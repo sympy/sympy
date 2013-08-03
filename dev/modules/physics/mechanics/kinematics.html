@@ -1,0 +1,588 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mechanics: Kinematics &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="index.html" />
+    <link rel="next" title="Mechanics: Masses, Inertias, Particles and Rigid Bodies" href="masses.html" />
+    <link rel="prev" title="Mechanics: Vector &amp; ReferenceFrame" href="vectors.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="masses.html" title="Mechanics: Masses, Inertias, Particles and Rigid Bodies"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="vectors.html" title="Mechanics: Vector &amp; ReferenceFrame"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mechanics-kinematics">
+<h1>Mechanics: Kinematics<a class="headerlink" href="#mechanics-kinematics" title="Permalink to this headline">¶</a></h1>
+<p>In mechanics, kinematics refers to the motion of bodies (or particles).
+It is the &#8216;a&#8217; in &#8216;f=ma&#8217;. This document will give some mathematical background
+to describing a system&#8217;s kinematics as well as how to represent the kinematics
+in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>.</p>
+<div class="section" id="introduction-to-kinematics">
+<h2>Introduction to Kinematics<a class="headerlink" href="#introduction-to-kinematics" title="Permalink to this headline">¶</a></h2>
+<p>The first topic is rigid motion kinematics. A rigid body is an idealized
+representation of a physical object which has mass and rotational inertia.
+Rigid bodies are obviously not flexible. We can break down rigid body motion
+into translational motion, and rotational motion (when dealing with particles, we
+only have translational motion). Rotational motion can further be broken down
+into simple rotations and general rotations.</p>
+<p>Translation of a rigid body is defined as a motion where the orientation of the
+body does not change during the motion; or during the motion any line segment
+would be parallel to itself at the start of the motion.</p>
+<p>Simple rotations are rotations in which the orientation of the body may change,
+but there is always one line which remains parallel to itself at the start of
+the motion.</p>
+<p>General rotations are rotations which there is not always one line parallel to
+itself at the start of the motion.</p>
+<div class="section" id="angular-velocity">
+<h3>Angular Velocity<a class="headerlink" href="#angular-velocity" title="Permalink to this headline">¶</a></h3>
+<p>The angular velocity of a rigid body refers to the rate of change of its
+orientation. The angular velocity of a body is written down as:
+<span class="math">\(^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}\)</span>, or the angular velocity of
+<span class="math">\(\mathbf{B}\)</span> in <span class="math">\(\mathbf{N}\)</span>, which is a vector. Note that here,
+the term rigid body was used, but reference frames can also have angular
+velocities. Further discussion of the distinction between a rigid body and a
+reference frame will occur later when describing the code representation.</p>
+<p>Angular velocity is defined as being positive in the direction which causes the
+orientation angles to increase (for simple rotations, or series of simple
+rotations).</p>
+<div align="center" class="align-center"><img height="350" src="../../../_images/kin_angvel1.svg" width="250" /></div>
+<p>The angular velocity vector represents the time derivative of the orientation.
+As a time derivative vector quantity, like those covered in the Vector &amp;
+ReferenceFrame documentation, this quantity (angular velocity) needs to be
+defined in a reference frame. That is what the <span class="math">\(\mathbf{N}\)</span> is in the
+above definition of angular velocity; the frame in which the angular velocity
+is defined in.</p>
+<p>The angular velocity of <span class="math">\(\mathbf{B}\)</span> in <span class="math">\(\mathbf{N}\)</span> can also be
+defined by:</p>
+<div class="math">
+\[^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}} =
+(\frac{^{\mathbf{N}}d \mathbf{\hat{b}_y}}{dt}\cdot\mathbf{\hat{b}_z}
+)\mathbf{\hat{b}_x} + (\frac{^{\mathbf{N}}d \mathbf{\hat{b}_z}}{dt}\cdot
+\mathbf{\hat{b}_x})\mathbf{\hat{b}_y} + (\frac{^{\mathbf{N}}d
+\mathbf{\hat{b}_x}}{dt}\cdot\mathbf{\hat{b}_y})\mathbf{\hat{b}_z}\]</div>
+<p>It is also common for a body&#8217;s angular velocity to be written as:</p>
+<div class="math">
+\[^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}} = w_x \mathbf{\hat{b}_x} +
+w_y \mathbf{\hat{b}_y} + w_z \mathbf{\hat{b}_z}\]</div>
+<p>There are a few additional important points relating to angular velocity. The
+first is the addition theorem for angular velocities, a way of relating the
+angular velocities of multiple bodies and frames. The theorem follows:</p>
+<div class="math">
+\[^{\mathbf{N}}\mathbf{\omega}^{\mathbf{D}} =
+^{\mathbf{N}}\mathbf{\omega}^{\mathbf{A}} +
+^{\mathbf{A}}\mathbf{\omega}^{\mathbf{B}} +
+^{\mathbf{B}}\mathbf{\omega}^{\mathbf{C}} +
+^{\mathbf{C}}\mathbf{\omega}^{\mathbf{D}}\]</div>
+<p>This is also shown in the following example:</p>
+<div align="center" class="align-center"><img height="300" src="../../../_images/kin_angvel2.svg" width="450" /></div>
+<div class="math">
+\[\begin{split}^{\mathbf{N}}\mathbf{\omega}^{\mathbf{A}} &amp;= 0\\
+^{\mathbf{A}}\mathbf{\omega}^{\mathbf{B}} &amp;= \dot{q_1} \mathbf{\hat{a}_x}\\
+^{\mathbf{B}}\mathbf{\omega}^{\mathbf{C}} &amp;= - \dot{q_2} \mathbf{\hat{b}_z}\\
+^{\mathbf{C}}\mathbf{\omega}^{\mathbf{D}} &amp;= \dot{q_3} \mathbf{\hat{c}_y}\\
+^{\mathbf{N}}\mathbf{\omega}^{\mathbf{D}} &amp;= \dot{q_1} \mathbf{\hat{a}_x}
+- \dot{q_2} \mathbf{\hat{b}_z} + \dot{q_3} \mathbf{\hat{c}_y}\\\end{split}\]</div>
+<p>Note the signs used in the angular velocity definitions, which are related to
+how the displacement angle is defined in this case.</p>
+<p>This theorem makes defining angular velocities of multibody systems much
+easier, as the angular velocity of a body in a chain needs to only be defined
+to the previous body in order to be fully defined (and the first body needs
+to be defined in the desired reference frame). The following figure shows an
+example of when using this theorem can make things easier.</p>
+<div align="center" class="align-center"><img height="250" src="../../../_images/kin_angvel3.svg" width="400" /></div>
+<p>Here we can easily write the angular velocity of the body
+<span class="math">\(\mathbf{D}\)</span> in the reference frame of the first body <span class="math">\(\mathbf{A}\)</span>:</p>
+<div class="math">
+\[\begin{split}^\mathbf{A}\mathbf{\omega}^\mathbf{D} = w_1 \mathbf{\hat{p_1}} +
+w_2 \mathbf{\hat{p_2}} + w_3 \mathbf{\hat{p_3}}\\\end{split}\]</div>
+<p>It is very important to remember to only use this with angular velocities; you
+cannot use this theorem with the velocities of points.</p>
+<p>There is another theorem commonly used: the derivative theorem. It provides an
+alternative method (which can be easier) to calculate the time derivative of a
+vector in a reference frame:</p>
+<div class="math">
+\[\frac{^{\mathbf{N}} d \mathbf{v}}{dt} = \frac{^{\mathbf{B}} d \mathbf{v}}{dt}
++ ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}} \times \mathbf{v}\]</div>
+<p>The vector <span class="math">\(\mathbf{v}\)</span> can be any vector quantity: a position vector,
+a velocity vector, angular velocity vector, etc. Instead of taking the time
+derivative of the vector in <span class="math">\(\mathbf{N}\)</span>, we take it in
+<span class="math">\(\mathbf{B}\)</span>, where <span class="math">\(\mathbf{B}\)</span> can be any reference frame or
+body, usually one in which it is easy to take the derivative on
+<span class="math">\(\mathbf{v}\)</span> in (<span class="math">\(\mathbf{v}\)</span> is usually composed only of the basis
+vector set belonging to <span class="math">\(\mathbf{B}\)</span>). Then we add the cross product of
+the angular velocity of our newer frame,
+<span class="math">\(^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}\)</span> and our vector quantity
+<span class="math">\(\mathbf{v}\)</span>. Again, you can choose any alternative frame for this.
+Examples follow:</p>
+</div>
+<div class="section" id="angular-acceleration">
+<h3>Angular Acceleration<a class="headerlink" href="#angular-acceleration" title="Permalink to this headline">¶</a></h3>
+<p>Angular acceleration refers to the time rate of change of the angular velocity
+vector. Just as the angular velocity vector is for a body and is specified in a
+frame, the angular acceleration vector is for a body and is specified in a
+frame: <span class="math">\(^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}}\)</span>, or the angular
+acceleration of <span class="math">\(\mathbf{B}\)</span> in <span class="math">\(\mathbf{N}\)</span>, which is a vector.</p>
+<p>Calculating the angular acceleration is relatively straight forward:</p>
+<div class="math">
+\[^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}} =
+\frac{^{\mathbf{N}} d ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}}{dt}\]</div>
+<p>Note that this can be calculated with the derivative theorem, and when the
+angular velocity is defined in a body fixed frame, becomes quite simple:</p>
+<div class="math">
+\[\begin{split}^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}} &amp;=
+\frac{^{\mathbf{N}} d ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}}{dt}\\\end{split}\]\[\begin{split}^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}} &amp;=
+\frac{^{\mathbf{B}} d ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}}{dt}
++ ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}} \times
+^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}\\\end{split}\]\[\begin{split}\textrm{if } ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}} &amp;=
+w_x \mathbf{\hat{b}_x} + w_y \mathbf{\hat{b}_y} + w_z \mathbf{\hat{b}_z}\\\end{split}\]\[\begin{split}\textrm{then } ^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}} &amp;=
+\frac{^{\mathbf{B}} d ^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}}{dt}
++ \underbrace{^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}} \times
+^{\mathbf{N}}\mathbf{\omega}^{\mathbf{B}}}_{
+\textrm{this is 0 by definition}}\\\end{split}\]\[\begin{split}^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}}&amp;=\frac{d w_x}{dt}\mathbf{\hat{b}_x}
++ \frac{d w_y}{dt}\mathbf{\hat{b}_y} + \frac{d w_z}{dt}\mathbf{\hat{b}_z}\\\end{split}\]\[\begin{split}^{\mathbf{N}}\mathbf{\alpha}^{\mathbf{B}}&amp;= \dot{w_x}\mathbf{\hat{b}_x} +
+\dot{w_y}\mathbf{\hat{b}_y} + \dot{w_z}\mathbf{\hat{b}_z}\\\end{split}\]</div>
+<p>Again, this is only for the case in which the angular velocity of the body is
+defined in body fixed components.</p>
+</div>
+<div class="section" id="point-velocity-acceleration">
+<h3>Point Velocity &amp; Acceleration<a class="headerlink" href="#point-velocity-acceleration" title="Permalink to this headline">¶</a></h3>
+<p>Consider a point, <span class="math">\(P\)</span>: we can define some characteristics of the point.
+First, we can define a position vector from some other point to <span class="math">\(P\)</span>.
+Second, we can define the velocity vector of <span class="math">\(P\)</span> in a reference frame of
+our choice. Third, we can define the acceleration vector of <span class="math">\(P\)</span> in a
+reference frame of our choice.</p>
+<p>These three quantities are read as:</p>
+<div class="math">
+\[\begin{split}\mathbf{r}^{OP} \textrm{, the position vector from } O
+\textrm{ to }P\\
+^{\mathbf{N}}\mathbf{v}^P \textrm{, the velocity of } P
+\textrm{ in the reference frame } \mathbf{N}\\
+^{\mathbf{N}}\mathbf{a}^P \textrm{, the acceleration of } P
+\textrm{ in the reference frame } \mathbf{N}\\\end{split}\]</div>
+<p>Note that the position vector does not have a frame associated with it; this is
+because there is no time derivative involved, unlike the velocity and
+acceleration vectors.</p>
+<p>We can find these quantities for a simple example easily:</p>
+<div align="center" class="align-center"><img height="300" src="../../../_images/kin_1.svg" width="300" /></div>
+<div class="math">
+\[\begin{split}\textrm{Let's define: }
+\mathbf{r}^{OP} &amp;= q_x \mathbf{\hat{n}_x} + q_y \mathbf{\hat{n}_y}\\
+^{\mathbf{N}}\mathbf{v}^P &amp;= \frac{^{\mathbf{N}} d \mathbf{r}^{OP}}{dt}\\
+\textrm{then we can calculate: }
+^{\mathbf{N}}\mathbf{v}^P &amp;= \dot{q}_x\mathbf{\hat{n}_x} +
+\dot{q}_y\mathbf{\hat{n}_y}\\
+\textrm{and :}
+^{\mathbf{N}}\mathbf{a}^P &amp;= \frac{^{\mathbf{N}} d
+^{\mathbf{N}}\mathbf{v}^P}{dt}\\
+^{\mathbf{N}}\mathbf{a}^P &amp;= \ddot{q}_x\mathbf{\hat{n}_x} +
+\ddot{q}_y\mathbf{\hat{n}_y}\\\end{split}\]</div>
+<p>It is critical to understand in the above example that the point <span class="math">\(O\)</span> is
+fixed in the reference frame <span class="math">\(\mathbf{N}\)</span>. There is no addition theorem
+for translational velocities; alternatives will be discussed later though.
+Also note that the position of every point might not
+always need to be defined to form the dynamic equations of motion.
+When you don&#8217;t want to define the position vector of a point, you can start by
+just defining the velocity vector. For the above example:</p>
+<div class="math">
+\[\begin{split}\textrm{Let us instead define the velocity vector as: }
+^{\mathbf{N}}\mathbf{v}^P &amp;= u_x \mathbf{\hat{n}_x} +
+u_y \mathbf{\hat{n}_y}\\
+\textrm{then acceleration can be written as: }
+^{\mathbf{N}}\mathbf{a}^P &amp;= \dot{u}_x \mathbf{\hat{n}_x} +
+\dot{u}_y \mathbf{\hat{n}_y}\\\end{split}\]</div>
+<p>There will often be cases when the velocity of a point is desired and a related
+point&#8217;s velocity is known. For the cases in which we have two points fixed on a
+rigid body, we use the 2-Point Theorem:</p>
+<div align="center" class="align-center"><img height="300" src="../../../_images/kin_2pt.svg" width="300" /></div>
+<p>Let&#8217;s say we know the velocity of the point <span class="math">\(S\)</span> and the angular
+velocity of the body <span class="math">\(\mathbf{B}\)</span>, both defined in the reference frame
+<span class="math">\(\mathbf{N}\)</span>. We can calculate the velocity and acceleration
+of the point <span class="math">\(P\)</span> in <span class="math">\(\mathbf{N}\)</span> as follows:</p>
+<div class="math">
+\[\begin{split}^{\mathbf{N}}\mathbf{v}^P &amp;= ^\mathbf{N}\mathbf{v}^S +
+^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times \mathbf{r}^{SP}\\
+^{\mathbf{N}}\mathbf{a}^P &amp;= ^\mathbf{N}\mathbf{a}^S +
+^\mathbf{N}\mathbf{\alpha}^\mathbf{B} \times \mathbf{r}^{SP} +
+^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times
+(^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times \mathbf{r}^{SP})\\\end{split}\]</div>
+<p>When only one of the two points is fixed on a body, the 1 point theorem is used
+instead.</p>
+<div align="center" class="align-center"><img height="400" src="../../../_images/kin_1pt.svg" width="400" /></div>
+<p>Here, the velocity of point <span class="math">\(S\)</span> is known in the frame <span class="math">\(\mathbf{N}\)</span>,
+the angular velocity of <span class="math">\(\mathbf{B}\)</span> is known in <span class="math">\(\mathbf{N}\)</span>, and
+the velocity of the point <span class="math">\(P\)</span> is known in the frame associated with body
+<span class="math">\(\mathbf{B}\)</span>. We can then write the velocity and acceleration of
+<span class="math">\(P\)</span> in <span class="math">\(\mathbf{N}\)</span> as:</p>
+<div class="math">
+\[\begin{split}^{\mathbf{N}}\mathbf{v}^P &amp;= ^\mathbf{B}\mathbf{v}^P +
+^\mathbf{N}\mathbf{v}^S + ^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times
+\mathbf{r}^{SP}\\\end{split}\]\[\begin{split}^{\mathbf{N}}\mathbf{a}^P &amp;= ^\mathbf{B}\mathbf{a}^S +
+^\mathbf{N}\mathbf{a}^O + ^\mathbf{N}\mathbf{\alpha}^\mathbf{B}
+\times \mathbf{r}^{SP} + ^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times
+(^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times \mathbf{r}^{SP}) +
+2 ^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times ^\mathbf{B} \mathbf{v}^P \\\end{split}\]</div>
+<p>Examples of applications of the 1 point and 2 point theorem follow.</p>
+<div align="center" class="align-center"><img height="300" src="../../../_images/kin_2.svg" width="400" /></div>
+<p>This example has a disc translating and rotating in a plane. We can easily
+define the angular velocity of the body <span class="math">\(\mathbf{B}\)</span> and velocity of the
+point <span class="math">\(O\)</span>:</p>
+<div class="math">
+\[\begin{split}^\mathbf{N}\mathbf{\omega}^\mathbf{B} &amp;= u_3 \mathbf{\hat{n}_z} = u_3
+\mathbf{\hat{b}_z}\\
+^\mathbf{N}\mathbf{v}^O &amp;= u_1 \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y}\\\end{split}\]</div>
+<p>and accelerations can be written as:</p>
+<div class="math">
+\[\begin{split}^\mathbf{N}\mathbf{\alpha}^\mathbf{B} &amp;= \dot{u_3} \mathbf{\hat{n}_z} =
+\dot{u_3} \mathbf{\hat{b}_z}\\
+^\mathbf{N}\mathbf{a}^O &amp;= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
+\mathbf{\hat{n}_y}\\\end{split}\]</div>
+<p>We can use the 2 point theorem to calculate the velocity and acceleration of
+point <span class="math">\(P\)</span> now.</p>
+<div class="math">
+\[\begin{split}\mathbf{r}^{OP} &amp;= R \mathbf{\hat{b}_x}\\
+^\mathbf{N}\mathbf{v}^P &amp;= ^\mathbf{N}\mathbf{v}^O +
+^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times \mathbf{r}^{OP}\\
+^\mathbf{N}\mathbf{v}^P &amp;= u_1 \mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y}
++ u_3 \mathbf{\hat{b}_z} \times R \mathbf{\hat{b}_x} = u_1
+\mathbf{\hat{n}_x} + u_2 \mathbf{\hat{n}_y} + u_3 R \mathbf{\hat{b}_y}\\
+^{\mathbf{N}}\mathbf{a}^P &amp;= ^\mathbf{N}\mathbf{a}^O +
+^\mathbf{N}\mathbf{\alpha}^\mathbf{B} \times \mathbf{r}^{OP} +
+^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times
+(^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times \mathbf{r}^{OP})\\
+^{\mathbf{N}}\mathbf{a}^P &amp;= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
+\mathbf{\hat{n}_y} + \dot{u_3}\mathbf{\hat{b}_z}\times R \mathbf{\hat{b}_x}
++u_3\mathbf{\hat{b}_z}\times(u_3\mathbf{\hat{b}_z}\times
+R\mathbf{\hat{b}_x})\\
+^{\mathbf{N}}\mathbf{a}^P &amp;= \dot{u_1} \mathbf{\hat{n}_x} + \dot{u_2}
+\mathbf{\hat{n}_y} + R\dot{u_3}\mathbf{\hat{b}_y} - R u_3^2
+\mathbf{\hat{b}_x}\\\end{split}\]</div>
+<div align="center" class="align-center"><img height="200" src="../../../_images/kin_3.svg" width="200" /></div>
+<p>In this example we have a double pendulum. We can use the two point theorem
+twice here in order to find the velocity of points <span class="math">\(Q\)</span> and <span class="math">\(P\)</span>;
+point <span class="math">\(O\)</span>&#8216;s velocity is zero in <span class="math">\(\mathbf{N}\)</span>.</p>
+<div class="math">
+\[\begin{split}\mathbf{r}^{OQ} &amp;= l \mathbf{\hat{b}_x}\\
+\mathbf{r}^{QP} &amp;= l \mathbf{\hat{c}_x}\\
+^\mathbf{N}\mathbf{\omega}^\mathbf{B} &amp;= u_1 \mathbf{\hat{b}_z}\\
+^\mathbf{N}\mathbf{\omega}^\mathbf{C} &amp;= u_2 \mathbf{\hat{c}_z}\\
+^\mathbf{N}\mathbf{v}^Q &amp;= ^\mathbf{N}\mathbf{v}^O +
+^\mathbf{N}\mathbf{\omega}^\mathbf{B} \times \mathbf{r}^{OQ}\\
+^\mathbf{N}\mathbf{v}^Q &amp;= u_1 l \mathbf{\hat{b}_y}\\
+^\mathbf{N}\mathbf{v}^P &amp;= ^\mathbf{N}\mathbf{v}^Q +
+^\mathbf{N}\mathbf{\omega}^\mathbf{C} \times \mathbf{r}^{QP}\\
+^\mathbf{N}\mathbf{v}^Q &amp;= u_1 l \mathbf{\hat{b}_y} +u_2 \mathbf{\hat{c}_z}
+\times l \mathbf{\hat{c}_x}\\
+^\mathbf{N}\mathbf{v}^Q &amp;= u_1 l\mathbf{\hat{b}_y}+u_2 l\mathbf{\hat{c}_y}\\\end{split}\]</div>
+<div align="center" class="align-center"><img height="400" src="../../../_images/kin_4.svg" width="300" /></div>
+<p>In this example we have a particle moving on a ring; the ring is supported by a
+rod which can rotate about the <span class="math">\(\mathbf{\hat{n}_x}\)</span> axis. First we use
+the two point theorem to find the velocity of the center point of the ring,
+<span class="math">\(Q\)</span>, then use the 1 point theorem to find the velocity of the particle on
+the ring.</p>
+<div class="math">
+\[\begin{split}^\mathbf{N}\mathbf{\omega}^\mathbf{C} &amp;= u_1 \mathbf{\hat{n}_x}\\
+\mathbf{r}^{OQ} &amp;= -l \mathbf{\hat{c}_z}\\
+^\mathbf{N}\mathbf{v}^Q &amp;= u_1 l \mathbf{\hat{c}_y}\\
+\mathbf{r}^{QP} &amp;= R(cos(q_2) \mathbf{\hat{c}_x}
++ sin(q_2) \mathbf{\hat{c}_y} )\\
+^\mathbf{C}\mathbf{v}^P &amp;= R u_2 (-sin(q_2) \mathbf{\hat{c}_x}
++ cos(q_2) \mathbf{\hat{c}_y} )\\
+^\mathbf{N}\mathbf{v}^P &amp;= ^\mathbf{C}\mathbf{v}^P +^\mathbf{N}\mathbf{v}^Q
++ ^\mathbf{N}\mathbf{\omega}^\mathbf{C} \times \mathbf{r}^{QP}\\
+^\mathbf{N}\mathbf{v}^P &amp;= R u_2 (-sin(q_2) \mathbf{\hat{c}_x}
++ cos(q_2) \mathbf{\hat{c}_y} ) + u_1 l \mathbf{\hat{c}_y} +
+u_1 \mathbf{\hat{c}_x} \times R(cos(q_2) \mathbf{\hat{c}_x}
++ sin(q_2) \mathbf{\hat{c}_y}\\
+^\mathbf{N}\mathbf{v}^P &amp;= - R u_2 sin(q_2) \mathbf{\hat{c}_x}
++ (R u_2 cos(q_2)+u_1 l)\mathbf{\hat{c}_y} + R u_1 sin(q_2)
+\mathbf{\hat{c}_z}\\\end{split}\]</div>
+<p>A final topic in the description of velocities of points is that of rolling, or
+rather, rolling without slip. Two bodies are said to be rolling without slip if
+and only if the point of contact on each body has the same velocity in another
+frame. See the following figure:</p>
+<div align="center" class="align-center"><img height="250" src="../../../_images/kin_rolling.svg" width="450" /></div>
+<p>This is commonly used to form the velocity of a point on one object rolling on
+another fixed object, such as in the following example:</p>
+</div>
+</div>
+<div class="section" id="kinematics-in-sympy-s-mechanics">
+<h2>Kinematics in SymPy&#8217;s Mechanics<a class="headerlink" href="#kinematics-in-sympy-s-mechanics" title="Permalink to this headline">¶</a></h2>
+<p>It should be clear by now that the topic of kinematics here has been mostly
+describing the correct way to manipulate vectors into representing the
+velocities of points. Within <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> there are convenient methods for
+storing these velocities associated with frames and points. We&#8217;ll now revisit
+the above examples and show how to represent them in <a class="reference internal" href="../../matrices/immutablematrices.html#module-sympy" title="sympy"><tt class="xref py py-mod docutils literal"><span class="pre">sympy</span></tt></a>.</p>
+<p>The topic of reference frame creation has already been covered. When a
+<tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt> is created though, it automatically calculates the angular
+velocity of the frame using the time derivative of the DCM and the angular
+velocity definition.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mechanics_printing</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">q1&#39;*N.x</span>
+</pre></div>
+</div>
+<p>Note that the angular velocity can be defined in an alternate way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u1</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">u1*B.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">- u1*B.y</span>
+</pre></div>
+</div>
+<p>Both upon frame creation during <tt class="docutils literal"><span class="pre">orientnew</span></tt> and when calling <tt class="docutils literal"><span class="pre">set_ang_vel</span></tt>,
+the angular velocity is set in both frames involved, as seen above.</p>
+<div align="center" class="align-center"><img height="300" src="../../../_images/kin_angvel2.svg" width="450" /></div>
+<p>Here we have multiple bodies with angular velocities defined relative to each
+other. This is coded as:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;D&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2 u3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">u1</span> <span class="o">*</span> <span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="n">u2</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">u3</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">u3*C.y - u2*B.z + u1*A.x</span>
+</pre></div>
+</div>
+<p>In <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> the shortest path between two frames is used when finding
+the angular velocity. That would mean if we went back and set:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">D</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>The path that was just defined is what is used.
+This can cause problems though, as now the angular
+velocity definitions are inconsistent. It is recommended that you avoid
+doing this.</p>
+<p>Points are a translational analog to the rotational <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt>.
+Creating a <tt class="docutils literal"><span class="pre">Point</span></tt> can be done in two ways, like <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">pos_from</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="go">3*N.x + N.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;Q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span><span class="o">.</span><span class="n">set_pos</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span><span class="o">.</span><span class="n">pos_from</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+<span class="go">N.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span><span class="o">.</span><span class="n">pos_from</span><span class="p">(</span><span class="n">O</span><span class="p">)</span>
+<span class="go">3*N.x + N.y + N.z</span>
+</pre></div>
+</div>
+<p>Similar to <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt>, the position vector between two points is found
+by the shortest path (number of intermediate points) between them. Unlike
+rotational motion, there is no addition theorem for the velocity of points. In
+order to have the velocity of a <tt class="docutils literal"><span class="pre">Point</span></tt> in a <tt class="docutils literal"><span class="pre">ReferenceFrame</span></tt>, you have to
+set the value.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u1</span><span class="o">*</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">u1*N.x</span>
+</pre></div>
+</div>
+<p>For both translational and rotational accelerations, the value is computed by
+taking the time derivative of the appropriate velocity, unless the user sets it
+otherwise.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">acc</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">u1&#39;*N.x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_acc</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u2</span><span class="o">*</span><span class="n">u1</span><span class="o">*</span><span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">acc</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">u1*u2*N.y</span>
+</pre></div>
+</div>
+<p>Next is a description of the 2 point and 1 point theorems, as used in
+<tt class="docutils literal"><span class="pre">sympy</span></tt>.</p>
+<div align="center" class="align-center"><img height="300" src="../../../_images/kin_2.svg" width="400" /></div>
+<p>First is the translating, rotating disc.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2 u3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">u2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">R</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u3</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">u1*N.x + u2*N.y + R*u3*B.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">a2pt_theory</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="go">u1&#39;*N.x + u2&#39;*N.y - R*u3**2*B.x + R*u3&#39;*B.y</span>
+</pre></div>
+</div>
+<p>We will also cover implementation of the 1 point theorem.</p>
+<div align="center" class="align-center"><img height="400" src="../../../_images/kin_4.svg" width="300" /></div>
+<p>This is the particle moving on a ring, again.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;l&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;O&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span> <span class="o">=</span> <span class="n">O</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Q&#39;</span><span class="p">,</span> <span class="o">-</span><span class="n">l</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">R</span> <span class="o">*</span> <span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">q2</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="n">q2</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">R</span> <span class="o">*</span> <span class="n">u2</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">q2</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">q2</span><span class="p">)</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Q</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">O</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">l*u1*C.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">v1pt_theory</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">- R*u2*sin(q2)*C.x + (R*u2*cos(q2) + l*u1)*C.y + R*u1*sin(q2)*C.z</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Mechanics: Kinematics</a><ul>
+<li><a class="reference internal" href="#introduction-to-kinematics">Introduction to Kinematics</a><ul>
+<li><a class="reference internal" href="#angular-velocity">Angular Velocity</a></li>
+<li><a class="reference internal" href="#angular-acceleration">Angular Acceleration</a></li>
+<li><a class="reference internal" href="#point-velocity-acceleration">Point Velocity &amp; Acceleration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#kinematics-in-sympy-s-mechanics">Kinematics in SymPy&#8217;s Mechanics</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="vectors.html"
+                        title="previous chapter">Mechanics: Vector &amp; ReferenceFrame</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="masses.html"
+                        title="next chapter">Mechanics: Masses, Inertias, Particles and Rigid Bodies</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/mechanics/kinematics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="masses.html" title="Mechanics: Masses, Inertias, Particles and Rigid Bodies"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="vectors.html" title="Mechanics: Vector &amp; ReferenceFrame"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

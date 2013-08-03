@@ -1,0 +1,669 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Codegen &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Utilities" href="index.html" />
+    <link rel="next" title="Decorator" href="decorator.html" />
+    <link rel="prev" title="Autowrap Module" href="autowrap.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="decorator.html" title="Decorator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="autowrap.html" title="Autowrap Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Utilities</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="codegen">
+<h1>Codegen<a class="headerlink" href="#codegen" title="Permalink to this headline">¶</a></h1>
+<p>This module provides functionality to generate directly compilable code from
+SymPy expressions.  The <tt class="docutils literal"><span class="pre">codegen</span></tt> function is the user interface to the code
+generation functionality in SymPy.  Some details of the implementation is given
+below for advanced users that may want to use the framework directly.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The <tt class="docutils literal"><span class="pre">codegen</span></tt> callable is not in the sympy namespace automatically,
+to use it you must first execute</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.codegen</span> <span class="kn">import</span> <span class="n">codegen</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="impementation-details">
+<h2>Impementation Details<a class="headerlink" href="#impementation-details" title="Permalink to this headline">¶</a></h2>
+<p>Here we present the most important pieces of the internal structure, as
+advanced users may want to use it directly, for instance by subclassing a code
+generator for a specialized application.  <strong>It is very likely that you would
+prefer to use the codegen() function documented above.</strong></p>
+<p>Basic assumptions:</p>
+<ul class="simple">
+<li>A generic Routine data structure describes the routine that must be translated
+into C/Fortran/... code. This data structure covers all features present in
+one or more of the supported languages.</li>
+<li>Descendants from the CodeGen class transform multiple Routine instances into
+compilable code. Each derived class translates into a specific language.</li>
+<li>In many cases, one wants a simple workflow. The friendly functions in the last
+part are a simple api on top of the Routine/CodeGen stuff. They are easier to
+use, but are less powerful.</li>
+</ul>
+</div>
+<div class="section" id="routine">
+<h2>Routine<a class="headerlink" href="#routine" title="Permalink to this headline">¶</a></h2>
+<p>The Routine class is a very important piece of the codegen module. Viewing the
+codegen utility as a translator of mathematical expressions into a set of
+statements in a programming language, the Routine instances are responsible for
+extracting and storing information about how the math can be encapsulated in a
+function call.  Thus, it is the Routine constructor that decides what arguments
+the routine will need and if there should be a return value.</p>
+</div>
+<div class="section" id="module-sympy.utilities.codegen">
+<span id="api-reference"></span><h2>API Reference<a class="headerlink" href="#module-sympy.utilities.codegen" title="Permalink to this headline">¶</a></h2>
+<p>module for generating C, C++, Fortran77, Fortran90 and python routines that
+evaluate sympy expressions. This module is work in progress. Only the
+milestones with a &#8216;+&#8217; character in the list below have been completed.</p>
+<p>&#8212; How is sympy.utilities.codegen different from sympy.printing.ccode? &#8212;</p>
+<p>We considered the idea to extend the printing routines for sympy functions in
+such a way that it prints complete compilable code, but this leads to a few
+unsurmountable issues that can only be tackled with dedicated code generator:</p>
+<ul class="simple">
+<li>For C, one needs both a code and a header file, while the printing routines
+generate just one string. This code generator can be extended to support
+.pyf files for f2py.</li>
+<li>SymPy functions are not concerned with programming-technical issues, such
+as input, output and input-output arguments. Other examples are contiguous
+or non-contiguous arrays, including headers of other libraries such as gsl
+or others.</li>
+<li>It is highly interesting to evaluate several sympy functions in one C
+routine, eventually sharing common intermediate results with the help
+of the cse routine. This is more than just printing.</li>
+<li>From the programming perspective, expressions with constants should be
+evaluated in the code generator as much as possible. This is different
+for printing.</li>
+</ul>
+<p>&#8212; Basic assumptions &#8212;</p>
+<ul class="simple">
+<li>A generic Routine data structure describes the routine that must be
+translated into C/Fortran/... code. This data structure covers all
+features present in one or more of the supported languages.</li>
+<li>Descendants from the CodeGen class transform multiple Routine instances
+into compilable code. Each derived class translates into a specific
+language.</li>
+<li>In many cases, one wants a simple workflow. The friendly functions in the
+last part are a simple api on top of the Routine/CodeGen stuff. They are
+easier to use, but are less powerful.</li>
+</ul>
+<p>&#8212; Milestones &#8212;</p>
+<ul class="simple">
+<li>First working version with scalar input arguments, generating C code,
+tests</li>
+<li>Friendly functions that are easier to use than the rigorous
+Routine/CodeGen workflow.</li>
+<li>Integer and Real numbers as input and output</li>
+<li>Output arguments</li>
+<li>InputOutput arguments</li>
+<li>Sort input/output arguments properly</li>
+<li>Contiguous array arguments (numpy matrices)</li>
+<li>Also generate .pyf code for f2py (in autowrap module)</li>
+<li>Isolate constants and evaluate them beforehand in double precision</li>
+<li>Fortran 90</li>
+</ul>
+<ul class="simple">
+<li>Common Subexpression Elimination</li>
+<li>User defined comments in the generated code</li>
+<li>Optional extra include lines for libraries/objects that can eval special
+functions</li>
+<li>Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...</li>
+<li>Contiguous array arguments (sympy matrices)</li>
+<li>Non-contiguous array arguments (sympy matrices)</li>
+<li>ccode must raise an error when it encounters something that can not be
+translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.</li>
+<li>Complex numbers as input and output</li>
+<li>A default complex datatype</li>
+<li>Include extra information in the header: date, user, hostname, sha1
+hash, ...</li>
+<li>Fortran 77</li>
+<li>C++</li>
+<li>Python</li>
+<li>...</li>
+</ul>
+<dl class="class">
+<dt id="sympy.utilities.codegen.Routine">
+<em class="property">class </em><tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">Routine</tt><big>(</big><em>name</em>, <em>expr</em>, <em>argument_sequence=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#Routine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.Routine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generic description of an evaluation routine for a set of sympy expressions.</p>
+<p>A CodeGen class can translate instances of this class into C/Fortran/...
+code. The routine specification covers all the features present in these
+languages. The CodeGen part must raise an exception when certain features
+are not present in the target language. For example, multiple return
+values are possible in Python, but not in C or Fortran. Another example:
+Fortran and Python support complex numbers, while C does not.</p>
+<dl class="attribute">
+<dt id="sympy.utilities.codegen.Routine.result_variables">
+<tt class="descname">result_variables</tt><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#Routine.result_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.Routine.result_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of OutputArgument, InOutArgument and Result.</p>
+<p>If return values are present, they are at the end ot the list.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.utilities.codegen.Routine.variables">
+<tt class="descname">variables</tt><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#Routine.variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.Routine.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set containing all variables possibly used in this routine.</p>
+<p>For routines with unnamed return values, the dummies that may or may
+not be used will be included in the set.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.utilities.codegen.DataType">
+<em class="property">class </em><tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">DataType</tt><big>(</big><em>cname</em>, <em>fname</em>, <em>pyname</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#DataType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.DataType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Holds strings for a certain datatype in different programming languages.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.codegen.get_default_datatype">
+<tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">get_default_datatype</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#get_default_datatype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.get_default_datatype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives a decent data type based on the assumptions on the expression.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.utilities.codegen.Argument">
+<em class="property">class </em><tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">Argument</tt><big>(</big><em>name</em>, <em>datatype=None</em>, <em>dimensions=None</em>, <em>precision=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#Argument"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.Argument" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract Argument data structure: a name and a data type.</p>
+<p>This structure is refined in the descendants below.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.utilities.codegen.Result">
+<em class="property">class </em><tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">Result</tt><big>(</big><em>expr</em>, <em>datatype=None</em>, <em>precision=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#Result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.Result" title="Permalink to this definition">¶</a></dt>
+<dd><p>An expression for a scalar return value.</p>
+<p>The name result is used to avoid conflicts with the reserved word
+&#8216;return&#8217; in the python language. It is also shorter than ReturnValue.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.utilities.codegen.CodeGen">
+<em class="property">class </em><tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">CodeGen</tt><big>(</big><em>project='project'</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#CodeGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.CodeGen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract class for the code generators.</p>
+<dl class="method">
+<dt id="sympy.utilities.codegen.CodeGen.dump_code">
+<tt class="descname">dump_code</tt><big>(</big><em>routines</em>, <em>f</em>, <em>prefix</em>, <em>header=True</em>, <em>empty=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#CodeGen.dump_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.CodeGen.dump_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the code file by calling language specific methods in correct order</p>
+<p>The generated file contains all the definitions of the routines in
+low-level code and refers to the header file if appropriate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>routines</dt>
+<dd>A list of Routine instances</dd>
+<dt>f</dt>
+<dd>A file-like object to write the file to</dd>
+<dt>prefix</dt>
+<dd>The filename prefix, used to refer to the proper header file. Only
+the basename of the prefix is used.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional arguments:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>header</dt>
+<dd>When True, a header comment is included on top of each source file.
+[DEFAULT=True]</dd>
+<dt>empty</dt>
+<dd>When True, empty lines are included to structure the source files.
+[DEFAULT=True]</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.utilities.codegen.CodeGen.write">
+<tt class="descname">write</tt><big>(</big><em>routines</em>, <em>prefix</em>, <em>to_files=False</em>, <em>header=True</em>, <em>empty=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#CodeGen.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.CodeGen.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes all the source code files for the given routines.</p>
+<p>The generate source is returned as a list of (filename, contents)
+tuples, or is written to files (see options). Each filename consists
+of the given prefix, appended with an appropriate extension.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">routines</span></tt></dt>
+<dd>A list of Routine instances to be written</dd>
+<dt><tt class="docutils literal"><span class="pre">prefix</span></tt></dt>
+<dd>The prefix for the output files</dd>
+<dt><tt class="docutils literal"><span class="pre">to_files</span></tt></dt>
+<dd>When True, the output is effectively written to files.
+[DEFAULT=False] Otherwise, a list of (filename, contents)
+tuples is returned.</dd>
+<dt><tt class="docutils literal"><span class="pre">header</span></tt></dt>
+<dd>When True, a header comment is included on top of each source
+file. [DEFAULT=True]</dd>
+<dt><tt class="docutils literal"><span class="pre">empty</span></tt></dt>
+<dd>When True, empty lines are included to structure the source
+files. [DEFAULT=True]</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.utilities.codegen.CCodeGen">
+<em class="property">class </em><tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">CCodeGen</tt><big>(</big><em>project='project'</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#CCodeGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.CCodeGen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator for C code</p>
+<p>The .write() method inherited from CodeGen will output a code file and an
+inteface file, &lt;prefix&gt;.c and &lt;prefix&gt;.h respectively.</p>
+<dl class="method">
+<dt id="sympy.utilities.codegen.CCodeGen.dump_c">
+<tt class="descname">dump_c</tt><big>(</big><em>routines</em>, <em>f</em>, <em>prefix</em>, <em>header=True</em>, <em>empty=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#CCodeGen.dump_c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.CCodeGen.dump_c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the code file by calling language specific methods in correct order</p>
+<p>The generated file contains all the definitions of the routines in
+low-level code and refers to the header file if appropriate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>routines</dt>
+<dd>A list of Routine instances</dd>
+<dt>f</dt>
+<dd>A file-like object to write the file to</dd>
+<dt>prefix</dt>
+<dd>The filename prefix, used to refer to the proper header file. Only
+the basename of the prefix is used.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional arguments:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>header</dt>
+<dd>When True, a header comment is included on top of each source file.
+[DEFAULT=True]</dd>
+<dt>empty</dt>
+<dd>When True, empty lines are included to structure the source files.
+[DEFAULT=True]</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.utilities.codegen.CCodeGen.dump_h">
+<tt class="descname">dump_h</tt><big>(</big><em>routines</em>, <em>f</em>, <em>prefix</em>, <em>header=True</em>, <em>empty=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#CCodeGen.dump_h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.CCodeGen.dump_h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the C header file.</p>
+<p>This file contains all the function declarations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>routines</dt>
+<dd>A list of Routine instances</dd>
+<dt>f</dt>
+<dd>A file-like object to write the file to</dd>
+<dt>prefix</dt>
+<dd>The filename prefix, used to construct the include guards.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional arguments:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>header</dt>
+<dd>When True, a header comment is included on top of each source
+file. [DEFAULT=True]</dd>
+<dt>empty</dt>
+<dd>When True, empty lines are included to structure the source
+files. [DEFAULT=True]</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.utilities.codegen.CCodeGen.get_prototype">
+<tt class="descname">get_prototype</tt><big>(</big><em>routine</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#CCodeGen.get_prototype"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.CCodeGen.get_prototype" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a string for the function prototype for the given routine.</p>
+<p>If the routine has multiple result objects, an CodeGenError is
+raised.</p>
+<p>See: <a class="reference external" href="http://en.wikipedia.org/wiki/Function_prototype">http://en.wikipedia.org/wiki/Function_prototype</a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.utilities.codegen.FCodeGen">
+<em class="property">class </em><tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">FCodeGen</tt><big>(</big><em>project='project'</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#FCodeGen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.FCodeGen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generator for Fortran 95 code</p>
+<p>The .write() method inherited from CodeGen will output a code file and an
+inteface file, &lt;prefix&gt;.f90 and &lt;prefix&gt;.h respectively.</p>
+<dl class="method">
+<dt id="sympy.utilities.codegen.FCodeGen.dump_f95">
+<tt class="descname">dump_f95</tt><big>(</big><em>routines</em>, <em>f</em>, <em>prefix</em>, <em>header=True</em>, <em>empty=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#FCodeGen.dump_f95"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.FCodeGen.dump_f95" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the code file by calling language specific methods in correct order</p>
+<p>The generated file contains all the definitions of the routines in
+low-level code and refers to the header file if appropriate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>routines</dt>
+<dd>A list of Routine instances</dd>
+<dt>f</dt>
+<dd>A file-like object to write the file to</dd>
+<dt>prefix</dt>
+<dd>The filename prefix, used to refer to the proper header file. Only
+the basename of the prefix is used.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional arguments:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>header</dt>
+<dd>When True, a header comment is included on top of each source file.
+[DEFAULT=True]</dd>
+<dt>empty</dt>
+<dd>When True, empty lines are included to structure the source files.
+[DEFAULT=True]</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.utilities.codegen.FCodeGen.dump_h">
+<tt class="descname">dump_h</tt><big>(</big><em>routines</em>, <em>f</em>, <em>prefix</em>, <em>header=True</em>, <em>empty=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#FCodeGen.dump_h"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.FCodeGen.dump_h" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the interface to a header file.</p>
+<p>This file contains all the function declarations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Arguments :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>routines</dt>
+<dd>A list of Routine instances</dd>
+<dt>f</dt>
+<dd>A file-like object to write the file to</dd>
+<dt>prefix</dt>
+<dd>The filename prefix</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional arguments:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>header</dt>
+<dd>When True, a header comment is included on top of each source
+file. [DEFAULT=True]</dd>
+<dt>empty</dt>
+<dd>When True, empty lines are included to structure the source
+files. [DEFAULT=True]</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.utilities.codegen.FCodeGen.get_interface">
+<tt class="descname">get_interface</tt><big>(</big><em>routine</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#FCodeGen.get_interface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.FCodeGen.get_interface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a string for the function interface for the given routine and
+a single result object, which can be None.</p>
+<p>If the routine has multiple result objects, a CodeGenError is
+raised.</p>
+<p>See: <a class="reference external" href="http://en.wikipedia.org/wiki/Function_prototype">http://en.wikipedia.org/wiki/Function_prototype</a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.codegen.codegen">
+<tt class="descclassname">sympy.utilities.codegen.</tt><tt class="descname">codegen</tt><big>(</big><em>name_expr</em>, <em>language</em>, <em>prefix</em>, <em>project='project'</em>, <em>to_files=False</em>, <em>header=True</em>, <em>empty=True</em>, <em>argument_sequence=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/codegen.html#codegen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.codegen.codegen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write source code for the given expressions in the given language.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Mandatory Arguments:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">name_expr</span></tt></dt>
+<dd>A single (name, expression) tuple or a list of (name, expression)
+tuples. Each tuple corresponds to a routine.  If the expression is an
+equality (an instance of class Equality) the left hand side is
+considered an output argument.</dd>
+<dt><tt class="docutils literal"><span class="pre">language</span></tt></dt>
+<dd>A string that indicates the source code language. This is case
+insensitive. For the moment, only &#8216;C&#8217; and &#8216;F95&#8217; is supported.</dd>
+<dt><tt class="docutils literal"><span class="pre">prefix</span></tt></dt>
+<dd>A prefix for the names of the files that contain the source code.
+Proper (language dependent) suffixes will be appended.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Optional Arguments:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">project</span></tt></dt>
+<dd>A project name, used for making unique preprocessor instructions.
+[DEFAULT=&#8221;project&#8221;]</dd>
+<dt><tt class="docutils literal"><span class="pre">to_files</span></tt></dt>
+<dd>When True, the code will be written to one or more files with the given
+prefix, otherwise strings with the names and contents of these files
+are returned. [DEFAULT=False]</dd>
+<dt><tt class="docutils literal"><span class="pre">header</span></tt></dt>
+<dd>When True, a header is written on top of each source file.
+[DEFAULT=True]</dd>
+<dt><tt class="docutils literal"><span class="pre">empty</span></tt></dt>
+<dd>When True, empty lines are used to structure the code.  [DEFAULT=True]</dd>
+<dt><tt class="docutils literal"><span class="pre">argument_sequence</span></tt></dt>
+<dd><p class="first">sequence of arguments for the routine in a preferred order.  A
+CodeGenError is raised if required arguments are missing.  Redundant
+arguments are used without warning.</p>
+<p class="last">If omitted, arguments will be ordered alphabetically, but with all
+input aguments first, and then output or in-out arguments.</p>
+</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.codegen</span> <span class="kn">import</span> <span class="n">codegen</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">c_name</span><span class="p">,</span> <span class="n">c_code</span><span class="p">),</span> <span class="p">(</span><span class="n">h_name</span><span class="p">,</span> <span class="n">c_header</span><span class="p">)]</span> <span class="o">=</span> <span class="n">codegen</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="p">(</span><span class="s">&quot;f&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">),</span> <span class="s">&quot;C&quot;</span><span class="p">,</span> <span class="s">&quot;test&quot;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">empty</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">c_name</span><span class="p">)</span>
+<span class="go">test.c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">c_code</span><span class="p">)</span>
+<span class="go">#include &quot;test.h&quot;</span>
+<span class="go">#include &lt;math.h&gt;</span>
+<span class="go">double f(double x, double y, double z) {</span>
+<span class="go">  return x + y*z;</span>
+<span class="go">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">h_name</span><span class="p">)</span>
+<span class="go">test.h</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">c_header</span><span class="p">)</span>
+<span class="go">#ifndef PROJECT__TEST__H</span>
+<span class="go">#define PROJECT__TEST__H</span>
+<span class="go">double f(double x, double y, double z);</span>
+<span class="go">#endif</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Codegen</a><ul>
+<li><a class="reference internal" href="#impementation-details">Impementation Details</a></li>
+<li><a class="reference internal" href="#routine">Routine</a></li>
+<li><a class="reference internal" href="#module-sympy.utilities.codegen">API Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="autowrap.html"
+                        title="previous chapter">Autowrap Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="decorator.html"
+                        title="next chapter">Decorator</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/utilities/codegen.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="decorator.html" title="Decorator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="autowrap.html" title="Autowrap Module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Utilities</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

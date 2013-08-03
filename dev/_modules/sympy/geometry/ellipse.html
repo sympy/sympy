@@ -1,0 +1,1487 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.geometry.ellipse &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.geometry.ellipse</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Elliptical geometrical entities.</span>
+
+<span class="sd">Contains</span>
+<span class="sd">* Ellipse</span>
+<span class="sd">* Circle</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.core.logic</span> <span class="kn">import</span> <span class="n">fuzzy_bool</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">oo</span>
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">simplify</span><span class="p">,</span> <span class="n">trigsimp</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">Max</span><span class="p">,</span> <span class="n">Min</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.complexes</span> <span class="kn">import</span> <span class="n">im</span>
+<span class="kn">from</span> <span class="nn">sympy.geometry.exceptions</span> <span class="kn">import</span> <span class="n">GeometryError</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">.entity</span> <span class="kn">import</span> <span class="n">GeometryEntity</span>
+<span class="kn">from</span> <span class="nn">.point</span> <span class="kn">import</span> <span class="n">Point</span>
+<span class="kn">from</span> <span class="nn">.line</span> <span class="kn">import</span> <span class="n">LinearEntity</span><span class="p">,</span> <span class="n">Line</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">_symbol</span><span class="p">,</span> <span class="n">idiff</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities.decorator</span> <span class="kn">import</span> <span class="n">doctest_depends_on</span>
+
+
+<div class="viewcode-block" id="Ellipse"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse">[docs]</a><span class="k">class</span> <span class="nc">Ellipse</span><span class="p">(</span><span class="n">GeometryEntity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An elliptical GeometryEntity.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    center : Point, optional</span>
+<span class="sd">        Default value is Point(0, 0)</span>
+<span class="sd">    hradius : number or SymPy expression, optional</span>
+<span class="sd">    vradius : number or SymPy expression, optional</span>
+<span class="sd">    eccentricity : number or SymPy expression, optional</span>
+<span class="sd">        Two of `hradius`, `vradius` and `eccentricity` must be supplied to</span>
+<span class="sd">        create an Ellipse. The third is derived from the two supplied.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    center</span>
+<span class="sd">    hradius</span>
+<span class="sd">    vradius</span>
+<span class="sd">    area</span>
+<span class="sd">    circumference</span>
+<span class="sd">    eccentricity</span>
+<span class="sd">    periapsis</span>
+<span class="sd">    apoapsis</span>
+<span class="sd">    focus_distance</span>
+<span class="sd">    foci</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ======</span>
+
+<span class="sd">    GeometryError</span>
+<span class="sd">        When `hradius`, `vradius` and `eccentricity` are incorrectly supplied</span>
+<span class="sd">        as parameters.</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        When `center` is not a Point.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Circle</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Constructed from a center and two radii, the first being the horizontal</span>
+<span class="sd">    radius (along the x-axis) and the second being the vertical radius (along</span>
+<span class="sd">    the y-axis).</span>
+
+<span class="sd">    When symbolic value for hradius and vradius are used, any calculation that</span>
+<span class="sd">    refers to the foci or the major or minor axis will assume that the ellipse</span>
+<span class="sd">    has its major radius on the x-axis. If this is not true then a manual</span>
+<span class="sd">    rotation is necessary.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Ellipse, Point, Rational</span>
+<span class="sd">    &gt;&gt;&gt; e1 = Ellipse(Point(0, 0), 5, 1)</span>
+<span class="sd">    &gt;&gt;&gt; e1.hradius, e1.vradius</span>
+<span class="sd">    (5, 1)</span>
+<span class="sd">    &gt;&gt;&gt; e2 = Ellipse(Point(3, 1), hradius=3, eccentricity=Rational(4, 5))</span>
+<span class="sd">    &gt;&gt;&gt; e2</span>
+<span class="sd">    Ellipse(Point(3, 1), 3, 9/5)</span>
+
+<span class="sd">    Plotting:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.plotting.pygletplot import PygletPlot as Plot</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Circle, Segment</span>
+<span class="sd">    &gt;&gt;&gt; c1 = Circle(Point(0,0), 1)</span>
+<span class="sd">    &gt;&gt;&gt; Plot(c1)                                # doctest: +SKIP</span>
+<span class="sd">    [0]: cos(t), sin(t), &#39;mode=parametric&#39;</span>
+<span class="sd">    &gt;&gt;&gt; p = Plot()                              # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; p[0] = c1                               # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; radius = Segment(c1.center, c1.random_point())</span>
+<span class="sd">    &gt;&gt;&gt; p[1] = radius                           # doctest: +SKIP</span>
+<span class="sd">    &gt;&gt;&gt; p                                       # doctest: +SKIP</span>
+<span class="sd">    [0]: cos(t), sin(t), &#39;mode=parametric&#39;</span>
+<span class="sd">    [1]: t*cos(1.546086215036205357975518382),</span>
+<span class="sd">    t*sin(1.546086215036205357975518382), &#39;mode=parametric&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span>
+        <span class="n">cls</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hradius</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vradius</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">eccentricity</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">hradius</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">hradius</span><span class="p">)</span>
+        <span class="n">vradius</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">vradius</span><span class="p">)</span>
+
+        <span class="n">eccentricity</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">eccentricity</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="p">(</span><span class="n">hradius</span><span class="p">,</span> <span class="n">vradius</span><span class="p">,</span> <span class="n">eccentricity</span><span class="p">))))</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Exactly two arguments of &quot;hradius&quot;, &#39;</span>
+                <span class="s">&#39;&quot;vradius&quot;, and &quot;eccentricity&quot; must not be None.&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">eccentricity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hradius</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">hradius</span> <span class="o">=</span> <span class="n">vradius</span> <span class="o">/</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eccentricity</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">vradius</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">vradius</span> <span class="o">=</span> <span class="n">hradius</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">eccentricity</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hradius</span> <span class="o">==</span> <span class="n">vradius</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Circle</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">hradius</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">GeometryEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">hradius</span><span class="p">,</span> <span class="n">vradius</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.center"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.center">[docs]</a>    <span class="k">def</span> <span class="nf">center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The center of the ellipse.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        center : number</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.center</span>
+<span class="sd">        Point(0, 0)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.hradius"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.hradius">[docs]</a>    <span class="k">def</span> <span class="nf">hradius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The horizontal radius of the ellipse.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        hradius : number</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        vradius, major, minor</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.hradius</span>
+<span class="sd">        3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.vradius"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.vradius">[docs]</a>    <span class="k">def</span> <span class="nf">vradius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The vertical radius of the ellipse.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        vradius : number</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        hradius, major, minor</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.vradius</span>
+<span class="sd">        1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.minor"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.minor">[docs]</a>    <span class="k">def</span> <span class="nf">minor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shorter axis of the ellipse (if it can be determined) else vradius.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        minor : number or expression</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        hradius, vradius, major</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse, Symbol</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.minor</span>
+<span class="sd">        1</span>
+
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; b = Symbol(&#39;b&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse(p1, a, b).minor</span>
+<span class="sd">        b</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse(p1, b, a).minor</span>
+<span class="sd">        a</span>
+
+<span class="sd">        &gt;&gt;&gt; m = Symbol(&#39;m&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; M = m + 1</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse(p1, m, M).minor</span>
+<span class="sd">        m</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">rv</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Min</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.major"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.major">[docs]</a>    <span class="k">def</span> <span class="nf">major</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Longer axis of the ellipse (if it can be determined) else hradius.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        major : number or expression</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        hradius, vradius, minor</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse, Symbol</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.major</span>
+<span class="sd">        3</span>
+
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; b = Symbol(&#39;b&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse(p1, a, b).major</span>
+<span class="sd">        a</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse(p1, b, a).major</span>
+<span class="sd">        b</span>
+
+<span class="sd">        &gt;&gt;&gt; m = Symbol(&#39;m&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; M = m + 1</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse(p1, m, M).major</span>
+<span class="sd">        m + 1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">Max</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">rv</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">Max</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.area"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.area">[docs]</a>    <span class="k">def</span> <span class="nf">area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The area of the ellipse.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        area : number</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.area</span>
+<span class="sd">        3*pi</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">simplify</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.circumference"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.circumference">[docs]</a>    <span class="k">def</span> <span class="nf">circumference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The circumference of the ellipse.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.circumference</span>
+<span class="sd">        12*Integral(sqrt((-8*_x**2/9 + 1)/(-_x**2 + 1)), (_x, 0, 1))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentricity</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">hradius</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">4</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span>
+                <span class="n">sqrt</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eccentricity</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.eccentricity"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.eccentricity">[docs]</a>    <span class="k">def</span> <span class="nf">eccentricity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The eccentricity of the ellipse.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        eccentricity : number</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse, sqrt</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, sqrt(2))</span>
+<span class="sd">        &gt;&gt;&gt; e1.eccentricity</span>
+<span class="sd">        sqrt(7)/3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">focus_distance</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">major</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.periapsis"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.periapsis">[docs]</a>    <span class="k">def</span> <span class="nf">periapsis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The periapsis of the ellipse.</span>
+
+<span class="sd">        The shortest distance between the focus and the contour.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        periapsis : number</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        apoapsis : Returns greatest distance between focus and contour</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.periapsis</span>
+<span class="sd">        -2*sqrt(2) + 3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">major</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentricity</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.apoapsis"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.apoapsis">[docs]</a>    <span class="k">def</span> <span class="nf">apoapsis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The apoapsis of the ellipse.</span>
+
+<span class="sd">        The greatest distance between the focus and the contour.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        apoapsis : number</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        periapsis : Returns shortest distance between foci and contour</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.apoapsis</span>
+<span class="sd">        2*sqrt(2) + 3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">major</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eccentricity</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.focus_distance"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.focus_distance">[docs]</a>    <span class="k">def</span> <span class="nf">focus_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The focale distance of the ellipse.</span>
+
+<span class="sd">        The distance between the center and one focus.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        focus_distance : number</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        foci</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.focus_distance</span>
+<span class="sd">        2*sqrt(2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">foci</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ellipse.foci"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.foci">[docs]</a>    <span class="k">def</span> <span class="nf">foci</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The foci of the ellipse.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The foci can only be calculated if the major/minor axes are known.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        ValueError</span>
+<span class="sd">            When the major and minor axis cannot be determined.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+<span class="sd">        focus_distance : Returns the distance between focus and center</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; p1 = Point(0, 0)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p1, 3, 1)</span>
+<span class="sd">        &gt;&gt;&gt; e1.foci</span>
+<span class="sd">        (Point(-2*sqrt(2), 0), Point(2*sqrt(2), 0))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+        <span class="n">hr</span><span class="p">,</span> <span class="n">vr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span>
+        <span class="k">if</span> <span class="n">hr</span> <span class="o">==</span> <span class="n">vr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+        <span class="c"># calculate focus distance manually, since focus_distance calls this routine</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hr</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">minor</span><span class="p">:</span>
+            <span class="c"># foci on the y-axis</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">fd</span><span class="p">),</span> <span class="n">c</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">fd</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">hr</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="p">:</span>
+            <span class="c"># foci on the x-axis</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="o">-</span><span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">c</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Ellipse.rotate"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotate ``angle`` radians counterclockwise about Point ``pt``.</span>
+
+<span class="sd">        Note: since the general ellipse is not supported, the axes of</span>
+<span class="sd">        the ellipse will not be rotated. Only the center is rotated to</span>
+<span class="sd">        a new position.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Ellipse, pi</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse((1, 0), 2, 1).rotate(pi/2)</span>
+<span class="sd">        Ellipse(Point(0, 1), 2, 1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Ellipse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ellipse.scale"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.scale">[docs]</a>    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override GeometryEntity.scale since it is the major and minor</span>
+<span class="sd">        axes which must be scaled and they are not GeometryEntities.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse((0, 0), 2, 1).scale(2, 4)</span>
+<span class="sd">        Circle(Point(0, 0), 4)</span>
+<span class="sd">        &gt;&gt;&gt; Ellipse((0, 0), 2, 1).scale(2)</span>
+<span class="sd">        Ellipse(Point(0, 0), 4, 1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+        <span class="k">if</span> <span class="n">pt</span><span class="p">:</span>
+            <span class="n">pt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">pt</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">hradius</span><span class="o">=</span><span class="n">h</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">vradius</span><span class="o">=</span><span class="n">v</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ellipse.reflect"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.reflect">[docs]</a>    <span class="k">def</span> <span class="nf">reflect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override GeometryEntity.reflect since the radius</span>
+<span class="sd">        is not a GeometryEntity.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Circle, Line</span>
+<span class="sd">        &gt;&gt;&gt; Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))</span>
+<span class="sd">        Circle(Point(1, 0), -1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">slope</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">reflect</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">hradius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;reflection line not horizontal | vertical.&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ellipse.encloses_point"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.encloses_point">[docs]</a>    <span class="k">def</span> <span class="nf">encloses_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if p is enclosed by (is inside of) self.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Being on the border of self is considered False.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        encloses_point : True, False or None</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Ellipse, S</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import t</span>
+<span class="sd">        &gt;&gt;&gt; e = Ellipse((0, 0), 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; e.encloses_point((0, 0))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; e.encloses_point(e.arbitrary_point(t).subs(t, S.Half))</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; e.encloses_point((4, 0))</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">foci</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># if the combined distance from the foci to p (h1 + h2) is less</span>
+            <span class="c"># than the combined distance from the foci to the minor axis</span>
+            <span class="c"># (which is the same as the major axis length) then p is inside</span>
+            <span class="c"># the ellipse</span>
+            <span class="n">h1</span><span class="p">,</span> <span class="n">h2</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">foci</span><span class="p">]</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">major</span> <span class="o">-</span> <span class="p">(</span><span class="n">h1</span> <span class="o">+</span> <span class="n">h2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fuzzy_bool</span><span class="p">(</span><span class="n">test</span><span class="o">.</span><span class="n">is_positive</span><span class="p">)</span>
+</div>
+    <span class="nd">@doctest_depends_on</span><span class="p">(</span><span class="n">modules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;pyglet&#39;</span><span class="p">,))</span>
+<div class="viewcode-block" id="Ellipse.tangent_lines"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.tangent_lines">[docs]</a>    <span class="k">def</span> <span class="nf">tangent_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tangent lines between `p` and the ellipse.</span>
+
+<span class="sd">        If `p` is on the ellipse, returns the tangent line through point `p`.</span>
+<span class="sd">        Otherwise, returns the tangent line(s) from `p` to the ellipse, or</span>
+<span class="sd">        None if no tangent line is possible (e.g., `p` inside ellipse).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        tangent_lines : list with 1 or 2 Lines</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            Can only find tangent lines for a point, `p`, on the ellipse.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point, sympy.geometry.line.Line</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(Point(0, 0), 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; e1.tangent_lines(Point(3, 0))</span>
+<span class="sd">        [Line(Point(3, 0), Point(3, -12))]</span>
+
+<span class="sd">        &gt;&gt;&gt; # This will plot an ellipse together with a tangent line.</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.plotting.pygletplot import PygletPlot as Plot</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; e = Ellipse(Point(0,0), 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; t = e.tangent_lines(e.random_point())</span>
+<span class="sd">        &gt;&gt;&gt; p = Plot()</span>
+<span class="sd">        &gt;&gt;&gt; p[0] = e # doctest: +SKIP</span>
+<span class="sd">        &gt;&gt;&gt; p[1] = t # doctest: +SKIP</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">encloses_point</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">-</span> <span class="n">p</span>
+            <span class="n">rise</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vradius</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">delta</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">run</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hradius</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">delta</span><span class="o">.</span><span class="n">y</span>
+            <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">run</span><span class="p">),</span>
+                       <span class="n">simplify</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">rise</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p2</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">foci</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">f1</span><span class="p">,</span> <span class="n">f2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">foci</span>
+                <span class="n">maj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span>
+                <span class="n">test</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">maj</span> <span class="o">-</span>
+                        <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">f1</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="o">-</span>
+                        <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">f2</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">test</span><span class="o">.</span><span class="n">is_number</span> <span class="ow">and</span> <span class="n">test</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="c"># else p is outside the ellipse or we can&#39;t tell. In case of the</span>
+            <span class="c"># latter, the solutions returned will only be valid if</span>
+            <span class="c"># the point is not inside the ellipse; if it is, nan will result.</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">),</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+            <span class="n">eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">equation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">dydx</span> <span class="o">=</span> <span class="n">idiff</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">slope</span> <span class="o">=</span> <span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">slope</span>
+            <span class="n">tangent_points</span> <span class="o">=</span> <span class="n">solve</span><span class="p">([</span><span class="n">slope</span> <span class="o">-</span> <span class="n">dydx</span><span class="p">,</span> <span class="n">eq</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+
+            <span class="c"># handle horizontal and vertical tangent lines</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tangent_points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">tangent_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span>
+                    <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="ow">or</span> <span class="n">tangent_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))]</span>
+
+            <span class="c"># others</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">tangent_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">tangent_points</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
+</div>
+<div class="viewcode-block" id="Ellipse.is_tangent"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.is_tangent">[docs]</a>    <span class="k">def</span> <span class="nf">is_tangent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is `o` tangent to the ellipse?</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        o : GeometryEntity</span>
+<span class="sd">            An Ellipse, LinearEntity or Polygon</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            When the wrong type of argument is supplied.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        is_tangent: boolean</span>
+<span class="sd">            True if o is tangent to the ellipse, False otherwise.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        tangent_lines</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse, Line</span>
+<span class="sd">        &gt;&gt;&gt; p0, p1, p2 = Point(0, 0), Point(3, 0), Point(3, 3)</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(p0, 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; e1.is_tangent(l1)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inter</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ellipse</span><span class="p">):</span>
+            <span class="n">inter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inter</span><span class="p">,</span> <span class="n">Ellipse</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">inter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inter</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Point</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inter</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">LinearEntity</span><span class="p">):</span>
+            <span class="n">inter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_line_intersection</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">inter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">inter</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">inter</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">o</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">o</span><span class="o">.</span><span class="n">sides</span><span class="p">:</span>
+                <span class="n">inter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_line_intersection</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+                <span class="n">c</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">([</span><span class="bp">True</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">inter</span> <span class="k">if</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">seg</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Unknown argument type&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ellipse.arbitrary_point"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.arbitrary_point">[docs]</a>    <span class="k">def</span> <span class="nf">arbitrary_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A parameterized point on the ellipse.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str, optional</span>
+<span class="sd">            Default value is &#39;t&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        arbitrary_point : Point</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        ValueError</span>
+<span class="sd">            When `parameter` already appears in the functions.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(Point(0, 0), 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; e1.arbitrary_point()</span>
+<span class="sd">        Point(3*cos(t), 2*sin(t))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Symbol </span><span class="si">%s</span><span class="s"> already appears in object and cannot be used as a parameter.&#39;</span> <span class="o">%</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Ellipse.plot_interval"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.plot_interval">[docs]</a>    <span class="k">def</span> <span class="nf">plot_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The plot interval for the default geometric plot of the Ellipse.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str, optional</span>
+<span class="sd">            Default value is &#39;t&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        plot_interval : list</span>
+<span class="sd">            [parameter, lower_bound, upper_bound]</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(Point(0, 0), 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; e1.plot_interval()</span>
+<span class="sd">        [t, -pi, pi]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Ellipse.random_point"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.random_point">[docs]</a>    <span class="k">def</span> <span class="nf">random_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A random point on the ellipse.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        point : Point</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+<span class="sd">        arbitrary_point : Returns parameterized point on ellipse</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+
+<span class="sd">        A random point may not appear to be on the ellipse, ie, `p in e` may</span>
+<span class="sd">        return False. This is because the coordinates of the point will be</span>
+<span class="sd">        floating point values, and when these values are substituted into the</span>
+<span class="sd">        equation for the ellipse the result may not be zero because of floating</span>
+<span class="sd">        point rounding error.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse, Segment</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(Point(0, 0), 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; e1.random_point() # gives some random point</span>
+<span class="sd">        Point(...)</span>
+<span class="sd">        &gt;&gt;&gt; p1 = e1.random_point(seed=0); p1.n(2)</span>
+<span class="sd">        Point(2.1, 1.4)</span>
+
+<span class="sd">        The random_point method assures that the point will test as being</span>
+<span class="sd">        in the ellipse:</span>
+
+<span class="sd">        &gt;&gt;&gt; p1 in e1</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        An arbitrary_point with a random value of t substituted into it may</span>
+<span class="sd">        not test as being on the ellipse because the expression tested that</span>
+<span class="sd">        a point is on the ellipse doesn&#39;t simplify to zero and doesn&#39;t evaluate</span>
+<span class="sd">        exactly to zero:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import t</span>
+<span class="sd">        &gt;&gt;&gt; e1.arbitrary_point(t)</span>
+<span class="sd">        Point(3*cos(t), 2*sin(t))</span>
+<span class="sd">        &gt;&gt;&gt; p2 = _.subs(t, 0.1)</span>
+<span class="sd">        &gt;&gt;&gt; p2 in e1</span>
+<span class="sd">        False</span>
+
+<span class="sd">        Note that arbitrary_point routine does not take this approach. A value for</span>
+<span class="sd">        cos(t) and sin(t) (not t) is substituted into the arbitrary point. There is</span>
+<span class="sd">        a small chance that this will give a point that will not test as being</span>
+<span class="sd">        in the ellipse, so the process is repeated (up to 10 times) until a</span>
+<span class="sd">        valid point is obtained.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">Rational</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arbitrary_point</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+        <span class="c"># get a random value in [-1, 1) corresponding to cos(t)</span>
+        <span class="c"># and confirm that it will test as being in the ellipse</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">random</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>  <span class="c"># should be enough?</span>
+            <span class="c"># simplify this now or else the Float will turn s into a Float</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">Rational</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">())</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">c</span><span class="p">),</span> <span class="n">y</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">s</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">p1</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p1</span>
+        <span class="k">raise</span> <span class="n">GeometryError</span><span class="p">(</span>
+            <span class="s">&#39;Having problems generating a point in the ellipse.&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ellipse.equation"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.equation">[docs]</a>    <span class="k">def</span> <span class="nf">equation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">&#39;y&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The equation of the ellipse.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        x : str, optional</span>
+<span class="sd">            Label for the x-axis. Default value is &#39;x&#39;.</span>
+<span class="sd">        y : str, optional</span>
+<span class="sd">            Label for the y-axis. Default value is &#39;y&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        equation : sympy expression</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        arbitrary_point : Returns parameterized point on ellipse</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ellipse</span>
+<span class="sd">        &gt;&gt;&gt; e1 = Ellipse(Point(1, 0), 3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; e1.equation()</span>
+<span class="sd">        y**2/4 + (x/3 - 1/3)**2 - 1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="p">((</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">t1</span> <span class="o">+</span> <span class="n">t2</span> <span class="o">-</span> <span class="mi">1</span>
+</div>
+    <span class="k">def</span> <span class="nf">_do_line_intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find the intersection of a LinearEntity and the ellipse.</span>
+
+<span class="sd">        All LinearEntities are treated as a line and filtered at</span>
+<span class="sd">        the end to see that they lie in o.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">hr_sq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">vr_sq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="n">lp</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">points</span>
+
+        <span class="n">ldir</span> <span class="o">=</span> <span class="n">lp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+        <span class="n">mdir</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">ldir</span><span class="o">.</span><span class="n">x</span><span class="o">/</span><span class="n">hr_sq</span><span class="p">,</span> <span class="n">ldir</span><span class="o">.</span><span class="n">y</span><span class="o">/</span><span class="n">vr_sq</span><span class="p">)</span>
+        <span class="n">mdiff</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">diff</span><span class="o">.</span><span class="n">x</span><span class="o">/</span><span class="n">hr_sq</span><span class="p">,</span> <span class="n">diff</span><span class="o">.</span><span class="n">y</span><span class="o">/</span><span class="n">vr_sq</span><span class="p">)</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ldir</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mdir</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">ldir</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mdiff</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">diff</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mdiff</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">det</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">det</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="o">-</span><span class="n">b</span> <span class="o">/</span> <span class="n">a</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">is_good</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">is_good</span> <span class="o">=</span> <span class="p">(</span><span class="n">det</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>  <span class="c"># symbolic, allow</span>
+                <span class="n">is_good</span> <span class="o">=</span> <span class="bp">True</span>
+
+            <span class="k">if</span> <span class="n">is_good</span><span class="p">:</span>
+                <span class="n">root</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">det</span><span class="p">)</span>
+                <span class="n">t_a</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">b</span> <span class="o">-</span> <span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="n">a</span>
+                <span class="n">t_b</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">b</span> <span class="o">+</span> <span class="n">root</span><span class="p">)</span> <span class="o">/</span> <span class="n">a</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">t_a</span> <span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">lp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">lp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">t_b</span> <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span> <span class="k">if</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">o</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_do_circle_intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The intersection of an Ellipse and a Circle.</span>
+
+<span class="sd">        Private helper method for `intersection`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">equation</span><span class="p">()</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Symbol</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">center</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">major</span><span class="p">,</span> <span class="n">o</span><span class="o">.</span><span class="n">minor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">simplify</span><span class="p">((</span><span class="n">r</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">b</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">simplify</span><span class="p">((</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">)))</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">y</span><span class="p">),</span> <span class="n">Point</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span>
+                             <span class="n">Point</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">y</span><span class="p">)]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">variables</span>
+            <span class="n">xx</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">equation</span><span class="p">(),</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">intersect</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">xx</span><span class="p">:</span>
+                <span class="n">yy</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">equation</span><span class="p">()</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xi</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="n">yy</span><span class="p">:</span>
+                    <span class="n">intersect</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">intersect</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_do_ellipse_intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The intersection of two ellipses.</span>
+
+<span class="sd">        Private helper method for `intersection`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">equation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">oeq</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">equation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">solve</span><span class="p">([</span><span class="n">seq</span><span class="p">,</span> <span class="n">oeq</span><span class="p">],</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="o">*</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span> <span class="k">if</span> <span class="n">im</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">is_zero</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">im</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">is_zero</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Ellipse.intersection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Ellipse.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The intersection of this ellipse and another geometrical entity</span>
+<span class="sd">        `o`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        o : GeometryEntity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        intersection : list of GeometryEntity objects</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        Currently supports intersections with Point, Line, Segment, Ray,</span>
+<span class="sd">        Circle and Ellipse types.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.entity.GeometryEntity</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Ellipse, Point, Line, sqrt</span>
+<span class="sd">        &gt;&gt;&gt; e = Ellipse(Point(0, 0), 5, 7)</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Point(0, 0))</span>
+<span class="sd">        []</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Point(5, 0))</span>
+<span class="sd">        [Point(5, 0)]</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Line(Point(0,0), Point(0, 1)))</span>
+<span class="sd">        [Point(0, -7), Point(0, 7)]</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Line(Point(5,0), Point(5, 1)))</span>
+<span class="sd">        [Point(5, 0)]</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Line(Point(6,0), Point(6, 1)))</span>
+<span class="sd">        []</span>
+<span class="sd">        &gt;&gt;&gt; e = Ellipse(Point(-1, 0), 4, 3)</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Ellipse(Point(1, 0), 4, 3))</span>
+<span class="sd">        [Point(0, -3*sqrt(15)/4), Point(0, 3*sqrt(15)/4)]</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Ellipse(Point(5, 0), 4, 3))</span>
+<span class="sd">        [Point(2, -3*sqrt(7)/4), Point(2, 3*sqrt(7)/4)]</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Ellipse(Point(100500, 0), 4, 3))</span>
+<span class="sd">        []</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Ellipse(Point(0, 0), 3, 4))</span>
+<span class="sd">        [Point(-363/175, -48*sqrt(111)/175), Point(-363/175, 48*sqrt(111)/175),</span>
+<span class="sd">        Point(3, 0)]</span>
+<span class="sd">        &gt;&gt;&gt; e.intersection(Ellipse(Point(-1, 0), 3, 4))</span>
+<span class="sd">        [Point(-17/5, -12/5), Point(-17/5, 12/5), Point(7/5, -12/5),</span>
+<span class="sd">        Point(7/5, 12/5)]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">LinearEntity</span><span class="p">):</span>
+            <span class="c"># LinearEntity may be a ray/segment, so check the points</span>
+            <span class="c"># of intersection for coincidence first</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_line_intersection</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Circle</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_circle_intersection</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ellipse</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">o</span> <span class="o">==</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_ellipse_intersection</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is the other GeometryEntity the same as this ellipse?&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">GeometryEntity</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">center</span> <span class="ow">and</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">hradius</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">hradius</span> <span class="ow">and</span>
+                                                  <span class="bp">self</span><span class="o">.</span><span class="n">vradius</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">vradius</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Ellipse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+            <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">equation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">x</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">y</span><span class="p">})</span>
+            <span class="k">return</span> <span class="n">trigsimp</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">res</span><span class="p">))</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ellipse</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">o</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="Circle"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle">[docs]</a><span class="k">class</span> <span class="nc">Circle</span><span class="p">(</span><span class="n">Ellipse</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A circle in space.</span>
+
+<span class="sd">    Constructed simply from a center and a radius, or from three</span>
+<span class="sd">    non-collinear points.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    center : Point</span>
+<span class="sd">    radius : number or sympy expression</span>
+<span class="sd">    points : sequence of three Points</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    radius (synonymous with hradius, vradius, major and minor)</span>
+<span class="sd">    circumference</span>
+<span class="sd">    equation</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ======</span>
+
+<span class="sd">    GeometryError</span>
+<span class="sd">        When trying to construct circle from three collinear points.</span>
+<span class="sd">        When trying to construct circle from incorrect parameters.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Ellipse, sympy.geometry.point.Point</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Point, Circle</span>
+<span class="sd">    &gt;&gt;&gt; # a circle constructed from a center and radius</span>
+<span class="sd">    &gt;&gt;&gt; c1 = Circle(Point(0, 0), 5)</span>
+<span class="sd">    &gt;&gt;&gt; c1.hradius, c1.vradius, c1.radius</span>
+<span class="sd">    (5, 5, 5)</span>
+
+<span class="sd">    &gt;&gt;&gt; # a circle costructed from three points</span>
+<span class="sd">    &gt;&gt;&gt; c2 = Circle(Point(0, 0), Point(1, 1), Point(1, 0))</span>
+<span class="sd">    &gt;&gt;&gt; c2.hradius, c2.vradius, c2.radius, c2.center</span>
+<span class="sd">    (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point(1/2, 1/2))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">Point</span><span class="o">.</span><span class="n">is_collinear</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GeometryError</span><span class="p">(</span>
+                    <span class="s">&quot;Cannot construct a circle from three collinear points&quot;</span><span class="p">)</span>
+            <span class="kn">from</span> <span class="nn">.polygon</span> <span class="kn">import</span> <span class="n">Triangle</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">Triangle</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">circumcenter</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">circumradius</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># Assume (center, radius) pair</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">c</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">r</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">GeometryEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="n">GeometryError</span><span class="p">(</span><span class="s">&quot;Circle.__new__ received unknown arguments&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Circle.radius"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle.radius">[docs]</a>    <span class="k">def</span> <span class="nf">radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The radius of the circle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        radius : number or sympy expression</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        Ellipse.major, Ellipse.minor, Ellipse.hradius, Ellipse.vradius</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Circle</span>
+<span class="sd">        &gt;&gt;&gt; c1 = Circle(Point(3, 4), 6)</span>
+<span class="sd">        &gt;&gt;&gt; c1.radius</span>
+<span class="sd">        6</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Circle.vradius"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle.vradius">[docs]</a>    <span class="k">def</span> <span class="nf">vradius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This Ellipse property is an alias for the Circle&#39;s radius.</span>
+
+<span class="sd">        Whereas hradius, major and minor can use Ellipse&#39;s conventions,</span>
+<span class="sd">        the vradius does not exist for a circle. It is always a positive</span>
+<span class="sd">        value in order that the Circle, like Polygons, will have an</span>
+<span class="sd">        area that can be positive or negative as determined by the sign</span>
+<span class="sd">        of the hradius.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Circle</span>
+<span class="sd">        &gt;&gt;&gt; c1 = Circle(Point(3, 4), 6)</span>
+<span class="sd">        &gt;&gt;&gt; c1.vradius</span>
+<span class="sd">        6</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Circle.circumference"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle.circumference">[docs]</a>    <span class="k">def</span> <span class="nf">circumference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The circumference of the circle.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        circumference : number or SymPy expression</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Circle</span>
+<span class="sd">        &gt;&gt;&gt; c1 = Circle(Point(3, 4), 6)</span>
+<span class="sd">        &gt;&gt;&gt; c1.circumference</span>
+<span class="sd">        12*pi</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">S</span><span class="o">.</span><span class="n">Pi</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+</div>
+<div class="viewcode-block" id="Circle.equation"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle.equation">[docs]</a>    <span class="k">def</span> <span class="nf">equation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">&#39;y&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The equation of the circle.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        x : str or Symbol, optional</span>
+<span class="sd">            Default value is &#39;x&#39;.</span>
+<span class="sd">        y : str or Symbol, optional</span>
+<span class="sd">            Default value is &#39;y&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        equation : SymPy expression</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Circle</span>
+<span class="sd">        &gt;&gt;&gt; c1 = Circle(Point(0, 0), 5)</span>
+<span class="sd">        &gt;&gt;&gt; c1.equation()</span>
+<span class="sd">        x**2 + y**2 - 25</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">t1</span> <span class="o">+</span> <span class="n">t2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">major</span><span class="o">**</span><span class="mi">2</span>
+</div>
+<div class="viewcode-block" id="Circle.intersection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The intersection of this circle with another geometrical entity.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        o : GeometryEntity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        intersection : list of GeometryEntities</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Circle, Line, Ray</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(5, 5), Point(6, 0)</span>
+<span class="sd">        &gt;&gt;&gt; p4 = Point(5, 0)</span>
+<span class="sd">        &gt;&gt;&gt; c1 = Circle(p1, 5)</span>
+<span class="sd">        &gt;&gt;&gt; c1.intersection(p2)</span>
+<span class="sd">        []</span>
+<span class="sd">        &gt;&gt;&gt; c1.intersection(p4)</span>
+<span class="sd">        [Point(5, 0)]</span>
+<span class="sd">        &gt;&gt;&gt; c1.intersection(Ray(p1, p2))</span>
+<span class="sd">        [Point(5*sqrt(2)/2, 5*sqrt(2)/2)]</span>
+<span class="sd">        &gt;&gt;&gt; c1.intersection(Line(p2, p3))</span>
+<span class="sd">        []</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Circle</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">center</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">radius</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">o</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">center</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">dy</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dx</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">radius</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="o">&gt;</span> <span class="n">R</span> <span class="ow">or</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">-</span> <span class="n">o</span><span class="o">.</span><span class="n">radius</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">[]</span>
+
+            <span class="n">a</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">o</span><span class="o">.</span><span class="n">radius</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">d</span><span class="p">))</span>
+
+            <span class="n">x2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="n">dx</span> <span class="o">*</span> <span class="n">a</span><span class="o">/</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">y2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="p">(</span><span class="n">dy</span> <span class="o">*</span> <span class="n">a</span><span class="o">/</span><span class="n">d</span><span class="p">)</span>
+
+            <span class="n">h</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">rx</span> <span class="o">=</span> <span class="o">-</span><span class="n">dy</span> <span class="o">*</span> <span class="p">(</span><span class="n">h</span><span class="o">/</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">ry</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="p">(</span><span class="n">h</span><span class="o">/</span><span class="n">d</span><span class="p">)</span>
+
+            <span class="n">xi_1</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">x2</span> <span class="o">+</span> <span class="n">rx</span><span class="p">)</span>
+            <span class="n">xi_2</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">x2</span> <span class="o">-</span> <span class="n">rx</span><span class="p">)</span>
+            <span class="n">yi_1</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">y2</span> <span class="o">+</span> <span class="n">ry</span><span class="p">)</span>
+            <span class="n">yi_2</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">y2</span> <span class="o">-</span> <span class="n">ry</span><span class="p">)</span>
+
+            <span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="n">Point</span><span class="p">(</span><span class="n">xi_1</span><span class="p">,</span> <span class="n">yi_1</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">xi_1</span> <span class="o">!=</span> <span class="n">xi_2</span> <span class="ow">or</span> <span class="n">yi_1</span> <span class="o">!=</span> <span class="n">yi_2</span><span class="p">:</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Point</span><span class="p">(</span><span class="n">xi_2</span><span class="p">,</span> <span class="n">yi_2</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">ret</span>
+
+        <span class="k">return</span> <span class="n">Ellipse</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Circle.scale"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle.scale">[docs]</a>    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override GeometryEntity.scale since the radius</span>
+<span class="sd">        is not a GeometryEntity.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Circle</span>
+<span class="sd">        &gt;&gt;&gt; Circle((0, 0), 1).scale(2, 2)</span>
+<span class="sd">        Circle(Point(0, 0), 2)</span>
+<span class="sd">        &gt;&gt;&gt; Circle((0, 0), 1).scale(2, 4)</span>
+<span class="sd">        Ellipse(Point(0, 0), 2, 4)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+        <span class="k">if</span> <span class="n">pt</span><span class="p">:</span>
+            <span class="n">pt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">pt</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span>
+        <span class="k">return</span> <span class="n">Ellipse</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">hradius</span><span class="o">=</span><span class="n">h</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">vradius</span><span class="o">=</span><span class="n">v</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Circle.reflect"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.ellipse.Circle.reflect">[docs]</a>    <span class="k">def</span> <span class="nf">reflect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override GeometryEntity.reflect since the radius</span>
+<span class="sd">        is not a GeometryEntity.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Circle, Line</span>
+<span class="sd">        &gt;&gt;&gt; Circle((0, 1), 1).reflect(Line((0, 0), (1, 1)))</span>
+<span class="sd">        Circle(Point(1, 0), -1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">reflect</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">)</span>
+
+</div></div>
+<span class="kn">from</span> <span class="nn">.polygon</span> <span class="kn">import</span> <span class="n">Polygon</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

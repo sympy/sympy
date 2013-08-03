@@ -1,0 +1,593 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.partfrac &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.partfrac</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Algorithms for partial fraction decomposition of rational functions. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">RootSum</span><span class="p">,</span> <span class="n">cancel</span><span class="p">,</span> <span class="n">factor</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polytools</span> <span class="kn">import</span> <span class="n">parallel_poly_from_expr</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyoptions</span> <span class="kn">import</span> <span class="n">allowed_flags</span><span class="p">,</span> <span class="n">set_defaults</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">PolynomialError</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">Expr</span>
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">preorder_traversal</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">numbered_symbols</span><span class="p">,</span> <span class="n">take</span><span class="p">,</span> <span class="n">xthreaded</span><span class="p">,</span> <span class="n">public</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="nd">@xthreaded</span>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="apart"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.partfrac.apart">[docs]</a><span class="k">def</span> <span class="nf">apart</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute partial fraction decomposition of a rational function.</span>
+
+<span class="sd">    Given a rational function ``f`` compute partial fraction decomposition</span>
+<span class="sd">    of ``f``. Two algorithms are available: one is based on undetermined</span>
+<span class="sd">    coefficients method and the other is Bronstein&#39;s full partial fraction</span>
+<span class="sd">    decomposition algorithm.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.partfrac import apart</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">    By default, using the undetermined coefficients method:</span>
+
+<span class="sd">    &gt;&gt;&gt; apart(y/(x + 2)/(x + 1), x)</span>
+<span class="sd">    -y/(x + 2) + y/(x + 1)</span>
+
+<span class="sd">    You can choose Bronstein&#39;s algorithm by setting ``full=True``:</span>
+
+<span class="sd">    &gt;&gt;&gt; apart(y/(x**2 + x + 1), x)</span>
+<span class="sd">    y/(x**2 + x + 1)</span>
+<span class="sd">    &gt;&gt;&gt; apart(y/(x**2 + x + 1), x, full=True)</span>
+<span class="sd">    RootSum(_w**2 + _w + 1, Lambda(_a, (-2*_a*y/3 - y/3)/(-_a + x)))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    apart_list, assemble_partfrac_list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_flags</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+
+    <span class="n">_options</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">set_defaults</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">),</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">parallel_poly_from_expr</span><span class="p">((</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PolynomialError</span> <span class="k">as</span> <span class="n">msg</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PolynomialError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="c"># non-commutative</span>
+        <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">nc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">(</span><span class="n">split_1</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="n">nc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">apart</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">,</span> <span class="o">**</span><span class="n">_options</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">nc</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">apart</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">_from_args</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">,</span> <span class="o">**</span><span class="n">_options</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">c</span><span class="o">*</span><span class="n">nc</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">nc</span>
+        <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">nc</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+                    <span class="n">c</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">nc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">apart</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">,</span> <span class="o">**</span><span class="n">_options</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                        <span class="n">nc</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">apart</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">c</span><span class="p">),</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">,</span> <span class="o">**</span><span class="n">_options</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">nc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">pot</span> <span class="o">=</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="nb">next</span><span class="p">(</span><span class="n">pot</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pot</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">reps</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">e</span><span class="p">,</span> <span class="n">apart</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">,</span> <span class="o">**</span><span class="n">_options</span><span class="p">)))</span>
+                    <span class="n">pot</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>  <span class="c"># this was handled successfully</span>
+                <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                    <span class="k">pass</span>
+            <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">reps</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">is_multivariate</span><span class="p">:</span>
+        <span class="n">fc</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">cancel</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">fc</span> <span class="o">!=</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">apart</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">,</span> <span class="o">**</span><span class="n">_options</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&quot;multivariate partial fraction decomposition&quot;</span><span class="p">)</span>
+
+    <span class="n">common</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+
+    <span class="n">poly</span><span class="p">,</span> <span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">rat_clear_denoms</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">Q</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">partial</span> <span class="o">=</span> <span class="n">P</span><span class="o">/</span><span class="n">Q</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">full</span><span class="p">:</span>
+            <span class="n">partial</span> <span class="o">=</span> <span class="n">apart_undetermined_coeffs</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">partial</span> <span class="o">=</span> <span class="n">apart_full_decomposition</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">Add</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">partial</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">term</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">RootSum</span><span class="p">):</span>
+            <span class="n">terms</span> <span class="o">+=</span> <span class="n">term</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">terms</span> <span class="o">+=</span> <span class="n">factor</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">common</span><span class="o">*</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span> <span class="o">+</span> <span class="n">terms</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">apart_undetermined_coeffs</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Partial fractions via method of undetermined coefficients. &quot;&quot;&quot;</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">numbered_symbols</span><span class="p">(</span><span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+    <span class="n">partial</span><span class="p">,</span> <span class="n">symbols</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">factors</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">factor_list</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">:</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">degree</span><span class="p">(),</span> <span class="n">Q</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">coeffs</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">take</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">q</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">partial</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+            <span class="n">symbols</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">coeffs</span><span class="p">)</span>
+
+    <span class="n">dom</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">get_domain</span><span class="p">()</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="o">*</span><span class="n">symbols</span><span class="p">)</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">gen</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">dom</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">partial</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">gen</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">dom</span><span class="p">)</span>
+        <span class="n">partial</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">set_domain</span><span class="p">(</span><span class="n">dom</span><span class="p">)</span>
+        <span class="n">F</span> <span class="o">+=</span> <span class="n">h</span><span class="o">*</span><span class="n">q</span>
+
+    <span class="n">system</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,),</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">terms</span><span class="p">():</span>
+        <span class="n">system</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span> <span class="o">-</span> <span class="n">P</span><span class="o">.</span><span class="n">nth</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+
+    <span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+    <span class="n">solution</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">symbols</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">partial</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">h</span><span class="o">/</span><span class="n">f</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span><span class="o">**</span><span class="n">k</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">apart_full_decomposition</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bronstein&#39;s full partial fraction decomposition algorithm.</span>
+
+<span class="sd">    Given a univariate rational function ``f``, performing only GCD</span>
+<span class="sd">    operations over the algebraic closure of the initial ground domain</span>
+<span class="sd">    of definition, compute full partial fraction decomposition with</span>
+<span class="sd">    fractions having linear denominators.</span>
+
+<span class="sd">    Note that no factorization of the initial denominator of ``f`` is</span>
+<span class="sd">    performed. The final decomposition is formed in terms of a sum of</span>
+<span class="sd">    :class:`RootSum` instances.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    1. [Bronstein93]_</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">assemble_partfrac_list</span><span class="p">(</span><span class="n">apart_list</span><span class="p">(</span><span class="n">P</span><span class="o">/</span><span class="n">Q</span><span class="p">,</span> <span class="n">P</span><span class="o">.</span><span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="apart_list"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.partfrac.apart_list">[docs]</a><span class="k">def</span> <span class="nf">apart_list</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">dummies</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute partial fraction decomposition of a rational function</span>
+<span class="sd">    and return the result in structured form.</span>
+
+<span class="sd">    Given a rational function ``f`` compute the partial fraction decomposition</span>
+<span class="sd">    of ``f``. Only Bronstein&#39;s full partial fraction decomposition algorithm</span>
+<span class="sd">    is supported by this method. The return value is highly structured and</span>
+<span class="sd">    perfectly suited for further algorithmic treatment rather than being</span>
+<span class="sd">    human-readable. The function returns a tuple holding three elements:</span>
+
+<span class="sd">    * The first item is the common coefficient, free of the variable `x` used</span>
+<span class="sd">      for decomposition. (It is an element of the base field `K`.)</span>
+
+<span class="sd">    * The second item is the polynomial part of the decomposition. This can be</span>
+<span class="sd">      the zero polynomial. (It is an element of `K[x]`.)</span>
+
+<span class="sd">    * The third part itself is a list of quadruples. Each quadruple</span>
+<span class="sd">      has the following elements in this order:</span>
+
+<span class="sd">      - The (not necessarily irreducible) polynomial `D` whose roots `w_i` appear</span>
+<span class="sd">        in the linear denominator of a bunch of related fraction terms. (This item</span>
+<span class="sd">        can also be a list of explicit roots. However, at the moment ``apart_list``</span>
+<span class="sd">        never returns a result this way, but the related ``assemble_partfrac_list``</span>
+<span class="sd">        function accepts this format as input.)</span>
+
+<span class="sd">      - The numerator of the fraction, written as a function of the root `w`</span>
+
+<span class="sd">      - The linear denominator of the fraction *excluding its power exponent*,</span>
+<span class="sd">        written as a function of the root `w`.</span>
+
+<span class="sd">      - The power to which the denominator has to be raised.</span>
+
+<span class="sd">    On can always rebuild a plain expression by using the function ``assemble_partfrac_list``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    A first example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.partfrac import apart_list, assemble_partfrac_list</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, t</span>
+
+<span class="sd">    &gt;&gt;&gt; f = (2*x**3 - 2*x) / (x**2 - 2*x + 1)</span>
+<span class="sd">    &gt;&gt;&gt; pfd = apart_list(f)</span>
+<span class="sd">    &gt;&gt;&gt; pfd</span>
+<span class="sd">    (1,</span>
+<span class="sd">    Poly(2*x + 4, x, domain=&#39;ZZ&#39;),</span>
+<span class="sd">    [(Poly(_w - 1, _w, domain=&#39;ZZ&#39;), Lambda(_a, 4), Lambda(_a, -_a + x), 1)])</span>
+
+<span class="sd">    &gt;&gt;&gt; assemble_partfrac_list(pfd)</span>
+<span class="sd">    2*x + 4 + 4/(x - 1)</span>
+
+<span class="sd">    Second example:</span>
+
+<span class="sd">    &gt;&gt;&gt; f = (-2*x - 2*x**2) / (3*x**2 - 6*x)</span>
+<span class="sd">    &gt;&gt;&gt; pfd = apart_list(f)</span>
+<span class="sd">    &gt;&gt;&gt; pfd</span>
+<span class="sd">    (-1,</span>
+<span class="sd">    Poly(2/3, x, domain=&#39;QQ&#39;),</span>
+<span class="sd">    [(Poly(_w - 2, _w, domain=&#39;ZZ&#39;), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])</span>
+
+<span class="sd">    &gt;&gt;&gt; assemble_partfrac_list(pfd)</span>
+<span class="sd">    -2/3 - 2/(x - 2)</span>
+
+<span class="sd">    Another example, showing symbolic parameters:</span>
+
+<span class="sd">    &gt;&gt;&gt; pfd = apart_list(t/(x**2 + x + t), x)</span>
+<span class="sd">    &gt;&gt;&gt; pfd</span>
+<span class="sd">    (1,</span>
+<span class="sd">    Poly(0, x, domain=&#39;ZZ[t]&#39;),</span>
+<span class="sd">    [(Poly(_w**2 + _w + t, _w, domain=&#39;ZZ[t]&#39;),</span>
+<span class="sd">    Lambda(_a, -2*_a*t/(4*t - 1) - t/(4*t - 1)),</span>
+<span class="sd">    Lambda(_a, -_a + x),</span>
+<span class="sd">    1)])</span>
+
+<span class="sd">    &gt;&gt;&gt; assemble_partfrac_list(pfd)</span>
+<span class="sd">    RootSum(_w**2 + _w + t, Lambda(_a, (-2*_a*t/(4*t - 1) - t/(4*t - 1))/(-_a + x)))</span>
+
+<span class="sd">    This example is taken from Bronstein&#39;s original paper:</span>
+
+<span class="sd">    &gt;&gt;&gt; f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)</span>
+<span class="sd">    &gt;&gt;&gt; pfd = apart_list(f)</span>
+<span class="sd">    &gt;&gt;&gt; pfd</span>
+<span class="sd">    (1,</span>
+<span class="sd">    Poly(0, x, domain=&#39;ZZ&#39;),</span>
+<span class="sd">    [(Poly(_w - 2, _w, domain=&#39;ZZ&#39;), Lambda(_a, 4), Lambda(_a, -_a + x), 1),</span>
+<span class="sd">    (Poly(_w**2 - 1, _w, domain=&#39;ZZ&#39;), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),</span>
+<span class="sd">    (Poly(_w + 1, _w, domain=&#39;ZZ&#39;), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])</span>
+
+<span class="sd">    &gt;&gt;&gt; assemble_partfrac_list(pfd)</span>
+<span class="sd">    -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    apart, assemble_partfrac_list</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    1. [Bronstein93]_</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">allowed_flags</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="n">set_defaults</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">),</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">parallel_poly_from_expr</span><span class="p">((</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">P</span><span class="o">.</span><span class="n">is_multivariate</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s">&quot;multivariate partial fraction decomposition&quot;</span><span class="p">)</span>
+
+    <span class="n">common</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+
+    <span class="n">poly</span><span class="p">,</span> <span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">rat_clear_denoms</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+
+    <span class="n">polypart</span> <span class="o">=</span> <span class="n">poly</span>
+
+    <span class="k">if</span> <span class="n">dummies</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">dummies</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">d</span>
+
+        <span class="n">dummies</span> <span class="o">=</span> <span class="n">dummies</span><span class="p">(</span><span class="s">&quot;w&quot;</span><span class="p">)</span>
+
+    <span class="n">rationalpart</span> <span class="o">=</span> <span class="n">apart_list_full_decomposition</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">dummies</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">common</span><span class="p">,</span> <span class="n">polypart</span><span class="p">,</span> <span class="n">rationalpart</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">apart_list_full_decomposition</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">dummygen</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bronstein&#39;s full partial fraction decomposition algorithm.</span>
+
+<span class="sd">    Given a univariate rational function ``f``, performing only GCD</span>
+<span class="sd">    operations over the algebraic closure of the initial ground domain</span>
+<span class="sd">    of definition, compute full partial fraction decomposition with</span>
+<span class="sd">    fractions having linear denominators.</span>
+
+<span class="sd">    Note that no factorization of the initial denominator of ``f`` is</span>
+<span class="sd">    performed. The final decomposition is formed in terms of a sum of</span>
+<span class="sd">    :class:`RootSum` instances.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    1. [Bronstein93]_</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">P</span><span class="o">/</span><span class="n">Q</span><span class="p">,</span> <span class="n">P</span><span class="o">.</span><span class="n">gen</span><span class="p">,</span> <span class="p">[]</span>
+
+    <span class="n">u</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;u&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+
+    <span class="n">partial</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">Q</span><span class="o">.</span><span class="n">sqf_list_include</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span>
+        <span class="n">U</span> <span class="o">+=</span> <span class="p">[</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="n">h</span> <span class="o">=</span> <span class="n">cancel</span><span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="n">b</span><span class="o">**</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">u</span><span class="o">**</span><span class="n">n</span>
+
+        <span class="n">H</span><span class="p">,</span> <span class="n">subs</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="p">],</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">H</span> <span class="o">+=</span> <span class="p">[</span> <span class="n">H</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">j</span> <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">subs</span> <span class="o">+=</span> <span class="p">[</span> <span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">b</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">/</span> <span class="n">j</span><span class="p">)</span> <span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">P</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">cancel</span><span class="p">(</span><span class="n">H</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="o">*</span><span class="n">subs</span><span class="p">[</span><span class="n">j</span> <span class="o">-</span> <span class="n">i</span><span class="p">])</span>
+
+            <span class="n">Q</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="o">*</span><span class="n">subs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="n">P</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">Q</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+            <span class="n">G</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+
+            <span class="n">B</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">half_gcdex</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">P</span> <span class="o">*</span> <span class="n">B</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">g</span><span class="p">))</span><span class="o">.</span><span class="n">rem</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+            <span class="n">Dw</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">next</span><span class="p">(</span><span class="n">dummygen</span><span class="p">))</span>
+            <span class="n">numer</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span>
+            <span class="n">denom</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">a</span><span class="p">))</span>
+            <span class="n">exponent</span> <span class="o">=</span> <span class="n">n</span><span class="o">-</span><span class="n">j</span>
+
+            <span class="n">partial</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">Dw</span><span class="p">,</span> <span class="n">numer</span><span class="p">,</span> <span class="n">denom</span><span class="p">,</span> <span class="n">exponent</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">partial</span>
+
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="assemble_partfrac_list"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.partfrac.assemble_partfrac_list">[docs]</a><span class="k">def</span> <span class="nf">assemble_partfrac_list</span><span class="p">(</span><span class="n">partial_list</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;Reassemble a full partial fraction decomposition</span>
+<span class="sd">    from a structured result obtained by the function ``apart_list``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    This example is taken from Bronstein&#39;s original paper:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.partfrac import apart_list, assemble_partfrac_list</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">    &gt;&gt;&gt; f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)</span>
+<span class="sd">    &gt;&gt;&gt; pfd = apart_list(f)</span>
+<span class="sd">    &gt;&gt;&gt; pfd</span>
+<span class="sd">    (1,</span>
+<span class="sd">    Poly(0, x, domain=&#39;ZZ&#39;),</span>
+<span class="sd">    [(Poly(_w - 2, _w, domain=&#39;ZZ&#39;), Lambda(_a, 4), Lambda(_a, -_a + x), 1),</span>
+<span class="sd">    (Poly(_w**2 - 1, _w, domain=&#39;ZZ&#39;), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),</span>
+<span class="sd">    (Poly(_w + 1, _w, domain=&#39;ZZ&#39;), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])</span>
+
+<span class="sd">    &gt;&gt;&gt; assemble_partfrac_list(pfd)</span>
+<span class="sd">    -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)</span>
+
+<span class="sd">    If we happen to know some roots we can provide them easily inside the structure:</span>
+
+<span class="sd">    &gt;&gt;&gt; pfd = apart_list(2/(x**2-2))</span>
+<span class="sd">    &gt;&gt;&gt; pfd</span>
+<span class="sd">    (1,</span>
+<span class="sd">    Poly(0, x, domain=&#39;ZZ&#39;),</span>
+<span class="sd">    [(Poly(_w**2 - 2, _w, domain=&#39;ZZ&#39;),</span>
+<span class="sd">    Lambda(_a, _a/2),</span>
+<span class="sd">    Lambda(_a, -_a + x),</span>
+<span class="sd">    1)])</span>
+
+<span class="sd">    &gt;&gt;&gt; pfda = assemble_partfrac_list(pfd)</span>
+<span class="sd">    &gt;&gt;&gt; pfda</span>
+<span class="sd">    RootSum(_w**2 - 2, Lambda(_a, _a/(-_a + x)))/2</span>
+
+<span class="sd">    &gt;&gt;&gt; pfda.doit()</span>
+<span class="sd">    -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Dummy, Poly, Lambda, sqrt</span>
+<span class="sd">    &gt;&gt;&gt; a = Dummy(&quot;a&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; pfd = (1, Poly(0, x, domain=&#39;ZZ&#39;), [([sqrt(2),-sqrt(2)], Lambda(a, a/2), Lambda(a, -a + x), 1)])</span>
+
+<span class="sd">    &gt;&gt;&gt; assemble_partfrac_list(pfd)</span>
+<span class="sd">    -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    apart, apart_list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># Common factor</span>
+    <span class="n">common</span> <span class="o">=</span> <span class="n">partial_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c"># Polynomial part</span>
+    <span class="n">polypart</span> <span class="o">=</span> <span class="n">partial_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">pfd</span> <span class="o">=</span> <span class="n">polypart</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span>
+
+    <span class="c"># Rational parts</span>
+    <span class="k">for</span> <span class="n">r</span><span class="p">,</span> <span class="n">nf</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">partial_list</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">Poly</span><span class="p">):</span>
+            <span class="c"># Assemble in case the roots are given implicitly by a polynomials</span>
+            <span class="n">an</span><span class="p">,</span> <span class="n">nu</span> <span class="o">=</span> <span class="n">nf</span><span class="o">.</span><span class="n">variables</span><span class="p">,</span> <span class="n">nf</span><span class="o">.</span><span class="n">expr</span>
+            <span class="n">ad</span><span class="p">,</span> <span class="n">de</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">variables</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">expr</span>
+            <span class="c"># Hack to make dummies equal because Lambda created new Dummies</span>
+            <span class="n">de</span> <span class="o">=</span> <span class="n">de</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">ad</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">an</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">an</span><span class="p">,</span> <span class="n">nu</span><span class="o">/</span><span class="n">de</span><span class="o">**</span><span class="n">ex</span><span class="p">)</span>
+            <span class="n">pfd</span> <span class="o">+=</span> <span class="n">RootSum</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">auto</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">quadratic</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Assemble in case the roots are given explicitely by a list of algebraic numbers</span>
+            <span class="k">for</span> <span class="n">root</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+                <span class="n">pfd</span> <span class="o">+=</span> <span class="n">nf</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">/</span><span class="n">df</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">**</span><span class="n">ex</span>
+
+    <span class="k">return</span> <span class="n">common</span><span class="o">*</span><span class="n">pfd</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

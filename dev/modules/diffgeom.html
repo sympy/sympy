@@ -1,0 +1,579 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Differential Geometry Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Development Tips: Comparisons in Python" href="../python-comparisons.html" />
+    <link rel="prev" title="Category Theory Module" href="categories.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../python-comparisons.html" title="Development Tips: Comparisons in Python"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="categories.html" title="Category Theory Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.diffgeom">
+<span id="differential-geometry-module"></span><h1>Differential Geometry Module<a class="headerlink" href="#module-sympy.diffgeom" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="base-class-reference">
+<h2>Base Class Reference<a class="headerlink" href="#base-class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.diffgeom.Manifold">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">Manifold</tt><big>(</big><em>name</em>, <em>dim</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.Manifold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object representing a mathematical manifold.</p>
+<p>The only role that this object plays is to keep a list of all patches
+defined on the manifold. It does not provide any means to study the
+topological characteristics of the manifold that it represents.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.diffgeom.Patch">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">Patch</tt><big>(</big><em>name</em>, <em>manifold</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.Patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object representing a patch on a manifold.</p>
+<p>On a manifold one can have many patches that do not always include the
+whole manifold. On these patches coordinate charts can be defined that
+permit the parametrization of any point on the patch in terms of a tuple
+of real numbers (the coordinates).</p>
+<p>This object serves as a container/parent for all coordinate system charts
+that can be defined on the patch it represents.</p>
+<p class="rubric">Examples:</p>
+<p>Define a Manifold and a Patch on that Manifold:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">Manifold</span><span class="p">,</span> <span class="n">Patch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Manifold</span><span class="p">(</span><span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Patch</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">patches</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.diffgeom.CoordSystem">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">CoordSystem</tt><big>(</big><em>name</em>, <em>patch</em>, <em>names=None</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains all coordinate transformation logic.</p>
+<p class="rubric">Examples</p>
+<p>Define a Manifold and a Patch, and then define two coord systems on that
+patch:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">Manifold</span><span class="p">,</span> <span class="n">Patch</span><span class="p">,</span> <span class="n">CoordSystem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">,</span> <span class="n">theta</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;r, theta&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Manifold</span><span class="p">(</span><span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">patch</span> <span class="o">=</span> <span class="n">Patch</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span> <span class="o">=</span> <span class="n">CoordSystem</span><span class="p">(</span><span class="s">&#39;rect&#39;</span><span class="p">,</span> <span class="n">patch</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span> <span class="o">=</span> <span class="n">CoordSystem</span><span class="p">(</span><span class="s">&#39;polar&#39;</span><span class="p">,</span> <span class="n">patch</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span> <span class="ow">in</span> <span class="n">patch</span><span class="o">.</span><span class="n">coord_systems</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Connect the coordinate systems. An inverse transformation is automatically
+found by <tt class="docutils literal"><span class="pre">solve</span></tt> when possible:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span><span class="o">.</span><span class="n">connect_to</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">theta</span><span class="p">],</span> <span class="p">[</span><span class="n">r</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span> <span class="n">r</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span><span class="o">.</span><span class="n">coord_tuple_transform_to</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">Matrix([</span>
+<span class="go">[0],</span>
+<span class="go">[0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span><span class="o">.</span><span class="n">coord_tuple_transform_to</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">Matrix([</span>
+<span class="go">[0],</span>
+<span class="go">[2]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span><span class="o">.</span><span class="n">coord_tuple_transform_to</span><span class="p">(</span><span class="n">polar</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">Matrix([</span>
+<span class="go">[sqrt(2)],</span>
+<span class="go">[   pi/4]])</span>
+</pre></div>
+</div>
+<p>Calculate the jacobian of the polar to cartesian transformation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">theta</span><span class="p">])</span>
+<span class="go">Matrix([</span>
+<span class="go">[cos(theta), -r*sin(theta)],</span>
+<span class="go">[sin(theta),  r*cos(theta)]])</span>
+</pre></div>
+</div>
+<p>Define a point using coordinates in one of the coordinate systems:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">polar</span><span class="o">.</span><span class="n">point</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span><span class="o">.</span><span class="n">point_to_coords</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[-sqrt(2)/2],</span>
+<span class="go">[ sqrt(2)/2]])</span>
+</pre></div>
+</div>
+<p>Define a basis scalar field (i.e. a coordinate function), that takes a
+point and returns its coordinates. It is an instance of <tt class="docutils literal"><span class="pre">BaseScalarField</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span><span class="o">.</span><span class="n">coord_function</span><span class="p">(</span><span class="mi">0</span><span class="p">)(</span><span class="n">p</span><span class="p">)</span>
+<span class="go">-sqrt(2)/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span><span class="o">.</span><span class="n">coord_function</span><span class="p">(</span><span class="mi">1</span><span class="p">)(</span><span class="n">p</span><span class="p">)</span>
+<span class="go">sqrt(2)/2</span>
+</pre></div>
+</div>
+<p>Define a basis vector field (i.e. a unit vector field along the coordinate
+line). Vectors are also differential operators on scalar fields. It is an
+instance of <tt class="docutils literal"><span class="pre">BaseVectorField</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">v_x</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">base_vector</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">coord_function</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">v_x</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">v_x</span><span class="p">(</span><span class="n">v_x</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>Define a basis oneform field:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dx</span> <span class="o">=</span> <span class="n">rect</span><span class="o">.</span><span class="n">base_oneform</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dx</span><span class="p">(</span><span class="n">v_x</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>If you provide a list of names the fields will print nicely:
+- without provided names:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">v_x</span><span class="p">,</span> <span class="n">dx</span>
+<span class="go">(rect_0, e_rect_0, drect_0)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>with provided names</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span> <span class="o">=</span> <span class="n">CoordSystem</span><span class="p">(</span><span class="s">&#39;rect&#39;</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;y&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span><span class="o">.</span><span class="n">coord_function</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">rect</span><span class="o">.</span><span class="n">base_vector</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">rect</span><span class="o">.</span><span class="n">base_oneform</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">(x, e_x, dx)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.base_oneform">
+<tt class="descname">base_oneform</tt><big>(</big><em>coord_index</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.base_oneform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a basis 1-form field.</p>
+<p>The basis one-form field for this coordinate system. It is also an
+operator on vector fields.</p>
+<p>See the docstring of <tt class="docutils literal"><span class="pre">CoordSystem</span></tt> for examples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.base_oneforms">
+<tt class="descname">base_oneforms</tt><big>(</big><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.base_oneforms" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all base oneforms.</p>
+<p>For more details see the <tt class="docutils literal"><span class="pre">base_oneform</span></tt> method of this class.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.base_vector">
+<tt class="descname">base_vector</tt><big>(</big><em>coord_index</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.base_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a basis vector field.</p>
+<p>The basis vector field for this coordinate system. It is also an
+operator on scalar fields.</p>
+<p>See the docstring of <tt class="docutils literal"><span class="pre">CoordSystem</span></tt> for examples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.base_vectors">
+<tt class="descname">base_vectors</tt><big>(</big><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.base_vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all base vectors.</p>
+<p>For more details see the <tt class="docutils literal"><span class="pre">base_vector</span></tt> method of this class.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.connect_to">
+<tt class="descname">connect_to</tt><big>(</big><em>to_sys</em>, <em>from_coords</em>, <em>to_exprs</em>, <em>inverse=True</em>, <em>fill_in_gaps=False</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.connect_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register the transformation used to switch to another coordinate system.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>to_sys</strong> :</p>
+<blockquote>
+<div><p>another instance of <tt class="docutils literal"><span class="pre">CoordSystem</span></tt></p>
+</div></blockquote>
+<p><strong>from_coords</strong> :</p>
+<blockquote>
+<div><p>list of symbols in terms of which <tt class="docutils literal"><span class="pre">to_exprs</span></tt> is given</p>
+</div></blockquote>
+<p><strong>to_exprs</strong> :</p>
+<blockquote>
+<div><p>list of the expressions of the new coordinate tuple</p>
+</div></blockquote>
+<p><strong>inverse</strong> :</p>
+<blockquote>
+<div><p>try to deduce and register the inverse transformation</p>
+</div></blockquote>
+<p><strong>fill_in_gaps</strong> :</p>
+<blockquote class="last">
+<div><p>try to deduce other transformation that are made
+possible by composing the present transformation with other already
+registered transformation</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.coord_function">
+<tt class="descname">coord_function</tt><big>(</big><em>coord_index</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.coord_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <tt class="docutils literal"><span class="pre">BaseScalarField</span></tt> that takes a point and returns one of the coords.</p>
+<p>Takes a point and returns its coordinate in this coordinate system.</p>
+<p>See the docstring of <tt class="docutils literal"><span class="pre">CoordSystem</span></tt> for examples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.coord_functions">
+<tt class="descname">coord_functions</tt><big>(</big><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.coord_functions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all coordinate functions.</p>
+<p>For more details see the <tt class="docutils literal"><span class="pre">coord_function</span></tt> method of this class.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.coord_tuple_transform_to">
+<tt class="descname">coord_tuple_transform_to</tt><big>(</big><em>to_sys</em>, <em>coords</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.coord_tuple_transform_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform <tt class="docutils literal"><span class="pre">coords</span></tt> to coord system <tt class="docutils literal"><span class="pre">to_sys</span></tt>.</p>
+<p>See the docstring of <tt class="docutils literal"><span class="pre">CoordSystem</span></tt> for examples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.jacobian">
+<tt class="descname">jacobian</tt><big>(</big><em>to_sys</em>, <em>coords</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.jacobian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the jacobian matrix of a transformation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.point">
+<tt class="descname">point</tt><big>(</big><em>coords</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a <tt class="docutils literal"><span class="pre">Point</span></tt> with coordinates given in this coord system.</p>
+<p>See the docstring of <tt class="docutils literal"><span class="pre">CoordSystem</span></tt> for examples.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.diffgeom.CoordSystem.point_to_coords">
+<tt class="descname">point_to_coords</tt><big>(</big><em>point</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CoordSystem.point_to_coords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the coordinates of a point in this coord system.</p>
+<p>See the docstring of <tt class="docutils literal"><span class="pre">CoordSystem</span></tt> for examples.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.diffgeom.BaseScalarField">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">BaseScalarField</tt><big>(</big><em>coord_sys</em>, <em>index</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.BaseScalarField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base Scalar Field over a Manifold for a given Coordinate System.</p>
+<p>A scalar field takes a point as an argument and returns a scalar.</p>
+<p>A base scalar field of a coordinate system takes a point and returns one of
+the coordinates of that point in the coordinate system in question.</p>
+<p>To define a scalar field you need to choose the coordinate system and the
+index of the coordinate.</p>
+<p>The use of the scalar field after its definition is independent of the
+coordinate system in which it was defined, however due to limitations in
+the simplification routines you may arrive at more complicated
+expression if you use unappropriate coordinate systems.</p>
+<p>You can build complicated scalar fields by just building up SymPy
+expressions containing <tt class="docutils literal"><span class="pre">BaseScalarField</span></tt> instances.</p>
+<p class="rubric">Examples</p>
+<p>Define boilerplate Manifold, Patch and coordinate systems:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="gp">... </span>       <span class="n">Manifold</span><span class="p">,</span> <span class="n">Patch</span><span class="p">,</span> <span class="n">CoordSystem</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">BaseScalarField</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r0</span><span class="p">,</span> <span class="n">theta0</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;r0, theta0&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Manifold</span><span class="p">(</span><span class="s">&#39;M&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Patch</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rect</span> <span class="o">=</span> <span class="n">CoordSystem</span><span class="p">(</span><span class="s">&#39;rect&#39;</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span> <span class="o">=</span> <span class="n">CoordSystem</span><span class="p">(</span><span class="s">&#39;polar&#39;</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">polar</span><span class="o">.</span><span class="n">connect_to</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="p">[</span><span class="n">r0</span><span class="p">,</span> <span class="n">theta0</span><span class="p">],</span> <span class="p">[</span><span class="n">r0</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">theta0</span><span class="p">),</span> <span class="n">r0</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">theta0</span><span class="p">)])</span>
+</pre></div>
+</div>
+<p>Point to be used as an argument for the filed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">point</span> <span class="o">=</span> <span class="n">polar</span><span class="o">.</span><span class="n">point</span><span class="p">([</span><span class="n">r0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Examples of fields:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fx</span> <span class="o">=</span> <span class="n">BaseScalarField</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fy</span> <span class="o">=</span> <span class="n">BaseScalarField</span><span class="p">(</span><span class="n">rect</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">fx</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">fy</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">rcall</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+<span class="go">r0**2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ftheta</span> <span class="o">=</span> <span class="n">BaseScalarField</span><span class="p">(</span><span class="n">polar</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fg</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="n">ftheta</span><span class="o">-</span><span class="n">pi</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fg</span><span class="o">.</span><span class="n">rcall</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+<span class="go">g(-pi)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.diffgeom.BaseVectorField">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">BaseVectorField</tt><big>(</big><em>coord_sys</em>, <em>index</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.BaseVectorField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vector Field over a Manifold.</p>
+<p>A vector field is an operator taking a scalar field and returning a
+directional derivative (which is also a scalar field).</p>
+<p>A base vector field is the same type of operator, however the derivation is
+specifically done wrt a chosen coordinate.</p>
+<p>To define a base vector field you need to choose the coordinate system and
+the index of the coordinate.</p>
+<p>The use of the vector field after its definition is independent of the
+coordinate system in which it was defined, however due to limitations in
+the simplification routines you may arrive at more complicated
+expression if you use unappropriate coordinate systems.</p>
+<p class="rubric">Examples</p>
+<p>Use the predefined R2 manifold, setup some boilerplate.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom.rn</span> <span class="kn">import</span> <span class="n">R2</span><span class="p">,</span> <span class="n">R2_p</span><span class="p">,</span> <span class="n">R2_r</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">BaseVectorField</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">theta0</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x0, y0, r0, theta0&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Points to be used as arguments for the field:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">point_p</span> <span class="o">=</span> <span class="n">R2_p</span><span class="o">.</span><span class="n">point</span><span class="p">([</span><span class="n">r0</span><span class="p">,</span> <span class="n">theta0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">point_r</span> <span class="o">=</span> <span class="n">R2_r</span><span class="o">.</span><span class="n">point</span><span class="p">([</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Scalar field to operate on:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s_field</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">R2</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s_field</span><span class="o">.</span><span class="n">rcall</span><span class="p">(</span><span class="n">point_r</span><span class="p">)</span>
+<span class="go">g(x0, y0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s_field</span><span class="o">.</span><span class="n">rcall</span><span class="p">(</span><span class="n">point_p</span><span class="p">)</span>
+<span class="go">g(r0*cos(theta0), r0*sin(theta0))</span>
+</pre></div>
+</div>
+<p>Vector field:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">BaseVectorField</span><span class="p">(</span><span class="n">R2_r</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">v</span><span class="p">(</span><span class="n">s_field</span><span class="p">))</span>
+<span class="go">/  d              \|</span>
+<span class="go">|-----(g(x, xi_2))||</span>
+<span class="go">\dxi_2            /|xi_2=y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">v</span><span class="p">(</span><span class="n">s_field</span><span class="p">)</span><span class="o">.</span><span class="n">rcall</span><span class="p">(</span><span class="n">point_r</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+<span class="go"> d</span>
+<span class="go">---(g(x0, y0))</span>
+<span class="go">dy0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">v</span><span class="p">(</span><span class="n">s_field</span><span class="p">)</span><span class="o">.</span><span class="n">rcall</span><span class="p">(</span><span class="n">point_p</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+<span class="go">/  d                           \|</span>
+<span class="go">|-----(g(r0*cos(theta0), xi_2))||</span>
+<span class="go">\dxi_2                         /|xi_2=r0*sin(theta0)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.diffgeom.Differential">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">Differential</tt><big>(</big><em>form_field</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.Differential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the differential (exterior derivative) of a form field.</p>
+<p>The differential of a form (i.e. the exterior derivative) has a complicated
+definition in the general case.</p>
+<p>The differential <span class="math">\(df\)</span> of the 0-form <span class="math">\(f\)</span> is defined for any vector field <span class="math">\(v\)</span>
+as <span class="math">\(df(v) = v(f)\)</span>.</p>
+<p class="rubric">Examples</p>
+<p>Use the predefined R2 manifold, setup some boilerplate.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom.rn</span> <span class="kn">import</span> <span class="n">R2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">Differential</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pprint</span>
+</pre></div>
+</div>
+<p>Scalar field (0-forms):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s_field</span> <span class="o">=</span> <span class="n">g</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">R2</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Vector fields:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">e_x</span><span class="p">,</span> <span class="n">e_y</span><span class="p">,</span> <span class="o">=</span> <span class="n">R2</span><span class="o">.</span><span class="n">e_x</span><span class="p">,</span> <span class="n">R2</span><span class="o">.</span><span class="n">e_y</span>
+</pre></div>
+</div>
+<p>Differentials:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dg</span> <span class="o">=</span> <span class="n">Differential</span><span class="p">(</span><span class="n">s_field</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dg</span>
+<span class="go">d(g(x, y))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">dg</span><span class="p">(</span><span class="n">e_x</span><span class="p">))</span>
+<span class="go">/  d              \|</span>
+<span class="go">|-----(g(xi_1, y))||</span>
+<span class="go">\dxi_1            /|xi_1=x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">dg</span><span class="p">(</span><span class="n">e_y</span><span class="p">))</span>
+<span class="go">/  d              \|</span>
+<span class="go">|-----(g(x, xi_2))||</span>
+<span class="go">\dxi_2            /|xi_2=y</span>
+</pre></div>
+</div>
+<p>Applying the exterior derivative operator twice always results in:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Differential</span><span class="p">(</span><span class="n">dg</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.diffgeom.BaseCovarDerivativeOp">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">BaseCovarDerivativeOp</tt><big>(</big><em>coord_sys</em>, <em>index</em>, <em>christoffel</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.BaseCovarDerivativeOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Covariant derivative operator wrt a base vector.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom.rn</span> <span class="kn">import</span> <span class="n">R2</span><span class="p">,</span> <span class="n">R2_r</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">BaseCovarDerivativeOp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">metric_to_Christoffel_2nd</span><span class="p">,</span> <span class="n">TensorProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TP</span> <span class="o">=</span> <span class="n">TensorProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ch</span> <span class="o">=</span> <span class="n">metric_to_Christoffel_2nd</span><span class="p">(</span><span class="n">TP</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">dx</span><span class="p">,</span> <span class="n">R2</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span> <span class="o">+</span> <span class="n">TP</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="n">R2</span><span class="o">.</span><span class="n">dy</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ch</span>
+<span class="go">(((0, 0), (0, 0)), ((0, 0), (0, 0)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvd</span> <span class="o">=</span> <span class="n">BaseCovarDerivativeOp</span><span class="p">(</span><span class="n">R2_r</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvd</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvd</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">R2</span><span class="o">.</span><span class="n">e_x</span><span class="p">)</span>
+<span class="go">e_x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.diffgeom.CovarDerivativeOp">
+<em class="property">class </em><tt class="descclassname">sympy.diffgeom.</tt><tt class="descname">CovarDerivativeOp</tt><big>(</big><em>wrt</em>, <em>christoffel</em><big>)</big><a class="headerlink" href="#sympy.diffgeom.CovarDerivativeOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Covariant derivative operator.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom.rn</span> <span class="kn">import</span> <span class="n">R2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">CovarDerivativeOp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.diffgeom</span> <span class="kn">import</span> <span class="n">metric_to_Christoffel_2nd</span><span class="p">,</span> <span class="n">TensorProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TP</span> <span class="o">=</span> <span class="n">TensorProduct</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ch</span> <span class="o">=</span> <span class="n">metric_to_Christoffel_2nd</span><span class="p">(</span><span class="n">TP</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">dx</span><span class="p">,</span> <span class="n">R2</span><span class="o">.</span><span class="n">dx</span><span class="p">)</span> <span class="o">+</span> <span class="n">TP</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">dy</span><span class="p">,</span> <span class="n">R2</span><span class="o">.</span><span class="n">dy</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ch</span>
+<span class="go">(((0, 0), (0, 0)), ((0, 0), (0, 0)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvd</span> <span class="o">=</span> <span class="n">CovarDerivativeOp</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">R2</span><span class="o">.</span><span class="n">e_x</span><span class="p">,</span> <span class="n">ch</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvd</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cvd</span><span class="p">(</span><span class="n">R2</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="n">R2</span><span class="o">.</span><span class="n">e_x</span><span class="p">)</span>
+<span class="go">x*e_x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Differential Geometry Module</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#base-class-reference">Base Class Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="categories.html"
+                        title="previous chapter">Category Theory Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../python-comparisons.html"
+                        title="next chapter">Development Tips: Comparisons in Python</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/diffgeom.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../python-comparisons.html" title="Development Tips: Comparisons in Python"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="categories.html" title="Category Theory Module"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

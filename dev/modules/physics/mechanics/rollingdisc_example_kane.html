@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>A rolling disc, with Kane’s method &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="A rolling disc" href="rollingdisc_example.html" />
+    <link rel="next" title="A rolling disc, with Kane’s method and constraint forces" href="rollingdisc_example_kane_constraints.html" />
+    <link rel="prev" title="A rolling disc" href="rollingdisc_example.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rollingdisc_example_kane_constraints.html" title="A rolling disc, with Kane’s method and constraint forces"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rollingdisc_example.html" title="A rolling disc"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li>
+          <li><a href="examples.html" >Examples for Physics/Mechanics</a> &raquo;</li>
+          <li><a href="rollingdisc_example.html" accesskey="U">A rolling disc</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="a-rolling-disc-with-kane-s-method">
+<h1>A rolling disc, with Kane&#8217;s method<a class="headerlink" href="#a-rolling-disc-with-kane-s-method" title="Permalink to this headline">¶</a></h1>
+<p>Here the definition of the rolling disc&#8217;s kinematics is formed from the contact
+point up, removing the need to introduce generalized speeds. Only 3
+configuration and three speed variables are need to describe this system, along
+with the disc&#8217;s mass and radius, and the local gravity (note that mass will
+drop out).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span>  <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3 u1 u2 u3&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span><span class="p">,</span> <span class="n">q2d</span><span class="p">,</span> <span class="n">q3d</span><span class="p">,</span> <span class="n">u1d</span><span class="p">,</span> <span class="n">u2d</span><span class="p">,</span> <span class="n">u3d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3 u1 u2 u3&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;r m g&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mechanics_printing</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The kinematics are formed by a series of simple rotations. Each simple rotation
+creates a new frame, and the next rotation is defined by the new frame&#8217;s basis
+vectors. This example uses a 3-1-2 series of rotations, or Z, X, Y series of
+rotations. Angular velocity for this is defined using the second frame&#8217;s basis
+(the lean frame); it is for this reason that we defined intermediate frames,
+rather than using a body-three orientation.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">Y</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q2</span><span class="p">,</span> <span class="n">Y</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q3</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u1</span> <span class="o">*</span> <span class="n">L</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">u2</span> <span class="o">*</span> <span class="n">L</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">u3</span> <span class="o">*</span> <span class="n">L</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span><span class="o">.</span><span class="n">set_ang_acc</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">R</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">dt</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">^</span> <span class="n">R</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>This is the translational kinematics. We create a point with no velocity
+in N; this is the contact point between the disc and ground. Next we form
+the position vector from the contact point to the disc&#8217;s center of mass.
+Finally we form the velocity and acceleration of the disc.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dmc</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">locatenew</span><span class="p">(</span><span class="s">&#39;Dmc&#39;</span><span class="p">,</span> <span class="n">r</span> <span class="o">*</span> <span class="n">L</span><span class="o">.</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dmc</span><span class="o">.</span><span class="n">v2pt_theory</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+<span class="go">r*u2*L.x - r*u1*L.y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dmc</span><span class="o">.</span><span class="n">a2pt_theory</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">R</span><span class="p">)</span>
+<span class="go">(r*u1*u3 + r*u2&#39;)*L.x + (-r*(-u3*q3&#39; + u1&#39;) + r*u2*u3)*L.y + (-r*u1**2 - r*u2**2)*L.z</span>
+</pre></div>
+</div>
+<p>This is a simple way to form the inertia dyadic. The inertia of the disc does
+not change within the lean frame as the disc rolls; this will make for simpler
+equations in the end.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">inertia</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">m</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">m</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">m</span> <span class="o">/</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+<span class="go">m*r**2/4*(L.x|L.x) + m*r**2/2*(L.y|L.y) + m*r**2/4*(L.z|L.z)</span>
+</pre></div>
+</div>
+<p>Kinematic differential equations; how the generalized coordinate time
+derivatives relate to generalized speeds. Here these were computed by hand.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">kd</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1d</span> <span class="o">-</span> <span class="n">u3</span><span class="o">/</span><span class="n">cos</span><span class="p">(</span><span class="n">q2</span><span class="p">),</span> <span class="n">q2d</span> <span class="o">-</span> <span class="n">u1</span><span class="p">,</span> <span class="n">q3d</span> <span class="o">-</span> <span class="n">u2</span> <span class="o">+</span> <span class="n">u3</span> <span class="o">*</span> <span class="n">tan</span><span class="p">(</span><span class="n">q2</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Creation of the force list; it is the gravitational force at the center of mass of
+the disc. Then we create the disc by assigning a Point to the center of mass
+attribute, a ReferenceFrame to the frame attribute, and mass and inertia. Then
+we form the body list.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ForceList</span> <span class="o">=</span> <span class="p">[(</span><span class="n">Dmc</span><span class="p">,</span> <span class="o">-</span> <span class="n">m</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">Y</span><span class="o">.</span><span class="n">z</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BodyD</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;BodyD&#39;</span><span class="p">,</span> <span class="n">Dmc</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">Dmc</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BodyList</span> <span class="o">=</span> <span class="p">[</span><span class="n">BodyD</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Finally we form the equations of motion, using the same steps we did before.
+Specify inertial frame, supply generalized coordinates and speeds, supply
+kinematic differential equation dictionary, compute Fr from the force list and
+Fr* from the body list, compute the mass matrix and forcing terms, then solve
+for the u dots (time derivatives of the generalized speeds).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">q_ind</span><span class="o">=</span><span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">],</span> <span class="n">u_ind</span><span class="o">=</span><span class="p">[</span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">],</span> <span class="n">kd_eqs</span><span class="o">=</span><span class="n">kd</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">frstar</span><span class="p">)</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">kanes_equations</span><span class="p">(</span><span class="n">ForceList</span><span class="p">,</span> <span class="n">BodyList</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MM</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">mass_matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">forcing</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">forcing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhs</span> <span class="o">=</span> <span class="n">MM</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="n">forcing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kdd</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">kindiffdict</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">kdd</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhs</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)],</span>
+<span class="go">[                                 -2*u1*u3/3],</span>
+<span class="go">[                    (-2*u2 + u3*tan(q2))*u1]])</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rollingdisc_example.html"
+                        title="previous chapter">A rolling disc</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="rollingdisc_example_kane_constraints.html"
+                        title="next chapter">A rolling disc, with Kane&#8217;s method and constraint forces</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/mechanics/rollingdisc_example_kane.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="rollingdisc_example_kane_constraints.html" title="A rolling disc, with Kane’s method and constraint forces"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rollingdisc_example.html" title="A rolling disc"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li>
+          <li><a href="examples.html" >Examples for Physics/Mechanics</a> &raquo;</li>
+          <li><a href="rollingdisc_example.html" >A rolling disc</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

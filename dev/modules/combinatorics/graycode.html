@@ -1,0 +1,417 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Gray Code &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Combinatorics Module" href="index.html" />
+    <link rel="next" title="Named Groups" href="named_groups.html" />
+    <link rel="prev" title="Subsets" href="subsets.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="named_groups.html" title="Named Groups"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="subsets.html" title="Subsets"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.combinatorics.graycode">
+<span id="gray-code"></span><span id="combinatorics-graycode"></span><h1>Gray Code<a class="headerlink" href="#module-sympy.combinatorics.graycode" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="sympy.combinatorics.graycode.GrayCode">
+<em class="property">class </em><tt class="descclassname">sympy.combinatorics.graycode.</tt><tt class="descname">GrayCode</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Gray code is essentially a Hamiltonian walk on
+a n-dimensional cube with edge length of one.
+The vertices of the cube are represented by vectors
+whose values are binary. The Hamilton walk visits
+each vertex exactly once. The Gray code for a 3d
+cube is [&#8216;000&#8217;,&#8216;100&#8217;,&#8216;110&#8217;,&#8216;010&#8217;,&#8216;011&#8217;,&#8216;111&#8217;,&#8216;101&#8217;,
+&#8216;001&#8217;].</p>
+<p>A Gray code solves the problem of sequentially
+generating all possible subsets of n objects in such
+a way that each subset is obtained from the previous
+one by either deleting or adding a single object.
+In the above example, 1 indicates that the object is
+present, and 0 indicates that its absent.</p>
+<p>Gray codes have applications in statistics as well when
+we want to compute various statistics related to subsets
+in an efficient manner.</p>
+<p>References:
+[1] Nijenhuis,A. and Wilf,H.S.(1978).
+Combinatorial Algorithms. Academic Press.
+[2] Knuth, D. (2011). The Art of Computer Programming, Vol 4
+Addison Wesley</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">generate_gray</span><span class="p">())</span>
+<span class="go">[&#39;000&#39;, &#39;001&#39;, &#39;011&#39;, &#39;010&#39;, &#39;110&#39;, &#39;111&#39;, &#39;101&#39;, &#39;100&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">generate_gray</span><span class="p">())</span>
+<span class="go">[&#39;0000&#39;, &#39;0001&#39;, &#39;0011&#39;, &#39;0010&#39;, &#39;0110&#39;, &#39;0111&#39;, &#39;0101&#39;, &#39;0100&#39;,     &#39;1100&#39;, &#39;1101&#39;, &#39;1111&#39;, &#39;1110&#39;, &#39;1010&#39;, &#39;1011&#39;, &#39;1001&#39;, &#39;1000&#39;]</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.combinatorics.graycode.GrayCode.current">
+<tt class="descname">current</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.current"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.current" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the currently referenced Gray code as a bit string.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s">&#39;100&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">current</span>
+<span class="go">&#39;100&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.graycode.GrayCode.generate_gray">
+<tt class="descname">generate_gray</tt><big>(</big><em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.generate_gray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.generate_gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the sequence of bit vectors of a Gray Code.</p>
+<p>[1] Knuth, D. (2011). The Art of Computer Programming,
+Vol 4, Addison Wesley</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.GrayCode.skip" title="sympy.combinatorics.graycode.GrayCode.skip"><tt class="xref py py-obj docutils literal"><span class="pre">skip</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">generate_gray</span><span class="p">())</span>
+<span class="go">[&#39;000&#39;, &#39;001&#39;, &#39;011&#39;, &#39;010&#39;, &#39;110&#39;, &#39;111&#39;, &#39;101&#39;, &#39;100&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">generate_gray</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="s">&#39;011&#39;</span><span class="p">))</span>
+<span class="go">[&#39;011&#39;, &#39;010&#39;, &#39;110&#39;, &#39;111&#39;, &#39;101&#39;, &#39;100&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">generate_gray</span><span class="p">(</span><span class="n">rank</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">[&#39;110&#39;, &#39;111&#39;, &#39;101&#39;, &#39;100&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.graycode.GrayCode.n">
+<tt class="descname">n</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.n"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the dimension of the Gray code.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">n</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.graycode.GrayCode.next">
+<tt class="descname">next</tt><big>(</big><em>delta=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.next"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Gray code a distance <tt class="docutils literal"><span class="pre">delta</span></tt> (default = 1) from the
+current value in canonical order.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s">&#39;110&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next</span><span class="p">()</span><span class="o">.</span><span class="n">current</span>
+<span class="go">&#39;111&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">current</span>
+<span class="go">&#39;010&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.graycode.GrayCode.rank">
+<tt class="descname">rank</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.rank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.rank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ranks the Gray code.</p>
+<p>A ranking algorithm determines the position (or rank)
+of a combinatorial object among all the objects w.r.t.
+a given order. For example, the 4 bit binary reflected
+Gray code (BRGC) &#8216;0101&#8217; has a rank of 6 as it appears in
+the 6th position in the canonical ordering of the family
+of 4 bit Gray codes.</p>
+<p>References:
+[1] <a class="reference external" href="http://www-stat.stanford.edu/~susan/courses/s208/node12.html">http://www-stat.stanford.edu/~susan/courses/s208/node12.html</a></p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.GrayCode.unrank" title="sympy.combinatorics.graycode.GrayCode.unrank"><tt class="xref py py-obj docutils literal"><span class="pre">unrank</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">generate_gray</span><span class="p">())</span>
+<span class="go">[&#39;000&#39;, &#39;001&#39;, &#39;011&#39;, &#39;010&#39;, &#39;110&#39;, &#39;111&#39;, &#39;101&#39;, &#39;100&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s">&#39;100&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rank</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span><span class="o">.</span><span class="n">current</span>
+<span class="go">&#39;100&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.combinatorics.graycode.GrayCode.selections">
+<tt class="descname">selections</tt><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.selections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.selections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of bit vectors in the Gray code.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">selections</span>
+<span class="go">8</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.combinatorics.graycode.GrayCode.skip">
+<tt class="descname">skip</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.skip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.skip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Skips the bit generation.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.GrayCode.generate_gray" title="sympy.combinatorics.graycode.GrayCode.generate_gray"><tt class="xref py py-obj docutils literal"><span class="pre">generate_gray</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">generate_gray</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="s">&#39;010&#39;</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">a</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">000</span>
+<span class="go">001</span>
+<span class="go">011</span>
+<span class="go">010</span>
+<span class="go">111</span>
+<span class="go">101</span>
+<span class="go">100</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.combinatorics.graycode.GrayCode.unrank">
+<em class="property">classmethod </em><tt class="descname">unrank</tt><big>(</big><em>n</em>, <em>rank</em><big>)</big><a class="reference internal" href="../../_modules/sympy/combinatorics/graycode.html#GrayCode.unrank"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.combinatorics.graycode.GrayCode.unrank" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unranks an n-bit sized Gray code of rank k. This method exists
+so that a derivative GrayCode class can define its own code of
+a given rank.</p>
+<p>The string here is generated in reverse order to allow for tail-call
+optimization.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.GrayCode.rank" title="sympy.combinatorics.graycode.GrayCode.rank"><tt class="xref py py-obj docutils literal"><span class="pre">rank</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GrayCode</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">current</span>
+<span class="go">&#39;00010&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">GrayCode</span><span class="o">.</span><span class="n">unrank</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">&#39;00010&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.graycode.random_bitstring">
+<em class="property">static </em><tt class="descclassname">graycode.</tt><tt class="descname">random_bitstring</tt><big>(</big><em>n</em><big>)</big><a class="headerlink" href="#sympy.combinatorics.graycode.random_bitstring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a random bitlist of length n.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">random_bitstring</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">random_bitstring</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> 
+<span class="go">100</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.graycode.gray_to_bin">
+<em class="property">static </em><tt class="descclassname">graycode.</tt><tt class="descname">gray_to_bin</tt><big>(</big><em>bin_list</em><big>)</big><a class="headerlink" href="#sympy.combinatorics.graycode.gray_to_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert from Gray coding to binary coding.</p>
+<p>We assume big endian encoding.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.bin_to_gray" title="sympy.combinatorics.graycode.bin_to_gray"><tt class="xref py py-obj docutils literal"><span class="pre">bin_to_gray</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">gray_to_bin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gray_to_bin</span><span class="p">(</span><span class="s">&#39;100&#39;</span><span class="p">)</span>
+<span class="go">&#39;111&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.graycode.bin_to_gray">
+<em class="property">static </em><tt class="descclassname">graycode.</tt><tt class="descname">bin_to_gray</tt><big>(</big><em>bin_list</em><big>)</big><a class="headerlink" href="#sympy.combinatorics.graycode.bin_to_gray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert from binary coding to gray coding.</p>
+<p>We assume big endian encoding.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.gray_to_bin" title="sympy.combinatorics.graycode.gray_to_bin"><tt class="xref py py-obj docutils literal"><span class="pre">gray_to_bin</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">bin_to_gray</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bin_to_gray</span><span class="p">(</span><span class="s">&#39;111&#39;</span><span class="p">)</span>
+<span class="go">&#39;100&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.graycode.get_subset_from_bitstring">
+<em class="property">static </em><tt class="descclassname">graycode.</tt><tt class="descname">get_subset_from_bitstring</tt><big>(</big><em>super_set</em>, <em>bitstring</em><big>)</big><a class="headerlink" href="#sympy.combinatorics.graycode.get_subset_from_bitstring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the subset defined by the bitstring.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.graycode_subsets" title="sympy.combinatorics.graycode.graycode_subsets"><tt class="xref py py-obj docutils literal"><span class="pre">graycode_subsets</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">get_subset_from_bitstring</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_subset_from_bitstring</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;d&#39;</span><span class="p">],</span> <span class="s">&#39;0011&#39;</span><span class="p">)</span>
+<span class="go">[&#39;c&#39;, &#39;d&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_subset_from_bitstring</span><span class="p">([</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">],</span> <span class="s">&#39;1100&#39;</span><span class="p">)</span>
+<span class="go">[&#39;c&#39;, &#39;a&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.combinatorics.graycode.graycode_subsets">
+<em class="property">static </em><tt class="descclassname">graycode.</tt><tt class="descname">graycode_subsets</tt><big>(</big><em>gray_code_set</em><big>)</big><a class="headerlink" href="#sympy.combinatorics.graycode.graycode_subsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the subsets as enumerated by a Gray code.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.combinatorics.graycode.get_subset_from_bitstring" title="sympy.combinatorics.graycode.get_subset_from_bitstring"><tt class="xref py py-obj docutils literal"><span class="pre">get_subset_from_bitstring</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">graycode_subsets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">graycode_subsets</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">]))</span>
+<span class="go">[[], [&#39;c&#39;], [&#39;b&#39;, &#39;c&#39;], [&#39;b&#39;], [&#39;a&#39;, &#39;b&#39;], [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;],     [&#39;a&#39;, &#39;c&#39;], [&#39;a&#39;]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">graycode_subsets</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">]))</span>
+<span class="go">[[], [&#39;c&#39;], [&#39;c&#39;, &#39;c&#39;], [&#39;c&#39;], [&#39;b&#39;, &#39;c&#39;], [&#39;b&#39;, &#39;c&#39;, &#39;c&#39;],     [&#39;b&#39;, &#39;c&#39;], [&#39;b&#39;], [&#39;a&#39;, &#39;b&#39;], [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;c&#39;],     [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], [&#39;a&#39;, &#39;c&#39;], [&#39;a&#39;, &#39;c&#39;, &#39;c&#39;], [&#39;a&#39;, &#39;c&#39;], [&#39;a&#39;]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="subsets.html"
+                        title="previous chapter">Subsets</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="named_groups.html"
+                        title="next chapter">Named Groups</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/combinatorics/graycode.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="named_groups.html" title="Named Groups"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="subsets.html" title="Subsets"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Combinatorics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

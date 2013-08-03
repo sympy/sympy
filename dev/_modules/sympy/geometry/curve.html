@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.geometry.curve &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.geometry.curve</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Curves in 2-dimensional Euclidean space.</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">Curve</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">is_sequence</span>
+<span class="kn">from</span> <span class="nn">sympy.core.containers</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">sympy.geometry.entity</span> <span class="kn">import</span> <span class="n">GeometryEntity</span>
+<span class="kn">from</span> <span class="nn">sympy.geometry.point</span> <span class="kn">import</span> <span class="n">Point</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">_symbol</span>
+
+
+<div class="viewcode-block" id="Curve"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve">[docs]</a><span class="k">class</span> <span class="nc">Curve</span><span class="p">(</span><span class="n">GeometryEntity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A curve in space.</span>
+
+<span class="sd">    A curve is defined by parametric functions for the coordinates, a</span>
+<span class="sd">    parameter and the lower and upper bounds for the parameter value.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    function : list of functions</span>
+<span class="sd">    limits : 3-tuple</span>
+<span class="sd">        Function parameter and lower and upper bounds.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    functions</span>
+<span class="sd">    parameter</span>
+<span class="sd">    limits</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ======</span>
+
+<span class="sd">    ValueError</span>
+<span class="sd">        When `functions` are specified incorrectly.</span>
+<span class="sd">        When `limits` are specified incorrectly.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.core.function.Function</span>
+<span class="sd">    sympy.polys.polyfuncs.interpolate</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import sin, cos, Symbol, interpolate</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import t, a</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Curve</span>
+<span class="sd">    &gt;&gt;&gt; C = Curve((sin(t), cos(t)), (t, 0, 2))</span>
+<span class="sd">    &gt;&gt;&gt; C.functions</span>
+<span class="sd">    (sin(t), cos(t))</span>
+<span class="sd">    &gt;&gt;&gt; C.limits</span>
+<span class="sd">    (t, 0, 2)</span>
+<span class="sd">    &gt;&gt;&gt; C.parameter</span>
+<span class="sd">    t</span>
+<span class="sd">    &gt;&gt;&gt; C = Curve((t, interpolate([1, 4, 9, 16], t)), (t, 0, 1)); C</span>
+<span class="sd">    Curve((t, t**2), (t, 0, 1))</span>
+<span class="sd">    &gt;&gt;&gt; C.subs(t, 4)</span>
+<span class="sd">    Point(4, 16)</span>
+<span class="sd">    &gt;&gt;&gt; C.arbitrary_point(a)</span>
+<span class="sd">    Point(a, a**2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+        <span class="n">fun</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">function</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Function argument should be (x(t), y(t)) &quot;</span>
+                <span class="s">&quot;but got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">function</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Limit argument should be (t, tmin, tmax) &quot;</span>
+                <span class="s">&quot;but got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">limits</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">GeometryEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">fun</span><span class="p">),</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">limits</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">old</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Curve.free_symbols"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.free_symbols">[docs]</a>    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of symbols other than the bound symbols used to</span>
+<span class="sd">        parametrically define the Curve.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import t, a</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Curve</span>
+<span class="sd">        &gt;&gt;&gt; Curve((t, t**2), (t, 0, 2)).free_symbols</span>
+<span class="sd">        set()</span>
+<span class="sd">        &gt;&gt;&gt; Curve((t, t**2), (t, a, 2)).free_symbols</span>
+<span class="sd">        set([a])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">free</span> <span class="o">|=</span> <span class="n">a</span><span class="o">.</span><span class="n">free_symbols</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="n">free</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">parameter</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">free</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Curve.functions"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.functions">[docs]</a>    <span class="k">def</span> <span class="nf">functions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The functions specifying the curve.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        functions : list of parameterized coordinate functions.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        parameter</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import t</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Curve</span>
+<span class="sd">        &gt;&gt;&gt; C = Curve((t, t**2), (t, 0, 2))</span>
+<span class="sd">        &gt;&gt;&gt; C.functions</span>
+<span class="sd">        (t, t**2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Curve.parameter"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.parameter">[docs]</a>    <span class="k">def</span> <span class="nf">parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The curve function variable.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        parameter : SymPy symbol</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        functions</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import t</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Curve</span>
+<span class="sd">        &gt;&gt;&gt; C = Curve([t, t**2], (t, 0, 2))</span>
+<span class="sd">        &gt;&gt;&gt; C.parameter</span>
+<span class="sd">        t</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Curve.limits"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.limits">[docs]</a>    <span class="k">def</span> <span class="nf">limits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The limits for the curve.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        limits : tuple</span>
+<span class="sd">            Contains parameter and lower and upper limits.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        plot_interval</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import t</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Curve</span>
+<span class="sd">        &gt;&gt;&gt; C = Curve([t, t**3], (t, -2, 2))</span>
+<span class="sd">        &gt;&gt;&gt; C.limits</span>
+<span class="sd">        (t, -2, 2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Curve.rotate"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotate ``angle`` radians counterclockwise about Point ``pt``.</span>
+
+<span class="sd">        The default pt is the origin, Point(0, 0).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry.curve import Curve</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import pi</span>
+<span class="sd">        &gt;&gt;&gt; Curve((x, x), (x, 0, 1)).rotate(pi/2)</span>
+<span class="sd">        Curve((-x, x), (x, 0, 1))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">rot_axis3</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="o">-</span><span class="n">Point</span><span class="p">(</span><span class="n">pt</span> <span class="ow">or</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rv</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">*=</span> <span class="n">rot_axis3</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">pt</span> <span class="o">=</span> <span class="o">-</span><span class="n">pt</span>
+            <span class="k">return</span> <span class="n">rv</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="Curve.scale"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.scale">[docs]</a>    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override GeometryEntity.scale since Curve is not made up of Points.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry.curve import Curve</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import pi</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; Curve((x, x), (x, 0, 1)).scale(2)</span>
+<span class="sd">        Curve((2*x, x), (x, 0, 1))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pt</span><span class="p">:</span>
+            <span class="n">pt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">pt</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">((</span><span class="n">fx</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">fy</span><span class="o">*</span><span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Curve.translate"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Translate the Curve by (x, y).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry.curve import Curve</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import pi</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; Curve((x, x), (x, 0, 1)).translate(1, 2)</span>
+<span class="sd">        Curve((x + 1, x + 2), (x, 0, 1))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fx</span><span class="p">,</span> <span class="n">fy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">((</span><span class="n">fx</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">fy</span> <span class="o">+</span> <span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Curve.arbitrary_point"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.arbitrary_point">[docs]</a>    <span class="k">def</span> <span class="nf">arbitrary_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A parameterized point on the curve.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str or Symbol, optional</span>
+<span class="sd">            Default value is &#39;t&#39;;</span>
+<span class="sd">            the Curve&#39;s parameter is selected with None or self.parameter</span>
+<span class="sd">            otherwise the provided symbol is used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        arbitrary_point : Point</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        ValueError</span>
+<span class="sd">            When `parameter` already appears in the functions.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import s</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.geometry import Curve</span>
+<span class="sd">        &gt;&gt;&gt; C = Curve([2*s, s**2], (s, 0, 2))</span>
+<span class="sd">        &gt;&gt;&gt; C.arbitrary_point()</span>
+<span class="sd">        Point(2*t, t**2)</span>
+<span class="sd">        &gt;&gt;&gt; C.arbitrary_point(C.parameter)</span>
+<span class="sd">        Point(2*s, s**2)</span>
+<span class="sd">        &gt;&gt;&gt; C.arbitrary_point(None)</span>
+<span class="sd">        Point(2*s, s**2)</span>
+<span class="sd">        &gt;&gt;&gt; C.arbitrary_point(Symbol(&#39;a&#39;))</span>
+<span class="sd">        Point(2*a, a**2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">parameter</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span>
+
+        <span class="n">tnew</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">tnew</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="ow">and</span>
+                <span class="n">tnew</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Symbol </span><span class="si">%s</span><span class="s"> already appears in object &#39;</span>
+                <span class="s">&#39;and cannot be used as a parameter.&#39;</span> <span class="o">%</span> <span class="n">tnew</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tnew</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">functions</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="Curve.plot_interval"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.curve.Curve.plot_interval">[docs]</a>    <span class="k">def</span> <span class="nf">plot_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The plot interval for the default geometric plot of the curve.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str or Symbol, optional</span>
+<span class="sd">            Default value is &#39;t&#39;;</span>
+<span class="sd">            otherwise the provided symbol is used.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        plot_interval : list (plot interval)</span>
+<span class="sd">            [parameter, lower_bound, upper_bound]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        limits : Returns limits of the parameter interval</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Curve, sin</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, t, s</span>
+<span class="sd">        &gt;&gt;&gt; Curve((x, sin(x)), (x, 1, 2)).plot_interval()</span>
+<span class="sd">        [t, 1, 2]</span>
+<span class="sd">        &gt;&gt;&gt; Curve((x, sin(x)), (x, 1, 2)).plot_interval(s)</span>
+<span class="sd">        [s, 1, 2]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

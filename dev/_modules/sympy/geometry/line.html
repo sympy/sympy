@@ -1,0 +1,1733 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.geometry.line &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.geometry.line</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Line-like geometrical entities.</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">LinearEntity</span>
+<span class="sd">Line</span>
+<span class="sd">Ray</span>
+<span class="sd">Segment</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.trigonometric</span> <span class="kn">import</span> <span class="n">_pi_coeff</span> <span class="k">as</span> <span class="n">pi_coeff</span>
+<span class="kn">from</span> <span class="nn">sympy.core.logic</span> <span class="kn">import</span> <span class="n">fuzzy_and</span>
+<span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">simplify</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">sympy.geometry.exceptions</span> <span class="kn">import</span> <span class="n">GeometryError</span>
+<span class="kn">from</span> <span class="nn">.entity</span> <span class="kn">import</span> <span class="n">GeometryEntity</span>
+<span class="kn">from</span> <span class="nn">.point</span> <span class="kn">import</span> <span class="n">Point</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">_symbol</span>
+
+<span class="c"># TODO: this should be placed elsewhere and reused in other modules</span>
+
+
+<span class="k">class</span> <span class="nc">Undecidable</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="LinearEntity"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity">[docs]</a><span class="k">class</span> <span class="nc">LinearEntity</span><span class="p">(</span><span class="n">GeometryEntity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An abstract base class for all linear entities (line, ray and segment)</span>
+<span class="sd">    in a 2-dimensional Euclidean space.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    p1</span>
+<span class="sd">    p2</span>
+<span class="sd">    coefficients</span>
+<span class="sd">    slope</span>
+<span class="sd">    points</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    This is an abstract class and is not meant to be instantiated.</span>
+<span class="sd">    Subclasses should implement the following methods:</span>
+
+<span class="sd">        * __eq__</span>
+<span class="sd">        * contains</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.entity.GeometryEntity</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">:</span>
+            <span class="c"># Rolygon returns lower priority classes...should LinearEntity, too?</span>
+            <span class="k">return</span> <span class="n">p1</span>  <span class="c"># raise ValueError(&quot;%s.__new__ requires two unique Points.&quot; % cls.__name__)</span>
+
+        <span class="k">return</span> <span class="n">GeometryEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LinearEntity.p1"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.p1">[docs]</a>    <span class="k">def</span> <span class="nf">p1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The first defining point of a linear entity.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l.p1</span>
+<span class="sd">        Point(0, 0)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LinearEntity.p2"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.p2">[docs]</a>    <span class="k">def</span> <span class="nf">p2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The second defining point of a linear entity.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l.p2</span>
+<span class="sd">        Point(5, 3)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LinearEntity.coefficients"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.coefficients">[docs]</a>    <span class="k">def</span> <span class="nf">coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The coefficients (`a`, `b`, `c`) for the linear equation `ax + by + c = 0`.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.line.Line.equation</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l.coefficients</span>
+<span class="sd">        (-3, 5, 0)</span>
+
+<span class="sd">        &gt;&gt;&gt; p3 = Point(x, y)</span>
+<span class="sd">        &gt;&gt;&gt; l2 = Line(p1, p3)</span>
+<span class="sd">        &gt;&gt;&gt; l2.coefficients</span>
+<span class="sd">        (-y, x, 0)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span>
+        <span class="k">if</span> <span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="o">-</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">p1</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="o">-</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">simplify</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>
+               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">)])</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.is_concurrent"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.is_concurrent">[docs]</a>    <span class="k">def</span> <span class="nf">is_concurrent</span><span class="p">(</span><span class="o">*</span><span class="n">lines</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is a sequence of linear entities concurrent?</span>
+
+<span class="sd">        Two or more linear entities are concurrent if they all</span>
+<span class="sd">        intersect at a single point.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        lines : a sequence of linear entities.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        True : if the set of linear entities are concurrent,</span>
+<span class="sd">        False : otherwise.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        Simply take the first two lines and find their intersection.</span>
+<span class="sd">        If there is no intersection, then the first two lines were</span>
+<span class="sd">        parallel and had no intersection so concurrency is impossible</span>
+<span class="sd">        amongst the whole set. Otherwise, check to see if the</span>
+<span class="sd">        intersection point of the first two lines is a member on</span>
+<span class="sd">        the rest of the lines. If so, the lines are concurrent.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.util.intersection</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(3, 5)</span>
+<span class="sd">        &gt;&gt;&gt; p3, p4 = Point(-2, -2), Point(0, 2)</span>
+<span class="sd">        &gt;&gt;&gt; l1, l2, l3 = Line(p1, p2), Line(p1, p3), Line(p1, p4)</span>
+<span class="sd">        &gt;&gt;&gt; l1.is_concurrent(l2, l3)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; l4 = Line(p2, p3)</span>
+<span class="sd">        &gt;&gt;&gt; l4.is_concurrent(l2, l3)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># Concurrency requires intersection at a single point; One linear</span>
+        <span class="c"># entity cannot be concurrent.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># Get the intersection (if parallel)</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+            <span class="c"># Make sure the intersection is on every linear entity</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.is_parallel"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.is_parallel">[docs]</a>    <span class="k">def</span> <span class="nf">is_parallel</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Are two linear entities parallel?</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        l1 : LinearEntity</span>
+<span class="sd">        l2 : LinearEntity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        True : if l1 and l2 are parallel,</span>
+<span class="sd">        False : otherwise.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        coefficients</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(1, 1)</span>
+<span class="sd">        &gt;&gt;&gt; p3, p4 = Point(3, 4), Point(6, 7)</span>
+<span class="sd">        &gt;&gt;&gt; l1, l2 = Line(p1, p2), Line(p3, p4)</span>
+<span class="sd">        &gt;&gt;&gt; Line.is_parallel(l1, l2)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; p5 = Point(6, 6)</span>
+<span class="sd">        &gt;&gt;&gt; l3 = Line(p3, p5)</span>
+<span class="sd">        &gt;&gt;&gt; Line.is_parallel(l1, l3)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="n">a2</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">l2</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">a1</span><span class="o">*</span><span class="n">b2</span> <span class="o">-</span> <span class="n">b1</span><span class="o">*</span><span class="n">a2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.is_perpendicular"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.is_perpendicular">[docs]</a>    <span class="k">def</span> <span class="nf">is_perpendicular</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Are two linear entities perpendicular?</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        l1 : LinearEntity</span>
+<span class="sd">        l2 : LinearEntity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        True : if l1 and l2 are perpendicular,</span>
+<span class="sd">        False : otherwise.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        coefficients</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 1)</span>
+<span class="sd">        &gt;&gt;&gt; l1, l2 = Line(p1, p2), Line(p1, p3)</span>
+<span class="sd">        &gt;&gt;&gt; l1.is_perpendicular(l2)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; p4 = Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l3 = Line(p1, p4)</span>
+<span class="sd">        &gt;&gt;&gt; l1.is_perpendicular(l3)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="n">a2</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">l2</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">a1</span><span class="o">*</span><span class="n">a2</span> <span class="o">+</span> <span class="n">b1</span><span class="o">*</span><span class="n">b2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.angle_between"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.angle_between">[docs]</a>    <span class="k">def</span> <span class="nf">angle_between</span><span class="p">(</span><span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The angle formed between the two linear entities.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        l1 : LinearEntity</span>
+<span class="sd">        l2 : LinearEntity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        angle : angle in radians</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        From the dot product of vectors v1 and v2 it is known that:</span>
+
+<span class="sd">            ``dot(v1, v2) = |v1|*|v2|*cos(A)``</span>
+
+<span class="sd">        where A is the angle formed between the two vectors. We can</span>
+<span class="sd">        get the directional vectors of the two lines and readily</span>
+<span class="sd">        find the angle between the two using the above formula.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        is_perpendicular</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(0, 4), Point(2, 0)</span>
+<span class="sd">        &gt;&gt;&gt; l1, l2 = Line(p1, p2), Line(p1, p3)</span>
+<span class="sd">        &gt;&gt;&gt; l1.angle_between(l2)</span>
+<span class="sd">        pi/2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">v1</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="n">p2</span> <span class="o">-</span> <span class="n">l1</span><span class="o">.</span><span class="n">p1</span>
+        <span class="n">v2</span> <span class="o">=</span> <span class="n">l2</span><span class="o">.</span><span class="n">p2</span> <span class="o">-</span> <span class="n">l2</span><span class="o">.</span><span class="n">p1</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">acos</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">v1</span><span class="p">)</span><span class="o">*</span><span class="nb">abs</span><span class="p">(</span><span class="n">v2</span><span class="p">)))</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.parallel_line"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.parallel_line">[docs]</a>    <span class="k">def</span> <span class="nf">parallel_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new Line parallel to this linear entity which passes</span>
+<span class="sd">        through the point `p`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        line : Line</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        is_parallel</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l2 = l1.parallel_line(p3)</span>
+<span class="sd">        &gt;&gt;&gt; p3 in l2</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; l1.is_parallel(l2)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span>
+        <span class="k">return</span> <span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.perpendicular_line"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.perpendicular_line">[docs]</a>    <span class="k">def</span> <span class="nf">perpendicular_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a new Line perpendicular to this linear entity which passes</span>
+<span class="sd">        through the point `p`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        line : Line</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        is_perpendicular, perpendicular_segment</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l2 = l1.perpendicular_line(p3)</span>
+<span class="sd">        &gt;&gt;&gt; p3 in l2</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; l1.is_perpendicular(l2)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">d2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c"># If a horizontal line</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>  <span class="c"># if p is on this linear entity</span>
+                <span class="k">return</span> <span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">d2</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">d1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Line</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.perpendicular_segment"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.perpendicular_segment">[docs]</a>    <span class="k">def</span> <span class="nf">perpendicular_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a perpendicular line segment from `p` to this line.</span>
+
+<span class="sd">        The enpoints of the segment are ``p`` and the closest point in</span>
+<span class="sd">        the line containing self. (If self is not a line, the point might</span>
+<span class="sd">        not be in self.)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        segment : Segment</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        Returns `p` itself if `p` is on this linear entity.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        perpendicular_line</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 2)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; s1 = l1.perpendicular_segment(p3)</span>
+<span class="sd">        &gt;&gt;&gt; l1.is_perpendicular(s1)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; p3 in s1</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; l1.perpendicular_segment(Point(4, 0))</span>
+<span class="sd">        Segment(Point(2, 2), Point(4, 0))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">p</span>
+        <span class="n">pl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">perpendicular_line</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">Line</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">pl</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Segment</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">p2</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LinearEntity.length"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.length">[docs]</a>    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The length of the line.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(3, 5)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.length</span>
+<span class="sd">        oo</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LinearEntity.slope"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.slope">[docs]</a>    <span class="k">def</span> <span class="nf">slope</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The slope of this linear entity, or infinity if vertical.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        slope : number or sympy expression</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        coefficients</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(3, 5)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.slope</span>
+<span class="sd">        5/3</span>
+
+<span class="sd">        &gt;&gt;&gt; p3 = Point(0, 4)</span>
+<span class="sd">        &gt;&gt;&gt; l2 = Line(p1, p3)</span>
+<span class="sd">        &gt;&gt;&gt; l2.slope</span>
+<span class="sd">        oo</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">d1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">return</span> <span class="n">simplify</span><span class="p">(</span><span class="n">d2</span><span class="o">/</span><span class="n">d1</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LinearEntity.points"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.points">[docs]</a>    <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The two points used to define this linear entity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        points : tuple of Points</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(5, 11)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.points</span>
+<span class="sd">        (Point(0, 0), Point(5, 11))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.projection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.projection">[docs]</a>    <span class="k">def</span> <span class="nf">projection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Project a point, line, ray, or segment onto this linear entity.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        other : Point or LinearEntity (Line, Ray, Segment)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        projection : Point or LinearEntity (Line, Ray, Segment)</span>
+<span class="sd">            The return type matches the type of the parameter ``other``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        GeometryError</span>
+<span class="sd">            When method is unable to perform projection.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        A projection involves taking the two points that define</span>
+<span class="sd">        the linear entity and projecting those points onto a</span>
+<span class="sd">        Line and then reforming the linear entity using these</span>
+<span class="sd">        projections.</span>
+<span class="sd">        A point P is projected onto a line L by finding the point</span>
+<span class="sd">        on L that is closest to P. This is done by creating a</span>
+<span class="sd">        perpendicular line through P and L and finding its</span>
+<span class="sd">        intersection with L.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point, perpendicular_line</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line, Segment, Rational</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(1, 1), Point(Rational(1, 2), 0)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.projection(p3)</span>
+<span class="sd">        Point(1/4, 1/4)</span>
+
+<span class="sd">        &gt;&gt;&gt; p4, p5 = Point(10, 0), Point(12, 1)</span>
+<span class="sd">        &gt;&gt;&gt; s1 = Segment(p4, p5)</span>
+<span class="sd">        &gt;&gt;&gt; l1.projection(s1)</span>
+<span class="sd">        Segment(Point(5, 5), Point(13/2, 13/2))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tline</span> <span class="o">=</span> <span class="n">Line</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">_project</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Project a point onto the line representing self.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">tline</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">p</span>
+            <span class="n">l1</span> <span class="o">=</span> <span class="n">tline</span><span class="o">.</span><span class="n">perpendicular_line</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tline</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">l1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">projected</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_project</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">LinearEntity</span><span class="p">):</span>
+            <span class="n">n_p1</span> <span class="o">=</span> <span class="n">_project</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">p1</span><span class="p">)</span>
+            <span class="n">n_p2</span> <span class="o">=</span> <span class="n">_project</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n_p1</span> <span class="o">==</span> <span class="n">n_p2</span><span class="p">:</span>
+                <span class="n">projected</span> <span class="o">=</span> <span class="n">n_p1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">projected</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">n_p1</span><span class="p">,</span> <span class="n">n_p2</span><span class="p">)</span>
+
+        <span class="c"># Didn&#39;t know how to project so raise an error</span>
+        <span class="k">if</span> <span class="n">projected</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">n1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="n">n2</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="k">raise</span> <span class="n">GeometryError</span><span class="p">(</span>
+                <span class="s">&quot;Do not know how to project </span><span class="si">%s</span><span class="s"> onto </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n2</span><span class="p">,</span> <span class="n">n1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">projected</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.intersection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The intersection with another geometrical entity.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        o : Point or LinearEntity</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        intersection : list of geometrical entities</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line, Segment</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(1, 1), Point(7, 7)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.intersection(p3)</span>
+<span class="sd">        [Point(7, 7)]</span>
+
+<span class="sd">        &gt;&gt;&gt; p4, p5 = Point(5, 0), Point(0, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l2 = Line(p4, p5)</span>
+<span class="sd">        &gt;&gt;&gt; l1.intersection(l2)</span>
+<span class="sd">        [Point(15/8, 15/8)]</span>
+
+<span class="sd">        &gt;&gt;&gt; p6, p7 = Point(0, 5), Point(2, 6)</span>
+<span class="sd">        &gt;&gt;&gt; s1 = Segment(p6, p7)</span>
+<span class="sd">        &gt;&gt;&gt; l1.intersection(s1)</span>
+<span class="sd">        []</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">LinearEntity</span><span class="p">):</span>
+            <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span><span class="p">,</span> <span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="n">a2</span><span class="p">,</span> <span class="n">b2</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">a1</span><span class="o">*</span><span class="n">b2</span> <span class="o">-</span> <span class="n">a2</span><span class="o">*</span><span class="n">b1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>  <span class="c"># assume they are parallel</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Line</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">p1</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="p">[]</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Line</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="ow">in</span> <span class="n">o</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+                    <span class="k">return</span> <span class="p">[]</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ray</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ray</span><span class="p">):</span>
+                        <span class="c"># case 1, rays in the same direction</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">xdirection</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">xdirection</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">o</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+                                <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="p">]</span>
+                            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+                        <span class="c"># case 2, rays in the opposite directions</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">source</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">source</span><span class="p">:</span>
+                                    <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">]</span>
+                                <span class="k">return</span> <span class="p">[</span><span class="n">Segment</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)]</span>
+                            <span class="k">return</span> <span class="p">[]</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">p1</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">o</span><span class="o">.</span><span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                                <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="p">]</span>
+                            <span class="k">return</span> <span class="p">[</span><span class="n">Segment</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)]</span>
+                        <span class="k">elif</span> <span class="n">o</span><span class="o">.</span><span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="p">[</span><span class="n">Segment</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="p">)]</span>
+                        <span class="k">return</span> <span class="p">[]</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ray</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+                        <span class="c"># A reminder that the points of Segments are ordered</span>
+                        <span class="c"># in such a way that the following works. See</span>
+                        <span class="c"># Segment.__new__ for details on the ordering.</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">o</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">o</span><span class="p">:</span>
+                                <span class="c"># Neither of the endpoints are in o so either</span>
+                                <span class="c"># o is contained in this segment or it isn&#39;t</span>
+                                <span class="k">if</span> <span class="n">o</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                                    <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+                                <span class="k">return</span> <span class="p">[]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="c"># p1 not in o but p2 is. Either there is a</span>
+                                <span class="c"># segment as an intersection, or they only</span>
+                                <span class="c"># intersect at an endpoint</span>
+                                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">p1</span><span class="p">:</span>
+                                    <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">p1</span><span class="p">]</span>
+                                <span class="k">return</span> <span class="p">[</span><span class="n">Segment</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">)]</span>
+                        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">o</span><span class="p">:</span>
+                            <span class="c"># p2 not in o but p1 is. Either there is a</span>
+                            <span class="c"># segment as an intersection, or they only</span>
+                            <span class="c"># intersect at an endpoint</span>
+                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">p2</span><span class="p">:</span>
+                                <span class="k">return</span> <span class="p">[</span><span class="n">o</span><span class="o">.</span><span class="n">p2</span><span class="p">]</span>
+                            <span class="k">return</span> <span class="p">[</span><span class="n">Segment</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">)]</span>
+
+                        <span class="c"># Both points of self in o so the whole segment</span>
+                        <span class="c"># is in o</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+
+                <span class="c"># Unknown linear entity</span>
+                <span class="k">return</span> <span class="p">[]</span>
+
+            <span class="c"># Not parallel, so find the point of intersection</span>
+            <span class="n">px</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">((</span><span class="n">b1</span><span class="o">*</span><span class="n">c2</span> <span class="o">-</span> <span class="n">c1</span><span class="o">*</span><span class="n">b2</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">py</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">((</span><span class="n">a2</span><span class="o">*</span><span class="n">c1</span> <span class="o">-</span> <span class="n">a1</span><span class="o">*</span><span class="n">c2</span><span class="p">)</span> <span class="o">/</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">inter</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">)</span>
+            <span class="c"># we do not use a simplistic &#39;inter in self and inter in o&#39;</span>
+            <span class="c"># because that requires an equality test that is fragile;</span>
+            <span class="c"># instead we employ some diagnostics to see if the intersection</span>
+            <span class="c"># is valid</span>
+
+            <span class="k">def</span> <span class="nf">inseg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">_between</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">c</span> <span class="o">&gt;=</span> <span class="n">a</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">&lt;=</span> <span class="n">b</span> <span class="ow">or</span> <span class="n">c</span> <span class="o">&lt;=</span> <span class="n">a</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">&gt;=</span> <span class="n">b</span>
+                <span class="k">if</span> <span class="n">_between</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">inter</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="n">_between</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">inter</span><span class="o">.</span><span class="n">y</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+
+            <span class="k">def</span> <span class="nf">inray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="n">sray</span> <span class="o">=</span> <span class="n">Ray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="n">inter</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sray</span><span class="o">.</span><span class="n">xdirection</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">xdirection</span> <span class="ow">and</span> \
+                        <span class="n">sray</span><span class="o">.</span><span class="n">ydirection</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ydirection</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Line</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Line</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="n">inter</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inray</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="n">inter</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Segment</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inseg</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="n">inter</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inray</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="n">inter</span><span class="p">]</span>
+                    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Segment</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inseg</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="n">inter</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Segment</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inseg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Segment</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inseg</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="p">[</span><span class="n">inter</span><span class="p">]</span>
+                <span class="bp">self</span><span class="p">,</span> <span class="n">o</span> <span class="o">=</span> <span class="n">o</span><span class="p">,</span> <span class="bp">self</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.arbitrary_point"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.arbitrary_point">[docs]</a>    <span class="k">def</span> <span class="nf">arbitrary_point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A parameterized point on the Line.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str, optional</span>
+<span class="sd">            The name of the parameter which will be used for the parametric</span>
+<span class="sd">            point. The default value is &#39;t&#39;. When this parameter is 0, the</span>
+<span class="sd">            first point used to define the line will be returned, and when</span>
+<span class="sd">            it is 1 the second point will be returned.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        point : Point</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        ValueError</span>
+<span class="sd">            When ``parameter`` already appears in the Line&#39;s definition.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(1, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.arbitrary_point()</span>
+<span class="sd">        Point(4*t + 1, 3*t)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Symbol </span><span class="si">%s</span><span class="s"> already appears in object &#39;</span>
+            <span class="s">&#39;and cannot be used as a parameter.&#39;</span> <span class="o">%</span> <span class="n">t</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">t</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="n">t</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.random_point"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.random_point">[docs]</a>    <span class="k">def</span> <span class="nf">random_point</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A random point on a LinearEntity.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        point : Point</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; p3 = l1.random_point()</span>
+<span class="sd">        &gt;&gt;&gt; # random point - don&#39;t know its coords in advance</span>
+<span class="sd">        &gt;&gt;&gt; p3 # doctest: +ELLIPSIS</span>
+<span class="sd">        Point(...)</span>
+<span class="sd">        &gt;&gt;&gt; # point should belong to the line</span>
+<span class="sd">        &gt;&gt;&gt; p3 in l1</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">random</span> <span class="kn">import</span> <span class="n">randint</span>
+
+        <span class="c"># The lower and upper</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">**</span><span class="mi">32</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="mi">32</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">slope</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ray</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ydirection</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span>
+
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Ray</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">xdirection</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span>
+
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">randint</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">c</span> <span class="o">-</span> <span class="n">a</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">b</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LinearEntity.is_similar"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.is_similar">[docs]</a>    <span class="k">def</span> <span class="nf">is_similar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if self and other are contained in the same line.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 1), Point(3, 4), Point(2, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l2 = Line(p1, p3)</span>
+<span class="sd">        &gt;&gt;&gt; l1.is_similar(l2)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_norm</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">/</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="o">/</span><span class="n">a</span>
+            <span class="k">elif</span> <span class="n">b</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">a</span><span class="o">/</span><span class="n">b</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="o">/</span><span class="n">b</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">c</span>
+        <span class="k">return</span> <span class="n">_norm</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span><span class="p">)</span> <span class="o">==</span> <span class="n">_norm</span><span class="p">(</span><span class="o">*</span><span class="n">other</span><span class="o">.</span><span class="n">coefficients</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a definitive answer or else raise an error if it cannot</span>
+<span class="sd">        be determined that other is on the boundaries of self.&quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">Undecidable</span><span class="p">(</span>
+                <span class="s">&quot;can&#39;t decide whether &#39;</span><span class="si">%s</span><span class="s">&#39; contains &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+<div class="viewcode-block" id="LinearEntity.contains"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.LinearEntity.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subclasses should implement this method and should return</span>
+<span class="sd">            True if other is on the boundaries of self;</span>
+<span class="sd">            False if not on the boundaries of self;</span>
+<span class="sd">            None if a determination cannot be made.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subclasses should implement this method.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">LinearEntity</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="Line"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Line">[docs]</a><span class="k">class</span> <span class="nc">Line</span><span class="p">(</span><span class="n">LinearEntity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An infinite line in space.</span>
+
+<span class="sd">    A line is declared with two distinct points or a point and slope</span>
+<span class="sd">    as defined using keyword `slope`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    At the moment only lines in a 2D space can be declared, because</span>
+<span class="sd">    Points can be defined only for 2D spaces.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    p1 : Point</span>
+<span class="sd">    pt : Point</span>
+<span class="sd">    slope : sympy expression</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.point.Point</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; import sympy</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import L</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Line, Segment</span>
+<span class="sd">    &gt;&gt;&gt; L = Line(Point(2,3), Point(3,5))</span>
+<span class="sd">    &gt;&gt;&gt; L</span>
+<span class="sd">    Line(Point(2, 3), Point(3, 5))</span>
+<span class="sd">    &gt;&gt;&gt; L.points</span>
+<span class="sd">    (Point(2, 3), Point(3, 5))</span>
+<span class="sd">    &gt;&gt;&gt; L.equation()</span>
+<span class="sd">    -2*x + y + 1</span>
+<span class="sd">    &gt;&gt;&gt; L.coefficients</span>
+<span class="sd">    (-2, 1, 1)</span>
+
+<span class="sd">    Instantiate with keyword ``slope``:</span>
+
+<span class="sd">    &gt;&gt;&gt; Line(Point(0, 0), slope=0)</span>
+<span class="sd">    Line(Point(0, 0), Point(1, 0))</span>
+
+<span class="sd">    Instantiate with another linear object</span>
+
+<span class="sd">    &gt;&gt;&gt; s = Segment((0, 0), (0, 1))</span>
+<span class="sd">    &gt;&gt;&gt; Line(s).equation()</span>
+<span class="sd">    x</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">slope</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">LinearEntity</span><span class="p">):</span>
+            <span class="n">p1</span><span class="p">,</span> <span class="n">pt</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">slope</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;The 2nd argument was not a valid Point. &#39;</span>
+                <span class="s">&#39;If it was a slope, enter it with keyword &quot;slope&quot;.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;A line requires two distinct points.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">slope</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">pt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">slope</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">slope</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">slope</span><span class="o">.</span><span class="n">is_bounded</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="c"># when unbounded slope, don&#39;t change x</span>
+                <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># go over 1 up slope</span>
+                <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">slope</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;A 2nd Point or keyword &quot;slope&quot; must be used.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">LinearEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Line.plot_interval"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Line.plot_interval">[docs]</a>    <span class="k">def</span> <span class="nf">plot_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The plot interval for the default geometric plot of line. Gives</span>
+<span class="sd">        values that will produce a line that is +/- 5 units long (where a</span>
+<span class="sd">        unit is the distance between the two points that define the line).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str, optional</span>
+<span class="sd">            Default value is &#39;t&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        plot_interval : list (plot interval)</span>
+<span class="sd">            [parameter, lower_bound, upper_bound]</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.plot_interval()</span>
+<span class="sd">        [t, -5, 5]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Line.equation"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Line.equation">[docs]</a>    <span class="k">def</span> <span class="nf">equation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s">&#39;y&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The equation of the line: ax + by + c.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        x : str, optional</span>
+<span class="sd">            The name to use for the x-axis, default value is &#39;x&#39;.</span>
+<span class="sd">        y : str, optional</span>
+<span class="sd">            The name to use for the y-axis, default value is &#39;y&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        equation : sympy expression</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        LinearEntity.coefficients</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Line</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(1, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; l1 = Line(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; l1.equation()</span>
+<span class="sd">        -3*x + 4*y + 3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span>
+        <span class="k">if</span> <span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span> <span class="o">-</span> <span class="n">p1</span><span class="o">.</span><span class="n">x</span>
+        <span class="k">elif</span> <span class="n">p1</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">y</span> <span class="o">-</span> <span class="n">p1</span><span class="o">.</span><span class="n">y</span>
+
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coefficients</span>
+        <span class="k">return</span> <span class="n">simplify</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">y</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Line.contains"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Line.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if o is on this Line, or False otherwise.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(),</span> <span class="n">Dummy</span><span class="p">()</span>
+            <span class="n">eq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">equation</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">eq</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">solve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">o</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">eq</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">solve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">o</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">solve</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">o</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">y</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">o</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">LinearEntity</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Line</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_similar</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">p1</span> <span class="ow">in</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">o</span><span class="o">.</span><span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if other is equal to this Line, or False otherwise.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Line</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="o">.</span><span class="n">is_collinear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Line</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="Ray"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Ray">[docs]</a><span class="k">class</span> <span class="nc">Ray</span><span class="p">(</span><span class="n">LinearEntity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Ray is a semi-line in the space with a source point and a direction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    p1 : Point</span>
+<span class="sd">        The source of the Ray</span>
+<span class="sd">    p2 : Point or radian value</span>
+<span class="sd">        This point determines the direction in which the Ray propagates.</span>
+<span class="sd">        If given as an angle it is interpreted in radians with the positive</span>
+<span class="sd">        direction being ccw.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    source</span>
+<span class="sd">    xdirection</span>
+<span class="sd">    ydirection</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.point.Point, Line</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    At the moment only rays in a 2D space can be declared, because</span>
+<span class="sd">    Points can be defined only for 2D spaces.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; import sympy</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Point, pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import r</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Ray</span>
+<span class="sd">    &gt;&gt;&gt; r = Ray(Point(2, 3), Point(3, 5))</span>
+<span class="sd">    &gt;&gt;&gt; r = Ray(Point(2, 3), Point(3, 5))</span>
+<span class="sd">    &gt;&gt;&gt; r</span>
+<span class="sd">    Ray(Point(2, 3), Point(3, 5))</span>
+<span class="sd">    &gt;&gt;&gt; r.points</span>
+<span class="sd">    (Point(2, 3), Point(3, 5))</span>
+<span class="sd">    &gt;&gt;&gt; r.source</span>
+<span class="sd">    Point(2, 3)</span>
+<span class="sd">    &gt;&gt;&gt; r.xdirection</span>
+<span class="sd">    oo</span>
+<span class="sd">    &gt;&gt;&gt; r.ydirection</span>
+<span class="sd">    oo</span>
+<span class="sd">    &gt;&gt;&gt; r.slope</span>
+<span class="sd">    2</span>
+<span class="sd">    &gt;&gt;&gt; Ray(Point(0, 0), angle=pi/4).slope</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">angle</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s">&#39;The 2nd argument was not a valid Point;</span><span class="se">\n</span><span class="s">if &#39;</span>
+                    <span class="s">&#39;it was meant to be an angle it should be &#39;</span>
+                    <span class="s">&#39;given with keyword &quot;angle&quot;.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;A Ray requires two distinct points.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">angle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">pt</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># we need to know if the angle is an odd multiple of pi/2</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">pi_coeff</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">angle</span><span class="p">))</span>
+            <span class="n">p2</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">q</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">p</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                            <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">q</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">p2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">c</span> <span class="o">*=</span> <span class="n">S</span><span class="o">.</span><span class="n">Pi</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">angle</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">p2</span><span class="p">:</span>
+                <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;A 2nd point or keyword &quot;angle&quot; must be used.&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">LinearEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ray.source"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Ray.source">[docs]</a>    <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The point from which the ray emanates.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ray</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(4, 1)</span>
+<span class="sd">        &gt;&gt;&gt; r1 = Ray(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; r1.source</span>
+<span class="sd">        Point(0, 0)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ray.xdirection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Ray.xdirection">[docs]</a>    <span class="k">def</span> <span class="nf">xdirection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The x direction of the ray.</span>
+
+<span class="sd">        Positive infinity if the ray points in the positive x direction,</span>
+<span class="sd">        negative infinity if the ray points in the negative x direction,</span>
+<span class="sd">        or 0 if the ray is vertical.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        ydirection</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ray</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, -1)</span>
+<span class="sd">        &gt;&gt;&gt; r1, r2 = Ray(p1, p2), Ray(p1, p3)</span>
+<span class="sd">        &gt;&gt;&gt; r1.xdirection</span>
+<span class="sd">        oo</span>
+<span class="sd">        &gt;&gt;&gt; r2.xdirection</span>
+<span class="sd">        0</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Ray.ydirection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Ray.ydirection">[docs]</a>    <span class="k">def</span> <span class="nf">ydirection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The y direction of the ray.</span>
+
+<span class="sd">        Positive infinity if the ray points in the positive y direction,</span>
+<span class="sd">        negative infinity if the ray points in the negative y direction,</span>
+<span class="sd">        or 0 if the ray is horizontal.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        xdirection</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ray</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(-1, -1), Point(-1, 0)</span>
+<span class="sd">        &gt;&gt;&gt; r1, r2 = Ray(p1, p2), Ray(p1, p3)</span>
+<span class="sd">        &gt;&gt;&gt; r1.ydirection</span>
+<span class="sd">        -oo</span>
+<span class="sd">        &gt;&gt;&gt; r2.ydirection</span>
+<span class="sd">        0</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+</div>
+<div class="viewcode-block" id="Ray.plot_interval"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Ray.plot_interval">[docs]</a>    <span class="k">def</span> <span class="nf">plot_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The plot interval for the default geometric plot of the Ray. Gives</span>
+<span class="sd">        values that will produce a ray that is 10 units long (where a unit is</span>
+<span class="sd">        the distance between the two points that define the ray).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str, optional</span>
+<span class="sd">            Default value is &#39;t&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        plot_interval : list</span>
+<span class="sd">            [parameter, lower_bound, upper_bound]</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Ray, pi</span>
+<span class="sd">        &gt;&gt;&gt; r = Ray((0, 0), angle=pi/4)</span>
+<span class="sd">        &gt;&gt;&gt; r.plot_interval()</span>
+<span class="sd">        [t, 0, 10]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is the other GeometryEntity equal to this Ray?&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Ray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">source</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Ray</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Ray.contains"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Ray.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is other GeometryEntity contained in this Ray?&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">Point</span><span class="o">.</span><span class="n">is_collinear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="n">o</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="n">o</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">xdirection</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">xdirection</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ydirection</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">ydirection</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">p1</span> <span class="ow">in</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">o</span><span class="o">.</span><span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">Point</span><span class="o">.</span><span class="n">is_collinear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">xdirection</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">x</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">xdirection</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">x</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">x</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ydirection</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">y</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">y</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rv</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">y</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">y</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">rv</span>
+                <span class="k">raise</span> <span class="n">Undecidable</span><span class="p">(</span>
+                    <span class="s">&#39;Cannot determine if </span><span class="si">%s</span><span class="s"> is in </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># Points are not collinear, so the rays are not parallel</span>
+                <span class="c"># and hence it is impossible for self to contain o</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="c"># No other known entity can be contained in a Ray</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div></div>
+<div class="viewcode-block" id="Segment"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Segment">[docs]</a><span class="k">class</span> <span class="nc">Segment</span><span class="p">(</span><span class="n">LinearEntity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An undirected line segment in space.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    p1 : Point</span>
+<span class="sd">    p2 : Point</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    length : number or sympy expression</span>
+<span class="sd">    midpoint : Point</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.point.Point, Line</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    At the moment only segments in a 2D space can be declared, because</span>
+<span class="sd">    Points can be defined only for 2D spaces.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; import sympy</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Point</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import s</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Segment</span>
+<span class="sd">    &gt;&gt;&gt; Segment((1, 0), (1, 1)) # tuples are interpreted as pts</span>
+<span class="sd">    Segment(Point(1, 0), Point(1, 1))</span>
+<span class="sd">    &gt;&gt;&gt; s = Segment(Point(4, 3), Point(1, 1))</span>
+<span class="sd">    &gt;&gt;&gt; s</span>
+<span class="sd">    Segment(Point(1, 1), Point(4, 3))</span>
+<span class="sd">    &gt;&gt;&gt; s.points</span>
+<span class="sd">    (Point(1, 1), Point(4, 3))</span>
+<span class="sd">    &gt;&gt;&gt; s.slope</span>
+<span class="sd">    2/3</span>
+<span class="sd">    &gt;&gt;&gt; s.length</span>
+<span class="sd">    sqrt(13)</span>
+<span class="sd">    &gt;&gt;&gt; s.midpoint</span>
+<span class="sd">    Point(5/2, 2)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c"># Reorder the two points under the following ordering:</span>
+        <span class="c">#   if p1.x != p2.x then p1.x &lt; p2.x</span>
+        <span class="c">#   if p1.x == p2.x then p1.y &lt; p2.y</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+        <span class="n">p2</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p1</span> <span class="o">==</span> <span class="n">p2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Point</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+            <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p1</span>
+        <span class="k">elif</span> <span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">p2</span><span class="o">.</span><span class="n">x</span> <span class="ow">and</span> <span class="n">p1</span><span class="o">.</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">p2</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>
+            <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p1</span>
+        <span class="k">return</span> <span class="n">LinearEntity</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Segment.plot_interval"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Segment.plot_interval">[docs]</a>    <span class="k">def</span> <span class="nf">plot_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter</span><span class="o">=</span><span class="s">&#39;t&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The plot interval for the default geometric plot of the Segment. Gives</span>
+<span class="sd">        values that will produce the full segment in a plot.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        parameter : str, optional</span>
+<span class="sd">            Default value is &#39;t&#39;.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        plot_interval : list</span>
+<span class="sd">            [parameter, lower_bound, upper_bound]</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Segment</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(5, 3)</span>
+<span class="sd">        &gt;&gt;&gt; s1 = Segment(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; s1.plot_interval()</span>
+<span class="sd">        [t, 0, 1]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">_symbol</span><span class="p">(</span><span class="n">parameter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="Segment.perpendicular_bisector"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Segment.perpendicular_bisector">[docs]</a>    <span class="k">def</span> <span class="nf">perpendicular_bisector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The perpendicular bisector of this segment.</span>
+
+<span class="sd">        If no point is specified or the point specified is not on the</span>
+<span class="sd">        bisector then the bisector is returned as a Line. Otherwise a</span>
+<span class="sd">        Segment is returned that joins the point specified and the</span>
+<span class="sd">        intersection of the bisector and the segment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        p : Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+
+<span class="sd">        bisector : Line or Segment</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        LinearEntity.perpendicular_segment</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Segment</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(6, 6), Point(5, 1)</span>
+<span class="sd">        &gt;&gt;&gt; s1 = Segment(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; s1.perpendicular_bisector()</span>
+<span class="sd">        Line(Point(3, 3), Point(9, -3))</span>
+
+<span class="sd">        &gt;&gt;&gt; s1.perpendicular_bisector(p3)</span>
+<span class="sd">        Segment(Point(3, 3), Point(5, 1))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">LinearEntity</span><span class="o">.</span><span class="n">perpendicular_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">midpoint</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">l</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">l</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Segment</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">midpoint</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Segment.length"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Segment.length">[docs]</a>    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The length of the line segment.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point.distance</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Segment</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(4, 3)</span>
+<span class="sd">        &gt;&gt;&gt; s1 = Segment(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; s1.length</span>
+<span class="sd">        5</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Segment.midpoint"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Segment.midpoint">[docs]</a>    <span class="k">def</span> <span class="nf">midpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The midpoint of the line segment.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.point.Point.midpoint</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Segment</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 0), Point(4, 3)</span>
+<span class="sd">        &gt;&gt;&gt; s1 = Segment(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; s1.midpoint</span>
+<span class="sd">        Point(2, 3/2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Point</span><span class="o">.</span><span class="n">midpoint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Segment.distance"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Segment.distance">[docs]</a>    <span class="k">def</span> <span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Finds the shortest distance between a line segment and a point.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        NotImplementedError is raised if o is not a Point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Segment</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 1), Point(3, 4)</span>
+<span class="sd">        &gt;&gt;&gt; s = Segment(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; s.distance(Point(10, 15))</span>
+<span class="sd">        sqrt(170)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_point_distance</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">_do_point_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculates the distance between a point and a line segment.&quot;&quot;&quot;</span>
+
+        <span class="n">seg_vector</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span>
+        <span class="n">pt_vector</span> <span class="o">=</span> <span class="n">pt</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">seg_vector</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pt_vector</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">t</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="n">pt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">Point</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="o">+</span> <span class="n">Point</span><span class="p">(</span><span class="n">t</span><span class="o">*</span><span class="n">seg_vector</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="o">*</span><span class="n">seg_vector</span><span class="o">.</span><span class="n">y</span><span class="p">),</span> <span class="n">pt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">distance</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is the other GeometryEntity equal to this Ray?&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">p1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p2</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">p2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Segment</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Segment.contains"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.line.Segment.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is the other GeometryEntity contained within this Segment?</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, Segment</span>
+<span class="sd">        &gt;&gt;&gt; p1, p2 = Point(0, 1), Point(3, 4)</span>
+<span class="sd">        &gt;&gt;&gt; s = Segment(p1, p2)</span>
+<span class="sd">        &gt;&gt;&gt; s2 = Segment(p2, p1)</span>
+<span class="sd">        &gt;&gt;&gt; s.contains(s2)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">p1</span> <span class="ow">in</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">p2</span> <span class="ow">in</span> <span class="bp">self</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">Point</span><span class="o">.</span><span class="n">is_collinear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+                <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">arbitrary_point</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">args</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p1</span><span class="o">.</span><span class="n">x</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p2</span><span class="o">.</span><span class="n">x</span><span class="p">:</span>
+                    <span class="n">ti</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ti</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">ti</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">ti</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+                <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="c"># No other known entity can be contained in a Ray</span>
+        <span class="k">return</span> <span class="bp">False</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

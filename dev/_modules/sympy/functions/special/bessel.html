@@ -1,0 +1,835 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.special.bessel &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.special.bessel</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Bessel type functions&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">I</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">ArgumentIndexError</span><span class="p">,</span> <span class="n">expand_func</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.trigonometric</span> <span class="kn">import</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">csc</span><span class="p">,</span> <span class="n">cot</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.complexes</span> <span class="kn">import</span> <span class="n">re</span><span class="p">,</span> <span class="n">im</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="c"># TODO</span>
+<span class="c"># o Airy Ai and Bi functions</span>
+<span class="c"># o Scorer functions G1 and G2</span>
+<span class="c"># o Asymptotic expansions</span>
+<span class="c">#   These are possible, e.g. for fixed order, but since the bessel type</span>
+<span class="c">#   functions are oscillatory they are not actually tractable at</span>
+<span class="c">#   infinity, so this is not particularly useful right now.</span>
+<span class="c"># o Series Expansions for functions of the second kind about zero</span>
+<span class="c"># o Nicer series expansions.</span>
+<span class="c"># o More rewriting.</span>
+<span class="c"># o Add solvers to ode.py (or rather add solvers for the hypergeometric equation).</span>
+
+
+<div class="viewcode-block" id="BesselBase"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.BesselBase">[docs]</a><span class="k">class</span> <span class="nc">BesselBase</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for bessel-type functions.</span>
+
+<span class="sd">    This class is meant to reduce code duplication.</span>
+<span class="sd">    All Bessel type functions can 1) be differentiated, and the derivatives</span>
+<span class="sd">    expressed in terms of similar functions and 2) be rewritten in terms</span>
+<span class="sd">    of other bessel-type functions.</span>
+
+<span class="sd">    Here &quot;bessel-type functions&quot; are assumed to have one complex parameter.</span>
+
+<span class="sd">    To use this base class, define class attributes ``_a`` and ``_b`` such that</span>
+<span class="sd">    ``2*F_n&#39; = -_a*F_{n+1} + b*F_{n-1}``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="BesselBase.order"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.BesselBase.order">[docs]</a>    <span class="k">def</span> <span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The order of the bessel-type function. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="BesselBase.argument"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.BesselBase.argument">[docs]</a>    <span class="k">def</span> <span class="nf">argument</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The argument of the bessel-type function. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span> \
+            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">/</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span> \
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="n">z</span><span class="o">.</span><span class="n">is_negative</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">nu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">nu</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_expand_func</span><span class="p">()</span> <span class="o">+</span>
+                        <span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">*</span><span class="p">(</span><span class="n">nu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">nu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_expand_func</span><span class="p">()</span><span class="o">/</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">*</span><span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_expand_func</span><span class="p">()</span><span class="o">/</span><span class="n">z</span> <span class="o">-</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_expand_func</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+</div>
+<div class="viewcode-block" id="besselj"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.besselj">[docs]</a><span class="k">class</span> <span class="nc">besselj</span><span class="p">(</span><span class="n">BesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Bessel function of the first kind.</span>
+
+<span class="sd">    The Bessel `J` function of order `\nu` is defined to be the function</span>
+<span class="sd">    satisfying Bessel&#39;s differential equation</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}</span>
+<span class="sd">        + z \frac{\mathrm{d}w}{\mathrm{d}z} + (z^2 - \nu^2) w = 0,</span>
+
+<span class="sd">    with Laurent expansion</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        J_\nu(z) = z^\nu \left(\frac{1}{\Gamma(\nu + 1) 2^\nu} + O(z^2) \right),</span>
+
+<span class="sd">    if :math:`\nu` is not a negative integer. If :math:`\nu=-n \in \mathbb{Z}_{&lt;0}`</span>
+<span class="sd">    *is* a negative integer, then the definition is</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        J_{-n}(z) = (-1)^n J_n(z).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Create a Bessel function object:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import besselj, jn</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, n</span>
+<span class="sd">    &gt;&gt;&gt; b = besselj(n, z)</span>
+
+<span class="sd">    Differentiate it:</span>
+
+<span class="sd">    &gt;&gt;&gt; b.diff(z)</span>
+<span class="sd">    besselj(n - 1, z)/2 - besselj(n + 1, z)/2</span>
+
+<span class="sd">    Rewrite in terms of spherical Bessel functions:</span>
+
+<span class="sd">    &gt;&gt;&gt; b.rewrite(jn)</span>
+<span class="sd">    sqrt(2)*sqrt(z)*jn(n - 1/2, z)/sqrt(pi)</span>
+
+<span class="sd">    Access the parameter and argument:</span>
+
+<span class="sd">    &gt;&gt;&gt; b.order</span>
+<span class="sd">    n</span>
+<span class="sd">    &gt;&gt;&gt; b.argument</span>
+<span class="sd">    z</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    bessely, besseli, besselk</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Abramowitz, Milton; Stegun, Irene A., eds. (1965), &quot;Chapter 9&quot;,</span>
+<span class="sd">           Handbook of Mathematical Functions with Formulas, Graphs, and</span>
+<span class="sd">           Mathematical Tables</span>
+<span class="sd">    .. [2] Luke, Y. L. (1969), The Special Functions and Their</span>
+<span class="sd">           Approximations, Volume 1</span>
+<span class="sd">    .. [3] http://en.wikipedia.org/wiki/Bessel_function</span>
+<span class="sd">    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_a</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">_b</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_zero</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_negative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+            <span class="k">elif</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="ow">or</span> <span class="p">(</span><span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">nu</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="o">-</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">besselj</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+            <span class="n">newz</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">extract_multiplicatively</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">newz</span><span class="p">:</span>  <span class="c"># NOTE we don&#39;t want to change the function if z==0</span>
+                <span class="k">return</span> <span class="n">I</span><span class="o">**</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">besseli</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">newz</span><span class="p">)</span>
+
+        <span class="c"># branch handling:</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">unpolarify</span><span class="p">,</span> <span class="n">exp</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="n">newz</span> <span class="o">=</span> <span class="n">unpolarify</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">newz</span> <span class="o">!=</span> <span class="n">z</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">newz</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">newz</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">extract_branch_factor</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="o">*</span><span class="n">I</span><span class="p">)</span><span class="o">*</span><span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">newz</span><span class="p">)</span>
+        <span class="n">nnu</span> <span class="o">=</span> <span class="n">unpolarify</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nu</span> <span class="o">!=</span> <span class="n">nnu</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">besselj</span><span class="p">(</span><span class="n">nnu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_besseli</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">polar_lift</span><span class="p">,</span> <span class="n">exp</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">besseli</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">polar_lift</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="p">)</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_bessely</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">csc</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">bessely</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="n">cot</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">bessely</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_jn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">jn</span><span class="p">(</span><span class="n">nu</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="bessely"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.bessely">[docs]</a><span class="k">class</span> <span class="nc">bessely</span><span class="p">(</span><span class="n">BesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Bessel function of the second kind.</span>
+
+<span class="sd">    The Bessel `Y` function of order `\nu` is defined as</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        Y_\nu(z) = \lim_{\mu \to \nu} \frac{J_\mu(z) \cos(\pi \mu)</span>
+<span class="sd">                                            - J_{-\mu}(z)}{\sin(\pi \mu)},</span>
+
+<span class="sd">    where :math:`J_\mu(z)` is the Bessel function of the first kind.</span>
+
+<span class="sd">    It is a solution to Bessel&#39;s equation, and linearly independent from</span>
+<span class="sd">    :math:`J_\nu`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import bessely, yn</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, n</span>
+<span class="sd">    &gt;&gt;&gt; b = bessely(n, z)</span>
+<span class="sd">    &gt;&gt;&gt; b.diff(z)</span>
+<span class="sd">    bessely(n - 1, z)/2 - bessely(n + 1, z)/2</span>
+<span class="sd">    &gt;&gt;&gt; b.rewrite(yn)</span>
+<span class="sd">    sqrt(2)*sqrt(z)*yn(n - 1/2, z)/sqrt(pi)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    besselj, besseli, besselk</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_a</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">_b</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="ow">or</span> <span class="n">z</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">bessely</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">csc</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="n">besselj</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_besseli</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="n">aj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">aj</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">aj</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">besseli</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_yn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">yn</span><span class="p">(</span><span class="n">nu</span> <span class="o">-</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="besseli"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.besseli">[docs]</a><span class="k">class</span> <span class="nc">besseli</span><span class="p">(</span><span class="n">BesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Modified Bessel function of the first kind.</span>
+
+<span class="sd">    The Bessel I function is a solution to the modified Bessel equation</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}</span>
+<span class="sd">        + z \frac{\mathrm{d}w}{\mathrm{d}z} + (z^2 + \nu^2)^2 w = 0.</span>
+
+<span class="sd">    It can be defined as</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        I_\nu(z) = i^{-\nu} J_\nu(iz),</span>
+
+<span class="sd">    where :math:`J_\nu(z)` is the Bessel function of the first kind.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import besseli</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, n</span>
+<span class="sd">    &gt;&gt;&gt; besseli(n, z).diff(z)</span>
+<span class="sd">    besseli(n - 1, z)/2 + besseli(n + 1, z)/2</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    besselj, bessely, besselk</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_a</span> <span class="o">=</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">_b</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_zero</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_negative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+            <span class="k">elif</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">im</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="ow">or</span> <span class="n">im</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">nu</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">besseli</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="o">-</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">besseli</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+            <span class="n">newz</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">extract_multiplicatively</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">newz</span><span class="p">:</span>  <span class="c"># NOTE we don&#39;t want to change the function if z==0</span>
+                <span class="k">return</span> <span class="n">I</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="o">-</span><span class="n">newz</span><span class="p">)</span>
+
+        <span class="c"># branch handling:</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">unpolarify</span><span class="p">,</span> <span class="n">exp</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="n">newz</span> <span class="o">=</span> <span class="n">unpolarify</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">newz</span> <span class="o">!=</span> <span class="n">z</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">besseli</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">newz</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">newz</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">extract_branch_factor</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="o">*</span><span class="n">I</span><span class="p">)</span><span class="o">*</span><span class="n">besseli</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">newz</span><span class="p">)</span>
+        <span class="n">nnu</span> <span class="o">=</span> <span class="n">unpolarify</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nu</span> <span class="o">!=</span> <span class="n">nnu</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">besseli</span><span class="p">(</span><span class="n">nnu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">polar_lift</span><span class="p">,</span> <span class="n">exp</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">polar_lift</span><span class="p">(</span><span class="n">I</span><span class="p">)</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_bessely</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="n">aj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">aj</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">aj</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">bessely</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_jn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">jn</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="besselk"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.besselk">[docs]</a><span class="k">class</span> <span class="nc">besselk</span><span class="p">(</span><span class="n">BesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Modified Bessel function of the second kind.</span>
+
+<span class="sd">    The Bessel K function of order :math:`\nu` is defined as</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        K_\nu(z) = \lim_{\mu \to \nu} \frac{\pi}{2}</span>
+<span class="sd">                   \frac{I_{-\mu}(z) -I_\mu(z)}{\sin(\pi \mu)},</span>
+
+<span class="sd">    where :math:`I_\mu(z)` is the modified Bessel function of the first kind.</span>
+
+<span class="sd">    It is a solution of the modified Bessel equation, and linearly independent</span>
+<span class="sd">    from :math:`Y_\nu`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import besselk</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, n</span>
+<span class="sd">    &gt;&gt;&gt; besselk(n, z).diff(z)</span>
+<span class="sd">    -besselk(n - 1, z)/2 - besselk(n + 1, z)/2</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    besselj, besseli, bessely</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_a</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">_b</span> <span class="o">=</span> <span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+            <span class="k">elif</span> <span class="n">re</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">im</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="ow">or</span> <span class="n">im</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">could_extract_minus_sign</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">besselk</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_besseli</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">nu</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pi</span><span class="o">*</span><span class="n">csc</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">besseli</span><span class="p">(</span><span class="o">-</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="n">besseli</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="n">ai</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_besseli</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ai</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ai</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">besselj</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_bessely</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="n">aj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">aj</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">aj</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">bessely</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_yn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="n">ay</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_bessely</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ay</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ay</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">yn</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="hankel1"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.hankel1">[docs]</a><span class="k">class</span> <span class="nc">hankel1</span><span class="p">(</span><span class="n">BesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Hankel function of the first kind.</span>
+
+<span class="sd">    This function is defined as</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        H_\nu^{(1)} = J_\nu(z) + iY_\nu(z),</span>
+
+<span class="sd">    where :math:`J_\nu(z)` is the Bessel function of the first kind, and</span>
+<span class="sd">    :math:`Y_\nu(z)` is the Bessel function of the second kind.</span>
+
+<span class="sd">    It is a solution to Bessel&#39;s equation.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import hankel1</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, n</span>
+<span class="sd">    &gt;&gt;&gt; hankel1(n, z).diff(z)</span>
+<span class="sd">    hankel1(n - 1, z)/2 - hankel1(n + 1, z)/2</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    hankel2, besselj, bessely</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_a</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">_b</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="n">z</span><span class="o">.</span><span class="n">is_negative</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">hankel2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+
+</div>
+<div class="viewcode-block" id="hankel2"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.hankel2">[docs]</a><span class="k">class</span> <span class="nc">hankel2</span><span class="p">(</span><span class="n">BesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Hankel function of the second kind.</span>
+
+<span class="sd">    This function is defined as</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        H_\nu^{(2)} = J_\nu(z) - iY_\nu(z),</span>
+
+<span class="sd">    where :math:`J_\nu(z)` is the Bessel function of the first kind, and</span>
+<span class="sd">    :math:`Y_\nu(z)` is the Bessel function of the second kind.</span>
+
+<span class="sd">    It is a solution to Bessel&#39;s equation, and linearly independent from</span>
+<span class="sd">    :math:`H_\nu^{(1)}`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import hankel2</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z, n</span>
+<span class="sd">    &gt;&gt;&gt; hankel2(n, z).diff(z)</span>
+<span class="sd">    hankel2(n - 1, z)/2 - hankel2(n + 1, z)/2</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    hankel1, besselj, bessely</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_a</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">_b</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">and</span> <span class="n">z</span><span class="o">.</span><span class="n">is_negative</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">hankel1</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">z</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+</div>
+<span class="kn">from</span> <span class="nn">sympy.polys.orthopolys</span> <span class="kn">import</span> <span class="n">spherical_bessel_fn</span> <span class="k">as</span> <span class="n">fn</span>
+
+
+<span class="k">class</span> <span class="nc">SphericalBesselBase</span><span class="p">(</span><span class="n">BesselBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for spherical Bessel functions.</span>
+
+<span class="sd">    These are thin wrappers around ordinary Bessel functions,</span>
+<span class="sd">    since spherical Bessel functions differ from the ordinary</span>
+<span class="sd">    ones just by a slight change in order.</span>
+
+<span class="sd">    To use this class, define the ``_rewrite`` and ``_expand`` methods.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Expand self into a polynomial. Nu is guaranteed to be Integer. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;expansion&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_rewrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Rewrite self in terms of ordinary Bessel functions. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;rewriting&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expand</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rewrite</span><span class="p">()</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span> <span class="o">-</span> \
+            <span class="bp">self</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+
+
+<div class="viewcode-block" id="jn"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.jn">[docs]</a><span class="k">class</span> <span class="nc">jn</span><span class="p">(</span><span class="n">SphericalBesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Spherical Bessel function of the first kind.</span>
+
+<span class="sd">    This function is a solution to the spherical Bessel equation</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        z^2 \frac{\mathrm{d}^2 w}{\mathrm{d}z^2}</span>
+<span class="sd">          + 2z \frac{\mathrm{d}w}{\mathrm{d}z} + (z^2 - \nu(\nu + 1)) w = 0.</span>
+
+<span class="sd">    It can be defined as</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        j_\nu(z) = \sqrt{\frac{\pi}{2z}} J_{\nu + \frac{1}{2}}(z),</span>
+
+<span class="sd">    where :math:`J_\nu(z)` is the Bessel function of the first kind.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, jn, sin, cos, expand_func</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; print(jn(0, z).expand(func=True))</span>
+<span class="sd">    sin(z)/z</span>
+<span class="sd">    &gt;&gt;&gt; jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(jn(3, z))</span>
+<span class="sd">    (-6/z**2 + 15/z**4)*sin(z) + (1/z - 15/z**3)*cos(z)</span>
+
+<span class="sd">    The spherical Bessel functions of integral order</span>
+<span class="sd">    are calculated using the formula:</span>
+
+<span class="sd">    .. math:: j_n(z) = f_n(z) \sin{z} + (-1)^{n+1} f_{-n-1}(z) \cos{z},</span>
+
+<span class="sd">    where the coefficients :math:`f_n(z)` are available as</span>
+<span class="sd">    :func:`polys.orthopolys.spherical_bessel_fn`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    besselj, bessely, besselk, yn</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_rewrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_besselj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">))</span> <span class="o">*</span> <span class="n">besselj</span><span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="n">S</span><span class="p">(</span><span class="s">&#39;1/2&#39;</span><span class="p">),</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+        <span class="k">return</span> <span class="n">fn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">fn</span><span class="p">(</span><span class="o">-</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="yn"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.yn">[docs]</a><span class="k">class</span> <span class="nc">yn</span><span class="p">(</span><span class="n">SphericalBesselBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Spherical Bessel function of the second kind.</span>
+
+<span class="sd">    This function is another solution to the spherical Bessel equation, and</span>
+<span class="sd">    linearly independent from :math:`j_n`. It can be defined as</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        j_\nu(z) = \sqrt{\frac{\pi}{2z}} Y_{\nu + \frac{1}{2}}(z),</span>
+
+<span class="sd">    where :math:`Y_\nu(z)` is the Bessel function of the second kind.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, yn, sin, cos, expand_func</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; print(expand_func(yn(0, z)))</span>
+<span class="sd">    -cos(z)/z</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z</span>
+<span class="sd">    True</span>
+
+<span class="sd">    For integral orders :math:`n`, :math:`y_n` is calculated using the formula:</span>
+
+<span class="sd">    .. math:: y_n(z) = (-1)^{n+1} j_{-n-1}(z)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    besselj, bessely, besselk, jn</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_rewrite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite_as_bessely</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_bessely</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">z</span><span class="p">))</span> <span class="o">*</span> <span class="n">bessely</span><span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="n">S</span><span class="p">(</span><span class="s">&#39;1/2&#39;</span><span class="p">),</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> \
+               <span class="p">(</span><span class="n">fn</span><span class="p">(</span><span class="o">-</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">fn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="o">*</span> <span class="n">cos</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="jn_zeros"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.bessel.jn_zeros">[docs]</a><span class="k">def</span> <span class="nf">jn_zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&quot;sympy&quot;</span><span class="p">,</span> <span class="n">dps</span><span class="o">=</span><span class="mi">15</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Zeros of the spherical Bessel function of the first kind.</span>
+
+<span class="sd">    This returns an array of zeros of jn up to the k-th zero.</span>
+
+<span class="sd">    * method = &quot;sympy&quot;: uses :func:`mpmath.besseljzero`</span>
+<span class="sd">    * method = &quot;scipy&quot;: uses the</span>
+<span class="sd">      `SciPy&#39;s sph_jn &lt;http://docs.scipy.org/doc/scipy/reference/generated/scipy.special.jn.html&gt;`_</span>
+<span class="sd">      and</span>
+<span class="sd">      `newton &lt;http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.newton.html&gt;`_</span>
+<span class="sd">      to find all</span>
+<span class="sd">      roots, which is faster than computing the zeros using a general</span>
+<span class="sd">      numerical solver, but it requires SciPy and only works with low</span>
+<span class="sd">      precision floating point numbers.  [The function used with</span>
+<span class="sd">      method=&quot;sympy&quot; is a recent addition to mpmath, before that a general</span>
+<span class="sd">      solver was used.]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import jn_zeros</span>
+<span class="sd">    &gt;&gt;&gt; jn_zeros(2, 4, dps=5)</span>
+<span class="sd">    [5.7635, 9.095, 12.323, 15.515]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    jn, yn, besselj, besselk, bessely</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;sympy&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sympy.mpmath</span> <span class="kn">import</span> <span class="n">besseljzero</span>
+        <span class="kn">from</span> <span class="nn">sympy.mpmath.libmp.libmpf</span> <span class="kn">import</span> <span class="n">dps_to_prec</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Expr</span>
+        <span class="n">prec</span> <span class="o">=</span> <span class="n">dps_to_prec</span><span class="p">(</span><span class="n">dps</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Expr</span><span class="o">.</span><span class="n">_from_mpmath</span><span class="p">(</span><span class="n">besseljzero</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">_to_mpmath</span><span class="p">(</span><span class="n">prec</span><span class="p">),</span>
+                                              <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)),</span> <span class="n">prec</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+    <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;scipy&quot;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">sph_jn</span>
+        <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">newton</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sph_jn</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Unknown method.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">solver</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;scipy&quot;</span><span class="p">:</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Unknown method.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">root</span>
+
+    <span class="c"># we need to approximate the position of the first root:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">n</span> <span class="o">+</span> <span class="n">pi</span>
+    <span class="c"># determine the first root exactly:</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">solver</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">root</span><span class="p">)</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c"># estimate the position of the next root using the last root + pi:</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">solver</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">root</span> <span class="o">+</span> <span class="n">pi</span><span class="p">)</span>
+        <span class="n">roots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">roots</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

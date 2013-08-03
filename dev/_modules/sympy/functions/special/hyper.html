@@ -1,0 +1,1151 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.special.hyper &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.special.hyper</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Hypergeometric and Meijer G-functions&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">ilcm</span><span class="p">,</span> <span class="n">Mod</span><span class="p">,</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Derivative</span><span class="p">,</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.core.containers</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="kn">import</span> <span class="n">Mul</span>
+
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">asin</span><span class="p">,</span> <span class="n">atan</span><span class="p">,</span>
+        <span class="n">sinh</span><span class="p">,</span> <span class="n">cosh</span><span class="p">,</span> <span class="n">asinh</span><span class="p">,</span> <span class="n">acosh</span><span class="p">,</span> <span class="n">atanh</span><span class="p">,</span> <span class="n">acoth</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">TupleArg</span><span class="p">(</span><span class="n">Tuple</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">limit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">xlim</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">&#39;+&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Compute limit x-&gt;xlim.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.series.limits</span> <span class="kn">import</span> <span class="n">limit</span>
+        <span class="k">return</span> <span class="n">TupleArg</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">limit</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">xlim</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+
+<span class="c"># TODO should __new__ accept **options?</span>
+<span class="c"># TODO should constructors should check if parameters are sensible?</span>
+
+
+<span class="k">def</span> <span class="nf">_prep_tuple</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Turn an iterable argument V into a Tuple and unpolarify, since both</span>
+<span class="sd">    hypergeometric and meijer g-functions are unbranched in their parameters.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.special.hyper import _prep_tuple</span>
+<span class="sd">    &gt;&gt;&gt; _prep_tuple([1, 2, 3])</span>
+<span class="sd">    (1, 2, 3)</span>
+<span class="sd">    &gt;&gt;&gt; _prep_tuple((4, 5))</span>
+<span class="sd">    (4, 5)</span>
+<span class="sd">    &gt;&gt;&gt; _prep_tuple((7, 8, 9))</span>
+<span class="sd">    (7, 8, 9)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">unpolarify</span>
+    <span class="k">return</span> <span class="n">TupleArg</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">unpolarify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])</span>
+
+
+<span class="k">class</span> <span class="nc">TupleParametersBase</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Base class that takes care of differentiation, when some of</span>
+<span class="sd">        the arguments are actually tuples. &quot;&quot;&quot;</span>
+    <span class="c"># This is not deduced automatically since there are Tuples as arguments.</span>
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_diffargs</span><span class="p">):</span>
+                    <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diffargs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">res</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fdiff</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span><span class="o">*</span><span class="n">m</span>
+            <span class="k">return</span> <span class="n">res</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">fdiff</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">ArgumentIndexError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="hyper"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.hyper">[docs]</a><span class="k">class</span> <span class="nc">hyper</span><span class="p">(</span><span class="n">TupleParametersBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    The (generalized) hypergeometric function is defined by a series where</span>
+<span class="sd">    the ratios of successive terms are a rational function of the summation</span>
+<span class="sd">    index. When convergent, it is continued analytically to the largest</span>
+<span class="sd">    possible domain.</span>
+
+<span class="sd">    The hypergeometric function depends on two vectors of parameters, called</span>
+<span class="sd">    the numerator parameters :math:`a_p`, and the denominator parameters</span>
+<span class="sd">    :math:`b_q`. It also has an argument :math:`z`. The series definition is</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}</span>
+<span class="sd">                     \middle| z \right)</span>
+<span class="sd">        = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}</span>
+<span class="sd">                            \frac{z^n}{n!},</span>
+
+<span class="sd">    where :math:`(a)_n = (a)(a+1)\dots(a+n-1)` denotes the rising factorial.</span>
+
+<span class="sd">    If one of the :math:`b_q` is a non-positive integer then the series is</span>
+<span class="sd">    undefined unless one of the `a_p` is a larger (i.e. smaller in</span>
+<span class="sd">    magnitude) non-positive integer. If none of the :math:`b_q` is a</span>
+<span class="sd">    non-positive integer and one of the :math:`a_p` is a non-positive</span>
+<span class="sd">    integer, then the series reduces to a polynomial. To simplify the</span>
+<span class="sd">    following discussion, we assume that none of the :math:`a_p` or</span>
+<span class="sd">    :math:`b_q` is a non-positive integer. For more details, see the</span>
+<span class="sd">    references.</span>
+
+<span class="sd">    The series converges for all :math:`z` if :math:`p \le q`, and thus</span>
+<span class="sd">    defines an entire single-valued function in this case. If :math:`p =</span>
+<span class="sd">    q+1` the series converges for :math:`|z| &lt; 1`, and can be continued</span>
+<span class="sd">    analytically into a half-plane. If :math:`p &gt; q+1` the series is</span>
+<span class="sd">    divergent for all :math:`z`.</span>
+
+<span class="sd">    Note: The hypergeometric function constructor currently does *not* check</span>
+<span class="sd">    if the parameters actually yield a well-defined function.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    The parameters :math:`a_p` and :math:`b_q` can be passed as arbitrary</span>
+<span class="sd">    iterables, for example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions import hyper</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, n, a</span>
+<span class="sd">    &gt;&gt;&gt; hyper((1, 2, 3), [3, 4], x)</span>
+<span class="sd">    hyper((1, 2, 3), (3, 4), x)</span>
+
+<span class="sd">    There is also pretty printing (it looks better using unicode):</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import pprint</span>
+<span class="sd">    &gt;&gt;&gt; pprint(hyper((1, 2, 3), [3, 4], x), use_unicode=False)</span>
+<span class="sd">      _</span>
+<span class="sd">     |_  /1, 2, 3 |  \</span>
+<span class="sd">     |   |        | x|</span>
+<span class="sd">    3  2 \  3, 4  |  /</span>
+
+<span class="sd">    The parameters must always be iterables, even if they are vectors of</span>
+<span class="sd">    length one or zero:</span>
+
+<span class="sd">    &gt;&gt;&gt; hyper((1, ), [], x)</span>
+<span class="sd">    hyper((1,), (), x)</span>
+
+<span class="sd">    But of course they may be variables (but if they depend on x then you</span>
+<span class="sd">    should not expect much implemented functionality):</span>
+
+<span class="sd">    &gt;&gt;&gt; hyper((n, a), (n**2,), x)</span>
+<span class="sd">    hyper((n, a), (n**2,), x)</span>
+
+<span class="sd">    The hypergeometric function generalizes many named special functions.</span>
+<span class="sd">    The function hyperexpand() tries to express a hypergeometric function</span>
+<span class="sd">    using named special functions.</span>
+<span class="sd">    For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import hyperexpand</span>
+<span class="sd">    &gt;&gt;&gt; hyperexpand(hyper([], [], x))</span>
+<span class="sd">    exp(x)</span>
+
+<span class="sd">    You can also use expand_func:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import expand_func</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(x*hyper([1, 1], [2], -x))</span>
+<span class="sd">    log(x + 1)</span>
+
+<span class="sd">    More examples:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">    &gt;&gt;&gt; hyperexpand(hyper([], [S(1)/2], -x**2/4))</span>
+<span class="sd">    cos(x)</span>
+<span class="sd">    &gt;&gt;&gt; hyperexpand(x*hyper([S(1)/2, S(1)/2], [S(3)/2], x**2))</span>
+<span class="sd">    asin(x)</span>
+
+<span class="sd">    We can also sometimes hyperexpand parametric functions:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import a</span>
+<span class="sd">    &gt;&gt;&gt; hyperexpand(hyper([-a], [], x))</span>
+<span class="sd">    (-x + 1)**a</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.simplify.hyperexpand</span>
+<span class="sd">    sympy.functions.special.gamma_functions.gamma</span>
+<span class="sd">    meijerg</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,</span>
+<span class="sd">           Volume 1</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Generalized_hypergeometric_function</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">ap</span><span class="p">,</span> <span class="n">bq</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="c"># TODO should we check convergence conditions?</span>
+        <span class="k">return</span> <span class="n">Function</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">_prep_tuple</span><span class="p">(</span><span class="n">ap</span><span class="p">),</span> <span class="n">_prep_tuple</span><span class="p">(</span><span class="n">bq</span><span class="p">),</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">ap</span><span class="p">,</span> <span class="n">bq</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">unpolarify</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ap</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bq</span><span class="p">):</span>
+            <span class="n">nz</span> <span class="o">=</span> <span class="n">unpolarify</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">z</span> <span class="o">!=</span> <span class="n">nz</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">hyper</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">bq</span><span class="p">,</span> <span class="n">nz</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+        <span class="n">nap</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">])</span>
+        <span class="n">nbq</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">b</span> <span class="o">+</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">])</span>
+        <span class="n">fac</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">)</span><span class="o">/</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fac</span><span class="o">*</span><span class="n">hyper</span><span class="p">(</span><span class="n">nap</span><span class="p">,</span> <span class="n">nbq</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">hyperexpand</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ap</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">gamma</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">*</span><span class="n">gamma</span><span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span><span class="o">/</span><span class="n">gamma</span><span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">gamma</span><span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hyperexpand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_Sum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ap</span><span class="p">,</span> <span class="n">bq</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">RisingFactorial</span><span class="p">,</span> <span class="n">Piecewise</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;n&quot;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">rfap</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ap</span><span class="p">])</span>
+        <span class="n">rfbq</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">RisingFactorial</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bq</span><span class="p">])</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">rfap</span><span class="p">)</span> <span class="o">/</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">rfbq</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">C</span><span class="o">.</span><span class="n">Sum</span><span class="p">(</span><span class="n">coeff</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="n">n</span> <span class="o">/</span> <span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)),</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">convergence_statement</span><span class="p">),</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="hyper.argument"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.hyper.argument">[docs]</a>    <span class="k">def</span> <span class="nf">argument</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Argument of the hypergeometric function. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="hyper.ap"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.hyper.ap">[docs]</a>    <span class="k">def</span> <span class="nf">ap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Numerator parameters of the hypergeometric function. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="hyper.bq"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.hyper.bq">[docs]</a>    <span class="k">def</span> <span class="nf">bq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Denominator parameters of the hypergeometric function. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_diffargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ap</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bq</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="hyper.eta"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.hyper.eta">[docs]</a>    <span class="k">def</span> <span class="nf">eta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A quantity related to the convergence of the series. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="hyper.radius_of_convergence"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.hyper.radius_of_convergence">[docs]</a>    <span class="k">def</span> <span class="nf">radius_of_convergence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the radius of convergence of the defining series.</span>
+
+<span class="sd">        Note that even if this is not oo, the function may still be evaluated</span>
+<span class="sd">        outside of the radius of convergence by analytic continuation. But if</span>
+<span class="sd">        this is zero, then the function is not actually defined anywhere else.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions import hyper</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import z</span>
+<span class="sd">        &gt;&gt;&gt; hyper((1, 2), [3], z).radius_of_convergence</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; hyper((1, 2, 3), [4], z).radius_of_convergence</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; hyper((1, 2), (3, 4), z).radius_of_convergence</span>
+<span class="sd">        oo</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ap</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">):</span>
+            <span class="n">aints</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ap</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">bints</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bq</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">aints</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">bints</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">popped</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bints</span><span class="p">:</span>
+                <span class="n">cancelled</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">while</span> <span class="n">aints</span><span class="p">:</span>
+                    <span class="n">a</span> <span class="o">=</span> <span class="n">aints</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="p">:</span>
+                        <span class="n">cancelled</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+                    <span class="n">popped</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">cancelled</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">aints</span> <span class="ow">or</span> <span class="n">popped</span><span class="p">:</span>
+                <span class="c"># There are still non-positive numerator parameters.</span>
+                <span class="c"># This is a polynomial.</span>
+                <span class="k">return</span> <span class="n">oo</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">oo</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="hyper.convergence_statement"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.hyper.convergence_statement">[docs]</a>    <span class="k">def</span> <span class="nf">convergence_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return a condition on z under which the series converges. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">re</span><span class="p">,</span> <span class="n">Ne</span><span class="p">,</span> <span class="n">oo</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius_of_convergence</span>
+        <span class="k">if</span> <span class="n">R</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">R</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="c"># The special functions and their approximations, page 44</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">re</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">re</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">re</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Ne</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">c3</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">re</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Or</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">c3</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="meijerg"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg">[docs]</a><span class="k">class</span> <span class="nc">meijerg</span><span class="p">(</span><span class="n">TupleParametersBase</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    The Meijer G-function is defined by a Mellin-Barnes type integral that</span>
+<span class="sd">    resembles an inverse Mellin transform. It generalizes the hypergeometric</span>
+<span class="sd">    functions.</span>
+
+<span class="sd">    The Meijer G-function depends on four sets of parameters. There are</span>
+<span class="sd">    &quot;*numerator parameters*&quot;</span>
+<span class="sd">    :math:`a_1, \dots, a_n` and :math:`a_{n+1}, \dots, a_p`, and there are</span>
+<span class="sd">    &quot;*denominator parameters*&quot;</span>
+<span class="sd">    :math:`b_1, \dots, b_m` and :math:`b_{m+1}, \dots, b_q`.</span>
+<span class="sd">    Confusingly, it is traditionally denoted as follows (note the position</span>
+<span class="sd">    of `m`, `n`, `p`, `q`, and how they relate to the lengths of the four</span>
+<span class="sd">    parameter vectors):</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \dots, a_n &amp; a_{n+1}, \dots, a_p \\</span>
+<span class="sd">                                        b_1, \dots, b_m &amp; b_{m+1}, \dots, b_q</span>
+<span class="sd">                          \end{matrix} \middle| z \right).</span>
+
+<span class="sd">    However, in sympy the four parameter vectors are always available</span>
+<span class="sd">    separately (see examples), so that there is no need to keep track of the</span>
+<span class="sd">    decorating sub- and super-scripts on the G symbol.</span>
+
+<span class="sd">    The G function is defined as the following integral:</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">         \frac{1}{2 \pi i} \int_L \frac{\prod_{j=1}^m \Gamma(b_j - s)</span>
+<span class="sd">         \prod_{j=1}^n \Gamma(1 - a_j + s)}{\prod_{j=m+1}^q \Gamma(1- b_j +s)</span>
+<span class="sd">         \prod_{j=n+1}^p \Gamma(a_j - s)} z^s \mathrm{d}s,</span>
+
+<span class="sd">    where :math:`\Gamma(z)` is the gamma function. There are three possible</span>
+<span class="sd">    contours which we will not describe in detail here (see the references).</span>
+<span class="sd">    If the integral converges along more than one of them the definitions</span>
+<span class="sd">    agree. The contours all separate the poles of :math:`\Gamma(1-a_j+s)`</span>
+<span class="sd">    from the poles of :math:`\Gamma(b_k-s)`, so in particular the G function</span>
+<span class="sd">    is undefined if :math:`a_j - b_k \in \mathbb{Z}_{&gt;0}` for some</span>
+<span class="sd">    :math:`j \le n` and :math:`k \le m`.</span>
+
+<span class="sd">    The conditions under which one of the contours yields a convergent integral</span>
+<span class="sd">    are complicated and we do not state them here, see the references.</span>
+
+<span class="sd">    Note: Currently the Meijer G-function constructor does *not* check any</span>
+<span class="sd">    convergence conditions.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    You can pass the parameters either as four separate vectors:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions import meijerg</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, a</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.core.containers import Tuple</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import pprint</span>
+<span class="sd">    &gt;&gt;&gt; pprint(meijerg((1, 2), (a, 4), (5,), [], x), use_unicode=False)</span>
+<span class="sd">     __1, 2 /1, 2  a, 4 |  \</span>
+<span class="sd">    /__     |           | x|</span>
+<span class="sd">    \_|4, 1 \ 5         |  /</span>
+
+<span class="sd">    or as two nested vectors:</span>
+
+<span class="sd">    &gt;&gt;&gt; pprint(meijerg([(1, 2), (3, 4)], ([5], Tuple()), x), use_unicode=False)</span>
+<span class="sd">     __1, 2 /1, 2  3, 4 |  \</span>
+<span class="sd">    /__     |           | x|</span>
+<span class="sd">    \_|4, 1 \ 5         |  /</span>
+
+<span class="sd">    As with the hypergeometric function, the parameters may be passed as</span>
+<span class="sd">    arbitrary iterables. Vectors of length zero and one also have to be</span>
+<span class="sd">    passed as iterables. The parameters need not be constants, but if they</span>
+<span class="sd">    depend on the argument then not much implemented functionality should be</span>
+<span class="sd">    expected.</span>
+
+<span class="sd">    All the subvectors of parameters are available:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import pprint</span>
+<span class="sd">    &gt;&gt;&gt; g = meijerg([1], [2], [3], [4], x)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(g, use_unicode=False)</span>
+<span class="sd">     __1, 1 /1  2 |  \</span>
+<span class="sd">    /__     |     | x|</span>
+<span class="sd">    \_|2, 2 \3  4 |  /</span>
+<span class="sd">    &gt;&gt;&gt; g.an</span>
+<span class="sd">    (1,)</span>
+<span class="sd">    &gt;&gt;&gt; g.ap</span>
+<span class="sd">    (1, 2)</span>
+<span class="sd">    &gt;&gt;&gt; g.aother</span>
+<span class="sd">    (2,)</span>
+<span class="sd">    &gt;&gt;&gt; g.bm</span>
+<span class="sd">    (3,)</span>
+<span class="sd">    &gt;&gt;&gt; g.bq</span>
+<span class="sd">    (3, 4)</span>
+<span class="sd">    &gt;&gt;&gt; g.bother</span>
+<span class="sd">    (4,)</span>
+
+<span class="sd">    The Meijer G-function generalizes the hypergeometric functions.</span>
+<span class="sd">    In some cases it can be expressed in terms of hypergeometric functions,</span>
+<span class="sd">    using Slater&#39;s theorem. For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import hyperexpand</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import a, b, c</span>
+<span class="sd">    &gt;&gt;&gt; hyperexpand(meijerg([a], [], [c], [b], x), allow_hyper=True)</span>
+<span class="sd">    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,),</span>
+<span class="sd">                                 (-b + c + 1,), -x)/gamma(-b + c + 1)</span>
+
+<span class="sd">    Thus the Meijer G-function also subsumes many named functions as special</span>
+<span class="sd">    cases. You can use expand_func or hyperexpand to (try to) rewrite a</span>
+<span class="sd">    Meijer G-function in terms of named special functions. For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import expand_func, S</span>
+<span class="sd">    &gt;&gt;&gt; expand_func(meijerg([[],[]], [[0],[]], -x))</span>
+<span class="sd">    exp(x)</span>
+<span class="sd">    &gt;&gt;&gt; hyperexpand(meijerg([[],[]], [[S(1)/2],[0]], (x/2)**2))</span>
+<span class="sd">    sin(x)/sqrt(pi)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    hyper</span>
+<span class="sd">    sympy.simplify.hyperexpand</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Luke, Y. L. (1969), The Special Functions and Their Approximations,</span>
+<span class="sd">           Volume 1</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Meijer_G-function</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">3</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="n">args</span><span class="p">[</span><span class="mi">4</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;args must eiter be as, as&#39;, bs, bs&#39;, z or &quot;</span>
+                            <span class="s">&quot;as, bs, z&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">tr</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;wrong argument&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">TupleArg</span><span class="p">(</span><span class="n">_prep_tuple</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">_prep_tuple</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="c"># TODO should we check convergence conditions?</span>
+        <span class="k">return</span> <span class="n">Function</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">tr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">tr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diff_wrt_parameter</span><span class="p">(</span><span class="n">argindex</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">)</span>
+            <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">meijerg</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aother</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bother</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">argument</span> <span class="o">*</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span> <span class="o">+</span> <span class="n">G</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">)</span>
+            <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">G</span> <span class="o">=</span> <span class="n">meijerg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aother</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bother</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">argument</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span> <span class="o">-</span> <span class="n">G</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">def</span> <span class="nf">_diff_wrt_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="c"># Differentiation wrt a parameter can only be done in very special</span>
+        <span class="c"># cases. In particular, if we want to differentiate with respect to</span>
+        <span class="c"># `a`, all other gamma factors have to reduce to rational functions.</span>
+        <span class="c">#</span>
+        <span class="c"># Let MT denote mellin transform. Suppose T(-s) is the gamma factor</span>
+        <span class="c"># appearing in the definition of G. Then</span>
+        <span class="c">#</span>
+        <span class="c">#   MT(log(z)G(z)) = d/ds T(s) = d/da T(s) + ...</span>
+        <span class="c">#</span>
+        <span class="c"># Thus d/da G(z) = log(z)G(z) - ...</span>
+        <span class="c"># The ... can be evaluated as a G function under the above conditions,</span>
+        <span class="c"># the formula being most easily derived by using</span>
+        <span class="c">#</span>
+        <span class="c"># d  Gamma(s + n)    Gamma(s + n) / 1    1                1     \</span>
+        <span class="c"># -- ------------ =  ------------ | - + ----  + ... + --------- |</span>
+        <span class="c"># ds Gamma(s)        Gamma(s)     \ s   s + 1         s + n - 1 /</span>
+        <span class="c">#</span>
+        <span class="c"># which follows from the difference equation of the digamma function.</span>
+        <span class="c"># (There is a similar equation for -n instead of +n).</span>
+
+        <span class="c"># We first figure out how to pair the parameters.</span>
+        <span class="n">an</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">)</span>
+        <span class="n">ap</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aother</span><span class="p">)</span>
+        <span class="n">bm</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">)</span>
+        <span class="n">bq</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bother</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">an</span><span class="p">):</span>
+            <span class="n">an</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">idx</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">an</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ap</span><span class="p">):</span>
+                <span class="n">ap</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">idx</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ap</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">bm</span><span class="p">):</span>
+                    <span class="n">bm</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">bq</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">idx</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">bm</span><span class="p">))</span>
+        <span class="n">pairs1</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pairs2</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">l1</span><span class="p">,</span> <span class="n">l2</span><span class="p">,</span> <span class="n">pairs</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">an</span><span class="p">,</span> <span class="n">bq</span><span class="p">,</span> <span class="n">pairs1</span><span class="p">),</span> <span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">bm</span><span class="p">,</span> <span class="n">pairs2</span><span class="p">)]:</span>
+            <span class="k">while</span> <span class="n">l1</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">l1</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">l2</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">Mod</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">simplify</span><span class="p">(),</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="n">i</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Derivative not expressible &#39;</span>
+                                              <span class="s">&#39;as G-function?&#39;</span><span class="p">)</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">l2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">l2</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+
+        <span class="c"># Now build the result.</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span>
+
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">pairs1</span><span class="p">:</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">b</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+                <span class="n">base</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">res</span> <span class="o">-=</span> <span class="n">sign</span><span class="o">*</span><span class="n">meijerg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span> <span class="o">+</span> <span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,),</span> <span class="bp">self</span><span class="o">.</span><span class="n">aother</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bother</span> <span class="o">+</span> <span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">0</span><span class="p">,),</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">pairs2</span><span class="p">:</span>
+            <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+                <span class="n">base</span> <span class="o">=</span> <span class="n">b</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="n">res</span> <span class="o">-=</span> <span class="n">sign</span><span class="o">*</span><span class="n">meijerg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aother</span> <span class="o">+</span> <span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,),</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">bm</span> <span class="o">+</span> <span class="p">(</span><span class="n">base</span> <span class="o">+</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">0</span><span class="p">,),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bother</span><span class="p">,</span>
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res</span>
+
+<div class="viewcode-block" id="meijerg.get_period"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.get_period">[docs]</a>    <span class="k">def</span> <span class="nf">get_period</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a number P such that G(x*exp(I*P)) == G(x).</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.hyper import meijerg</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import z</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import pi, S</span>
+
+<span class="sd">        &gt;&gt;&gt; meijerg([1], [], [], [], z).get_period()</span>
+<span class="sd">        2*pi</span>
+<span class="sd">        &gt;&gt;&gt; meijerg([pi], [], [], [], z).get_period()</span>
+<span class="sd">        oo</span>
+<span class="sd">        &gt;&gt;&gt; meijerg([1, 2], [], [], [], z).get_period()</span>
+<span class="sd">        oo</span>
+<span class="sd">        &gt;&gt;&gt; meijerg([1,1], [2], [1, S(1)/2, S(1)/3], [1], z).get_period()</span>
+<span class="sd">        12*pi</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># This follows from slater&#39;s theorem.</span>
+        <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+            <span class="c"># first check that no two differ by an integer</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">oo</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">Mod</span><span class="p">((</span><span class="n">b</span> <span class="o">-</span> <span class="n">l</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">simplify</span><span class="p">(),</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="n">oo</span>
+            <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">ilcm</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">q</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">l</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="n">compute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">)</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">compute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">)</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="n">q</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">beta</span> <span class="o">==</span> <span class="n">oo</span> <span class="ow">or</span> <span class="n">alpha</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">oo</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">ilcm</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">q</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">beta</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">alpha</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">hyperexpand</span>
+        <span class="k">return</span> <span class="n">hyperexpand</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="c"># The default code is insufficient for polar arguments.</span>
+        <span class="c"># mpmath provides an optional argument &quot;r&quot;, which evaluates</span>
+        <span class="c"># G(z**(1/r)). I am not sure what its intended use is, but we hijack it</span>
+        <span class="c"># here in the following way: to evaluate at a number z of |argument|</span>
+        <span class="c"># less than (say) n*pi, we put r=1/n, compute z&#39; = root(z, n)</span>
+        <span class="c"># (carefully so as not to loose the branch information), and evaluate</span>
+        <span class="c"># G(z&#39;**(1/r)) = G(z&#39;**n) = G(z).</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">exp_polar</span><span class="p">,</span> <span class="n">ceiling</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">mpmath</span><span class="p">,</span> <span class="n">Expr</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span>
+        <span class="n">znum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="o">.</span><span class="n">_eval_evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">znum</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">exp_polar</span><span class="p">):</span>
+            <span class="n">znum</span><span class="p">,</span> <span class="n">branch</span> <span class="o">=</span> <span class="n">znum</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">(</span><span class="n">exp_polar</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">branch</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span>
+            <span class="n">branch</span> <span class="o">=</span> <span class="n">branch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">I</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">branch</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">ceiling</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">branch</span><span class="o">/</span><span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">znum</span> <span class="o">=</span> <span class="n">znum</span><span class="o">**</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">branch</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+        <span class="c">#print znum, branch, n</span>
+
+        <span class="c"># Convert all args to mpf or mpc</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="p">[</span><span class="n">z</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">ap</span><span class="p">,</span> <span class="n">bq</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">_to_mpmath</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="p">[</span><span class="n">znum</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="c"># Set mpmath precision and apply. Make sure precision is restored</span>
+        <span class="c"># afterwards</span>
+        <span class="n">orig</span> <span class="o">=</span> <span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">prec</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">mpmath</span><span class="o">.</span><span class="n">meijerg</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">bq</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+            <span class="c">#print ap, bq, z, r, v</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">orig</span>
+
+        <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">_from_mpmath</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+
+<div class="viewcode-block" id="meijerg.integrand"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.integrand">[docs]</a>    <span class="k">def</span> <span class="nf">integrand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the defining integrand D(s). &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">gamma</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">argument</span><span class="o">**</span><span class="n">s</span> \
+            <span class="o">*</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">))</span> \
+            <span class="o">*</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">a</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">))</span> \
+            <span class="o">/</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">b</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bother</span><span class="p">))</span> \
+            <span class="o">/</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aother</span><span class="p">))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.argument"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.argument">[docs]</a>    <span class="k">def</span> <span class="nf">argument</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Argument of the Meijer G-function. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.an"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.an">[docs]</a>    <span class="k">def</span> <span class="nf">an</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; First set of numerator parameters. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.ap"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.ap">[docs]</a>    <span class="k">def</span> <span class="nf">ap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Combined numerator parameters. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.aother"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.aother">[docs]</a>    <span class="k">def</span> <span class="nf">aother</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Second set of numerator parameters. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.bm"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.bm">[docs]</a>    <span class="k">def</span> <span class="nf">bm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; First set of denominator parameters. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.bq"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.bq">[docs]</a>    <span class="k">def</span> <span class="nf">bq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Combined denominator parameters. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.bother"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.bother">[docs]</a>    <span class="k">def</span> <span class="nf">bother</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Second set of denominator parameters. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_diffargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ap</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bq</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.nu"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.nu">[docs]</a>    <span class="k">def</span> <span class="nf">nu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A quantity related to the convergence region of the integral,</span>
+<span class="sd">            c.f. references. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">)</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="meijerg.delta"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.hyper.meijerg.delta">[docs]</a>    <span class="k">def</span> <span class="nf">delta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A quantity related to the convergence region of the integral,</span>
+<span class="sd">            c.f. references. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bm</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">an</span><span class="p">)</span> <span class="o">-</span> <span class="n">S</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ap</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bq</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">HyperRep</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A base class for &quot;hyper representation functions&quot;.</span>
+
+<span class="sd">    This is used exclusively in hyperexpand(), but fits more logically here.</span>
+
+<span class="sd">    pFq is branched at 1 if p == q+1. For use with slater-expansion, we want</span>
+<span class="sd">    define an &quot;analytic continuation&quot; to all polar numbers, which is</span>
+<span class="sd">    continuous on circles and on the ray t*exp_polar(I*pi). Moreover, we want</span>
+<span class="sd">    a &quot;nice&quot; expression for the various cases.</span>
+
+<span class="sd">    This base class contains the core logic, concrete derived classes only</span>
+<span class="sd">    supply the actual functions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">unpolarify</span>
+        <span class="n">nargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">unpolarify</span><span class="p">,</span> <span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span> <span class="o">+</span> <span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">if</span> <span class="n">args</span> <span class="o">!=</span> <span class="n">nargs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">*</span><span class="n">nargs</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; An expression for F(x) which holds for |x| &lt; 1. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; An expression for F(-x) which holds for |x| &lt; 1. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; An expression for F(exp_polar(2*I*pi*n)*x), |x| &gt; 1. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; An expression for F(exp_polar(2*I*pi*n + pi*I)*x), |x| &gt; 1. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_nonrep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Piecewise</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extract_branch_factor</span><span class="p">(</span><span class="n">allow_half</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">minus</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">nargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="n">minus</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">n</span> <span class="o">-=</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">nnargs</span> <span class="o">=</span> <span class="n">nargs</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="n">minus</span><span class="p">:</span>
+            <span class="n">small</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr_small_minus</span><span class="p">(</span><span class="o">*</span><span class="n">nargs</span><span class="p">)</span>
+            <span class="n">big</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr_big_minus</span><span class="p">(</span><span class="o">*</span><span class="n">nnargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">small</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr_small</span><span class="p">(</span><span class="o">*</span><span class="n">nargs</span><span class="p">)</span>
+            <span class="n">big</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr_big</span><span class="p">(</span><span class="o">*</span><span class="n">nnargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">big</span> <span class="o">==</span> <span class="n">small</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">small</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">big</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">small</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_nonrepsmall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extract_branch_factor</span><span class="p">(</span><span class="n">allow_half</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span><span class="p">,)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr_small_minus</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expr_small</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_power1</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return a representative for hyper([-a], [], z) == (1 - z)**a. &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="n">a</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="n">a</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_expr_small</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_expr_small_minus</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_power2</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return a representative for hyper([a, a - 1/2], [2*a], z). &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">sgn</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+            <span class="n">sgn</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sgn</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span> \
+            <span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">sgn</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+            <span class="n">sgn</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">return</span> <span class="n">sgn</span><span class="o">*</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">sgn</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_log1</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent -z*hyper([1, 1], [2], z) == log(1 - z). &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_atanh</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent hyper([1/2, 1], [3/2], z) == atanh(sqrt(z))/sqrt(z). &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">atanh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">acoth</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">acoth</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">-</span> <span class="n">I</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">-</span> <span class="n">pi</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_asin1</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent hyper([1/2, 1/2], [3/2], z) == asin(sqrt(z))/sqrt(z). &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">asin</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">asinh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="p">((</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">acosh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">asinh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_asin2</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent hyper([1, 1], [3/2], z) == asin(sqrt(z))/sqrt(z)/sqrt(1-z). &quot;&quot;&quot;</span>
+    <span class="c"># TODO this can be nicer</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">HyperRep_asin1</span><span class="o">.</span><span class="n">_expr_small</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> \
+            <span class="o">/</span><span class="n">HyperRep_power1</span><span class="o">.</span><span class="n">_expr_small</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">HyperRep_asin1</span><span class="o">.</span><span class="n">_expr_small_minus</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> \
+            <span class="o">/</span><span class="n">HyperRep_power1</span><span class="o">.</span><span class="n">_expr_small_minus</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">HyperRep_asin1</span><span class="o">.</span><span class="n">_expr_big</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> \
+            <span class="o">/</span><span class="n">HyperRep_power1</span><span class="o">.</span><span class="n">_expr_big</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">HyperRep_asin1</span><span class="o">.</span><span class="n">_expr_big_minus</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> \
+            <span class="o">/</span><span class="n">HyperRep_power1</span><span class="o">.</span><span class="n">_expr_big_minus</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_sqrts1</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return a representative for hyper([-a, 1/2 - a], [1/2], z). &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">((</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">a</span><span class="p">)</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">a</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="p">((</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">n</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_sqrts2</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return a representative for</span>
+<span class="sd">          sqrt(z)/2*[(1-sqrt(z))**2a - (1 + sqrt(z))**2a]</span>
+<span class="sd">          == -2*z/(2*a+1) d/dz hyper([-a - 1/2, -a], [1/2], z)&quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="p">((</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
+                              <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">n</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="p">((</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
+                              <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">n</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">a</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> \
+                <span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">a</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_log2</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent log(1/2 + sqrt(1 - z)/2) == -z/4*hyper([3/2, 1, 1], [2, 2], z) &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">log</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">asin</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">I</span><span class="o">*</span><span class="n">asin</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="n">log</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_cosasin</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent hyper([a, -a], [1/2], z) == cos(2*a*asin(sqrt(z))). &quot;&quot;&quot;</span>
+    <span class="c"># Note there are many alternative expressions, e.g. as powers of a sum of</span>
+    <span class="c"># square roots.</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">asin</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cosh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">asinh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cosh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">acosh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cosh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">asinh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HyperRep_sinasin</span><span class="p">(</span><span class="n">HyperRep</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent 2*a*z*hyper([1 - a, 1 + a], [3/2], z)</span>
+<span class="sd">        == sqrt(z)/sqrt(1-z)*sin(2*a*asin(sqrt(z))) &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">asin</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_small_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">sinh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">asinh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">sinh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">acosh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">+</span> <span class="n">a</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_expr_big_minus</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">sinh</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">asinh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="p">))</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">n</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

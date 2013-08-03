@@ -1,0 +1,686 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.assumptions.handlers.sets &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.assumptions.handlers.sets</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Handlers for predicates related to set membership: integer, rational, etc.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.assumptions</span> <span class="kn">import</span> <span class="n">Q</span><span class="p">,</span> <span class="n">ask</span>
+<span class="kn">from</span> <span class="nn">sympy.assumptions.handlers</span> <span class="kn">import</span> <span class="n">CommonHandler</span><span class="p">,</span> <span class="n">test_closed_group</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span><span class="p">,</span> <span class="n">S</span>
+
+
+<div class="viewcode-block" id="AskIntegerHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskIntegerHandler">[docs]</a><span class="k">class</span> <span class="nc">AskIntegerHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.integer</span>
+<span class="sd">    Test that an expression belongs to the field of integer numbers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="c"># helper method</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">round</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">expr</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskIntegerHandler.Add"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskIntegerHandler.Add">[docs]</a>    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integer + Integer       -&gt; Integer</span>
+<span class="sd">        Integer + !Integer      -&gt; !Integer</span>
+<span class="sd">        !Integer + !Integer -&gt; ?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskIntegerHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskIntegerHandler.Mul"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskIntegerHandler.Mul">[docs]</a>    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Integer*Integer      -&gt; Integer</span>
+<span class="sd">        Integer*Irrational   -&gt; !Integer</span>
+<span class="sd">        Odd/Even             -&gt; !Integer</span>
+<span class="sd">        Integer*Rational     -&gt; ?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskIntegerHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">_output</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">q</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">expr</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="o">~</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">q</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="bp">None</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">irrational</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">_output</span><span class="p">:</span>
+                        <span class="n">_output</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_output</span>
+</div>
+    <span class="n">Pow</span> <span class="o">=</span> <span class="n">Add</span>
+
+    <span class="nb">int</span><span class="p">,</span> <span class="n">Integer</span> <span class="o">=</span> <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)]</span><span class="o">*</span><span class="mi">2</span>
+
+    <span class="n">Pi</span><span class="p">,</span> <span class="n">Exp1</span><span class="p">,</span> <span class="n">GoldenRatio</span><span class="p">,</span> <span class="n">Infinity</span><span class="p">,</span> <span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">ImaginaryUnit</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysFalse</span><span class="p">)]</span><span class="o">*</span><span class="mi">6</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Rational</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="c"># rationals with denominator one get</span>
+        <span class="c"># evaluated to Integers</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Float</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">==</span> <span class="n">expr</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Abs</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">MatrixElement</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer_elements</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="n">Determinant</span> <span class="o">=</span> <span class="n">Trace</span> <span class="o">=</span> <span class="n">MatrixElement</span>
+
+</div>
+<div class="viewcode-block" id="AskRationalHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskRationalHandler">[docs]</a><span class="k">class</span> <span class="nc">AskRationalHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.rational</span>
+<span class="sd">    Test that an expression belongs to the field of rational numbers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskRationalHandler.Add"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskRationalHandler.Add">[docs]</a>    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rational + Rational     -&gt; Rational</span>
+<span class="sd">        Rational + !Rational    -&gt; !Rational</span>
+<span class="sd">        !Rational + !Rational   -&gt; ?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">)</span>
+</div>
+    <span class="n">Mul</span> <span class="o">=</span> <span class="n">Add</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskRationalHandler.Pow"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskRationalHandler.Pow">[docs]</a>    <span class="k">def</span> <span class="nf">Pow</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Rational ** Integer      -&gt; Rational</span>
+<span class="sd">        Irrational ** Rational   -&gt; Irrational</span>
+<span class="sd">        Rational ** Irrational   -&gt; ?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">prime</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="n">Rational</span><span class="p">,</span> <span class="n">Float</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)]</span><span class="o">*</span><span class="mi">2</span> <span class="c"># Float is finite-precision</span>
+
+    <span class="n">ImaginaryUnit</span><span class="p">,</span> <span class="n">Infinity</span><span class="p">,</span> <span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">Pi</span><span class="p">,</span> <span class="n">Exp1</span><span class="p">,</span> <span class="n">GoldenRatio</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysFalse</span><span class="p">)]</span><span class="o">*</span><span class="mi">6</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">cot</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span><span class="p">,</span> <span class="n">asin</span><span class="p">,</span> <span class="n">atan</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span>
+    <span class="n">acos</span><span class="p">,</span> <span class="n">acot</span> <span class="o">=</span> <span class="n">log</span><span class="p">,</span> <span class="n">cot</span>
+
+</div>
+<span class="k">class</span> <span class="nc">AskIrrationalHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Basic</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">_real</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_real</span><span class="p">:</span>
+            <span class="n">_rational</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">(</span><span class="n">expr</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_rational</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="n">_rational</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_real</span>
+
+
+<div class="viewcode-block" id="AskRealHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskRealHandler">[docs]</a><span class="k">class</span> <span class="nc">AskRealHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.real</span>
+<span class="sd">    Test that an expression belongs to the field of real numbers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="c"># let as_real_imag() work first since the expression may</span>
+        <span class="c"># be simpler to evaluate</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">_prec</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ow">not</span> <span class="n">i</span>
+        <span class="c"># allow None to be returned if we couldn&#39;t show for sure</span>
+        <span class="c"># that i was 0</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskRealHandler.Add"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskRealHandler.Add">[docs]</a>    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Real + Real              -&gt; Real</span>
+<span class="sd">        Real + (Complex &amp; !Real) -&gt; !Real</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskRealHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskRealHandler.Mul"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskRealHandler.Mul">[docs]</a>    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Real*Real               -&gt; Real</span>
+<span class="sd">        Real*Imaginary          -&gt; !Real</span>
+<span class="sd">        Imaginary*Imaginary     -&gt; Real</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskRealHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">imaginary</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">^</span> <span class="bp">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskRealHandler.Pow"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskRealHandler.Pow">[docs]</a>    <span class="k">def</span> <span class="nf">Pow</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Real**Integer         -&gt; Real</span>
+<span class="sd">        Positive**Real        -&gt; Real</span>
+<span class="sd">        Real**(Integer/Even)  -&gt; Real if base is nonnegative</span>
+<span class="sd">        Real**(Integer/Odd)   -&gt; Real</span>
+<span class="sd">        Real**Imaginary       -&gt; ?</span>
+<span class="sd">        Imaginary**Real       -&gt; ?</span>
+<span class="sd">        Real**Real            -&gt; ?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskRealHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">imaginary</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">odd</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> \
+                   <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">q</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="n">Rational</span><span class="p">,</span> <span class="n">Float</span><span class="p">,</span> <span class="n">Pi</span><span class="p">,</span> <span class="n">Exp1</span><span class="p">,</span> <span class="n">GoldenRatio</span><span class="p">,</span> <span class="n">Abs</span><span class="p">,</span> <span class="n">re</span><span class="p">,</span> <span class="n">im</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)]</span><span class="o">*</span><span class="mi">8</span>
+
+    <span class="n">ImaginaryUnit</span><span class="p">,</span> <span class="n">Infinity</span><span class="p">,</span> <span class="n">NegativeInfinity</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysFalse</span><span class="p">)]</span><span class="o">*</span><span class="mi">3</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sin</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="n">cos</span><span class="p">,</span> <span class="n">exp</span> <span class="o">=</span> <span class="p">[</span><span class="n">sin</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">MatrixElement</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real_elements</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="n">Determinant</span> <span class="o">=</span> <span class="n">Trace</span> <span class="o">=</span> <span class="n">MatrixElement</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="AskExtendedRealHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskExtendedRealHandler">[docs]</a><span class="k">class</span> <span class="nc">AskExtendedRealHandler</span><span class="p">(</span><span class="n">AskRealHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.extended_real</span>
+<span class="sd">    Test that an expression belongs to the field of extended real numbers,</span>
+<span class="sd">    that is real numbers union {Infinity, -Infinity}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">extended_real</span><span class="p">)</span>
+
+    <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span> <span class="o">=</span> <span class="p">[</span><span class="n">Add</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span>
+
+    <span class="n">Infinity</span><span class="p">,</span> <span class="n">NegativeInfinity</span> <span class="o">=</span> <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)]</span><span class="o">*</span><span class="mi">2</span>
+
+</div>
+<div class="viewcode-block" id="AskHermitianHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskHermitianHandler">[docs]</a><span class="k">class</span> <span class="nc">AskHermitianHandler</span><span class="p">(</span><span class="n">AskRealHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.hermitian</span>
+<span class="sd">    Test that an expression belongs to the field of Hermitian operators</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskHermitianHandler.Add"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskHermitianHandler.Add">[docs]</a>    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hermitian + Hermitian  -&gt; Hermitian</span>
+<span class="sd">        Hermitian + !Hermitian -&gt; !Hermitian</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskRealHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskHermitianHandler.Mul"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskHermitianHandler.Mul">[docs]</a>    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        As long as there is at most only one noncommutative term:</span>
+<span class="sd">        Hermitian*Hermitian         -&gt; Hermitian</span>
+<span class="sd">        Hermitian*Antihermitian     -&gt; !Hermitian</span>
+<span class="sd">        Antihermitian*Antihermitian -&gt; Hermitian</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskRealHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">nccount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">antihermitian</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">^</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">commutative</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">nccount</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">nccount</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskHermitianHandler.Pow"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskHermitianHandler.Pow">[docs]</a>    <span class="k">def</span> <span class="nf">Pow</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hermitian**Integer -&gt; Hermitian</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskRealHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+</div>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sin</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="n">cos</span><span class="p">,</span> <span class="n">exp</span> <span class="o">=</span> <span class="p">[</span><span class="n">sin</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span>
+
+</div>
+<div class="viewcode-block" id="AskComplexHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskComplexHandler">[docs]</a><span class="k">class</span> <span class="nc">AskComplexHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.complex</span>
+<span class="sd">    Test that an expression belongs to the field of complex numbers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span>
+
+    <span class="n">Mul</span> <span class="o">=</span> <span class="n">Pow</span> <span class="o">=</span> <span class="n">Add</span>
+
+    <span class="n">Number</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">re</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">NumberSymbol</span><span class="p">,</span> <span class="n">Abs</span><span class="p">,</span> <span class="n">ImaginaryUnit</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)]</span><span class="o">*</span><span class="mi">9</span> <span class="c"># they are all complex functions or expressions</span>
+
+    <span class="n">Infinity</span><span class="p">,</span> <span class="n">NegativeInfinity</span> <span class="o">=</span> <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysFalse</span><span class="p">)]</span><span class="o">*</span><span class="mi">2</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">MatrixElement</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">complex_elements</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="n">Determinant</span> <span class="o">=</span> <span class="n">Trace</span> <span class="o">=</span> <span class="n">MatrixElement</span>
+
+</div>
+<div class="viewcode-block" id="AskImaginaryHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskImaginaryHandler">[docs]</a><span class="k">class</span> <span class="nc">AskImaginaryHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.imaginary</span>
+<span class="sd">    Test that an expression belongs to the field of imaginary numbers,</span>
+<span class="sd">    that is, numbers in the form x*I, where x is real</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="c"># helper method</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskImaginaryHandler.Add"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskImaginaryHandler.Add">[docs]</a>    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Imaginary + Imaginary -&gt; Imaginary</span>
+<span class="sd">        Imaginary + Complex   -&gt; ?</span>
+<span class="sd">        Imaginary + Real      -&gt; !Imaginary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskImaginaryHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">reals</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">imaginary</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">reals</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">reals</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="n">reals</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="n">reals</span><span class="p">):</span>
+                <span class="c"># two reals could sum 0 thus giving an imaginary</span>
+                <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskImaginaryHandler.Mul"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskImaginaryHandler.Mul">[docs]</a>    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Real*Imaginary      -&gt; Imaginary</span>
+<span class="sd">        Imaginary*Imaginary -&gt; Real</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskImaginaryHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">reals</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">imaginary</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">^</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">reals</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskImaginaryHandler.Pow"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskImaginaryHandler.Pow">[docs]</a>    <span class="k">def</span> <span class="nf">Pow</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Imaginary**integer -&gt; Imaginary if integer % 2 == 1</span>
+<span class="sd">        Imaginary**integer -&gt; real if integer % 2 == 0</span>
+<span class="sd">        Imaginary**Imaginary    -&gt; ?</span>
+<span class="sd">        Imaginary**Real         -&gt; ?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskImaginaryHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">imaginary</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">odd</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> \
+                   <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">q</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span><span class="n">assumptions</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+                <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+</div>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">NumberSymbol</span> <span class="o">=</span> <span class="n">Number</span>
+
+    <span class="n">ImaginaryUnit</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="AskAntiHermitianHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskAntiHermitianHandler">[docs]</a><span class="k">class</span> <span class="nc">AskAntiHermitianHandler</span><span class="p">(</span><span class="n">AskImaginaryHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for Q.antihermitian</span>
+<span class="sd">    Test that an expression belongs to the field of anti-Hermitian operators,</span>
+<span class="sd">    that is, operators in the form x*I, where x is Hermitian</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskAntiHermitianHandler.Add"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskAntiHermitianHandler.Add">[docs]</a>    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Antihermitian + Antihermitian  -&gt; Antihermitian</span>
+<span class="sd">        Antihermitian + !Antihermitian -&gt; !Antihermitian</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskImaginaryHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">antihermitian</span><span class="p">)</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskAntiHermitianHandler.Mul"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskAntiHermitianHandler.Mul">[docs]</a>    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        As long as there is at most only one noncommutative term:</span>
+<span class="sd">        Hermitian*Hermitian         -&gt; !Antihermitian</span>
+<span class="sd">        Hermitian*Antihermitian     -&gt; Antihermitian</span>
+<span class="sd">        Antihermitian*Antihermitian -&gt; !Antihermitian</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskImaginaryHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">nccount</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">antihermitian</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">^</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">commutative</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">nccount</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">nccount</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskAntiHermitianHandler.Pow"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskAntiHermitianHandler.Pow">[docs]</a>    <span class="k">def</span> <span class="nf">Pow</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hermitian**Integer  -&gt; !Antihermitian</span>
+<span class="sd">        Antihermitian**Even -&gt; !Antihermitian</span>
+<span class="sd">        Antihermitian**Odd  -&gt; Antihermitian</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskImaginaryHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">hermitian</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">antihermitian</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">odd</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+
+</div></div>
+<div class="viewcode-block" id="AskAlgebraicHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/sets.html#sympy.assumptions.handlers.sets.AskAlgebraicHandler">[docs]</a><span class="k">class</span> <span class="nc">AskAlgebraicHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Handler for Q.algebraic key. &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">test_closed_group</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Pow</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> <span class="n">ask</span><span class="p">(</span>
+            <span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Rational</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">q</span> <span class="o">!=</span> <span class="mi">0</span>
+
+    <span class="n">Float</span><span class="p">,</span> <span class="n">GoldenRatio</span><span class="p">,</span> <span class="n">ImaginaryUnit</span><span class="p">,</span> <span class="n">AlgebraicNumber</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)]</span><span class="o">*</span><span class="mi">4</span>
+
+    <span class="n">Infinity</span><span class="p">,</span> <span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">ComplexInfinity</span><span class="p">,</span> <span class="n">Pi</span><span class="p">,</span> <span class="n">Exp1</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysFalse</span><span class="p">)]</span><span class="o">*</span><span class="mi">5</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">exp</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">cot</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">algebraic</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="o">~</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">tan</span><span class="p">,</span> <span class="n">asin</span><span class="p">,</span> <span class="n">atan</span> <span class="o">=</span> <span class="p">[</span><span class="n">exp</span><span class="p">]</span><span class="o">*</span><span class="mi">5</span>
+    <span class="n">acos</span><span class="p">,</span> <span class="n">acot</span> <span class="o">=</span> <span class="n">log</span><span class="p">,</span> <span class="n">cot</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

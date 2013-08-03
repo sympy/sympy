@@ -1,0 +1,1090 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Concrete Mathematics &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Numerical evaluation" href="evalf.html" />
+    <link rel="prev" title="Number Theory" href="ntheory.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="evalf.html" title="Numerical evaluation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ntheory.html" title="Number Theory"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="concrete-mathematics">
+<h1>Concrete Mathematics<a class="headerlink" href="#concrete-mathematics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="hypergeometric-terms">
+<h2>Hypergeometric terms<a class="headerlink" href="#hypergeometric-terms" title="Permalink to this headline">¶</a></h2>
+<p>The center stage, in recurrence solving and summations, play hypergeometric
+terms. Formally these are sequences annihilated by first order linear
+recurrence operators. In simple words if we are given term <span class="math">\(a(n)\)</span> then it is
+hypergeometric if its consecutive term ratio is a rational function in <span class="math">\(n\)</span>.</p>
+<p>To check if a sequence is of this type you can use the <tt class="docutils literal"><span class="pre">is_hypergeometric</span></tt>
+method which is available in Basic class. Here is simple example involving a
+polynomial:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n,k&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Of course polynomials are hypergeometric but are there any more complicated
+sequences of this type? Here are some trivial examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rf</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ff</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>We see that all species used in summations and other parts of concrete
+mathematics are hypergeometric. Note also that binomial coefficients and both
+rising and falling factorials are hypergeometric in both their arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rf</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ff</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>To say more, all previously shown examples are valid for integer linear
+arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binomial</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rf</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ff</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gamma</span><span class="p">(</span><span class="mi">5</span><span class="o">*</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">7</span><span class="p">))</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>However nonlinear arguments make those sequences fail to be hypergeometric:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">is_hypergeometric</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>If not only the knowledge of being hypergeometric or not is needed, you can use
+<tt class="docutils literal"><span class="pre">hypersimp()</span></tt> function. It will try to simplify combinatorial expression and
+if the term given is hypergeometric it will return a quotient of polynomials of
+minimal degree. Otherwise is will return <span class="math">\(None\)</span> to say that sequence is not
+hypergeometric:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">hypersimp</span><span class="p">(</span><span class="n">factorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+<span class="go">2*(n + 1)*(2*n + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hypersimp</span><span class="p">(</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sum-and-product-manipulation">
+<h2>Sum and Product manipulation<a class="headerlink" href="#sum-and-product-manipulation" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.concrete.simplification.index">
+<tt class="descclassname">sympy.concrete.simplification.</tt><tt class="descname">index</tt><big>(</big><em>expr</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/simplification.html#index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.simplification.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the index of a limit variable.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.concrete.simplification.change_index" title="sympy.concrete.simplification.change_index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.change_index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder_limit" title="sympy.concrete.simplification.reorder_limit"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder_limit</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder" title="sympy.concrete.simplification.reorder"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reverse_order" title="sympy.concrete.simplification.reverse_order"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reverse_order</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.simplification</span> <span class="kn">import</span> <span class="n">index</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">Product</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">(</span><span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">index</span><span class="p">(</span><span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p><tt class="docutils literal"><span class="pre">index(expr,</span> <span class="pre">x)</span></tt>  returns the index of the limit variable <tt class="docutils literal"><span class="pre">x</span></tt> in the
+limits of <tt class="docutils literal"><span class="pre">expr</span></tt>. Note that we start counting with 0 at the inner-most
+limits tuple.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.simplification.change_index">
+<tt class="descclassname">sympy.concrete.simplification.</tt><tt class="descname">change_index</tt><big>(</big><em>expr</em>, <em>var</em>, <em>trafo</em>, <em>newvar=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/simplification.html#change_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.simplification.change_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change index of a Sum or Product.</p>
+<p>Perform a linear transformation <span class="math">\(x \mapsto a x + b\)</span> on the index variable
+<span class="math">\(x\)</span>. For <span class="math">\(a\)</span> the only values allowed are <span class="math">\(\pm 1\)</span>. A new variable to be used
+after the change of index can also be specified.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.concrete.simplification.index" title="sympy.concrete.simplification.index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder_limit" title="sympy.concrete.simplification.reorder_limit"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder_limit</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder" title="sympy.concrete.simplification.reorder"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reverse_order" title="sympy.concrete.simplification.reverse_order"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reverse_order</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.simplification</span> <span class="kn">import</span> <span class="n">change_index</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">Product</span><span class="p">,</span> <span class="n">simplify</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">-a**2/2 + a/2 + b**2/2 + b/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span> <span class="o">=</span> <span class="n">change_index</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span>
+<span class="go">Sum(y - 1, (y, a + 1, b + 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">-a**2/2 + a/2 + b**2/2 + b/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span> <span class="o">=</span> <span class="n">change_index</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span>
+<span class="go">Sum(-y, (y, -b, -a))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">-a**2/2 + a/2 + b**2/2 + b/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span> <span class="o">=</span> <span class="n">change_index</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="n">u</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span>
+<span class="go">Sum(-u + x, (x, a + u, b + u))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">-a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+<span class="go">-a**2/2 + a/2 + b**2/2 + b/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span> <span class="o">=</span> <span class="n">change_index</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">x</span> <span class="o">-</span> <span class="n">u</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span>
+<span class="go">Sum(-u - y, (y, -b - u, -a - u))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">-a**2/2 - a*u + a/2 + b**2/2 + b*u + b/2 - u*(-a + b + 1) + u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+<span class="go">-a**2/2 + a/2 + b**2/2 + b/2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">j</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span>
+<span class="go">Product(i*j**2, (i, a, b), (j, c, d))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P2</span> <span class="o">=</span> <span class="n">change_index</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P2</span>
+<span class="go">Product(j**2*(k - 3), (k, a + 3, b + 3), (j, c, d))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P3</span> <span class="o">=</span> <span class="n">change_index</span><span class="p">(</span><span class="n">P2</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P3</span>
+<span class="go">Product(l**2*(k - 3), (k, a + 3, b + 3), (l, -d, -c))</span>
+</pre></div>
+</div>
+<p>When dealing with symbols only, we can make a
+general linear transformation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span> <span class="o">=</span> <span class="n">change_index</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">u</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">v</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span>
+<span class="go">Sum((-v + y)/u, (y, b*u + v, a*u + v))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">-v*(a*u - b*u + 1)/u + (a**2*u**2/2 + a*u*v + a*u/2 - b**2*u**2/2 - b*u*v + b*u/2 + v)/u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">Sn</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+<span class="go">a**2*u/2 + a/2 - b**2*u/2 + b/2</span>
+</pre></div>
+</div>
+<p>However, the last result can be inconsistent with usual
+summation where the index increment is always 1. This is
+obvious as we get back the original value only for <tt class="docutils literal"><span class="pre">u</span></tt>
+equal +1 or -1.</p>
+<p class="rubric">Usage</p>
+<p><tt class="docutils literal"><span class="pre">change_index(expr,</span> <span class="pre">var,</span> <span class="pre">trafo,</span> <span class="pre">newvar=None)</span></tt> where <tt class="docutils literal"><span class="pre">var</span></tt> specifies the
+index variable <span class="math">\(x\)</span> to transform. The transformation <tt class="docutils literal"><span class="pre">trafo</span></tt> must be linear
+and given in terms of <tt class="docutils literal"><span class="pre">var</span></tt>. If the optional argument <tt class="docutils literal"><span class="pre">newvar</span></tt> is
+provided then <tt class="docutils literal"><span class="pre">var</span></tt> gets replaced by <tt class="docutils literal"><span class="pre">newvar</span></tt> in the final expression.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.simplification.reorder_limit">
+<tt class="descclassname">sympy.concrete.simplification.</tt><tt class="descname">reorder_limit</tt><big>(</big><em>expr</em>, <em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/simplification.html#reorder_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.simplification.reorder_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interchange two limit tuples of a Sum or Product expression.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.concrete.simplification.index" title="sympy.concrete.simplification.index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.change_index" title="sympy.concrete.simplification.change_index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.change_index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder" title="sympy.concrete.simplification.reorder"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reverse_order" title="sympy.concrete.simplification.reverse_order"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reverse_order</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.simplification</span> <span class="kn">import</span> <span class="n">reorder_limit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">Product</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reorder_limit</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">)),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reorder_limit</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">Sum(x**2, (x, c, d), (x, a, b))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reorder_limit</span><span class="p">(</span><span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">)),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">Product(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p><tt class="docutils literal"><span class="pre">reorder_limit(expr,</span> <span class="pre">x,</span> <span class="pre">y)</span></tt> interchanges two limit tuples. The
+arguments <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">y</span></tt> are integers corresponding to the index
+variables of the two limits which are to be interchanged. The
+expression <tt class="docutils literal"><span class="pre">expr</span></tt> has to be either a Sum or a Product.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.simplification.reorder">
+<tt class="descclassname">sympy.concrete.simplification.</tt><tt class="descname">reorder</tt><big>(</big><em>expr</em>, <em>*arg</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/simplification.html#reorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.simplification.reorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorder limits in a expression containing a Sum or a Product.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.concrete.simplification.index" title="sympy.concrete.simplification.index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.change_index" title="sympy.concrete.simplification.change_index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.change_index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder_limit" title="sympy.concrete.simplification.reorder_limit"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder_limit</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reverse_order" title="sympy.concrete.simplification.reverse_order"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reverse_order</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.simplification</span> <span class="kn">import</span> <span class="n">reorder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">Product</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reorder</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+<span class="go">Sum(x*y, (y, c, d), (x, a, b))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reorder</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">)),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+<span class="go">Sum(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reorder</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span>
+<span class="go">Product(x*y*z, (z, e, f), (y, c, d), (x, a, b))</span>
+</pre></div>
+</div>
+<p>We can also select the index variables by counting them, starting
+with the inner-most one:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reorder</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">Sum(x**2, (x, c, d), (x, a, b))</span>
+</pre></div>
+</div>
+<p>And of course we can mix both schemes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reorder</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">Sum(x*y, (y, c, d), (x, a, b))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reorder</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">)),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">Sum(x*y, (y, c, d), (x, a, b))</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p><tt class="docutils literal"><span class="pre">reorder(expr,</span> <span class="pre">*arg)</span></tt> reorders the limits in the expression <tt class="docutils literal"><span class="pre">expr</span></tt>
+according to the list of tuples given by <tt class="docutils literal"><span class="pre">arg</span></tt>. These tuples can
+contain numerical indices or index variable names or involve both.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.simplification.reverse_order">
+<tt class="descclassname">sympy.concrete.simplification.</tt><tt class="descname">reverse_order</tt><big>(</big><em>expr</em>, <em>*indices</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/simplification.html#reverse_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.simplification.reverse_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse the order of a limit in a Sum or Product.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.concrete.simplification.index" title="sympy.concrete.simplification.index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.change_index" title="sympy.concrete.simplification.change_index"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.change_index</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder_limit" title="sympy.concrete.simplification.reorder_limit"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder_limit</span></tt></a>, <a class="reference internal" href="#sympy.concrete.simplification.reorder" title="sympy.concrete.simplification.reorder"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.concrete.simplification.reorder</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r12" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R12]</a></td><td>Michael Karr, &#8220;Summation in Finite Terms&#8221;, Journal of the ACM,
+Volume 28 Issue 2, April 1981, Pages 305-350
+<a class="reference external" href="http://dl.acm.org/citation.cfm?doid=322248.322255">http://dl.acm.org/citation.cfm?doid=322248.322255</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.simplification</span> <span class="kn">import</span> <span class="n">reverse_order</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reverse_order</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">Sum(-x, (x, 4, -1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reverse_order</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">Sum(x*y, (x, 6, 0), (y, 7, -1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reverse_order</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">Sum(-x, (x, b + 1, a - 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reverse_order</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)),</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">Sum(-x, (x, b + 1, a - 1))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Product</span><span class="p">,</span> <span class="n">simplify</span><span class="p">,</span> <span class="n">RisingFactorial</span><span class="p">,</span> <span class="n">gamma</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pr</span> <span class="o">=</span> <span class="n">reverse_order</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pr</span>
+<span class="go">Product(1/x, (x, b + 1, a - 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pr</span> <span class="o">=</span> <span class="n">Pr</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pr</span>
+<span class="go">1/RisingFactorial(b + 1, a - b - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">Pr</span><span class="p">)</span>
+<span class="go">gamma(b + 1)/gamma(a)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span>
+<span class="go">RisingFactorial(a, -a + b + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+<span class="go">gamma(b + 1)/gamma(a)</span>
+</pre></div>
+</div>
+<p>While one should prefer variable names when specifying which limits
+to reverse, the index counting notation comes in handy in case there
+are several symbols with the same name.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span>
+<span class="go">Sum(x**2, (x, a, b), (x, c, d))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S0</span> <span class="o">=</span> <span class="n">reverse_order</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S0</span>
+<span class="go">Sum(-x**2, (x, b + 1, a - 1), (x, c, d))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span> <span class="o">=</span> <span class="n">reverse_order</span><span class="p">(</span><span class="n">S0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span>
+<span class="go">Sum(x**2, (x, b + 1, a - 1), (x, d + 1, c - 1))</span>
+</pre></div>
+</div>
+<p>Of course we can mix both notations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reverse_order</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span> <span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reverse_order</span><span class="p">(</span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))</span>
+</pre></div>
+</div>
+<p class="rubric">Usage</p>
+<p><tt class="docutils literal"><span class="pre">reverse_order(expr,</span> <span class="pre">*indices)</span></tt> reverses some limits in the expression
+<tt class="docutils literal"><span class="pre">expr</span></tt> which can be either a <tt class="docutils literal"><span class="pre">Sum</span></tt> or a <tt class="docutils literal"><span class="pre">Product</span></tt>. The selectors in
+the argument <tt class="docutils literal"><span class="pre">indices</span></tt> specify some indices whose limits get reversed.
+These selectors are either variable names or numerical indices counted
+starting from the inner-most limit tuple.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="concrete-class-reference">
+<h2>Concrete Class Reference<a class="headerlink" href="#concrete-class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.concrete.summations.Sum">
+<em class="property">class </em><tt class="descclassname">sympy.concrete.summations.</tt><tt class="descname">Sum</tt><a class="reference internal" href="../_modules/sympy/concrete/summations.html#Sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.summations.Sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents unevaluated summation.</p>
+<p><tt class="docutils literal"><span class="pre">Sum</span></tt> represents a finite or infinite series, with the first argument
+being the general form of terms in the series, and the second argument
+being <tt class="docutils literal"><span class="pre">(dummy_variable,</span> <span class="pre">start,</span> <span class="pre">end)</span></tt>, with <tt class="docutils literal"><span class="pre">dummy_variable</span></tt> taking
+all integer values from <tt class="docutils literal"><span class="pre">start</span></tt> through <tt class="docutils literal"><span class="pre">end</span></tt>. In accordance with
+long-standing mathematical convention, the end term is included in the
+summation.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">summation</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">Product</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">product</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r13" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R13]</a></td><td>Michael Karr, &#8220;Summation in Finite Terms&#8221;, Journal of the ACM,
+Volume 28 Issue 2, April 1981, Pages 305-350
+<a class="reference external" href="http://dl.acm.org/citation.cfm?doid=322248.322255">http://dl.acm.org/citation.cfm?doid=322248.322255</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r14" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[R14]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Summation#Capital-sigma_notation">http://en.wikipedia.org/wiki/Summation#Capital-sigma_notation</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r15" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id4">[R15]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Empty_sum">http://en.wikipedia.org/wiki/Empty_sum</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span>
+<span class="go">Sum(k, (k, 1, m))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">m**2/2 + m/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span>
+<span class="go">Sum(k**2, (k, 1, m))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">m**3/3 + m**2/2 + m/6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">k</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">oo</span><span class="p">))</span>
+<span class="go">Sum(x**k, (k, 0, oo))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">k</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">Piecewise((1/(-x + 1), Abs(x) &lt; 1), (Sum(x**k, (k, 0, oo)), True))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">k</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">),(</span><span class="n">k</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">exp(x)</span>
+</pre></div>
+</div>
+<p>An example showing that the symbolic result of a summation is still
+valid for seemingly nonsensical values of the limits. Then the Karr
+convention allows us to give a perfectly valid interpretation to
+those sums by interchanging the limits according to the above rules:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span>
+<span class="go">n**2/2 + n/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">6</span>
+</pre></div>
+</div>
+<p>An explicit example of the Karr summation convention:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="o">+</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span>
+<span class="go">m**2*n + m*n**2 - m*n + n**3/3 - n**2/2 + n/6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S2</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">m</span><span class="o">+</span><span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S2</span>
+<span class="go">-m**2*n - m*n**2 + m*n - n**3/3 + n**2/2 - n/6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S1</span> <span class="o">+</span> <span class="n">S2</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S3</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S3</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p class="rubric">Finite Sums</p>
+<p>For finite sums (and sums with symbolic limits assumed to be finite) we
+follow the summation convention described by Karr [1], especially
+definition 3 of section 1.4. The sum:</p>
+<div class="math">
+\[\begin{split}\sum_{m \leq i &lt; n} f(i)\end{split}\]</div>
+<p>has <em>the obvious meaning</em> for <span class="math">\(m &lt; n\)</span>, namely:</p>
+<div class="math">
+\[\begin{split}\sum_{m \leq i &lt; n} f(i) = f(m) + f(m+1) + \ldots + f(n-2) + f(n-1)\end{split}\]</div>
+<p>with the upper limit value <span class="math">\(f(n)\)</span> excluded. The sum over an empty set is
+zero if and only if <span class="math">\(m = n\)</span>:</p>
+<div class="math">
+\[\begin{split}\sum_{m \leq i &lt; n} f(i) = 0  \quad \mathrm{for} \quad  m = n\end{split}\]</div>
+<p>Finally, for all other sums over empty sets we assume the following
+definition:</p>
+<div class="math">
+\[\begin{split}\sum_{m \leq i &lt; n} f(i) = - \sum_{n \leq i &lt; m} f(i)  \quad \mathrm{for} \quad  m &gt; n\end{split}\]</div>
+<p>It is important to note that Karr defines all sums with the upper
+limit being exclusive. This is in contrast to the usual mathematical notation,
+but does not affect the summation convention. Indeed we have:</p>
+<div class="math">
+\[\begin{split}\sum_{m \leq i &lt; n} f(i) = \sum_{i = m}^{n - 1} f(i)\end{split}\]</div>
+<p>where the difference in notation is intentional to emphasize the meaning,
+with limits typeset on the top being inclusive.</p>
+<dl class="method">
+<dt id="sympy.concrete.summations.Sum.euler_maclaurin">
+<tt class="descname">euler_maclaurin</tt><big>(</big><em>m=0</em>, <em>n=0</em>, <em>eps=0</em>, <em>eval_integral=True</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/summations.html#Sum.euler_maclaurin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.summations.Sum.euler_maclaurin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an Euler-Maclaurin approximation of self, where m is the
+number of leading terms to sum directly and n is the number of
+terms in the tail.</p>
+<p>With m = n = 0, this is simply the corresponding integral
+plus a first-order endpoint correction.</p>
+<p>Returns (s, e) where s is the Euler-Maclaurin approximation
+and e is the estimated error (taken to be the magnitude of
+the first omitted term in the tail):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">1.28333333333333</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">euler_maclaurin</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span>
+<span class="go">-log(2) + 7/20 + log(5)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sstr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">sstr</span><span class="p">((</span><span class="n">s</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="n">e</span><span class="o">.</span><span class="n">evalf</span><span class="p">()),</span> <span class="n">full_prec</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">(1.26629073187415, 0.0175000000000000)</span>
+</pre></div>
+</div>
+<p>The endpoints may be symbolic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span><span class="o">.</span><span class="n">euler_maclaurin</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span>
+<span class="go">-log(a) + log(b) + 1/(2*b) + 1/(2*a)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span>
+<span class="go">Abs(-1/(12*b**2) + 1/(12*a**2))</span>
+</pre></div>
+</div>
+<p>If the function is a polynomial of degree at most 2n+1, the
+Euler-Maclaurin formula becomes exact (and e = 0 is returned):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span><span class="o">.</span><span class="n">euler_maclaurin</span><span class="p">()</span>
+<span class="go">(b**2/2 + b/2 - 1, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">b**2/2 + b/2 - 1</span>
+</pre></div>
+</div>
+<p>With a nonzero eps specified, the summation is ended
+as soon as the remainder term is less than the epsilon.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.concrete.summations.Sum.is_number">
+<tt class="descname">is_number</tt><a class="reference internal" href="../_modules/sympy/concrete/summations.html#Sum.is_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.summations.Sum.is_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the Sum will result in a number, else False.</p>
+<p>Sums are a special case since they contain symbols that can
+be replaced with numbers. Whether the integral can be done or not is
+another issue. But answering whether the final result is a number is
+not difficult.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.concrete.summations.Sum.is_zero">
+<tt class="descname">is_zero</tt><a class="reference internal" href="../_modules/sympy/concrete/summations.html#Sum.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.summations.Sum.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Sum is only zero if its function is zero or if all terms
+cancel out. This only answers whether the summand zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.concrete.summations.Sum.variables">
+<tt class="descname">variables</tt><a class="reference internal" href="../_modules/sympy/concrete/summations.html#Sum.variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.summations.Sum.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of the summation variables</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sum</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">variables</span>
+<span class="go">[i]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.concrete.products.Product">
+<em class="property">class </em><tt class="descclassname">sympy.concrete.products.</tt><tt class="descname">Product</tt><a class="reference internal" href="../_modules/sympy/concrete/products.html#Product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.products.Product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents unevaluated products.</p>
+<p><tt class="docutils literal"><span class="pre">Product</span></tt> represents a finite or infinite product, with the first
+argument being the general form of terms in the series, and the second
+argument being <tt class="docutils literal"><span class="pre">(dummy_variable,</span> <span class="pre">start,</span> <span class="pre">end)</span></tt>, with <tt class="docutils literal"><span class="pre">dummy_variable</span></tt>
+taking all integer values from <tt class="docutils literal"><span class="pre">start</span></tt> through <tt class="docutils literal"><span class="pre">end</span></tt>. In accordance
+with long-standing mathematical convention, the end term is included in
+the product.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">Sum</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">summation</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">product</span></tt></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r16" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id5">[R16]</a></td><td>Michael Karr, &#8220;Summation in Finite Terms&#8221;, Journal of the ACM,
+Volume 28 Issue 2, April 1981, Pages 305-350
+<a class="reference external" href="http://dl.acm.org/citation.cfm?doid=322248.322255">http://dl.acm.org/citation.cfm?doid=322248.322255</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r17" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[R17]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation">http://en.wikipedia.org/wiki/Multiplication#Capital_Pi_notation</a></td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="r18" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[R18]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Empty_product">http://en.wikipedia.org/wiki/Empty_product</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Product</span><span class="p">,</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">k</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span>
+<span class="go">Product(k, (k, 1, m))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">k</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">factorial(m)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span>
+<span class="go">Product(k**2, (k, 1, m))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">(factorial(m))**2</span>
+</pre></div>
+</div>
+<p>Wallis&#8217; product for pi:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">W</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W</span>
+<span class="go">Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, oo))</span>
+</pre></div>
+</div>
+<p>Direct computation currently fails:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">W</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">nan</span>
+</pre></div>
+</div>
+<p>But we can approach the infinite product by a limit of finite products:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">limit</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W2</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W2</span>
+<span class="go">Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, n))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W2e</span> <span class="o">=</span> <span class="n">W2</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W2e</span>
+<span class="go">2**(-2*n)*4**n*(factorial(n))**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">W2e</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">pi/2</span>
+</pre></div>
+</div>
+<p>By the same formula we can compute sin(pi/2):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">simplify</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">x</span> <span class="o">*</span> <span class="n">Product</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">k</span><span class="o">**</span><span class="mi">2</span><span class="p">,(</span><span class="n">k</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span>
+<span class="go">pi**2*Product(1 - pi**2/(4*k**2), (k, 1, n))/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pe</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pe</span>
+<span class="go">pi**2*RisingFactorial(1 + pi/2, n)*RisingFactorial(-pi/2 + 1, n)/(2*(factorial(n))**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pe</span> <span class="o">=</span> <span class="n">Pe</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pe</span>
+<span class="go">pi**2*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/(2*gamma(1 + pi/2)*gamma(-pi/2 + 1)*gamma(n + 1)**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pe</span> <span class="o">=</span> <span class="n">simplify</span><span class="p">(</span><span class="n">Pe</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pe</span>
+<span class="go">sin(pi**2/2)*gamma(n + 1 + pi/2)*gamma(n - pi/2 + 1)/gamma(n + 1)**2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">Pe</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">sin(pi**2/2)</span>
+</pre></div>
+</div>
+<p>Products with the lower limit being larger than the upper one:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">120</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">120</span>
+</pre></div>
+</div>
+<p>The empty product:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>An example showing that the symbolic result of a product is still
+valid for seemingly nonsensical values of the limits. Then the Karr
+convention allows us to give a perfectly valid interpretation to
+those products by interchanging the limits according to the above rules:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span>
+<span class="go">2**(n - 9)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">1/16</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">1/16</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">/</span><span class="n">Product</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">1/16</span>
+</pre></div>
+</div>
+<p>An explicit example of the Karr summation convention applied to products:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">P1</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P1</span>
+<span class="go">x**(-a + b + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P2</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">b</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P2</span>
+<span class="go">x**(a - b - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">P1</span> <span class="o">*</span> <span class="n">P2</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>And another one:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">P1</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P1</span>
+<span class="go">RisingFactorial(b, a - b + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P2</span> <span class="o">=</span> <span class="n">Product</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P2</span>
+<span class="go">RisingFactorial(a + 1, -a + b - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P1</span> <span class="o">*</span> <span class="n">P2</span>
+<span class="go">RisingFactorial(b, a - b + 1)*RisingFactorial(a + 1, -a + b - 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">P1</span> <span class="o">*</span> <span class="n">P2</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p class="rubric">Finite Products</p>
+<p>For finite products (and products with symbolic limits assumed to be finite)
+we follow the analogue of the summation convention described by Karr [1],
+especially definition 3 of section 1.4. The product:</p>
+<div class="math">
+\[\begin{split}\prod_{m \leq i &lt; n} f(i)\end{split}\]</div>
+<p>has <em>the obvious meaning</em> for <span class="math">\(m &lt; n\)</span>, namely:</p>
+<div class="math">
+\[\begin{split}\prod_{m \leq i &lt; n} f(i) = f(m) f(m+1) \cdot \ldots \cdot f(n-2) f(n-1)\end{split}\]</div>
+<p>with the upper limit value <span class="math">\(f(n)\)</span> excluded. The product over an empty set is
+one if and only if <span class="math">\(m = n\)</span>:</p>
+<div class="math">
+\[\begin{split}\prod_{m \leq i &lt; n} f(i) = 1  \quad \mathrm{for} \quad  m = n\end{split}\]</div>
+<p>Finally, for all other products over empty sets we assume the following
+definition:</p>
+<div class="math">
+\[\begin{split}\prod_{m \leq i &lt; n} f(i) = \frac{1}{\prod_{n \leq i &lt; m} f(i)}  \quad \mathrm{for} \quad  m &gt; n\end{split}\]</div>
+<p>It is important to note that above we define all products with the upper
+limit being exclusive. This is in contrast to the usual mathematical notation,
+but does not affect the product convention. Indeed we have:</p>
+<div class="math">
+\[\begin{split}\prod_{m \leq i &lt; n} f(i) = \prod_{i = m}^{n - 1} f(i)\end{split}\]</div>
+<p>where the difference in notation is intentional to emphasize the meaning,
+with limits typeset on the top being inclusive.</p>
+<dl class="attribute">
+<dt id="sympy.concrete.products.Product.free_symbols">
+<tt class="descname">free_symbols</tt><a class="reference internal" href="../_modules/sympy/concrete/products.html#Product.free_symbols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.products.Product.free_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>This method returns the symbols that will affect the value of
+the Product when evaluated. This is useful if one is trying to
+determine whether a product depends on a certain symbol or not.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Product</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">free_symbols</span>
+<span class="go">set([y])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.concrete.products.Product.is_number">
+<tt class="descname">is_number</tt><a class="reference internal" href="../_modules/sympy/concrete/products.html#Product.is_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.products.Product.is_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the Product will result in a number, else False.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">Product</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span><span class="o">.</span><span class="n">is_number</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.concrete.products.Product.is_zero">
+<tt class="descname">is_zero</tt><a class="reference internal" href="../_modules/sympy/concrete/products.html#Product.is_zero"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.products.Product.is_zero" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Product is zero only if its term is zero.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.concrete.products.Product.variables">
+<tt class="descname">variables</tt><a class="reference internal" href="../_modules/sympy/concrete/products.html#Product.variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.products.Product.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of the product variables</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Product</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Product</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">variables</span>
+<span class="go">[i]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="concrete-functions-reference">
+<h2>Concrete Functions Reference<a class="headerlink" href="#concrete-functions-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.concrete.summations.summation">
+<tt class="descclassname">sympy.concrete.summations.</tt><tt class="descname">summation</tt><big>(</big><em>f</em>, <em>*symbols</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/summations.html#summation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.summations.summation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the summation of f with respect to symbols.</p>
+<p>The notation for symbols is similar to the notation used in Integral.
+summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
+i.e.,</p>
+<div class="highlight-python"><pre>                            b
+                          ____
+                          \   `
+summation(f, (i, a, b)) =  )    f
+                          /___,
+                          i = a</pre>
+</div>
+<p>If it cannot compute the sum, it returns an unevaluated Sum object.
+Repeated sums can be computed by introducing additional symbols tuples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">summation</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">log</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i n m&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">summation</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="go">n**2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summation</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summation</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">**</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">Sum(log(n)**(-n), (n, 2, oo))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summation</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+<span class="go">m**3/6 + m**2/2 + m/3</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">summation</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">n</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">exp(x)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">Sum</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">Product</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">product</span></tt></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.products.product">
+<tt class="descclassname">sympy.concrete.products.</tt><tt class="descname">product</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/products.html#product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.products.product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the product.</p>
+<p>The notation for symbols is similiar to the notation used in Sum or
+Integral. product(f, (i, a, b)) computes the product of f with
+respect to i from a to b, i.e.,</p>
+<div class="highlight-python"><pre>                             b
+                           _____
+product(f(n), (i, a, b)) = |   | f(n)
+                           |   |
+                           i = a</pre>
+</div>
+<p>If it cannot compute the product, it returns an unevaluated Product object.
+Repeated products can be computed by introducing additional symbols tuples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">product</span><span class="p">,</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i n m k&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">product</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+<span class="go">factorial(k)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">product</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+<span class="go">m**k</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">product</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="go">Product(factorial(k), (k, 1, n))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.gosper.gosper_normal">
+<tt class="descclassname">sympy.concrete.gosper.</tt><tt class="descname">gosper_normal</tt><big>(</big><em>f</em>, <em>g</em>, <em>n</em>, <em>polys=True</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/gosper.html#gosper_normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.gosper.gosper_normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the Gosper&#8217;s normal form of <tt class="docutils literal"><span class="pre">f</span></tt> and <tt class="docutils literal"><span class="pre">g</span></tt>.</p>
+<p>Given relatively prime univariate polynomials <tt class="docutils literal"><span class="pre">f</span></tt> and <tt class="docutils literal"><span class="pre">g</span></tt>,
+rewrite their quotient to a normal form defined as follows:</p>
+<div class="math">
+\[\frac{f(n)}{g(n)} = Z \cdot \frac{A(n) C(n+1)}{B(n) C(n)}\]</div>
+<p>where <tt class="docutils literal"><span class="pre">Z</span></tt> is an arbitrary constant and <tt class="docutils literal"><span class="pre">A</span></tt>, <tt class="docutils literal"><span class="pre">B</span></tt>, <tt class="docutils literal"><span class="pre">C</span></tt> are
+monic polynomials in <tt class="docutils literal"><span class="pre">n</span></tt> with the following properties:</p>
+<ol class="arabic simple">
+<li><span class="math">\(\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}\)</span></li>
+<li><span class="math">\(\gcd(B(n), C(n+1)) = 1\)</span></li>
+<li><span class="math">\(\gcd(A(n), C(n)) = 1\)</span></li>
+</ol>
+<p>This normal form, or rational factorization in other words, is a
+crucial step in Gosper&#8217;s algorithm and in solving of difference
+equations. It can be also used to decide if two hypergeometric
+terms are similar or not.</p>
+<p>This procedure will return a tuple containing elements of this
+factorization in the form <tt class="docutils literal"><span class="pre">(Z*A,</span> <span class="pre">B,</span> <span class="pre">C)</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.gosper</span> <span class="kn">import</span> <span class="n">gosper_normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">n</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gosper_normal</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">+</span><span class="mi">3</span><span class="p">),</span> <span class="n">n</span><span class="p">,</span> <span class="n">polys</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">(1/4, n + 3/2, n + 1/4)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.gosper.gosper_term">
+<tt class="descclassname">sympy.concrete.gosper.</tt><tt class="descname">gosper_term</tt><big>(</big><em>f</em>, <em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/gosper.html#gosper_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.gosper.gosper_term" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute Gosper&#8217;s hypergeometric term for <tt class="docutils literal"><span class="pre">f</span></tt>.</p>
+<p>Suppose <tt class="docutils literal"><span class="pre">f</span></tt> is a hypergeometric term such that:</p>
+<div class="math">
+\[s_n = \sum_{k=0}^{n-1} f_k\]</div>
+<p>and <span class="math">\(f_k\)</span> doesn&#8217;t depend on <span class="math">\(n\)</span>. Returns a hypergeometric
+term <span class="math">\(g_n\)</span> such that <span class="math">\(g_{n+1} - g_n = f_n\)</span>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.gosper</span> <span class="kn">import</span> <span class="n">gosper_term</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">factorial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">n</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gosper_term</span><span class="p">((</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+<span class="go">(-n - 1/2)/(n + 1/4)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.concrete.gosper.gosper_sum">
+<tt class="descclassname">sympy.concrete.gosper.</tt><tt class="descname">gosper_sum</tt><big>(</big><em>f</em>, <em>k</em><big>)</big><a class="reference internal" href="../_modules/sympy/concrete/gosper.html#gosper_sum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.concrete.gosper.gosper_sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gosper&#8217;s hypergeometric summation algorithm.</p>
+<p>Given a hypergeometric term <tt class="docutils literal"><span class="pre">f</span></tt> such that:</p>
+<div class="math">
+\[s_n = \sum_{k=0}^{n-1} f_k\]</div>
+<p>and <span class="math">\(f(n)\)</span> doesn&#8217;t depend on <span class="math">\(n\)</span>, returns <span class="math">\(g_{n} - g(0)\)</span> where
+<span class="math">\(g_{n+1} - g_n = f_n\)</span>, or <tt class="docutils literal"><span class="pre">None</span></tt> if <span class="math">\(s_n\)</span> can not be expressed
+in closed form as a sum of hypergeometric terms.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r19" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id8">[R19]</a></td><td>Marko Petkovsek, Herbert S. Wilf, Doron Zeilberger, A = B,
+AK Peters, Ltd., Wellesley, MA, USA, 1997, pp. 73&#8211;100</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.concrete.gosper</span> <span class="kn">import</span> <span class="n">gosper_sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">factorial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gosper_sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="go">(-factorial(n) + 2*factorial(2*n + 1))/factorial(2*n + 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gosper_sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="go">(-60*factorial(n) + factorial(2*n + 1))/(60*factorial(2*n + 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Concrete Mathematics</a><ul>
+<li><a class="reference internal" href="#hypergeometric-terms">Hypergeometric terms</a></li>
+<li><a class="reference internal" href="#sum-and-product-manipulation">Sum and Product manipulation</a></li>
+<li><a class="reference internal" href="#concrete-class-reference">Concrete Class Reference</a></li>
+<li><a class="reference internal" href="#concrete-functions-reference">Concrete Functions Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ntheory.html"
+                        title="previous chapter">Number Theory</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="evalf.html"
+                        title="next chapter">Numerical evaluation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/concrete.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="evalf.html" title="Numerical evaluation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ntheory.html" title="Number Theory"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

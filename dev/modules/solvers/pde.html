@@ -1,0 +1,641 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PDE &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Solvers" href="solvers.html" />
+    <link rel="prev" title="ODE" href="ode.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="Solvers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ode.html" title="ODE"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pde">
+<span id="pde-docs"></span><h1>PDE<a class="headerlink" href="#pde" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="user-functions">
+<h2>User Functions<a class="headerlink" href="#user-functions" title="Permalink to this headline">¶</a></h2>
+<p>These are functions that are imported into the global namespace with <tt class="docutils literal"><span class="pre">from</span> <span class="pre">sympy</span> <span class="pre">import</span> <span class="pre">*</span></tt>.  They are intended for user use.</p>
+<div class="section" id="pde-separate">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">pde_separate()</span></tt><a class="headerlink" href="#pde-separate" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.pde_separate">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">pde_separate</tt><big>(</big><em>eq</em>, <em>fun</em>, <em>sep</em>, <em>strategy='mul'</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#pde_separate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.pde_separate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Separate variables in partial differential equation either by additive
+or multiplicative separation approach. It tries to rewrite an equation so
+that one of the specified variables occurs on a different side of the
+equation than the others.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>eq</strong> &#8211; Partial differential equation</li>
+<li><strong>fun</strong> &#8211; Original function F(x, y, z)</li>
+<li><strong>sep</strong> &#8211; List of separated functions [X(x), u(y, z)]</li>
+<li><strong>strategy</strong> &#8211; Separation strategy. You can choose between additive
+separation (&#8216;add&#8217;) and multiplicative separation (&#8216;mul&#8217;) which is
+default.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">pde_separate_add</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">pde_separate_mul</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">E</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">pde_separate</span><span class="p">,</span> <span class="n">Derivative</span> <span class="k">as</span> <span class="n">D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="s">&#39;uXT&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span> <span class="n">E</span><span class="o">**</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">t</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pde_separate</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">T</span><span class="p">(</span><span class="n">t</span><span class="p">)],</span> <span class="n">strategy</span><span class="o">=</span><span class="s">&#39;add&#39;</span><span class="p">)</span>
+<span class="go">[exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">t</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pde_separate</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">T</span><span class="p">(</span><span class="n">t</span><span class="p">)],</span> <span class="n">strategy</span><span class="o">=</span><span class="s">&#39;mul&#39;</span><span class="p">)</span>
+<span class="go">[Derivative(X(x), x, x)/X(x), Derivative(T(t), t, t)/T(t)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="pde-separate-add">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">pde_separate_add()</span></tt><a class="headerlink" href="#pde-separate-add" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.pde_separate_add">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">pde_separate_add</tt><big>(</big><em>eq</em>, <em>fun</em>, <em>sep</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#pde_separate_add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.pde_separate_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for searching additive separable solutions.</p>
+<p>Consider an equation of two independent variables x, y and a dependent
+variable w, we look for the product of two functions depending on different
+arguments:</p>
+<p><span class="math">\(w(x, y, z) = X(x) + y(y, z)\)</span></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">E</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">pde_separate_add</span><span class="p">,</span> <span class="n">Derivative</span> <span class="k">as</span> <span class="n">D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="s">&#39;uXT&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">x</span><span class="p">),</span> <span class="n">E</span><span class="o">**</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">))</span><span class="o">*</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="n">t</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pde_separate_add</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">),</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">T</span><span class="p">(</span><span class="n">t</span><span class="p">)])</span>
+<span class="go">[exp(-X(x))*Derivative(X(x), x), exp(T(t))*Derivative(T(t), t)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="pde-separate-mul">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">pde_separate_mul()</span></tt><a class="headerlink" href="#pde-separate-mul" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.pde_separate_mul">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">pde_separate_mul</tt><big>(</big><em>eq</em>, <em>fun</em>, <em>sep</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#pde_separate_mul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.pde_separate_mul" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for searching multiplicative separable solutions.</p>
+<p>Consider an equation of two independent variables x, y and a dependent
+variable w, we look for the product of two functions depending on different
+arguments:</p>
+<p><span class="math">\(w(x, y, z) = X(x)*u(y, z)\)</span></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">pde_separate_mul</span><span class="p">,</span> <span class="n">Derivative</span> <span class="k">as</span> <span class="n">D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="s">&#39;uXY&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">D</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pde_separate_mul</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">u</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="p">[</span><span class="n">X</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">Y</span><span class="p">(</span><span class="n">y</span><span class="p">)])</span>
+<span class="go">[Derivative(X(x), x, x)/X(x), Derivative(Y(y), y, y)/Y(y)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="pdsolve">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">pdsolve()</span></tt><a class="headerlink" href="#pdsolve" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.pdsolve">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">pdsolve</tt><big>(</big><em>eq</em>, <em>func=None</em>, <em>hint='default'</em>, <em>dict=False</em>, <em>solvefun=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#pdsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.pdsolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves any (supported) kind of partial differential equation.</p>
+<p><strong>Usage</strong></p>
+<blockquote>
+<div>pdsolve(eq, f(x,y), hint) -&gt; Solve partial differential equation
+eq for function f(x,y), using method hint.</div></blockquote>
+<p><strong>Details</strong></p>
+<blockquote>
+<div><dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">eq</span></tt> can be any supported partial differential equation (see</dt>
+<dd>the pde docstring for supported methods).  This can either
+be an Equality, or an expression, which is assumed to be
+equal to 0.</dd>
+<dt><tt class="docutils literal"><span class="pre">f(x,y)</span></tt> is a function of two variables whose derivatives in that</dt>
+<dd>variable make up the partial differential equation. In many
+cases it is not necessary to provide this; it will be autodetected
+(and an error raised if it couldn&#8217;t be detected).</dd>
+<dt><tt class="docutils literal"><span class="pre">hint</span></tt> is the solving method that you want pdsolve to use.  Use</dt>
+<dd>classify_pde(eq, f(x,y)) to get all of the possible hints for
+a PDE.  The default hint, &#8216;default&#8217;, will use whatever hint
+is returned first by classify_pde().  See Hints below for
+more options that you can use for hint.</dd>
+<dt><tt class="docutils literal"><span class="pre">solvefun</span></tt> is the convention used for arbitrary functions returned</dt>
+<dd>by the PDE solver. If not set by the user, it is set by default
+to be F.</dd>
+</dl>
+</div></blockquote>
+<p><strong>Hints</strong></p>
+<blockquote>
+<div><p>Aside from the various solving methods, there are also some
+meta-hints that you can pass to pdsolve():</p>
+<dl class="docutils">
+<dt>&#8220;default&#8221;:</dt>
+<dd>This uses whatever hint is returned first by
+classify_pde(). This is the default argument to
+pdsolve().</dd>
+<dt>&#8220;all&#8221;:</dt>
+<dd><p class="first">To make pdsolve apply all relevant classification hints,
+use pdsolve(PDE, func, hint=&#8221;all&#8221;).  This will return a
+dictionary of hint:solution terms.  If a hint causes
+pdsolve to raise the NotImplementedError, value of that
+hint&#8217;s key will be the exception object raised.  The
+dictionary will also include some special keys:</p>
+<ul class="last simple">
+<li>order: The order of the PDE.  See also ode_order() in
+deutils.py</li>
+<li>default: The solution that would be returned by
+default.  This is the one produced by the hint that
+appears first in the tuple returned by classify_pde().</li>
+</ul>
+</dd>
+<dt>&#8220;all_Integral&#8221;:</dt>
+<dd>This is the same as &#8220;all&#8221;, except if a hint also has a
+corresponding &#8220;_Integral&#8221; hint, it only returns the
+&#8220;_Integral&#8221; hint.  This is useful if &#8220;all&#8221; causes
+pdsolve() to hang because of a difficult or impossible
+integral.  This meta-hint will also be much faster than
+&#8220;all&#8221;, because integrate() is an expensive routine.</dd>
+</dl>
+<p>See also the classify_pde() docstring for more info on hints,
+and the pde docstring for a list of all supported hints.</p>
+</div></blockquote>
+<dl class="docutils">
+<dt><strong>Tips</strong></dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>You can declare the derivative of an unknown function this way:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Derivative</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="c"># x and y are the independent variables</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&quot;f&quot;</span><span class="p">)(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="c"># f is a function of x and y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># fx will be the partial derivative of f with respect to x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fx</span> <span class="o">=</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># fy will be the partial derivative of f with respect to y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fy</span> <span class="o">=</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><p class="first">See test_pde.py for many tests, which serves also as a set of
+examples for how to use pdsolve().</p>
+</li>
+<li><p class="first">pdsolve always returns an Equality class (except for the case
+when the hint is &#8220;all&#8221; or &#8220;all_Integral&#8221;). Note that it is not possible
+to get an explicit solution for f(x, y) as in the case of ODE&#8217;s</p>
+</li>
+<li><p class="first">Do help(pde.pde_hintname) to get help more information on a
+specific hint</p>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.pde</span> <span class="kn">import</span> <span class="n">pdsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">Eq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ux</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uy</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">ux</span><span class="o">/</span><span class="n">u</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">uy</span><span class="o">/</span><span class="n">u</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdsolve</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+<span class="go">f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="classify-pde">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">classify_pde()</span></tt><a class="headerlink" href="#classify-pde" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.classify_pde">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">classify_pde</tt><big>(</big><em>eq</em>, <em>func=None</em>, <em>dict=False</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#classify_pde"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.classify_pde" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple of possible pdsolve() classifications for a PDE.</p>
+<p>The tuple is ordered so that first item is the classification that
+pdsolve() uses to solve the PDE by default.  In general,
+classifications at the near the beginning of the list will produce
+better solutions faster than those near the end, thought there are
+always exceptions.  To make pdsolve use a different classification,
+use pdsolve(PDE, func, hint=&lt;classification&gt;).  See also the pdsolve()
+docstring for different meta-hints you can use.</p>
+<p>If <tt class="docutils literal"><span class="pre">dict</span></tt> is true, classify_pde() will return a dictionary of
+hint:match expression terms. This is intended for internal use by
+pdsolve().  Note that because dictionaries are ordered arbitrarily,
+this will most likely not be in the same order as the tuple.</p>
+<p>You can get help on different hints by doing help(pde.pde_hintname),
+where hintname is the name of the hint without &#8220;_Integral&#8221;.</p>
+<p>See sympy.pde.allhints or the sympy.pde docstring for a list of all
+supported hints that can be returned from classify_pde.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.pde</span> <span class="kn">import</span> <span class="n">classify_pde</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">Eq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ux</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uy</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">ux</span><span class="o">/</span><span class="n">u</span><span class="p">))</span> <span class="o">+</span> <span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">uy</span><span class="o">/</span><span class="n">u</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">classify_pde</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+<span class="go">(&#39;1st_linear_constant_coeff_homogeneous&#39;,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="checkpdesol">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">checkpdesol()</span></tt><a class="headerlink" href="#checkpdesol" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.checkpdesol">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">checkpdesol</tt><big>(</big><em>pde</em>, <em>sol</em>, <em>func=None</em>, <em>solve_for_func=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#checkpdesol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.checkpdesol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the given solution satisfies the partial differential
+equation.</p>
+<p>pde is the partial differential equation which can be given in the
+form of an equation or an expression. sol is the solution for which
+the pde is to be checked. This can also be given in an equation or
+an expression form. If the function is not provided, the helper
+function _preprocess from deutils is used to identify the function.</p>
+<p>If a sequence of solutions is passed, the same sort of container will be
+used to return the result for each solution.</p>
+<p>The following methods are currently being implemented to check if the
+solution satisfies the PDE:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Directly substitute the solution in the PDE and check. If the
+solution hasn&#8217;t been solved for f, then it will solve for f
+provided solve_for_func hasn&#8217;t been set to False.</li>
+</ol>
+</div></blockquote>
+<p>If the solution satisfies the PDE, then a tuple (True, 0) is returned.
+Otherwise a tuple (False, expr) where expr is the value obtained
+after substituting the solution in the PDE. However if a known solution
+returns False, it may be due to the inability of doit() to simplify it to zero.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">diff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.pde</span> <span class="kn">import</span> <span class="n">checkpdesol</span><span class="p">,</span> <span class="n">pdsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sol</span> <span class="o">=</span> <span class="n">pdsolve</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">checkpdesol</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">sol</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">checkpdesol</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">sol</span><span class="p">)</span>
+<span class="go">(False, (x*F(4*x - 3*y) - 6*F(4*x - 3*y)/25 + 4*Subs(Derivative(F(_xi_1), _xi_1), (_xi_1,), (4*x - 3*y,)))*exp(-6*x/25 - 8*y/25))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="hint-methods">
+<h2>Hint Methods<a class="headerlink" href="#hint-methods" title="Permalink to this headline">¶</a></h2>
+<p>These funcions are meant for internal use. However they contain useful information on the various solving methods.</p>
+<div class="section" id="pde-1st-linear-constant-coeff-homogeneous">
+<h3><tt class="xref py py-obj docutils literal"><span class="pre">pde_1st_linear_constant_coeff_homogeneous</span></tt><a class="headerlink" href="#pde-1st-linear-constant-coeff-homogeneous" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.pde_1st_linear_constant_coeff_homogeneous">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">pde_1st_linear_constant_coeff_homogeneous</tt><big>(</big><em>eq</em>, <em>func</em>, <em>order</em>, <em>match</em>, <em>solvefun</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#pde_1st_linear_constant_coeff_homogeneous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.pde_1st_linear_constant_coeff_homogeneous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves a first order linear homogeneous
+partial differential equation with constant coefficients.</p>
+<p>The general form of this partial differential equation is
+a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = 0
+where a, b and c are constants.</p>
+<p>The general solution of the differential equation, can be found
+by the method of characteristics. It is given by
+f(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">pdsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ux</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uy</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genform</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">ux</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">uy</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">genform</span><span class="p">)</span>
+<span class="go">  d               d</span>
+<span class="go">a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)</span>
+<span class="go">  dx              dy</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">pdsolve</span><span class="p">(</span><span class="n">genform</span><span class="p">))</span>
+<span class="go">                         -c*(a*x + b*y)</span>
+<span class="go">                         ---------------</span>
+<span class="go">                              2    2</span>
+<span class="go">                             a  + b</span>
+<span class="go">f(x, y) = F(-a*y + b*x)*e</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li>Viktor Grigoryan, &#8220;Partial Differential Equations&#8221;
+Math 124A - Fall 2010, pp.7</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.pde</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="gp">... </span><span class="n">pde_1st_linear_constant_coeff_homogeneous</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pdsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdsolve</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="go">f(x, y) == F(x - y)*exp(-x/2 - y/2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">pdsolve</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+<span class="go">                      x   y</span>
+<span class="go">                    - - - -</span>
+<span class="go">                      2   2</span>
+<span class="go">f(x, y) = F(x - y)*e</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="pde-1st-linear-constant-coeff">
+<h3><tt class="xref py py-obj docutils literal"><span class="pre">pde_1st_linear_constant_coeff</span></tt><a class="headerlink" href="#pde-1st-linear-constant-coeff" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.solvers.pde.pde_1st_linear_constant_coeff">
+<tt class="descclassname">sympy.solvers.pde.</tt><tt class="descname">pde_1st_linear_constant_coeff</tt><big>(</big><em>eq</em>, <em>func</em>, <em>order</em>, <em>match</em>, <em>solvefun</em><big>)</big><a class="reference internal" href="../../_modules/sympy/solvers/pde.html#pde_1st_linear_constant_coeff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.solvers.pde.pde_1st_linear_constant_coeff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves a first order linear partial differential equation
+with constant coefficients.</p>
+<p>The general form of this partial differential equation is
+a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = G(x,y)
+where a, b and c are constants and G can be an arbitrary
+function in x and y.</p>
+<p>The general solution of the PDE is</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">pdsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;G&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ux</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">uy</span> <span class="o">=</span> <span class="n">u</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">genform</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">u</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">ux</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">uy</span> <span class="o">-</span> <span class="n">G</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">genform</span><span class="p">)</span>
+<span class="go">              d               d</span>
+<span class="go">a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)</span>
+<span class="go">              dx              dy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">pdsolve</span><span class="p">(</span><span class="n">genform</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="s">&#39;1st_linear_constant_coeff_Integral&#39;</span><span class="p">))</span>
+<span class="go">          //          b*x + c*y                                             \</span>
+<span class="go">          ||              /                                                 |</span>
+<span class="go">          ||             |                                                  |</span>
+<span class="go">          ||             |                                       a*xi       |</span>
+<span class="go">          ||             |                                     -------      |</span>
+<span class="go">          ||             |                                      2    2      |</span>
+<span class="go">          ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |</span>
+<span class="go">          ||             |     G|------------, -------------|*e        d(xi)|</span>
+<span class="go">          ||             |      |   2    2         2    2   |               |</span>
+<span class="go">          ||             |      \  b  + c         b  + c    /               |</span>
+<span class="go">          ||             |                                                  |</span>
+<span class="go">          ||            /                                                   |</span>
+<span class="go">          ||                                                                |</span>
+<span class="go">f(x, y) = ||F(eta) + -------------------------------------------------------|*</span>
+<span class="go">          ||                                  2    2                        |</span>
+<span class="go">          \\                                 b  + c                         /</span>
+
+<span class="go">        \|</span>
+<span class="go">        ||</span>
+<span class="go">        ||</span>
+<span class="go">        ||</span>
+<span class="go">        ||</span>
+<span class="go">        ||</span>
+<span class="go">        ||</span>
+<span class="go">        ||</span>
+<span class="go">        ||</span>
+<span class="go">  -a*xi ||</span>
+<span class="go"> -------||</span>
+<span class="go">  2    2||</span>
+<span class="go"> b  + c ||</span>
+<span class="go">e       ||</span>
+<span class="go">        ||</span>
+<span class="go">        /|eta=-b*y + c*x, xi=b*x + c*y</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li>Viktor Grigoryan, &#8220;Partial Differential Equations&#8221;
+Math 124A - Fall 2010, pp.7</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.solvers.pde</span> <span class="kn">import</span> <span class="n">pdsolve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">pprint</span><span class="p">,</span> <span class="n">exp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">5</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="o">-</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pdsolve</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+<span class="go">f(x, y) == (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-sympy.solvers.pde">
+<span id="information-on-the-pde-module"></span><h2>Information on the pde module<a class="headerlink" href="#module-sympy.solvers.pde" title="Permalink to this headline">¶</a></h2>
+<p>This module contains pdsolve() and different helper functions that it
+uses. It is heavily inspired by the ode module and hence the basic
+infrastructure remains the same.</p>
+<p><strong>Functions in this module</strong></p>
+<blockquote>
+<div><p>These are the user functions in this module:</p>
+<ul>
+<li><p class="first">pdsolve()     - Solves PDE&#8217;s</p>
+</li>
+<li><p class="first">classify_pde() - Classifies PDEs into possible hints for dsolve().</p>
+</li>
+<li><dl class="first docutils">
+<dt>pde_separate() - Separate variables in partial differential equation either by</dt>
+<dd><p class="first last">additive or multiplicative separation approach.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>These are the helper functions in this module:</p>
+<ul>
+<li><p class="first">pde_separate_add() - Helper function for searching additive separable solutions.</p>
+</li>
+<li><dl class="first docutils">
+<dt>pde_separate_mul() - Helper function for searching multiplicative</dt>
+<dd><p class="first last">separable solutions.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p><strong>Currently implemented solver methods</strong></p>
+<p>The following methods are implemented for solving partial differential
+equations.  See the docstrings of the various pde_hint() functions for
+more information on each (run help(pde)):</p>
+<blockquote>
+<div><ul class="simple">
+<li>1st order linear homogeneous partial differential equations
+with constant coefficients.</li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PDE</a><ul>
+<li><a class="reference internal" href="#user-functions">User Functions</a><ul>
+<li><a class="reference internal" href="#pde-separate"><tt class="docutils literal"><span class="pre">pde_separate()</span></tt></a></li>
+<li><a class="reference internal" href="#pde-separate-add"><tt class="docutils literal"><span class="pre">pde_separate_add()</span></tt></a></li>
+<li><a class="reference internal" href="#pde-separate-mul"><tt class="docutils literal"><span class="pre">pde_separate_mul()</span></tt></a></li>
+<li><a class="reference internal" href="#pdsolve"><tt class="docutils literal"><span class="pre">pdsolve()</span></tt></a></li>
+<li><a class="reference internal" href="#classify-pde"><tt class="docutils literal"><span class="pre">classify_pde()</span></tt></a></li>
+<li><a class="reference internal" href="#checkpdesol"><tt class="docutils literal"><span class="pre">checkpdesol()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hint-methods">Hint Methods</a><ul>
+<li><a class="reference internal" href="#pde-1st-linear-constant-coeff-homogeneous"><tt class="docutils literal"><span class="pre">pde_1st_linear_constant_coeff_homogeneous</span></tt></a></li>
+<li><a class="reference internal" href="#pde-1st-linear-constant-coeff"><tt class="docutils literal"><span class="pre">pde_1st_linear_constant_coeff</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-sympy.solvers.pde">Information on the pde module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ode.html"
+                        title="previous chapter">ODE</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="solvers.html"
+                        title="next chapter">Solvers</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/solvers/pde.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="Solvers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ode.html" title="ODE"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

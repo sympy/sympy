@@ -1,0 +1,1497 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Second Quantization &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Physics Module" href="index.html" />
+    <link rel="next" title="Wigner Symbols" href="wigner.html" />
+    <link rel="prev" title="Quantum Harmonic Oscillator in 3-D" href="sho.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wigner.html" title="Wigner Symbols"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sho.html" title="Quantum Harmonic Oscillator in 3-D"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Physics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.secondquant">
+<span id="second-quantization"></span><h1>Second Quantization<a class="headerlink" href="#module-sympy.physics.secondquant" title="Permalink to this headline">¶</a></h1>
+<p>Second quantization operators and states for bosons.</p>
+<p>This follow the formulation of Fetter and Welecka, &#8220;Quantum Theory
+of Many-Particle Systems.&#8221;</p>
+<dl class="class">
+<dt id="sympy.physics.secondquant.Dagger">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">Dagger</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#Dagger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.Dagger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hermitian conjugate of creation/annihilation operators.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Dagger</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">Bd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">I</span><span class="p">)</span>
+<span class="go">-2*I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">CreateBoson(0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">Bd</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">AnnihilateBoson(0)</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="sympy.physics.secondquant.Dagger.eval">
+<em class="property">classmethod </em><tt class="descname">eval</tt><big>(</big><em>arg</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#Dagger.eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.Dagger.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Dagger instance.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Dagger</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">Bd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">I</span><span class="p">)</span>
+<span class="go">-2*I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">CreateBoson(0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">Bd</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+<span class="go">AnnihilateBoson(0)</span>
+</pre></div>
+</div>
+<p>The eval() method is called automatically.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.KroneckerDelta">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">KroneckerDelta</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta" title="Permalink to this definition">¶</a></dt>
+<dd><p>The discrete, or Kronecker, delta function.</p>
+<p>A function that takes in two integers <span class="math">\(i\)</span> and <span class="math">\(j\)</span>. It returns <span class="math">\(0\)</span> if <span class="math">\(i\)</span> and <span class="math">\(j\)</span> are
+not equal or it returns <span class="math">\(1\)</span> if <span class="math">\(i\)</span> and <span class="math">\(j\)</span> are equal.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>i</strong> : Number, Symbol</p>
+<blockquote>
+<div><p>The first index of the delta function.</p>
+</div></blockquote>
+<p><strong>j</strong> : Number, Symbol</p>
+<blockquote class="last">
+<div><p>The second index of the delta function.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.eval" title="sympy.physics.secondquant.KroneckerDelta.eval"><tt class="xref py py-obj docutils literal"><span class="pre">eval</span></tt></a>, <a class="reference internal" href="../functions/special.html#sympy.functions.special.delta_functions.DiracDelta" title="sympy.functions.special.delta_functions.DiracDelta"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.functions.special.delta_functions.DiracDelta</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r232" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R232]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Kronecker_delta">http://en.wikipedia.org/wiki/Kronecker_delta</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>A simple example with integer indices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>Symbolic indices:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+<span class="go">KroneckerDelta(i, j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+<span class="go">KroneckerDelta(i, i + k + 1)</span>
+</pre></div>
+</div>
+<dl class="classmethod">
+<dt id="sympy.physics.secondquant.KroneckerDelta.eval">
+<em class="property">classmethod </em><tt class="descname">eval</tt><big>(</big><em>i</em>, <em>j</em><big>)</big><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the discrete delta function.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+<span class="go">KroneckerDelta(i, j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+<span class="go">KroneckerDelta(i, i + k + 1)</span>
+</pre></div>
+</div>
+<p># indirect doctest</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.KroneckerDelta.indices_contain_equal_information">
+<tt class="descname">indices_contain_equal_information</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.indices_contain_equal_information" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if indices are either both above or below fermi.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">indices_contain_equal_information</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">indices_contain_equal_information</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">indices_contain_equal_information</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.KroneckerDelta.is_above_fermi">
+<tt class="descname">is_above_fermi</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.is_above_fermi" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if Delta can be non-zero above fermi</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_below_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_below_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_below_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_only_below_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_only_above_fermi</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_above_fermi</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_above_fermi</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">is_above_fermi</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.KroneckerDelta.is_below_fermi">
+<tt class="descname">is_below_fermi</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.is_below_fermi" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if Delta can be non-zero below fermi</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_above_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_above_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_above_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_only_above_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_only_below_fermi</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_below_fermi</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_below_fermi</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">is_below_fermi</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi">
+<tt class="descname">is_only_above_fermi</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if Delta is restricted to above fermi</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_above_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_above_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_above_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_below_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_below_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_below_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_only_below_fermi</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_above_fermi</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_above_fermi</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_above_fermi</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi">
+<tt class="descname">is_only_below_fermi</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.is_only_below_fermi" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if Delta is restricted to below fermi</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_above_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_above_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_above_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_below_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_below_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_below_fermi</span></tt></a>, <a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi" title="sympy.physics.secondquant.KroneckerDelta.is_only_above_fermi"><tt class="xref py py-obj docutils literal"><span class="pre">is_only_above_fermi</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_below_fermi</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_below_fermi</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_below_fermi</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.KroneckerDelta.killable_index">
+<tt class="descname">killable_index</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.killable_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index which is preferred to substitute in the final
+expression.</p>
+<p>The index to substitute is the index with less information regarding
+fermi level.  If indices contain same information, &#8216;a&#8217; is preferred
+before &#8216;b&#8217;.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.preferred_index" title="sympy.physics.secondquant.KroneckerDelta.preferred_index"><tt class="xref py py-obj docutils literal"><span class="pre">preferred_index</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">killable_index</span>
+<span class="go">p</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">killable_index</span>
+<span class="go">p</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">killable_index</span>
+<span class="go">j</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.KroneckerDelta.preferred_index">
+<tt class="descname">preferred_index</tt><a class="headerlink" href="#sympy.physics.secondquant.KroneckerDelta.preferred_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index which is preferred to keep in the final expression.</p>
+<p>The preferred index is the index with more information regarding fermi
+level.  If indices contain same information, &#8216;a&#8217; is preferred before
+&#8216;b&#8217;.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.secondquant.KroneckerDelta.killable_index" title="sympy.physics.secondquant.KroneckerDelta.killable_index"><tt class="xref py py-obj docutils literal"><span class="pre">killable_index</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions.special.tensor_functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">j</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">preferred_index</span>
+<span class="go">i</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">preferred_index</span>
+<span class="go">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">preferred_index</span>
+<span class="go">i</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.AnnihilateBoson">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">AnnihilateBoson</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateBoson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateBoson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bosonic annihilation operator.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">AnnihilateBoson(x)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.physics.secondquant.AnnihilateBoson.apply_operator">
+<tt class="descname">apply_operator</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateBoson.apply_operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateBoson.apply_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply state to self if self is not symbolic and state is a FockStateKet, else
+multiply self by state.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">BKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="go">y*AnnihilateBoson(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">BKet</span><span class="p">((</span><span class="n">n</span><span class="p">,)))</span>
+<span class="go">sqrt(n)*FockStateBosonKet((n - 1,))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.CreateBoson">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">CreateBoson</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateBoson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateBoson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bosonic creation operator.</p>
+<dl class="method">
+<dt id="sympy.physics.secondquant.CreateBoson.apply_operator">
+<tt class="descname">apply_operator</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateBoson.apply_operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateBoson.apply_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply state to self if self is not symbolic and state is a FockStateKet, else
+multiply self by state.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">Dagger</span><span class="p">,</span> <span class="n">BKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="go">y*CreateBoson(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">BKet</span><span class="p">((</span><span class="n">n</span><span class="p">,)))</span>
+<span class="go">sqrt(n)*FockStateBosonKet((n - 1,))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.AnnihilateFermion">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">AnnihilateFermion</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateFermion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateFermion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fermionic annihilation operator.</p>
+<dl class="method">
+<dt id="sympy.physics.secondquant.AnnihilateFermion.apply_operator">
+<tt class="descname">apply_operator</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateFermion.apply_operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateFermion.apply_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply state to self if self is not symbolic and state is a FockStateKet, else
+multiply self by state.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">Dagger</span><span class="p">,</span> <span class="n">BKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="go">y*CreateBoson(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">BKet</span><span class="p">((</span><span class="n">n</span><span class="p">,)))</span>
+<span class="go">sqrt(n)*FockStateBosonKet((n - 1,))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.AnnihilateFermion.is_only_q_annihilator">
+<tt class="descname">is_only_q_annihilator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateFermion.is_only_q_annihilator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateFermion.is_only_q_annihilator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always destroy a quasi-particle?  (annihilate hole or annihilate particle)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_annihilator</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_annihilator</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_annihilator</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.AnnihilateFermion.is_only_q_creator">
+<tt class="descname">is_only_q_creator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateFermion.is_only_q_creator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateFermion.is_only_q_creator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always create a quasi-particle?  (create hole or create particle)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_creator</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_creator</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_creator</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.AnnihilateFermion.is_q_annihilator">
+<tt class="descname">is_q_annihilator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateFermion.is_q_annihilator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateFermion.is_q_annihilator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
+If so, would that be above or below the fermi surface?</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_annihilator</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_annihilator</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_annihilator</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.AnnihilateFermion.is_q_creator">
+<tt class="descname">is_q_creator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AnnihilateFermion.is_q_creator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AnnihilateFermion.is_q_creator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can we create a quasi-particle?  (create hole or create particle)
+If so, would that be above or below the fermi surface?</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_creator</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_creator</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_creator</span>
+<span class="go">-1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.CreateFermion">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">CreateFermion</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateFermion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateFermion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fermionic creation operator.</p>
+<dl class="method">
+<dt id="sympy.physics.secondquant.CreateFermion.apply_operator">
+<tt class="descname">apply_operator</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateFermion.apply_operator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateFermion.apply_operator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply state to self if self is not symbolic and state is a FockStateKet, else
+multiply self by state.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">B</span><span class="p">,</span> <span class="n">Dagger</span><span class="p">,</span> <span class="n">BKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+<span class="go">y*CreateBoson(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">apply_operator</span><span class="p">(</span><span class="n">BKet</span><span class="p">((</span><span class="n">n</span><span class="p">,)))</span>
+<span class="go">sqrt(n)*FockStateBosonKet((n - 1,))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.CreateFermion.is_only_q_annihilator">
+<tt class="descname">is_only_q_annihilator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateFermion.is_only_q_annihilator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateFermion.is_only_q_annihilator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always destroy a quasi-particle?  (annihilate hole or annihilate particle)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_annihilator</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_annihilator</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_annihilator</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.CreateFermion.is_only_q_creator">
+<tt class="descname">is_only_q_creator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateFermion.is_only_q_creator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateFermion.is_only_q_creator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always create a quasi-particle?  (create hole or create particle)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_creator</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_creator</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_only_q_creator</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.CreateFermion.is_q_annihilator">
+<tt class="descname">is_q_annihilator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateFermion.is_q_annihilator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateFermion.is_q_annihilator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can we destroy a quasi-particle?  (annihilate hole or annihilate particle)
+If so, would that be above or below the fermi surface?</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_annihilator</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_annihilator</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_annihilator</span>
+<span class="go">-1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.CreateFermion.is_q_creator">
+<tt class="descname">is_q_creator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#CreateFermion.is_q_creator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.CreateFermion.is_q_creator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Can we create a quasi-particle?  (create hole or create particle)
+If so, would that be above or below the fermi surface?</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_creator</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_creator</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">is_q_creator</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.FockState">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FockState</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FockState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FockState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Many particle Fock state with a sequence of occupation numbers.</p>
+<p>Anywhere you can have a FockState, you can also have S.Zero.
+All code must check for this!</p>
+<p>Base class to represent FockStates.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.FockStateBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FockStateBra</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FockStateBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FockStateBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a bra.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.FockStateKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FockStateKet</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FockStateKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FockStateKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation of a ket.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.FockStateBosonKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FockStateBosonKet</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FockStateBosonKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FockStateBosonKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Many particle Fock state with a sequence of occupation numbers.</p>
+<p>Occupation numbers can be any integer &gt;= 0.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">BKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BKet</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">FockStateBosonKet((1, 2))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.FockStateBosonBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FockStateBosonBra</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FockStateBosonBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FockStateBosonBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describes a collection of BosonBra particles.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">BBra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BBra</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">FockStateBosonBra((1, 2))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.BBra">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">BBra</tt><a class="headerlink" href="#sympy.physics.secondquant.BBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.secondquant.FockStateBosonBra" title="sympy.physics.secondquant.FockStateBosonBra"><tt class="xref py py-class docutils literal"><span class="pre">FockStateBosonBra</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.BKet">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">BKet</tt><a class="headerlink" href="#sympy.physics.secondquant.BKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.secondquant.FockStateBosonKet" title="sympy.physics.secondquant.FockStateBosonKet"><tt class="xref py py-class docutils literal"><span class="pre">FockStateBosonKet</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.FBra">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FBra</tt><a class="headerlink" href="#sympy.physics.secondquant.FBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">FockStateFermionBra</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.FKet">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FKet</tt><a class="headerlink" href="#sympy.physics.secondquant.FKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">FockStateFermionKet</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.F">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">F</tt><a class="headerlink" href="#sympy.physics.secondquant.F" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.secondquant.AnnihilateFermion" title="sympy.physics.secondquant.AnnihilateFermion"><tt class="xref py py-class docutils literal"><span class="pre">AnnihilateFermion</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.Fd">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">Fd</tt><a class="headerlink" href="#sympy.physics.secondquant.Fd" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.secondquant.CreateFermion" title="sympy.physics.secondquant.CreateFermion"><tt class="xref py py-class docutils literal"><span class="pre">CreateFermion</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.B">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">B</tt><a class="headerlink" href="#sympy.physics.secondquant.B" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.secondquant.AnnihilateBoson" title="sympy.physics.secondquant.AnnihilateBoson"><tt class="xref py py-class docutils literal"><span class="pre">AnnihilateBoson</span></tt></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.Bd">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">Bd</tt><a class="headerlink" href="#sympy.physics.secondquant.Bd" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#sympy.physics.secondquant.CreateBoson" title="sympy.physics.secondquant.CreateBoson"><tt class="xref py py-class docutils literal"><span class="pre">CreateBoson</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.secondquant.apply_operators">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">apply_operators</tt><big>(</big><em>e</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#apply_operators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.apply_operators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take a sympy expression with operators and states and apply the operators.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">apply_operators</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">apply_operators</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">+</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.InnerProduct">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">InnerProduct</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#InnerProduct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.InnerProduct" title="Permalink to this definition">¶</a></dt>
+<dd><p>An unevaluated inner product between a bra and ket.</p>
+<p>Currently this class just reduces things to a product of
+Kronecker Deltas.  In the future, we could introduce abstract
+states like <tt class="docutils literal"><span class="pre">|a&gt;</span></tt> and <tt class="docutils literal"><span class="pre">|b&gt;</span></tt>, and leave the inner product unevaluated as
+<tt class="docutils literal"><span class="pre">&lt;a|b&gt;</span></tt>.</p>
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.InnerProduct.bra">
+<tt class="descname">bra</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#InnerProduct.bra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.InnerProduct.bra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bra part of the state</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.InnerProduct.ket">
+<tt class="descname">ket</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#InnerProduct.ket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.InnerProduct.ket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the ket part of the state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.BosonicBasis">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">BosonicBasis</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#BosonicBasis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.BosonicBasis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for a basis set of bosonic Fock states.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.VarBosonicBasis">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">VarBosonicBasis</tt><big>(</big><em>n_max</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#VarBosonicBasis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.VarBosonicBasis" title="Permalink to this definition">¶</a></dt>
+<dd><p>A single state, variable particle number basis set.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">VarBosonicBasis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">VarBosonicBasis</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">[FockState((0,)), FockState((1,)), FockState((2,)),</span>
+<span class="go"> FockState((3,)), FockState((4,))]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.physics.secondquant.VarBosonicBasis.index">
+<tt class="descname">index</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#VarBosonicBasis.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.VarBosonicBasis.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index of state in basis.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">VarBosonicBasis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">VarBosonicBasis</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">[FockState((0,)), FockState((1,)), FockState((2,))]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state</span>
+<span class="go">FockStateBosonKet((1,))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.secondquant.VarBosonicBasis.state">
+<tt class="descname">state</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#VarBosonicBasis.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.VarBosonicBasis.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>The state of a single basis.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">VarBosonicBasis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">VarBosonicBasis</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">FockStateBosonKet((3,))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.FixedBosonicBasis">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">FixedBosonicBasis</tt><big>(</big><em>n_particles</em>, <em>n_levels</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FixedBosonicBasis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FixedBosonicBasis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fixed particle number basis set.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">FixedBosonicBasis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">FixedBosonicBasis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">[FockState((2, 0)), FockState((1, 1)), FockState((0, 2))]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state</span>
+<span class="go">FockStateBosonKet((1, 1))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.physics.secondquant.FixedBosonicBasis.index">
+<tt class="descname">index</tt><big>(</big><em>state</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FixedBosonicBasis.index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FixedBosonicBasis.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the index of state in basis.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">FixedBosonicBasis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">FixedBosonicBasis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.secondquant.FixedBosonicBasis.state">
+<tt class="descname">state</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#FixedBosonicBasis.state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.FixedBosonicBasis.state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the state that lies at index i of the basis</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">FixedBosonicBasis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">FixedBosonicBasis</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">FockStateBosonKet((1, 0, 1))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.Commutator">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">Commutator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#Commutator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.Commutator" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Commutator:  [A, B] = A*B - B*A</p>
+<p>The arguments are ordered according to .__cmp__()</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Commutator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;A,B&#39;</span><span class="p">,</span> <span class="n">commutative</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+<span class="go">-Commutator(A, B)</span>
+</pre></div>
+</div>
+<p>Evaluate the commutator with .doit()</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">);</span> <span class="n">comm</span>
+<span class="go">Commutator(A, B)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">A*B - B*A</span>
+</pre></div>
+</div>
+<p>For two second quantization operators the commutator is evaluated
+immediately:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Fd</span><span class="p">,</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">),</span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="go">2*NO(CreateFermion(a)*CreateFermion(i))</span>
+</pre></div>
+</div>
+<p>But for more complicated expressions, the evaluation is triggered by
+a call to .doit()</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">Fd</span><span class="p">(</span><span class="n">q</span><span class="p">),</span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">));</span> <span class="n">comm</span>
+<span class="go">Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="n">wicks</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">-KroneckerDelta(i, p)*CreateFermion(q) +</span>
+<span class="go"> KroneckerDelta(i, q)*CreateFermion(p)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.physics.secondquant.Commutator.doit">
+<tt class="descname">doit</tt><big>(</big><em>**hints</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#Commutator.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.Commutator.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables the computation of complex expressions.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Commutator</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a,b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">Fd</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="n">wicks</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.physics.secondquant.Commutator.eval">
+<em class="property">classmethod </em><tt class="descname">eval</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#Commutator.eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.Commutator.eval" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Commutator [A,B] is on canonical form if A &lt; B.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">Commutator</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c1</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">Fd</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c2</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">F</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.secondquant.matrix_rep">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">matrix_rep</tt><big>(</big><em>op</em>, <em>basis</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#matrix_rep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.matrix_rep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the representation of an operator in a basis.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">VarBosonicBasis</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">matrix_rep</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">VarBosonicBasis</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">o</span> <span class="o">=</span> <span class="n">B</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">matrix_rep</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, 1,       0,       0, 0],</span>
+<span class="go">[0, 0, sqrt(2),       0, 0],</span>
+<span class="go">[0, 0,       0, sqrt(3), 0],</span>
+<span class="go">[0, 0,       0,       0, 2],</span>
+<span class="go">[0, 0,       0,       0, 0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.secondquant.contraction">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">contraction</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#contraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.contraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates contraction of Fermionic operators a and b.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span><span class="p">,</span> <span class="n">contraction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a,b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A contraction is non-zero only if a quasi-creator is to the right of a
+quasi-annihilator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">contraction</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">),</span><span class="n">Fd</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+<span class="go">KroneckerDelta(a, b)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">contraction</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">F</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+<span class="go">KroneckerDelta(i, j)</span>
+</pre></div>
+</div>
+<p>For general indices a non-zero result restricts the indices to below/above
+the fermi surface:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">contraction</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">KroneckerDelta(_i, q)*KroneckerDelta(p, q)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">contraction</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="n">Fd</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">KroneckerDelta(_a, q)*KroneckerDelta(p, q)</span>
+</pre></div>
+</div>
+<p>Two creators or two annihilators always vanishes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">contraction</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">contraction</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="n">Fd</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.secondquant.wicks">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">wicks</tt><big>(</big><em>e</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#wicks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.wicks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the normal ordered equivalent of an expression using Wicks Theorem.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">wicks</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span><span class="p">,</span> <span class="n">NO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q,r&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wicks</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>  
+<span class="go">d(p, q)*d(q, _i) + NO(CreateFermion(p)*AnnihilateFermion(q))</span>
+</pre></div>
+</div>
+<p>By default, the expression is expanded:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wicks</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">+</span><span class="n">F</span><span class="p">(</span><span class="n">r</span><span class="p">)))</span> 
+<span class="go">NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(</span>
+<span class="go">    AnnihilateFermion(p)*AnnihilateFermion(r))</span>
+</pre></div>
+</div>
+<p>With the keyword &#8216;keep_only_fully_contracted=True&#8217;, only fully contracted
+terms are returned.</p>
+<dl class="docutils">
+<dt>By request, the result can be simplified in the following order:</dt>
+<dd>&#8211; KroneckerDelta functions are evaluated
+&#8211; Dummy variables are substituted consistently across terms</dd>
+</dl>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p q r&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wicks</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">+</span><span class="n">F</span><span class="p">(</span><span class="n">r</span><span class="p">)),</span> <span class="n">keep_only_fully_contracted</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> 
+<span class="go">KroneckerDelta(_i, _q)*KroneckerDelta(</span>
+<span class="go">    _p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.NO">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">NO</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#NO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.NO" title="Permalink to this definition">¶</a></dt>
+<dd><p>This Object is used to represent normal ordering brackets.</p>
+<p>i.e.  {abcd}  sometimes written  :abcd:</p>
+<p>Applying the function NO(arg) to an argument means that all operators in
+the argument will be assumed to anticommute, and have vanishing
+contractions.  This allows an immediate reordering to canonical form
+upon object creation.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">NO</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">NO(CreateFermion(p)*AnnihilateFermion(q))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">*</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+<span class="go">-NO(CreateFermion(p)*AnnihilateFermion(q))</span>
+</pre></div>
+</div>
+<p>Note:
+If you want to generate a normal ordered equivalent of an expression, you
+should use the function wicks().  This class only indicates that all
+operators inside the brackets anticommute, and have vanishing contractions.
+Nothing more, nothing less.</p>
+<dl class="method">
+<dt id="sympy.physics.secondquant.NO.doit">
+<tt class="descname">doit</tt><big>(</big><em>**kw_args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#NO.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.NO.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Either removes the brackets or enables complex computations
+in its arguments.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">NO</span><span class="p">,</span> <span class="n">Fd</span><span class="p">,</span> <span class="n">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">textwrap</span> <span class="kn">import</span> <span class="n">fill</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">fill</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">())))</span>
+<span class="go">KroneckerDelta(_a, _p)*KroneckerDelta(_a,</span>
+<span class="go">_q)*CreateFermion(_a)*AnnihilateFermion(_a) + KroneckerDelta(_a,</span>
+<span class="go">_p)*KroneckerDelta(_i, _q)*CreateFermion(_a)*AnnihilateFermion(_i) -</span>
+<span class="go">KroneckerDelta(_a, _q)*KroneckerDelta(_i,</span>
+<span class="go">_p)*AnnihilateFermion(_a)*CreateFermion(_i) - KroneckerDelta(_i,</span>
+<span class="go">_p)*KroneckerDelta(_i, _q)*AnnihilateFermion(_i)*CreateFermion(_i)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.secondquant.NO.get_subNO">
+<tt class="descname">get_subNO</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#NO.get_subNO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.NO.get_subNO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a NO() without FermionicOperator at index i.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">F</span><span class="p">,</span> <span class="n">NO</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">r</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q,r&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">r</span><span class="p">))</span><span class="o">.</span><span class="n">get_subNO</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  
+<span class="go">NO(AnnihilateFermion(p)*AnnihilateFermion(r))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.NO.has_q_annihilators">
+<tt class="descname">has_q_annihilators</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#NO.has_q_annihilators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.NO.has_q_annihilators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 0 if the rightmost argument of the first argument is a not a
+q_annihilator, else 1 if it is above fermi or -1 if it is below fermi.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">NO</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">.</span><span class="n">has_q_annihilators</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">))</span><span class="o">.</span><span class="n">has_q_annihilators</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">.</span><span class="n">has_q_annihilators</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.NO.has_q_creators">
+<tt class="descname">has_q_creators</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#NO.has_q_creators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.NO.has_q_creators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return 0 if the leftmost argument of the first argument is a not a
+q_creator, else 1 if it is above fermi or -1 if it is below fermi.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">NO</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="o">.</span><span class="n">has_q_creators</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">))</span><span class="o">.</span><span class="n">has_q_creators</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">a</span><span class="p">))</span><span class="o">.</span><span class="n">has_q_creators</span>           
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.secondquant.NO.iter_q_annihilators">
+<tt class="descname">iter_q_annihilators</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#NO.iter_q_annihilators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.NO.iter_q_annihilators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates over the annihilation operators.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">NO</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">no</span> <span class="o">=</span> <span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">Fd</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">no</span><span class="o">.</span><span class="n">iter_q_creators</span><span class="p">()</span>
+<span class="go">&lt;generator object... at 0x...&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">no</span><span class="o">.</span><span class="n">iter_q_creators</span><span class="p">())</span>
+<span class="go">[0, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">no</span><span class="o">.</span><span class="n">iter_q_annihilators</span><span class="p">())</span>
+<span class="go">[3, 2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.secondquant.NO.iter_q_creators">
+<tt class="descname">iter_q_creators</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#NO.iter_q_creators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.NO.iter_q_creators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates over the creation operators.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">NO</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">Fd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">no</span> <span class="o">=</span> <span class="n">NO</span><span class="p">(</span><span class="n">Fd</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">F</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">Fd</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">no</span><span class="o">.</span><span class="n">iter_q_creators</span><span class="p">()</span>
+<span class="go">&lt;generator object... at 0x...&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">no</span><span class="o">.</span><span class="n">iter_q_creators</span><span class="p">())</span>
+<span class="go">[0, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">no</span><span class="o">.</span><span class="n">iter_q_annihilators</span><span class="p">())</span>
+<span class="go">[3, 2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.secondquant.evaluate_deltas">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">evaluate_deltas</tt><big>(</big><em>e</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#evaluate_deltas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.evaluate_deltas" title="Permalink to this definition">¶</a></dt>
+<dd><p>We evaluate KroneckerDelta symbols in the expression assuming Einstein summation.</p>
+<p>If one index is repeated it is summed over and in effect substituted with
+the other one. If both indices are repeated we substitute according to what
+is the preferred index.  this is determined by
+KroneckerDelta.preferred_index and KroneckerDelta.killable_index.</p>
+<p>In case there are no possible substitutions or if a substitution would
+imply a loss of information, nothing is done.</p>
+<p>In case an index appears in more than one KroneckerDelta, the resulting
+substitution depends on the order of the factors.  Since the ordering is platform
+dependent, the literal expression resulting from this function may be hard to
+predict.</p>
+<p class="rubric">Examples</p>
+<p>We assume the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">KroneckerDelta</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">evaluate_deltas</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p q&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The order of preference for these indices according to KroneckerDelta is
+(a, b, i, j, p, q).</p>
+<p>Trivial cases:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>       <span class="c"># d_ij f(i) -&gt; f(j)</span>
+<span class="go">f(_j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>       <span class="c"># d_ij f(j) -&gt; f(i)</span>
+<span class="go">f(_i)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>       <span class="c"># d_ip f(p) -&gt; f(i)</span>
+<span class="go">f(_i)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>       <span class="c"># d_qp f(p) -&gt; f(q)</span>
+<span class="go">f(_q)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>       <span class="c"># d_qp f(q) -&gt; f(p)</span>
+<span class="go">f(_p)</span>
+</pre></div>
+</div>
+<p>More interesting cases:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">t</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
+<span class="go">f(_i, _q)*t(_a, _i)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">t</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
+<span class="go">f(_a, _q)*t(_a, _i)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
+<span class="go">f(_p, _p)</span>
+</pre></div>
+</div>
+<p>Finally, here are some cases where nothing is done, because that would
+imply a loss of information:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="go">f(_q)*KroneckerDelta(_i, _p)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">evaluate_deltas</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">f</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="go">f(_i)*KroneckerDelta(_i, _p)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.AntiSymmetricTensor">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">AntiSymmetricTensor</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AntiSymmetricTensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AntiSymmetricTensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores upper and lower indices in separate Tuple&#8217;s.</p>
+<p>Each group of indices is assumed to be antisymmetric.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">AntiSymmetricTensor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+<span class="go">AntiSymmetricTensor(v, (a, i), (b, j))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+<span class="go">-AntiSymmetricTensor(v, (a, i), (b, j))</span>
+</pre></div>
+</div>
+<p>As you can see, the indices are automatically sorted to a canonical form.</p>
+<dl class="method">
+<dt id="sympy.physics.secondquant.AntiSymmetricTensor.doit">
+<tt class="descname">doit</tt><big>(</big><em>**kw_args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AntiSymmetricTensor.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AntiSymmetricTensor.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns self.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">AntiSymmetricTensor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a,b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">AntiSymmetricTensor(v, (a, i), (b, j))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.AntiSymmetricTensor.lower">
+<tt class="descname">lower</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AntiSymmetricTensor.lower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AntiSymmetricTensor.lower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the lower indices.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">AntiSymmetricTensor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a,b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+<span class="go">AntiSymmetricTensor(v, (a, i), (b, j))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span>
+<span class="go">(b, j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.AntiSymmetricTensor.symbol">
+<tt class="descname">symbol</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AntiSymmetricTensor.symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AntiSymmetricTensor.symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the symbol of the tensor.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">AntiSymmetricTensor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a,b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+<span class="go">AntiSymmetricTensor(v, (a, i), (b, j))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span><span class="o">.</span><span class="n">symbol</span>
+<span class="go">v</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.secondquant.AntiSymmetricTensor.upper">
+<tt class="descname">upper</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#AntiSymmetricTensor.upper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.AntiSymmetricTensor.upper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the upper indices.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">AntiSymmetricTensor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a,b&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+<span class="go">AntiSymmetricTensor(v, (a, i), (b, j))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">AntiSymmetricTensor</span><span class="p">(</span><span class="s">&#39;v&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span><span class="o">.</span><span class="n">upper</span>
+<span class="go">(a, i)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.secondquant.substitute_dummies">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">substitute_dummies</tt><big>(</big><em>expr</em>, <em>new_indices=False</em>, <em>pretty_indices={}</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#substitute_dummies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.substitute_dummies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect terms by substitution of dummy variables.</p>
+<p>This routine allows simplification of Add expressions containing terms
+which differ only due to dummy variables.</p>
+<p>The idea is to substitute all dummy variables consistently depending on
+the structure of the term.  For each term, we obtain a sequence of all
+dummy variables, where the order is determined by the index range, what
+factors the index belongs to and its position in each factor.  See
+_get_ordered_dummies() for more inforation about the sorting of dummies.
+The index sequence is then substituted consistently in each term.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">substitute_dummies</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b c d&#39;</span><span class="p">,</span> <span class="n">above_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span><span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i j&#39;</span><span class="p">,</span> <span class="n">below_fermi</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">);</span> <span class="n">expr</span>
+<span class="go">f(_a, _b) + f(_c, _d)</span>
+</pre></div>
+</div>
+<p>Since a, b, c and d are equivalent summation indices, the expression can be
+simplified to a single term (for which the dummy indices are still summed over)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">substitute_dummies</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">2*f(_a, _b)</span>
+</pre></div>
+</div>
+<p>Controlling output:</p>
+<p>By default the dummy symbols that are already present in the expression
+will be reused in a different permuation.  However, if new_indices=True,
+new dummies will be generated and inserted.  The keyword &#8216;pretty_indices&#8217;
+can be used to control this generation of new symbols.</p>
+<p>By default the new dummies will be generated on the form i_1, i_2, a_1,
+etc.  If you supply a dictionary with key:value pairs in the form:</p>
+<blockquote>
+<div>{ index_group: string_of_letters }</div></blockquote>
+<p>The letters will be used as labels for the new dummy symbols.  The
+index_groups must be one of &#8216;above&#8217;, &#8216;below&#8217; or &#8216;general&#8217;.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_dummies</span> <span class="o">=</span> <span class="p">{</span> <span class="s">&#39;above&#39;</span><span class="p">:</span><span class="s">&#39;st&#39;</span><span class="p">,</span> <span class="s">&#39;below&#39;</span><span class="p">:</span><span class="s">&#39;uv&#39;</span> <span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">substitute_dummies</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">new_indices</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">pretty_indices</span><span class="o">=</span><span class="n">my_dummies</span><span class="p">)</span>
+<span class="go">f(_s, _t, _u, _v)</span>
+</pre></div>
+</div>
+<p>If we run out of letters, or if there is no keyword for some index_group
+the default dummy generator will be used as a fallback:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p q&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>  <span class="c"># general indices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">substitute_dummies</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">new_indices</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">pretty_indices</span><span class="o">=</span><span class="n">my_dummies</span><span class="p">)</span>
+<span class="go">f(_p_0, _p_1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.secondquant.PermutationOperator">
+<em class="property">class </em><tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">PermutationOperator</tt><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#PermutationOperator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.PermutationOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the index permutation operator P(ij).</p>
+<p>P(ij)*f(i)*g(j) = f(i)*g(j) - f(j)*g(i)</p>
+<dl class="method">
+<dt id="sympy.physics.secondquant.PermutationOperator.get_permuted">
+<tt class="descname">get_permuted</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#PermutationOperator.get_permuted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.PermutationOperator.get_permuted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns -expr with permuted indices.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">PermutationOperator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PermutationOperator</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">get_permuted</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">))</span>
+<span class="go">-f(q, p)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.secondquant.simplify_index_permutations">
+<tt class="descclassname">sympy.physics.secondquant.</tt><tt class="descname">simplify_index_permutations</tt><big>(</big><em>expr</em>, <em>permutation_operators</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/secondquant.html#simplify_index_permutations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.secondquant.simplify_index_permutations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs simplification by introducing PermutationOperators where appropriate.</p>
+<dl class="docutils">
+<dt>Schematically:</dt>
+<dd>[abij] - [abji] - [baij] + [baji] -&gt;  P(ab)*P(ij)*[abij]</dd>
+</dl>
+<p>permutation_operators is a list of PermutationOperators to consider.</p>
+<p>If permutation_operators=[P(ab),P(ij)] we will try to introduce the
+permutation operators P(ij) and P(ab) in the expression.  If there are other
+possible simplifications, we ignore them.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">simplify_index_permutations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.secondquant</span> <span class="kn">import</span> <span class="n">PermutationOperator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">s</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p,q,r,s&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;g&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="n">p</span><span class="p">);</span> <span class="n">expr</span>
+<span class="go">f(p)*g(q) - f(q)*g(p)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify_index_permutations</span><span class="p">(</span><span class="n">expr</span><span class="p">,[</span><span class="n">PermutationOperator</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">)])</span>
+<span class="go">f(p)*g(q)*PermutationOperator(p, q)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">PermutList</span> <span class="o">=</span> <span class="p">[</span><span class="n">PermutationOperator</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">q</span><span class="p">),</span><span class="n">PermutationOperator</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">s</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">r</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">r</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">s</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">s</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">r</span><span class="p">)</span> <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">p</span><span class="p">,</span><span class="n">s</span><span class="p">)</span><span class="o">*</span><span class="n">g</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">r</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify_index_permutations</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="n">PermutList</span><span class="p">)</span>
+<span class="go">f(p, r)*g(q, s)*PermutationOperator(p, q)*PermutationOperator(r, s)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sho.html"
+                        title="previous chapter">Quantum Harmonic Oscillator in 3-D</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="wigner.html"
+                        title="next chapter">Wigner Symbols</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/physics/secondquant.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="wigner.html" title="Wigner Symbols"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sho.html" title="Quantum Harmonic Oscillator in 3-D"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Physics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

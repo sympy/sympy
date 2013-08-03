@@ -1,0 +1,630 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Logic Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Matrices" href="matrices/index.html" />
+    <link rel="prev" title="Computing Integrals using Meijer G-Functions" href="integrals/g-functions.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="matrices/index.html" title="Matrices"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="integrals/g-functions.html" title="Computing Integrals using Meijer G-Functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.logic">
+<span id="logic-module"></span><h1>Logic Module<a class="headerlink" href="#module-sympy.logic" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>The logic module for SymPy allows to form and manipulate logic expressions
+using symbolic and Boolean values.</p>
+</div>
+<div class="section" id="forming-logical-expressions">
+<h2>Forming logical expressions<a class="headerlink" href="#forming-logical-expressions" title="Permalink to this headline">¶</a></h2>
+<p>You can build Boolean expressions with the standard python operators <tt class="docutils literal"><span class="pre">&amp;</span></tt>
+(<tt class="xref py py-class docutils literal"><span class="pre">And</span></tt>), <tt class="docutils literal"><span class="pre">|</span></tt> (<tt class="xref py py-class docutils literal"><span class="pre">Or</span></tt>), <tt class="docutils literal"><span class="pre">~</span></tt> (<tt class="xref py py-class docutils literal"><span class="pre">Not</span></tt>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">|</span> <span class="p">(</span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">Or(And(x, y), y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">|</span> <span class="n">y</span>
+<span class="go">Or(x, y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">~</span><span class="n">x</span>
+<span class="go">Not(x)</span>
+</pre></div>
+</div>
+<p>You can also form implications with <tt class="docutils literal"><span class="pre">&gt;&gt;</span></tt> and <tt class="docutils literal"><span class="pre">&lt;&lt;</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">&gt;&gt;</span> <span class="n">y</span>
+<span class="go">Implies(x, y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">&lt;&lt;</span> <span class="n">y</span>
+<span class="go">Implies(y, x)</span>
+</pre></div>
+</div>
+<p>Like most types in SymPy, Boolean expressions inherit from <tt class="xref py py-class docutils literal"><span class="pre">Basic</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">y</span> <span class="o">&amp;</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">x</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="bp">True</span><span class="p">})</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">|</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">atoms</span><span class="p">()</span>
+<span class="go">set([x, y])</span>
+</pre></div>
+</div>
+<p>The logic module also includes the following functions to derive boolean expressions
+from their truth tables-</p>
+<dl class="function">
+<dt id="sympy.logic.boolalg.SOPform">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">SOPform</tt><big>(</big><em>variables</em>, <em>minterms</em>, <em>dontcares=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#SOPform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.SOPform" title="Permalink to this definition">¶</a></dt>
+<dd><p>The SOPform function uses simplified_pairs and a redundant group-
+eliminating algorithm to convert the list of all input combos that
+generate &#8216;1&#8217; (the minterms) into the smallest Sum of Products form.</p>
+<p>The variables must be given as the first argument.</p>
+<p>Return a logical Or function (i.e., the &#8220;sum of products&#8221; or &#8220;SOP&#8221;
+form) that gives the desired outcome. If there are inputs that can
+be ignored, pass them as a list, too.</p>
+<p>The result will be one of the (perhaps many) functions that satisfy
+the conditions.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r208" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R208]</a></td><td>en.wikipedia.org/wiki/Quine-McCluskey_algorithm</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic</span> <span class="kn">import</span> <span class="n">SOPform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minterms</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dontcares</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">SOPform</span><span class="p">([</span><span class="s">&#39;w&#39;</span><span class="p">,</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">,</span><span class="s">&#39;z&#39;</span><span class="p">],</span> <span class="n">minterms</span><span class="p">,</span> <span class="n">dontcares</span><span class="p">)</span>
+<span class="go">Or(And(Not(w), z), And(y, z))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.logic.boolalg.POSform">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">POSform</tt><big>(</big><em>variables</em>, <em>minterms</em>, <em>dontcares=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#POSform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.POSform" title="Permalink to this definition">¶</a></dt>
+<dd><p>The POSform function uses simplified_pairs and a redundant-group
+eliminating algorithm to convert the list of all input combinations
+that generate &#8216;1&#8217; (the minterms) into the smallest Product of Sums form.</p>
+<p>The variables must be given as the first argument.</p>
+<p>Return a logical And function (i.e., the &#8220;product of sums&#8221; or &#8220;POS&#8221;
+form) that gives the desired outcome. If there are inputs that can
+be ignored, pass them as a list, too.</p>
+<p>The result will be one of the (perhaps many) functions that satisfy
+the conditions.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r209" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R209]</a></td><td>en.wikipedia.org/wiki/Quine-McCluskey_algorithm</td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic</span> <span class="kn">import</span> <span class="n">POSform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minterms</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="gp">... </span>            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dontcares</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">POSform</span><span class="p">([</span><span class="s">&#39;w&#39;</span><span class="p">,</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">,</span><span class="s">&#39;z&#39;</span><span class="p">],</span> <span class="n">minterms</span><span class="p">,</span> <span class="n">dontcares</span><span class="p">)</span>
+<span class="go">And(Or(Not(w), y), z)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="boolean-functions">
+<h2>Boolean functions<a class="headerlink" href="#boolean-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.logic.boolalg.And">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">And</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#And"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.And" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logical AND function.</p>
+<p>It evaluates its arguments in order, giving False immediately
+if any of them are False, and True if they are all True.</p>
+<p class="rubric">Notes</p>
+<p>The operator operator <tt class="docutils literal"><span class="pre">&amp;</span></tt> will perform bitwise operations
+on integers and for convenience will construct an Add when
+the arguments are symbolic, but the And function does not
+perform bitwise operations and when any argument is True it
+is simply removed from the arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">And</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">y</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">And</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">&amp;</span> <span class="n">y</span>
+<span class="go">And(x, y)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.Or">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">Or</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#Or"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.Or" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logical OR function</p>
+<p>It evaluates its arguments in order, giving True immediately
+if any of them are True, and False if they are all False.</p>
+<p class="rubric">Notes</p>
+<p>The operator operator <tt class="docutils literal"><span class="pre">|</span></tt> will perform bitwise operations
+on integers and for convenience will construct an Or when
+the arguments are symbolic, but the Or function does not
+perform bitwise operations and when any argument is False it
+is simply removed from the arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Or</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">y</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">Or</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">|</span> <span class="n">y</span>
+<span class="go">Or(x, y)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.Not">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">Not</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#Not"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.Not" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logical Not function (negation)</p>
+<p class="rubric">Notes</p>
+<p>De Morgan rules are applied automatically.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.Xor">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">Xor</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#Xor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.Xor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logical XOR (exclusive OR) function.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.Nand">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">Nand</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#Nand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.Nand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logical NAND function.</p>
+<p>It evaluates its arguments in order, giving True immediately if any
+of them are False, and False if they are all True.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.Nor">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">Nor</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#Nor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.Nor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logical NOR function.</p>
+<p>It evaluates its arguments in order, giving False immediately if any
+of them are True, and True if they are all False.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.Implies">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">Implies</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#Implies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.Implies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logical implication.</p>
+<p>A implies B is equivalent to !A v B</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.Equivalent">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">Equivalent</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#Equivalent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.Equivalent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalence relation.</p>
+<p>Equivalent(A, B) is True iff A and B are both True or both False</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.logic.boolalg.ITE">
+<em class="property">class </em><tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">ITE</tt><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#ITE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.ITE" title="Permalink to this definition">¶</a></dt>
+<dd><p>If then else clause.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>The following functions can be used to handle Conjunctive and Disjunctive Normal
+forms-</p>
+<dl class="function">
+<dt id="sympy.logic.boolalg.to_cnf">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">to_cnf</tt><big>(</big><em>expr</em>, <em>simplify=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#to_cnf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.to_cnf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a propositional logical sentence s to conjunctive normal form.
+That is, of the form ((A | ~B | ...) &amp; (B | C | ...) &amp; ...)</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">to_cnf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_cnf</span><span class="p">(</span><span class="o">~</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">B</span><span class="p">)</span> <span class="o">|</span> <span class="n">D</span><span class="p">)</span>
+<span class="go">And(Or(D, Not(A)), Or(D, Not(B)))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.logic.boolalg.to_dnf">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">to_dnf</tt><big>(</big><em>expr</em>, <em>simplify=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#to_dnf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.to_dnf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a propositional logical sentence s to disjunctive normal form.
+That is, of the form ((A &amp; ~B &amp; ...) | (B &amp; C &amp; ...) | ...)</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">to_dnf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">D</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_dnf</span><span class="p">(</span><span class="n">B</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">C</span><span class="p">))</span>
+<span class="go">Or(And(A, B), And(B, C))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.logic.boolalg.is_cnf">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">is_cnf</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#is_cnf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.is_cnf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether or not an expression is in conjunctive normal form.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">is_cnf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_cnf</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">B</span> <span class="o">|</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_cnf</span><span class="p">(</span><span class="n">A</span> <span class="o">&amp;</span> <span class="n">B</span> <span class="o">&amp;</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_cnf</span><span class="p">((</span><span class="n">A</span> <span class="o">&amp;</span> <span class="n">B</span><span class="p">)</span> <span class="o">|</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.logic.boolalg.is_dnf">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">is_dnf</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#is_dnf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.is_dnf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test whether or not an expression is in disjunctive normal form.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">is_dnf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_dnf</span><span class="p">(</span><span class="n">A</span> <span class="o">|</span> <span class="n">B</span> <span class="o">|</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_dnf</span><span class="p">(</span><span class="n">A</span> <span class="o">&amp;</span> <span class="n">B</span> <span class="o">&amp;</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_dnf</span><span class="p">((</span><span class="n">A</span> <span class="o">&amp;</span> <span class="n">B</span><span class="p">)</span> <span class="o">|</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_dnf</span><span class="p">(</span><span class="n">A</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">B</span> <span class="o">|</span> <span class="n">C</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="simplification-and-equivalence-testing">
+<h2>Simplification and equivalence-testing<a class="headerlink" href="#simplification-and-equivalence-testing" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.logic.boolalg.simplify_logic">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">simplify_logic</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#simplify_logic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.simplify_logic" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function simplifies a boolean function to its
+simplified version in SOP or POS form. The return type is an
+Or or And object in SymPy. The input can be a string or a boolean
+expression.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic</span> <span class="kn">import</span> <span class="n">simplify_logic</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="s">&#39;(~x &amp; ~y &amp; ~z) | ( ~x &amp; ~y &amp; z)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify_logic</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">And(Not(x), Not(y))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">Or(And(Not(x), Not(y), Not(z)), And(Not(x), Not(y), z))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify_logic</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">And(Not(x), Not(y))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<p>SymPy&#8217;s simplify() function can also be used to simplify logic expressions to their
+simplest forms.</p>
+<dl class="function">
+<dt id="sympy.logic.boolalg.bool_equal">
+<tt class="descclassname">sympy.logic.boolalg.</tt><tt class="descname">bool_equal</tt><big>(</big><em>bool1</em>, <em>bool2</em>, <em>info=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/boolalg.html#bool_equal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.boolalg.bool_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if the two expressions represent the same logical
+behavior for some correspondence between the variables of each
+(which may be different). For example, And(x, y) is logically
+equivalent to And(a, b) for {x: a, y: b} (or vice versa). If the
+mapping is desired, then set <tt class="docutils literal"><span class="pre">info</span></tt> to True and the simplified
+form of the functions and the mapping of variables will be
+returned.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">SOPform</span><span class="p">,</span> <span class="n">bool_equal</span><span class="p">,</span> <span class="n">Or</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Not</span><span class="p">,</span> <span class="n">Xor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">w</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function1</span> <span class="o">=</span> <span class="n">SOPform</span><span class="p">([</span><span class="s">&#39;x&#39;</span><span class="p">,</span><span class="s">&#39;z&#39;</span><span class="p">,</span><span class="s">&#39;y&#39;</span><span class="p">],[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">function2</span> <span class="o">=</span> <span class="n">SOPform</span><span class="p">([</span><span class="s">&#39;a&#39;</span><span class="p">,</span><span class="s">&#39;b&#39;</span><span class="p">,</span><span class="s">&#39;c&#39;</span><span class="p">],[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bool_equal</span><span class="p">(</span><span class="n">function1</span><span class="p">,</span> <span class="n">function2</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(And(Not(z), y), {y: a, z: b})</span>
+</pre></div>
+</div>
+<p>The results are not necessarily unique, but they are canonical. Here,
+<tt class="docutils literal"><span class="pre">(w,</span> <span class="pre">z)</span></tt> could be <tt class="docutils literal"><span class="pre">(a,</span> <span class="pre">d)</span></tt> or <tt class="docutils literal"><span class="pre">(d,</span> <span class="pre">a)</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span>  <span class="n">Or</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">w</span><span class="p">),</span> <span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">z</span><span class="p">),</span> <span class="n">And</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq2</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">a</span><span class="p">),</span> <span class="n">And</span><span class="p">(</span><span class="n">Not</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">d</span><span class="p">),</span> <span class="n">And</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bool_equal</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">eq2</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bool_equal</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">eq2</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(Or(And(Not(y), w), And(Not(y), z), And(x, y)), {w: a, x: b, y: c, z: d})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">Xor</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">c</span><span class="p">,</span> <span class="n">And</span><span class="p">(</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bool_equal</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">eq</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">info</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(And(Or(Not(a), Not(b)), Or(a, b), c, d), {a: a, b: b, c: d, d: x})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="inference">
+<h2>Inference<a class="headerlink" href="#inference" title="Permalink to this headline">¶</a></h2>
+<p>This module implements some inference routines in propositional logic.</p>
+<p>The function satisfiable will test that a given Boolean expression is satisfiable,
+that is, you can assign values to the variables to make the sentence <span class="math">\(True\)</span>.</p>
+<p>For example, the expression <tt class="docutils literal"><span class="pre">x</span> <span class="pre">&amp;</span> <span class="pre">~x</span></tt> is not satisfiable, since there are no
+values for <tt class="docutils literal"><span class="pre">x</span></tt> that make this sentence <tt class="docutils literal"><span class="pre">True</span></tt>. On the other hand, <tt class="docutils literal"><span class="pre">(x</span>
+<span class="pre">|</span> <span class="pre">y)</span> <span class="pre">&amp;</span> <span class="pre">(x</span> <span class="pre">|</span> <span class="pre">~y)</span> <span class="pre">&amp;</span> <span class="pre">(~x</span> <span class="pre">|</span> <span class="pre">y)</span></tt> is satisfiable with both <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">y</span></tt> being
+<tt class="docutils literal"><span class="pre">True</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.inference</span> <span class="kn">import</span> <span class="n">satisfiable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">satisfiable</span><span class="p">(</span><span class="n">x</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">x</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">satisfiable</span><span class="p">((</span><span class="n">x</span> <span class="o">|</span> <span class="n">y</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span> <span class="o">|</span> <span class="o">~</span><span class="n">y</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="o">~</span><span class="n">x</span> <span class="o">|</span> <span class="n">y</span><span class="p">))</span>
+<span class="go">{x: True, y: True}</span>
+</pre></div>
+</div>
+<p>As you see, when a sentence is satisfiable, it returns a model that makes that
+sentence <tt class="docutils literal"><span class="pre">True</span></tt>. If it is not satisfiable it will return <tt class="docutils literal"><span class="pre">False</span></tt>.</p>
+<dl class="function">
+<dt id="sympy.logic.inference.satisfiable">
+<tt class="descclassname">sympy.logic.inference.</tt><tt class="descname">satisfiable</tt><big>(</big><em>expr</em>, <em>algorithm='dpll2'</em><big>)</big><a class="reference internal" href="../_modules/sympy/logic/inference.html#satisfiable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.logic.inference.satisfiable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check satisfiability of a propositional sentence.
+Returns a model when it succeeds</p>
+<p>Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.logic.inference</span> <span class="kn">import</span> <span class="n">satisfiable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">satisfiable</span><span class="p">(</span><span class="n">A</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">B</span><span class="p">)</span>
+<span class="go">{A: True, B: False}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">satisfiable</span><span class="p">(</span><span class="n">A</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">A</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Logic Module</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#forming-logical-expressions">Forming logical expressions</a></li>
+<li><a class="reference internal" href="#boolean-functions">Boolean functions</a></li>
+<li><a class="reference internal" href="#simplification-and-equivalence-testing">Simplification and equivalence-testing</a></li>
+<li><a class="reference internal" href="#inference">Inference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="integrals/g-functions.html"
+                        title="previous chapter">Computing Integrals using Meijer G-Functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="matrices/index.html"
+                        title="next chapter">Matrices</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/logic.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="matrices/index.html" title="Matrices"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="integrals/g-functions.html" title="Computing Integrals using Meijer G-Functions"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

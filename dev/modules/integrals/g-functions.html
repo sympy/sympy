@@ -1,0 +1,869 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Computing Integrals using Meijer G-Functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Symbolic Integrals" href="integrals.html" />
+    <link rel="next" title="Logic Module" href="../logic.html" />
+    <link rel="prev" title="Symbolic Integrals" href="integrals.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../logic.html" title="Logic Module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="integrals.html" title="Symbolic Integrals"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="integrals.html" accesskey="U">Symbolic Integrals</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="computing-integrals-using-meijer-g-functions">
+<h1>Computing Integrals using Meijer G-Functions<a class="headerlink" href="#computing-integrals-using-meijer-g-functions" title="Permalink to this headline">¶</a></h1>
+<p>This text aims do describe in some detail the steps (and subtleties) involved
+in using Meijer G-functions for computing definite and indefinite integrals.
+We shall ignore proofs completely.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The algorithm to compute <span class="math">\(\int f(x) \mathrm{d}x\)</span> or
+<span class="math">\(\int_0^\infty f(x) \mathrm{d}x\)</span> generally consists of three steps:</p>
+<ol class="arabic simple">
+<li>Rewrite the integrand using Meijer G-functions (one or sometimes two).</li>
+<li>Apply an integration theorem, to get the answer (usually expressed as another
+G-function).</li>
+<li>Expand the result in named special functions.</li>
+</ol>
+<p>Step (3) is implemented in the function hyperexpand (q.v.). Steps (1) and (2)
+are described below. Morever, G-functions are usually branched. Thus our treatment
+of branched functions is described first.</p>
+<p>Some other integrals (e.g. <span class="math">\(\int_{-\infty}^\infty\)</span>) can also be computed by first
+recasting them into one of the above forms. There is a lot of choice involved
+here, and the algorithm is heuristic at best.</p>
+</div>
+<div class="section" id="polar-numbers-and-branched-functions">
+<h2>Polar Numbers and Branched Functions<a class="headerlink" href="#polar-numbers-and-branched-functions" title="Permalink to this headline">¶</a></h2>
+<p>Both Meijer G-Functions and Hypergeometric functions are typically branched
+(possible branchpoints being <span class="math">\(0\)</span>, <span class="math">\(\pm 1\)</span>, <span class="math">\(\infty\)</span>). This is not very important
+when e.g. expanding a single hypergeometric function into named special functions,
+since sorting out the branches can be left to the human user. However this
+algorithm manipulates and transforms G-functions, and to do this correctly it needs
+at least some crude understanding of the branchings involved.</p>
+<p>To begin, we consider the set
+<span class="math">\(\mathcal{S} = \{(r, \theta) : r &gt; 0, \theta \in \mathbb{R}\}\)</span>. We have a map
+<span class="math">\(p: \mathcal{S}: \rightarrow \mathbb{C}-\{0\}, (r, \theta) \mapsto r e^{i \theta}\)</span>.
+Decreeing this to be a local biholomorphism gives <span class="math">\(\mathcal{S}\)</span> both a topology
+and a complex structure. This Riemann Surface is usually referred to as the
+Riemann Surface of the logarithm, for the following reason:
+We can define maps
+<span class="math">\(\operatorname{Exp}: \mathbb{C} \rightarrow \mathcal{S}, (x + i y) \mapsto (\exp(x), y)\)</span> and
+<span class="math">\(\operatorname{Log}: \mathcal{S} \rightarrow \mathbb{C}, (e^x, y) \mapsto x + iy\)</span>.
+These can both be shown to be holomorphic, and are indeed mutual inverses.</p>
+<p>We also sometimes formally attach a point &#8220;zero&#8221; (<span class="math">\(0\)</span>) to <span class="math">\(\mathcal{S}\)</span> and denote the
+resulting object <span class="math">\(\mathcal{S}_0\)</span>. Notably there is no complex structure
+defined near <span class="math">\(0\)</span>. A fundamental system of neighbourhoods is given by
+<span class="math">\(\{\operatorname{Exp}(z) : \Re(z) &lt; k\}\)</span>, which at least defines a topology. Elements of
+<span class="math">\(\mathcal{S}_0\)</span> shall be called polar numbers.
+We further define functions
+<span class="math">\(\operatorname{Arg}: \mathcal{S} \rightarrow \mathbb{R}, (r, \theta) \mapsto \theta\)</span> and
+<span class="math">\(|.|: \mathcal{S}_0 \rightarrow \mathbb{R}_{&gt;0}, (r, \theta) \mapsto r\)</span>.
+These have evident meaning and are both continuous everywhere.</p>
+<p>Using these maps many operations can be extended from <span class="math">\(\mathbb{C}\)</span> to
+<span class="math">\(\mathcal{S}\)</span>. We define <span class="math">\(\operatorname{Exp}(a) \operatorname{Exp}(b) = \operatorname{Exp}(a + b)\)</span> for <span class="math">\(a, b \in \mathbb{C}\)</span>,
+also for <span class="math">\(a \in \mathcal{S}\)</span> and <span class="math">\(b \in \mathbb{C}\)</span> we define
+<span class="math">\(a^b = \operatorname{Exp}(b \operatorname{Log}(a))\)</span>.
+It can be checked easily that using these definitions, many algebraic properties
+holding for positive reals (e.g. <span class="math">\((ab)^c = a^c b^c\)</span>) which hold in <span class="math">\(\mathbb{C}\)</span>
+only for some numbers (because of branch cuts) hold indeed for all polar numbers.</p>
+<p>As one peculiarity it should be mentioned that addition of polar numbers is not
+usually defined. However, formal sums of polar numbers can be used to express
+branching behaviour. For example, consider the functions <span class="math">\(F(z) = \sqrt{1 + z}\)</span>
+and <span class="math">\(G(a, b) = \sqrt{a + b}\)</span>, where <span class="math">\(a, b, z\)</span> are polar numbers.
+The general rule is that functions of a single polar variable are defined in
+such a way that they are continuous on circles, and agree with the usual
+definition for positive reals. Thus if <span class="math">\(S(z)\)</span> denotes the standard branch of
+the square root function on <span class="math">\(\mathbb{C}\)</span>, we are forced to define</p>
+<div class="math">
+\[\begin{split}F(z) = \begin{cases}
+ S(p(z)) &amp;: |z| &lt; 1 \\
+ S(p(z)) &amp;: -\pi &lt; \operatorname{Arg}(z) + 4\pi n \le \pi \text{ for some } n \in \mathbb{Z} \\
+ -S(p(z)) &amp;: \text{else}
+\end{cases}.\end{split}\]</div>
+<p>(We are omitting <span class="math">\(|z| = 1\)</span> here, this does not matter for integration.)
+Finally we define <span class="math">\(G(a, b) = \sqrt{a}F(b/a)\)</span>.</p>
+</div>
+<div class="section" id="representing-branched-functions-on-the-argand-plane">
+<h2>Representing Branched Functions on the Argand Plane<a class="headerlink" href="#representing-branched-functions-on-the-argand-plane" title="Permalink to this headline">¶</a></h2>
+<p>Suppose <span class="math">\(f: \mathcal{S} \to \mathbb{C}\)</span> is a holomorphic function. We wish to
+define a function <span class="math">\(F\)</span> on (part of) the complex numbers <span class="math">\(\mathbb{C}\)</span> that
+represents <span class="math">\(f\)</span> as closely as possible. This process is knows as &#8220;introducing
+branch cuts&#8221;. In our situation, there is actually a canonical way of doing this
+(which is adhered to in all of SymPy), as follows: Introduce the &#8220;cut complex
+plane&#8221;
+<span class="math">\(C = \mathbb{C} \setminus \mathbb{R}_{\le 0}\)</span>. Define a function
+<span class="math">\(l: C \to \mathcal{S}\)</span> via <span class="math">\(re^{i\theta} \mapsto r \operatorname{Exp}(i\theta)\)</span>. Here <span class="math">\(r &gt; 0\)</span>
+and <span class="math">\(-\pi &lt; \theta \le \pi\)</span>. Then <span class="math">\(l\)</span> is holomorphic, and we define
+<span class="math">\(G = f \circ l\)</span>. This called &#8220;lifting to the principal branch&#8221; throughout the
+SymPy documentation.</p>
+</div>
+<div class="section" id="table-lookups-and-inverse-mellin-transforms">
+<h2>Table Lookups and Inverse Mellin Transforms<a class="headerlink" href="#table-lookups-and-inverse-mellin-transforms" title="Permalink to this headline">¶</a></h2>
+<p>Suppose we are given an integrand <span class="math">\(f(x)\)</span> and are trying to rewrite it as a
+single G-function. To do this, we first split <span class="math">\(f(x)\)</span> into the form <span class="math">\(x^s g(x)\)</span>
+(where <span class="math">\(g(x)\)</span> is supposed to be simpler than <span class="math">\(f(x)\)</span>). This is because multiplicative
+powers can be absorbed into the G-function later. This splitting is done by
+<tt class="docutils literal"><span class="pre">_split_mul(f,</span> <span class="pre">x)</span></tt>. Then we assemble a tuple of functions that occur in
+<span class="math">\(f\)</span> (e.g. if <span class="math">\(f(x) = e^x \cos{x}\)</span>, we would assemble the tuple <span class="math">\((\cos, \exp)\)</span>).
+This is done by the function <tt class="docutils literal"><span class="pre">_mytype(f,</span> <span class="pre">x)</span></tt>. Next we index a lookup table
+(created using <tt class="docutils literal"><span class="pre">_create_lookup_table()</span></tt>) with this tuple. This (hopefully)
+yields a list of Meijer G-function formulae involving these functions, we then
+pattern-match all of them. If one fits, we were successful, otherwise not and we
+have to try something else.</p>
+<p>Suppose now we want to rewrite as a product of two G-functions. To do this,
+we (try to) find all inequivalent ways of splitting <span class="math">\(f(x)\)</span> into a product
+<span class="math">\(f_1(x) f_2(x)\)</span>.
+We could try these splittings in any order, but it is often a good idea to
+minimise (a) the number of powers occuring in <span class="math">\(f_i(x)\)</span> and (b) the number of
+different functions occuring in <span class="math">\(f_i(x)\)</span>. Thus given e.g.
+<span class="math">\(f(x) = \sin{x}\, e^{x} \sin{2x}\)</span> we should try <span class="math">\(f_1(x) = \sin{x}\, \sin{2x}\)</span>,
+<span class="math">\(f_2(x) = e^{x}\)</span> first.
+All of this is done by the function <tt class="docutils literal"><span class="pre">_mul_as_two_parts(f)</span></tt>.</p>
+<p>Finally, we can try a recursive Mellin transform technique. Since the Meijer
+G-function is defined essentially as a certain inverse mellin transform,
+if we want to write a function <span class="math">\(f(x)\)</span> as a G-function, we can compute its mellin
+transform <span class="math">\(F(s)\)</span>. If <span class="math">\(F(s)\)</span> is in the right form, the G-function expression
+can be read off. This technique generalises many standard rewritings, e.g.
+<span class="math">\(e^{ax} e^{bx} = e^{(a + b) x}\)</span>.</p>
+<p>One twist is that some functions don&#8217;t have mellin transforms, even though they
+can be written as G-functions. This is true for example for <span class="math">\(f(x) = e^x \sin{x}\)</span>
+(the function grows too rapidly to have a mellin transform). However if the function
+is recognised to be analytic, then we can try to compute the mellin-transform of
+<span class="math">\(f(ax)\)</span> for a parameter <span class="math">\(a\)</span>, and deduce the G-function expression by analytic
+continuation. (Checking for analyticity is easy. Since we can only deal with a
+certain subset of functions anyway, we only have to filter out those which are
+not analyitc.)</p>
+<p>The function <tt class="docutils literal"><span class="pre">_rewrite_single</span></tt> does the table lookup and recursive mellin
+transform. The functions <tt class="docutils literal"><span class="pre">_rewrite1</span></tt> and <tt class="docutils literal"><span class="pre">_rewrite2</span></tt> respectively use
+above-mentioned helpers and <tt class="docutils literal"><span class="pre">_rewrite_single</span></tt> to rewrite their argument as
+respectively one or two G-functions.</p>
+</div>
+<div class="section" id="applying-the-integral-theorems">
+<h2>Applying the Integral Theorems<a class="headerlink" href="#applying-the-integral-theorems" title="Permalink to this headline">¶</a></h2>
+<p>If the integrand has been recast into G-functions, evaluating the integral is
+relatively easy. We first do some substitutions to reduce e.g. the exponent
+of the argument of the G-function to unity (see <tt class="docutils literal"><span class="pre">_rewrite_saxena_1</span></tt> and
+<tt class="docutils literal"><span class="pre">_rewrite_saxena</span></tt>, respectively, for one or two G-functions). Next we go through
+a list of conditions under which the integral theorem applies. It can fail for
+basically two reasons: either the integral does not exist, or the manipulations
+in deriving the theorem may not be allowed (for more details, see this <a class="reference internal" href="#blogpost">[BlogPost]</a>).</p>
+<p>Sometimes this can be remedied by reducing the argument of the G-functions
+involved. For example it is clear that the G-function representing <span class="math">\(e^z\)</span>
+is satisfies <span class="math">\(G(\operatorname{Exp}(2 \pi i)z) = G(z)\)</span> for all <span class="math">\(z \in \mathcal{S}\)</span>. The function
+<tt class="docutils literal"><span class="pre">meijerg.get_period()</span></tt> can be used to discover this, and the function
+<tt class="docutils literal"><span class="pre">principal_branch(z,</span> <span class="pre">period)</span></tt> in <tt class="docutils literal"><span class="pre">functions/elementary/complexes.py</span></tt> can
+be used to exploit the information. This is done transparently by the
+integration code.</p>
+<table class="docutils citation" frame="void" id="blogpost" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[BlogPost]</a></td><td><a class="reference external" href="http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/">http://nessgrh.wordpress.com/2011/07/07/tricky-branch-cuts/</a></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="the-g-function-integration-theorems">
+<h1>The G-Function Integration Theorems<a class="headerlink" href="#the-g-function-integration-theorems" title="Permalink to this headline">¶</a></h1>
+<p>This section intends to display in detail the definite integration theorems
+used in the code. The following two formulae go back to Meijer (In fact he
+proved more general formulae; indeed in the literature formulae are usually
+staded in more general form. However it is very easy to deduce the general
+formulae from the ones we give here. It seemed best to keep the theorems as
+simple as possible, since they are very complicated anyway.):</p>
+<ol class="arabic">
+<li><div class="first math">
+\[\begin{split}\int_0^\infty
+G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \dots, a_p \\
+                                           b_1, \dots, b_q \end{matrix}
+        \right| \eta x \right) \mathrm{d}x =
+ \frac{\prod_{j=1}^m \Gamma(b_j + 1) \prod_{j=1}^n \Gamma(-a_j)}{\eta
+       \prod_{j=m+1}^q \Gamma(-b_j) \prod_{j=n+1}^p \Gamma(a_j + 1)}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}\int_0^\infty
+G_{u, v}^{s, t} \left.\left(\begin{matrix} c_1, \dots, c_u \\
+                                           d_1, \dots, d_v \end{matrix}
+        \right| \sigma x \right)
+G_{p, q}^{m, n} \left.\left(\begin{matrix} a_1, \dots, a_p \\
+                                           b_1, \dots, b_q \end{matrix}
+        \right| \omega x \right)
+\mathrm{d}x =
+G_{v+p, u+q}^{m+t, n+s} \left.\left(
+      \begin{matrix} a_1, \dots, a_n, -d_1, \dots, -d_v, a_{n+1}, \dots, a_p \\
+                     b_1, \dots, b_m, -c_1, \dots, -c_u, b_{m+1}, \dots, b_q
+      \end{matrix}
+        \right| \frac{\omega}{\sigma} \right)\end{split}\]</div>
+</li>
+</ol>
+<p>The more interesting question is under what conditions these formulae are
+valid. Below we detail the conditions implemented in SymPy. They are an
+amalgamation of conditions found in <a class="reference internal" href="../simplify/hyperexpand.html#prudnikov1990">[Prudnikov1990]</a> and <a class="reference internal" href="../simplify/hyperexpand.html#luke1969">[Luke1969]</a>; please
+let us know if you find any errors.</p>
+<div class="section" id="conditions-of-convergence-for-integral-1">
+<h2>Conditions of Convergence for Integral (1)<a class="headerlink" href="#conditions-of-convergence-for-integral-1" title="Permalink to this headline">¶</a></h2>
+<p>We can without loss of generality assume <span class="math">\(p \le q\)</span>, since the G-functions
+of indices <span class="math">\(m, n, p, q\)</span> and of indices <span class="math">\(n, m, q, p\)</span> can be related easily
+(see e.g. <a class="reference internal" href="../simplify/hyperexpand.html#luke1969">[Luke1969]</a>, section 5.3). We introduce the following notation:</p>
+<div class="math">
+\[\begin{split}\xi = m + n - p \\
+\delta = m + n - \frac{p + q}{2}\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_3: -\Re(b_j) &lt; 1 \text{ for } j=1, \dots, m \\
+0 &lt; -\Re(a_j) \text{ for } j=1, \dots, n\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_3^*: -\Re(b_j) &lt; 1 \text{ for } j=1, \dots, q \\
+0 &lt; -\Re(a_j) \text{ for } j=1, \dots, p\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_4: -\Re(\delta) + \frac{q + 1 - p}{2} &gt; q - p\end{split}\]</div>
+<p>The convergence conditions will be detailed in several &#8220;cases&#8221;, numbered one
+to five. For later use it will be helpful to separate conditions &#8220;at infinity&#8221;
+from conditions &#8220;at zero&#8221;. By conditions &#8220;at infinity&#8221; we mean conditions that
+only depend on the behaviour of the integrand for large, positive values
+of <span class="math">\(x\)</span>, whereas by conditions &#8220;at zero&#8221; we mean conditions that only depend on
+the behaviour of the integrand on <span class="math">\((0, \epsilon)\)</span> for any <span class="math">\(\epsilon &gt; 0\)</span>.
+Since all our conditions are specified in terms of parameters of the
+G-functions, this distinction is not immediately visible. They are, however, of
+very distinct character mathematically; the conditions at infinity being in
+particular much harder to control.</p>
+<p>In order for the integral theorem to be valid, conditions
+<span class="math">\(n\)</span> &#8220;at zero&#8221; and &#8220;at infinity&#8221; both have to be fulfilled, for some <span class="math">\(n\)</span>.</p>
+<p>These are the conditions &#8220;at infinity&#8221;:</p>
+<ol class="arabic">
+<li><div class="first math">
+\[\begin{split}\delta &gt; 0 \wedge |\arg(\eta)| &lt; \delta \pi \wedge (A \vee B \vee C),\end{split}\]</div>
+<p>where</p>
+<div class="math">
+\[\begin{split}A = 1 \le n \wedge p &lt; q \wedge 1 \le m\end{split}\]</div>
+<div class="math">
+\[B = 1 \le p \wedge 1 \le m \wedge q = p+1 \wedge
+            \neg (n = 0 \wedge m = p + 1 )\]</div>
+<div class="math">
+\[C = 1 \le n \wedge q = p \wedge |\arg(\eta)| \ne (\delta - 2k)\pi
+       \text{ for } k = 0, 1, \dots
+         \left\lceil \frac{\delta}{2} \right\rceil.\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}n = 0 \wedge p + 1 \le m \wedge |\arg(\eta)| &lt; \delta \pi\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}(p &lt; q \wedge 1 \le m \wedge \delta &gt; 0 \wedge |\arg(\eta)| = \delta \pi)
+\vee (p \le q - 2 \wedge \delta = 0 \wedge \arg(\eta) = 0)\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q \wedge \delta = 0 \wedge \arg(\eta) = 0 \wedge \eta \ne 0
+\wedge \Re\left(\sum_{j=1}^p b_j - a_j \right) &lt; 0\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}\delta &gt; 0 \wedge |\arg(\eta)| &lt; \delta \pi\end{split}\]</div>
+</li>
+</ol>
+<p>And these are the conditions &#8220;at zero&#8221;:</p>
+<ol class="arabic">
+<li><div class="first math">
+\[\eta \ne 0 \wedge C_3\]</div>
+</li>
+<li><div class="first math">
+\[C_3\]</div>
+</li>
+<li><div class="first math">
+\[C_3 \wedge C_4\]</div>
+</li>
+<li><div class="first math">
+\[C_3\]</div>
+</li>
+<li><div class="first math">
+\[C_3\]</div>
+</li>
+</ol>
+</div>
+<div class="section" id="conditions-of-convergence-for-integral-2">
+<h2>Conditions of Convergence for Integral (2)<a class="headerlink" href="#conditions-of-convergence-for-integral-2" title="Permalink to this headline">¶</a></h2>
+<p>We introduce the following notation:</p>
+<div class="math">
+\[b^* = s + t - \frac{u + v}{2}\]</div>
+<div class="math">
+\[c^* = m + n - \frac{p + q}{2}\]</div>
+<div class="math">
+\[\rho = \sum_{j=1}^v d_j - \sum_{j=1}^u c_j + \frac{u - v}{2} + 1\]</div>
+<div class="math">
+\[\mu = \sum_{j=1}^q b_j - \sum_{j=1}^p a_j + \frac{p - q}{2} + 1\]</div>
+<div class="math">
+\[\phi = q - p - \frac{u - v}{2} + 1\]</div>
+<div class="math">
+\[\eta = 1 - (v - u) - \mu - \rho\]</div>
+<div class="math">
+\[\psi = \frac{\pi(q - m - n) + |\arg(\omega)|}{q - p}\]</div>
+<div class="math">
+\[\theta = \frac{\pi(v - s - t) + |\arg(\sigma)|)}{v - u}\]</div>
+<div class="math">
+\[\lambda_c = (q - p)|\omega|^{1/(q - p)} \cos{\psi}
++ (v - u)|\sigma|^{1/(v - u)} \cos{\theta}\]</div>
+<div class="math">
+\[\lambda_{s0}(c_1, c_2) = c_1 (q - p)|\omega|^{1/(q - p)} \sin{\psi}
++ c_2 (v - u)|\sigma|^{1/(v - u)} \sin{\theta}\]</div>
+<div class="math">
+\[\begin{split}\lambda_s =
+\begin{cases} \operatorname{\lambda_{s0}}\left(-1,-1\right) \operatorname{\lambda_{s0}}\left(1,1\right) &amp; \text{for}\: \arg(\omega) = 0 \wedge \arg(\sigma) = 0 \\\operatorname{\lambda_{s0}}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),-1\right) \operatorname{\lambda_{s0}}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),1\right) &amp; \text{for}\: \arg(\omega) \ne 0 \wedge \arg(\sigma) = 0 \\\operatorname{\lambda_{s0}}\left(-1,\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) \operatorname{\lambda_{s0}}\left(1,\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) &amp; \text{for}\: \arg(\omega) = 0 \wedge \arg(\sigma) \ne 0) \\\operatorname{\lambda_{s0}}\left(\operatorname{sign}\left(\operatorname{\arg}\left(\omega\right)\right),\operatorname{sign}\left(\operatorname{\arg}\left(\sigma\right)\right)\right) &amp; \text{otherwise} \end{cases}\end{split}\]</div>
+<div class="math">
+\[z_0 = \frac{\omega}{\sigma} e^{-i\pi (b^* + c^*)}\]</div>
+<div class="math">
+\[z_1 = \frac{\sigma}{\omega} e^{-i\pi (b^* + c^*)}\]</div>
+<p>The following conditions will be helpful:</p>
+<div class="math">
+\[\begin{split}C_1: (a_i - b_j \notin \mathbb{Z}_{&gt;0} \text{ for } i = 1, \dots, n, j = 1, \dots, m) \\
+\wedge
+(c_i - d_j \notin \mathbb{Z}_{&gt;0} \text{ for } i = 1, \dots, t, j = 1, \dots, s)\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_2:
+\Re(1 + b_i + d_j) &gt; 0 \text{ for } i = 1, \dots, m, j = 1, \dots, s\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_3:
+\Re(a_i + c_j) &lt; 1 \text{ for } i = 1, \dots, n, j = 1, \dots, t\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_4:
+(p - q)\Re(c_i) - \Re(\mu) &gt; -\frac{3}{2} \text{ for } i=1, \dots, t\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_5:
+(p - q)\Re(1 + d_i) - \Re(\mu) &gt; -\frac{3}{2} \text{ for } i=1, \dots, s\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_6:
+(u - v)\Re(a_i) - \Re(\rho) &gt; -\frac{3}{2} \text{ for } i=1, \dots, n\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_7:
+(u - v)\Re(1 + b_i) - \Re(\rho) &gt; -\frac{3}{2} \text{ for } i=1, \dots, m\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_8:
+0 &lt; \lvert{\phi}\rvert + 2 \Re\left(\left(\mu -1\right) \left(- u + v\right) + \left(- p + q\right) \left(\rho -1\right) + \left(- p + q\right) \left(- u + v\right)\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_9:
+0 &lt; \lvert{\phi}\rvert - 2 \Re\left(\left(\mu -1\right) \left(- u + v\right) + \left(- p + q\right) \left(\rho -1\right) + \left(- p + q\right) \left(- u + v\right)\right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_{10}:
+\lvert{\operatorname{arg}\left(\sigma\right)}\rvert &lt; \pi b^{*}\end{split}\]</div>
+<div class="math">
+\[C_{11}:
+\lvert{\operatorname{arg}\left(\sigma\right)}\rvert = \pi b^{*}\]</div>
+<div class="math">
+\[\begin{split}C_{12}:
+|\arg(\omega)| &lt; c^*\pi\end{split}\]</div>
+<div class="math">
+\[C_{13}:
+|\arg(\omega)| = c^*\pi\]</div>
+<div class="math">
+\[\begin{split}C_{14}^1:
+\left(z_0 \ne 1 \wedge |\arg(1 - z_0)| &lt; \pi \right) \vee
+\left(z_0 = 1 \wedge \Re(\mu + \rho - u + v) &lt; 1 \right)\end{split}\]</div>
+<div class="math">
+\[\begin{split}C_{14}^2:
+\left(z_1 \ne 1 \wedge |\arg(1 - z_1)| &lt; \pi \right) \vee
+\left(z_1 = 1 \wedge \Re(\mu + \rho - p + q) &lt; 1 \right)\end{split}\]</div>
+<div class="math">
+\[C_{14}:
+\phi = 0 \wedge b^* + c^* \le 1 \wedge (C_{14}^1 \vee C_{14}^2)\]</div>
+<div class="math">
+\[\begin{split}C_{15}:
+\lambda_c &gt; 0 \vee (\lambda_c = 0 \wedge \lambda_s \ne 0 \wedge \Re(\eta) &gt; -1)
+              \vee (\lambda_c = 0 \wedge \lambda_s = 0 \wedge \Re(\eta) &gt; 0)\end{split}\]</div>
+<div class="math">
+\[C_{16}: \int_0^\infty G_{u, v}^{s, t}(\sigma x) \mathrm{d} x
+\text{ converges at infinity }\]</div>
+<div class="math">
+\[C_{17}: \int_0^\infty G_{p, q}^{m, n}(\omega x) \mathrm{d} x
+\text{ converges at infinity }\]</div>
+<p>Note that <span class="math">\(C_{16}\)</span> and <span class="math">\(C_{17}\)</span> are the reason we split the convergence conditions for
+integral (1).</p>
+<p>With this notation established, the implemented convergence conditions can be enumerated
+as follows:</p>
+<ol class="arabic">
+<li><div class="first math">
+\[\begin{split}m n s t \neq 0 \wedge 0 &lt; b^{*} \wedge 0 &lt; c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}u = v \wedge b^{*} = 0 \wedge 0 &lt; c^{*} \wedge 0 &lt; \sigma \wedge \Re{\rho} &lt; 1 \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q \wedge u = v \wedge b^{*} = 0 \wedge c^{*} = 0 \wedge 0 &lt; \sigma \wedge 0 &lt; \omega \wedge \Re{\mu} &lt; 1 \wedge \Re{\rho} &lt; 1 \wedge \sigma \neq \omega \wedge C_{1} \wedge C_{2} \wedge C_{3}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q \wedge u = v \wedge b^{*} = 0 \wedge c^{*} = 0 \wedge 0 &lt; \sigma \wedge 0 &lt; \omega \wedge \Re\left(\mu + \rho\right) &lt; 1 \wedge \omega \neq \sigma \wedge C_{1} \wedge C_{2} \wedge C_{3}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q \wedge u = v \wedge b^{*} = 0 \wedge c^{*} = 0 \wedge 0 &lt; \sigma \wedge 0 &lt; \omega \wedge \Re\left(\mu + \rho\right) &lt; 1 \wedge \omega \neq \sigma \wedge C_{1} \wedge C_{2} \wedge C_{3}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}q &lt; p \wedge 0 &lt; s \wedge 0 &lt; b^{*} \wedge 0 \leq c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{5} \wedge C_{10} \wedge C_{13}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p &lt; q \wedge 0 &lt; t \wedge 0 &lt; b^{*} \wedge 0 \leq c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{4} \wedge C_{10} \wedge C_{13}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}v &lt; u \wedge 0 &lt; m \wedge 0 &lt; c^{*} \wedge 0 \leq b^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{7} \wedge C_{11} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}u &lt; v \wedge 0 &lt; n \wedge 0 &lt; c^{*} \wedge 0 \leq b^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{6} \wedge C_{11} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}q &lt; p \wedge u = v \wedge b^{*} = 0 \wedge 0 \leq c^{*} \wedge 0 &lt; \sigma \wedge \Re{\rho} &lt; 1 \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{5} \wedge C_{13}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p &lt; q \wedge u = v \wedge b^{*} = 0 \wedge 0 \leq c^{*} \wedge 0 &lt; \sigma \wedge \Re{\rho} &lt; 1 \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{4} \wedge C_{13}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q \wedge v &lt; u \wedge 0 \leq b^{*} \wedge c^{*} = 0 \wedge 0 &lt; \omega \wedge \Re{\mu} &lt; 1 \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{7} \wedge C_{11}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q \wedge u &lt; v \wedge 0 \leq b^{*} \wedge c^{*} = 0 \wedge 0 &lt; \omega \wedge \Re{\mu} &lt; 1 \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{6} \wedge C_{11}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p &lt; q \wedge v &lt; u \wedge 0 \leq b^{*} \wedge 0 \leq c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{4} \wedge C_{7} \wedge C_{11} \wedge C_{13}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}q &lt; p \wedge u &lt; v \wedge 0 \leq b^{*} \wedge 0 \leq c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{5} \wedge C_{6} \wedge C_{11} \wedge C_{13}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}q &lt; p \wedge v &lt; u \wedge 0 \leq b^{*} \wedge 0 \leq c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{5} \wedge C_{7} \wedge C_{8} \wedge C_{11} \wedge C_{13} \wedge C_{14}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p &lt; q \wedge u &lt; v \wedge 0 \leq b^{*} \wedge 0 \leq c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{4} \wedge C_{6} \wedge C_{9} \wedge C_{11} \wedge C_{13} \wedge C_{14}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}t = 0 \wedge 0 &lt; s \wedge 0 &lt; b^{*} \wedge 0 &lt; \phi \wedge C_{1} \wedge C_{2} \wedge C_{10}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}s = 0 \wedge 0 &lt; t \wedge 0 &lt; b^{*} \wedge \phi &lt; 0 \wedge C_{1} \wedge C_{3} \wedge C_{10}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}n = 0 \wedge 0 &lt; m \wedge 0 &lt; c^{*} \wedge \phi &lt; 0 \wedge C_{1} \wedge C_{2} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}m = 0 \wedge 0 &lt; n \wedge 0 &lt; c^{*} \wedge 0 &lt; \phi \wedge C_{1} \wedge C_{3} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}s t = 0 \wedge 0 &lt; b^{*} \wedge 0 &lt; c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}m n = 0 \wedge 0 &lt; b^{*} \wedge 0 &lt; c^{*} \wedge C_{1} \wedge C_{2} \wedge C_{3} \wedge C_{10} \wedge C_{12}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p &lt; m + n \wedge t = 0 \wedge \phi = 0 \wedge 0 &lt; s \wedge 0 &lt; b^{*} \wedge c^{*} &lt; 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert &lt; \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}q &lt; m + n \wedge s = 0 \wedge \phi = 0 \wedge 0 &lt; t \wedge 0 &lt; b^{*} \wedge c^{*} &lt; 0 \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert &lt; \pi \left(m + n - q + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 &lt; s \wedge 0 &lt; b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} &lt; \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p = q + 1 \wedge s = 0 \wedge \phi = 0 \wedge 0 &lt; t \wedge 0 &lt; b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} &lt; \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}p &lt; q -1 \wedge t = 0 \wedge \phi = 0 \wedge 0 &lt; s \wedge 0 &lt; b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} &lt; \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert &lt; \pi \left(m + n - p + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{10} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}q + 1 &lt; p \wedge s = 0 \wedge \phi = 0 \wedge 0 &lt; t \wedge 0 &lt; b^{*} \wedge 0 \leq c^{*} \wedge \pi c^{*} &lt; \lvert{\operatorname{arg}\left(\omega\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\omega\right)}\rvert &lt; \pi \left(m + n - q + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{10} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}n = 0 \wedge \phi = 0 \wedge 0 &lt; s + t \wedge 0 &lt; m \wedge 0 &lt; c^{*} \wedge b^{*} &lt; 0 \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert &lt; \pi \left(s + t - u + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}m = 0 \wedge \phi = 0 \wedge v &lt; s + t \wedge 0 &lt; n \wedge 0 &lt; c^{*} \wedge b^{*} &lt; 0 \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert &lt; \pi \left(s + t - v + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}n = 0 \wedge \phi = 0 \wedge u = v -1 \wedge 0 &lt; m \wedge 0 &lt; c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} &lt; \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert &lt; \pi \left(b^{*} + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}m = 0 \wedge \phi = 0 \wedge u = v + 1 \wedge 0 &lt; n \wedge 0 &lt; c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} &lt; \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert &lt; \pi \left(b^{*} + 1\right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}n = 0 \wedge \phi = 0 \wedge u &lt; v -1 \wedge 0 &lt; m \wedge 0 &lt; c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} &lt; \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert &lt; \pi \left(s + t - u + 1\right) \wedge C_{1} \wedge C_{2} \wedge C_{12} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}m = 0 \wedge \phi = 0 \wedge v + 1 &lt; u \wedge 0 &lt; n \wedge 0 &lt; c^{*} \wedge 0 \leq b^{*} \wedge \pi b^{*} &lt; \lvert{\operatorname{arg}\left(\sigma\right)}\rvert \wedge \lvert{\operatorname{arg}\left(\sigma\right)}\rvert &lt; \pi \left(s + t - v + 1 \right) \wedge C_{1} \wedge C_{3} \wedge C_{12} \wedge C_{14} \wedge C_{15}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}C_{17} \wedge t = 0 \wedge u &lt; s \wedge 0 &lt; b^{*} \wedge C_{10} \wedge C_{1} \wedge C_{2} \wedge C_{3}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}C_{17} \wedge s = 0 \wedge v &lt; t \wedge 0 &lt; b^{*} \wedge C_{10} \wedge C_{1} \wedge C_{2} \wedge C_{3}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}C_{16} \wedge n = 0 \wedge p &lt; m \wedge 0 &lt; c^{*} \wedge C_{12} \wedge C_{1} \wedge C_{2} \wedge C_{3}\end{split}\]</div>
+</li>
+<li><div class="first math">
+\[\begin{split}C_{16} \wedge m = 0 \wedge q &lt; n \wedge 0 &lt; c^{*} \wedge C_{12} \wedge C_{1} \wedge C_{2} \wedge C_{3}\end{split}\]</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="the-inverse-laplace-transform-of-a-g-function">
+<h1>The Inverse Laplace Transform of a G-function<a class="headerlink" href="#the-inverse-laplace-transform-of-a-g-function" title="Permalink to this headline">¶</a></h1>
+<p>The inverse laplace transform of a Meijer G-function can be expressed as
+another G-function. This is a fairly versatile method for computing this
+transform. However, I could not find the details in the literature, so I work
+them out here. In <a class="reference internal" href="../simplify/hyperexpand.html#luke1969">[Luke1969]</a>, section 5.6.3, there is a formula for the inverse
+Laplace transform of a G-function of argument <span class="math">\(bz\)</span>, and convergence conditions
+are also given. However, we need a formula for argument <span class="math">\(bz^a\)</span> for rational <span class="math">\(a\)</span>.</p>
+<p>We are asked to compute</p>
+<div class="math">
+\[f(t) = \frac{1}{2\pi i} \int_{c-i\infty}^{c+i\infty} e^{zt} G(bz^a) \mathrm{d}z,\]</div>
+<p>for positive real <span class="math">\(t\)</span>. Three questions arise:</p>
+<ol class="arabic simple">
+<li>When does this integral converge?</li>
+<li>How can we compute the integral?</li>
+<li>When is our computation valid?</li>
+</ol>
+<div class="section" id="how-to-compute-the-integral">
+<h2>How to compute the integral<a class="headerlink" href="#how-to-compute-the-integral" title="Permalink to this headline">¶</a></h2>
+<p>We shall work formally for now. Denote by <span class="math">\(\Delta(s)\)</span> the product of gamma
+functions appearing in the definition of <span class="math">\(G\)</span>, so that</p>
+<div class="math">
+\[G(z) = \frac{1}{2\pi i} \int_L \Delta(s) z^s \mathrm{d}s.\]</div>
+<p>Thus</p>
+<div class="math">
+\[f(t) = \frac{1}{(2\pi i)^2} \int_{c - i\infty}^{c + i\infty} \int_L
+              e^{zt} \Delta(s) b^s z^{as} \mathrm{d}s \mathrm{d}z.\]</div>
+<p>We interchange the order of integration to get</p>
+<div class="math">
+\[f(t) = \frac{1}{2\pi i} \int_L b^s \Delta(s)
+      \int_{c-i\infty}^{c+i\infty} e^{zt} z^{as} \frac{\mathrm{d}z}{2\pi i}
+            \mathrm{d}s.\]</div>
+<p>The inner integral is easily seen to be
+<span class="math">\(\frac{1}{\Gamma(-as)} \frac{1}{t^{1+as}}\)</span>. (Using Cauchy&#8217;s theorem and Jordan&#8217;s
+lemma deform the contour to run from <span class="math">\(-\infty\)</span> to <span class="math">\(-\infty\)</span>, encircling <span class="math">\(0\)</span> once
+in the negative sense. For <span class="math">\(as\)</span> real and greater than one,
+this contour can be pushed onto
+the negative real axis and the integral is recognised as a product of a sine and
+a gamma function. The formula is then proved using the functional equation of the
+gamma function, and extended to the entire domain of convergence of the original
+integral by appealing to analytic continuation.)
+Hence we find</p>
+<div class="math">
+\[f(t) = \frac{1}{t} \frac{1}{2\pi i} \int_L \Delta(s) \frac{1}{\Gamma(-as)}
+              \left(\frac{b}{t^a}\right)^s \mathrm{d}s,\]</div>
+<p>which is a so-called Fox H function (of argument <span class="math">\(\frac{b}{t^a}\)</span>). For rational
+<span class="math">\(a\)</span>, this can be expressed as a Meijer G-function using the gamma function
+multiplication theorem.</p>
+</div>
+<div class="section" id="when-this-computation-is-valid">
+<h2>When this computation is valid<a class="headerlink" href="#when-this-computation-is-valid" title="Permalink to this headline">¶</a></h2>
+<p>There are a number of obstacles in this computation. Interchange of integrals
+is only valid if all integrals involved are absolutely convergent. In
+particular the inner integral has to converge. Also, for our identification of
+the final integral as a Fox H / Meijer G-function to be correct, the poles of
+the newly obtained gamma function must be separated properly.</p>
+<p>It is easy to check that the inner integal converges absolutely for
+<span class="math">\(\Re(as) &lt; -1\)</span>. Thus the contour <span class="math">\(L\)</span> has to run left of the line <span class="math">\(\Re(as) = -1\)</span>.
+Under this condition, the poles of the newly-introduced gamma function are
+separated properly.</p>
+<p>It remains to observe that the Meijer G-function is an analytic, unbranched
+function of its parameters, and of the coefficient <span class="math">\(b\)</span>. Hence so is <span class="math">\(f(t)\)</span>.
+Thus the final computation remains valid as long as the initial integral
+converges, and if there exists a changed set of parameters where the computation
+is valid. If we assume w.l.o.g. that <span class="math">\(a &gt; 0\)</span>, then the latter condition is
+fulfilled if <span class="math">\(G\)</span> converges along contours (2) or (3) of <a class="reference internal" href="../simplify/hyperexpand.html#luke1969">[Luke1969]</a>,
+section 5.2, i.e. either <span class="math">\(\delta &gt;= \frac{a}{2}\)</span> or <span class="math">\(p \ge 1, p \ge q\)</span>.</p>
+</div>
+<div class="section" id="when-the-integral-exists">
+<h2>When the integral exists<a class="headerlink" href="#when-the-integral-exists" title="Permalink to this headline">¶</a></h2>
+<p>Using <a class="reference internal" href="../simplify/hyperexpand.html#luke1969">[Luke1969]</a>, section 5.10, for any given meijer G-function we can find a
+dominant term of the form <span class="math">\(z^a e^{bz^c}\)</span> (although this expression might not be
+the best possible, because of cancellation).</p>
+<p>We must thus investigate</p>
+<div class="math">
+\[\lim_{T \to \infty} \int_{c-iT}^{c+iT}
+e^{zt} z^a e^{bz^c} \mathrm{d}z.\]</div>
+<p>(This principal value integral is the exact statement used in the Laplace
+inversion theorem.) We write <span class="math">\(z = c + i \tau\)</span>. Then
+<span class="math">\(arg(z) \to \pm \frac{\pi}{2}\)</span>, and so <span class="math">\(e^{zt} \sim e^{it \tau}\)</span> (where <span class="math">\(\sim\)</span>
+shall always mean &#8220;asymptotically equivalent up to a positive real
+multiplicative constant&#8221;). Also
+<span class="math">\(z^{x + iy} \sim |\tau|^x e^{i y \log{|\tau|}} e^{\pm x i \frac{\pi}{2}}.\)</span></p>
+<p>Set <span class="math">\(\omega_{\pm} = b e^{\pm i \Re(c) \frac{\pi}{2}}\)</span>. We have three cases:</p>
+<ol class="arabic simple">
+<li><span class="math">\(b=0\)</span> or <span class="math">\(\Re(c) \le 0\)</span>.
+In this case the integral converges if <span class="math">\(\Re(a) \le -1\)</span>.</li>
+<li><span class="math">\(b \ne 0\)</span>, <span class="math">\(\Im(c) = 0\)</span>, <span class="math">\(\Re(c) &gt; 0\)</span>.
+In this case the integral converges if <span class="math">\(\Re(\omega_{\pm}) &lt; 0\)</span>.</li>
+<li><span class="math">\(b \ne 0\)</span>, <span class="math">\(\Im(c) = 0\)</span>, <span class="math">\(\Re(c) &gt; 0\)</span>, <span class="math">\(\Re(\omega_{\pm}) \le 0\)</span>, and at least
+one of <span class="math">\(\Re(\omega_{\pm}) = 0\)</span>.
+Here the same condition as in (1) applies.</li>
+</ol>
+</div>
+</div>
+<div class="section" id="implemented-g-function-formulae">
+<h1>Implemented G-Function Formulae<a class="headerlink" href="#implemented-g-function-formulae" title="Permalink to this headline">¶</a></h1>
+<p>An important part of the algorithm is a table expressing various functions
+as Meijer G-functions. This is essentially a table of Mellin Transforms in
+disguise. The following automatically generated table shows the formulae
+currently implemented in SymPy. An entry &#8220;generated&#8221; means that the
+corresponding G-function has a variable number of parameters.
+This table is intended to shrink in future, when the algorithm&#8217;s capabilities
+of deriving new formulae improve. Of course it has to grow whenever a new class
+of special functions is to be dealt with.</p>
+<span class="target" id="module-sympy.integrals.meijerint_doc"></span><p>Elementary functions:</p>
+<div class="math">
+\[\begin{split}a = a {G_{1, 1}^{1, 0}\left(\begin{matrix}  &amp; 1 \\0 &amp;  \end{matrix} \middle| {z} \right)} + a {G_{1, 1}^{0, 1}\left(\begin{matrix} 1 &amp;  \\ &amp; 0 \end{matrix} \middle| {z} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(z^{q} p + b\right)^{- a} = \frac{b^{- a}}{\Gamma{\left(a \right)}} {G_{1, 1}^{1, 1}\left(\begin{matrix} - a + 1 &amp;  \\0 &amp;  \end{matrix} \middle| {\frac{z^{q} p}{b}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\frac{- b^{a} + \left(z^{q} p\right)^{a}}{z^{q} p - b} = \frac{1}{\pi} b^{a - 1} \sin{\left (\pi a \right )} {G_{2, 2}^{2, 2}\left(\begin{matrix} 0, a &amp;  \\0, a &amp;  \end{matrix} \middle| {\frac{z^{q} p}{b}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(a + \sqrt{z^{q} p + a^{2}}\right)^{b} = - \frac{a^{b} b}{2 \sqrt{\pi}} {G_{2, 2}^{1, 2}\left(\begin{matrix} \frac{b}{2} + \frac{1}{2}, \frac{b}{2} + 1 &amp;  \\0 &amp; b \end{matrix} \middle| {\frac{z^{q} p}{a^{2}}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(- a + \sqrt{z^{q} p + a^{2}}\right)^{b} = \frac{a^{b} b}{2 \sqrt{\pi}} {G_{2, 2}^{1, 2}\left(\begin{matrix} \frac{b}{2} + \frac{1}{2}, \frac{b}{2} + 1 &amp;  \\b &amp; 0 \end{matrix} \middle| {\frac{z^{q} p}{a^{2}}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\frac{\left(a + \sqrt{z^{q} p + a^{2}}\right)^{b}}{\sqrt{z^{q} p + a^{2}}} = \frac{1}{\sqrt{\pi}} a^{b - 1} {G_{2, 2}^{1, 2}\left(\begin{matrix} \frac{b}{2} + \frac{1}{2}, \frac{b}{2} &amp;  \\0 &amp; b \end{matrix} \middle| {\frac{z^{q} p}{a^{2}}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\frac{\left(- a + \sqrt{z^{q} p + a^{2}}\right)^{b}}{\sqrt{z^{q} p + a^{2}}} = \frac{1}{\sqrt{\pi}} a^{b - 1} {G_{2, 2}^{1, 2}\left(\begin{matrix} \frac{b}{2} + \frac{1}{2}, \frac{b}{2} &amp;  \\b &amp; 0 \end{matrix} \middle| {\frac{z^{q} p}{a^{2}}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(z^{\frac{q}{2}} \sqrt{p} + \sqrt{z^{q} p + a}\right)^{b} = - \frac{a^{\frac{b}{2}} b}{2 \sqrt{\pi}} {G_{2, 2}^{2, 1}\left(\begin{matrix} \frac{b}{2} + 1 &amp; - \frac{b}{2} + 1 \\0, \frac{1}{2} &amp;  \end{matrix} \middle| {\frac{z^{q} p}{a}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(- z^{\frac{q}{2}} \sqrt{p} + \sqrt{z^{q} p + a}\right)^{b} = \frac{a^{\frac{b}{2}} b}{2 \sqrt{\pi}} {G_{2, 2}^{2, 1}\left(\begin{matrix} - \frac{b}{2} + 1 &amp; \frac{b}{2} + 1 \\0, \frac{1}{2} &amp;  \end{matrix} \middle| {\frac{z^{q} p}{a}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\frac{\left(z^{\frac{q}{2}} \sqrt{p} + \sqrt{z^{q} p + a}\right)^{b}}{\sqrt{z^{q} p + a}} = \frac{1}{\sqrt{\pi}} a^{\frac{b}{2} - \frac{1}{2}} {G_{2, 2}^{2, 1}\left(\begin{matrix} \frac{b}{2} + \frac{1}{2} &amp; - \frac{b}{2} + \frac{1}{2} \\0, \frac{1}{2} &amp;  \end{matrix} \middle| {\frac{z^{q} p}{a}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\frac{\left(- z^{\frac{q}{2}} \sqrt{p} + \sqrt{z^{q} p + a}\right)^{b}}{\sqrt{z^{q} p + a}} = \frac{1}{\sqrt{\pi}} a^{\frac{b}{2} - \frac{1}{2}} {G_{2, 2}^{2, 1}\left(\begin{matrix} - \frac{b}{2} + \frac{1}{2} &amp; \frac{b}{2} + \frac{1}{2} \\0, \frac{1}{2} &amp;  \end{matrix} \middle| {\frac{z^{q} p}{a}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\left\lvert{- z^{q} p + b}\right\rvert\)</span>:</p>
+<div class="math">
+\[\begin{split}\left\lvert{- z^{q} p + b}\right\rvert^{- a} = \frac{\pi \left\lvert{b}\right\rvert^{- a}}{\cos{\left (\frac{\pi a}{2} \right )} \Gamma{\left(a \right)}} {G_{2, 2}^{1, 1}\left(\begin{matrix} - a + 1 &amp; - \frac{a}{2} + \frac{1}{2} \\0 &amp; - \frac{a}{2} + \frac{1}{2} \end{matrix} \middle| {\frac{z^{q} p}{b}} \right)},\text{ if } \Re{a} &lt; 1\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{Chi}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{Chi}{\left (z^{q} p \right )} = - \frac{\pi^{\frac{3}{2}}}{2} {G_{2, 4}^{2, 0}\left(\begin{matrix}  &amp; \frac{1}{2}, 1 \\0, 0 &amp; \frac{1}{2}, \frac{1}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{Ci}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{Ci}{\left (z^{q} p \right )} = - \frac{\sqrt{\pi}}{2} {G_{1, 3}^{2, 0}\left(\begin{matrix}  &amp; 1 \\0, 0 &amp; \frac{1}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{Ei}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{Ei}{\left (z^{q} p \right )} = - i \pi {G_{1, 1}^{1, 0}\left(\begin{matrix}  &amp; 1 \\0 &amp;  \end{matrix} \middle| {z} \right)} - {G_{1, 2}^{2, 0}\left(\begin{matrix}  &amp; 1 \\0, 0 &amp;  \end{matrix} \middle| {z^{q} p e^{i \pi}} \right)} - i \pi {G_{1, 1}^{0, 1}\left(\begin{matrix} 1 &amp;  \\ &amp; 0 \end{matrix} \middle| {z} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\theta\left(z^{q} p - b\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}\left(z^{q} p - b\right)^{a - 1} \theta\left(z^{q} p - b\right) = b^{a - 1} \Gamma{\left(a \right)} {G_{1, 1}^{0, 1}\left(\begin{matrix} a &amp;  \\ &amp; 0 \end{matrix} \middle| {\frac{z^{q} p}{b}} \right)},\text{ if } b &gt; 0\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(- z^{q} p + b\right)^{a - 1} \theta\left(- z^{q} p + b\right) = b^{a - 1} \Gamma{\left(a \right)} {G_{1, 1}^{1, 0}\left(\begin{matrix}  &amp; a \\0 &amp;  \end{matrix} \middle| {\frac{z^{q} p}{b}} \right)},\text{ if } b &gt; 0\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(z^{q} p - b\right)^{a - 1} \theta\left(z - \left(\frac{b}{p}\right)^{\frac{1}{q}}\right) = b^{a - 1} \Gamma{\left(a \right)} {G_{1, 1}^{0, 1}\left(\begin{matrix} a &amp;  \\ &amp; 0 \end{matrix} \middle| {\frac{z^{q} p}{b}} \right)},\text{ if } b &gt; 0\end{split}\]</div>
+<div class="math">
+\[\begin{split}\left(- z^{q} p + b\right)^{a - 1} \theta\left(- z + \left(\frac{b}{p}\right)^{\frac{1}{q}}\right) = b^{a - 1} \Gamma{\left(a \right)} {G_{1, 1}^{1, 0}\left(\begin{matrix}  &amp; a \\0 &amp;  \end{matrix} \middle| {\frac{z^{q} p}{b}} \right)},\text{ if } b &gt; 0\end{split}\]</div>
+<p>Functions involving <span class="math">\(\theta\left(- z^{q} p + 1\right)\)</span>, <span class="math">\(\log{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\log^{n}{\left (z^{q} p \right )} \theta\left(- z^{q} p + 1\right) = \text{generated}\]</div>
+<div class="math">
+\[\log^{n}{\left (z^{q} p \right )} \theta\left(z^{q} p - 1\right) = \text{generated}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{Shi}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{Shi}{\left (z^{q} p \right )} = \frac{\sqrt{\pi} p}{4} z^{q} {G_{1, 3}^{1, 1}\left(\begin{matrix} \frac{1}{2} &amp;  \\0 &amp; - \frac{1}{2}, - \frac{1}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q} e^{i \pi}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{Si}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{Si}{\left (z^{q} p \right )} = \frac{\sqrt{\pi}}{2} {G_{1, 3}^{1, 1}\left(\begin{matrix} 1 &amp;  \\\frac{1}{2} &amp; 0, 0 \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(I_{a}\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}I_{a}\left(z^{q} p\right) = \pi {G_{1, 3}^{1, 0}\left(\begin{matrix}  &amp; \frac{a}{2} + \frac{1}{2} \\\frac{a}{2} &amp; - \frac{a}{2}, \frac{a}{2} + \frac{1}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(J_{a}\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}J_{a}\left(z^{q} p\right) = {G_{0, 2}^{1, 0}\left(\begin{matrix}  &amp;  \\\frac{a}{2} &amp; - \frac{a}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(K_{a}\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}K_{a}\left(z^{q} p\right) = \frac{1}{2} {G_{0, 2}^{2, 0}\left(\begin{matrix}  &amp;  \\\frac{a}{2}, - \frac{a}{2} &amp;  \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(Y_{a}\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}Y_{a}\left(z^{q} p\right) = {G_{1, 3}^{2, 0}\left(\begin{matrix}  &amp; - \frac{a}{2} - \frac{1}{2} \\\frac{a}{2}, - \frac{a}{2} &amp; - \frac{a}{2} - \frac{1}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\cos{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\cos{\left (z^{q} p \right )} = \sqrt{\pi} {G_{0, 2}^{1, 0}\left(\begin{matrix}  &amp;  \\0 &amp; \frac{1}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\cosh{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\cosh{\left (z^{q} p \right )} = \pi^{\frac{3}{2}} {G_{1, 3}^{1, 0}\left(\begin{matrix}  &amp; \frac{1}{2} \\0 &amp; \frac{1}{2}, \frac{1}{2} \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(E\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}E\left(z^{q} p\right) = - \frac{1}{4} {G_{2, 2}^{1, 2}\left(\begin{matrix} \frac{1}{2}, \frac{3}{2} &amp;  \\0 &amp; 0 \end{matrix} \middle| {- z^{q} p} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(K\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}K\left(z^{q} p\right) = \frac{1}{2} {G_{2, 2}^{1, 2}\left(\begin{matrix} \frac{1}{2}, \frac{1}{2} &amp;  \\0 &amp; 0 \end{matrix} \middle| {- z^{q} p} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{erf}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{erf}{\left (z^{q} p \right )} = \frac{1}{\sqrt{\pi}} {G_{1, 2}^{1, 1}\left(\begin{matrix} 1 &amp;  \\\frac{1}{2} &amp; 0 \end{matrix} \middle| {z^{2 q} p^{2}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{erfc}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{erfc}{\left (z^{q} p \right )} = \frac{1}{\sqrt{\pi}} {G_{1, 2}^{2, 0}\left(\begin{matrix}  &amp; 1 \\0, \frac{1}{2} &amp;  \end{matrix} \middle| {z^{2 q} p^{2}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{erfi}{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{erfi}{\left (z^{q} p \right )} = \frac{z^{q} p}{\sqrt{\pi}} {G_{1, 2}^{1, 1}\left(\begin{matrix} \frac{1}{2} &amp;  \\0 &amp; - \frac{1}{2} \end{matrix} \middle| {- z^{2 q} p^{2}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(e^{z^{q} p e^{i \pi}}\)</span>:</p>
+<div class="math">
+\[\begin{split}e^{z^{q} p e^{i \pi}} = {G_{0, 1}^{1, 0}\left(\begin{matrix}  &amp;  \\0 &amp;  \end{matrix} \middle| {z^{q} p} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\operatorname{E}_{a}\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}\operatorname{E}_{a}\left(z^{q} p\right) = {G_{1, 2}^{2, 0}\left(\begin{matrix}  &amp; a \\a - 1, 0 &amp;  \end{matrix} \middle| {z^{q} p} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(C\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}C\left(z^{q} p\right) = \frac{1}{2} {G_{1, 3}^{1, 1}\left(\begin{matrix} 1 &amp;  \\\frac{1}{4} &amp; 0, \frac{3}{4} \end{matrix} \middle| {\frac{\pi^{2} p^{4}}{16} z^{4 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(S\left(z^{q} p\right)\)</span>:</p>
+<div class="math">
+\[\begin{split}S\left(z^{q} p\right) = \frac{1}{2} {G_{1, 3}^{1, 1}\left(\begin{matrix} 1 &amp;  \\\frac{3}{4} &amp; 0, \frac{1}{4} \end{matrix} \middle| {\frac{\pi^{2} p^{4}}{16} z^{4 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\log{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\log^{n}{\left (z^{q} p \right )} = \text{generated}\]</div>
+<div class="math">
+\[\begin{split}\log{\left (z^{q} p + a \right )} = \log{\left (a \right )} {G_{1, 1}^{1, 0}\left(\begin{matrix}  &amp; 1 \\0 &amp;  \end{matrix} \middle| {z} \right)} + \log{\left (a \right )} {G_{1, 1}^{0, 1}\left(\begin{matrix} 1 &amp;  \\ &amp; 0 \end{matrix} \middle| {z} \right)} + {G_{2, 2}^{1, 2}\left(\begin{matrix} 1, 1 &amp;  \\1 &amp; 0 \end{matrix} \middle| {\frac{z^{q} p}{a}} \right)}\end{split}\]</div>
+<div class="math">
+\[\begin{split}\log{\left (\left\lvert{z^{q} p - a}\right\rvert \right )} = \log{\left (\left\lvert{a}\right\rvert \right )} {G_{1, 1}^{1, 0}\left(\begin{matrix}  &amp; 1 \\0 &amp;  \end{matrix} \middle| {z} \right)} + \log{\left (\left\lvert{a}\right\rvert \right )} {G_{1, 1}^{0, 1}\left(\begin{matrix} 1 &amp;  \\ &amp; 0 \end{matrix} \middle| {z} \right)} + \pi {G_{3, 3}^{1, 2}\left(\begin{matrix} 1, 1 &amp; \frac{1}{2} \\1 &amp; 0, \frac{1}{2} \end{matrix} \middle| {\frac{z^{q} p}{a}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\sin{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\sin{\left (z^{q} p \right )} = \sqrt{\pi} {G_{0, 2}^{1, 0}\left(\begin{matrix}  &amp;  \\\frac{1}{2} &amp; 0 \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+<p>Functions involving <span class="math">\(\sinh{\left (z^{q} p \right )}\)</span>:</p>
+<div class="math">
+\[\begin{split}\sinh{\left (z^{q} p \right )} = \pi^{\frac{3}{2}} {G_{1, 3}^{1, 0}\left(\begin{matrix}  &amp; 1 \\\frac{1}{2} &amp; 1, 0 \end{matrix} \middle| {\frac{p^{2}}{4} z^{2 q}} \right)}\end{split}\]</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Computing Integrals using Meijer G-Functions</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#polar-numbers-and-branched-functions">Polar Numbers and Branched Functions</a></li>
+<li><a class="reference internal" href="#representing-branched-functions-on-the-argand-plane">Representing Branched Functions on the Argand Plane</a></li>
+<li><a class="reference internal" href="#table-lookups-and-inverse-mellin-transforms">Table Lookups and Inverse Mellin Transforms</a></li>
+<li><a class="reference internal" href="#applying-the-integral-theorems">Applying the Integral Theorems</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-g-function-integration-theorems">The G-Function Integration Theorems</a><ul>
+<li><a class="reference internal" href="#conditions-of-convergence-for-integral-1">Conditions of Convergence for Integral (1)</a></li>
+<li><a class="reference internal" href="#conditions-of-convergence-for-integral-2">Conditions of Convergence for Integral (2)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-inverse-laplace-transform-of-a-g-function">The Inverse Laplace Transform of a G-function</a><ul>
+<li><a class="reference internal" href="#how-to-compute-the-integral">How to compute the integral</a></li>
+<li><a class="reference internal" href="#when-this-computation-is-valid">When this computation is valid</a></li>
+<li><a class="reference internal" href="#when-the-integral-exists">When the integral exists</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#implemented-g-function-formulae">Implemented G-Function Formulae</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="integrals.html"
+                        title="previous chapter">Symbolic Integrals</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../logic.html"
+                        title="next chapter">Logic Module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/integrals/g-functions.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../logic.html" title="Logic Module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="integrals.html" title="Symbolic Integrals"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="integrals.html" >Symbolic Integrals</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

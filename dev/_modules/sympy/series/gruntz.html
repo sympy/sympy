@@ -1,0 +1,762 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.series.gruntz &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.series.gruntz</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Limits</span>
+<span class="sd">======</span>
+
+<span class="sd">Implemented according to the PhD thesis</span>
+<span class="sd">http://www.cybertester.com/data/gruntz.pdf, which contains very thorough</span>
+<span class="sd">descriptions of the algorithm including many examples.  We summarize here</span>
+<span class="sd">the gist of it.</span>
+
+<span class="sd">All functions are sorted according to how rapidly varying they are at</span>
+<span class="sd">infinity using the following rules. Any two functions f and g can be</span>
+<span class="sd">compared using the properties of L:</span>
+
+<span class="sd">L=lim  log|f(x)| / log|g(x)|           (for x -&gt; oo)</span>
+
+<span class="sd">We define &gt;, &lt; ~ according to::</span>
+
+<span class="sd">    1. f &gt; g .... L=+-oo</span>
+
+<span class="sd">        we say that:</span>
+<span class="sd">        - f is greater than any power of g</span>
+<span class="sd">        - f is more rapidly varying than g</span>
+<span class="sd">        - f goes to infinity/zero faster than g</span>
+
+<span class="sd">    2. f &lt; g .... L=0</span>
+
+<span class="sd">        we say that:</span>
+<span class="sd">        - f is lower than any power of g</span>
+
+<span class="sd">    3. f ~ g .... L!=0, +-oo</span>
+
+<span class="sd">        we say that:</span>
+<span class="sd">        - both f and g are bounded from above and below by suitable integral</span>
+<span class="sd">          powers of the other</span>
+
+<span class="sd">Examples</span>
+<span class="sd">========</span>
+<span class="sd">::</span>
+<span class="sd">    2 &lt; x &lt; exp(x) &lt; exp(x**2) &lt; exp(exp(x))</span>
+<span class="sd">    2 ~ 3 ~ -5</span>
+<span class="sd">    x ~ x**2 ~ x**3 ~ 1/x ~ x**m ~ -x</span>
+<span class="sd">    exp(x) ~ exp(-x) ~ exp(2x) ~ exp(x)**2 ~ exp(x+exp(-x))</span>
+<span class="sd">    f ~ 1/f</span>
+
+<span class="sd">So we can divide all the functions into comparability classes (x and x^2</span>
+<span class="sd">belong to one class, exp(x) and exp(-x) belong to some other class). In</span>
+<span class="sd">principle, we could compare any two functions, but in our algorithm, we</span>
+<span class="sd">don&#39;t compare anything below the class 2~3~-5 (for example log(x) is</span>
+<span class="sd">below this), so we set 2~3~-5 as the lowest comparability class.</span>
+
+<span class="sd">Given the function f, we find the list of most rapidly varying (mrv set)</span>
+<span class="sd">subexpressions of it. This list belongs to the same comparability class.</span>
+<span class="sd">Let&#39;s say it is {exp(x), exp(2x)}. Using the rule f ~ 1/f we find an</span>
+<span class="sd">element &quot;w&quot; (either from the list or a new one) from the same</span>
+<span class="sd">comparability class which goes to zero at infinity. In our example we</span>
+<span class="sd">set w=exp(-x) (but we could also set w=exp(-2x) or w=exp(-3x) ...). We</span>
+<span class="sd">rewrite the mrv set using w, in our case {1/w, 1/w^2}, and substitute it</span>
+<span class="sd">into f. Then we expand f into a series in w::</span>
+
+<span class="sd">    f = c0*w^e0 + c1*w^e1 + ... + O(w^en),       where e0&lt;e1&lt;...&lt;en, c0!=0</span>
+
+<span class="sd">but for x-&gt;oo, lim f = lim c0*w^e0, because all the other terms go to zero,</span>
+<span class="sd">because w goes to zero faster than the ci and ei. So::</span>
+
+<span class="sd">    for e0&gt;0, lim f = 0</span>
+<span class="sd">    for e0&lt;0, lim f = +-oo   (the sign depends on the sign of c0)</span>
+<span class="sd">    for e0=0, lim f = lim c0</span>
+
+<span class="sd">We need to recursively compute limits at several places of the algorithm, but</span>
+<span class="sd">as is shown in the PhD thesis, it always finishes.</span>
+
+<span class="sd">Important functions from the implementation:</span>
+
+<span class="sd">compare(a, b, x) compares &quot;a&quot; and &quot;b&quot; by computing the limit L.</span>
+<span class="sd">mrv(e, x) returns list of most rapidly varying (mrv) subexpressions of &quot;e&quot;</span>
+<span class="sd">rewrite(e, Omega, x, wsym) rewrites &quot;e&quot; in terms of w</span>
+<span class="sd">leadterm(f, x) returns the lowest power term in the series of f</span>
+<span class="sd">mrv_leadterm(e, x) returns the lead term (c0, e0) for e</span>
+<span class="sd">limitinf(e, x) computes lim e  (for x-&gt;oo)</span>
+<span class="sd">limit(e, z, z0) computes any limit by converting it to the case x-&gt;oo</span>
+
+<span class="sd">All the functions are really simple and straightforward except</span>
+<span class="sd">rewrite(), which is the most difficult/complex part of the algorithm.</span>
+<span class="sd">When the algorithm fails, the bugs are usually in the series expansion</span>
+<span class="sd">(i.e. in SymPy) or in rewrite.</span>
+
+<span class="sd">This code is almost exact rewrite of the Maple code inside the Gruntz</span>
+<span class="sd">thesis.</span>
+
+<span class="sd">Debugging</span>
+<span class="sd">---------</span>
+
+<span class="sd">Because the gruntz algorithm is highly recursive, it&#39;s difficult to</span>
+<span class="sd">figure out what went wrong inside a debugger. Instead, turn on nice</span>
+<span class="sd">debug prints by defining the environment variable SYMPY_DEBUG. For</span>
+<span class="sd">example:</span>
+
+<span class="sd">[user@localhost]: SYMPY_DEBUG=True ./bin/isympy</span>
+
+<span class="sd">In [1]: limit(sin(x)/x, x, 0)</span>
+<span class="sd">limitinf(_x*sin(1/_x), _x) = 1</span>
+<span class="sd">+-mrv_leadterm(_x*sin(1/_x), _x) = (1, 0)</span>
+<span class="sd">| +-mrv(_x*sin(1/_x), _x) = set([_x])</span>
+<span class="sd">| | +-mrv(_x, _x) = set([_x])</span>
+<span class="sd">| | +-mrv(sin(1/_x), _x) = set([_x])</span>
+<span class="sd">| |   +-mrv(1/_x, _x) = set([_x])</span>
+<span class="sd">| |     +-mrv(_x, _x) = set([_x])</span>
+<span class="sd">| +-mrv_leadterm(exp(_x)*sin(exp(-_x)), _x, set([exp(_x)])) = (1, 0)</span>
+<span class="sd">|   +-rewrite(exp(_x)*sin(exp(-_x)), set([exp(_x)]), _x, _w) = (1/_w*sin(_w), -_x)</span>
+<span class="sd">|     +-sign(_x, _x) = 1</span>
+<span class="sd">|     +-mrv_leadterm(1, _x) = (1, 0)</span>
+<span class="sd">+-sign(0, _x) = 0</span>
+<span class="sd">+-limitinf(1, _x) = 1</span>
+
+<span class="sd">And check manually which line is wrong. Then go to the source code and</span>
+<span class="sd">debug this function to figure out the exact problem.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">Wild</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">exp</span>
+<span class="kn">from</span> <span class="nn">sympy.series.order</span> <span class="kn">import</span> <span class="n">Order</span>
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">powsimp</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cacheit</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">reduce</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities.timeutils</span> <span class="kn">import</span> <span class="n">timethis</span>
+<span class="n">timeit</span> <span class="o">=</span> <span class="n">timethis</span><span class="p">(</span><span class="s">&#39;gruntz&#39;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">debug_decorator</span> <span class="k">as</span> <span class="n">debug</span>
+
+
+<div class="viewcode-block" id="compare"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.compare">[docs]</a><span class="k">def</span> <span class="nf">compare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns &quot;&lt;&quot; if a&lt;b, &quot;=&quot; for a == b, &quot;&gt;&quot; for a&gt;b&quot;&quot;&quot;</span>
+    <span class="c"># log(exp(...)) must always be simplified here for termination</span>
+    <span class="n">la</span><span class="p">,</span> <span class="n">lb</span> <span class="o">=</span> <span class="n">log</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">log</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span> <span class="ow">and</span> <span class="n">a</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp</span><span class="p">:</span>
+        <span class="n">la</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp</span><span class="p">:</span>
+        <span class="n">lb</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">limitinf</span><span class="p">(</span><span class="n">la</span><span class="o">/</span><span class="n">lb</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;&lt;&quot;</span>
+    <span class="k">elif</span> <span class="n">c</span><span class="o">.</span><span class="n">is_unbounded</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;&gt;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&quot;=&quot;</span>
+
+</div>
+<div class="viewcode-block" id="SubsSet"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.SubsSet">[docs]</a><span class="k">class</span> <span class="nc">SubsSet</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stores (expr, dummy) pairs, and how to rewrite expr-s.</span>
+
+<span class="sd">    The gruntz algorithm needs to rewrite certain expressions in term of a new</span>
+<span class="sd">    variable w. We cannot use subs, because it is just too smart for us. For</span>
+<span class="sd">    example::</span>
+
+<span class="sd">        &gt; Omega=[exp(exp(_p - exp(-_p))/(1 - 1/_p)), exp(exp(_p))]</span>
+<span class="sd">        &gt; O2=[exp(-exp(_p) + exp(-exp(-_p))*exp(_p)/(1 - 1/_p))/_w, 1/_w]</span>
+<span class="sd">        &gt; e = exp(exp(_p - exp(-_p))/(1 - 1/_p)) - exp(exp(_p))</span>
+<span class="sd">        &gt; e.subs(Omega[0],O2[0]).subs(Omega[1],O2[1])</span>
+<span class="sd">        -1/w + exp(exp(p)*exp(-exp(-p))/(1 - 1/p))</span>
+
+<span class="sd">    is really not what we want!</span>
+
+<span class="sd">    So we do it the hard way and keep track of all the things we potentially</span>
+<span class="sd">    want to substitute by dummy variables. Consider the expression::</span>
+
+<span class="sd">        exp(x - exp(-x)) + exp(x) + x.</span>
+
+<span class="sd">    The mrv set is {exp(x), exp(-x), exp(x - exp(-x))}.</span>
+<span class="sd">    We introduce corresponding dummy variables d1, d2, d3 and rewrite::</span>
+
+<span class="sd">        d3 + d1 + x.</span>
+
+<span class="sd">    This class first of all keeps track of the mapping expr-&gt;variable, i.e.</span>
+<span class="sd">    will at this stage be a dictionary::</span>
+
+<span class="sd">        {exp(x): d1, exp(-x): d2, exp(x - exp(-x)): d3}.</span>
+
+<span class="sd">    [It turns out to be more convenient this way round.]</span>
+<span class="sd">    But sometimes expressions in the mrv set have other expressions from the</span>
+<span class="sd">    mrv set as subexpressions, and we need to keep track of that as well. In</span>
+<span class="sd">    this case, d3 is really exp(x - d2), so rewrites at this stage is::</span>
+
+<span class="sd">        {d3: exp(x-d2)}.</span>
+
+<span class="sd">    The function rewrite uses all this information to correctly rewrite our</span>
+<span class="sd">    expression in terms of w. In this case w can be choosen to be exp(-x),</span>
+<span class="sd">    i.e. d2. The correct rewriting then is::</span>
+
+<span class="sd">        exp(-w)/w + 1/w + x.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rewrites</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">SubsSet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__repr__</span><span class="p">()</span> <span class="o">+</span> <span class="s">&#39;, &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewrites</span><span class="o">.</span><span class="n">__repr__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">do_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+<div class="viewcode-block" id="SubsSet.meets"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.SubsSet.meets">[docs]</a>    <span class="k">def</span> <span class="nf">meets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tell whether or not self and s2 have non-empty intersection&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">s2</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="SubsSet.union"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.SubsSet.union">[docs]</a>    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">exps</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the union of self and s2, adjusting exps&quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">tr</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">s2</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">exps</span><span class="p">:</span>
+                    <span class="n">exps</span> <span class="o">=</span> <span class="n">exps</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">res</span><span class="p">[</span><span class="n">expr</span><span class="p">])</span>
+                <span class="n">tr</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+        <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">rewr</span> <span class="ow">in</span> <span class="n">s2</span><span class="o">.</span><span class="n">rewrites</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">rewrites</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">rewr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">tr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">exps</span>
+</div>
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">SubsSet</span><span class="p">()</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">rewrites</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rewrites</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">r</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+        <span class="k">return</span> <span class="n">r</span>
+
+</div>
+<span class="nd">@debug</span>
+<div class="viewcode-block" id="mrv"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.mrv">[docs]</a><span class="k">def</span> <span class="nf">mrv</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a SubsSet of most rapidly varying (mrv) subexpressions of &#39;e&#39;,</span>
+<span class="sd">       and e rewritten in terms of these&quot;&quot;&quot;</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">powsimp</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;exp&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SubsSet</span><span class="p">(),</span> <span class="n">e</span>
+    <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">SubsSet</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">s</span><span class="p">[</span><span class="n">x</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Mul</span> <span class="ow">or</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+        <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">as_independent</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c"># throw away x-independent terms</span>
+        <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">func</span> <span class="o">!=</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">as_two_terms</span><span class="p">()</span>
+        <span class="n">s1</span><span class="p">,</span> <span class="n">e1</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">s2</span><span class="p">,</span> <span class="n">e2</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mrv_max1</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">as_base_exp</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">mrv</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">e</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">b</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">expr</span><span class="o">**</span><span class="n">e</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">log</span><span class="p">:</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">log</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp</span><span class="p">:</span>
+        <span class="c"># We know from the theory of this algorithm that exp(log(...)) may always</span>
+        <span class="c"># be simplified here, and doing so is vital for termination.</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">log</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mrv</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">limitinf</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">is_unbounded</span><span class="p">:</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="n">SubsSet</span><span class="p">()</span>
+            <span class="n">e1</span> <span class="o">=</span> <span class="n">s1</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+            <span class="n">s2</span><span class="p">,</span> <span class="n">e2</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">su</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">s2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">su</span><span class="o">.</span><span class="n">rewrites</span><span class="p">[</span><span class="n">e1</span><span class="p">]</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">e2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">mrv_max3</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">s2</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="n">e2</span><span class="p">),</span> <span class="n">su</span><span class="p">,</span> <span class="n">e1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">expr</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Function</span><span class="p">:</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="n">mrv</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="n">l2</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">l</span> <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">SubsSet</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">l2</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># e.g. something like BesselJ(x, x)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;MRV set computation for functions in&quot;</span>
+                                      <span class="s">&quot; several variables not implemented.&quot;</span><span class="p">)</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">ss</span> <span class="o">=</span> <span class="n">l2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">SubsSet</span><span class="p">()</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">ss</span><span class="o">.</span><span class="n">do_subs</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">l</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Derivative</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;MRV set computation for derviatives&quot;</span>
+                                  <span class="s">&quot; not implemented yet.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mrv</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+        <span class="s">&quot;Don&#39;t know how to calculate the mrv of &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="mrv_max3"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.mrv_max3">[docs]</a><span class="k">def</span> <span class="nf">mrv_max3</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">expsf</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">expsg</span><span class="p">,</span> <span class="n">union</span><span class="p">,</span> <span class="n">expsboth</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the maximum of two sets of expressions f and g, which</span>
+<span class="sd">    are in the same comparability class, i.e. max() compares (two elements of)</span>
+<span class="sd">    f and g and returns either (f, expsf) [if f is larger], (g, expsg)</span>
+<span class="sd">    [if g is larger] or (union, expsboth) [if f, g are of the same class].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">SubsSet</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">SubsSet</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="n">SubsSet</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="n">expsg</span>
+    <span class="k">elif</span> <span class="n">g</span> <span class="o">==</span> <span class="n">SubsSet</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">expsf</span>
+    <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">meets</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">union</span><span class="p">,</span> <span class="n">expsboth</span>
+
+    <span class="n">c</span> <span class="o">=</span> <span class="n">compare</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&quot;&gt;&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">expsf</span>
+    <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&quot;&lt;&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="n">expsg</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">c</span> <span class="o">==</span> <span class="s">&quot;=&quot;</span>
+        <span class="k">return</span> <span class="n">union</span><span class="p">,</span> <span class="n">expsboth</span>
+
+</div>
+<div class="viewcode-block" id="mrv_max1"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.mrv_max1">[docs]</a><span class="k">def</span> <span class="nf">mrv_max1</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">exps</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes the maximum of two sets of expressions f and g, which</span>
+<span class="sd">    are in the same comparability class, i.e. mrv_max1() compares (two elements of)</span>
+<span class="sd">    f and g and returns the set, which is in the higher comparability class</span>
+<span class="sd">    of the union of both, if they have the same order of variation.</span>
+<span class="sd">    Also returns exps, with the appropriate substitutions made.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">exps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mrv_max3</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">do_subs</span><span class="p">(</span><span class="n">exps</span><span class="p">),</span> <span class="n">g</span><span class="p">,</span> <span class="n">f</span><span class="o">.</span><span class="n">do_subs</span><span class="p">(</span><span class="n">exps</span><span class="p">),</span>
+                    <span class="n">u</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+</div>
+<span class="nd">@debug</span>
+<span class="nd">@cacheit</span>
+<span class="nd">@timeit</span>
+<div class="viewcode-block" id="sign"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.sign">[docs]</a><span class="k">def</span> <span class="nf">sign</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a sign of an expression e(x) for x-&gt;oo.</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        e &gt;  0 for x sufficiently large ...  1</span>
+<span class="sd">        e == 0 for x sufficiently large ...  0</span>
+<span class="sd">        e &lt;  0 for x sufficiently large ... -1</span>
+
+<span class="sd">    The result of this function is currently undefined if e changes sign</span>
+<span class="sd">    arbitarily often for arbitrarily large x (e.g. sin(x)).</span>
+
+<span class="sd">    Note that this returns zero only if e is *constantly* zero</span>
+<span class="sd">    for x sufficiently large. [If e is constant, of course, this is just</span>
+<span class="sd">    the same thing as the sign of e.]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sign</span> <span class="k">as</span> <span class="n">_sign</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_sign</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">as_two_terms</span><span class="p">()</span>
+        <span class="n">sa</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sa</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">sa</span> <span class="o">*</span> <span class="n">sign</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">**</span><span class="n">e</span><span class="o">.</span><span class="n">exp</span>
+    <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">log</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sign</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="c"># if all else fails, do it the hard way</span>
+    <span class="n">c0</span><span class="p">,</span> <span class="n">e0</span> <span class="o">=</span> <span class="n">mrv_leadterm</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sign</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+</div>
+<span class="nd">@debug</span>
+<span class="nd">@timeit</span>
+<span class="nd">@cacheit</span>
+<div class="viewcode-block" id="limitinf"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.limitinf">[docs]</a><span class="k">def</span> <span class="nf">limitinf</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Limit e(x) for x-&gt; oo&quot;&quot;&quot;</span>
+    <span class="c">#rewrite e in terms of tractable functions only</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="s">&#39;tractable&#39;</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">e</span>  <span class="c"># e is a constant</span>
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">Order</span><span class="p">):</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">removeO</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+        <span class="c"># We make sure that x.is_positive is True so we</span>
+        <span class="c"># get all the correct mathematical bechavior from the expression.</span>
+        <span class="c"># We need a fresh variable.</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">p</span>
+    <span class="n">c0</span><span class="p">,</span> <span class="n">e0</span> <span class="o">=</span> <span class="n">mrv_leadterm</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">e0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sig</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>  <span class="c"># e0&gt;0: lim f = 0</span>
+    <span class="k">elif</span> <span class="n">sig</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>  <span class="c"># e0&lt;0: lim f = +-oo (the sign depends on the sign of c0)</span>
+        <span class="k">if</span> <span class="n">c0</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="n">Wild</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="n">I</span><span class="p">])):</span>
+            <span class="k">return</span> <span class="n">c0</span><span class="o">*</span><span class="n">oo</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="c">#the leading term shouldn&#39;t be 0:</span>
+        <span class="k">assert</span> <span class="n">s</span> <span class="o">!=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">*</span><span class="n">oo</span>
+    <span class="k">elif</span> <span class="n">sig</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">limitinf</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c"># e0=0: lim f = lim c0</span>
+
+</div>
+<span class="k">def</span> <span class="nf">moveup2</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">SubsSet</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">r</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))]</span> <span class="o">=</span> <span class="n">var</span>
+    <span class="k">for</span> <span class="n">var</span><span class="p">,</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">rewrites</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">rewrites</span><span class="p">[</span><span class="n">var</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rewrites</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">r</span>
+
+
+<span class="k">def</span> <span class="nf">moveup</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">l</span><span class="p">]</span>
+
+
+<span class="nd">@debug</span>
+<span class="nd">@timeit</span>
+<div class="viewcode-block" id="calculate_series"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.calculate_series">[docs]</a><span class="k">def</span> <span class="nf">calculate_series</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">skip_abs</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">logx</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Calculates at least one term of the series of &quot;e&quot; in &quot;x&quot;.</span>
+
+<span class="sd">    This is a place that fails most often, so it is in its own function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">nseries</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">logx</span><span class="o">=</span><span class="n">logx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">series</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">Order</span><span class="p">):</span>
+            <span class="c"># The series expansion is locally exact.</span>
+            <span class="k">return</span> <span class="n">series</span>
+
+        <span class="n">series</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">removeO</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">series</span> <span class="ow">and</span> <span class="p">((</span><span class="ow">not</span> <span class="n">skip_abs</span><span class="p">)</span> <span class="ow">or</span> <span class="n">series</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">series</span>
+        <span class="n">n</span> <span class="o">*=</span> <span class="mi">2</span>
+
+</div>
+<span class="nd">@debug</span>
+<span class="nd">@timeit</span>
+<span class="nd">@cacheit</span>
+<div class="viewcode-block" id="mrv_leadterm"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.mrv_leadterm">[docs]</a><span class="k">def</span> <span class="nf">mrv_leadterm</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns (c0, e0) for e.&quot;&quot;&quot;</span>
+    <span class="n">Omega</span> <span class="o">=</span> <span class="n">SubsSet</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">Omega</span> <span class="o">==</span> <span class="n">SubsSet</span><span class="p">():</span>
+        <span class="n">Omega</span><span class="p">,</span> <span class="n">exps</span> <span class="o">=</span> <span class="n">mrv</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Omega</span><span class="p">:</span>
+        <span class="c"># e really does not depend on x after simplification</span>
+        <span class="n">series</span> <span class="o">=</span> <span class="n">calculate_series</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">c0</span><span class="p">,</span> <span class="n">e0</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">leadterm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">e0</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">c0</span><span class="p">,</span> <span class="n">e0</span>
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">Omega</span><span class="p">:</span>
+        <span class="c">#move the whole omega up (exponentiate each term):</span>
+        <span class="n">Omega_up</span> <span class="o">=</span> <span class="n">moveup2</span><span class="p">(</span><span class="n">Omega</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">e_up</span> <span class="o">=</span> <span class="n">moveup</span><span class="p">([</span><span class="n">e</span><span class="p">],</span> <span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">exps_up</span> <span class="o">=</span> <span class="n">moveup</span><span class="p">([</span><span class="n">exps</span><span class="p">],</span> <span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c"># NOTE: there is no need to move this down!</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">e_up</span>
+        <span class="n">Omega</span> <span class="o">=</span> <span class="n">Omega_up</span>
+        <span class="n">exps</span> <span class="o">=</span> <span class="n">exps_up</span>
+    <span class="c">#</span>
+    <span class="c"># The positive dummy, w, is used here so log(w*2) etc. will expand;</span>
+    <span class="c"># a unique dummy is needed in this algorithm</span>
+    <span class="c">#</span>
+    <span class="c"># For limits of complex functions, the algorithm would have to be</span>
+    <span class="c"># improved, or just find limits of Re and Im components separately.</span>
+    <span class="c">#</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;w&quot;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">logw</span> <span class="o">=</span> <span class="n">rewrite</span><span class="p">(</span><span class="n">exps</span><span class="p">,</span> <span class="n">Omega</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="n">series</span> <span class="o">=</span> <span class="n">calculate_series</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">logx</span><span class="o">=</span><span class="n">logw</span><span class="p">)</span>
+    <span class="n">series</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="n">logw</span><span class="p">)</span>  <span class="c"># this should not be necessary</span>
+    <span class="k">return</span> <span class="n">series</span><span class="o">.</span><span class="n">leadterm</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="build_expression_tree"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.build_expression_tree">[docs]</a><span class="k">def</span> <span class="nf">build_expression_tree</span><span class="p">(</span><span class="n">Omega</span><span class="p">,</span> <span class="n">rewrites</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot; Helper function for rewrite.</span>
+
+<span class="sd">    We need to sort Omega (mrv set) so that we replace an expression before</span>
+<span class="sd">    we replace any expression in terms of which it has to be rewritten::</span>
+
+<span class="sd">        e1 ---&gt; e2 ---&gt; e3</span>
+<span class="sd">                 \</span>
+<span class="sd">                  -&gt; e4</span>
+
+<span class="sd">    Here we can do e1, e2, e3, e4 or e1, e2, e4, e3.</span>
+<span class="sd">    To do this we assemble the nodes into a tree, and sort them by height.</span>
+
+<span class="sd">    This function builds the tree, rewrites then sorts the nodes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">Node</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">ht</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span>
+                          <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">ht</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">before</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Omega</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">Node</span><span class="p">()</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">before</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">var</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span>
+        <span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">Omega</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rewrites</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">rewrites</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">v2</span> <span class="ow">in</span> <span class="n">Omega</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">v2</span><span class="p">):</span>
+                    <span class="n">n</span><span class="o">.</span><span class="n">before</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">v2</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">nodes</span>
+
+</div>
+<span class="nd">@debug</span>
+<span class="nd">@timeit</span>
+<div class="viewcode-block" id="rewrite"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.rewrite">[docs]</a><span class="k">def</span> <span class="nf">rewrite</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Omega</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">wsym</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;e(x) ... the function</span>
+<span class="sd">    Omega ... the mrv set</span>
+<span class="sd">    wsym ... the symbol which is going to be used for w</span>
+
+<span class="sd">    Returns the rewritten e in terms of w and log(w). See test_rewrite1()</span>
+<span class="sd">    for examples and correct results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ilcm</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Omega</span><span class="p">,</span> <span class="n">SubsSet</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">Omega</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="c">#all items in Omega must be exponentials</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">Omega</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">assert</span> <span class="n">t</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp</span>
+    <span class="n">rewrites</span> <span class="o">=</span> <span class="n">Omega</span><span class="o">.</span><span class="n">rewrites</span>
+    <span class="n">Omega</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Omega</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+    <span class="n">nodes</span> <span class="o">=</span> <span class="n">build_expression_tree</span><span class="p">(</span><span class="n">Omega</span><span class="p">,</span> <span class="n">rewrites</span><span class="p">)</span>
+    <span class="n">Omega</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">nodes</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">ht</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">g</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Omega</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c"># g is going to be the &quot;w&quot; - the simplest one in the mrv set</span>
+    <span class="n">sig</span> <span class="o">=</span> <span class="n">sign</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sig</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">wsym</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">wsym</span>  <span class="c"># if g goes to oo, substitute 1/w</span>
+    <span class="k">elif</span> <span class="n">sig</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Result depends on the sign of </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">sig</span><span class="p">)</span>
+    <span class="c">#O2 is a list, which results by rewriting each item in Omega using &quot;w&quot;</span>
+    <span class="n">O2</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">denominators</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">Omega</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">limitinf</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">g</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="n">denominators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">rewrites</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">rewrites</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">exp</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">rewrites</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">O2</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">var</span><span class="p">,</span> <span class="n">exp</span><span class="p">((</span><span class="n">arg</span> <span class="o">-</span> <span class="n">c</span><span class="o">*</span><span class="n">g</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">expand</span><span class="p">())</span><span class="o">*</span><span class="n">wsym</span><span class="o">**</span><span class="n">c</span><span class="p">))</span>
+
+    <span class="c">#Remember that Omega contains subexpressions of &quot;e&quot;. So now we find</span>
+    <span class="c">#them in &quot;e&quot; and substitute them for our rewriting, stored in O2</span>
+
+    <span class="c"># the following powsimp is necessary to automatically combine exponentials,</span>
+    <span class="c"># so that the .subs() below succeeds:</span>
+    <span class="c"># TODO this should not be necessary</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">powsimp</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;exp&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">O2</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">Omega</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+    <span class="c">#finally compute the logarithm of w (logw).</span>
+    <span class="n">logw</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">sig</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">logw</span> <span class="o">=</span> <span class="o">-</span><span class="n">logw</span>  <span class="c"># log(w)-&gt;log(1/w)=-log(w)</span>
+
+    <span class="c"># Some parts of sympy have difficulty computing series expansions with</span>
+    <span class="c"># non-integral exponents. The following heuristic improves the situation:</span>
+    <span class="n">exponent</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">ilcm</span><span class="p">,</span> <span class="n">denominators</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">wsym</span><span class="p">,</span> <span class="n">wsym</span><span class="o">**</span><span class="n">exponent</span><span class="p">)</span>
+    <span class="n">logw</span> <span class="o">/=</span> <span class="n">exponent</span>
+
+    <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">logw</span>
+
+</div>
+<div class="viewcode-block" id="gruntz"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.gruntz.gruntz">[docs]</a><span class="k">def</span> <span class="nf">gruntz</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">&quot;+&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the limit of e(z) at the point z0 using the Gruntz algorithm.</span>
+
+<span class="sd">    z0 can be any expression, including oo and -oo.</span>
+
+<span class="sd">    For dir=&quot;+&quot; (default) it calculates the limit from the right</span>
+<span class="sd">    (z-&gt;z0+) and for dir=&quot;-&quot; the limit from the left (z-&gt;z0-). For infinite z0</span>
+<span class="sd">    (oo or -oo), the dir argument doesn&#39;t matter.</span>
+
+<span class="sd">    This algorithm is fully described in the module docstring in the gruntz.py</span>
+<span class="sd">    file. It relies heavily on the series expansion. Most frequently, gruntz()</span>
+<span class="sd">    is only used if the faster limit() function (which uses heuristics) fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Second argument must be a Symbol&quot;</span><span class="p">)</span>
+
+    <span class="c">#convert all limits to the limit z-&gt;oo; sign of z is handled in limitinf</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">z0</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">limitinf</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">z0</span> <span class="o">==</span> <span class="o">-</span><span class="n">oo</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">limitinf</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="o">-</span><span class="n">z</span><span class="p">),</span> <span class="n">z</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s">&quot;-&quot;</span><span class="p">:</span>
+            <span class="n">e0</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">z0</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s">&quot;+&quot;</span><span class="p">:</span>
+            <span class="n">e0</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">z0</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;dir must be &#39;+&#39; or &#39;-&#39;&quot;</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">limitinf</span><span class="p">(</span><span class="n">e0</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="c"># This is a bit of a heuristic for nice results... we always rewrite</span>
+    <span class="c"># tractable functions in terms of familiar intractable ones.</span>
+    <span class="c"># It might be nicer to rewrite the exactly to what they were initially,</span>
+    <span class="c"># but that would take some work to implement.</span>
+    <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="s">&#39;intractable&#39;</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

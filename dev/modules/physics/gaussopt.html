@@ -1,0 +1,852 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Gaussian Optics &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Physics Module" href="index.html" />
+    <link rel="next" title="Hydrogen Wavefunctions" href="hydrogen.html" />
+    <link rel="prev" title="Physics Module" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hydrogen.html" title="Hydrogen Wavefunctions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Physics Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Physics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.gaussopt">
+<span id="gaussian-optics"></span><h1>Gaussian Optics<a class="headerlink" href="#module-sympy.physics.gaussopt" title="Permalink to this headline">¶</a></h1>
+<p>Gaussian optics.</p>
+<p>The module implements:</p>
+<ul>
+<li><p class="first">Ray transfer matrices for geometrical and gaussian optics.</p>
+<p>See RayTransferMatrix, GeometricRay and BeamParameter</p>
+</li>
+<li><p class="first">Conjugation relations for geometrical and gaussian optics.</p>
+<p>See geometric_conj*, gauss_conj and conjugate_gauss_beams</p>
+</li>
+</ul>
+<p>The conventions for the distances are as follows:</p>
+<dl class="docutils">
+<dt>focal distance</dt>
+<dd>positive for convergent lenses</dd>
+<dt>object distance</dt>
+<dd>positive for real objects</dd>
+<dt>image distance</dt>
+<dd>positive for real images</dd>
+</dl>
+<dl class="class">
+<dt id="sympy.physics.gaussopt.BeamParameter">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">BeamParameter</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for a gaussian ray in the Ray Transfer Matrix formalism.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wavelen</strong> : the wavelength,</p>
+<p><strong>z</strong> : the distance to waist, and</p>
+<p><strong>w</strong> : the waist, or</p>
+<p class="last"><strong>z_r</strong> : the rayleigh range</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r210" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[R210]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Complex_beam_parameter">http://en.wikipedia.org/wiki/Complex_beam_parameter</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">q</span>
+<span class="go">1 + 1.88679245283019*I*pi</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">q</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">1.0 + 5.92753330865999*I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">w_0</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">0.00100000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">z_r</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">5.92753330865999</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">FreeSpace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fs</span> <span class="o">=</span> <span class="n">FreeSpace</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span> <span class="o">=</span> <span class="n">fs</span><span class="o">*</span><span class="n">p</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">0.00101413072159615</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p1</span><span class="o">.</span><span class="n">w</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">0.00210803120913829</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.BeamParameter.divergence">
+<tt class="descname">divergence</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter.divergence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter.divergence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Half of the total angular spread.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">divergence</span>
+<span class="go">0.00053/pi</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.BeamParameter.gouy">
+<tt class="descname">gouy</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter.gouy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter.gouy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Gouy phase.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">gouy</span>
+<span class="go">atan(0.53/pi)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.BeamParameter.q">
+<tt class="descname">q</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter.q"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter.q" title="Permalink to this definition">¶</a></dt>
+<dd><p>The complex parameter representing the beam.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">q</span>
+<span class="go">1 + 1.88679245283019*I*pi</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.BeamParameter.radius">
+<tt class="descname">radius</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter.radius"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter.radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The radius of curvature of the phase front.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">radius</span>
+<span class="go">0.2809/pi**2 + 1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.BeamParameter.w">
+<tt class="descname">w</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter.w"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter.w" title="Permalink to this definition">¶</a></dt>
+<dd><p>The beam radius at <span class="math">\(1/e^2\)</span> intensity.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.gaussopt.BeamParameter.w_0" title="sympy.physics.gaussopt.BeamParameter.w_0"><tt class="xref py py-obj docutils literal"><span class="pre">w_0</span></tt></a></dt>
+<dd>the minimal radius of beam</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">w</span>
+<span class="go">0.001*sqrt(0.2809/pi**2 + 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.BeamParameter.w_0">
+<tt class="descname">w_0</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter.w_0"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter.w_0" title="Permalink to this definition">¶</a></dt>
+<dd><p>The beam waist (minimal radius).</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.physics.gaussopt.BeamParameter.w" title="sympy.physics.gaussopt.BeamParameter.w"><tt class="xref py py-obj docutils literal"><span class="pre">w</span></tt></a></dt>
+<dd>the beam radius at <span class="math">\(1/e^2\)</span> intensity</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">w_0</span>
+<span class="go">0.00100000000000000</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.BeamParameter.waist_approximation_limit">
+<tt class="descname">waist_approximation_limit</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#BeamParameter.waist_approximation_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.BeamParameter.waist_approximation_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>The minimal waist for which the gauss beam approximation is valid.</p>
+<p>The gauss beam is a solution to the paraxial equation. For curvatures
+that are too great it is not a valid approximation.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">BeamParameter</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">BeamParameter</span><span class="p">(</span><span class="mf">530e-9</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">waist_approximation_limit</span>
+<span class="go">1.06e-6/pi</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.CurvedMirror">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">CurvedMirror</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#CurvedMirror"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.CurvedMirror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ray Transfer Matrix for reflection from curved surface.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>R</strong> : radius of curvature (positive for concave)</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">CurvedMirror</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CurvedMirror</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[   1, 0],</span>
+<span class="go">[-2/R, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.CurvedRefraction">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">CurvedRefraction</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#CurvedRefraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.CurvedRefraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ray Transfer Matrix for refraction on curved interface.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>R</strong> : radius of curvature (positive for concave)</p>
+<p><strong>n1</strong> : refractive index of one medium</p>
+<p class="last"><strong>n2</strong> : refractive index of other medium</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">CurvedRefraction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;R n1 n2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">CurvedRefraction</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[               1,     0],</span>
+<span class="go">[(n1 - n2)/(R*n2), n1/n2]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.FlatMirror">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">FlatMirror</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#FlatMirror"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.FlatMirror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ray Transfer Matrix for reflection.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">FlatMirror</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FlatMirror</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0],</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.FlatRefraction">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">FlatRefraction</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#FlatRefraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.FlatRefraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ray Transfer Matrix for refraction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n1</strong> : refractive index of one medium</p>
+<p class="last"><strong>n2</strong> : refractive index of other medium</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">FlatRefraction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n1 n2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FlatRefraction</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[1,     0],</span>
+<span class="go">[0, n1/n2]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.FreeSpace">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">FreeSpace</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#FreeSpace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.FreeSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ray Transfer Matrix for free space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>distance</strong> :</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">FreeSpace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;d&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FreeSpace</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, d],</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.GeometricRay">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">GeometricRay</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#GeometricRay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.GeometricRay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Representation for a geometric ray in the Ray Transfer Matrix formalism.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>h</strong> : height, and</p>
+<p><strong>angle</strong> : angle, or</p>
+<p><strong>matrix</strong> : a 2x1 matrix (Matrix(2, 1, [height, angle]))</p>
+<p><strong>Examples</strong> :</p>
+<p><strong>=======</strong> :</p>
+<p><strong>&gt;&gt;&gt; from sympy.physics.gaussopt import GeometricRay, FreeSpace</strong> :</p>
+<p><strong>&gt;&gt;&gt; from sympy import symbols, Matrix</strong> :</p>
+<p><strong>&gt;&gt;&gt; d, h, angle = symbols(&#8216;d, h, angle&#8217;)</strong> :</p>
+<p><strong>&gt;&gt;&gt; GeometricRay(h, angle)</strong> :</p>
+<p><strong>Matrix([</strong> :</p>
+<p><strong>[    h],</strong> :</p>
+<p><strong>[angle]])</strong> :</p>
+<p><strong>&gt;&gt;&gt; FreeSpace(d)*GeometricRay(h, angle)</strong> :</p>
+<p><strong>Matrix([</strong> :</p>
+<p><strong>[angle*d + h],</strong> :</p>
+<p><strong>[      angle]])</strong> :</p>
+<p><strong>&gt;&gt;&gt; GeometricRay( Matrix( ((h,), (angle,)) ) )</strong> :</p>
+<p><strong>Matrix([</strong> :</p>
+<p><strong>[    h],</strong> :</p>
+<p class="last"><strong>[angle]])</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.GeometricRay.angle">
+<tt class="descname">angle</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#GeometricRay.angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.GeometricRay.angle" title="Permalink to this definition">¶</a></dt>
+<dd><p>The angle with the optical axis.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">GeometricRay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="p">,</span> <span class="n">angle</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;h, angle&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gRay</span> <span class="o">=</span> <span class="n">GeometricRay</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gRay</span><span class="o">.</span><span class="n">angle</span>
+<span class="go">angle</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.GeometricRay.height">
+<tt class="descname">height</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#GeometricRay.height"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.GeometricRay.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>The distance from the optical axis.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">GeometricRay</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h</span><span class="p">,</span> <span class="n">angle</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;h, angle&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gRay</span> <span class="o">=</span> <span class="n">GeometricRay</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gRay</span><span class="o">.</span><span class="n">height</span>
+<span class="go">h</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.RayTransferMatrix">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">RayTransferMatrix</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#RayTransferMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.RayTransferMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for a Ray Transfer Matrix.</p>
+<p>It should be used if there isn&#8217;t already a more specific subclass mentioned
+in See Also.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>parameters</strong> : A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.GeometricRay" title="sympy.physics.gaussopt.GeometricRay"><tt class="xref py py-obj docutils literal"><span class="pre">GeometricRay</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.BeamParameter" title="sympy.physics.gaussopt.BeamParameter"><tt class="xref py py-obj docutils literal"><span class="pre">BeamParameter</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.FreeSpace" title="sympy.physics.gaussopt.FreeSpace"><tt class="xref py py-obj docutils literal"><span class="pre">FreeSpace</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.FlatRefraction" title="sympy.physics.gaussopt.FlatRefraction"><tt class="xref py py-obj docutils literal"><span class="pre">FlatRefraction</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.CurvedRefraction" title="sympy.physics.gaussopt.CurvedRefraction"><tt class="xref py py-obj docutils literal"><span class="pre">CurvedRefraction</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.FlatMirror" title="sympy.physics.gaussopt.FlatMirror"><tt class="xref py py-obj docutils literal"><span class="pre">FlatMirror</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.CurvedMirror" title="sympy.physics.gaussopt.CurvedMirror"><tt class="xref py py-obj docutils literal"><span class="pre">CurvedMirror</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.ThinLens" title="sympy.physics.gaussopt.ThinLens"><tt class="xref py py-obj docutils literal"><span class="pre">ThinLens</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r211" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[R211]</a></td><td><a class="reference external" href="http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis">http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">RayTransferMatrix</span><span class="p">,</span> <span class="n">ThinLens</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Matrix</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">RayTransferMatrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 2],</span>
+<span class="go">[3, 4]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">RayTransferMatrix</span><span class="p">(</span><span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]))</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 2],</span>
+<span class="go">[3, 4]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span><span class="o">.</span><span class="n">A</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lens</span> <span class="o">=</span> <span class="n">ThinLens</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lens</span>
+<span class="go">Matrix([</span>
+<span class="go">[   1, 0],</span>
+<span class="go">[-1/f, 1]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">lens</span><span class="o">.</span><span class="n">C</span>
+<span class="go">-1/f</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.RayTransferMatrix.A">
+<tt class="descname">A</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#RayTransferMatrix.A"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.RayTransferMatrix.A" title="Permalink to this definition">¶</a></dt>
+<dd><p>The A parameter of the Matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">RayTransferMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">RayTransferMatrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span><span class="o">.</span><span class="n">A</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.RayTransferMatrix.B">
+<tt class="descname">B</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#RayTransferMatrix.B"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.RayTransferMatrix.B" title="Permalink to this definition">¶</a></dt>
+<dd><p>The B parameter of the Matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">RayTransferMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">RayTransferMatrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span><span class="o">.</span><span class="n">B</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.RayTransferMatrix.C">
+<tt class="descname">C</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#RayTransferMatrix.C"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.RayTransferMatrix.C" title="Permalink to this definition">¶</a></dt>
+<dd><p>The C parameter of the Matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">RayTransferMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">RayTransferMatrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span><span class="o">.</span><span class="n">C</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.gaussopt.RayTransferMatrix.D">
+<tt class="descname">D</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#RayTransferMatrix.D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.RayTransferMatrix.D" title="Permalink to this definition">¶</a></dt>
+<dd><p>The D parameter of the Matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">RayTransferMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span> <span class="o">=</span> <span class="n">RayTransferMatrix</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mat</span><span class="o">.</span><span class="n">D</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.gaussopt.ThinLens">
+<em class="property">class </em><tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">ThinLens</tt><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#ThinLens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.ThinLens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ray Transfer Matrix for a thin lens.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><strong>f</strong> : the focal distance</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.RayTransferMatrix" title="sympy.physics.gaussopt.RayTransferMatrix"><tt class="xref py py-obj docutils literal"><span class="pre">RayTransferMatrix</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">ThinLens</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ThinLens</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[   1, 0],</span>
+<span class="go">[-1/f, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.gaussopt.conjugate_gauss_beams">
+<tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">conjugate_gauss_beams</tt><big>(</big><em>wavelen</em>, <em>waist_in</em>, <em>waist_out</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#conjugate_gauss_beams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.conjugate_gauss_beams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the optical setup conjugating the object/image waists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wavelen</strong> : the wavelength of the beam</p>
+<p><strong>waist_in and waist_out</strong> : the waists to be conjugated</p>
+<p><strong>f</strong> : the focal distance of the element used in the conjugation</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>a tuple containing (s_in, s_out, f)</strong> :</p>
+<p><strong>s_in</strong> : the distance before the optical element</p>
+<p><strong>s_out</strong> : the distance after the optical element</p>
+<p class="last"><strong>f</strong> : the focal distance of the optical element</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">conjugate_gauss_beams</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">factor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span><span class="p">,</span> <span class="n">w_i</span><span class="p">,</span> <span class="n">w_o</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;l w_i w_o f&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">conjugate_gauss_beams</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">w_i</span><span class="p">,</span> <span class="n">w_o</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">f</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factor</span><span class="p">(</span><span class="n">conjugate_gauss_beams</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">w_i</span><span class="p">,</span> <span class="n">w_o</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">f</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 -</span>
+<span class="go">          pi**2*w_i**4/(f**2*l**2)))/w_i**2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">conjugate_gauss_beams</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">w_i</span><span class="p">,</span> <span class="n">w_o</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="n">f</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">f</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.gaussopt.gaussian_conj">
+<tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">gaussian_conj</tt><big>(</big><em>s_in</em>, <em>z_r_in</em>, <em>f</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#gaussian_conj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.gaussian_conj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conjugation relation for gaussian beams.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>s_in</strong> : the distance to optical element from the waist</p>
+<p><strong>z_r_in</strong> : the rayleigh range of the incident beam</p>
+<p><strong>f</strong> : the focal length of the optical element</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>a tuple containing (s_out, z_r_out, m)</strong> :</p>
+<p><strong>s_out</strong> : the distance between the new waist and the optical element</p>
+<p><strong>z_r_out</strong> : the rayleigh range of the emergent beam</p>
+<p class="last"><strong>m</strong> : the ration between the new and the old waists</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">gaussian_conj</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s_in</span><span class="p">,</span> <span class="n">z_r_in</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;s_in z_r_in f&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gaussian_conj</span><span class="p">(</span><span class="n">s_in</span><span class="p">,</span> <span class="n">z_r_in</span><span class="p">,</span> <span class="n">f</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">1/(-1/(s_in + z_r_in**2/(-f + s_in)) + 1/f)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gaussian_conj</span><span class="p">(</span><span class="n">s_in</span><span class="p">,</span> <span class="n">z_r_in</span><span class="p">,</span> <span class="n">f</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">z_r_in/(1 - s_in**2/f**2 + z_r_in**2/f**2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">gaussian_conj</span><span class="p">(</span><span class="n">s_in</span><span class="p">,</span> <span class="n">z_r_in</span><span class="p">,</span> <span class="n">f</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+<span class="go">1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.gaussopt.geometric_conj_ab">
+<tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">geometric_conj_ab</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#geometric_conj_ab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.geometric_conj_ab" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conjugation relation for geometrical beams under paraxial conditions.</p>
+<p>Takes the distances to the optical element and returns the needed
+focal distance.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.geometric_conj_af" title="sympy.physics.gaussopt.geometric_conj_af"><tt class="xref py py-obj docutils literal"><span class="pre">geometric_conj_af</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.geometric_conj_bf" title="sympy.physics.gaussopt.geometric_conj_bf"><tt class="xref py py-obj docutils literal"><span class="pre">geometric_conj_bf</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">geometric_conj_ab</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometric_conj_ab</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="go">a*b/(a + b)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.gaussopt.geometric_conj_af">
+<tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">geometric_conj_af</tt><big>(</big><em>a</em>, <em>f</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#geometric_conj_af"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.geometric_conj_af" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conjugation relation for geometrical beams under paraxial conditions.</p>
+<p>Takes the object distance (for geometric_conj_af) or the image distance
+(for geometric_conj_bf) to the optical element and the focal distance.
+Then it returns the other distance needed for conjugation.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.geometric_conj_ab" title="sympy.physics.gaussopt.geometric_conj_ab"><tt class="xref py py-obj docutils literal"><span class="pre">geometric_conj_ab</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">geometric_conj_af</span><span class="p">,</span> <span class="n">geometric_conj_bf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometric_conj_af</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+<span class="go">a*f/(a - f)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometric_conj_bf</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+<span class="go">b*f/(b - f)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.gaussopt.geometric_conj_bf">
+<tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">geometric_conj_bf</tt><big>(</big><em>a</em>, <em>f</em><big>)</big><a class="headerlink" href="#sympy.physics.gaussopt.geometric_conj_bf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conjugation relation for geometrical beams under paraxial conditions.</p>
+<p>Takes the object distance (for geometric_conj_af) or the image distance
+(for geometric_conj_bf) to the optical element and the focal distance.
+Then it returns the other distance needed for conjugation.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.geometric_conj_ab" title="sympy.physics.gaussopt.geometric_conj_ab"><tt class="xref py py-obj docutils literal"><span class="pre">geometric_conj_ab</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">geometric_conj_af</span><span class="p">,</span> <span class="n">geometric_conj_bf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;a b f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometric_conj_af</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+<span class="go">a*f/(a - f)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">geometric_conj_bf</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+<span class="go">b*f/(b - f)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.gaussopt.rayleigh2waist">
+<tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">rayleigh2waist</tt><big>(</big><em>z_r</em>, <em>wavelen</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#rayleigh2waist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.rayleigh2waist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the waist from the rayleigh range of a gaussian beam.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.waist2rayleigh" title="sympy.physics.gaussopt.waist2rayleigh"><tt class="xref py py-obj docutils literal"><span class="pre">waist2rayleigh</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.BeamParameter" title="sympy.physics.gaussopt.BeamParameter"><tt class="xref py py-obj docutils literal"><span class="pre">BeamParameter</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">rayleigh2waist</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z_r</span><span class="p">,</span> <span class="n">wavelen</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;z_r wavelen&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rayleigh2waist</span><span class="p">(</span><span class="n">z_r</span><span class="p">,</span> <span class="n">wavelen</span><span class="p">)</span>
+<span class="go">sqrt(wavelen*z_r)/sqrt(pi)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.gaussopt.waist2rayleigh">
+<tt class="descclassname">sympy.physics.gaussopt.</tt><tt class="descname">waist2rayleigh</tt><big>(</big><em>w</em>, <em>wavelen</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/gaussopt.html#waist2rayleigh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.gaussopt.waist2rayleigh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the rayleigh range from the waist of a gaussian beam.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.physics.gaussopt.rayleigh2waist" title="sympy.physics.gaussopt.rayleigh2waist"><tt class="xref py py-obj docutils literal"><span class="pre">rayleigh2waist</span></tt></a>, <a class="reference internal" href="#sympy.physics.gaussopt.BeamParameter" title="sympy.physics.gaussopt.BeamParameter"><tt class="xref py py-obj docutils literal"><span class="pre">BeamParameter</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.gaussopt</span> <span class="kn">import</span> <span class="n">waist2rayleigh</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span><span class="p">,</span> <span class="n">wavelen</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;w wavelen&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">waist2rayleigh</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">wavelen</span><span class="p">)</span>
+<span class="go">pi*w**2/wavelen</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Physics Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hydrogen.html"
+                        title="next chapter">Hydrogen Wavefunctions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/physics/gaussopt.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hydrogen.html" title="Hydrogen Wavefunctions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Physics Module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Physics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

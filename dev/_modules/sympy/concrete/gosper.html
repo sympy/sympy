@@ -1,0 +1,336 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.concrete.gosper &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.concrete.gosper</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Gosper&#39;s algorithm for hypergeometric summation. &quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">symbols</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">is_sequence</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.polys</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">parallel_poly_from_expr</span><span class="p">,</span> <span class="n">factor</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">hypersimp</span>
+
+
+<div class="viewcode-block" id="gosper_normal"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.gosper.gosper_normal">[docs]</a><span class="k">def</span> <span class="nf">gosper_normal</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">polys</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Compute the Gosper&#39;s normal form of ``f`` and ``g``.</span>
+
+<span class="sd">    Given relatively prime univariate polynomials ``f`` and ``g``,</span>
+<span class="sd">    rewrite their quotient to a normal form defined as follows:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \frac{f(n)}{g(n)} = Z \cdot \frac{A(n) C(n+1)}{B(n) C(n)}</span>
+
+<span class="sd">    where ``Z`` is an arbitrary constant and ``A``, ``B``, ``C`` are</span>
+<span class="sd">    monic polynomials in ``n`` with the following properties:</span>
+
+<span class="sd">    1. `\gcd(A(n), B(n+h)) = 1 \forall h \in \mathbb{N}`</span>
+<span class="sd">    2. `\gcd(B(n), C(n+1)) = 1`</span>
+<span class="sd">    3. `\gcd(A(n), C(n)) = 1`</span>
+
+<span class="sd">    This normal form, or rational factorization in other words, is a</span>
+<span class="sd">    crucial step in Gosper&#39;s algorithm and in solving of difference</span>
+<span class="sd">    equations. It can be also used to decide if two hypergeometric</span>
+<span class="sd">    terms are similar or not.</span>
+
+<span class="sd">    This procedure will return a tuple containing elements of this</span>
+<span class="sd">    factorization in the form ``(Z*A, B, C)``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.gosper import gosper_normal</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n</span>
+
+<span class="sd">    &gt;&gt;&gt; gosper_normal(4*n+5, 2*(4*n+1)*(2*n+3), n, polys=False)</span>
+<span class="sd">    (1/4, n + 3/2, n + 1/4)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">),</span> <span class="n">opt</span> <span class="o">=</span> <span class="n">parallel_poly_from_expr</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">),</span> <span class="n">n</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">a</span><span class="p">,</span> <span class="n">A</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">LC</span><span class="p">(),</span> <span class="n">p</span><span class="o">.</span><span class="n">monic</span><span class="p">()</span>
+    <span class="n">b</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">LC</span><span class="p">(),</span> <span class="n">q</span><span class="o">.</span><span class="n">monic</span><span class="p">()</span>
+
+    <span class="n">C</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">one</span><span class="p">,</span> <span class="n">a</span><span class="o">/</span><span class="n">b</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;h&#39;</span><span class="p">)</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">h</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">opt</span><span class="o">.</span><span class="n">domain</span><span class="p">)</span>
+
+    <span class="n">R</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">resultant</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">compose</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">ground_roots</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">roots</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">or</span> <span class="n">r</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">roots</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">roots</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">+</span><span class="n">i</span><span class="p">))</span>
+
+        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">i</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">C</span> <span class="o">*=</span> <span class="n">d</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">j</span><span class="p">)</span>
+
+    <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">mul_ground</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">polys</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span>
+
+</div>
+<div class="viewcode-block" id="gosper_term"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.gosper.gosper_term">[docs]</a><span class="k">def</span> <span class="nf">gosper_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Compute Gosper&#39;s hypergeometric term for ``f``.</span>
+
+<span class="sd">    Suppose ``f`` is a hypergeometric term such that:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        s_n = \sum_{k=0}^{n-1} f_k</span>
+
+<span class="sd">    and `f_k` doesn&#39;t depend on `n`. Returns a hypergeometric</span>
+<span class="sd">    term `g_n` such that `g_{n+1} - g_n = f_n`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.gosper import gosper_term</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.functions import factorial</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n</span>
+
+<span class="sd">    &gt;&gt;&gt; gosper_term((4*n + 1)*factorial(n)/factorial(2*n + 1), n)</span>
+<span class="sd">    (-n - 1/2)/(n + 1/4)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">hypersimp</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>    <span class="c"># &#39;f&#39; is *not* a hypergeometric term</span>
+
+    <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+
+    <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">gosper_normal</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">N</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">degree</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">N</span> <span class="o">!=</span> <span class="n">M</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">LC</span><span class="p">()</span> <span class="o">!=</span> <span class="n">B</span><span class="o">.</span><span class="n">LC</span><span class="p">()):</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">K</span> <span class="o">-</span> <span class="nb">max</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">M</span><span class="p">)])</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">N</span><span class="p">:</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">K</span> <span class="o">-</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">K</span> <span class="o">-</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">nth</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">A</span><span class="o">.</span><span class="n">nth</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">A</span><span class="o">.</span><span class="n">LC</span><span class="p">()])</span>
+
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">D</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">or</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">D</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">D</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>    <span class="c"># &#39;f(n)&#39; is *not* Gosper-summable</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;c:</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">cls</span><span class="o">=</span><span class="n">Dummy</span><span class="p">)</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">get_domain</span><span class="p">()</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="o">*</span><span class="n">coeffs</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">coeffs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">A</span><span class="o">*</span><span class="n">x</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="n">C</span>
+
+    <span class="n">solution</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">coeffs</span><span class="p">(),</span> <span class="n">coeffs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">solution</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>    <span class="c"># &#39;f(n)&#39; is *not* Gosper-summable</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coeff</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">solution</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>    <span class="c"># &#39;f(n)&#39; is *not* Gosper-summable</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">B</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">C</span><span class="o">.</span><span class="n">as_expr</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="gosper_sum"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.gosper.gosper_sum">[docs]</a><span class="k">def</span> <span class="nf">gosper_sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Gosper&#39;s hypergeometric summation algorithm.</span>
+
+<span class="sd">    Given a hypergeometric term ``f`` such that:</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        s_n = \sum_{k=0}^{n-1} f_k</span>
+
+<span class="sd">    and `f(n)` doesn&#39;t depend on `n`, returns `g_{n} - g(0)` where</span>
+<span class="sd">    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed</span>
+<span class="sd">    in closed form as a sum of hypergeometric terms.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.gosper import gosper_sum</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.functions import factorial</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import i, n, k</span>
+
+<span class="sd">    &gt;&gt;&gt; f = (4*k + 1)*factorial(k)/factorial(2*k + 1)</span>
+<span class="sd">    &gt;&gt;&gt; gosper_sum(f, (k, 0, n))</span>
+<span class="sd">    (-factorial(n) + 2*factorial(2*n + 1))/factorial(2*n + 1)</span>
+<span class="sd">    &gt;&gt;&gt; _.subs(n, 2) == sum(f.subs(k, i) for i in [0, 1, 2])</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; gosper_sum(f, (k, 3, n))</span>
+<span class="sd">    (-60*factorial(n) + factorial(2*n + 1))/(60*factorial(2*n + 1))</span>
+<span class="sd">    &gt;&gt;&gt; _.subs(n, 5) == sum(f.subs(k, i) for i in [3, 4, 5])</span>
+<span class="sd">    True</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Marko Petkovsek, Herbert S. Wilf, Doron Zeilberger, A = B,</span>
+<span class="sd">           AK Peters, Ltd., Wellesley, MA, USA, 1997, pp. 73--100</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">indefinite</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+        <span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">k</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">indefinite</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">gosper_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">indefinite</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">f</span><span class="o">*</span><span class="n">g</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="p">(</span><span class="n">g</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="p">(</span><span class="n">g</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="n">factor</span><span class="p">(</span><span class="n">result</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

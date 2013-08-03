@@ -1,0 +1,626 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.printing.pretty.stringpict &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.printing.pretty.stringpict</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Prettyprinter by Jurjen Bos.</span>
+<span class="sd">(I hate spammers: mail me at pietjepuk314 at the reverse of ku.oc.oohay).</span>
+<span class="sd">All objects have a method that create a &quot;stringPict&quot;,</span>
+<span class="sd">that can be used in the str method for pretty printing.</span>
+
+<span class="sd">Updates by Jason Gedge (email &lt;my last name&gt; at cs mun ca)</span>
+<span class="sd">    - terminal_string() method</span>
+<span class="sd">    - minor fixes and changes (mostly to prettyForm)</span>
+
+<span class="sd">TODO:</span>
+<span class="sd">    - Allow left/center/right alignment options for above/below and</span>
+<span class="sd">      top/center/bottom alignment options for left/right</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">.pretty_symbology</span> <span class="kn">import</span> <span class="n">hobj</span><span class="p">,</span> <span class="n">vobj</span><span class="p">,</span> <span class="n">xsym</span><span class="p">,</span> <span class="n">xobj</span><span class="p">,</span> <span class="n">pretty_use_unicode</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">u</span><span class="p">,</span> <span class="n">string_types</span><span class="p">,</span> <span class="nb">xrange</span>
+
+
+<div class="viewcode-block" id="stringPict"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict">[docs]</a><span class="k">class</span> <span class="nc">stringPict</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An ASCII picture.</span>
+<span class="sd">    The pictures are represented as a list of equal length strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#special value for stringPict.below</span>
+    <span class="n">LINE</span> <span class="o">=</span> <span class="s">&#39;line&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">baseline</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize from string.</span>
+<span class="sd">        Multiline strings are centered.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#picture is a string that just can be printed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">picture</span> <span class="o">=</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">equalLengths</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+        <span class="c">#baseline is the line number of the &quot;base line&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">baseline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binding</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">equalLengths</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+        <span class="c"># empty lines</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="p">]</span>
+
+        <span class="n">width</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">width</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+
+<div class="viewcode-block" id="stringPict.height"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.height">[docs]</a>    <span class="k">def</span> <span class="nf">height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The height of the picture in characters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="stringPict.width"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.width">[docs]</a>    <span class="k">def</span> <span class="nf">width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The width of the picture in characters.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="stringPict.next"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Put a string of stringPicts next to each other.</span>
+<span class="sd">        Returns string, baseline arguments for stringPict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#convert everything to stringPicts</span>
+        <span class="n">objects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="n">objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="c">#make a list of pictures, with equal height and baseline</span>
+        <span class="n">newBaseline</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">baseline</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">)</span>
+        <span class="n">newHeightBelowBaseline</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="n">obj</span><span class="o">.</span><span class="n">baseline</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">)</span>
+        <span class="n">newHeight</span> <span class="o">=</span> <span class="n">newBaseline</span> <span class="o">+</span> <span class="n">newHeightBelowBaseline</span>
+
+        <span class="n">pictures</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+            <span class="n">oneEmptyLine</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">obj</span><span class="o">.</span><span class="n">width</span><span class="p">()]</span>
+            <span class="n">basePadding</span> <span class="o">=</span> <span class="n">newBaseline</span> <span class="o">-</span> <span class="n">obj</span><span class="o">.</span><span class="n">baseline</span>
+            <span class="n">totalPadding</span> <span class="o">=</span> <span class="n">newHeight</span> <span class="o">-</span> <span class="n">obj</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+            <span class="n">pictures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">oneEmptyLine</span> <span class="o">*</span> <span class="n">basePadding</span> <span class="o">+</span>
+                <span class="n">obj</span><span class="o">.</span><span class="n">picture</span> <span class="o">+</span>
+                <span class="n">oneEmptyLine</span> <span class="o">*</span> <span class="p">(</span><span class="n">totalPadding</span> <span class="o">-</span> <span class="n">basePadding</span><span class="p">))</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="k">for</span> <span class="n">lines</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">pictures</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">newBaseline</span>
+</div>
+<div class="viewcode-block" id="stringPict.right"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.right">[docs]</a>    <span class="k">def</span> <span class="nf">right</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;Put pictures next to this one.</span>
+<span class="sd">        Returns string, baseline arguments for stringPict.</span>
+<span class="sd">        (Multiline) strings are allowed, and are given a baseline of 0.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.printing.pretty.stringpict import stringPict</span>
+<span class="sd">        &gt;&gt;&gt; print(stringPict(&quot;10&quot;).right(&quot; + &quot;,stringPict(&quot;1\r-\r2&quot;,1))[0])</span>
+<span class="sd">             1</span>
+<span class="sd">        10 + -</span>
+<span class="sd">             2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="stringPict.left"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.left">[docs]</a>    <span class="k">def</span> <span class="nf">left</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Put pictures (left to right) at left.</span>
+<span class="sd">        Returns string, baseline arguments for stringPict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">args</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="p">,)))</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="stringPict.stack"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.stack">[docs]</a>    <span class="k">def</span> <span class="nf">stack</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Put pictures on top of each other,</span>
+<span class="sd">        from top to bottom.</span>
+<span class="sd">        Returns string, baseline arguments for stringPict.</span>
+<span class="sd">        The baseline is the baseline of the second picture.</span>
+<span class="sd">        Everything is centered.</span>
+<span class="sd">        Baseline is the baseline of the second picture.</span>
+<span class="sd">        Strings are allowed.</span>
+<span class="sd">        The special value stringPict.LINE is a row of &#39;-&#39; extended to the width.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#convert everything to stringPicts; keep LINE</span>
+        <span class="n">objects</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">LINE</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="n">objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="c">#compute new width</span>
+        <span class="n">newWidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objects</span>
+            <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">LINE</span><span class="p">)</span>
+
+        <span class="n">lineObj</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="n">hobj</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">,</span> <span class="n">newWidth</span><span class="p">))</span>
+
+        <span class="c">#replace LINE with proper lines</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">objects</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">LINE</span><span class="p">:</span>
+                <span class="n">objects</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">lineObj</span>
+
+        <span class="c">#stack the pictures, and center the result</span>
+        <span class="n">newPicture</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objects</span><span class="p">:</span>
+            <span class="n">newPicture</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">picture</span><span class="p">)</span>
+        <span class="n">newPicture</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">newWidth</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">newPicture</span><span class="p">]</span>
+        <span class="n">newBaseline</span> <span class="o">=</span> <span class="n">objects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">+</span> <span class="n">objects</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">baseline</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">newPicture</span><span class="p">),</span> <span class="n">newBaseline</span>
+</div>
+<div class="viewcode-block" id="stringPict.below"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.below">[docs]</a>    <span class="k">def</span> <span class="nf">below</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Put pictures under this picture.</span>
+<span class="sd">        Returns string, baseline arguments for stringPict.</span>
+<span class="sd">        Baseline is baseline of top picture</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.printing.pretty.stringpict import stringPict</span>
+<span class="sd">        &gt;&gt;&gt; print(stringPict(&quot;x+3&quot;).below(</span>
+<span class="sd">        ...       stringPict.LINE, &#39;3&#39;)[0]) #doctest: +NORMALIZE_WHITESPACE</span>
+<span class="sd">        x+3</span>
+<span class="sd">        ---</span>
+<span class="sd">         3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">baseline</span> <span class="o">=</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span>
+</div>
+<div class="viewcode-block" id="stringPict.above"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.above">[docs]</a>    <span class="k">def</span> <span class="nf">above</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Put pictures above this picture.</span>
+<span class="sd">        Returns string, baseline arguments for stringPict.</span>
+<span class="sd">        Baseline is baseline of bottom picture.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">string</span><span class="p">,</span> <span class="n">baseline</span> <span class="o">=</span> <span class="n">stringPict</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">args</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="p">,)))</span>
+        <span class="n">baseline</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span>
+        <span class="k">return</span> <span class="n">string</span><span class="p">,</span> <span class="n">baseline</span>
+</div>
+<div class="viewcode-block" id="stringPict.parens"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.parens">[docs]</a>    <span class="k">def</span> <span class="nf">parens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="s">&#39;(&#39;</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="s">&#39;)&#39;</span><span class="p">,</span> <span class="n">ifascii_nougly</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Put parentheses around self.</span>
+<span class="sd">        Returns string, baseline arguments for stringPict.</span>
+
+<span class="sd">        left or right can be None or empty string which means &#39;no paren from</span>
+<span class="sd">        that side&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span>
+
+        <span class="c"># XXX this is a hack -- ascii parens are ugly!</span>
+        <span class="k">if</span> <span class="n">ifascii_nougly</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">pretty_use_unicode</span><span class="p">():</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="k">if</span> <span class="n">left</span><span class="p">:</span>
+            <span class="n">lparen</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="n">vobj</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">h</span><span class="p">),</span> <span class="n">baseline</span><span class="o">=</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">lparen</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">right</span><span class="p">:</span>
+            <span class="n">rparen</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="n">vobj</span><span class="p">(</span><span class="n">right</span><span class="p">,</span> <span class="n">h</span><span class="p">),</span> <span class="n">baseline</span><span class="o">=</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">res</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">rparen</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">picture</span><span class="p">),</span> <span class="n">res</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="stringPict.leftslash"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.leftslash">[docs]</a>    <span class="k">def</span> <span class="nf">leftslash</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Precede object by a slash of the proper size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># XXX not used anywhere ?</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">slash</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="n">height</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">xobj</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">i</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">stringPict</span><span class="p">(</span><span class="n">slash</span><span class="p">,</span> <span class="n">height</span><span class="o">//</span><span class="mi">2</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="stringPict.root"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.root">[docs]</a>    <span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Produce a nice root symbol.</span>
+<span class="sd">        Produces ugly results for big n inserts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># XXX not used anywhere</span>
+        <span class="c"># XXX duplicate of root drawing in pretty.py</span>
+        <span class="c">#put line over expression</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">above</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">())</span>
+        <span class="c">#construct right half of root symbol</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+        <span class="n">slash</span> <span class="o">=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">height</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">*</span> <span class="n">i</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">slash</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="n">slash</span><span class="p">,</span> <span class="n">height</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c">#left half of root symbol</span>
+        <span class="k">if</span> <span class="n">height</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">downline</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s"> </span><span class="se">\n</span><span class="s"> </span><span class="se">\\</span><span class="s">&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">downline</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="c">#put n on top, as low as possible</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">n</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">downline</span><span class="o">.</span><span class="n">width</span><span class="p">():</span>
+            <span class="n">downline</span> <span class="o">=</span> <span class="n">downline</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">-</span> <span class="n">downline</span><span class="o">.</span><span class="n">width</span><span class="p">()))</span>
+            <span class="n">downline</span> <span class="o">=</span> <span class="n">downline</span><span class="o">.</span><span class="n">above</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="c">#build root symbol</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">downline</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">slash</span><span class="p">)</span>
+        <span class="c">#glue it on at the proper height</span>
+        <span class="c">#normally, the root symbel is as high as self</span>
+        <span class="c">#which is one less than result</span>
+        <span class="c">#this moves the root symbol one down</span>
+        <span class="c">#if the root became higher, the baseline has to grow too</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">baseline</span> <span class="o">-</span> <span class="n">result</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">+</span> <span class="n">root</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="stringPict.render"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span> <span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the string form of self.</span>
+
+<span class="sd">           Unless the argument line_break is set to False, it will</span>
+<span class="sd">           break the expression in a form that can be printed</span>
+<span class="sd">           on the terminal without being broken up.</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&quot;wrap_line&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&quot;num_columns&quot;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Read the argument num_columns if it is not None</span>
+            <span class="n">ncols</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&quot;num_columns&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Attempt to get a terminal width</span>
+            <span class="n">ncols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminal_width</span><span class="p">()</span>
+
+        <span class="n">ncols</span> <span class="o">-=</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="n">ncols</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ncols</span> <span class="o">=</span> <span class="mi">78</span>
+
+        <span class="c"># If smaller than the terminal width, no need to correct</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">ncols</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">[</span><span class="mi">0</span><span class="p">])(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="c"># for one-line pictures we don&#39;t need v-spacers. on the other hand, for</span>
+        <span class="c"># multiline-pictures, we need v-spacers between blocks, compare:</span>
+        <span class="c">#</span>
+        <span class="c">#    2  2        3    | a*c*e + a*c*f + a*d  | a*c*e + a*c*f + a*d  | 3.14159265358979323</span>
+        <span class="c"># 6*x *y  + 4*x*y  +  |                      | *e + a*d*f + b*c*e   | 84626433832795</span>
+        <span class="c">#                     | *e + a*d*f + b*c*e   | + b*c*f + b*d*e + b  |</span>
+        <span class="c">#      3    4    4    |                      | *d*f                 |</span>
+        <span class="c"># 4*y*x  + x  + y     | + b*c*f + b*d*e + b  |                      |</span>
+        <span class="c">#                     |                      |                      |</span>
+        <span class="c">#                     | *d*f</span>
+
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">svals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">do_vspacers</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">():</span>
+            <span class="n">svals</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span> <span class="n">sval</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span> <span class="o">+</span> <span class="n">ncols</span><span class="p">]</span> <span class="k">for</span> <span class="n">sval</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">picture</span> <span class="p">])</span>
+            <span class="k">if</span> <span class="n">do_vspacers</span><span class="p">:</span>
+                <span class="n">svals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>  <span class="c"># a vertical spacer</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="n">ncols</span>
+
+        <span class="k">if</span> <span class="n">svals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">svals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c"># Get rid of the last spacer</span>
+
+        <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">svals</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="stringPict.terminal_width"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.stringPict.terminal_width">[docs]</a>    <span class="k">def</span> <span class="nf">terminal_width</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the terminal width if possible, otherwise return 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ncols</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">curses</span>
+            <span class="kn">import</span> <span class="nn">io</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">curses</span><span class="o">.</span><span class="n">setupterm</span><span class="p">()</span>
+                <span class="n">ncols</span> <span class="o">=</span> <span class="n">curses</span><span class="o">.</span><span class="n">tigetnum</span><span class="p">(</span><span class="s">&#39;cols&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="c"># windows curses doesn&#39;t implement setupterm or tigetnum</span>
+                <span class="c"># code below from</span>
+                <span class="c"># http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/440694</span>
+                <span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="n">windll</span><span class="p">,</span> <span class="n">create_string_buffer</span>
+                <span class="c"># stdin handle is -10</span>
+                <span class="c"># stdout handle is -11</span>
+                <span class="c"># stderr handle is -12</span>
+                <span class="n">h</span> <span class="o">=</span> <span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span><span class="o">.</span><span class="n">GetStdHandle</span><span class="p">(</span><span class="o">-</span><span class="mi">12</span><span class="p">)</span>
+                <span class="n">csbi</span> <span class="o">=</span> <span class="n">create_string_buffer</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">windll</span><span class="o">.</span><span class="n">kernel32</span><span class="o">.</span><span class="n">GetConsoleScreenBufferInfo</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">csbi</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+                    <span class="kn">import</span> <span class="nn">struct</span>
+                    <span class="p">(</span><span class="n">bufx</span><span class="p">,</span> <span class="n">bufy</span><span class="p">,</span> <span class="n">curx</span><span class="p">,</span> <span class="n">cury</span><span class="p">,</span> <span class="n">wattr</span><span class="p">,</span>
+                     <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">maxx</span><span class="p">,</span> <span class="n">maxy</span><span class="p">)</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s">&quot;hhhhHhhhhhh&quot;</span><span class="p">,</span> <span class="n">csbi</span><span class="o">.</span><span class="n">raw</span><span class="p">)</span>
+                    <span class="n">ncols</span> <span class="o">=</span> <span class="n">right</span> <span class="o">-</span> <span class="n">left</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="n">curses</span><span class="o">.</span><span class="n">error</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">except</span> <span class="n">io</span><span class="o">.</span><span class="n">UnsupportedOperation</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">return</span> <span class="n">ncols</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">)</span> <span class="o">==</span> <span class="n">o</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">stringPict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">picture</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">picture</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">stringPict</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">unicode</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">u</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;stringPict(</span><span class="si">%r</span><span class="s">,</span><span class="si">%d</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="prettyForm"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.prettyForm">[docs]</a><span class="k">class</span> <span class="nc">prettyForm</span><span class="p">(</span><span class="n">stringPict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extension of the stringPict class that knows about basic math applications,</span>
+<span class="sd">    optimizing double minus signs.</span>
+
+<span class="sd">    &quot;Binding&quot; is interpreted as follows::</span>
+
+<span class="sd">        ATOM this is an atom: never needs to be parenthesized</span>
+<span class="sd">        FUNC this is a function application: parenthesize if added (?)</span>
+<span class="sd">        DIV  this is a division: make wider division if divided</span>
+<span class="sd">        POW  this is a power: only parenthesize if exponent</span>
+<span class="sd">        MUL  this is a multiplication: parenthesize if powered</span>
+<span class="sd">        ADD  this is an addition: parenthesize if multiplied or powered</span>
+<span class="sd">        NEG  this is a negative number: optimize if added, parenthesize if</span>
+<span class="sd">             multiplied or powered</span>
+<span class="sd">        OPEN this is an open object: parenthesize if added, multiplied, or</span>
+<span class="sd">             powered (example: Piecewise)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ATOM</span><span class="p">,</span> <span class="n">FUNC</span><span class="p">,</span> <span class="n">DIV</span><span class="p">,</span> <span class="n">POW</span><span class="p">,</span> <span class="n">MUL</span><span class="p">,</span> <span class="n">ADD</span><span class="p">,</span> <span class="n">NEG</span><span class="p">,</span> <span class="n">OPEN</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">baseline</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">binding</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">unicode</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize from stringPict and binding power.&quot;&quot;&quot;</span>
+        <span class="n">stringPict</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">baseline</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">binding</span> <span class="o">=</span> <span class="n">binding</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unicode</span> <span class="o">=</span> <span class="nb">unicode</span> <span class="ow">or</span> <span class="n">s</span>
+
+    <span class="c"># Note: code to handle subtraction is in _print_Add</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a pretty addition.</span>
+<span class="sd">        Addition of negative numbers is simplified.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">binding</span> <span class="o">&gt;</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">NEG</span><span class="p">:</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">others</span><span class="p">:</span>
+            <span class="c">#add parentheses for weak binders</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">binding</span> <span class="o">&gt;</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">NEG</span><span class="p">:</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+            <span class="c">#use existing minus sign if available</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">binding</span> <span class="o">!=</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">NEG</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39; + &#39;</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">binding</span><span class="o">=</span><span class="n">prettyForm</span><span class="o">.</span><span class="n">ADD</span><span class="p">,</span> <span class="o">*</span><span class="n">stringPict</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">den</span><span class="p">,</span> <span class="n">slashed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a pretty division; stacked or slashed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">slashed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Can&#39;t do slashed fraction yet&quot;</span><span class="p">)</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">num</span><span class="o">.</span><span class="n">binding</span> <span class="o">==</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">DIV</span><span class="p">:</span>
+            <span class="n">num</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">num</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">den</span><span class="o">.</span><span class="n">binding</span> <span class="o">==</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">DIV</span><span class="p">:</span>
+            <span class="n">den</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">den</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">num</span><span class="o">.</span><span class="n">binding</span><span class="o">==</span><span class="n">prettyForm</span><span class="o">.</span><span class="n">NEG</span><span class="p">:</span>
+            <span class="n">num</span> <span class="o">=</span> <span class="n">num</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">binding</span><span class="o">=</span><span class="n">prettyForm</span><span class="o">.</span><span class="n">DIV</span><span class="p">,</span> <span class="o">*</span><span class="n">stringPict</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="n">num</span><span class="p">,</span>
+            <span class="n">stringPict</span><span class="o">.</span><span class="n">LINE</span><span class="p">,</span>
+            <span class="n">den</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__div__</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">others</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a pretty multiplication.</span>
+<span class="sd">        Parentheses are needed around +, - and neg.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">others</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="c"># We aren&#39;t actually multiplying... So nothing to do here.</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">binding</span> <span class="o">&gt;</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">MUL</span><span class="p">:</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">others</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xsym</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">))</span>
+            <span class="c">#add parentheses for weak binders</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">binding</span> <span class="o">&gt;</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">MUL</span><span class="p">:</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">arg</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="n">len_res</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">len_res</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">len_res</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;-1&#39;</span> <span class="ow">and</span> <span class="n">result</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">xsym</span><span class="p">(</span><span class="s">&#39;*&#39;</span><span class="p">):</span>
+                <span class="c"># substitute -1 by -, like in -1*x -&gt; -x</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span><span class="p">:</span>
+            <span class="c"># if there is a - sign in front of all</span>
+            <span class="c"># This test was failing to catch a prettyForm.__mul__(prettyForm(&quot;-1&quot;, 0, 6)) being negative</span>
+            <span class="nb">bin</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">NEG</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">bin</span> <span class="o">=</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">MUL</span>
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">binding</span><span class="o">=</span><span class="nb">bin</span><span class="p">,</span> <span class="o">*</span><span class="n">stringPict</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="o">*</span><span class="n">result</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;prettyForm(</span><span class="si">%r</span><span class="s">,</span><span class="si">%d</span><span class="s">,</span><span class="si">%d</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">picture</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">binding</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make a pretty power.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">binding</span> <span class="o">&gt;</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">FUNC</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">binding</span> <span class="o">==</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">POW</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">binding</span> <span class="o">==</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">FUNC</span><span class="p">:</span>
+            <span class="c">#         2</span>
+            <span class="c">#  sin  +   + (x)</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">baseline</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">prettyFunc</span><span class="o">.</span><span class="n">baseline</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="o">.</span><span class="n">prettyFunc</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="o">*</span><span class="n">func</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">prettyArgs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#      2    &lt;-- top</span>
+            <span class="c"># (x+y)     &lt;-- bot</span>
+            <span class="n">top</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">a</span><span class="o">.</span><span class="n">width</span><span class="p">()))</span>
+            <span class="n">bot</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="o">.</span><span class="n">right</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="o">*</span><span class="n">b</span><span class="o">.</span><span class="n">width</span><span class="p">()))</span>
+
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">binding</span><span class="o">=</span><span class="n">prettyForm</span><span class="o">.</span><span class="n">POW</span><span class="p">,</span> <span class="o">*</span><span class="n">bot</span><span class="o">.</span><span class="n">above</span><span class="p">(</span><span class="n">top</span><span class="p">))</span>
+
+    <span class="n">simpleFunctions</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;sin&quot;</span><span class="p">,</span> <span class="s">&quot;cos&quot;</span><span class="p">,</span> <span class="s">&quot;tan&quot;</span><span class="p">]</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="prettyForm.apply"><a class="viewcode-back" href="../../../../modules/printing.html#sympy.printing.pretty.stringpict.prettyForm.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Functions of one or more variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">simpleFunctions</span><span class="p">:</span>
+            <span class="c">#simple function: use only space if possible</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Simple function </span><span class="si">%s</span><span class="s"> must have 1 argument&quot;</span> <span class="o">%</span> <span class="n">function</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">__pretty__</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">binding</span> <span class="o">&lt;=</span> <span class="n">prettyForm</span><span class="o">.</span><span class="n">DIV</span><span class="p">:</span>
+                <span class="c">#optimization: no parentheses necessary</span>
+                <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">binding</span><span class="o">=</span><span class="n">prettyForm</span><span class="o">.</span><span class="n">FUNC</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">function</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="p">))</span>
+        <span class="n">argumentList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">argumentList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+            <span class="n">argumentList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">__pretty__</span><span class="p">())</span>
+        <span class="n">argumentList</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">stringPict</span><span class="o">.</span><span class="n">next</span><span class="p">(</span><span class="o">*</span><span class="n">argumentList</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+        <span class="n">argumentList</span> <span class="o">=</span> <span class="n">stringPict</span><span class="p">(</span><span class="o">*</span><span class="n">argumentList</span><span class="o">.</span><span class="n">parens</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">prettyForm</span><span class="p">(</span><span class="n">binding</span><span class="o">=</span><span class="n">prettyForm</span><span class="o">.</span><span class="n">ATOM</span><span class="p">,</span> <span class="o">*</span><span class="n">argumentList</span><span class="o">.</span><span class="n">left</span><span class="p">(</span><span class="n">function</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

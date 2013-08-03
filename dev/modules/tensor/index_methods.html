@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Methods &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Tensor Module" href="index.html" />
+    <link rel="next" title="Tensor" href="tensor.html" />
+    <link rel="prev" title="Indexed Objects" href="indexed.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tensor.html" title="Tensor"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="indexed.html" title="Indexed Objects"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Tensor Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.tensor.index_methods">
+<span id="methods"></span><h1>Methods<a class="headerlink" href="#module-sympy.tensor.index_methods" title="Permalink to this headline">¶</a></h1>
+<p>Module with functions operating on IndexedBase, Indexed and Idx objects</p>
+<ul class="simple">
+<li>Check shape conformance</li>
+<li>Determine indices in resulting expression</li>
+</ul>
+<p>etc.</p>
+<p>Methods in this module could be implemented by calling methods on Expr
+objects instead.  When things stabilize this could be a useful
+refactoring.</p>
+<dl class="function">
+<dt id="sympy.tensor.index_methods.get_contraction_structure">
+<tt class="descclassname">sympy.tensor.index_methods.</tt><tt class="descname">get_contraction_structure</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/index_methods.html#get_contraction_structure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.index_methods.get_contraction_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine dummy indices of <tt class="docutils literal"><span class="pre">expr</span></tt> and describe its structure</p>
+<p>By <em>dummy</em> we mean indices that are summation indices.</p>
+<p>The stucture of the expression is determined and described as follows:</p>
+<ol class="arabic">
+<li><p class="first">A conforming summation of Indexed objects is described with a dict where
+the keys are summation indices and the corresponding values are sets
+containing all terms for which the summation applies.  All Add objects
+in the SymPy expression tree are described like this.</p>
+</li>
+<li><p class="first">For all nodes in the SymPy expression tree that are <em>not</em> of type Add, the
+following applies:</p>
+<p>If a node discovers contractions in one of its arguments, the node
+itself will be stored as a key in the dict.  For that key, the
+corresponding value is a list of dicts, each of which is the result of a
+recursive call to get_contraction_structure().  The list contains only
+dicts for the non-trivial deeper contractions, ommitting dicts with None
+as the one and only key.</p>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The presence of expressions among the dictinary keys indicates
+multiple levels of index contractions.  A nested dict displays nested
+contractions and may itself contain dicts from a deeper level.  In
+practical calculations the summation in the deepest nested level must be
+calculated first so that the outer expression can access the resulting
+indexed object.</p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.index_methods</span> <span class="kn">import</span> <span class="n">get_contraction_structure</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">default_sort_key</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor</span> <span class="kn">import</span> <span class="n">IndexedBase</span><span class="p">,</span> <span class="n">Idx</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">A</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">IndexedBase</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;A&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">Idx</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="s">&#39;j&#39;</span><span class="p">,</span> <span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="s">&#39;l&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_contraction_structure</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+<span class="go">{(i,): set([x[i]*y[i]]), (j,): set([A[j, j]])}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_contraction_structure</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+<span class="go">{None: set([x[i]*y[j]])}</span>
+</pre></div>
+</div>
+<p>A multiplication of contracted factors results in nested dicts representing
+the internal contractions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">get_contraction_structure</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+<span class="go">[None, x[i, i]*y[j, j]]</span>
+</pre></div>
+</div>
+<p>In this case, the product has no contractions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[</span><span class="bp">None</span><span class="p">]</span>
+<span class="go">set([x[i, i]*y[j, j]])</span>
+</pre></div>
+</div>
+<p>Factors are contracted &#8220;first&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]],</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+<span class="go">[{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]</span>
+</pre></div>
+</div>
+<p>A parenthesized Add object is also returned as a nested dictionary.  The
+term containing the parenthesis is a Mul with a contraction among the
+arguments, so it will be found as a key in the result.  It stores the
+dictionary resulting from a recursive call on the Add expression.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">get_contraction_structure</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+<span class="go">[x[i]*(y[i] + A[i, j]*x[j]), (i,)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[(</span><span class="n">i</span><span class="p">,)]</span>
+<span class="go">set([x[i]*(y[i] + A[i, j]*x[j])])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span>
+<span class="go">[{None: set([y[i]]), (j,): set([A[i, j]*x[j]])}]</span>
+</pre></div>
+</div>
+<p>Powers with contractions in either base or exponent will also be found as
+keys in the dictionary, mapping to a list of results from recursive calls:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">get_contraction_structure</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">**</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[</span><span class="bp">None</span><span class="p">]</span>
+<span class="go">set([A[j, j]**A[i, i]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nested_contractions</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">**</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nested_contractions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">{(j,): set([A[j, j]])}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nested_contractions</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">{(i,): set([A[i, i]])}</span>
+</pre></div>
+</div>
+<p>The description of the contraction structure may appear complicated when
+represented with a string in the above examples, but it is easy to iterate
+over:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Expr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">continue</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="c"># treat deepest contraction first</span>
+<span class="gp">... </span>            <span class="k">pass</span>
+<span class="gp">... </span>    <span class="c"># treat outermost contactions here</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.tensor.index_methods.get_indices">
+<tt class="descclassname">sympy.tensor.index_methods.</tt><tt class="descname">get_indices</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/tensor/index_methods.html#get_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.tensor.index_methods.get_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the outer indices of expression <tt class="docutils literal"><span class="pre">expr</span></tt></p>
+<p>By <em>outer</em> we mean indices that are not summation indices.  Returns a set
+and a dict.  The set contains outer indices and the dict contains
+information about index symmetries.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor.index_methods</span> <span class="kn">import</span> <span class="n">get_indices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.tensor</span> <span class="kn">import</span> <span class="n">IndexedBase</span><span class="p">,</span> <span class="n">Idx</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">A</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">IndexedBase</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="s">&#39;A&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i j a z&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The indices of the total expression is determined, Repeated indices imply a
+summation, for instance the trace of a matrix A:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">get_indices</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+<span class="go">(set(), {})</span>
+</pre></div>
+</div>
+<p>In the case of many terms, the terms are required to have identical
+outer indices.  Else an IndexConformanceException is raised.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">get_indices</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+<span class="go">(set([i]), {})</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Exceptions :</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+<p>An IndexConformanceException means that the terms ar not compatible, e.g.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">get_indices</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>                
+<span class="go">        (...)</span>
+<span class="go">IndexConformanceException: Indices are not consistent: x(i) + y(j)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>The concept of <em>outer</em> indices applies recursively, starting on the deepest
+level.  This implies that dummies inside parenthesis are assumed to be
+summed first, so that the following expression is handled gracefully:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">get_indices</span><span class="p">((</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">y</span><span class="p">[</span><span class="n">j</span><span class="p">])</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+<span class="go">(set([i, j]), {})</span>
+</pre></div>
+</div>
+<p class="last">This is correct and may appear convenient, but you need to be careful
+with this as SymPy will happily .expand() the product, if requested.  The
+resulting expression would mix the outer <tt class="docutils literal"><span class="pre">j</span></tt> with the dummies inside
+the parenthesis, which makes it a different expression.  To be on the
+safe side, it is best to avoid such ambiguities by using unique indices
+for all contractions that should be held separate.</p>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="indexed.html"
+                        title="previous chapter">Indexed Objects</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tensor.html"
+                        title="next chapter">Tensor</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/tensor/index_methods.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="tensor.html" title="Tensor"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="indexed.html" title="Indexed Objects"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Tensor Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

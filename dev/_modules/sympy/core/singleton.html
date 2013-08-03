@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.core.singleton &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.core.singleton</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Singleton mechanism&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span> <span class="nn">.assumptions</span> <span class="kn">import</span> <span class="n">ManagedProperties</span>
+<span class="kn">from</span> <span class="nn">.sympify</span> <span class="kn">import</span> <span class="n">sympify</span>
+
+
+<span class="k">class</span> <span class="nc">SingletonRegistry</span><span class="p">(</span><span class="n">Registry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A map between singleton classes and the corresponding instances.</span>
+<span class="sd">    E.g. S.Exp == C.Exp()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">__call__</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">sympify</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;S&quot;</span>
+
+<span class="n">S</span> <span class="o">=</span> <span class="n">SingletonRegistry</span><span class="p">()</span>
+
+
+<span class="k">class</span> <span class="nc">Singleton</span><span class="p">(</span><span class="n">ManagedProperties</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metaclass for singleton classes.</span>
+
+<span class="sd">    A singleton class has only one instance which is returned every time the</span>
+<span class="sd">    class is instantiated. Additionally, this instance can be accessed through</span>
+<span class="sd">    the global registry object S as S.&lt;class_name&gt;.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import S, Basic</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.core.singleton import Singleton</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.core.compatibility import with_metaclass</span>
+<span class="sd">        &gt;&gt;&gt; class MySingleton(with_metaclass(Singleton, Basic)):</span>
+<span class="sd">        ...     pass</span>
+<span class="sd">        &gt;&gt;&gt; Basic() is Basic()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; MySingleton() is MySingleton()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; S.MySingleton is MySingleton()</span>
+<span class="sd">        True</span>
+
+<span class="sd">    ** Developer notes **</span>
+<span class="sd">        The class is instantiated immediately at the point where it is defined</span>
+<span class="sd">        by calling cls.__new__(cls). This instance is cached and cls.__new__ is</span>
+<span class="sd">        rebound to return it directly.</span>
+
+<span class="sd">        The original constructor is also cached to allow subclasses to access it</span>
+<span class="sd">        and have their own instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dict_</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">cls</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dict_</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ancestor</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">mro</span><span class="p">():</span>
+            <span class="k">if</span> <span class="s">&#39;__new__&#39;</span> <span class="ow">in</span> <span class="n">ancestor</span><span class="o">.</span><span class="n">__dict__</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ancestor</span><span class="p">,</span> <span class="n">Singleton</span><span class="p">)</span> <span class="ow">and</span> <span class="n">ancestor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">cls</span><span class="p">:</span>
+            <span class="n">ctor</span> <span class="o">=</span> <span class="n">ancestor</span><span class="o">.</span><span class="n">_new_instance</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ctor</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">__new__</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_new_instance</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">ctor</span><span class="p">)</span>
+
+        <span class="n">the_instance</span> <span class="o">=</span> <span class="n">ctor</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">the_instance</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">__new__</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">__new__</span><span class="p">)</span>
+
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">the_instance</span><span class="p">)</span>
+
+        <span class="c"># Inject pickling support.</span>
+        <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">()</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">__getnewargs__</span> <span class="o">=</span> <span class="n">__getnewargs__</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

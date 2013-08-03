@@ -1,0 +1,1156 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.stats.rv &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.stats" href="../stats.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" accesskey="U">sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.stats.rv</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Main Random Variables Module</span>
+
+<span class="sd">Defines abstract random variable type.</span>
+<span class="sd">Contains interfaces for probability space object (PSpace) as well as standard</span>
+<span class="sd">operators, P, E, sample, density, where</span>
+
+<span class="sd">See Also</span>
+<span class="sd">========</span>
+<span class="sd">sympy.stats.crv</span>
+<span class="sd">sympy.stats.frv</span>
+<span class="sd">sympy.stats.rv_interface</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Basic</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">lambdify</span><span class="p">,</span>
+        <span class="n">sympify</span><span class="p">,</span> <span class="n">Equality</span><span class="p">,</span> <span class="n">solve</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">DiracDelta</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">from</span> <span class="nn">sympy.core.sets</span> <span class="kn">import</span> <span class="n">FiniteSet</span><span class="p">,</span> <span class="n">ProductSet</span>
+<span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+
+
+<div class="viewcode-block" id="RandomDomain"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.RandomDomain">[docs]</a><span class="k">class</span> <span class="nc">RandomDomain</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a set of variables and the values which they can take</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.stats.crv.ContinuousDomain</span>
+<span class="sd">    sympy.stats.frv.FiniteDomain</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_ProductDomain</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Finite</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Continuous</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">symbols</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="o">*</span><span class="n">symbols</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="SingleDomain"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.SingleDomain">[docs]</a><span class="k">class</span> <span class="nc">SingleDomain</span><span class="p">(</span><span class="n">RandomDomain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A single variable and its domain</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.stats.crv.SingleContinuousDomain</span>
+<span class="sd">    sympy.stats.frv.SingleFiniteDomain</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">symbol</span><span class="o">.</span><span class="n">is_Symbol</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">sym</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">other</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">sym</span> <span class="ow">and</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span>
+
+</div>
+<div class="viewcode-block" id="ConditionalDomain"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.ConditionalDomain">[docs]</a><span class="k">class</span> <span class="nc">ConditionalDomain</span><span class="p">(</span><span class="n">RandomDomain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A RandomDomain with an attached condition</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.stats.crv.ConditionalContinuousDomain</span>
+<span class="sd">    sympy.stats.frv.ConditionalFiniteDomain</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">fulldomain</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="nb">dict</span><span class="p">((</span><span class="n">rs</span><span class="p">,</span> <span class="n">rs</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">rs</span> <span class="ow">in</span> <span class="n">random_symbols</span><span class="p">(</span><span class="n">condition</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">fulldomain</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fulldomain</span><span class="o">.</span><span class="n">symbols</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fulldomain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Set of Conditional Domain not Implemented&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fulldomain</span><span class="o">.</span><span class="n">as_boolean</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="PSpace"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.PSpace">[docs]</a><span class="k">class</span> <span class="nc">PSpace</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Probability Space</span>
+
+<span class="sd">    Probability Spaces encode processes that equal different values</span>
+<span class="sd">    probabalistically. These underly Random Symbols which occur in SymPy</span>
+<span class="sd">    expressions and contain the mechanics to evaluate statistical statements.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.stats.crv.ContinuousPSpace</span>
+<span class="sd">    sympy.stats.frv.FinitePSpace</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_Finite</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">is_Continuous</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">is_real</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">RandomSymbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sym</span><span class="p">)</span> <span class="k">for</span> <span class="n">sym</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">symbols</span>
+
+    <span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">compute_density</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="SinglePSpace"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.SinglePSpace">[docs]</a><span class="k">class</span> <span class="nc">SinglePSpace</span><span class="p">(</span><span class="n">PSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the probabilities of a set of random events that can be</span>
+<span class="sd">    attributed to a single variable/symbol.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">distribution</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;s should have been string or Symbol&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">distribution</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomSymbol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">distribution</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="RandomSymbol"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.RandomSymbol">[docs]</a><span class="k">class</span> <span class="nc">RandomSymbol</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Random Symbols represent ProbabilitySpaces in SymPy Expressions</span>
+<span class="sd">    In principle they can take on any value that their symbol can take on</span>
+<span class="sd">    within the associated PSpace with probability determined by the PSpace</span>
+<span class="sd">    Density.</span>
+
+<span class="sd">    Random Symbols contain pspace and symbol properties.</span>
+<span class="sd">    The pspace property points to the represented Probability Space</span>
+<span class="sd">    The symbol is a standard SymPy Symbol that is used in that probability space</span>
+<span class="sd">    for example in defining a density.</span>
+
+<span class="sd">    You can form normal SymPy expressions using RandomSymbols and operate on</span>
+<span class="sd">    those expressions with the Functions</span>
+
+<span class="sd">    E - Expectation of a random expression</span>
+<span class="sd">    P - Probability of a condition</span>
+<span class="sd">    density - Probability Density of an expression</span>
+<span class="sd">    given - A new random expression (with new random symbols) given a condition</span>
+
+<span class="sd">    An object of the RandomSymbol type should almost never be created by the</span>
+<span class="sd">    user. They tend to be created instead by the PSpace class&#39;s value method.</span>
+<span class="sd">    Traditionally a user doesn&#39;t even do this but instead calls one of the</span>
+<span class="sd">    convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">pspace</span><span class="p">,</span> <span class="n">symbol</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pspace</span><span class="p">,</span> <span class="n">PSpace</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">pspace</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span>
+
+    <span class="n">is_bounded</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_finite</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_Symbol</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_Atom</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">_diff_wrt</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">pspace</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">symbol</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">name</span>   <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="n">is_positive</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">is_positive</span><span class="p">)</span>
+    <span class="n">is_integer</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">is_integer</span><span class="p">)</span>
+    <span class="n">is_real</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">pspace</span><span class="o">.</span><span class="n">is_real</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_commutative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="o">.</span><span class="n">is_commutative</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">pspace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="ProductPSpace"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.ProductPSpace">[docs]</a><span class="k">class</span> <span class="nc">ProductPSpace</span><span class="p">(</span><span class="n">PSpace</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A probability space resulting from the merger of two independent probability</span>
+<span class="sd">    spaces.</span>
+
+<span class="sd">    Often created using the function, pspace</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">spaces</span><span class="p">):</span>
+        <span class="n">rs_space_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">spaces</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                <span class="n">rs_space_dict</span><span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">space</span>
+
+        <span class="n">symbols</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">rs_space_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="c"># Overlapping symbols</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">spaces</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Overlapping Random Variables&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">is_Finite</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">spaces</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">sympy.stats.frv</span> <span class="kn">import</span> <span class="n">ProductFinitePSpace</span>
+            <span class="n">cls</span> <span class="o">=</span> <span class="n">ProductFinitePSpace</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">is_Continuous</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="n">spaces</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">sympy.stats.crv</span> <span class="kn">import</span> <span class="n">ProductContinuousPSpace</span>
+            <span class="n">cls</span> <span class="o">=</span> <span class="n">ProductContinuousPSpace</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">FiniteSet</span><span class="p">(</span><span class="o">*</span><span class="n">spaces</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rs_space_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">value</span><span class="p">]</span> <span class="o">=</span> <span class="n">space</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">rs_space_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">spaces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sumsets</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">rvs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="n">rvs</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">rvs</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">rvs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">rvs</span> <span class="o">&amp;</span> <span class="n">space</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ProductDomain</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">domain</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Density not available for ProductSpaces&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">space</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spaces</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+
+</div>
+<div class="viewcode-block" id="ProductDomain"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.ProductDomain">[docs]</a><span class="k">class</span> <span class="nc">ProductDomain</span><span class="p">(</span><span class="n">RandomDomain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A domain resulting from the merger of two independent domains</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.stats.crv.ProductContinuousDomain</span>
+<span class="sd">    sympy.stats.frv.ProductFiniteDomain</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_ProductDomain</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">domains</span><span class="p">):</span>
+        <span class="n">symbols</span> <span class="o">=</span> <span class="n">sumsets</span><span class="p">([</span><span class="n">domain</span><span class="o">.</span><span class="n">symbols</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">domains</span><span class="p">])</span>
+
+        <span class="c"># Flatten any product of products</span>
+        <span class="n">domains2</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">domains</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">domain</span><span class="o">.</span><span class="n">is_ProductDomain</span><span class="p">:</span>
+                <span class="n">domains2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">domains2</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">domains</span><span class="p">)</span>
+        <span class="n">domains2</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">domains2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">is_Finite</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">domains2</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">sympy.stats.frv</span> <span class="kn">import</span> <span class="n">ProductFiniteDomain</span>
+            <span class="n">cls</span> <span class="o">=</span> <span class="n">ProductFiniteDomain</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">is_Continuous</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">domains2</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">sympy.stats.crv</span> <span class="kn">import</span> <span class="n">ProductContinuousDomain</span>
+            <span class="n">cls</span> <span class="o">=</span> <span class="n">ProductContinuousDomain</span>
+
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">domains2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sym_domain_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">symbol</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span>
+                                     <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">domain</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="n">sym</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span>
+                             <span class="k">for</span> <span class="n">sym</span>    <span class="ow">in</span> <span class="n">domain</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ProductSet</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">set</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c"># Split event into each subdomain</span>
+        <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span><span class="p">:</span>
+            <span class="c"># Collect the parts of this event which associate to this domain</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">other</span>
+                <span class="k">if</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">domain</span><span class="o">.</span><span class="n">symbols</span><span class="p">])</span>
+            <span class="c"># Test this sub-event</span>
+            <span class="k">if</span> <span class="n">elem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">domain</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="c"># All subevents passed</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">as_boolean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">And</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">as_boolean</span><span class="p">()</span> <span class="k">for</span> <span class="n">domain</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domains</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="random_symbols"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.random_symbols">[docs]</a><span class="k">def</span> <span class="nf">random_symbols</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns all RandomSymbols within a SymPy Expression.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">RandomSymbol</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+</div>
+<div class="viewcode-block" id="pspace"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.pspace">[docs]</a><span class="k">def</span> <span class="nf">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the underlying Probability Space of a random expression.</span>
+
+<span class="sd">    For internal use.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import pspace, Normal</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.stats.rv import ProductPSpace</span>
+<span class="sd">    &gt;&gt;&gt; X = Normal(&#39;X&#39;, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; pspace(2*X + 1) == X.pspace</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rvs</span> <span class="o">=</span> <span class="n">random_symbols</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rvs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="c"># If only one space present</span>
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">rv</span><span class="o">.</span><span class="n">pspace</span> <span class="o">==</span> <span class="n">rvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pspace</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">rvs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">pspace</span>
+    <span class="c"># Otherwise make a product space</span>
+    <span class="k">return</span> <span class="n">ProductPSpace</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">rv</span><span class="o">.</span><span class="n">pspace</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">])</span>
+
+</div>
+<span class="k">def</span> <span class="nf">sumsets</span><span class="p">(</span><span class="n">sets</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Union of sets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="nb">frozenset</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="n">sets</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="rs_swap"><a class="viewcode-back" href="../../../modules/stats.html#sympy.stats.rv.rs_swap">[docs]</a><span class="k">def</span> <span class="nf">rs_swap</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build a dictionary to swap RandomSymbols based on their underlying symbol.</span>
+
+<span class="sd">    i.e.</span>
+<span class="sd">    if    ``X = (&#39;x&#39;, pspace1)``</span>
+<span class="sd">    and   ``Y = (&#39;x&#39;, pspace2)``</span>
+<span class="sd">    then ``X`` and ``Y`` match and the key, value pair</span>
+<span class="sd">    ``{X:Y}`` will appear in the result</span>
+
+<span class="sd">    Inputs: collections a and b of random variables which share common symbols</span>
+<span class="sd">    Output: dict mapping RVs in a to RVs in b</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">rsa</span> <span class="ow">in</span> <span class="n">a</span><span class="p">:</span>
+        <span class="n">d</span><span class="p">[</span><span class="n">rsa</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rsb</span> <span class="k">for</span> <span class="n">rsb</span> <span class="ow">in</span> <span class="n">b</span> <span class="k">if</span> <span class="n">rsa</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">rsb</span><span class="o">.</span><span class="n">symbol</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">d</span>
+
+</div>
+<span class="k">def</span> <span class="nf">given</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Conditional Random Expression</span>
+<span class="sd">    From a random expression and a condition on that expression creates a new</span>
+<span class="sd">    probability space from the condition and returns the same expression on that</span>
+<span class="sd">    conditional probability space.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import given, density, Die</span>
+<span class="sd">    &gt;&gt;&gt; X = Die(&#39;X&#39;, 6)</span>
+<span class="sd">    &gt;&gt;&gt; Y = given(X, X&gt;3)</span>
+<span class="sd">    &gt;&gt;&gt; density(Y).dict</span>
+<span class="sd">    {4: 1/3, 5: 1/3, 6: 1/3}</span>
+
+<span class="sd">    Following convention, if the condition is a random symbol then that symbol</span>
+<span class="sd">    is considered fixed.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Normal</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import pprint</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import z</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Normal(&#39;X&#39;, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; Y = Normal(&#39;Y&#39;, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(density(X + Y, Y)(z), use_unicode=False)</span>
+<span class="sd">                    2</span>
+<span class="sd">           -(-Y + z)</span>
+<span class="sd">           -----------</span>
+<span class="sd">      ___       2</span>
+<span class="sd">    \/ 2 *e</span>
+<span class="sd">    ------------------</span>
+<span class="sd">             ____</span>
+<span class="sd">         2*\/ pi</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">random_symbols</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span> <span class="ow">or</span> <span class="n">pspace_independent</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">RandomSymbol</span><span class="p">):</span>
+        <span class="n">condition</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">condition</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span>
+
+    <span class="n">condsymbols</span> <span class="o">=</span> <span class="n">random_symbols</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">Equality</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">condsymbols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">ConditionalDomain</span><span class="p">)):</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">condsymbols</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">rv</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
+
+    <span class="c"># Get full probability space of both the expression and the condition</span>
+    <span class="n">fullspace</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">))</span>
+    <span class="c"># Build new space given the condition</span>
+    <span class="n">space</span> <span class="o">=</span> <span class="n">fullspace</span><span class="o">.</span><span class="n">conditional_space</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c"># Dictionary to swap out RandomSymbols in expr with new RandomSymbols</span>
+    <span class="c"># That point to the new conditional space</span>
+    <span class="n">swapdict</span> <span class="o">=</span> <span class="n">rs_swap</span><span class="p">(</span><span class="n">fullspace</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">space</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="c"># Swap random variables in the expression</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">swapdict</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+
+<span class="k">def</span> <span class="nf">expectation</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the expected value of a random expression</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    expr : Expr containing RandomSymbols</span>
+<span class="sd">        The expression of which you want to compute the expectation value</span>
+<span class="sd">    given : Expr containing RandomSymbols</span>
+<span class="sd">        A conditional expression. E(X, X&gt;0) is expectation of X given X &gt; 0</span>
+<span class="sd">    numsamples : int</span>
+<span class="sd">        Enables sampling and approximates the expectation with this many samples</span>
+<span class="sd">    evalf : Bool (defaults to True)</span>
+<span class="sd">        If sampling return a number rather than a complex expression</span>
+<span class="sd">    evaluate : Bool (defaults to True)</span>
+<span class="sd">        In case of continuous systems return unevaluated integral</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import E, Die</span>
+<span class="sd">    &gt;&gt;&gt; X = Die(&#39;X&#39;, 6)</span>
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    7/2</span>
+<span class="sd">    &gt;&gt;&gt; E(2*X + 1)</span>
+<span class="sd">    8</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X, X&gt;3) # Expectation of X given that it is above 3</span>
+<span class="sd">    5</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">random_symbols</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>  <span class="c"># expr isn&#39;t random?</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="k">if</span> <span class="n">numsamples</span><span class="p">:</span>  <span class="c"># Computing by monte carlo sampling?</span>
+        <span class="k">return</span> <span class="n">sampling_E</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="n">numsamples</span><span class="p">)</span>
+
+    <span class="c"># Create new expr and recompute E</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># If there is a condition</span>
+        <span class="k">return</span> <span class="n">expectation</span><span class="p">(</span><span class="n">given</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">),</span> <span class="n">evaluate</span><span class="o">=</span><span class="n">evaluate</span><span class="p">)</span>
+
+    <span class="c"># A few known statements for efficiency</span>
+
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>  <span class="c"># We know that E is Linear</span>
+        <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">expectation</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="n">evaluate</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="c"># Otherwise case is simple, pass work off to the ProbabilitySpace</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">integrate</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">evaluate</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s">&#39;doit&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">probability</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Probability that a condition is true, optionally given a second condition</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    expr : Relational containing RandomSymbols</span>
+<span class="sd">        The condition of which you want to compute the probability</span>
+<span class="sd">    given_condition : Relational containing RandomSymbols</span>
+<span class="sd">        A conditional expression. P(X&gt;1, X&gt;0) is expectation of X&gt;1 given X&gt;0</span>
+<span class="sd">    numsamples : int</span>
+<span class="sd">        Enables sampling and approximates the probability with this many samples</span>
+<span class="sd">    evalf : Bool (defaults to True)</span>
+<span class="sd">        If sampling return a number rather than a complex expression</span>
+<span class="sd">    evaluate : Bool (defaults to True)</span>
+<span class="sd">        In case of continuous systems return unevaluated integral</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import P, Die</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Eq</span>
+<span class="sd">    &gt;&gt;&gt; X, Y = Die(&#39;X&#39;, 6), Die(&#39;Y&#39;, 6)</span>
+<span class="sd">    &gt;&gt;&gt; P(X&gt;3)</span>
+<span class="sd">    1/2</span>
+<span class="sd">    &gt;&gt;&gt; P(Eq(X, 5), X&gt;2) # Probability that X == 5 given that X &gt; 2</span>
+<span class="sd">    1/4</span>
+<span class="sd">    &gt;&gt;&gt; P(X&gt;Y)</span>
+<span class="sd">    5/12</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">numsamples</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sampling_P</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="n">numsamples</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">given_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># If there is a condition</span>
+        <span class="c"># Recompute on new conditional expr</span>
+        <span class="k">return</span> <span class="n">probability</span><span class="p">(</span><span class="n">given</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c"># Otherwise pass work off to the ProbabilitySpace</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">evaluate</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s">&#39;doit&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">class</span> <span class="nc">Density</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">expr</span><span class="p">,</span> <span class="n">condition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">condition</span>
+        <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Recompute on new conditional expr</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">given</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">random_symbols</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">expr</span><span class="p">))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">RandomSymbol</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">pspace</span><span class="p">,</span> <span class="s">&#39;distribution&#39;</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">),</span> <span class="n">SinglePSpace</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">pspace</span><span class="o">.</span><span class="n">distribution</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">compute_density</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">evaluate</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s">&#39;doit&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Probability density of a random expression</span>
+
+<span class="sd">    Optionally given a second condition</span>
+
+<span class="sd">    This density will take on different forms for different types of</span>
+<span class="sd">    probability spaces.</span>
+<span class="sd">    Discrete variables produce Dicts.</span>
+<span class="sd">    Continuous variables produce Lambdas.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import density, Die, Normal</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; D = Die(&#39;D&#39;, 6)</span>
+<span class="sd">    &gt;&gt;&gt; X = Normal(x, 0, 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(D).dict</span>
+<span class="sd">    {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}</span>
+<span class="sd">    &gt;&gt;&gt; density(2*D).dict</span>
+<span class="sd">    {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}</span>
+<span class="sd">    &gt;&gt;&gt; density(X)(x)</span>
+<span class="sd">    sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Density</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="n">evaluate</span><span class="o">=</span><span class="n">evaluate</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">cdf</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cumulative Distribution Function of a random expression.</span>
+
+<span class="sd">    optionally given a second condition</span>
+
+<span class="sd">    This density will take on different forms for different types of</span>
+<span class="sd">    probability spaces.</span>
+<span class="sd">    Discrete variables produce Dicts.</span>
+<span class="sd">    Continuous variables produce Lambdas.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import density, Die, Normal, cdf</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; D = Die(&#39;D&#39;, 6)</span>
+<span class="sd">    &gt;&gt;&gt; X = Normal(&#39;X&#39;, 0, 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(D).dict</span>
+<span class="sd">    {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}</span>
+<span class="sd">    &gt;&gt;&gt; cdf(D)</span>
+<span class="sd">    {1: 1/6, 2: 1/3, 3: 1/2, 4: 2/3, 5: 5/6, 6: 1}</span>
+<span class="sd">    &gt;&gt;&gt; cdf(3*D, D&gt;2)</span>
+<span class="sd">    {9: 1/4, 12: 1/2, 15: 3/4, 18: 1}</span>
+
+<span class="sd">    &gt;&gt;&gt; cdf(X)</span>
+<span class="sd">    Lambda(_z, erf(sqrt(2)*_z/2)/2 + 1/2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># If there is a condition</span>
+        <span class="c"># Recompute on new conditional expr</span>
+        <span class="k">return</span> <span class="n">cdf</span><span class="p">(</span><span class="n">given</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c"># Otherwise pass work off to the ProbabilitySpace</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">compute_cdf</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">evaluate</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s">&#39;doit&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">where</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the domain where a condition is True.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import where, Die, Normal</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols, And</span>
+
+<span class="sd">    &gt;&gt;&gt; D1, D2 = Die(&#39;a&#39;, 6), Die(&#39;b&#39;, 6)</span>
+<span class="sd">    &gt;&gt;&gt; a, b = D1.symbol, D2.symbol</span>
+<span class="sd">    &gt;&gt;&gt; X = Normal(&#39;x&#39;, 0, 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; where(X**2&lt;1)</span>
+<span class="sd">    Domain: And(-1 &lt; x, x &lt; 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; where(X**2&lt;1).set</span>
+<span class="sd">    (-1, 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; where(And(D1&lt;=D2 , D2&lt;3))</span>
+<span class="sd">    Domain: Or(And(a == 1, b == 1), And(a == 1, b == 2), And(a == 2, b == 2))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">given_condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># If there is a condition</span>
+        <span class="c"># Recompute on new conditional expr</span>
+        <span class="k">return</span> <span class="n">where</span><span class="p">(</span><span class="n">given</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c"># Otherwise pass work off to the ProbabilitySpace</span>
+    <span class="k">return</span> <span class="n">pspace</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A realization of the random expression</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Die, sample</span>
+<span class="sd">    &gt;&gt;&gt; X, Y, Z = Die(&#39;X&#39;, 6), Die(&#39;Y&#39;, 6), Die(&#39;Z&#39;, 6)</span>
+
+<span class="sd">    &gt;&gt;&gt; die_roll = sample(X+Y+Z) # A random realization of three dice</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">sample_iter</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">sample_iter</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an iterator of realizations from the expression given a condition</span>
+
+<span class="sd">    expr: Random expression to be realized</span>
+<span class="sd">    condition: A conditional expression (optional)</span>
+<span class="sd">    numsamples: Length of the iterator (defaults to infinity)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Normal, sample_iter</span>
+<span class="sd">    &gt;&gt;&gt; X = Normal(&#39;X&#39;, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; expr = X*X + 3</span>
+<span class="sd">    &gt;&gt;&gt; iterator = sample_iter(expr, numsamples=3)</span>
+<span class="sd">    &gt;&gt;&gt; list(iterator) # doctest: +SKIP</span>
+<span class="sd">    [12, 4, 7]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    Sample</span>
+<span class="sd">    sampling_P</span>
+<span class="sd">    sampling_E</span>
+<span class="sd">    sample_iter_lambdify</span>
+<span class="sd">    sample_iter_subs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># lambdify is much faster but not as robust</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sample_iter_lambdify</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">numsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c"># use subs when lambdify fails</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sample_iter_subs</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">numsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">sample_iter_lambdify</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    See sample_iter</span>
+
+<span class="sd">    Uses lambdify for computation. This is fast but does not always work.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="n">rvs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ps</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">rvs</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+        <span class="n">given_fn</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">rvs</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c"># Check that lambdify can handle the expression</span>
+    <span class="c"># Some operations like Sum can prove difficult</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>  <span class="c"># a dictionary that maps RVs to values</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="n">rv</span><span class="p">]</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">]</span>
+        <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+            <span class="n">given_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Expr/condition too complex for lambdify&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">return_generator</span><span class="p">():</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">numsamples</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>  <span class="c"># a dictionary that maps RVs to values</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="n">rv</span><span class="p">]</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">rvs</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>  <span class="c"># Check that these values satisfy the condition</span>
+                <span class="n">gd</span> <span class="o">=</span> <span class="n">given_fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gd</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s">&quot;Conditions must not contain free symbols&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">gd</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>  <span class="c"># If the values don&#39;t satisfy then try again</span>
+                    <span class="k">continue</span>
+
+            <span class="k">yield</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">return_generator</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">sample_iter_subs</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    See sample_iter</span>
+
+<span class="sd">    Uses subs for computation. This is slow but almost always works.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">condition</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">while</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="n">numsamples</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">ps</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>  <span class="c"># a dictionary that maps RVs to values</span>
+
+        <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># Check that these values satisfy the condition</span>
+            <span class="n">gd</span> <span class="o">=</span> <span class="n">condition</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gd</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Conditions must not contain free symbols&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">gd</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>  <span class="c"># If the values don&#39;t satisfy then try again</span>
+                <span class="k">continue</span>
+
+        <span class="k">yield</span> <span class="n">expr</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">sampling_P</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+               <span class="n">evalf</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sampling version of P</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    P</span>
+<span class="sd">    sampling_E</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">count_true</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">count_false</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">sample_iter</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="p">,</span>
+                          <span class="n">numsamples</span><span class="o">=</span><span class="n">numsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Conditions must not contain free symbols&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">count_true</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">count_false</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="n">count_true</span><span class="p">)</span> <span class="o">/</span> <span class="n">numsamples</span>
+    <span class="k">if</span> <span class="n">evalf</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">sampling_E</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">numsamples</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+               <span class="n">evalf</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sampling version of E</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    P</span>
+<span class="sd">    sampling_P</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">samples</span> <span class="o">=</span> <span class="n">sample_iter</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">given_condition</span><span class="p">,</span>
+                          <span class="n">numsamples</span><span class="o">=</span><span class="n">numsamples</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="n">samples</span><span class="p">))</span> <span class="o">/</span> <span class="n">numsamples</span>
+    <span class="k">if</span> <span class="n">evalf</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">dependent</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dependence of two random expressions</span>
+
+<span class="sd">    Two expressions are independent if knowledge of one does not change</span>
+<span class="sd">    computations on the other.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Normal, dependent, given</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Tuple, Eq</span>
+
+<span class="sd">    &gt;&gt;&gt; X, Y = Normal(&#39;X&#39;, 0, 1), Normal(&#39;Y&#39;, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; dependent(X, Y)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; dependent(2*X + Y, -Y)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; X, Y = given(Tuple(X, Y), Eq(X+Y,3))</span>
+<span class="sd">    &gt;&gt;&gt; dependent(X, Y)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    independent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">pspace_independent</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">z</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># Dependent if density is unchanged when one is given information about</span>
+    <span class="c"># the other</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">density</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Eq</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span> <span class="o">!=</span> <span class="n">density</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">density</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Eq</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">))</span> <span class="o">!=</span> <span class="n">density</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">independent</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Independence of two random expressions</span>
+
+<span class="sd">    Two expressions are independent if knowledge of one does not change</span>
+<span class="sd">    computations on the other.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Normal, independent, given</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Tuple, Eq</span>
+
+<span class="sd">    &gt;&gt;&gt; X, Y = Normal(&#39;X&#39;, 0, 1), Normal(&#39;Y&#39;, 0, 1)</span>
+<span class="sd">    &gt;&gt;&gt; independent(X, Y)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; independent(2*X + Y, -Y)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; X, Y = given(Tuple(X, Y), Eq(X+Y,3))</span>
+<span class="sd">    &gt;&gt;&gt; independent(X, Y)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    dependent</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">dependent</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">pspace_independent</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Tests for independence between a and b by checking if their PSpaces have</span>
+<span class="sd">    overlapping symbols. This is a sufficient but not necessary condition for</span>
+<span class="sd">    independence and is intended to be used internally.</span>
+<span class="sd">    Note:</span>
+<span class="sd">    pspace_independent(a,b) implies independent(a,b)</span>
+<span class="sd">    independent(a,b) does not imply pspace_independent(a,b)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a_symbols</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">symbols</span>
+    <span class="n">b_symbols</span> <span class="o">=</span> <span class="n">pspace</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">symbols</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a_symbols</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">b_symbols</span><span class="p">))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+
+<span class="k">def</span> <span class="nf">rv_subs</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a random expression replace all random variables with their symbols.</span>
+
+<span class="sd">    If symbols keyword is given restrict the swap to only the symbols listed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">symbols</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">symbols</span> <span class="o">=</span> <span class="n">random_symbols</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">symbols</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">swapdict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">rv</span><span class="p">,</span> <span class="n">rv</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">swapdict</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">NamedArgsMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_argnames</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">attr</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; object has not attribute &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">attr</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">_value_check</span><span class="p">(</span><span class="n">condition</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check a condition on input value.</span>
+
+<span class="sd">    Raises ValueError with message if condition is not True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" >sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

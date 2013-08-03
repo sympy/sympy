@@ -1,0 +1,527 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.simplify.cse_main &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.simplify.cse_main</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Tools for doing common subexpression elimination.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">difflib</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">preorder_traversal</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">_coeff_isneg</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">iterable</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">numbered_symbols</span><span class="p">,</span> \
+    <span class="n">sift</span><span class="p">,</span> <span class="n">topological_sort</span><span class="p">,</span> <span class="n">ordered</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cse_opts</span>
+
+<span class="c"># (preprocessor, postprocessor) pairs which are commonly useful. They should</span>
+<span class="c"># each take a sympy expression and return a possibly transformed expression.</span>
+<span class="c"># When used in the function ``cse()``, the target expressions will be transformed</span>
+<span class="c"># by each of the preprocessor functions in order. After the common</span>
+<span class="c"># subexpressions are eliminated, each resulting expression will have the</span>
+<span class="c"># postprocessor functions transform them in *reverse* order in order to undo the</span>
+<span class="c"># transformation if necessary. This allows the algorithm to operate on</span>
+<span class="c"># a representation of the expressions that allows for more optimization</span>
+<span class="c"># opportunities.</span>
+<span class="c"># ``None`` can be used to specify no transformation for either the preprocessor or</span>
+<span class="c"># postprocessor.</span>
+
+<span class="n">cse_optimizations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cse_opts</span><span class="o">.</span><span class="n">default_optimizations</span><span class="p">)</span>
+
+<span class="c"># sometimes we want the output in a different format; non-trivial</span>
+<span class="c"># transformations can be put here for users</span>
+<span class="c"># ===============================================================</span>
+
+
+<span class="k">def</span> <span class="nf">reps_toposort</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sort replacements `r` so (k1, v1) appears before (k2, v2)</span>
+<span class="sd">    if k2 is in v1&#39;s free symbols. This orders items in the</span>
+<span class="sd">    way that cse returns its results (hence, in order to use the</span>
+<span class="sd">    replacements in a substitution option it would make sense</span>
+<span class="sd">    to reverse the order).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.cse_main import reps_toposort</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Eq</span>
+<span class="sd">    &gt;&gt;&gt; for l, r in reps_toposort([(x, y + 1), (y, 2)]):</span>
+<span class="sd">    ...     print(Eq(l, r))</span>
+<span class="sd">    ...</span>
+<span class="sd">    y == 2</span>
+<span class="sd">    x == y + 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c1</span><span class="p">,</span> <span class="p">(</span><span class="n">k1</span><span class="p">,</span> <span class="n">v1</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">c2</span><span class="p">,</span> <span class="p">(</span><span class="n">k2</span><span class="p">,</span> <span class="n">v2</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">k1</span> <span class="ow">in</span> <span class="n">v2</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+                <span class="n">E</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">topological_sort</span><span class="p">((</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)),</span> <span class="n">E</span><span class="p">))]</span>
+
+
+<span class="k">def</span> <span class="nf">cse_separate</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Move expressions that are in the form (symbol, expr) out of the</span>
+<span class="sd">    expressions and sort them into the replacements using the reps_toposort.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.cse_main import cse_separate</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import cos, exp, cse, Eq, symbols</span>
+<span class="sd">    &gt;&gt;&gt; x0, x1 = symbols(&#39;x:2&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))</span>
+<span class="sd">    &gt;&gt;&gt; cse([eq, Eq(x, z + 1), z - 2], postprocess=cse_separate) in [</span>
+<span class="sd">    ... [[(x0, y + 1), (x, z + 1), (x1, x + 1)],</span>
+<span class="sd">    ...  [x1 + exp(x1/x0) + cos(x0), z - 2]],</span>
+<span class="sd">    ... [[(x1, y + 1), (x, z + 1), (x0, x + 1)],</span>
+<span class="sd">    ...  [x0 + exp(x0/x1) + cos(x1), z - 2]]]</span>
+<span class="sd">    ...</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">sift</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">w</span><span class="o">.</span><span class="n">is_Equality</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">is_Symbol</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span> <span class="o">+</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">args</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="bp">True</span><span class="p">]]</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="bp">False</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">reps_toposort</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">e</span><span class="p">]</span>
+
+<span class="c"># ====end of cse postprocess idioms===========================</span>
+
+
+<span class="k">def</span> <span class="nf">preprocess_for_cse</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">optimizations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Preprocess an expression to optimize for common subexpression</span>
+<span class="sd">    elimination.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    expr : sympy expression</span>
+<span class="sd">        The target expression to optimize.</span>
+<span class="sd">    optimizations : list of (callable, callable) pairs</span>
+<span class="sd">        The (preprocessor, postprocessor) pairs.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    expr : sympy expression</span>
+<span class="sd">        The transformed expression.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">pre</span><span class="p">,</span> <span class="n">post</span> <span class="ow">in</span> <span class="n">optimizations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pre</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">pre</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+
+<span class="k">def</span> <span class="nf">postprocess_for_cse</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">optimizations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Postprocess an expression after common subexpression elimination to</span>
+<span class="sd">    return the expression to canonical sympy form.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    expr : sympy expression</span>
+<span class="sd">        The target expression to transform.</span>
+<span class="sd">    optimizations : list of (callable, callable) pairs, optional</span>
+<span class="sd">        The (preprocessor, postprocessor) pairs.  The postprocessors will be</span>
+<span class="sd">        applied in reversed order to undo the effects of the preprocessors</span>
+<span class="sd">        correctly.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    expr : sympy expression</span>
+<span class="sd">        The transformed expression.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">optimizations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">optimizations</span> <span class="o">=</span> <span class="n">cse_optimizations</span>
+    <span class="k">for</span> <span class="n">pre</span><span class="p">,</span> <span class="n">post</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">optimizations</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">post</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">post</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+
+<span class="k">def</span> <span class="nf">_remove_singletons</span><span class="p">(</span><span class="n">reps</span><span class="p">,</span> <span class="n">exprs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for cse that will remove expressions that weren&#39;t</span>
+<span class="sd">    used more than once.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">u_reps</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># the useful reps that are used more than once</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ui</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reps</span><span class="p">):</span>
+        <span class="n">used</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># where it was used</span>
+        <span class="n">ri</span><span class="p">,</span> <span class="n">ei</span> <span class="o">=</span> <span class="n">ui</span>
+
+        <span class="c"># keep track of whether the substitution was used more</span>
+        <span class="c"># than once. If used is None, it was never used (yet);</span>
+        <span class="c"># if used is an int, that is the last place where it was</span>
+        <span class="c"># used (&gt;=0 in the reps, &lt;0 in the expressions) and if</span>
+        <span class="c"># it is True, it was used more than once.</span>
+
+        <span class="n">used</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">tot</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c"># total times used so far</span>
+
+        <span class="c"># search through the reps</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">reps</span><span class="p">)):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">reps</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ri</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+                <span class="n">tot</span> <span class="o">+=</span> <span class="n">c</span>
+                <span class="k">if</span> <span class="n">tot</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">u_reps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+                    <span class="n">used</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">used</span> <span class="o">=</span> <span class="n">j</span>
+
+        <span class="k">if</span> <span class="n">used</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+
+            <span class="c"># then search through the expressions</span>
+
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">rj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exprs</span><span class="p">):</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">rj</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">ri</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+                    <span class="c"># append a negative so we know that it was in the</span>
+                    <span class="c"># expression that used it</span>
+                    <span class="n">tot</span> <span class="o">+=</span> <span class="n">c</span>
+                    <span class="k">if</span> <span class="n">tot</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">u_reps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+                        <span class="n">used</span> <span class="o">=</span> <span class="bp">True</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">used</span> <span class="o">=</span> <span class="n">j</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">exprs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">used</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+
+                <span class="c"># undo the change</span>
+
+                <span class="n">rep</span> <span class="o">=</span> <span class="p">{</span><span class="n">ri</span><span class="p">:</span> <span class="n">ei</span><span class="p">}</span>
+                <span class="n">j</span> <span class="o">=</span> <span class="n">used</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">exprs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">exprs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">rep</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">reps</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">reps</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">reps</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">rep</span><span class="p">)</span>
+
+    <span class="c"># reuse unused symbols so a contiguous range of symbols is returned</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">u_reps</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">reps</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ri</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">u_reps</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">u_reps</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">reps</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">rep</span> <span class="o">=</span> <span class="p">(</span><span class="n">u_reps</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">reps</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">u_reps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rep</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">u_reps</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="o">*</span><span class="n">rep</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">u_reps</span><span class="p">)):</span>
+                    <span class="n">u_reps</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">u_reps</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">u_reps</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="o">*</span><span class="n">rep</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">rj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">exprs</span><span class="p">):</span>
+                    <span class="n">exprs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">exprs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="o">*</span><span class="n">rep</span><span class="p">)</span>
+
+    <span class="n">reps</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">u_reps</span>  <span class="c"># change happens in-place</span>
+
+
+<div class="viewcode-block" id="cse"><a class="viewcode-back" href="../../../modules/simplify/simplify.html#sympy.simplify.cse_main.cse">[docs]</a><span class="k">def</span> <span class="nf">cse</span><span class="p">(</span><span class="n">exprs</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">optimizations</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">postprocess</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Perform common subexpression elimination on an expression.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    exprs : list of sympy expressions, or a single sympy expression</span>
+<span class="sd">        The expressions to reduce.</span>
+<span class="sd">    symbols : infinite iterator yielding unique Symbols</span>
+<span class="sd">        The symbols used to label the common subexpressions which are pulled</span>
+<span class="sd">        out. The ``numbered_symbols`` generator is useful. The default is a</span>
+<span class="sd">        stream of symbols of the form &quot;x0&quot;, &quot;x1&quot;, etc. This must be an infinite</span>
+<span class="sd">        iterator.</span>
+<span class="sd">    optimizations : list of (callable, callable) pairs, optional</span>
+<span class="sd">        The (preprocessor, postprocessor) pairs. If not provided,</span>
+<span class="sd">        ``sympy.simplify.cse.cse_optimizations`` is used.</span>
+<span class="sd">    postprocess : a function which accepts the two return values of cse and</span>
+<span class="sd">        returns the desired form of output from cse, e.g. if you want the</span>
+<span class="sd">        replacements reversed the function might be the following lambda:</span>
+<span class="sd">        lambda r, e: return reversed(r), e</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    replacements : list of (Symbol, expression) pairs</span>
+<span class="sd">        All of the common subexpressions that were replaced. Subexpressions</span>
+<span class="sd">        earlier in this list might show up in subexpressions later in this list.</span>
+<span class="sd">    reduced_exprs : list of sympy expressions</span>
+<span class="sd">        The reduced expressions with all of the replacements above.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+
+    <span class="k">if</span> <span class="n">symbols</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">symbols</span> <span class="o">=</span> <span class="n">numbered_symbols</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># In case we get passed an iterable with an __iter__ method instead of</span>
+        <span class="c"># an actual iterator.</span>
+        <span class="n">symbols</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
+    <span class="n">seen_subexp</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">muls</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">adds</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">to_eliminate</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">optimizations</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c"># Pull out the default here just in case there are some weird</span>
+        <span class="c"># manipulations of the module-level list in some other thread.</span>
+        <span class="n">optimizations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cse_optimizations</span><span class="p">)</span>
+
+    <span class="c"># Handle the case if just one expression was passed.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exprs</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+        <span class="n">exprs</span> <span class="o">=</span> <span class="p">[</span><span class="n">exprs</span><span class="p">]</span>
+
+    <span class="c"># Preprocess the expressions to give us better optimization opportunities.</span>
+    <span class="n">reduced_exprs</span> <span class="o">=</span> <span class="p">[</span><span class="n">preprocess_for_cse</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">optimizations</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">exprs</span><span class="p">]</span>
+
+    <span class="c"># Find all of the repeated subexpressions.</span>
+    <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">reduced_exprs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">subtree</span> <span class="ow">in</span> <span class="n">pt</span><span class="p">:</span>
+
+            <span class="n">inv</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">subtree</span> <span class="k">if</span> <span class="n">subtree</span><span class="o">.</span><span class="n">is_Pow</span> <span class="k">else</span> <span class="bp">None</span>
+
+            <span class="k">if</span> <span class="n">subtree</span><span class="o">.</span><span class="n">is_Atom</span> <span class="ow">or</span> <span class="n">iterable</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span> <span class="ow">or</span> <span class="n">inv</span> <span class="ow">and</span> <span class="n">inv</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+                <span class="c"># Exclude atoms, since there is no point in renaming them.</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">subtree</span> <span class="ow">in</span> <span class="n">seen_subexp</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">inv</span> <span class="ow">and</span> <span class="n">_coeff_isneg</span><span class="p">(</span><span class="n">subtree</span><span class="o">.</span><span class="n">exp</span><span class="p">):</span>
+                    <span class="c"># save the form with positive exponent</span>
+                    <span class="n">subtree</span> <span class="o">=</span> <span class="n">inv</span>
+                <span class="n">to_eliminate</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span>
+                <span class="n">pt</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">inv</span> <span class="ow">and</span> <span class="n">inv</span> <span class="ow">in</span> <span class="n">seen_subexp</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">_coeff_isneg</span><span class="p">(</span><span class="n">subtree</span><span class="o">.</span><span class="n">exp</span><span class="p">):</span>
+                    <span class="c"># save the form with positive exponent</span>
+                    <span class="n">subtree</span> <span class="o">=</span> <span class="n">inv</span>
+                <span class="n">to_eliminate</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span>
+                <span class="n">pt</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">subtree</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+                <span class="n">muls</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">subtree</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="n">adds</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span>
+
+            <span class="n">seen_subexp</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">subtree</span><span class="p">)</span>
+
+    <span class="c"># process adds - any adds that weren&#39;t repeated might contain</span>
+    <span class="c"># subpatterns that are repeated, e.g. x+y+z and x+y have x+y in common</span>
+    <span class="n">adds</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">(</span><span class="n">adds</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">adds</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">adds</span><span class="p">)):</span>
+            <span class="n">com</span> <span class="o">=</span> <span class="n">adds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">adds</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">com</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">to_eliminate</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">com</span><span class="p">))</span>
+
+                <span class="c"># remove this set of symbols so it doesn&#39;t appear again</span>
+                <span class="n">adds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">adds</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">com</span><span class="p">)</span>
+                <span class="n">adds</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">adds</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">com</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">adds</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">com</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">adds</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
+                        <span class="n">adds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">adds</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">com</span><span class="p">)</span>
+
+    <span class="c"># process muls - any muls that weren&#39;t repeated might contain</span>
+    <span class="c"># subpatterns that are repeated, e.g. x*y*z and x*y have x*y in common</span>
+
+    <span class="c"># use SequenceMatcher on the nc part to find the longest common expression</span>
+    <span class="c"># in common between the two nc parts</span>
+    <span class="n">sm</span> <span class="o">=</span> <span class="n">difflib</span><span class="o">.</span><span class="n">SequenceMatcher</span><span class="p">()</span>
+
+    <span class="n">muls</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">(</span><span class="n">cset</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">ordered</span><span class="p">(</span><span class="n">muls</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">muls</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">sm</span><span class="o">.</span><span class="n">set_seq1</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">muls</span><span class="p">)):</span>
+            <span class="c"># the commutative part in common</span>
+            <span class="n">ccom</span> <span class="o">=</span> <span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="c"># the non-commutative part in common</span>
+            <span class="k">if</span> <span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">muls</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="c"># see if there is any chance of an nc match</span>
+                <span class="n">ncom</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ccom</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ncom</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="c"># now work harder to find the match</span>
+                <span class="n">sm</span><span class="o">.</span><span class="n">set_seq2</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">i1</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">find_longest_match</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]),</span>
+                                                 <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">ncom</span> <span class="o">=</span> <span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">i1</span><span class="p">:</span><span class="n">i1</span> <span class="o">+</span> <span class="n">n</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ncom</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">com</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ccom</span><span class="p">)</span> <span class="o">+</span> <span class="n">ncom</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">com</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">to_eliminate</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">com</span><span class="p">))</span>
+
+            <span class="c"># remove ccom from all if there was no ncom; to update the nc part</span>
+            <span class="c"># would require finding the subexpr and then replacing it with a</span>
+            <span class="c"># dummy to keep bounding nc symbols from being identified as a</span>
+            <span class="c"># subexpr, e.g. removing B*C from A*B*C*D might allow A*D to be</span>
+            <span class="c"># identified as a subexpr which would not be right.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ncom</span><span class="p">:</span>
+                <span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">muls</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">ccom</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">muls</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">ccom</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">muls</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+                        <span class="n">muls</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">muls</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">ccom</span><span class="p">)</span>
+
+    <span class="c"># make to_eliminate canonical; we will prefer non-Muls to Muls</span>
+    <span class="c"># so select them first (non-Muls will have False for is_Mul and will</span>
+    <span class="c"># be first in the ordering.</span>
+    <span class="n">to_eliminate</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ordered</span><span class="p">(</span><span class="n">to_eliminate</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">_</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">))</span>
+
+    <span class="c"># Substitute symbols for all of the repeated subexpressions.</span>
+    <span class="n">replacements</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">reduced_exprs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reduced_exprs</span><span class="p">)</span>
+    <span class="n">hit</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">subtree</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_eliminate</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">hit</span><span class="p">:</span>
+            <span class="n">sym</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
+        <span class="n">hit</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">subtree</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span> <span class="n">subtree</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="n">update</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">xreplace</span><span class="p">({</span><span class="n">subtree</span><span class="p">:</span> <span class="n">sym</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">subtree</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">sym</span><span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">update</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subtree</span><span class="p">,</span> <span class="n">sym</span><span class="p">)</span>
+        <span class="c"># Make the substitution in all of the target expressions.</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">expr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reduced_exprs</span><span class="p">):</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="n">reduced_exprs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">reduced_exprs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">update</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="n">hit</span> <span class="o">=</span> <span class="n">hit</span> <span class="ow">or</span> <span class="p">(</span><span class="n">old</span> <span class="o">!=</span> <span class="n">reduced_exprs</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="c"># Make the substitution in all of the subsequent substitutions.</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_eliminate</span><span class="p">)):</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="n">to_eliminate</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">to_eliminate</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">update</span><span class="p">(</span><span class="n">to_eliminate</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">hit</span> <span class="o">=</span> <span class="n">hit</span> <span class="ow">or</span> <span class="p">(</span><span class="n">old</span> <span class="o">!=</span> <span class="n">to_eliminate</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">hit</span><span class="p">:</span>
+            <span class="n">replacements</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">sym</span><span class="p">,</span> <span class="n">subtree</span><span class="p">))</span>
+
+    <span class="c"># Postprocess the expressions to return the expressions to canonical form.</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">subtree</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">replacements</span><span class="p">):</span>
+        <span class="n">subtree</span> <span class="o">=</span> <span class="n">postprocess_for_cse</span><span class="p">(</span><span class="n">subtree</span><span class="p">,</span> <span class="n">optimizations</span><span class="p">)</span>
+        <span class="n">replacements</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">subtree</span><span class="p">)</span>
+    <span class="n">reduced_exprs</span> <span class="o">=</span> <span class="p">[</span><span class="n">postprocess_for_cse</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">optimizations</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">reduced_exprs</span><span class="p">]</span>
+
+    <span class="c"># remove replacements that weren&#39;t used more than once</span>
+    <span class="n">_remove_singletons</span><span class="p">(</span><span class="n">replacements</span><span class="p">,</span> <span class="n">reduced_exprs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exprs</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
+        <span class="n">reduced_exprs</span> <span class="o">=</span> <span class="p">[</span><span class="n">Matrix</span><span class="p">(</span><span class="n">exprs</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">exprs</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">reduced_exprs</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">postprocess</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">replacements</span><span class="p">,</span> <span class="n">reduced_exprs</span>
+    <span class="k">return</span> <span class="n">postprocess</span><span class="p">(</span><span class="n">replacements</span><span class="p">,</span> <span class="n">reduced_exprs</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

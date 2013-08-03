@@ -1,0 +1,650 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.core.symbol &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.core.symbol</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.assumptions</span> <span class="kn">import</span> <span class="n">StdFactKB</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">string_types</span>
+<span class="kn">from</span> <span class="nn">.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="kn">import</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">.sympify</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">.singleton</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">.expr</span> <span class="kn">import</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">AtomicExpr</span>
+<span class="kn">from</span> <span class="nn">.cache</span> <span class="kn">import</span> <span class="n">cacheit</span>
+<span class="kn">from</span> <span class="nn">.function</span> <span class="kn">import</span> <span class="n">FunctionClass</span>
+<span class="kn">from</span> <span class="nn">sympy.core.logic</span> <span class="kn">import</span> <span class="n">fuzzy_bool</span>
+<span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">Boolean</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">cartes</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.exceptions</span> <span class="kn">import</span> <span class="n">SymPyDeprecationWarning</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+<span class="kn">import</span> <span class="nn">re</span> <span class="kn">as</span> <span class="nn">_re</span>
+
+
+<div class="viewcode-block" id="Symbol"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.symbol.Symbol">[docs]</a><span class="k">class</span> <span class="nc">Symbol</span><span class="p">(</span><span class="n">AtomicExpr</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Assumptions:</span>
+<span class="sd">       commutative = True</span>
+
+<span class="sd">    You can override the default assumptions in the constructor:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">    &gt;&gt;&gt; A,B = symbols(&#39;A,B&#39;, commutative = False)</span>
+<span class="sd">    &gt;&gt;&gt; bool(A*B != B*A)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_comparable</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span>
+
+    <span class="n">is_Symbol</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_diff_wrt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Allow derivatives wrt Symbols.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">            &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; x._diff_wrt</span>
+<span class="sd">            True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Symbols are identified by name and assumptions::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; Symbol(&quot;x&quot;) == Symbol(&quot;x&quot;)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Symbol(&quot;x&quot;, real=True) == Symbol(&quot;x&quot;, real=False)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">assumptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;zero&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="n">is_commutative</span> <span class="o">=</span> <span class="n">fuzzy_bool</span><span class="p">(</span><span class="n">assumptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;commutative&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">is_commutative</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sd">&#39;&#39;&#39;Symbol commutativity must be True or False.&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">assumptions</span><span class="p">[</span><span class="s">&#39;commutative&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">is_commutative</span>
+        <span class="k">return</span> <span class="n">Symbol</span><span class="o">.</span><span class="n">__xnew_cached_</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new_stage2__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;name should be a string, not </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">name</span><span class="p">)))</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_assumptions</span> <span class="o">=</span> <span class="n">StdFactKB</span><span class="p">(</span><span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="n">__xnew__</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span>
+        <span class="n">__new_stage2__</span><span class="p">)</span>            <span class="c"># never cached (e.g. dummy)</span>
+    <span class="n">__xnew_cached_</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span>
+        <span class="n">cacheit</span><span class="p">(</span><span class="n">__new_stage2__</span><span class="p">))</span>   <span class="c"># symbols are always cached</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;_assumptions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assumptions</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">assumptions0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span>
+                <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assumptions</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">sort_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_key</span><span class="p">(),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),)),</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="o">.</span><span class="n">sort_key</span><span class="p">(),</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">def</span> <span class="nf">as_dummy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Dummy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">assumptions0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.function</span> <span class="kn">import</span> <span class="n">Function</span>
+        <span class="k">return</span> <span class="n">Function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_real_imag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ignore&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">re</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">C</span><span class="o">.</span><span class="n">im</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_sage_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">sage.all</span> <span class="kn">as</span> <span class="nn">sage</span>
+        <span class="k">return</span> <span class="n">sage</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">is_constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">wrt</span><span class="p">,</span> <span class="o">**</span><span class="n">flags</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">wrt</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="ow">in</span> <span class="n">wrt</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="Dummy"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.symbol.Dummy">[docs]</a><span class="k">class</span> <span class="nc">Dummy</span><span class="p">(</span><span class="n">Symbol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dummy symbols are each unique, identified by an internal count index:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Dummy</span>
+<span class="sd">    &gt;&gt;&gt; bool(Dummy(&quot;x&quot;) == Dummy(&quot;x&quot;)) == True</span>
+<span class="sd">    False</span>
+
+<span class="sd">    If a name is not supplied then a string value of the count index will be</span>
+<span class="sd">    used. This is useful when a temporary variable is needed and the name</span>
+<span class="sd">    of the variable used in the expression is not important.</span>
+
+<span class="sd">    &gt;&gt;&gt; Dummy() #doctest: +SKIP</span>
+<span class="sd">    _Dummy_10</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;dummy_index&#39;</span><span class="p">]</span>
+
+    <span class="n">is_Dummy</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;Dummy_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">Dummy</span><span class="o">.</span><span class="n">_count</span><span class="p">)</span>
+
+        <span class="n">is_commutative</span> <span class="o">=</span> <span class="n">fuzzy_bool</span><span class="p">(</span><span class="n">assumptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;commutative&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">is_commutative</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sd">&#39;&#39;&#39;Dummy&#39;s commutativity must be True or False.&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">assumptions</span><span class="p">[</span><span class="s">&#39;commutative&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">is_commutative</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Symbol</span><span class="o">.</span><span class="n">__xnew__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+
+        <span class="n">Dummy</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">dummy_index</span> <span class="o">=</span> <span class="n">Dummy</span><span class="o">.</span><span class="n">_count</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s">&#39;_assumptions&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_assumptions</span><span class="p">,</span> <span class="s">&#39;dummy_index&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dummy_index</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Symbol</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dummy_index</span><span class="p">,)</span>
+
+</div>
+<div class="viewcode-block" id="Wild"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.symbol.Wild">[docs]</a><span class="k">class</span> <span class="nc">Wild</span><span class="p">(</span><span class="n">Symbol</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A Wild symbol matches anything.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Wild, WildFunction, cos, pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; a = Wild(&#39;a&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Wild(&#39;b&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b.match(a)</span>
+<span class="sd">    {a_: b_}</span>
+<span class="sd">    &gt;&gt;&gt; x.match(a)</span>
+<span class="sd">    {a_: x}</span>
+<span class="sd">    &gt;&gt;&gt; pi.match(a)</span>
+<span class="sd">    {a_: pi}</span>
+<span class="sd">    &gt;&gt;&gt; (x**2).match(a)</span>
+<span class="sd">    {a_: x**2}</span>
+<span class="sd">    &gt;&gt;&gt; cos(x).match(a)</span>
+<span class="sd">    {a_: cos(x)}</span>
+<span class="sd">    &gt;&gt;&gt; A = WildFunction(&#39;A&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; A.match(a)</span>
+<span class="sd">    {a_: A_}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;exclude&#39;</span><span class="p">,</span> <span class="s">&#39;properties&#39;</span><span class="p">]</span>
+    <span class="n">is_Wild</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span> <span class="n">properties</span><span class="o">=</span><span class="p">(),</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">exclude</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">exclude</span><span class="p">])</span>
+        <span class="n">properties</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">properties</span><span class="p">)</span>
+        <span class="n">is_commutative</span> <span class="o">=</span> <span class="n">fuzzy_bool</span><span class="p">(</span><span class="n">assumptions</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;commutative&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">is_commutative</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sd">&#39;&#39;&#39;Wild&#39;s commutativity must be True or False.&#39;&#39;&#39;</span><span class="p">)</span>
+        <span class="n">assumptions</span><span class="p">[</span><span class="s">&#39;commutative&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">is_commutative</span>
+        <span class="k">return</span> <span class="n">Wild</span><span class="o">.</span><span class="n">__xnew__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">exclude</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">__xnew__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">exclude</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Symbol</span><span class="o">.</span><span class="n">__xnew__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">exclude</span> <span class="o">=</span> <span class="n">exclude</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">properties</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Wild</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exclude</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">)</span>
+
+    <span class="c"># TODO add check against another Wild</span>
+    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">repl_dict</span><span class="o">=</span><span class="p">{},</span> <span class="n">old</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exclude</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">f</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">properties</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">repl_dict</span> <span class="o">=</span> <span class="n">repl_dict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">repl_dict</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span> <span class="o">=</span> <span class="n">expr</span>
+        <span class="k">return</span> <span class="n">repl_dict</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; object is not callable&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+
+</div>
+<span class="n">_range</span> <span class="o">=</span> <span class="n">_re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="symbols"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.symbol.symbols">[docs]</a><span class="k">def</span> <span class="nf">symbols</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform strings into instances of :class:`Symbol` class.</span>
+
+<span class="sd">    :func:`symbols` function returns a sequence of symbols with names taken</span>
+<span class="sd">    from ``names`` argument, which can be a comma or whitespace delimited</span>
+<span class="sd">    string, or a sequence of strings::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols, Function</span>
+
+<span class="sd">        &gt;&gt;&gt; x, y, z = symbols(&#39;x,y,z&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; a, b, c = symbols(&#39;a b c&#39;)</span>
+
+<span class="sd">    The type of output is dependent on the properties of input arguments::</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x&#39;)</span>
+<span class="sd">        x</span>
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x,&#39;)</span>
+<span class="sd">        (x,)</span>
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x,y&#39;)</span>
+<span class="sd">        (x, y)</span>
+<span class="sd">        &gt;&gt;&gt; symbols((&#39;a&#39;, &#39;b&#39;, &#39;c&#39;))</span>
+<span class="sd">        (a, b, c)</span>
+<span class="sd">        &gt;&gt;&gt; symbols([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;])</span>
+<span class="sd">        [a, b, c]</span>
+<span class="sd">        &gt;&gt;&gt; symbols(set([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]))</span>
+<span class="sd">        set([a, b, c])</span>
+
+<span class="sd">    If an iterable container is needed for a single symbol, set the ``seq``</span>
+<span class="sd">    argument to ``True`` or terminate the symbol name with a comma::</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x&#39;, seq=True)</span>
+<span class="sd">        (x,)</span>
+
+<span class="sd">    To reduce typing, range syntax is supported to create indexed symbols.</span>
+<span class="sd">    Ranges are indicated by a colon and the type of range is determined by</span>
+<span class="sd">    the character to the right of the colon. If the character is a digit</span>
+<span class="sd">    then all continguous digits to the left are taken as the nonnegative</span>
+<span class="sd">    starting value (or 0 if there are no digit of the colon) and all</span>
+<span class="sd">    contiguous digits to the right are taken as 1 greater than the ending</span>
+<span class="sd">    value::</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x:10&#39;)</span>
+<span class="sd">        (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x5:10&#39;)</span>
+<span class="sd">        (x5, x6, x7, x8, x9)</span>
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x5(:2)&#39;)</span>
+<span class="sd">        (x50, x51)</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x5:10,y:5&#39;)</span>
+<span class="sd">        (x5, x6, x7, x8, x9, y0, y1, y2, y3, y4)</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols((&#39;x5:10&#39;, &#39;y:5&#39;))</span>
+<span class="sd">        ((x5, x6, x7, x8, x9), (y0, y1, y2, y3, y4))</span>
+
+<span class="sd">    If the character to the right of the colon is a letter, then the single</span>
+<span class="sd">    letter to the left (or &#39;a&#39; if there is none) is taken as the start</span>
+<span class="sd">    and all characters in the lexicographic range *through* the letter to</span>
+<span class="sd">    the right are used as the range::</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x:z&#39;)</span>
+<span class="sd">        (x, y, z)</span>
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x:c&#39;)  # null range</span>
+<span class="sd">        ()</span>
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x(:c)&#39;)</span>
+<span class="sd">        (xa, xb, xc)</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;:c&#39;)</span>
+<span class="sd">        (a, b, c)</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;a:d, x:z&#39;)</span>
+<span class="sd">        (a, b, c, d, x, y, z)</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols((&#39;a:d&#39;, &#39;x:z&#39;))</span>
+<span class="sd">        ((a, b, c, d), (x, y, z))</span>
+
+<span class="sd">    Multiple ranges are supported; contiguous numerical ranges should be</span>
+<span class="sd">    separated by parentheses to disambiguate the ending number of one</span>
+<span class="sd">    range from the starting number of the next::</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x:2(1:3)&#39;)</span>
+<span class="sd">        (x01, x02, x11, x12)</span>
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;:3:2&#39;)  # parsing is from left to right</span>
+<span class="sd">        (00, 01, 10, 11, 20, 21)</span>
+
+<span class="sd">    Only one pair of parentheses surrounding ranges are removed, so to</span>
+<span class="sd">    include parentheses around ranges, double them. And to include spaces,</span>
+<span class="sd">    commas, or colons, escape them with a backslash::</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x((a:b))&#39;)</span>
+<span class="sd">        (x(a), x(b))</span>
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;x(:1\,:2)&#39;)  # or &#39;x((:1)\,(:2))&#39;</span>
+<span class="sd">        (x(0,0), x(0,1))</span>
+
+<span class="sd">    All newly created symbols have assumptions set according to ``args``::</span>
+
+<span class="sd">        &gt;&gt;&gt; a = symbols(&#39;a&#39;, integer=True)</span>
+<span class="sd">        &gt;&gt;&gt; a.is_integer</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &gt;&gt;&gt; x, y, z = symbols(&#39;x,y,z&#39;, real=True)</span>
+<span class="sd">        &gt;&gt;&gt; x.is_real and y.is_real and z.is_real</span>
+<span class="sd">        True</span>
+
+<span class="sd">    Despite its name, :func:`symbols` can create symbol-like objects like</span>
+<span class="sd">    instances of Function or Wild classes. To achieve this, set ``cls``</span>
+<span class="sd">    keyword argument to the desired type::</span>
+
+<span class="sd">        &gt;&gt;&gt; symbols(&#39;f,g,h&#39;, cls=Function)</span>
+<span class="sd">        (f, g, h)</span>
+
+<span class="sd">        &gt;&gt;&gt; type(_[0])</span>
+<span class="sd">        &lt;class &#39;sympy.core.function.UndefinedFunction&#39;&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s">&#39;each_char&#39;</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="s">&#39;each_char&#39;</span><span class="p">]:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;Tip: &#39; &#39;.join(s) will transform a string s = &#39;xyz&#39; to &#39;x y z&#39;.&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">SymPyDeprecationWarning</span><span class="p">(</span>
+            <span class="n">feature</span><span class="o">=</span><span class="s">&quot;each_char in the options to symbols() and var()&quot;</span><span class="p">,</span>
+            <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;spaces or commas between symbol names&quot;</span><span class="p">,</span>
+            <span class="n">issue</span><span class="o">=</span><span class="mi">1919</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.0&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+        <span class="n">marker</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">literals</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;\,&#39;</span><span class="p">,</span> <span class="s">&#39;\:&#39;</span><span class="p">,</span> <span class="s">&#39;\ &#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">literals</span><span class="p">)):</span>
+            <span class="n">lit</span> <span class="o">=</span> <span class="n">literals</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lit</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="k">while</span> <span class="nb">chr</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                    <span class="n">marker</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">lit_char</span> <span class="o">=</span> <span class="nb">chr</span><span class="p">(</span><span class="n">marker</span><span class="p">)</span>
+                <span class="n">marker</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">names</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">lit</span><span class="p">,</span> <span class="n">lit_char</span><span class="p">)</span>
+                <span class="n">literals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">lit_char</span><span class="p">,</span> <span class="n">lit</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+        <span class="k">def</span> <span class="nf">literal</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">literals</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">literals</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">s</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">as_seq</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">as_seq</span><span class="p">:</span>
+            <span class="n">names</span> <span class="o">=</span> <span class="n">names</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;no symbols given&#39;</span><span class="p">)</span>
+
+        <span class="c"># split on commas</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">names</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;missing symbol between commas&#39;</span><span class="p">)</span>
+        <span class="c"># split on spaces</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;each_char&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">as_seq</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">symbols</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">cls</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;cls&#39;</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;seq&#39;</span><span class="p">,</span> <span class="n">as_seq</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;missing symbol&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s">&#39;:&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                <span class="n">symbol</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="n">literal</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">split</span> <span class="o">=</span> <span class="n">_range</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="c"># remove 1 layer of bounding parentheses around ranges</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">and</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="s">&#39;:&#39;</span> <span class="ow">and</span> \
+                        <span class="n">split</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;(&#39;</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="n">split</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;)&#39;</span><span class="p">):</span>
+                    <span class="n">split</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="n">split</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">split</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s">&#39;:&#39;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;missing end range&#39;</span><span class="p">)</span>
+                    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">b</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span><span class="p">:</span>
+                        <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                        <span class="n">b</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                        <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span> <span class="ow">or</span> <span class="s">&#39;a&#39;</span>
+                        <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span>
+                            <span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">a</span><span class="p">),</span>
+                            <span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>  <span class="c"># inclusive</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                        <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">seq</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">split</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">names</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cartes</span><span class="p">(</span><span class="o">*</span><span class="n">split</span><span class="p">)]</span>
+                <span class="k">if</span> <span class="n">literals</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">cls</span><span class="p">(</span><span class="n">literal</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">cls</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">names</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">seq</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">()</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">symbols</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">names</span><span class="p">)(</span><span class="n">result</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="var"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.symbol.var">[docs]</a><span class="k">def</span> <span class="nf">var</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create symbols and inject them into the global namespace.</span>
+
+<span class="sd">    This calls :func:`symbols` with the same arguments and puts the results</span>
+<span class="sd">    into the *global* namespace. It&#39;s recommended not to use :func:`var` in</span>
+<span class="sd">    library code, where :func:`symbols` has to be used::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import var</span>
+
+<span class="sd">        &gt;&gt;&gt; var(&#39;x&#39;)</span>
+<span class="sd">        x</span>
+<span class="sd">        &gt;&gt;&gt; x</span>
+<span class="sd">        x</span>
+
+<span class="sd">        &gt;&gt;&gt; var(&#39;a,ab,abc&#39;)</span>
+<span class="sd">        (a, ab, abc)</span>
+<span class="sd">        &gt;&gt;&gt; abc</span>
+<span class="sd">        abc</span>
+
+<span class="sd">        &gt;&gt;&gt; var(&#39;x,y&#39;, real=True)</span>
+<span class="sd">        (x, y)</span>
+<span class="sd">        &gt;&gt;&gt; x.is_real and y.is_real</span>
+<span class="sd">        True</span>
+
+<span class="sd">    See :func:`symbol` documentation for more details on what kinds of</span>
+<span class="sd">    arguments can be passed to :func:`var`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">traverse</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Recursively inject symbols to the global namespace. &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span><span class="p">[</span><span class="n">symbol</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">symbol</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">FunctionClass</span><span class="p">):</span>
+                <span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span><span class="p">[</span><span class="n">symbol</span><span class="o">.</span><span class="n">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">symbol</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">traverse</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">currentframe</span>
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">currentframe</span><span class="p">()</span><span class="o">.</span><span class="n">f_back</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">syms</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">syms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">syms</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span><span class="p">[</span><span class="n">syms</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">syms</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">syms</span><span class="p">,</span> <span class="n">FunctionClass</span><span class="p">):</span>
+                <span class="n">frame</span><span class="o">.</span><span class="n">f_globals</span><span class="p">[</span><span class="n">syms</span><span class="o">.</span><span class="n">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">syms</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">traverse</span><span class="p">(</span><span class="n">syms</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">frame</span>  <span class="c"># break cyclic dependencies as stated in inspect docs</span>
+
+    <span class="k">return</span> <span class="n">syms</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

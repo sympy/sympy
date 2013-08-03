@@ -1,0 +1,814 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.wigner &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.wigner</h1><div class="highlight"><pre>
+<span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">Wigner, Clebsch-Gordan, Racah, and Gaunt coefficients</span>
+
+<span class="sd">Collection of functions for calculating Wigner 3j, 6j, 9j,</span>
+<span class="sd">Clebsch-Gordan, Racah as well as Gaunt coefficients exactly, all</span>
+<span class="sd">evaluating to a rational number times the square root of a rational</span>
+<span class="sd">number [Rasch03]_.</span>
+
+<span class="sd">Please see the description of the individual functions for further</span>
+<span class="sd">details and examples.</span>
+
+<span class="sd">References</span>
+<span class="sd">~~~~~~~~~~</span>
+
+<span class="sd">.. [Rasch03] J. Rasch and A. C. H. Yu, &#39;Efficient Storage Scheme for</span>
+<span class="sd">  Pre-calculated Wigner 3j, 6j and Gaunt Coefficients&#39;, SIAM</span>
+<span class="sd">  J. Sci. Comput. Volume 25, Issue 4, pp. 1416-1428 (2003)</span>
+
+<span class="sd">Credits and Copyright</span>
+<span class="sd">~~~~~~~~~~~~~~~~~~~~~</span>
+
+<span class="sd">This code was taken from Sage with the permission of all authors:</span>
+
+<span class="sd">http://groups.google.com/group/sage-devel/browse_thread/thread/33835976efbb3b7f</span>
+
+<span class="sd">AUTHORS:</span>
+
+<span class="sd">- Jens Rasch (2009-03-24): initial version for Sage</span>
+
+<span class="sd">- Jens Rasch (2009-05-31): updated to sage-4.0</span>
+
+<span class="sd">Copyright (C) 2008 Jens Rasch &lt;jyr2000@gmail.com&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="c">#from sage.rings.complex_number import ComplexNumber</span>
+<span class="c">#from sage.rings.finite_rings.integer_mod import Mod</span>
+
+<span class="c"># This list of precomputed factorials is needed to massively</span>
+<span class="c"># accelerate future calculations of the various coefficients</span>
+<span class="n">_Factlist</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_calc_factlist</span><span class="p">(</span><span class="n">nn</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Function calculates a list of precomputed factorials in order to</span>
+<span class="sd">    massively accelerate future calculations of the various</span>
+<span class="sd">    coefficients.</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``nn`` -  integer, highest factorial to be computed</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    list of integers -- the list of precomputed factorials</span>
+
+<span class="sd">    EXAMPLES:</span>
+
+<span class="sd">    Calculate list of factorials::</span>
+
+<span class="sd">        sage: from sage.functions.wigner import _calc_factlist</span>
+<span class="sd">        sage: _calc_factlist(10)</span>
+<span class="sd">        [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nn</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_Factlist</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">_Factlist</span><span class="p">),</span> <span class="n">nn</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">_Factlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Factlist</span><span class="p">[</span><span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">ii</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_Factlist</span><span class="p">[:</span><span class="nb">int</span><span class="p">(</span><span class="n">nn</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="wigner_3j"><a class="viewcode-back" href="../../../modules/physics/wigner.html#sympy.physics.wigner.wigner_3j">[docs]</a><span class="k">def</span> <span class="nf">wigner_3j</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_3</span><span class="p">,</span> <span class="n">m_1</span><span class="p">,</span> <span class="n">m_2</span><span class="p">,</span> <span class="n">m_3</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Wigner 3j symbol `Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)`.</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer</span>
+
+<span class="sd">    -  ``prec`` - precision, default: ``None``. Providing a precision can</span>
+<span class="sd">       drastically speed up the calculation.</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    Rational number times the square root of a rational number</span>
+<span class="sd">    (if ``prec=None``), or real number if a precision is given.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.wigner import wigner_3j</span>
+<span class="sd">    &gt;&gt;&gt; wigner_3j(2, 6, 4, 0, 0, 0)</span>
+<span class="sd">    sqrt(715)/143</span>
+<span class="sd">    &gt;&gt;&gt; wigner_3j(2, 6, 4, 0, 0, 1)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    It is an error to have arguments that are not integer or half</span>
+<span class="sd">    integer values::</span>
+
+<span class="sd">        sage: wigner_3j(2.1, 6, 4, 0, 0, 0)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: j values must be integer or half integer</span>
+<span class="sd">        sage: wigner_3j(2, 6, 4, 1, 0, -1.1)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: m values must be integer or half integer</span>
+
+<span class="sd">    NOTES:</span>
+
+<span class="sd">    The Wigner 3j symbol obeys the following symmetry rules:</span>
+
+<span class="sd">    - invariant under any permutation of the columns (with the</span>
+<span class="sd">      exception of a sign change where `J:=j_1+j_2+j_3`):</span>
+
+<span class="sd">      .. math::</span>
+
+<span class="sd">         Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)</span>
+<span class="sd">          =Wigner3j(j_3,j_1,j_2,m_3,m_1,m_2)</span>
+<span class="sd">          =Wigner3j(j_2,j_3,j_1,m_2,m_3,m_1)</span>
+<span class="sd">          =(-1)^J Wigner3j(j_3,j_2,j_1,m_3,m_2,m_1)</span>
+<span class="sd">          =(-1)^J Wigner3j(j_1,j_3,j_2,m_1,m_3,m_2)</span>
+<span class="sd">          =(-1)^J Wigner3j(j_2,j_1,j_3,m_2,m_1,m_3)</span>
+
+<span class="sd">    - invariant under space inflection, i.e.</span>
+
+<span class="sd">      .. math::</span>
+
+<span class="sd">         Wigner3j(j_1,j_2,j_3,m_1,m_2,m_3)</span>
+<span class="sd">         =(-1)^J Wigner3j(j_1,j_2,j_3,-m_1,-m_2,-m_3)</span>
+
+<span class="sd">    - symmetric with respect to the 72 additional symmetries based on</span>
+<span class="sd">      the work by [Regge58]_</span>
+
+<span class="sd">    - zero for `j_1`, `j_2`, `j_3` not fulfilling triangle relation</span>
+
+<span class="sd">    - zero for `m_1 + m_2 + m_3 \neq 0`</span>
+
+<span class="sd">    - zero for violating any one of the conditions</span>
+<span class="sd">      `j_1 \ge |m_1|`,  `j_2 \ge |m_2|`,  `j_3 \ge |m_3|`</span>
+
+<span class="sd">    ALGORITHM:</span>
+
+<span class="sd">    This function uses the algorithm of [Edmonds74]_ to calculate the</span>
+<span class="sd">    value of the 3j symbol exactly. Note that the formula contains</span>
+<span class="sd">    alternating sums over large factorials and is therefore unsuitable</span>
+<span class="sd">    for finite precision arithmetic and only useful for a computer</span>
+<span class="sd">    algebra system [Rasch03]_.</span>
+
+<span class="sd">    REFERENCES:</span>
+
+<span class="sd">    .. [Regge58] &#39;Symmetry Properties of Clebsch-Gordan Coefficients&#39;,</span>
+<span class="sd">      T. Regge, Nuovo Cimento, Volume 10, pp. 544 (1958)</span>
+
+<span class="sd">    .. [Edmonds74] &#39;Angular Momentum in Quantum Mechanics&#39;,</span>
+<span class="sd">      A. R. Edmonds, Princeton University Press (1974)</span>
+
+<span class="sd">    AUTHORS:</span>
+
+<span class="sd">    - Jens Rasch (2009-03-24): initial version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">j_1</span> <span class="o">*</span> <span class="mi">2</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">j_2</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">j_2</span> <span class="o">*</span> <span class="mi">2</span> <span class="ow">or</span> \
+            <span class="nb">int</span><span class="p">(</span><span class="n">j_3</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">j_3</span> <span class="o">*</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;j values must be integer or half integer&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">m_1</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m_1</span> <span class="o">*</span> <span class="mi">2</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">m_2</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m_2</span> <span class="o">*</span> <span class="mi">2</span> <span class="ow">or</span> \
+            <span class="nb">int</span><span class="p">(</span><span class="n">m_3</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m_3</span> <span class="o">*</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;m values must be integer or half integer&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m_1</span> <span class="o">+</span> <span class="n">m_2</span> <span class="o">+</span> <span class="n">m_3</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">prefid</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">-</span> <span class="n">j_2</span> <span class="o">-</span> <span class="n">m_3</span><span class="p">))</span>
+    <span class="n">m_3</span> <span class="o">=</span> <span class="o">-</span><span class="n">m_3</span>
+    <span class="n">a1</span> <span class="o">=</span> <span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">-</span> <span class="n">j_3</span>
+    <span class="k">if</span> <span class="n">a1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">j_1</span> <span class="o">-</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_3</span>
+    <span class="k">if</span> <span class="n">a2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">a3</span> <span class="o">=</span> <span class="o">-</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_3</span>
+    <span class="k">if</span> <span class="n">a3</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m_1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">j_1</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m_2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">j_2</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m_3</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">j_3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">maxfact</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j_1</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m_1</span><span class="p">),</span> <span class="n">j_2</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m_2</span><span class="p">),</span>
+                  <span class="n">j_3</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">m_3</span><span class="p">))</span>
+    <span class="n">_calc_factlist</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">maxfact</span><span class="p">))</span>
+
+    <span class="n">argsqrt</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">-</span> <span class="n">j_3</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">-</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_3</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="o">-</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_3</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">m_1</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_2</span> <span class="o">-</span> <span class="n">m_2</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_2</span> <span class="o">+</span> <span class="n">m_2</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_3</span> <span class="o">-</span> <span class="n">m_3</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_3</span> <span class="o">+</span> <span class="n">m_3</span><span class="p">)])</span> <span class="o">/</span> \
+        <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>
+
+    <span class="n">ressqrt</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">argsqrt</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ressqrt</span><span class="o">.</span><span class="n">is_complex</span><span class="p">:</span>
+        <span class="n">ressqrt</span> <span class="o">=</span> <span class="n">ressqrt</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">imin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">j_3</span> <span class="o">+</span> <span class="n">j_1</span> <span class="o">+</span> <span class="n">m_2</span><span class="p">,</span> <span class="o">-</span><span class="n">j_3</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">j_2</span> <span class="o">+</span> <span class="n">m_2</span><span class="p">,</span> <span class="n">j_1</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">,</span> <span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">-</span> <span class="n">j_3</span><span class="p">)</span>
+    <span class="n">sumres</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">imin</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">imax</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">den</span> <span class="o">=</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ii</span> <span class="o">+</span> <span class="n">j_3</span> <span class="o">-</span> <span class="n">j_1</span> <span class="o">-</span> <span class="n">m_2</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_2</span> <span class="o">+</span> <span class="n">m_2</span> <span class="o">-</span> <span class="n">ii</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">-</span> <span class="n">ii</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">ii</span> <span class="o">+</span> <span class="n">j_3</span> <span class="o">-</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">m_1</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">-</span> <span class="n">j_3</span> <span class="o">-</span> <span class="n">ii</span><span class="p">)]</span>
+        <span class="n">sumres</span> <span class="o">=</span> <span class="n">sumres</span> <span class="o">+</span> <span class="n">Integer</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">ii</span><span class="p">)</span> <span class="o">/</span> <span class="n">den</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">ressqrt</span> <span class="o">*</span> <span class="n">sumres</span> <span class="o">*</span> <span class="n">prefid</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<div class="viewcode-block" id="clebsch_gordan"><a class="viewcode-back" href="../../../modules/physics/wigner.html#sympy.physics.wigner.clebsch_gordan">[docs]</a><span class="k">def</span> <span class="nf">clebsch_gordan</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_3</span><span class="p">,</span> <span class="n">m_1</span><span class="p">,</span> <span class="n">m_2</span><span class="p">,</span> <span class="n">m_3</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Clebsch-Gordan coefficient</span>
+<span class="sd">    `\langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle`.</span>
+
+<span class="sd">    The reference for this function is [Edmonds74]_.</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``j_1``, ``j_2``, ``j_3``, ``m_1``, ``m_2``, ``m_3`` - integer or half integer</span>
+
+<span class="sd">    -  ``prec`` - precision, default: ``None``. Providing a precision can</span>
+<span class="sd">       drastically speed up the calculation.</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    Rational number times the square root of a rational number</span>
+<span class="sd">    (if ``prec=None``), or real number if a precision is given.</span>
+
+<span class="sd">    EXAMPLES::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.wigner import clebsch_gordan</span>
+<span class="sd">        &gt;&gt;&gt; clebsch_gordan(S(3)/2, S(1)/2, 2, S(3)/2, S(1)/2, 2)</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; clebsch_gordan(S(3)/2, S(1)/2, 1, S(3)/2, -S(1)/2, 1)</span>
+<span class="sd">        sqrt(3)/2</span>
+<span class="sd">        &gt;&gt;&gt; clebsch_gordan(S(3)/2, S(1)/2, 1, -S(1)/2, S(1)/2, 0)</span>
+<span class="sd">        -sqrt(2)/2</span>
+
+<span class="sd">    NOTES:</span>
+
+<span class="sd">    The Clebsch-Gordan coefficient will be evaluated via its relation</span>
+<span class="sd">    to Wigner 3j symbols:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \langle j_1 m_1 \; j_2 m_2 | j_3 m_3 \rangle</span>
+<span class="sd">        =(-1)^{j_1-j_2+m_3} \sqrt{2j_3+1} \;</span>
+<span class="sd">        Wigner3j(j_1,j_2,j_3,m_1,m_2,-m_3)</span>
+
+<span class="sd">    See also the documentation on Wigner 3j symbols which exhibit much</span>
+<span class="sd">    higher symmetry relations than the Clebsch-Gordan coefficient.</span>
+
+<span class="sd">    AUTHORS:</span>
+
+<span class="sd">    - Jens Rasch (2009-03-24): initial version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">sympify</span><span class="p">(</span><span class="n">j_1</span> <span class="o">-</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">m_3</span><span class="p">)</span> <span class="o">*</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">j_3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">wigner_3j</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_3</span><span class="p">,</span> <span class="n">m_1</span><span class="p">,</span> <span class="n">m_2</span><span class="p">,</span> <span class="o">-</span><span class="n">m_3</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_big_delta_coeff</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span> <span class="n">bb</span><span class="p">,</span> <span class="n">cc</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Calculates the Delta coefficient of the 3 angular momenta for</span>
+<span class="sd">    Racah symbols. Also checks that the differences are of integer</span>
+<span class="sd">    value.</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``aa`` - first angular momentum, integer or half integer</span>
+
+<span class="sd">    -  ``bb`` - second angular momentum, integer or half integer</span>
+
+<span class="sd">    -  ``cc`` - third angular momentum, integer or half integer</span>
+
+<span class="sd">    -  ``prec`` - precision of the ``sqrt()`` calculation</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    double - Value of the Delta coefficient</span>
+
+<span class="sd">    EXAMPLES::</span>
+
+<span class="sd">        sage: from sage.functions.wigner import _big_delta_coeff</span>
+<span class="sd">        sage: _big_delta_coeff(1,1,1)</span>
+<span class="sd">        1/2*sqrt(1/6)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">-</span> <span class="n">cc</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">-</span> <span class="n">cc</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;j values must be integer or half integer and fulfill the triangle relation&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">bb</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">bb</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;j values must be integer or half integer and fulfill the triangle relation&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">aa</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">aa</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;j values must be integer or half integer and fulfill the triangle relation&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">-</span> <span class="n">cc</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">bb</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">aa</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">maxfact</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">-</span> <span class="n">cc</span><span class="p">,</span> <span class="n">aa</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">bb</span><span class="p">,</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">aa</span><span class="p">,</span> <span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">_calc_factlist</span><span class="p">(</span><span class="n">maxfact</span><span class="p">)</span>
+
+    <span class="n">argsqrt</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">-</span> <span class="n">cc</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">bb</span><span class="p">)]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">aa</span><span class="p">)])</span> <span class="o">/</span> \
+        <span class="n">Integer</span><span class="p">(</span><span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span>
+
+    <span class="n">ressqrt</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">argsqrt</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">prec</span><span class="p">:</span>
+        <span class="n">ressqrt</span> <span class="o">=</span> <span class="n">ressqrt</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">ressqrt</span>
+
+
+<div class="viewcode-block" id="racah"><a class="viewcode-back" href="../../../modules/physics/wigner.html#sympy.physics.wigner.racah">[docs]</a><span class="k">def</span> <span class="nf">racah</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span> <span class="n">bb</span><span class="p">,</span> <span class="n">cc</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">ee</span><span class="p">,</span> <span class="n">ff</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Racah symbol `W(a,b,c,d;e,f)`.</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``a``, ..., ``f`` - integer or half integer</span>
+
+<span class="sd">    -  ``prec`` - precision, default: ``None``. Providing a precision can</span>
+<span class="sd">       drastically speed up the calculation.</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    Rational number times the square root of a rational number</span>
+<span class="sd">    (if ``prec=None``), or real number if a precision is given.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.wigner import racah</span>
+<span class="sd">    &gt;&gt;&gt; racah(3,3,3,3,3,3)</span>
+<span class="sd">    -1/14</span>
+
+<span class="sd">    NOTES:</span>
+
+<span class="sd">    The Racah symbol is related to the Wigner 6j symbol:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)</span>
+<span class="sd">       =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)</span>
+
+<span class="sd">    Please see the 6j symbol for its much richer symmetries and for</span>
+<span class="sd">    additional properties.</span>
+
+<span class="sd">    ALGORITHM:</span>
+
+<span class="sd">    This function uses the algorithm of [Edmonds74]_ to calculate the</span>
+<span class="sd">    value of the 6j symbol exactly. Note that the formula contains</span>
+<span class="sd">    alternating sums over large factorials and is therefore unsuitable</span>
+<span class="sd">    for finite precision arithmetic and only useful for a computer</span>
+<span class="sd">    algebra system [Rasch03]_.</span>
+
+<span class="sd">    AUTHORS:</span>
+
+<span class="sd">    - Jens Rasch (2009-03-24): initial version</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prefac</span> <span class="o">=</span> <span class="n">_big_delta_coeff</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span> <span class="n">bb</span><span class="p">,</span> <span class="n">ee</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">_big_delta_coeff</span><span class="p">(</span><span class="n">cc</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">ee</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">_big_delta_coeff</span><span class="p">(</span><span class="n">aa</span><span class="p">,</span> <span class="n">cc</span><span class="p">,</span> <span class="n">ff</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">_big_delta_coeff</span><span class="p">(</span><span class="n">bb</span><span class="p">,</span> <span class="n">dd</span><span class="p">,</span> <span class="n">ff</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">prefac</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">imin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">ee</span><span class="p">,</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">dd</span> <span class="o">+</span> <span class="n">ee</span><span class="p">,</span> <span class="n">aa</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">ff</span><span class="p">,</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">dd</span> <span class="o">+</span> <span class="n">ff</span><span class="p">)</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">dd</span><span class="p">,</span> <span class="n">aa</span> <span class="o">+</span> <span class="n">dd</span> <span class="o">+</span> <span class="n">ee</span> <span class="o">+</span> <span class="n">ff</span><span class="p">,</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">ee</span> <span class="o">+</span> <span class="n">ff</span><span class="p">)</span>
+
+    <span class="n">maxfact</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">imax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">dd</span><span class="p">,</span> <span class="n">aa</span> <span class="o">+</span> <span class="n">dd</span> <span class="o">+</span> <span class="n">ee</span> <span class="o">+</span> <span class="n">ff</span><span class="p">,</span>
+                 <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">ee</span> <span class="o">+</span> <span class="n">ff</span><span class="p">)</span>
+    <span class="n">_calc_factlist</span><span class="p">(</span><span class="n">maxfact</span><span class="p">)</span>
+
+    <span class="n">sumres</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">imin</span><span class="p">,</span> <span class="n">imax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">den</span> <span class="o">=</span> <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">kk</span> <span class="o">-</span> <span class="n">aa</span> <span class="o">-</span> <span class="n">bb</span> <span class="o">-</span> <span class="n">ee</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">kk</span> <span class="o">-</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">dd</span> <span class="o">-</span> <span class="n">ee</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">kk</span> <span class="o">-</span> <span class="n">aa</span> <span class="o">-</span> <span class="n">cc</span> <span class="o">-</span> <span class="n">ff</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">kk</span> <span class="o">-</span> <span class="n">bb</span> <span class="o">-</span> <span class="n">dd</span> <span class="o">-</span> <span class="n">ff</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">dd</span> <span class="o">-</span> <span class="n">kk</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">dd</span> <span class="o">+</span> <span class="n">ee</span> <span class="o">+</span> <span class="n">ff</span> <span class="o">-</span> <span class="n">kk</span><span class="p">)]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">ee</span> <span class="o">+</span> <span class="n">ff</span> <span class="o">-</span> <span class="n">kk</span><span class="p">)]</span>
+        <span class="n">sumres</span> <span class="o">=</span> <span class="n">sumres</span> <span class="o">+</span> <span class="n">Integer</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">kk</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">kk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">den</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">prefac</span> <span class="o">*</span> <span class="n">sumres</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">int</span><span class="p">(</span><span class="n">aa</span> <span class="o">+</span> <span class="n">bb</span> <span class="o">+</span> <span class="n">cc</span> <span class="o">+</span> <span class="n">dd</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<div class="viewcode-block" id="wigner_6j"><a class="viewcode-back" href="../../../modules/physics/wigner.html#sympy.physics.wigner.wigner_6j">[docs]</a><span class="k">def</span> <span class="nf">wigner_6j</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_3</span><span class="p">,</span> <span class="n">j_4</span><span class="p">,</span> <span class="n">j_5</span><span class="p">,</span> <span class="n">j_6</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Wigner 6j symbol `Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)`.</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``j_1``, ..., ``j_6`` - integer or half integer</span>
+
+<span class="sd">    -  ``prec`` - precision, default: ``None``. Providing a precision can</span>
+<span class="sd">       drastically speed up the calculation.</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    Rational number times the square root of a rational number</span>
+<span class="sd">    (if ``prec=None``), or real number if a precision is given.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.wigner import wigner_6j</span>
+<span class="sd">    &gt;&gt;&gt; wigner_6j(3,3,3,3,3,3)</span>
+<span class="sd">    -1/14</span>
+<span class="sd">    &gt;&gt;&gt; wigner_6j(5,5,5,5,5,5)</span>
+<span class="sd">    1/52</span>
+
+<span class="sd">    It is an error to have arguments that are not integer or half</span>
+<span class="sd">    integer values or do not fulfill the triangle relation::</span>
+
+<span class="sd">        sage: wigner_6j(2.5,2.5,2.5,2.5,2.5,2.5)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: j values must be integer or half integer and fulfill the triangle relation</span>
+<span class="sd">        sage: wigner_6j(0.5,0.5,1.1,0.5,0.5,1.1)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: j values must be integer or half integer and fulfill the triangle relation</span>
+
+<span class="sd">    NOTES:</span>
+
+<span class="sd">    The Wigner 6j symbol is related to the Racah symbol but exhibits</span>
+<span class="sd">    more symmetries as detailed below.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)</span>
+<span class="sd">        =(-1)^{j_1+j_2+j_4+j_5} W(j_1,j_2,j_5,j_4,j_3,j_6)</span>
+
+<span class="sd">    The Wigner 6j symbol obeys the following symmetry rules:</span>
+
+<span class="sd">    - Wigner 6j symbols are left invariant under any permutation of</span>
+<span class="sd">      the columns:</span>
+
+<span class="sd">      .. math::</span>
+
+<span class="sd">         Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)</span>
+<span class="sd">          =Wigner6j(j_3,j_1,j_2,j_6,j_4,j_5)</span>
+<span class="sd">          =Wigner6j(j_2,j_3,j_1,j_5,j_6,j_4)</span>
+<span class="sd">          =Wigner6j(j_3,j_2,j_1,j_6,j_5,j_4)</span>
+<span class="sd">          =Wigner6j(j_1,j_3,j_2,j_4,j_6,j_5)</span>
+<span class="sd">          =Wigner6j(j_2,j_1,j_3,j_5,j_4,j_6)</span>
+
+<span class="sd">    - They are invariant under the exchange of the upper and lower</span>
+<span class="sd">      arguments in each of any two columns, i.e.</span>
+
+<span class="sd">      .. math::</span>
+
+<span class="sd">         Wigner6j(j_1,j_2,j_3,j_4,j_5,j_6)</span>
+<span class="sd">          =Wigner6j(j_1,j_5,j_6,j_4,j_2,j_3)</span>
+<span class="sd">          =Wigner6j(j_4,j_2,j_6,j_1,j_5,j_3)</span>
+<span class="sd">          =Wigner6j(j_4,j_5,j_3,j_1,j_2,j_6)</span>
+
+<span class="sd">    - additional 6 symmetries [Regge59]_ giving rise to 144 symmetries</span>
+<span class="sd">      in total</span>
+
+<span class="sd">    - only non-zero if any triple of `j`&#39;s fulfill a triangle relation</span>
+
+<span class="sd">    ALGORITHM:</span>
+
+<span class="sd">    This function uses the algorithm of [Edmonds74]_ to calculate the</span>
+<span class="sd">    value of the 6j symbol exactly. Note that the formula contains</span>
+<span class="sd">    alternating sums over large factorials and is therefore unsuitable</span>
+<span class="sd">    for finite precision arithmetic and only useful for a computer</span>
+<span class="sd">    algebra system [Rasch03]_.</span>
+
+<span class="sd">    REFERENCES:</span>
+
+<span class="sd">    .. [Regge59] &#39;Symmetry Properties of Racah Coefficients&#39;,</span>
+<span class="sd">      T. Regge, Nuovo Cimento, Volume 11, pp. 116 (1959)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="nb">int</span><span class="p">(</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_4</span> <span class="o">+</span> <span class="n">j_5</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">racah</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_5</span><span class="p">,</span> <span class="n">j_4</span><span class="p">,</span> <span class="n">j_3</span><span class="p">,</span> <span class="n">j_6</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<div class="viewcode-block" id="wigner_9j"><a class="viewcode-back" href="../../../modules/physics/wigner.html#sympy.physics.wigner.wigner_9j">[docs]</a><span class="k">def</span> <span class="nf">wigner_9j</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_3</span><span class="p">,</span> <span class="n">j_4</span><span class="p">,</span> <span class="n">j_5</span><span class="p">,</span> <span class="n">j_6</span><span class="p">,</span> <span class="n">j_7</span><span class="p">,</span> <span class="n">j_8</span><span class="p">,</span> <span class="n">j_9</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Wigner 9j symbol</span>
+<span class="sd">    `Wigner9j(j_1,j_2,j_3,j_4,j_5,j_6,j_7,j_8,j_9)`.</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``j_1``, ..., ``j_9`` - integer or half integer</span>
+
+<span class="sd">    -  ``prec`` - precision, default: ``None``. Providing a precision can</span>
+<span class="sd">       drastically speed up the calculation.</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    Rational number times the square root of a rational number</span>
+<span class="sd">    (if ``prec=None``), or real number if a precision is given.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.wigner import wigner_9j</span>
+<span class="sd">    &gt;&gt;&gt; wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18</span>
+<span class="sd">    0.05555555...</span>
+
+<span class="sd">    It is an error to have arguments that are not integer or half</span>
+<span class="sd">    integer values or do not fulfill the triangle relation::</span>
+
+<span class="sd">        sage: wigner_9j(0.5,0.5,0.5, 0.5,0.5,0.5, 0.5,0.5,0.5,prec=64)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: j values must be integer or half integer and fulfill the triangle relation</span>
+<span class="sd">        sage: wigner_9j(1,1,1, 0.5,1,1.5, 0.5,1,2.5,prec=64)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: j values must be integer or half integer and fulfill the triangle relation</span>
+
+<span class="sd">    ALGORITHM:</span>
+
+<span class="sd">    This function uses the algorithm of [Edmonds74]_ to calculate the</span>
+<span class="sd">    value of the 3j symbol exactly. Note that the formula contains</span>
+<span class="sd">    alternating sums over large factorials and is therefore unsuitable</span>
+<span class="sd">    for finite precision arithmetic and only useful for a computer</span>
+<span class="sd">    algebra system [Rasch03]_.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">imin</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">j_1</span> <span class="o">+</span> <span class="n">j_9</span><span class="p">,</span> <span class="n">j_2</span> <span class="o">+</span> <span class="n">j_6</span><span class="p">,</span> <span class="n">j_4</span> <span class="o">+</span> <span class="n">j_8</span><span class="p">)</span>
+
+    <span class="n">sumres</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">imin</span><span class="p">,</span> <span class="n">imax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">sumres</span> <span class="o">=</span> <span class="n">sumres</span> <span class="o">+</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">kk</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> \
+            <span class="n">racah</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_9</span><span class="p">,</span> <span class="n">j_6</span><span class="p">,</span> <span class="n">j_3</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="o">*</span> \
+            <span class="n">racah</span><span class="p">(</span><span class="n">j_4</span><span class="p">,</span> <span class="n">j_6</span><span class="p">,</span> <span class="n">j_8</span><span class="p">,</span> <span class="n">j_2</span><span class="p">,</span> <span class="n">j_5</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="o">*</span> \
+            <span class="n">racah</span><span class="p">(</span><span class="n">j_1</span><span class="p">,</span> <span class="n">j_4</span><span class="p">,</span> <span class="n">j_9</span><span class="p">,</span> <span class="n">j_8</span><span class="p">,</span> <span class="n">j_7</span><span class="p">,</span> <span class="n">kk</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sumres</span>
+
+</div>
+<div class="viewcode-block" id="gaunt"><a class="viewcode-back" href="../../../modules/physics/wigner.html#sympy.physics.wigner.gaunt">[docs]</a><span class="k">def</span> <span class="nf">gaunt</span><span class="p">(</span><span class="n">l_1</span><span class="p">,</span> <span class="n">l_2</span><span class="p">,</span> <span class="n">l_3</span><span class="p">,</span> <span class="n">m_1</span><span class="p">,</span> <span class="n">m_2</span><span class="p">,</span> <span class="n">m_3</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the Gaunt coefficient.</span>
+
+<span class="sd">    The Gaunt coefficient is defined as the integral over three</span>
+<span class="sd">    spherical harmonics:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        Y(j_1,j_2,j_3,m_1,m_2,m_3)</span>
+<span class="sd">        =\int Y_{l_1,m_1}(\Omega)</span>
+<span class="sd">         Y_{l_2,m_2}(\Omega) Y_{l_3,m_3}(\Omega) d\Omega</span>
+<span class="sd">        =\sqrt{(2l_1+1)(2l_2+1)(2l_3+1)/(4\pi)}</span>
+<span class="sd">         \; Y(j_1,j_2,j_3,0,0,0) \; Y(j_1,j_2,j_3,m_1,m_2,m_3)</span>
+
+<span class="sd">    INPUT:</span>
+
+<span class="sd">    -  ``l_1``, ``l_2``, ``l_3``, ``m_1``, ``m_2``, ``m_3`` - integer</span>
+
+<span class="sd">    -  ``prec`` - precision, default: ``None``. Providing a precision can</span>
+<span class="sd">       drastically speed up the calculation.</span>
+
+<span class="sd">    OUTPUT:</span>
+
+<span class="sd">    Rational number times the square root of a rational number</span>
+<span class="sd">    (if ``prec=None``), or real number if a precision is given.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.wigner import gaunt</span>
+<span class="sd">    &gt;&gt;&gt; gaunt(1,0,1,1,0,-1)</span>
+<span class="sd">    -1/(2*sqrt(pi))</span>
+<span class="sd">    &gt;&gt;&gt; gaunt(1000,1000,1200,9,3,-12).n(64)</span>
+<span class="sd">    0.00689500421922113448...</span>
+
+<span class="sd">    It is an error to use non-integer values for `l` and `m`::</span>
+
+<span class="sd">        sage: gaunt(1.2,0,1.2,0,0,0)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: l values must be integer</span>
+<span class="sd">        sage: gaunt(1,0,1,1.1,0,-1.1)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">        ...</span>
+<span class="sd">        ValueError: m values must be integer</span>
+
+<span class="sd">    NOTES:</span>
+
+<span class="sd">    The Gaunt coefficient obeys the following symmetry rules:</span>
+
+<span class="sd">    - invariant under any permutation of the columns</span>
+
+<span class="sd">      .. math::</span>
+<span class="sd">          Y(j_1,j_2,j_3,m_1,m_2,m_3)</span>
+<span class="sd">          =Y(j_3,j_1,j_2,m_3,m_1,m_2)</span>
+<span class="sd">          =Y(j_2,j_3,j_1,m_2,m_3,m_1)</span>
+<span class="sd">          =Y(j_3,j_2,j_1,m_3,m_2,m_1)</span>
+<span class="sd">          =Y(j_1,j_3,j_2,m_1,m_3,m_2)</span>
+<span class="sd">          =Y(j_2,j_1,j_3,m_2,m_1,m_3)</span>
+
+<span class="sd">    - invariant under space inflection, i.e.</span>
+
+<span class="sd">      .. math::</span>
+<span class="sd">          Y(j_1,j_2,j_3,m_1,m_2,m_3)</span>
+<span class="sd">          =Y(j_1,j_2,j_3,-m_1,-m_2,-m_3)</span>
+
+<span class="sd">    - symmetric with respect to the 72 Regge symmetries as inherited</span>
+<span class="sd">      for the `3j` symbols [Regge58]_</span>
+
+<span class="sd">    - zero for `l_1`, `l_2`, `l_3` not fulfilling triangle relation</span>
+
+<span class="sd">    - zero for violating any one of the conditions: `l_1 \ge |m_1|`,</span>
+<span class="sd">      `l_2 \ge |m_2|`, `l_3 \ge |m_3|`</span>
+
+<span class="sd">    - non-zero only for an even sum of the `l_i`, i.e.</span>
+<span class="sd">      `J = l_1 + l_2 + l_3 = 2n` for `n` in `\mathbb{N}`</span>
+
+<span class="sd">    ALGORITHM:</span>
+
+<span class="sd">    This function uses the algorithm of [Liberatodebrito82]_ to</span>
+<span class="sd">    calculate the value of the Gaunt coefficient exactly. Note that</span>
+<span class="sd">    the formula contains alternating sums over large factorials and is</span>
+<span class="sd">    therefore unsuitable for finite precision arithmetic and only</span>
+<span class="sd">    useful for a computer algebra system [Rasch03]_.</span>
+
+<span class="sd">    REFERENCES:</span>
+
+<span class="sd">    .. [Liberatodebrito82] &#39;FORTRAN program for the integral of three</span>
+<span class="sd">      spherical harmonics&#39;, A. Liberato de Brito,</span>
+<span class="sd">      Comput. Phys. Commun., Volume 25, pp. 81-85 (1982)</span>
+
+<span class="sd">    AUTHORS:</span>
+
+<span class="sd">    - Jens Rasch (2009-03-24): initial version for Sage</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">l_1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">l_1</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">l_2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">l_2</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">l_3</span><span class="p">)</span> <span class="o">!=</span> <span class="n">l_3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;l values must be integer&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">m_1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m_1</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">m_2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m_2</span> <span class="ow">or</span> <span class="nb">int</span><span class="p">(</span><span class="n">m_3</span><span class="p">)</span> <span class="o">!=</span> <span class="n">m_3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;m values must be integer&quot;</span><span class="p">)</span>
+
+    <span class="n">bigL</span> <span class="o">=</span> <span class="p">(</span><span class="n">l_1</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">+</span> <span class="n">l_3</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">a1</span> <span class="o">=</span> <span class="n">l_1</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">-</span> <span class="n">l_3</span>
+    <span class="k">if</span> <span class="n">a1</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">l_1</span> <span class="o">-</span> <span class="n">l_2</span> <span class="o">+</span> <span class="n">l_3</span>
+    <span class="k">if</span> <span class="n">a2</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">a3</span> <span class="o">=</span> <span class="o">-</span><span class="n">l_1</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">+</span> <span class="n">l_3</span>
+    <span class="k">if</span> <span class="n">a3</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">bigL</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">m_1</span> <span class="o">+</span> <span class="n">m_2</span> <span class="o">+</span> <span class="n">m_3</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m_1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">l_1</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m_2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">l_2</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">m_3</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">l_3</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">imin</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">-</span><span class="n">l_3</span> <span class="o">+</span> <span class="n">l_1</span> <span class="o">+</span> <span class="n">m_2</span><span class="p">,</span> <span class="o">-</span><span class="n">l_3</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">imax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">l_2</span> <span class="o">+</span> <span class="n">m_2</span><span class="p">,</span> <span class="n">l_1</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">,</span> <span class="n">l_1</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">-</span> <span class="n">l_3</span><span class="p">)</span>
+
+    <span class="n">maxfact</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">l_1</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">+</span> <span class="n">l_3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">imax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">_calc_factlist</span><span class="p">(</span><span class="n">maxfact</span><span class="p">)</span>
+
+    <span class="n">argsqrt</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">l_1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">l_2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">l_3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_1</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_1</span> <span class="o">+</span> <span class="n">m_1</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_2</span> <span class="o">-</span> <span class="n">m_2</span><span class="p">]</span> <span class="o">*</span> \
+        <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_2</span> <span class="o">+</span> <span class="n">m_2</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_3</span> <span class="o">-</span> <span class="n">m_3</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_3</span> <span class="o">+</span> <span class="n">m_3</span><span class="p">]</span> <span class="o">/</span> \
+        <span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+    <span class="n">ressqrt</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">argsqrt</span><span class="p">)</span>
+
+    <span class="n">prefac</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="n">_Factlist</span><span class="p">[</span><span class="n">bigL</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_2</span> <span class="o">-</span> <span class="n">l_1</span> <span class="o">+</span> <span class="n">l_3</span><span class="p">]</span> <span class="o">*</span>
+                     <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_1</span> <span class="o">-</span> <span class="n">l_2</span> <span class="o">+</span> <span class="n">l_3</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_1</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">-</span> <span class="n">l_3</span><span class="p">])</span><span class="o">/</span> \
+        <span class="n">_Factlist</span><span class="p">[</span><span class="mi">2</span> <span class="o">*</span> <span class="n">bigL</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">/</span> \
+        <span class="p">(</span><span class="n">_Factlist</span><span class="p">[</span><span class="n">bigL</span> <span class="o">-</span> <span class="n">l_1</span><span class="p">]</span> <span class="o">*</span>
+         <span class="n">_Factlist</span><span class="p">[</span><span class="n">bigL</span> <span class="o">-</span> <span class="n">l_2</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">bigL</span> <span class="o">-</span> <span class="n">l_3</span><span class="p">])</span>
+
+    <span class="n">sumres</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">imin</span><span class="p">,</span> <span class="n">imax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">den</span> <span class="o">=</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="n">l_3</span> <span class="o">-</span> <span class="n">l_1</span> <span class="o">-</span> <span class="n">m_2</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_2</span> <span class="o">+</span> <span class="n">m_2</span> <span class="o">-</span> <span class="n">ii</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_1</span> <span class="o">-</span> <span class="n">ii</span> <span class="o">-</span> <span class="n">m_1</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="n">_Factlist</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="n">l_3</span> <span class="o">-</span> <span class="n">l_2</span> <span class="o">+</span> <span class="n">m_1</span><span class="p">]</span> <span class="o">*</span> <span class="n">_Factlist</span><span class="p">[</span><span class="n">l_1</span> <span class="o">+</span> <span class="n">l_2</span> <span class="o">-</span> <span class="n">l_3</span> <span class="o">-</span> <span class="n">ii</span><span class="p">]</span>
+        <span class="n">sumres</span> <span class="o">=</span> <span class="n">sumres</span> <span class="o">+</span> <span class="n">Integer</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="n">ii</span><span class="p">)</span> <span class="o">/</span> <span class="n">den</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">ressqrt</span> <span class="o">*</span> <span class="n">prefac</span> <span class="o">*</span> <span class="n">sumres</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">bigL</span> <span class="o">+</span> <span class="n">l_3</span> <span class="o">+</span> <span class="n">m_1</span> <span class="o">-</span> <span class="n">m_2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">prec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

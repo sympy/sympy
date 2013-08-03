@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Polynomials Manipulation Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Basic functionality of the module" href="basics.html" />
+    <link rel="prev" title="References" href="../mpmath/references.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="basics.html" title="Basic functionality of the module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../mpmath/references.html" title="References"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="polynomials-manipulation-module">
+<span id="polys-docs"></span><h1>Polynomials Manipulation Module<a class="headerlink" href="#polynomials-manipulation-module" title="Permalink to this headline">¶</a></h1>
+<p>Computations with polynomials are at the core of computer algebra and
+having a fast and robust polynomials manipulation module is a key for
+building a powerful symbolic manipulation system. SymPy has a dedicated
+module <tt class="xref py py-mod docutils literal"><span class="pre">sympy.polys</span></tt> for computing in polynomial algebras over
+various coefficient domains.</p>
+<p>There is a vast number of methods implemented, ranging from simple tools
+like polynomial division, to advanced concepts including Gröbner bases
+and multivariate factorization over algebraic number domains.</p>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="basics.html">Basic functionality of the module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basics.html#basic-functionality">Basic functionality</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#division">Division</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#gcd-and-lcm">GCD and LCM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#square-free-factorization">Square-free factorization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#factorization">Factorization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#groebner-bases">Groebner bases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="basics.html#solving-equations">Solving Equations</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="wester.html">Examples from Wester&#8217;s Article</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="wester.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wester.html#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#simple-univariate-polynomial-factorization">Simple univariate polynomial factorization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#univariate-gcd-resultant-and-factorization">Univariate GCD, resultant and factorization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#multivariate-gcd-and-factorization">Multivariate GCD and factorization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#support-for-symbols-in-exponents">Support for symbols in exponents</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#testing-if-polynomials-have-common-zeros">Testing if polynomials have common zeros</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#normalizing-simple-rational-functions">Normalizing simple rational functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#expanding-expressions-and-factoring-back">Expanding expressions and factoring back</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#factoring-in-terms-of-cyclotomic-polynomials">Factoring in terms of cyclotomic polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#univariate-factoring-over-gaussian-numbers">Univariate factoring over Gaussian numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#computing-with-automatic-field-extensions">Computing with automatic field extensions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#univariate-factoring-over-various-domains">Univariate factoring over various domains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#factoring-polynomials-into-linear-factors">Factoring polynomials into linear factors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#advanced-factoring-over-finite-fields">Advanced factoring over finite fields</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#working-with-expressions-as-polynomials">Working with expressions as polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#computing-reduced-grobner-bases">Computing reduced Gröbner bases</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#multivariate-factoring-over-algebraic-numbers">Multivariate factoring over algebraic numbers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wester.html#partial-fraction-decomposition">Partial fraction decomposition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wester.html#literature">Literature</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference.html">Polynomials Manipulation Module Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#basic-polynomial-manipulation-functions">Basic polynomial manipulation functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#extra-polynomial-manipulation-functions">Extra polynomial manipulation functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#domain-constructors">Domain constructors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#algebraic-number-fields">Algebraic number fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#monomials-encoded-as-tuples">Monomials encoded as tuples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#orderings-of-monomials">Orderings of monomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#formal-manipulation-of-roots-of-polynomials">Formal manipulation of roots of polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#symbolic-root-finding-algorithms">Symbolic root-finding algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#special-polynomials">Special polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#orthogonal-polynomials">Orthogonal polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#manipulation-of-rational-functions">Manipulation of rational functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference.html#partial-fraction-decomposition">Partial fraction decomposition</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agca.html">AGCA - Algebraic Geometry and Commutative Algebra Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agca.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agca.html#reference">Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agca.html#base-rings">Base Rings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agca.html#modules-ideals-and-their-elementary-properties">Modules, Ideals and their Elementary Properties</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agca.html#module-homomorphisms-and-syzygies">Module Homomorphisms and Syzygies</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="internals.html">Internals of the Polynomial Manipulation Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="internals.html#domains">Domains</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#abstract-domains">Abstract Domains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#concrete-domains">Concrete Domains</a></li>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#implementation-domains">Implementation Domains</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html#level-one">Level One</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html#level-zero">Level Zero</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#manipulation-of-dense-multivariate-polynomials">Manipulation of dense, multivariate polynomials</a></li>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#manipulation-of-dense-univariate-polynomials-with-finite-field-coefficients">Manipulation of dense, univariate polynomials with finite field coefficients</a></li>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#manipulation-of-sparse-distributed-polynomials-and-vectors">Manipulation of sparse, distributed polynomials and vectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#polynomial-factorization-algorithms">Polynomial factorization algorithms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="internals.html#groebner-basis-algorithms">Groebner basis algorithms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html#exceptions">Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="internals.html#undocumented">Undocumented</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="literature.html">Literature</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Polynomials Manipulation Module</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../mpmath/references.html"
+                        title="previous chapter">References</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="basics.html"
+                        title="next chapter">Basic functionality of the module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/polys/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="basics.html" title="Basic functionality of the module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../mpmath/references.html" title="References"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

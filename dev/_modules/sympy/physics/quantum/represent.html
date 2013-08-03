@@ -1,0 +1,672 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.represent &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.represent</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Logic for representing operators in state in various bases.</span>
+
+<span class="sd">TODO:</span>
+
+<span class="sd">* Get represent working with continuous hilbert spaces.</span>
+<span class="sd">* Document default basis functionality.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">integrate</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.dagger</span> <span class="kn">import</span> <span class="n">Dagger</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.commutator</span> <span class="kn">import</span> <span class="n">Commutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.anticommutator</span> <span class="kn">import</span> <span class="n">AntiCommutator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.innerproduct</span> <span class="kn">import</span> <span class="n">InnerProduct</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QExpr</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.tensorproduct</span> <span class="kn">import</span> <span class="n">TensorProduct</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.matrixutils</span> <span class="kn">import</span> <span class="n">flatten_scalar</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">KetBase</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">,</span> <span class="n">StateBase</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">OuterProduct</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operatorset</span> <span class="kn">import</span> <span class="n">operators_to_state</span><span class="p">,</span> <span class="n">state_to_operators</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;represent&#39;</span><span class="p">,</span>
+    <span class="s">&#39;rep_innerproduct&#39;</span><span class="p">,</span>
+    <span class="s">&#39;rep_expectation&#39;</span><span class="p">,</span>
+    <span class="s">&#39;integrate_result&#39;</span><span class="p">,</span>
+    <span class="s">&#39;get_basis&#39;</span><span class="p">,</span>
+    <span class="s">&#39;enumerate_states&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-----------------------------------------------------------------------------</span>
+<span class="c"># Represent</span>
+<span class="c">#-----------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span> <span class="nf">_sympy_to_scalar</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert from a sympy scalar to a Python scalar.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Float</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Number</span> <span class="ow">or</span> <span class="n">e</span><span class="o">.</span><span class="n">is_NumberSymbol</span> <span class="ow">or</span> <span class="n">e</span> <span class="o">==</span> <span class="n">I</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Expected number, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="represent"><a class="viewcode-back" href="../../../../modules/physics/quantum/represent.html#sympy.physics.quantum.represent.represent">[docs]</a><span class="k">def</span> <span class="nf">represent</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent the quantum expression in the given basis.</span>
+
+<span class="sd">    In quantum mechanics abstract states and operators can be represented in</span>
+<span class="sd">    various basis sets. Under this operation the follow transforms happen:</span>
+
+<span class="sd">    * Ket -&gt; column vector or function</span>
+<span class="sd">    * Bra -&gt; row vector of function</span>
+<span class="sd">    * Operator -&gt; matrix or differential operator</span>
+
+<span class="sd">    This function is the top-level interface for this action.</span>
+
+<span class="sd">    This function walks the sympy expression tree looking for ``QExpr``</span>
+<span class="sd">    instances that have a ``_represent`` method. This method is then called</span>
+<span class="sd">    and the object is replaced by the representation returned by this method.</span>
+<span class="sd">    By default, the ``_represent`` method will dispatch to other methods</span>
+<span class="sd">    that handle the representation logic for a particular basis set. The</span>
+<span class="sd">    naming convention for these methods is the following::</span>
+
+<span class="sd">        def _represent_FooBasis(self, e, basis, **options)</span>
+
+<span class="sd">    This function will have the logic for representing instances of its class</span>
+<span class="sd">    in the basis set having a class named ``FooBasis``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    expr  : Expr</span>
+<span class="sd">        The expression to represent.</span>
+<span class="sd">    basis : Operator, basis set</span>
+<span class="sd">        An object that contains the information about the basis set. If an</span>
+<span class="sd">        operator is used, the basis is assumed to be the orthonormal</span>
+<span class="sd">        eigenvectors of that operator. In general though, the basis argument</span>
+<span class="sd">        can be any object that contains the basis set information.</span>
+<span class="sd">    options : dict</span>
+<span class="sd">        Key/value pairs of options that are passed to the underlying method</span>
+<span class="sd">        that finds the representation. These options can be used to</span>
+<span class="sd">        control how the representation is done. For example, this is where</span>
+<span class="sd">        the size of the basis set would be set.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    e : Expr</span>
+<span class="sd">        The SymPy expression of the represented quantum expression.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Here we subclass ``Operator`` and ``Ket`` to create the z-spin operator</span>
+<span class="sd">    and its spin 1/2 up eigenstate. By definining the ``_represent_SzOp``</span>
+<span class="sd">    method, the ket can be represented in the z-spin basis.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum import Operator, represent, Ket</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Matrix</span>
+
+<span class="sd">    &gt;&gt;&gt; class SzUpKet(Ket):</span>
+<span class="sd">    ...     def _represent_SzOp(self, basis, **options):</span>
+<span class="sd">    ...         return Matrix([1,0])</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; class SzOp(Operator):</span>
+<span class="sd">    ...     pass</span>
+<span class="sd">    ...</span>
+<span class="sd">    &gt;&gt;&gt; sz = SzOp(&#39;Sz&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; up = SzUpKet(&#39;up&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; represent(up, basis=sz)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1],</span>
+<span class="sd">    [0]])</span>
+
+<span class="sd">    Here we see an example of representations in a continuous</span>
+<span class="sd">    basis. We see that the result of representing various combinations</span>
+<span class="sd">    of cartesian position operators and kets give us continuous</span>
+<span class="sd">    expressions involving DiracDelta functions.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XOp, XKet, XBra</span>
+<span class="sd">    &gt;&gt;&gt; X = XOp()</span>
+<span class="sd">    &gt;&gt;&gt; x = XKet()</span>
+<span class="sd">    &gt;&gt;&gt; y = XBra(&#39;y&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; represent(X*x)</span>
+<span class="sd">    x*DiracDelta(x - x_2)</span>
+<span class="sd">    &gt;&gt;&gt; represent(X*x*y)</span>
+<span class="sd">    x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">format</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;format&#39;</span><span class="p">,</span> <span class="s">&#39;sympy&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">QExpr</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">OuterProduct</span><span class="p">):</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&#39;replace_none&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">temp_basis</span> <span class="o">=</span> <span class="n">get_basis</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">temp_basis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">options</span><span class="p">[</span><span class="s">&#39;basis&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_basis</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">_represent</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">strerr</span><span class="p">:</span>
+            <span class="c">#If no _represent_FOO method exists, map to the</span>
+            <span class="c">#appropriate basis state and try</span>
+            <span class="c">#the other methods of representation</span>
+            <span class="n">options</span><span class="p">[</span><span class="s">&#39;replace_none&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">KetBase</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">)):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">rep_innerproduct</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">strerr</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">rep_expectation</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">strerr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">strerr</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">represent</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">args</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="c"># scipy.sparse doesn&#39;t support += so we use plain = here.</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">+</span> <span class="n">represent</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>
+        <span class="n">base</span><span class="p">,</span> <span class="n">exp</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_base_exp</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;numpy&#39;</span> <span class="ow">or</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;scipy.sparse&#39;</span><span class="p">:</span>
+            <span class="n">exp</span> <span class="o">=</span> <span class="n">_sympy_to_scalar</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">represent</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span><span class="o">**</span><span class="n">exp</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">TensorProduct</span><span class="p">):</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="p">[</span><span class="n">represent</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">TensorProduct</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Dagger</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Dagger</span><span class="p">(</span><span class="n">represent</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Commutator</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">represent</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">represent</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">-</span> <span class="n">B</span><span class="o">*</span><span class="n">A</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">AntiCommutator</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">represent</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">represent</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">+</span> <span class="n">B</span><span class="o">*</span><span class="n">A</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">InnerProduct</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">represent</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">bra</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">ket</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">OuterProduct</span><span class="p">)):</span>
+        <span class="c"># For numpy and scipy.sparse, we can only handle numerical prefactors.</span>
+        <span class="k">if</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;numpy&#39;</span> <span class="ow">or</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;scipy.sparse&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_sympy_to_scalar</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">OuterProduct</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Mul expected, got: </span><span class="si">%r</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&quot;index&quot;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="s">&quot;unities&quot;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&quot;unities&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">represent</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="n">last_arg</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_arg</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">options</span><span class="p">[</span><span class="s">&quot;unities&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_arg</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_arg</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s">&quot;unities&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">last_arg</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">):</span>
+            <span class="n">options</span><span class="p">[</span><span class="s">&quot;unities&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">])</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">represent</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span><span class="o">*</span><span class="n">result</span>
+        <span class="n">last_arg</span> <span class="o">=</span> <span class="n">arg</span>
+
+    <span class="c"># All three matrix formats create 1 by 1 matrices when inner products of</span>
+    <span class="c"># vectors are taken. In these cases, we simply return a scalar.</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">flatten_scalar</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">integrate_result</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="rep_innerproduct"><a class="viewcode-back" href="../../../../modules/physics/quantum/represent.html#sympy.physics.quantum.represent.rep_innerproduct">[docs]</a><span class="k">def</span> <span class="nf">rep_innerproduct</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an innerproduct like representation (e.g. ``&lt;x&#39;|x&gt;``) for the</span>
+<span class="sd">    given state.</span>
+
+<span class="sd">    Attempts to calculate inner product with a bra from the specified</span>
+<span class="sd">    basis. Should only be passed an instance of KetBase or BraBase</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    expr : KetBase or BraBase</span>
+<span class="sd">        The expression to be represented</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.represent import rep_innerproduct</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet</span>
+<span class="sd">    &gt;&gt;&gt; rep_innerproduct(XKet())</span>
+<span class="sd">    DiracDelta(x - x_1)</span>
+<span class="sd">    &gt;&gt;&gt; rep_innerproduct(XKet(), basis=PxOp())</span>
+<span class="sd">    sqrt(2)*exp(-I*px_1*x/hbar)/(2*sqrt(hbar)*sqrt(pi))</span>
+<span class="sd">    &gt;&gt;&gt; rep_innerproduct(PxKet(), basis=XOp())</span>
+<span class="sd">    sqrt(2)*exp(I*px*x_1/hbar)/(2*sqrt(hbar)*sqrt(pi))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">KetBase</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;expr passed is not a Bra or Ket&quot;</span><span class="p">)</span>
+
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">get_basis</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Can&#39;t form this representation!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="s">&quot;index&quot;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">basis_kets</span> <span class="o">=</span> <span class="n">enumerate_states</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">):</span>
+        <span class="n">bra</span> <span class="o">=</span> <span class="n">expr</span>
+        <span class="n">ket</span> <span class="o">=</span> <span class="p">(</span><span class="n">basis_kets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">basis_kets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dual</span> <span class="o">==</span> <span class="n">expr</span> <span class="k">else</span> <span class="n">basis_kets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">bra</span> <span class="o">=</span> <span class="p">(</span><span class="n">basis_kets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">dual</span> <span class="k">if</span> <span class="n">basis_kets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+               <span class="o">==</span> <span class="n">expr</span> <span class="k">else</span> <span class="n">basis_kets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dual</span><span class="p">)</span>
+        <span class="n">ket</span> <span class="o">=</span> <span class="n">expr</span>
+
+    <span class="n">prod</span> <span class="o">=</span> <span class="n">InnerProduct</span><span class="p">(</span><span class="n">bra</span><span class="p">,</span> <span class="n">ket</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">prod</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+
+    <span class="n">format</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;format&#39;</span><span class="p">,</span> <span class="s">&#39;sympy&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">_format_represent</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">format</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="rep_expectation"><a class="viewcode-back" href="../../../../modules/physics/quantum/represent.html#sympy.physics.quantum.represent.rep_expectation">[docs]</a><span class="k">def</span> <span class="nf">rep_expectation</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns an ``&lt;x&#39;|A|x&gt;`` type representation for the given operator.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    expr : Operator</span>
+<span class="sd">        Operator to be represented in the specified basis</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.represent import rep_expectation</span>
+<span class="sd">    &gt;&gt;&gt; rep_expectation(XOp())</span>
+<span class="sd">    x_1*DiracDelta(x_1 - x_2)</span>
+<span class="sd">    &gt;&gt;&gt; rep_expectation(XOp(), basis=PxOp())</span>
+<span class="sd">    &lt;px_2|*X*|px_1&gt;</span>
+<span class="sd">    &gt;&gt;&gt; rep_expectation(XOp(), basis=PxKet())</span>
+<span class="sd">    &lt;px_2|*X*|px_1&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="s">&quot;index&quot;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;The passed expression is not an operator&quot;</span><span class="p">)</span>
+
+    <span class="n">basis_state</span> <span class="o">=</span> <span class="n">get_basis</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">basis_state</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis_state</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Could not get basis kets for this operator&quot;</span><span class="p">)</span>
+
+    <span class="n">basis_kets</span> <span class="o">=</span> <span class="n">enumerate_states</span><span class="p">(</span><span class="n">basis_state</span><span class="p">,</span> <span class="n">options</span><span class="p">[</span><span class="s">&quot;index&quot;</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">bra</span> <span class="o">=</span> <span class="n">basis_kets</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">dual</span>
+    <span class="n">ket</span> <span class="o">=</span> <span class="n">basis_kets</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">qapply</span><span class="p">(</span><span class="n">bra</span><span class="o">*</span><span class="n">expr</span><span class="o">*</span><span class="n">ket</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="integrate_result"><a class="viewcode-back" href="../../../../modules/physics/quantum/represent.html#sympy.physics.quantum.represent.integrate_result">[docs]</a><span class="k">def</span> <span class="nf">integrate_result</span><span class="p">(</span><span class="n">orig_expr</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the result of integrating over any unities ``(|x&gt;&lt;x|)`` in</span>
+<span class="sd">    the given expression. Intended for integrating over the result of</span>
+<span class="sd">    representations in continuous bases.</span>
+
+<span class="sd">    This function integrates over any unities that may have been</span>
+<span class="sd">    inserted into the quantum expression and returns the result.</span>
+<span class="sd">    It uses the interval of the Hilbert space of the basis state</span>
+<span class="sd">    passed to it in order to figure out the limits of integration.</span>
+<span class="sd">    The unities option must be</span>
+<span class="sd">    specified for this to work.</span>
+
+<span class="sd">    Note: This is mostly used internally by represent(). Examples are</span>
+<span class="sd">    given merely to show the use cases.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    orig_expr : quantum expression</span>
+<span class="sd">        The original expression which was to be represented</span>
+
+<span class="sd">    result: Expr</span>
+<span class="sd">        The resulting representation that we wish to integrate over</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols, DiracDelta</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.represent import integrate_result</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XOp, XKet</span>
+<span class="sd">    &gt;&gt;&gt; x_ket = XKet()</span>
+<span class="sd">    &gt;&gt;&gt; X_op = XOp()</span>
+<span class="sd">    &gt;&gt;&gt; x, x_1, x_2 = symbols(&#39;x, x_1, x_2&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2))</span>
+<span class="sd">    x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)</span>
+<span class="sd">    &gt;&gt;&gt; integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2),</span>
+<span class="sd">    ...     unities=[1])</span>
+<span class="sd">    x*DiracDelta(x - x_2)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">options</span><span class="p">[</span><span class="s">&#39;replace_none&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s">&quot;basis&quot;</span> <span class="ow">in</span> <span class="n">options</span><span class="p">:</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="n">orig_expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&quot;basis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_basis</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">options</span><span class="p">[</span><span class="s">&quot;basis&quot;</span><span class="p">],</span> <span class="n">StateBase</span><span class="p">):</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&quot;basis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_basis</span><span class="p">(</span><span class="n">orig_expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;basis&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">basis</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">unities</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;unities&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unities</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">kets</span> <span class="o">=</span> <span class="n">enumerate_states</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">unities</span><span class="p">)</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kets</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">coords</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+            <span class="c">#TODO: Add support for sets of operators</span>
+            <span class="n">basis_op</span> <span class="o">=</span> <span class="n">state_to_operators</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">basis_op</span><span class="o">.</span><span class="n">hilbert_space</span><span class="o">.</span><span class="n">interval</span><span class="o">.</span><span class="n">start</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">basis_op</span><span class="o">.</span><span class="n">hilbert_space</span><span class="o">.</span><span class="n">interval</span><span class="o">.</span><span class="n">end</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="get_basis"><a class="viewcode-back" href="../../../../modules/physics/quantum/represent.html#sympy.physics.quantum.represent.get_basis">[docs]</a><span class="k">def</span> <span class="nf">get_basis</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a basis state instance corresponding to the basis specified in</span>
+<span class="sd">    options=s. If no basis is specified, the function tries to form a default</span>
+<span class="sd">    basis state of the given expression.</span>
+
+<span class="sd">    There are three behaviors:</span>
+
+<span class="sd">    1. The basis specified in options is already an instance of StateBase. If</span>
+<span class="sd">       this is the case, it is simply returned. If the class is specified but</span>
+<span class="sd">       not an instance, a default instance is returned.</span>
+
+<span class="sd">    2. The basis specified is an operator or set of operators. If this</span>
+<span class="sd">       is the case, the operator_to_state mapping method is used.</span>
+
+<span class="sd">    3. No basis is specified. If expr is a state, then a default instance of</span>
+<span class="sd">       its class is returned.  If expr is an operator, then it is mapped to the</span>
+<span class="sd">       corresponding state.  If it is neither, then we cannot obtain the basis</span>
+<span class="sd">       state.</span>
+
+<span class="sd">    If the basis cannot be mapped, then it is not changed.</span>
+
+<span class="sd">    This will be called from within represent, and represent will</span>
+<span class="sd">    only pass QExpr&#39;s.</span>
+
+<span class="sd">    TODO (?): Support for Muls and other types of expressions?</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    expr : Operator or StateBase</span>
+<span class="sd">        Expression whose basis is sought</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.represent import get_basis</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet</span>
+<span class="sd">    &gt;&gt;&gt; x = XKet()</span>
+<span class="sd">    &gt;&gt;&gt; X = XOp()</span>
+<span class="sd">    &gt;&gt;&gt; get_basis(x)</span>
+<span class="sd">    |x&gt;</span>
+<span class="sd">    &gt;&gt;&gt; get_basis(X)</span>
+<span class="sd">    |x&gt;</span>
+<span class="sd">    &gt;&gt;&gt; get_basis(x, basis=PxOp())</span>
+<span class="sd">    |px&gt;</span>
+<span class="sd">    &gt;&gt;&gt; get_basis(x, basis=PxKet)</span>
+<span class="sd">    |px&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;basis&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">replace_none</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;replace_none&quot;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">basis</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">replace_none</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">basis</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">KetBase</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BraBase</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_make_default</span><span class="p">((</span><span class="n">expr</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="n">state_inst</span> <span class="o">=</span> <span class="n">operators_to_state</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">state_inst</span> <span class="k">if</span> <span class="n">state_inst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">Operator</span><span class="p">)</span> <span class="ow">or</span>
+          <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">Operator</span><span class="p">))):</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">operators_to_state</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">state</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">state</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">basis</span>
+    <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_make_default</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_make_default</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">return</span> <span class="n">expr</span>
+
+
+<div class="viewcode-block" id="enumerate_states"><a class="viewcode-back" href="../../../../modules/physics/quantum/represent.html#sympy.physics.quantum.represent.enumerate_states">[docs]</a><span class="k">def</span> <span class="nf">enumerate_states</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns instances of the given state with dummy indices appended</span>
+
+<span class="sd">    Operates in two different modes:</span>
+
+<span class="sd">    1. Two arguments are passed to it. The first is the base state which is to</span>
+<span class="sd">       be indexed, and the second argument is a list of indices to append.</span>
+
+<span class="sd">    2. Three arguments are passed. The first is again the base state to be</span>
+<span class="sd">       indexed. The second is the start index for counting.  The final argument</span>
+<span class="sd">       is the number of kets you wish to receive.</span>
+
+<span class="sd">    Tries to call state._enumerate_state. If this fails, returns an empty list</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    args : list</span>
+<span class="sd">        See list of operation modes above for explanation</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.cartesian import XBra, XKet</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.represent import enumerate_states</span>
+<span class="sd">    &gt;&gt;&gt; test = XKet(&#39;foo&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; enumerate_states(test, 1, 3)</span>
+<span class="sd">    [|foo_1&gt;, |foo_2&gt;, |foo_3&gt;]</span>
+<span class="sd">    &gt;&gt;&gt; test2 = XBra(&#39;bar&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; enumerate_states(test2, [4, 5, 10])</span>
+<span class="sd">    [&lt;bar_4|, &lt;bar_5|, &lt;bar_10|]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">state</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Wrong number of arguments!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">StateBase</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;First argument is not a state!&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">num_states</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&#39;start_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num_states</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">options</span><span class="p">[</span><span class="s">&#39;index_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_enumerate_state</span><span class="p">(</span><span class="n">num_states</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">ret</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

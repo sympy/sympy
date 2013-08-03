@@ -1,0 +1,473 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.plotting.plot_implicit &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.plotting.plot_implicit</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Implicit plotting module for SymPy</span>
+
+<span class="sd">The module implements a data series called ImplicitSeries which is used by</span>
+<span class="sd">``Plot`` class to plot implicit plots for different backends. The module,</span>
+<span class="sd">by default, implements plotting using interval arithmetic. It switches to a</span>
+<span class="sd">fall back algorithm if the expression cannot be plotted used interval</span>
+<span class="sd">interval arithmetic. It is also possible to specify to use the fall back</span>
+<span class="sd">algorithm for all plots.</span>
+
+<span class="sd">Boolean combinations of expressions cannot be plotted by the fall back</span>
+<span class="sd">algorithm.</span>
+
+<span class="sd">See Also</span>
+<span class="sd">========</span>
+<span class="sd">sympy.plotting.plot</span>
+
+<span class="sd">References</span>
+<span class="sd">==========</span>
+<span class="sd">- Jeffrey Allen Tupper. Reliable Two-Dimensional Graphing Methods for</span>
+<span class="sd">Mathematical Formulae with Two Free Variables.</span>
+
+<span class="sd">- Jeffrey Allen Tupper. Graphing Equations with Generalized Interval</span>
+<span class="sd">Arithmetic. Master&#39;s thesis. University of Toronto, 1996</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">.plot</span> <span class="kn">import</span> <span class="n">BaseSeries</span><span class="p">,</span> <span class="n">Plot</span>
+<span class="kn">from</span> <span class="nn">.experimental_lambdify</span> <span class="kn">import</span> <span class="n">experimental_lambdify</span><span class="p">,</span> <span class="n">vectorized_lambdify</span>
+<span class="kn">from</span> <span class="nn">.intervalmath</span> <span class="kn">import</span> <span class="n">interval</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Equality</span><span class="p">,</span> <span class="n">GreaterThan</span><span class="p">,</span> <span class="n">LessThan</span><span class="p">,</span>
+                <span class="n">Relational</span><span class="p">,</span> <span class="n">StrictLessThan</span><span class="p">,</span> <span class="n">StrictGreaterThan</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.external</span> <span class="kn">import</span> <span class="n">import_module</span>
+<span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">BooleanFunction</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.decorator</span> <span class="kn">import</span> <span class="n">doctest_depends_on</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+
+<div class="viewcode-block" id="ImplicitSeries"><a class="viewcode-back" href="../../../modules/plotting.html#sympy.plotting.plot_implicit.ImplicitSeries">[docs]</a><span class="k">class</span> <span class="nc">ImplicitSeries</span><span class="p">(</span><span class="n">BaseSeries</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Representation for Implicit plot &quot;&quot;&quot;</span>
+    <span class="n">is_implicit</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var_start_end_x</span><span class="p">,</span> <span class="n">var_start_end_y</span><span class="p">,</span>
+            <span class="n">has_equality</span><span class="p">,</span> <span class="n">use_interval_math</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span> <span class="n">nb_of_points</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ImplicitSeries</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">var_start_end_x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">var_start_end_x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">var_start_end_x</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_y</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">var_start_end_y</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">var_start_end_y</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">var_start_end_y</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_raster</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_equality</span> <span class="o">=</span> <span class="n">has_equality</span>  <span class="c"># If the expression has equality, i.e.</span>
+                                         <span class="c">#Eq, Greaterthan, LessThan.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_of_points</span> <span class="o">=</span> <span class="n">nb_of_points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_interval_math</span> <span class="o">=</span> <span class="n">use_interval_math</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">depth</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&#39;Implicit equation: </span><span class="si">%s</span><span class="s"> for &#39;</span>
+                <span class="s">&#39;</span><span class="si">%s</span><span class="s"> over </span><span class="si">%s</span><span class="s"> and </span><span class="si">%s</span><span class="s"> over </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">)</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">),</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_x</span><span class="p">),</span>
+                    <span class="nb">str</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">start_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_x</span><span class="p">)),</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_y</span><span class="p">),</span>
+                    <span class="nb">str</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">start_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_y</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">get_raster</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">experimental_lambdify</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">var_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span>
+                                    <span class="n">use_interval</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">xinterval</span> <span class="o">=</span> <span class="n">interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_x</span><span class="p">)</span>
+        <span class="n">yinterval</span> <span class="o">=</span> <span class="n">interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_y</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">xinterval</span><span class="p">,</span> <span class="n">yinterval</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_interval_math</span><span class="p">:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Adaptive meshing could not be applied to the&quot;</span>
+                            <span class="s">&quot; expression. Using uniform meshing.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">use_interval_math</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_interval_math</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_raster_interval</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_meshes_grid</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_raster_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Uses interval math to adaptively mesh and obtain the plot&quot;&quot;&quot;</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span>
+        <span class="n">interval_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c">#Create initial 32 divisions</span>
+        <span class="n">np</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s">&#39;numpy&#39;</span><span class="p">)</span>
+        <span class="n">xsample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_x</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
+        <span class="n">ysample</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_y</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
+
+        <span class="c">#Add a small jitter so that there are no false positives for equality.</span>
+        <span class="c"># Ex: y==x becomes True for x interval(1, 2) and y interval(1, 2)</span>
+        <span class="c">#which will draw a rectangle.</span>
+        <span class="n">jitterx</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">xsample</span><span class="p">))</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_x</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span>
+        <span class="n">jittery</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">ysample</span><span class="p">))</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">end_y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_y</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="o">**</span><span class="mi">20</span>
+        <span class="n">xsample</span> <span class="o">+=</span> <span class="n">jitterx</span>
+        <span class="n">ysample</span> <span class="o">+=</span> <span class="n">jittery</span>
+
+        <span class="n">xinter</span> <span class="o">=</span> <span class="p">[</span><span class="n">interval</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">)</span> <span class="k">for</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xsample</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                           <span class="n">xsample</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+        <span class="n">yinter</span> <span class="o">=</span> <span class="p">[</span><span class="n">interval</span><span class="p">(</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="p">)</span> <span class="k">for</span> <span class="n">y1</span><span class="p">,</span> <span class="n">y2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ysample</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                           <span class="n">ysample</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+        <span class="n">interval_list</span> <span class="o">=</span> <span class="p">[[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">xinter</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">yinter</span><span class="p">]</span>
+        <span class="n">plot_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c">#recursive call refinepixels which subdivides the intervals which are</span>
+        <span class="c">#neither True nor False according to the expression.</span>
+        <span class="k">def</span> <span class="nf">refine_pixels</span><span class="p">(</span><span class="n">interval_list</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Evaluates the intervals and subdivides the interval if the</span>
+<span class="sd">            expression is partially satisfied.&quot;&quot;&quot;</span>
+            <span class="n">temp_interval_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">plot_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">intervals</span> <span class="ow">in</span> <span class="n">interval_list</span><span class="p">:</span>
+
+                <span class="c">#Convert the array indices to x and y values</span>
+                <span class="n">intervalx</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">intervaly</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">func_eval</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">intervalx</span><span class="p">,</span> <span class="n">intervaly</span><span class="p">)</span>
+                <span class="c">#The expression is valid in the interval. Change the contour</span>
+                <span class="c">#array values to 1.</span>
+                <span class="k">if</span> <span class="n">func_eval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">or</span> <span class="n">func_eval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="n">func_eval</span> <span class="o">==</span> <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+                    <span class="n">plot_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">intervalx</span><span class="p">,</span> <span class="n">intervaly</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="n">func_eval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">func_eval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="c">#Subdivide</span>
+                    <span class="n">avgx</span> <span class="o">=</span> <span class="n">intervalx</span><span class="o">.</span><span class="n">mid</span>
+                    <span class="n">avgy</span> <span class="o">=</span> <span class="n">intervaly</span><span class="o">.</span><span class="n">mid</span>
+                    <span class="n">a</span> <span class="o">=</span> <span class="n">interval</span><span class="p">(</span><span class="n">intervalx</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">avgx</span><span class="p">)</span>
+                    <span class="n">b</span> <span class="o">=</span> <span class="n">interval</span><span class="p">(</span><span class="n">avgx</span><span class="p">,</span> <span class="n">intervalx</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="n">interval</span><span class="p">(</span><span class="n">intervaly</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="n">avgy</span><span class="p">)</span>
+                    <span class="n">d</span> <span class="o">=</span> <span class="n">interval</span><span class="p">(</span><span class="n">avgy</span><span class="p">,</span> <span class="n">intervaly</span><span class="o">.</span><span class="n">end</span><span class="p">)</span>
+                    <span class="n">temp_interval_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">])</span>
+                    <span class="n">temp_interval_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">])</span>
+                    <span class="n">temp_interval_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">])</span>
+                    <span class="n">temp_interval_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">b</span><span class="p">,</span> <span class="n">d</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">temp_interval_list</span><span class="p">,</span> <span class="n">plot_list</span>
+
+        <span class="k">while</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">interval_list</span><span class="p">):</span>
+            <span class="n">interval_list</span><span class="p">,</span> <span class="n">plot_list_temp</span> <span class="o">=</span> <span class="n">refine_pixels</span><span class="p">(</span><span class="n">interval_list</span><span class="p">)</span>
+            <span class="n">plot_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">plot_list_temp</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="c">#Check whether the expression represents an equality</span>
+        <span class="c">#If it represents an equality, then none of the intervals</span>
+        <span class="c">#would have satisfied the expression due to floating point</span>
+        <span class="c">#differences. Add all the undecided values to the plot.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_equality</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">intervals</span> <span class="ow">in</span> <span class="n">interval_list</span><span class="p">:</span>
+                <span class="n">intervalx</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">intervaly</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">func_eval</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">intervalx</span><span class="p">,</span> <span class="n">intervaly</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">func_eval</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span> <span class="n">func_eval</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+                    <span class="n">plot_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">intervalx</span><span class="p">,</span> <span class="n">intervaly</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">plot_list</span><span class="p">,</span> <span class="s">&#39;fill&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_get_meshes_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates the mesh for generating a contour.</span>
+
+<span class="sd">        In the case of equality, ``contour`` function of matplotlib can</span>
+<span class="sd">        be used. In other cases, matplotlib&#39;s ``contourf`` is used.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">equal</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">rhs</span>
+            <span class="n">equal</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">GreaterThan</span><span class="p">,</span> <span class="n">StrictGreaterThan</span><span class="p">)):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">rhs</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">LessThan</span><span class="p">,</span> <span class="n">StrictLessThan</span><span class="p">)):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">rhs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">lhs</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;The expression is not supported for &quot;</span>
+                                    <span class="s">&quot;plotting in uniform meshed plot.&quot;</span><span class="p">)</span>
+        <span class="n">np</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s">&#39;numpy&#39;</span><span class="p">)</span>
+        <span class="n">xarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_of_points</span><span class="p">)</span>
+        <span class="n">yarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_of_points</span><span class="p">)</span>
+        <span class="n">x_grid</span><span class="p">,</span> <span class="n">y_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xarray</span><span class="p">,</span> <span class="n">yarray</span><span class="p">)</span>
+
+        <span class="n">func</span> <span class="o">=</span> <span class="n">vectorized_lambdify</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">var_x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">var_y</span><span class="p">),</span> <span class="n">expr</span><span class="p">)</span>
+        <span class="n">z_grid</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">x_grid</span><span class="p">,</span> <span class="n">y_grid</span><span class="p">)</span>
+        <span class="n">z_grid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">z_grid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">z_grid</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">z_grid</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">equal</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">xarray</span><span class="p">,</span> <span class="n">yarray</span><span class="p">,</span> <span class="n">z_grid</span><span class="p">,</span> <span class="s">&#39;contour&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">xarray</span><span class="p">,</span> <span class="n">yarray</span><span class="p">,</span> <span class="n">z_grid</span><span class="p">,</span> <span class="s">&#39;contourf&#39;</span>
+
+</div>
+<span class="nd">@doctest_depends_on</span><span class="p">(</span><span class="n">modules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;matplotlib&#39;</span><span class="p">,))</span>
+<div class="viewcode-block" id="plot_implicit"><a class="viewcode-back" href="../../../modules/plotting.html#sympy.plotting.plot_implicit.plot_implicit">[docs]</a><span class="k">def</span> <span class="nf">plot_implicit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A plot function to plot implicit equations / inequalities.</span>
+
+<span class="sd">    Arguments</span>
+<span class="sd">    =========</span>
+
+<span class="sd">    - ``expr`` : The equation / inequality that is to be plotted.</span>
+<span class="sd">    - ``(x, xmin, xmax)`` optional, 3-tuple denoting the range of symbol</span>
+<span class="sd">      ``x``</span>
+<span class="sd">    - ``(y, ymin, ymax)`` optional, 3-tuple denoting the range of symbol</span>
+<span class="sd">      ``y``</span>
+
+<span class="sd">    The following arguments can be passed as named parameters.</span>
+
+<span class="sd">    - ``adaptive``. Boolean. The default value is set to True. It has to be</span>
+<span class="sd">        set to False if you want to use a mesh grid.</span>
+
+<span class="sd">    - ``depth`` integer. The depth of recursion for adaptive mesh grid.</span>
+<span class="sd">        Default value is 0. Takes value in the range (0, 4).</span>
+
+<span class="sd">    - ``points`` integer. The number of points if adaptive mesh grid is not</span>
+<span class="sd">        used. Default value is 200.</span>
+
+<span class="sd">    - ``title`` string .The title for the plot.</span>
+
+<span class="sd">    - ``xlabel`` string. The label for the x - axis</span>
+
+<span class="sd">    - ``ylabel`` string. The label for the y - axis</span>
+
+<span class="sd">    plot_implicit, by default, uses interval arithmetic to plot functions. If</span>
+<span class="sd">    the expression cannot be plotted using interval arithmetic, it defaults to</span>
+<span class="sd">    a generating a contour using a mesh grid of fixed number of points. By</span>
+<span class="sd">    setting adaptive to False, you can force plot_implicit to use the mesh</span>
+<span class="sd">    grid. The mesh grid method can be effective when adaptive plotting using</span>
+<span class="sd">    interval arithmetic, fails to plot with small line width.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">    =========</span>
+
+<span class="sd">    Plot expressions:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import plot_implicit, cos, sin, symbols, Eq, And</span>
+<span class="sd">    &gt;&gt;&gt; x, y = symbols(&#39;x y&#39;)</span>
+
+<span class="sd">    Without any ranges for the symbols in the expression</span>
+
+<span class="sd">    &gt;&gt;&gt; p1 = plot_implicit(Eq(x**2 + y**2, 5))</span>
+
+<span class="sd">    With the range for the symbols</span>
+
+<span class="sd">    &gt;&gt;&gt; p2 = plot_implicit(Eq(x**2 + y**2, 3),</span>
+<span class="sd">    ...         (x, -3, 3), (y, -3, 3))</span>
+
+<span class="sd">    With depth of recursion as argument.</span>
+
+<span class="sd">    &gt;&gt;&gt; p3 = plot_implicit(Eq(x**2 + y**2, 5),</span>
+<span class="sd">    ...         (x, -4, 4), (y, -4, 4), depth = 2)</span>
+
+<span class="sd">    Using mesh grid and not using adaptive meshing.</span>
+
+<span class="sd">    &gt;&gt;&gt; p4 = plot_implicit(Eq(x**2 + y**2, 5),</span>
+<span class="sd">    ...         (x, -5, 5), (y, -2, 2), adaptive=False)</span>
+
+<span class="sd">    Using mesh grid with number of points as input.</span>
+
+<span class="sd">    &gt;&gt;&gt; p5 = plot_implicit(Eq(x**2 + y**2, 5),</span>
+<span class="sd">    ...         (x, -5, 5), (y, -2, 2),</span>
+<span class="sd">    ...         adaptive=False, points=400)</span>
+
+<span class="sd">    Plotting regions.</span>
+
+<span class="sd">    &gt;&gt;&gt; p6 = plot_implicit(y &gt; x**2)</span>
+
+<span class="sd">    Plotting Using boolean conjunctions.</span>
+
+<span class="sd">    &gt;&gt;&gt; p7 = plot_implicit(And(y &gt; x, y &gt; -x))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">has_equality</span> <span class="o">=</span> <span class="bp">False</span>  <span class="c"># Represents whether the expression contains an Equality,</span>
+                     <span class="c">#GreaterThan or LessThan</span>
+
+    <span class="k">def</span> <span class="nf">arg_expand</span><span class="p">(</span><span class="n">bool_expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recursively expands the arguments of an Boolean Function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">bool_expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">BooleanFunction</span><span class="p">):</span>
+                <span class="n">arg_expand</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Relational</span><span class="p">):</span>
+                <span class="n">arg_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+
+    <span class="n">arg_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BooleanFunction</span><span class="p">):</span>
+        <span class="n">arg_expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="c">#Check whether there is an equality in the expression provided.</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="p">(</span><span class="n">Equality</span><span class="p">,</span> <span class="n">GreaterThan</span><span class="p">,</span> <span class="n">LessThan</span><span class="p">))</span>
+               <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">arg_list</span><span class="p">):</span>
+            <span class="n">has_equality</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Relational</span><span class="p">):</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">Eq</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">has_equality</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Equality</span><span class="p">,</span> <span class="n">GreaterThan</span><span class="p">,</span> <span class="n">LessThan</span><span class="p">)):</span>
+        <span class="n">has_equality</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">free_symbols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span>
+    <span class="n">range_symbols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">args</span><span class="p">])</span>
+    <span class="n">symbols</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">free_symbols</span><span class="p">,</span> <span class="n">range_symbols</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Implicit plotting is not implemented for &quot;</span>
+                                  <span class="s">&quot;more than 2 variables&quot;</span><span class="p">)</span>
+
+    <span class="c">#Create default ranges if the range is not provided.</span>
+    <span class="n">default_range</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">var_start_end_x</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">var_start_end_y</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">free_symbols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">var_start_end_x</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">var_start_end_y</span><span class="p">,</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">+</span> <span class="n">default_range</span>
+                                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="p">(</span><span class="n">free_symbols</span> <span class="o">-</span> <span class="n">range_symbols</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">var_start_end_x</span><span class="p">,</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">+</span> <span class="n">default_range</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">free_symbols</span><span class="p">)</span>
+            <span class="c">#Create a random symbol</span>
+            <span class="n">var_start_end_y</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">Dummy</span><span class="p">())</span> <span class="o">+</span> <span class="n">default_range</span>
+
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">free_symbols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">var_start_end_x</span><span class="p">,</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">+</span> <span class="n">default_range</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">free_symbols</span><span class="p">)</span>
+            <span class="c">#create a random symbol</span>
+            <span class="n">var_start_end_y</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">Dummy</span><span class="p">())</span> <span class="o">+</span> <span class="n">default_range</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">var_start_end_x</span><span class="p">,</span> <span class="n">var_start_end_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tuple</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="o">+</span> <span class="n">default_range</span>
+                                                <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">free_symbols</span><span class="p">)</span>
+
+    <span class="n">use_interval</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;adaptive&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">nb_of_points</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;points&#39;</span><span class="p">,</span> <span class="mi">300</span><span class="p">)</span>
+    <span class="n">depth</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;depth&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="c">#Check whether the depth is greater than 4 or less than 0.</span>
+    <span class="k">if</span> <span class="n">depth</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="k">elif</span> <span class="n">depth</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">series_argument</span> <span class="o">=</span> <span class="n">ImplicitSeries</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">var_start_end_x</span><span class="p">,</span> <span class="n">var_start_end_y</span><span class="p">,</span>
+                                    <span class="n">has_equality</span><span class="p">,</span> <span class="n">use_interval</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span>
+                                    <span class="n">nb_of_points</span><span class="p">)</span>
+    <span class="n">show</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;show&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+    <span class="c">#set the x and y limits</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;xlim&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">var_start_end_x</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;ylim&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">var_start_end_y</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Plot</span><span class="p">(</span><span class="n">series_argument</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">show</span><span class="p">:</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">p</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

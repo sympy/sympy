@@ -1,0 +1,426 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.units &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.units</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Physical units and dimensions.</span>
+
+<span class="sd">The base class is Unit, where all here defined units (~200) inherit from.</span>
+
+<span class="sd">The find_unit function can help you find units for a given quantity:</span>
+
+<span class="sd">    &gt;&gt;&gt; import sympy.physics.units as u</span>
+<span class="sd">    &gt;&gt;&gt; u.find_unit(&#39;coul&#39;)</span>
+<span class="sd">    [&#39;coulomb&#39;, &#39;coulombs&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; u.find_unit(u.charge)</span>
+<span class="sd">    [&#39;C&#39;, &#39;charge&#39;, &#39;coulomb&#39;, &#39;coulombs&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; u.coulomb</span>
+<span class="sd">    A*s</span>
+
+<span class="sd">Units are always given in terms of base units that have a name and</span>
+<span class="sd">an abbreviation:</span>
+
+<span class="sd">    &gt;&gt;&gt; u.A.name</span>
+<span class="sd">    &#39;ampere&#39;</span>
+<span class="sd">    &gt;&gt;&gt; u.ampere.abbrev</span>
+<span class="sd">    &#39;A&#39;</span>
+
+<span class="sd">The generic name for a unit (like &#39;length&#39;, &#39;mass&#39;, etc...)</span>
+<span class="sd">can help you find units:</span>
+
+<span class="sd">    &gt;&gt;&gt; u.find_unit(&#39;magnet&#39;)</span>
+<span class="sd">    [&#39;magnetic_flux&#39;, &#39;magnetic_constant&#39;, &#39;magnetic_flux_density&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; u.find_unit(u.magnetic_flux)</span>
+<span class="sd">    [&#39;Wb&#39;, &#39;wb&#39;, &#39;weber&#39;, &#39;webers&#39;, &#39;magnetic_flux&#39;]</span>
+
+<span class="sd">If, for a given session, you wish to add a unit you may do so:</span>
+
+<span class="sd">    &gt;&gt;&gt; u.find_unit(&#39;gal&#39;)</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; u.gal = 4*u.quart</span>
+<span class="sd">    &gt;&gt;&gt; u.gal/u.inch**3</span>
+<span class="sd">    231</span>
+
+<span class="sd">To see a given quantity in terms of some other unit, divide by the desired</span>
+<span class="sd">unit:</span>
+
+<span class="sd">    &gt;&gt;&gt; mph = u.miles/u.hours</span>
+<span class="sd">    &gt;&gt;&gt; (u.m/u.s/mph).n(2)</span>
+<span class="sd">    2.2</span>
+
+<span class="sd">The units are defined in terms of base units, so when you divide similar</span>
+<span class="sd">units you will obtain a pure number. This means, for example, that if you</span>
+<span class="sd">divide a real-world mass (like grams) by the atomic mass unit (amu) you</span>
+<span class="sd">will obtain Avogadro&#39;s number. To obtain the answer in moles you</span>
+<span class="sd">should divide by the unit ``avogadro``:</span>
+
+<span class="sd">    &gt;&gt;&gt; u.grams/u.amu</span>
+<span class="sd">    602214179000000000000000</span>
+<span class="sd">    &gt;&gt;&gt; _/u.avogadro</span>
+<span class="sd">    mol</span>
+
+<span class="sd">For chemical calculations the unit ``mmu`` (molar mass unit) has been</span>
+<span class="sd">defined so this conversion is handled automatically. For example, the</span>
+<span class="sd">number of moles in 1 kg of water might be calculated as:</span>
+
+<span class="sd">    &gt;&gt;&gt; u.kg/(18*u.mmu).n(3)</span>
+<span class="sd">    55.5*mol</span>
+
+<span class="sd">If you need the number of atoms in a mol as a pure number you can use</span>
+<span class="sd">``avogadro_number`` but if you need it as a dimensional quantity you should use</span>
+<span class="sd">``avogadro_constant``. (``avogadro`` is a shorthand for the dimensional</span>
+<span class="sd">quantity.)</span>
+
+<span class="sd">    &gt;&gt;&gt; u.avogadro_number</span>
+<span class="sd">    602214179000000000000000</span>
+<span class="sd">    &gt;&gt;&gt; u.avogadro_constant</span>
+<span class="sd">    602214179000000000000000/mol</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">AtomicExpr</span>
+
+
+<div class="viewcode-block" id="Unit"><a class="viewcode-back" href="../../../modules/physics/units.html#sympy.physics.units.Unit">[docs]</a><span class="k">class</span> <span class="nc">Unit</span><span class="p">(</span><span class="n">AtomicExpr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for base unit of physical units.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.units import Unit</span>
+<span class="sd">    &gt;&gt;&gt; Unit(&quot;meter&quot;, &quot;m&quot;)</span>
+<span class="sd">    m</span>
+
+<span class="sd">    Other units are derived from base units:</span>
+
+<span class="sd">    &gt;&gt;&gt; import sympy.physics.units as u</span>
+<span class="sd">    &gt;&gt;&gt; cm = u.m/100</span>
+<span class="sd">    &gt;&gt;&gt; 100*u.cm</span>
+<span class="sd">    m</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_positive</span> <span class="o">=</span> <span class="bp">True</span>    <span class="c"># make sqrt(m**2) --&gt; m</span>
+    <span class="n">is_commutative</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_number</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="s">&quot;abbrev&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">abbrev</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">AtomicExpr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">abbrev</span><span class="p">,</span> <span class="nb">str</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">abbrev</span><span class="p">))</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">abbrev</span> <span class="o">=</span> <span class="n">abbrev</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">abbrev</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Unit</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Unit</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__hash__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">abbrev</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+
+<span class="c"># Dimensionless</span>
+</div>
+<span class="n">percent</span> <span class="o">=</span> <span class="n">percents</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">permille</span> <span class="o">=</span> <span class="n">permille</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+
+<span class="n">ten</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">yotta</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">24</span>
+<span class="n">zetta</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">21</span>
+<span class="n">exa</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">18</span>
+<span class="n">peta</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">15</span>
+<span class="n">tera</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">12</span>
+<span class="n">giga</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">9</span>
+<span class="n">mega</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">6</span>
+<span class="n">kilo</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">3</span>
+<span class="n">deca</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**</span><span class="mi">1</span>
+<span class="n">deci</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">1</span>
+<span class="n">centi</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">2</span>
+<span class="n">milli</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">3</span>
+<span class="n">micro</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">6</span>
+<span class="n">nano</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">9</span>
+<span class="n">pico</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">12</span>
+<span class="n">femto</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">15</span>
+<span class="n">atto</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">18</span>
+<span class="n">zepto</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">21</span>
+<span class="n">yocto</span> <span class="o">=</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">24</span>
+
+<span class="n">rad</span> <span class="o">=</span> <span class="n">radian</span> <span class="o">=</span> <span class="n">radians</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">deg</span> <span class="o">=</span> <span class="n">degree</span> <span class="o">=</span> <span class="n">degrees</span> <span class="o">=</span> <span class="n">pi</span><span class="o">/</span><span class="mi">180</span>
+
+
+<span class="c"># Base units</span>
+
+<span class="n">length</span> <span class="o">=</span> <span class="n">m</span> <span class="o">=</span> <span class="n">meter</span> <span class="o">=</span> <span class="n">meters</span> <span class="o">=</span> <span class="n">Unit</span><span class="p">(</span><span class="s">&#39;meter&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">)</span>
+<span class="n">mass</span> <span class="o">=</span> <span class="n">kg</span> <span class="o">=</span> <span class="n">kilogram</span> <span class="o">=</span> <span class="n">kilograms</span> <span class="o">=</span> <span class="n">Unit</span><span class="p">(</span><span class="s">&#39;kilogram&#39;</span><span class="p">,</span> <span class="s">&#39;kg&#39;</span><span class="p">)</span>
+<span class="n">time</span> <span class="o">=</span> <span class="n">s</span> <span class="o">=</span> <span class="n">second</span> <span class="o">=</span> <span class="n">seconds</span> <span class="o">=</span> <span class="n">Unit</span><span class="p">(</span><span class="s">&#39;second&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">)</span>
+<span class="n">current</span> <span class="o">=</span> <span class="n">A</span> <span class="o">=</span> <span class="n">ampere</span> <span class="o">=</span> <span class="n">amperes</span> <span class="o">=</span> <span class="n">Unit</span><span class="p">(</span><span class="s">&#39;ampere&#39;</span><span class="p">,</span> <span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="n">temperature</span> <span class="o">=</span> <span class="n">K</span> <span class="o">=</span> <span class="n">kelvin</span> <span class="o">=</span> <span class="n">kelvins</span> <span class="o">=</span> <span class="n">Unit</span><span class="p">(</span><span class="s">&#39;kelvin&#39;</span><span class="p">,</span> <span class="s">&#39;K&#39;</span><span class="p">)</span>
+<span class="n">amount</span> <span class="o">=</span> <span class="n">mol</span> <span class="o">=</span> <span class="n">mole</span> <span class="o">=</span> <span class="n">moles</span> <span class="o">=</span> <span class="n">Unit</span><span class="p">(</span><span class="s">&#39;mole&#39;</span><span class="p">,</span> <span class="s">&#39;mol&#39;</span><span class="p">)</span>
+<span class="n">luminosity</span> <span class="o">=</span> <span class="n">cd</span> <span class="o">=</span> <span class="n">candela</span> <span class="o">=</span> <span class="n">candelas</span> <span class="o">=</span> <span class="n">Unit</span><span class="p">(</span><span class="s">&#39;candela&#39;</span><span class="p">,</span> <span class="s">&#39;cd&#39;</span><span class="p">)</span>
+
+
+<span class="c"># Derived units</span>
+<span class="n">volume</span> <span class="o">=</span> <span class="n">meter</span><span class="o">**</span><span class="mi">3</span>
+<span class="n">frequency</span> <span class="o">=</span> <span class="n">Hz</span> <span class="o">=</span> <span class="n">hz</span> <span class="o">=</span> <span class="n">hertz</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">s</span>
+<span class="n">force</span> <span class="o">=</span> <span class="n">N</span> <span class="o">=</span> <span class="n">newton</span> <span class="o">=</span> <span class="n">newtons</span> <span class="o">=</span> <span class="n">m</span><span class="o">*</span><span class="n">kg</span><span class="o">/</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">energy</span> <span class="o">=</span> <span class="n">J</span> <span class="o">=</span> <span class="n">joule</span> <span class="o">=</span> <span class="n">joules</span> <span class="o">=</span> <span class="n">N</span><span class="o">*</span><span class="n">m</span>
+<span class="n">power</span> <span class="o">=</span> <span class="n">W</span> <span class="o">=</span> <span class="n">watt</span> <span class="o">=</span> <span class="n">watts</span> <span class="o">=</span> <span class="n">J</span><span class="o">/</span><span class="n">s</span>
+<span class="n">pressure</span> <span class="o">=</span> <span class="n">Pa</span> <span class="o">=</span> <span class="n">pa</span> <span class="o">=</span> <span class="n">pascal</span> <span class="o">=</span> <span class="n">pascals</span> <span class="o">=</span> <span class="n">N</span><span class="o">/</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">charge</span> <span class="o">=</span> <span class="n">C</span> <span class="o">=</span> <span class="n">coulomb</span> <span class="o">=</span> <span class="n">coulombs</span> <span class="o">=</span> <span class="n">s</span><span class="o">*</span><span class="n">A</span>
+<span class="n">voltage</span> <span class="o">=</span> <span class="n">v</span> <span class="o">=</span> <span class="n">V</span> <span class="o">=</span> <span class="n">volt</span> <span class="o">=</span> <span class="n">volts</span> <span class="o">=</span> <span class="n">W</span><span class="o">/</span><span class="n">A</span>
+<span class="n">resistance</span> <span class="o">=</span> <span class="n">ohm</span> <span class="o">=</span> <span class="n">ohms</span> <span class="o">=</span> <span class="n">V</span><span class="o">/</span><span class="n">A</span>
+<span class="n">conductance</span> <span class="o">=</span> <span class="n">S</span> <span class="o">=</span> <span class="n">siemens</span> <span class="o">=</span> <span class="n">mho</span> <span class="o">=</span> <span class="n">mhos</span> <span class="o">=</span> <span class="n">A</span><span class="o">/</span><span class="n">V</span>
+<span class="n">capacitance</span> <span class="o">=</span> <span class="n">F</span> <span class="o">=</span> <span class="n">farad</span> <span class="o">=</span> <span class="n">farads</span> <span class="o">=</span> <span class="n">C</span><span class="o">/</span><span class="n">V</span>
+<span class="n">magnetic_flux</span> <span class="o">=</span> <span class="n">Wb</span> <span class="o">=</span> <span class="n">wb</span> <span class="o">=</span> <span class="n">weber</span> <span class="o">=</span> <span class="n">webers</span> <span class="o">=</span> <span class="n">J</span><span class="o">/</span><span class="n">A</span>
+<span class="n">magnetic_flux_density</span> <span class="o">=</span> <span class="n">T</span> <span class="o">=</span> <span class="n">tesla</span> <span class="o">=</span> <span class="n">teslas</span> <span class="o">=</span> <span class="n">V</span><span class="o">*</span><span class="n">s</span><span class="o">/</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">inductance</span> <span class="o">=</span> <span class="n">H</span> <span class="o">=</span> <span class="n">henry</span> <span class="o">=</span> <span class="n">henrys</span> <span class="o">=</span> <span class="n">V</span><span class="o">*</span><span class="n">s</span><span class="o">/</span><span class="n">A</span>
+<span class="n">speed</span> <span class="o">=</span> <span class="n">m</span><span class="o">/</span><span class="n">s</span>
+<span class="n">acceleration</span> <span class="o">=</span> <span class="n">m</span><span class="o">/</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">density</span> <span class="o">=</span> <span class="n">kg</span><span class="o">/</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span>
+
+<span class="c"># Common length units</span>
+
+<span class="n">km</span> <span class="o">=</span> <span class="n">kilometer</span> <span class="o">=</span> <span class="n">kilometers</span> <span class="o">=</span> <span class="n">kilo</span><span class="o">*</span><span class="n">m</span>
+<span class="n">dm</span> <span class="o">=</span> <span class="n">decimeter</span> <span class="o">=</span> <span class="n">decimeters</span> <span class="o">=</span> <span class="n">deci</span><span class="o">*</span><span class="n">m</span>
+<span class="n">cm</span> <span class="o">=</span> <span class="n">centimeter</span> <span class="o">=</span> <span class="n">centimeters</span> <span class="o">=</span> <span class="n">centi</span><span class="o">*</span><span class="n">m</span>
+<span class="n">mm</span> <span class="o">=</span> <span class="n">millimeter</span> <span class="o">=</span> <span class="n">millimeters</span> <span class="o">=</span> <span class="n">milli</span><span class="o">*</span><span class="n">m</span>
+<span class="n">um</span> <span class="o">=</span> <span class="n">micrometer</span> <span class="o">=</span> <span class="n">micrometers</span> <span class="o">=</span> <span class="n">micron</span> <span class="o">=</span> <span class="n">microns</span> <span class="o">=</span> <span class="n">micro</span><span class="o">*</span><span class="n">m</span>
+<span class="n">nm</span> <span class="o">=</span> <span class="n">nanometer</span> <span class="o">=</span> <span class="n">nanometers</span> <span class="o">=</span> <span class="n">nano</span><span class="o">*</span><span class="n">m</span>
+<span class="n">pm</span> <span class="o">=</span> <span class="n">picometer</span> <span class="o">=</span> <span class="n">picometers</span> <span class="o">=</span> <span class="n">pico</span><span class="o">*</span><span class="n">m</span>
+
+<span class="n">ft</span> <span class="o">=</span> <span class="n">foot</span> <span class="o">=</span> <span class="n">feet</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;0.3048&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">m</span>
+<span class="n">inch</span> <span class="o">=</span> <span class="n">inches</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;25.4&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">mm</span>
+<span class="n">yd</span> <span class="o">=</span> <span class="n">yard</span> <span class="o">=</span> <span class="n">yards</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">ft</span>
+<span class="n">mi</span> <span class="o">=</span> <span class="n">mile</span> <span class="o">=</span> <span class="n">miles</span> <span class="o">=</span> <span class="mi">5280</span><span class="o">*</span><span class="n">ft</span>
+
+
+<span class="c"># Common volume and area units</span>
+
+<span class="n">l</span> <span class="o">=</span> <span class="n">liter</span> <span class="o">=</span> <span class="n">liters</span> <span class="o">=</span> <span class="n">m</span><span class="o">**</span><span class="mi">3</span> <span class="o">/</span> <span class="mi">1000</span>
+<span class="n">dl</span> <span class="o">=</span> <span class="n">deciliter</span> <span class="o">=</span> <span class="n">deciliters</span> <span class="o">=</span> <span class="n">deci</span><span class="o">*</span><span class="n">l</span>
+<span class="n">cl</span> <span class="o">=</span> <span class="n">centiliter</span> <span class="o">=</span> <span class="n">centiliters</span> <span class="o">=</span> <span class="n">centi</span><span class="o">*</span><span class="n">l</span>
+<span class="n">ml</span> <span class="o">=</span> <span class="n">milliliter</span> <span class="o">=</span> <span class="n">milliliters</span> <span class="o">=</span> <span class="n">milli</span><span class="o">*</span><span class="n">l</span>
+
+
+<span class="c"># Common time units</span>
+
+<span class="n">ms</span> <span class="o">=</span> <span class="n">millisecond</span> <span class="o">=</span> <span class="n">milliseconds</span> <span class="o">=</span> <span class="n">milli</span><span class="o">*</span><span class="n">s</span>
+<span class="n">us</span> <span class="o">=</span> <span class="n">microsecond</span> <span class="o">=</span> <span class="n">microseconds</span> <span class="o">=</span> <span class="n">micro</span><span class="o">*</span><span class="n">s</span>
+<span class="n">ns</span> <span class="o">=</span> <span class="n">nanosecond</span> <span class="o">=</span> <span class="n">nanoseconds</span> <span class="o">=</span> <span class="n">nano</span><span class="o">*</span><span class="n">s</span>
+<span class="n">ps</span> <span class="o">=</span> <span class="n">picosecond</span> <span class="o">=</span> <span class="n">picoseconds</span> <span class="o">=</span> <span class="n">pico</span><span class="o">*</span><span class="n">s</span>
+
+<span class="n">minute</span> <span class="o">=</span> <span class="n">minutes</span> <span class="o">=</span> <span class="mi">60</span><span class="o">*</span><span class="n">s</span>
+<span class="n">h</span> <span class="o">=</span> <span class="n">hour</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">=</span> <span class="mi">60</span><span class="o">*</span><span class="n">minute</span>
+<span class="n">day</span> <span class="o">=</span> <span class="n">days</span> <span class="o">=</span> <span class="mi">24</span><span class="o">*</span><span class="n">hour</span>
+
+<span class="n">sidereal_year</span> <span class="o">=</span> <span class="n">sidereal_years</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;31558149.540&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">s</span>
+<span class="n">tropical_year</span> <span class="o">=</span> <span class="n">tropical_years</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;365.24219&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">day</span>
+<span class="n">common_year</span> <span class="o">=</span> <span class="n">common_years</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;365&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">day</span>
+<span class="n">julian_year</span> <span class="o">=</span> <span class="n">julian_years</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;365.25&#39;</span><span class="p">)</span><span class="o">*</span><span class="n">day</span>
+
+<span class="n">year</span> <span class="o">=</span> <span class="n">years</span> <span class="o">=</span> <span class="n">tropical_year</span>
+
+
+<span class="c"># Common mass units</span>
+
+<span class="n">g</span> <span class="o">=</span> <span class="n">gram</span> <span class="o">=</span> <span class="n">grams</span> <span class="o">=</span> <span class="n">kilogram</span> <span class="o">/</span> <span class="n">kilo</span>
+<span class="n">mg</span> <span class="o">=</span> <span class="n">milligram</span> <span class="o">=</span> <span class="n">milligrams</span> <span class="o">=</span> <span class="n">milli</span> <span class="o">*</span> <span class="n">g</span>
+<span class="n">ug</span> <span class="o">=</span> <span class="n">microgram</span> <span class="o">=</span> <span class="n">micrograms</span> <span class="o">=</span> <span class="n">micro</span> <span class="o">*</span> <span class="n">g</span>
+
+
+<span class="c">#----------------------------------------------------------------------------</span>
+<span class="c"># Physical constants</span>
+<span class="c">#</span>
+<span class="n">c</span> <span class="o">=</span> <span class="n">speed_of_light</span> <span class="o">=</span> <span class="mi">299792458</span> <span class="o">*</span> <span class="n">m</span><span class="o">/</span><span class="n">s</span>
+<span class="n">G</span> <span class="o">=</span> <span class="n">gravitational_constant</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;6.67428&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">11</span> <span class="o">*</span> <span class="n">m</span><span class="o">**</span><span class="mi">3</span> <span class="o">/</span> <span class="n">kg</span> <span class="o">/</span> <span class="n">s</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">u0</span> <span class="o">=</span> <span class="n">magnetic_constant</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">pi</span> <span class="o">*</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">7</span> <span class="o">*</span> <span class="n">N</span><span class="o">/</span><span class="n">A</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">e0</span> <span class="o">=</span> <span class="n">electric_constant</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">u0</span> <span class="o">*</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">Z0</span> <span class="o">=</span> <span class="n">vacuum_impedance</span> <span class="o">=</span> <span class="n">u0</span> <span class="o">*</span> <span class="n">c</span>
+
+<span class="n">planck</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;6.62606896&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">34</span> <span class="o">*</span> <span class="n">J</span><span class="o">*</span><span class="n">s</span>
+<span class="n">hbar</span> <span class="o">=</span> <span class="n">planck</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+
+<span class="n">avogadro_number</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;6.02214179&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="mi">23</span>
+<span class="n">avogadro</span> <span class="o">=</span> <span class="n">avogadro_constant</span> <span class="o">=</span> <span class="n">avogadro_number</span> <span class="o">/</span> <span class="n">mol</span>
+<span class="n">boltzmann</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;1.3806505&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">ten</span><span class="o">**-</span><span class="mi">23</span> <span class="o">*</span> <span class="n">J</span> <span class="o">/</span> <span class="n">K</span>
+
+<span class="n">gee</span> <span class="o">=</span> <span class="n">gees</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="s">&#39;9.80665&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">m</span><span class="o">/</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">atmosphere</span> <span class="o">=</span> <span class="n">atmospheres</span> <span class="o">=</span> <span class="n">atm</span> <span class="o">=</span> <span class="mi">101325</span> <span class="o">*</span> <span class="n">pascal</span>
+
+<span class="n">kPa</span> <span class="o">=</span> <span class="n">kilo</span><span class="o">*</span><span class="n">Pa</span>
+<span class="n">bar</span> <span class="o">=</span> <span class="n">bars</span> <span class="o">=</span> <span class="mi">100</span><span class="o">*</span><span class="n">kPa</span>
+<span class="n">pound</span> <span class="o">=</span> <span class="n">pounds</span> <span class="o">=</span> <span class="mf">0.45359237</span> <span class="o">*</span> <span class="n">kg</span> <span class="o">*</span> <span class="n">gee</span>  <span class="c"># exact</span>
+<span class="n">psi</span> <span class="o">=</span> <span class="n">pound</span> <span class="o">/</span> <span class="n">inch</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="n">dHg0</span> <span class="o">=</span> <span class="mf">13.5951</span>  <span class="c"># approx value at 0 C</span>
+<span class="n">mmHg</span> <span class="o">=</span> <span class="n">dHg0</span> <span class="o">*</span> <span class="mf">9.80665</span> <span class="o">*</span> <span class="n">Pa</span>
+<span class="n">amu</span> <span class="o">=</span> <span class="n">amus</span> <span class="o">=</span> <span class="n">gram</span> <span class="o">/</span> <span class="n">avogadro</span> <span class="o">/</span> <span class="n">mol</span>
+<span class="n">mmu</span> <span class="o">=</span> <span class="n">mmus</span> <span class="o">=</span> <span class="n">gram</span> <span class="o">/</span> <span class="n">mol</span>
+<span class="n">quart</span> <span class="o">=</span> <span class="n">quarts</span> <span class="o">=</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">231</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">*</span> <span class="n">inch</span><span class="o">**</span><span class="mi">3</span>
+<span class="n">eV</span> <span class="o">=</span> <span class="mf">1.602176487e-19</span> <span class="o">*</span> <span class="n">J</span>
+
+<span class="c"># Other convenient units and magnitudes</span>
+
+<span class="n">ly</span> <span class="o">=</span> <span class="n">lightyear</span> <span class="o">=</span> <span class="n">lightyears</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">julian_year</span>
+<span class="n">au</span> <span class="o">=</span> <span class="n">astronomical_unit</span> <span class="o">=</span> <span class="n">astronomical_units</span> <span class="o">=</span> <span class="mi">149597870691</span><span class="o">*</span><span class="n">m</span>
+
+
+<div class="viewcode-block" id="find_unit"><a class="viewcode-back" href="../../../modules/physics/units.html#sympy.physics.units.find_unit">[docs]</a><span class="k">def</span> <span class="nf">find_unit</span><span class="p">(</span><span class="n">quantity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of matching units names.</span>
+<span class="sd">    if quantity is a string -- units containing the string `quantity`</span>
+<span class="sd">    if quantity is a unit -- units having matching base units</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics import units as u</span>
+<span class="sd">    &gt;&gt;&gt; u.find_unit(&#39;charge&#39;)</span>
+<span class="sd">    [&#39;charge&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; u.find_unit(u.charge)</span>
+<span class="sd">    [&#39;C&#39;, &#39;charge&#39;, &#39;coulomb&#39;, &#39;coulombs&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; u.find_unit(&#39;volt&#39;)</span>
+<span class="sd">    [&#39;volt&#39;, &#39;volts&#39;, &#39;voltage&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; u.find_unit(u.inch**3)[:5]</span>
+<span class="sd">    [&#39;l&#39;, &#39;cl&#39;, &#39;dl&#39;, &#39;ml&#39;, &#39;liter&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">sympy.physics.units</span> <span class="kn">as</span> <span class="nn">u</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">quantity</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">if</span> <span class="n">quantity</span> <span class="ow">in</span> <span class="n">i</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="n">quantity</span><span class="o">.</span><span class="n">as_coeff_Mul</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">units</span> <span class="o">==</span> <span class="nb">eval</span><span class="p">(</span><span class="s">&#39;u.&#39;</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">as_coeff_Mul</span><span class="p">()[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">rv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">len</span><span class="p">)</span>
+
+<span class="c"># Delete this so it doesn&#39;t pollute the namespace</span></div>
+<span class="k">del</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">pi</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

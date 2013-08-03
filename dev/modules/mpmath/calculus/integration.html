@@ -1,0 +1,800 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Numerical integration (quadrature) &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Numerical calculus" href="index.html" />
+    <link rel="next" title="Ordinary differential equations" href="odes.html" />
+    <link rel="prev" title="Differentiation" href="differentiation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="odes.html" title="Ordinary differential equations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="differentiation.html" title="Differentiation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="numerical-integration-quadrature">
+<h1>Numerical integration (quadrature)<a class="headerlink" href="#numerical-integration-quadrature" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="standard-quadrature-quad">
+<h2>Standard quadrature (<tt class="docutils literal"><span class="pre">quad</span></tt>)<a class="headerlink" href="#standard-quadrature-quad" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mpmath.quad">
+<tt class="descclassname">mpmath.</tt><tt class="descname">quad</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>*points</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.quad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a single, double or triple integral over a given
+1D interval, 2D rectangle, or 3D cuboid. A basic example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="p">])</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+<p>A basic 2D integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="p">])</span>
+<span class="go">4.0</span>
+</pre></div>
+</div>
+<p><strong>Interval format</strong></p>
+<p>The integration range for each dimension may be specified
+using a list or tuple. Arguments are interpreted as follows:</p>
+<p><tt class="docutils literal"><span class="pre">quad(f,</span> <span class="pre">[x1,</span> <span class="pre">x2])</span></tt> &#8211; calculates
+<span class="math">\(\int_{x_1}^{x_2} f(x) \, dx\)</span></p>
+<p><tt class="docutils literal"><span class="pre">quad(f,</span> <span class="pre">[x1,</span> <span class="pre">x2],</span> <span class="pre">[y1,</span> <span class="pre">y2])</span></tt> &#8211; calculates
+<span class="math">\(\int_{x_1}^{x_2} \int_{y_1}^{y_2} f(x,y) \, dy \, dx\)</span></p>
+<p><tt class="docutils literal"><span class="pre">quad(f,</span> <span class="pre">[x1,</span> <span class="pre">x2],</span> <span class="pre">[y1,</span> <span class="pre">y2],</span> <span class="pre">[z1,</span> <span class="pre">z2])</span></tt> &#8211; calculates
+<span class="math">\(\int_{x_1}^{x_2} \int_{y_1}^{y_2} \int_{z_1}^{z_2} f(x,y,z)
+\, dz \, dy \, dx\)</span></p>
+<p>Endpoints may be finite or infinite. An interval descriptor
+may also contain more than two points. In this
+case, the integration is split into subintervals, between
+each pair of consecutive points. This is useful for
+dealing with mid-interval discontinuities, or integrating
+over large intervals where the function is irregular or
+oscillates.</p>
+<p><strong>Options</strong></p>
+<p><a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> recognizes the following keyword arguments:</p>
+<dl class="docutils">
+<dt><em>method</em></dt>
+<dd>Chooses integration algorithm (described below).</dd>
+<dt><em>error</em></dt>
+<dd>If set to true, <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> returns <span class="math">\((v, e)\)</span> where <span class="math">\(v\)</span> is the
+integral and <span class="math">\(e\)</span> is the estimated error.</dd>
+<dt><em>maxdegree</em></dt>
+<dd>Maximum degree of the quadrature rule to try before
+quitting.</dd>
+<dt><em>verbose</em></dt>
+<dd>Print details about progress.</dd>
+</dl>
+<p><strong>Algorithms</strong></p>
+<p>Mpmath presently implements two integration algorithms: tanh-sinh
+quadrature and Gauss-Legendre quadrature. These can be selected
+using <em>method=&#8217;tanh-sinh&#8217;</em> or <em>method=&#8217;gauss-legendre&#8217;</em> or by
+passing the classes <em>method=TanhSinh</em>, <em>method=GaussLegendre</em>.
+The functions <tt class="xref py py-func docutils literal"><span class="pre">quadts()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">quadgl()</span></tt> are also available
+as shortcuts.</p>
+<p>Both algorithms have the property that doubling the number of
+evaluation points roughly doubles the accuracy, so both are ideal
+for high precision quadrature (hundreds or thousands of digits).</p>
+<p>At high precision, computing the nodes and weights for the
+integration can be expensive (more expensive than computing the
+function values). To make repeated integrations fast, nodes
+are automatically cached.</p>
+<p>The advantages of the tanh-sinh algorithm are that it tends to
+handle endpoint singularities well, and that the nodes are cheap
+to compute on the first run. For these reasons, it is used by
+<a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> as the default algorithm.</p>
+<p>Gauss-Legendre quadrature often requires fewer function
+evaluations, and is therefore often faster for repeated use, but
+the algorithm does not handle endpoint singularities as well and
+the nodes are more expensive to compute. Gauss-Legendre quadrature
+can be a better choice if the integrand is smooth and repeated
+integrations are required (e.g. for multiple integrals).</p>
+<p>See the documentation for <tt class="xref py py-class docutils literal"><span class="pre">TanhSinh</span></tt> and
+<tt class="xref py py-class docutils literal"><span class="pre">GaussLegendre</span></tt> for additional details.</p>
+<p><strong>Examples of 1D integrals</strong></p>
+<p>Intervals may be infinite or half-infinite. The following two
+examples evaluate the limits of the inverse tangent function
+(<span class="math">\(\int 1/(1+x^2) = \tan^{-1} x\)</span>), and the Gaussian integral
+<span class="math">\(\int_{\infty}^{\infty} \exp(-x^2)\,dx = \sqrt{\pi}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">3.14159265358979</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">3.14159265358979</span>
+</pre></div>
+</div>
+<p>Integrals can typically be resolved to high precision.
+The following computes 50 digits of <span class="math">\(\pi\)</span> by integrating the
+area of the half-circle defined by <span class="math">\(x^2 + y^2 \le 1\)</span>,
+<span class="math">\(-1 \le x \le 1\)</span>, <span class="math">\(y \ge 0\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">3.1415926535897932384626433832795028841971693993751</span>
+</pre></div>
+</div>
+<p>One can just as well compute 1000 digits (output truncated):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  
+<span class="go">3.141592653589793238462643383279502884...216420198</span>
+</pre></div>
+</div>
+<p>Complex integrals are supported. The following computes
+a residue at <span class="math">\(z = 0\)</span> by integrating counterclockwise along the
+diamond-shaped path from <span class="math">\(1\)</span> to <span class="math">\(+i\)</span> to <span class="math">\(-1\)</span> to <span class="math">\(-i\)</span> to <span class="math">\(1\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">z</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
+<span class="go">(0.0 + 6.28318530717959j)</span>
+</pre></div>
+</div>
+<p><strong>Examples of 2D and 3D integrals</strong></p>
+<p>Here are several nice examples of analytically solvable
+2D integrals (taken from MathWorld [1]) that can be evaluated
+to high precision fairly rapidly by <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">0.577215664901532860606512090082</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">+</span><span class="n">euler</span>
+<span class="go">0.577215664901532860606512090082</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">3.17343648530607134219175646705</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">4</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span>
+<span class="go">3.17343648530607134219175646705</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">1.23370055013616982735431137498</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">8</span>
+<span class="go">1.23370055013616982735431137498</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">1.64493406684822643647241516665</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mi">6</span>
+<span class="go">1.64493406684822643647241516665</span>
+</pre></div>
+</div>
+<p>Multiple integrals may be done over infinite ranges:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">inf</span><span class="p">]))</span>
+<span class="go">0.367879441171442</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">e</span><span class="p">)</span>
+<span class="go">0.367879441171442</span>
+</pre></div>
+</div>
+<p>For nonrectangular areas, one can call <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> recursively.
+For example, we can replicate the earlier example of calculating
+<span class="math">\(\pi\)</span> by integrating over the unit-circle, and actually use double
+quadrature to actually measure the area circle:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">3.14159265358979</span>
+</pre></div>
+</div>
+<p>Here is a simple triple integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;gauss-legendre&#39;</span><span class="p">)</span>
+<span class="go">0.101366277027041</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">-</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="mi">4</span>
+<span class="go">0.101366277027041</span>
+</pre></div>
+</div>
+<p><strong>Singularities</strong></p>
+<p>Both tanh-sinh and Gauss-Legendre quadrature are designed to
+integrate smooth (infinitely differentiable) functions. Neither
+algorithm copes well with mid-interval singularities (such as
+mid-interval discontinuities in <span class="math">\(f(x)\)</span> or <span class="math">\(f'(x)\)</span>).
+The best solution is to split the integral into parts:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">])</span>   <span class="c"># Bad</span>
+<span class="go">3.99900894176779</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">])</span>  <span class="c"># Good</span>
+<span class="go">4.0</span>
+</pre></div>
+</div>
+<p>The tanh-sinh rule often works well for integrands having a
+singularity at one or both endpoints:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;tanh-sinh&#39;</span><span class="p">)</span>  <span class="c"># Good</span>
+<span class="go">-1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;gauss-legendre&#39;</span><span class="p">)</span>  <span class="c"># Bad</span>
+<span class="go">-0.999932197413801</span>
+</pre></div>
+</div>
+<p>However, the result may still be inaccurate for some functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;tanh-sinh&#39;</span><span class="p">)</span>
+<span class="go">1.99999999946942</span>
+</pre></div>
+</div>
+<p>This problem is not due to the quadrature rule per se, but to
+numerical amplification of errors in the nodes. The problem can be
+circumvented by temporarily increasing the precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;tanh-sinh&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">+</span><span class="n">a</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+<p><strong>Highly variable functions</strong></p>
+<p>For functions that are smooth (in the sense of being infinitely
+differentiable) but contain sharp mid-interval peaks or many
+&#8220;bumps&#8221;, <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> may fail to provide full accuracy. For
+example, with default settings, <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> is able to integrate
+<span class="math">\(\sin(x)\)</span> accurately over an interval of length 100 but not over
+length 1000:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">]);</span> <span class="mi">1</span><span class="o">-</span><span class="n">cos</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>   <span class="c"># Good</span>
+<span class="go">0.137681127712316</span>
+<span class="go">0.137681127712316</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">]);</span> <span class="mi">1</span><span class="o">-</span><span class="n">cos</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>   <span class="c"># Bad</span>
+<span class="go">-37.8587612408485</span>
+<span class="go">0.437620923709297</span>
+</pre></div>
+</div>
+<p>One solution is to break the integration into 10 intervals of
+length 100:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>   <span class="c"># Good</span>
+<span class="go">0.437620923709297</span>
+</pre></div>
+</div>
+<p>Another is to increase the degree of the quadrature:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">],</span> <span class="n">maxdegree</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>   <span class="c"># Also good</span>
+<span class="go">0.437620923709297</span>
+</pre></div>
+</div>
+<p>Whether splitting the interval or increasing the degree is
+more efficient differs from case to case. Another example is the
+function <span class="math">\(1/(1+x^2)\)</span>, which has a sharp peak centered around
+<span class="math">\(x = 0\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>   <span class="c"># Bad</span>
+<span class="go">3.64804647105268</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="n">maxdegree</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>   <span class="c"># Good</span>
+<span class="go">3.12159332021646</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">])</span>   <span class="c"># Also good</span>
+<span class="go">3.12159332021646</span>
+</pre></div>
+</div>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://mathworld.wolfram.com/DoubleIntegral.html">http://mathworld.wolfram.com/DoubleIntegral.html</a></li>
+</ol>
+</dd></dl>
+
+</div>
+<div class="section" id="oscillatory-quadrature-quadosc">
+<h2>Oscillatory quadrature (<tt class="docutils literal"><span class="pre">quadosc</span></tt>)<a class="headerlink" href="#oscillatory-quadrature-quadosc" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mpmath.quadosc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">quadosc</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>interval</em>, <em>omega=None</em>, <em>period=None</em>, <em>zeros=None</em><big>)</big><a class="headerlink" href="#mpmath.quadosc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates</p>
+<div class="math">
+\[I = \int_a^b f(x) dx\]</div>
+<p>where at least one of <span class="math">\(a\)</span> and <span class="math">\(b\)</span> is infinite and where
+<span class="math">\(f(x) = g(x) \cos(\omega x  + \phi)\)</span> for some slowly
+decreasing function <span class="math">\(g(x)\)</span>. With proper input, <a class="reference internal" href="#mpmath.quadosc" title="mpmath.quadosc"><tt class="xref py py-func docutils literal"><span class="pre">quadosc()</span></tt></a>
+can also handle oscillatory integrals where the oscillation
+rate is different from a pure sine or cosine wave.</p>
+<p>In the standard case when <span class="math">\(|a| &lt; \infty, b = \infty\)</span>,
+<a class="reference internal" href="#mpmath.quadosc" title="mpmath.quadosc"><tt class="xref py py-func docutils literal"><span class="pre">quadosc()</span></tt></a> works by evaluating the infinite series</p>
+<div class="math">
+\[I = \int_a^{x_1} f(x) dx +
+\sum_{k=1}^{\infty} \int_{x_k}^{x_{k+1}} f(x) dx\]</div>
+<p>where <span class="math">\(x_k\)</span> are consecutive zeros (alternatively
+some other periodic reference point) of <span class="math">\(f(x)\)</span>.
+Accordingly, <a class="reference internal" href="#mpmath.quadosc" title="mpmath.quadosc"><tt class="xref py py-func docutils literal"><span class="pre">quadosc()</span></tt></a> requires information about the
+zeros of <span class="math">\(f(x)\)</span>. For a periodic function, you can specify
+the zeros by either providing the angular frequency <span class="math">\(\omega\)</span>
+(<em>omega</em>) or the <em>period</em> <span class="math">\(2 \pi/\omega\)</span>. In general, you can
+specify the <span class="math">\(n\)</span>-th zero by providing the <em>zeros</em> arguments.
+Below is an example of each:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sin</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.37833007080198</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">period</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.37833007080198</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">zeros</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">pi</span><span class="o">*</span><span class="n">n</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.37833007080198</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">ei</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span><span class="o">-</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">ei</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>  <span class="c"># Computed by Mathematica</span>
+<span class="go">0.37833007080198</span>
+</pre></div>
+</div>
+<p>Note that <em>zeros</em> was specified to multiply <span class="math">\(n\)</span> by the
+<em>half-period</em>, not the full period. In theory, it does not matter
+whether each partial integral is done over a half period or a full
+period. However, if done over half-periods, the infinite series
+passed to <a class="reference internal" href="sums_limits.html#mpmath.nsum" title="mpmath.nsum"><tt class="xref py py-func docutils literal"><span class="pre">nsum()</span></tt></a> becomes an <em>alternating series</em> and this
+typically makes the extrapolation much more efficient.</p>
+<p>Here is an example of an integration over the entire real line,
+and a half-infinite integration starting at <span class="math">\(-\infty\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.15572734979092</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">/</span><span class="n">e</span>
+<span class="go">1.15572734979092</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">period</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">-0.0844109505595739</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">si</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span>
+<span class="go">-0.0844109505595738</span>
+</pre></div>
+</div>
+<p>Of course, the integrand may contain a complex exponential just as
+well as a real sine or cosine:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">(0.156410688228254 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">/</span><span class="n">e</span><span class="o">**</span><span class="mi">3</span>
+<span class="go">0.156410688228254</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="n">x</span><span class="o">+</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">inf</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">(0.00317486988463794 - 0.0447701735209082j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="o">/</span><span class="n">exp</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(0.00317486988463794 - 0.0447701735209082j)</span>
+</pre></div>
+</div>
+<p><strong>Non-periodic functions</strong></p>
+<p>If <span class="math">\(f(x) = g(x) h(x)\)</span> for some function <span class="math">\(h(x)\)</span> that is not
+strictly periodic, <em>omega</em> or <em>period</em> might not work, and it might
+be necessary to use <em>zeros</em>.</p>
+<p>A notable exception can be made for Bessel functions which, though not
+periodic, are &#8220;asymptotically periodic&#8221; in a sufficiently strong sense
+that the sum extrapolation will work out:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">j0</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="n">period</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">j1</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="n">period</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>More properly, one should provide the exact Bessel function zeros:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">j0zero</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">findroot</span><span class="p">(</span><span class="n">j0</span><span class="p">,</span> <span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">j0</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="n">zeros</span><span class="o">=</span><span class="n">j0zero</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>For an example where <em>zeros</em> becomes necessary, consider the
+complete Fresnel integrals</p>
+<div class="math">
+\[\int_0^{\infty} \cos x^2\,dx = \int_0^{\infty} \sin x^2\,dx
+= \sqrt{\frac{\pi}{8}}.\]</div>
+<p>Although the integrands do not decrease in magnitude as
+<span class="math">\(x \to \infty\)</span>, the integrals are convergent since the oscillation
+rate increases (causing consecutive periods to asymptotically
+cancel out). These integrals are virtually impossible to calculate
+to any kind of accuracy using standard quadrature rules. However,
+if one provides the correct asymptotic distribution of zeros
+(<span class="math">\(x_n \sim \sqrt{n}\)</span>), <a class="reference internal" href="#mpmath.quadosc" title="mpmath.quadosc"><tt class="xref py py-func docutils literal"><span class="pre">quadosc()</span></tt></a> works:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">zeros</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">n</span><span class="p">))</span>
+<span class="go">0.626657068657750125603941321203</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">zeros</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">n</span><span class="p">))</span>
+<span class="go">0.626657068657750125603941321203</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span>
+<span class="go">0.626657068657750125603941321203</span>
+</pre></div>
+</div>
+<p>(Interestingly, these integrals can still be evaluated if one
+places some other constant than <span class="math">\(\pi\)</span> in the square root sign.)</p>
+<p>In general, if <span class="math">\(f(x) \sim g(x) \cos(h(x))\)</span>, the zeros follow
+the inverse-function distribution <span class="math">\(h^{-1}(x)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">sin</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">zeros</span><span class="o">=</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+<span class="go">-0.25024394235267</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="n">si</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+<span class="go">-0.250243942352671</span>
+</pre></div>
+</div>
+<p><strong>Non-alternating functions</strong></p>
+<p>If the integrand oscillates around a positive value, without
+alternating signs, the extrapolation might fail. A simple trick
+that sometimes works is to multiply or divide the frequency by 2:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c"># Bad</span>
+<span class="go">1.28642190869861</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>  <span class="c"># Perfect</span>
+<span class="go">1.28652953559617</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">ci</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">sin</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="mi">6</span>
+<span class="go">1.28652953559617</span>
+</pre></div>
+</div>
+<p><strong>Fast decay</strong></p>
+<p><a class="reference internal" href="#mpmath.quadosc" title="mpmath.quadosc"><tt class="xref py py-func docutils literal"><span class="pre">quadosc()</span></tt></a> is primarily useful for slowly decaying
+integrands. If the integrand decreases exponentially or faster,
+<a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> will likely handle it without trouble (and generally be
+much faster than <a class="reference internal" href="#mpmath.quadosc" title="mpmath.quadosc"><tt class="xref py py-func docutils literal"><span class="pre">quadosc()</span></tt></a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">inf</span><span class="p">])</span>
+<span class="go">0.5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="quadrature-rules">
+<h2>Quadrature rules<a class="headerlink" href="#quadrature-rules" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="mpmath.calculus.quadrature.QuadratureRule">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.quadrature.</tt><tt class="descname">QuadratureRule</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quadrature rules are implemented using this class, in order to
+simplify the code and provide a common infrastructure
+for tasks such as error estimation and node caching.</p>
+<p>You can implement a custom quadrature rule by subclassing
+<tt class="xref py py-class docutils literal"><span class="pre">QuadratureRule</span></tt> and implementing the appropriate
+methods. The subclass can then be used by <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> by
+passing it as the <em>method</em> argument.</p>
+<p><tt class="xref py py-class docutils literal"><span class="pre">QuadratureRule</span></tt> instances are supposed to be singletons.
+<tt class="xref py py-class docutils literal"><span class="pre">QuadratureRule</span></tt> therefore implements instance caching
+in <tt class="xref py py-func docutils literal"><span class="pre">__new__()</span></tt>.</p>
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.calc_nodes">
+<tt class="descname">calc_nodes</tt><big>(</big><em>degree</em>, <em>prec</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.calc_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.calc_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute nodes for the standard interval <span class="math">\([-1, 1]\)</span>. Subclasses
+should probably implement only this method, and use
+<tt class="xref py py-func docutils literal"><span class="pre">get_nodes()</span></tt> method to retrieve the nodes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete cached node data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.estimate_error">
+<tt class="descname">estimate_error</tt><big>(</big><em>results</em>, <em>prec</em>, <em>epsilon</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.estimate_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.estimate_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given results from integrations <span class="math">\([I_1, I_2, \ldots, I_k]\)</span> done
+with a quadrature of rule of degree <span class="math">\(1, 2, \ldots, k\)</span>, estimate
+the error of <span class="math">\(I_k\)</span>.</p>
+<p>For <span class="math">\(k = 2\)</span>, we estimate  <span class="math">\(|I_{\infty}-I_2|\)</span> as <span class="math">\(|I_2-I_1|\)</span>.</p>
+<p>For <span class="math">\(k &gt; 2\)</span>, we extrapolate <span class="math">\(|I_{\infty}-I_k| \approx |I_{k+1}-I_k|\)</span>
+from <span class="math">\(|I_k-I_{k-1}|\)</span> and <span class="math">\(|I_k-I_{k-2}|\)</span> under the assumption
+that each degree increment roughly doubles the accuracy of
+the quadrature rule (this is true for both <tt class="xref py py-class docutils literal"><span class="pre">TanhSinh</span></tt>
+and <tt class="xref py py-class docutils literal"><span class="pre">GaussLegendre</span></tt>). The extrapolation formula is given
+by Borwein, Bailey &amp; Girgensohn. Although not very conservative,
+this method seems to be very robust in practice.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.get_nodes">
+<tt class="descname">get_nodes</tt><big>(</big><em>a</em>, <em>b</em>, <em>degree</em>, <em>prec</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.get_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.get_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return nodes for given interval, degree and precision. The
+nodes are retrieved from a cache if already computed;
+otherwise they are computed by calling <tt class="xref py py-func docutils literal"><span class="pre">calc_nodes()</span></tt>
+and are then cached.</p>
+<p>Subclasses should probably not implement this method,
+but just implement <tt class="xref py py-func docutils literal"><span class="pre">calc_nodes()</span></tt> for the actual
+node computation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.guess_degree">
+<tt class="descname">guess_degree</tt><big>(</big><em>prec</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.guess_degree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.guess_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a desired precision <span class="math">\(p\)</span> in bits, estimate the degree <span class="math">\(m\)</span>
+of the quadrature required to accomplish full accuracy for
+typical integrals. By default, <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> will perform up
+to <span class="math">\(m\)</span> iterations. The value of <span class="math">\(m\)</span> should be a slight
+overestimate, so that &#8220;slightly bad&#8221; integrals can be dealt
+with automatically using a few extra iterations. On the
+other hand, it should not be too big, so <a class="reference internal" href="#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a> can
+quit within a reasonable amount of time when it is given
+an &#8220;unsolvable&#8221; integral.</p>
+<p>The default formula used by <tt class="xref py py-func docutils literal"><span class="pre">guess_degree()</span></tt> is tuned
+for both <tt class="xref py py-class docutils literal"><span class="pre">TanhSinh</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">GaussLegendre</span></tt>.
+The output is roughly as follows:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><span class="math">\(p\)</span></th>
+<th class="head"><span class="math">\(m\)</span></th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>50</td>
+<td>6</td>
+</tr>
+<tr class="row-odd"><td>100</td>
+<td>7</td>
+</tr>
+<tr class="row-even"><td>500</td>
+<td>10</td>
+</tr>
+<tr class="row-odd"><td>3000</td>
+<td>12</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>This formula is based purely on a limited amount of
+experimentation and will sometimes be wrong.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.sum_next">
+<tt class="descname">sum_next</tt><big>(</big><em>f</em>, <em>nodes</em>, <em>degree</em>, <em>prec</em>, <em>previous</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.sum_next"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.sum_next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the step sum <span class="math">\(\sum w_k f(x_k)\)</span> where the <em>nodes</em> list
+contains the <span class="math">\((w_k, x_k)\)</span> pairs.</p>
+<p><tt class="xref py py-func docutils literal"><span class="pre">summation()</span></tt> will supply the list <em>results</em> of
+values computed by <tt class="xref py py-func docutils literal"><span class="pre">sum_next()</span></tt> at previous degrees, in
+case the quadrature rule is able to reuse them.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.summation">
+<tt class="descname">summation</tt><big>(</big><em>f</em>, <em>points</em>, <em>prec</em>, <em>epsilon</em>, <em>max_degree</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.summation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.summation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main integration function. Computes the 1D integral over
+the interval specified by <em>points</em>. For each subinterval,
+performs quadrature of degree from 1 up to <em>max_degree</em>
+until <tt class="xref py py-func docutils literal"><span class="pre">estimate_error()</span></tt> signals convergence.</p>
+<p><tt class="xref py py-func docutils literal"><span class="pre">summation()</span></tt> transforms each subintegration to
+the standard interval and then calls <tt class="xref py py-func docutils literal"><span class="pre">sum_next()</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.QuadratureRule.transform_nodes">
+<tt class="descname">transform_nodes</tt><big>(</big><em>nodes</em>, <em>a</em>, <em>b</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#QuadratureRule.transform_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.QuadratureRule.transform_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rescale standardized nodes (for <span class="math">\([-1, 1]\)</span>) to a general
+interval <span class="math">\([a, b]\)</span>. For a finite interval, a simple linear
+change of variables is used. Otherwise, the following
+transformations are used:</p>
+<div class="math">
+\[[a, \infty] : t = \frac{1}{x} + (a-1)\]\[[-\infty, b] : t = (b+1) - \frac{1}{x}\]\[[-\infty, \infty] : t = \frac{x}{\sqrt{1-x^2}}\]</div>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="tanh-sinh-rule">
+<h3>Tanh-sinh rule<a class="headerlink" href="#tanh-sinh-rule" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="mpmath.calculus.quadrature.TanhSinh">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.quadrature.</tt><tt class="descname">TanhSinh</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#TanhSinh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.TanhSinh" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class implements &#8220;tanh-sinh&#8221; or &#8220;doubly exponential&#8221;
+quadrature. This quadrature rule is based on the Euler-Maclaurin
+integral formula. By performing a change of variables involving
+nested exponentials / hyperbolic functions (hence the name), the
+derivatives at the endpoints vanish rapidly. Since the error term
+in the Euler-Maclaurin formula depends on the derivatives at the
+endpoints, a simple step sum becomes extremely accurate. In
+practice, this means that doubling the number of evaluation
+points roughly doubles the number of accurate digits.</p>
+<dl class="docutils">
+<dt>Comparison to Gauss-Legendre:</dt>
+<dd><ul class="first last simple">
+<li>Initial computation of nodes is usually faster</li>
+<li>Handles endpoint singularities better</li>
+<li>Handles infinite integration intervals better</li>
+<li>Is slower for smooth integrands once nodes have been computed</li>
+</ul>
+</dd>
+</dl>
+<p>The implementation of the tanh-sinh algorithm is based on the
+description given in Borwein, Bailey &amp; Girgensohn, &#8220;Experimentation
+in Mathematics - Computational Paths to Discovery&#8221;, A K Peters,
+2003, pages 312-313. In the present implementation, a few
+improvements have been made:</p>
+<blockquote>
+<div><ul class="simple">
+<li>A more efficient scheme is used to compute nodes (exploiting
+recurrence for the exponential function)</li>
+<li>The nodes are computed successively instead of all at once</li>
+</ul>
+</div></blockquote>
+<p>Various documents describing the algorithm are available online, e.g.:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="http://crd.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf">http://crd.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf</a></li>
+<li><a class="reference external" href="http://users.cs.dal.ca/~jborwein/tanh-sinh.pdf">http://users.cs.dal.ca/~jborwein/tanh-sinh.pdf</a></li>
+</ul>
+</div></blockquote>
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.TanhSinh.calc_nodes">
+<tt class="descname">calc_nodes</tt><big>(</big><em>degree</em>, <em>prec</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#TanhSinh.calc_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.TanhSinh.calc_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The abscissas and weights for tanh-sinh quadrature of degree
+<span class="math">\(m\)</span> are given by</p>
+<div class="math">
+\[x_k = \tanh(\pi/2 \sinh(t_k))\]\[w_k = \pi/2 \cosh(t_k) / \cosh(\pi/2 \sinh(t_k))^2\]</div>
+<p>where <span class="math">\(t_k = t_0 + hk\)</span> for a step length <span class="math">\(h \sim 2^{-m}\)</span>. The
+list of nodes is actually infinite, but the weights die off so
+rapidly that only a few are needed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.TanhSinh.sum_next">
+<tt class="descname">sum_next</tt><big>(</big><em>f</em>, <em>nodes</em>, <em>degree</em>, <em>prec</em>, <em>previous</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#TanhSinh.sum_next"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.TanhSinh.sum_next" title="Permalink to this definition">¶</a></dt>
+<dd><p>Step sum for tanh-sinh quadrature of degree <span class="math">\(m\)</span>. We exploit the
+fact that half of the abscissas at degree <span class="math">\(m\)</span> are precisely the
+abscissas from degree <span class="math">\(m-1\)</span>. Thus reusing the result from
+the previous level allows a 2x speedup.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="gauss-legendre-rule">
+<h3>Gauss-Legendre rule<a class="headerlink" href="#gauss-legendre-rule" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="mpmath.calculus.quadrature.GaussLegendre">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.quadrature.</tt><tt class="descname">GaussLegendre</tt><big>(</big><em>ctx</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#GaussLegendre"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.GaussLegendre" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class implements Gauss-Legendre quadrature, which is
+exceptionally efficient for polynomials and polynomial-like (i.e.
+very smooth) integrands.</p>
+<p>The abscissas and weights are given by roots and values of
+Legendre polynomials, which are the orthogonal polynomials
+on <span class="math">\([-1, 1]\)</span> with respect to the unit weight
+(see <a class="reference internal" href="../functions/orthogonal.html#mpmath.legendre" title="mpmath.legendre"><tt class="xref py py-func docutils literal"><span class="pre">legendre()</span></tt></a>).</p>
+<p>In this implementation, we take the &#8220;degree&#8221; <span class="math">\(m\)</span> of the quadrature
+to denote a Gauss-Legendre rule of degree <span class="math">\(3 \cdot 2^m\)</span> (following
+Borwein, Bailey &amp; Girgensohn). This way we get quadratic, rather
+than linear, convergence as the degree is incremented.</p>
+<dl class="docutils">
+<dt>Comparison to tanh-sinh quadrature:</dt>
+<dd><ul class="first last simple">
+<li>Is faster for smooth integrands once nodes have been computed</li>
+<li>Initial computation of nodes is usually slower</li>
+<li>Handles endpoint singularities worse</li>
+<li>Handles infinite integration intervals worse</li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="mpmath.calculus.quadrature.GaussLegendre.calc_nodes">
+<tt class="descname">calc_nodes</tt><big>(</big><em>degree</em>, <em>prec</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/quadrature.html#GaussLegendre.calc_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.quadrature.GaussLegendre.calc_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the abscissas and weights for Gauss-Legendre
+quadrature of degree of given degree (actually <span class="math">\(3 \cdot 2^m\)</span>).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Numerical integration (quadrature)</a><ul>
+<li><a class="reference internal" href="#standard-quadrature-quad">Standard quadrature (<tt class="docutils literal"><span class="pre">quad</span></tt>)</a></li>
+<li><a class="reference internal" href="#oscillatory-quadrature-quadosc">Oscillatory quadrature (<tt class="docutils literal"><span class="pre">quadosc</span></tt>)</a></li>
+<li><a class="reference internal" href="#quadrature-rules">Quadrature rules</a><ul>
+<li><a class="reference internal" href="#tanh-sinh-rule">Tanh-sinh rule</a></li>
+<li><a class="reference internal" href="#gauss-legendre-rule">Gauss-Legendre rule</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="differentiation.html"
+                        title="previous chapter">Differentiation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="odes.html"
+                        title="next chapter">Ordinary differential equations</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/calculus/integration.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="odes.html" title="Ordinary differential equations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="differentiation.html" title="Differentiation"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

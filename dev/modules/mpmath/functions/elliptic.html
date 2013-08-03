@@ -1,0 +1,1368 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Elliptic functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="Zeta functions, L-series and polylogarithms" href="zeta.html" />
+    <link rel="prev" title="Hypergeometric functions" href="hypergeometric.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="zeta.html" title="Zeta functions, L-series and polylogarithms"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="hypergeometric.html" title="Hypergeometric functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-mpmath.functions.elliptic">
+<span id="elliptic-functions"></span><h1>Elliptic functions<a class="headerlink" href="#module-mpmath.functions.elliptic" title="Permalink to this headline">¶</a></h1>
+<p>Elliptic functions historically comprise the elliptic integrals
+and their inverses, and originate from the problem of computing the
+arc length of an ellipse. From a more modern point of view,
+an elliptic function is defined as a doubly periodic function, i.e.
+a function which satisfies</p>
+<div class="math">
+\[f(z + 2 \omega_1) = f(z + 2 \omega_2) = f(z)\]</div>
+<p>for some half-periods <span class="math">\(\omega_1, \omega_2\)</span> with
+<span class="math">\(\mathrm{Im}[\omega_1 / \omega_2] &gt; 0\)</span>. The canonical elliptic
+functions are the Jacobi elliptic functions. More broadly, this section
+includes  quasi-doubly periodic functions (such as the Jacobi theta
+functions) and other functions useful in the study of elliptic functions.</p>
+<p>Many different conventions for the arguments of
+elliptic functions are in use. It is even standard to use
+different parameterizations for different functions in the same
+text or software (and mpmath is no exception).
+The usual parameters are the elliptic nome <span class="math">\(q\)</span>, which usually
+must satisfy <span class="math">\(|q| &lt; 1\)</span>; the elliptic parameter <span class="math">\(m\)</span> (an arbitrary
+complex number); the elliptic modulus <span class="math">\(k\)</span> (an arbitrary complex
+number); and the half-period ratio <span class="math">\(\tau\)</span>, which usually must
+satisfy <span class="math">\(\mathrm{Im}[\tau] &gt; 0\)</span>.
+These quantities can be expressed in terms of each other
+using the following relations:</p>
+<div class="math">
+\[m = k^2\]</div>
+<div class="math">
+\[\tau = -i \frac{K(1-m)}{K(m)}\]</div>
+<div class="math">
+\[q = e^{i \pi \tau}\]</div>
+<div class="math">
+\[k = \frac{\vartheta_2^4(q)}{\vartheta_3^4(q)}\]</div>
+<p>In addition, an alternative definition is used for the nome in
+number theory, which we here denote by q-bar:</p>
+<div class="math">
+\[\bar{q} = q^2 = e^{2 i \pi \tau}\]</div>
+<p>For convenience, mpmath provides functions to convert
+between the various parameters (<a class="reference internal" href="#mpmath.qfrom" title="mpmath.qfrom"><tt class="xref py py-func docutils literal"><span class="pre">qfrom()</span></tt></a>, <a class="reference internal" href="#mpmath.mfrom" title="mpmath.mfrom"><tt class="xref py py-func docutils literal"><span class="pre">mfrom()</span></tt></a>,
+<a class="reference internal" href="#mpmath.kfrom" title="mpmath.kfrom"><tt class="xref py py-func docutils literal"><span class="pre">kfrom()</span></tt></a>, <a class="reference internal" href="#mpmath.taufrom" title="mpmath.taufrom"><tt class="xref py py-func docutils literal"><span class="pre">taufrom()</span></tt></a>, <a class="reference internal" href="#mpmath.qbarfrom" title="mpmath.qbarfrom"><tt class="xref py py-func docutils literal"><span class="pre">qbarfrom()</span></tt></a>).</p>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference internal" href="../references.html#abramowitzstegun">[AbramowitzStegun]</a></li>
+<li><a class="reference internal" href="../references.html#whittakerwatson">[WhittakerWatson]</a></li>
+</ol>
+<div class="section" id="elliptic-arguments">
+<h2>Elliptic arguments<a class="headerlink" href="#elliptic-arguments" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="qfrom">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">qfrom()</span></tt><a class="headerlink" href="#qfrom" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.qfrom">
+<tt class="descclassname">mpmath.</tt><tt class="descname">qfrom</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.qfrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the elliptic nome <span class="math">\(q\)</span>, given any of <span class="math">\(q, m, k, \tau, \bar{q}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">mfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">kfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="n">taufrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">(0.25 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfrom</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="qbarfrom">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">qbarfrom()</span></tt><a class="headerlink" href="#qbarfrom" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.qbarfrom">
+<tt class="descclassname">mpmath.</tt><tt class="descname">qbarfrom</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.qbarfrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number-theoretic nome <span class="math">\(\bar q\)</span>, given any of
+<span class="math">\(q, m, k, \tau, \bar{q}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">qfrom</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">extraprec</span><span class="p">(</span><span class="mi">20</span><span class="p">)(</span><span class="n">mfrom</span><span class="p">)(</span><span class="n">qbar</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>  <span class="c"># ill-conditioned</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">extraprec</span><span class="p">(</span><span class="mi">20</span><span class="p">)(</span><span class="n">kfrom</span><span class="p">)(</span><span class="n">qbar</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>  <span class="c"># ill-conditioned</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="n">taufrom</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">(0.25 + 0.0j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="mfrom">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">mfrom()</span></tt><a class="headerlink" href="#mfrom" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.mfrom">
+<tt class="descclassname">mpmath.</tt><tt class="descname">mfrom</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.mfrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the elliptic parameter <span class="math">\(m\)</span>, given any of
+<span class="math">\(q, m, k, \tau, \bar{q}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">qfrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">kfrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="n">taufrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">(0.25 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+</pre></div>
+</div>
+<p>As <span class="math">\(q \to 1\)</span> and <span class="math">\(q \to -1\)</span>, <span class="math">\(m\)</span> rapidly approaches
+<span class="math">\(1\)</span> and <span class="math">\(-\infty\)</span> respectively:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="go">0.9999999999999798332943533</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=-</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="go">-49586681013729.32611558353</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">-inf</span>
+</pre></div>
+</div>
+<p>The inverse nome as a function of <span class="math">\(q\)</span> has an integer
+Taylor series expansion:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">mfrom</span><span class="p">(</span><span class="n">q</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">[0.0, 16.0, -128.0, 704.0, -3072.0, 11488.0, -38400.0, 117632.0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="kfrom">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">kfrom()</span></tt><a class="headerlink" href="#kfrom" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.kfrom">
+<tt class="descclassname">mpmath.</tt><tt class="descname">kfrom</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.kfrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the elliptic modulus <span class="math">\(k\)</span>, given any of
+<span class="math">\(q, m, k, \tau, \bar{q}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">mfrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">qfrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="n">taufrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">(0.25 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.25</span>
+</pre></div>
+</div>
+<p>As <span class="math">\(q \to 1\)</span> and <span class="math">\(q \to -1\)</span>, <span class="math">\(k\)</span> rapidly approaches
+<span class="math">\(1\)</span> and <span class="math">\(i \infty\)</span> respectively:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="go">0.9999999999999899166471767</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=-</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="go">(0.0 + 7041781.096692038332790615j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kfrom</span><span class="p">(</span><span class="n">q</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(0.0 + +infj)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="taufrom">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">taufrom()</span></tt><a class="headerlink" href="#taufrom" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.taufrom">
+<tt class="descclassname">mpmath.</tt><tt class="descname">taufrom</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.taufrom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the elliptic half-period ratio <span class="math">\(\tau\)</span>, given any of
+<span class="math">\(q, m, k, \tau, \bar{q}\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">taufrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">0.5</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.0 + 0.5j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">taufrom</span><span class="p">(</span><span class="n">q</span><span class="o">=</span><span class="n">qfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">0.5</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(0.0 + 0.5j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">taufrom</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="n">mfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">0.5</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(0.0 + 0.5j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">taufrom</span><span class="p">(</span><span class="n">k</span><span class="o">=</span><span class="n">kfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">0.5</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(0.0 + 0.5j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">taufrom</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="n">qbarfrom</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="mf">0.5</span><span class="n">j</span><span class="p">))</span>
+<span class="go">(0.0 + 0.5j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="legendre-elliptic-integrals">
+<h2>Legendre elliptic integrals<a class="headerlink" href="#legendre-elliptic-integrals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ellipk">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ellipk()</span></tt><a class="headerlink" href="#ellipk" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ellipk">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ellipk</tt><big>(</big><em>m</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.ellipk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the complete elliptic integral of the first kind,
+<span class="math">\(K(m)\)</span>, defined by</p>
+<div class="math">
+\[K(m) = \int_0^{\pi/2} \frac{dt}{\sqrt{1-m \sin^2 t}} \, = \,
+\frac{\pi}{2} \,_2F_1\left(\frac{1}{2}, \frac{1}{2}, 1, m\right).\]</div>
+<p>Note that the argument is the parameter <span class="math">\(m = k^2\)</span>,
+not the modulus <span class="math">\(k\)</span> which is sometimes used.</p>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Complete elliptic integrals K(m) and E(m)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">ellipk</span><span class="p">,</span> <span class="n">ellipe</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="mi">600</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../_images/ellipk.png" src="../../../_images/ellipk.png" />
+<p><strong>Examples</strong></p>
+<p>Values and limits include:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">(0.0 + 0.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.31102877714605990523242</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(1.31102877714605990523242 - 1.31102877714605990523242j)</span>
+</pre></div>
+</div>
+<p>Verifying the defining integral and hypergeometric
+representation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.85407467730137191843385</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**-</span><span class="mf">0.5</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">1.85407467730137191843385</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">hyp2f1</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.85407467730137191843385</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for arbitrary complex <span class="math">\(m\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.9111955638049650086562171 + 0.6313342832413452438845091j)</span>
+</pre></div>
+</div>
+<p>A definite integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">ellipk</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="ellipf">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ellipf()</span></tt><a class="headerlink" href="#ellipf" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ellipf">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ellipf</tt><big>(</big><em>phi</em>, <em>m</em><big>)</big><a class="headerlink" href="#mpmath.ellipf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Legendre incomplete elliptic integral of the first kind</p>
+<blockquote>
+<div><div class="math">
+\[F(\phi,m) = \int_0^{\phi} \frac{dt}{\sqrt{1-m \sin^2 t}}\]</div>
+</div></blockquote>
+<p>or equivalently</p>
+<div class="math">
+\[F(\phi,m) = \int_0^{\sin z}
+\frac{dt}{\left(\sqrt{1-t^2}\right)\left(\sqrt{1-mt^2}\right)}.\]</div>
+<p>The function reduces to a complete elliptic integral of the first kind
+(see <a class="reference internal" href="#mpmath.ellipk" title="mpmath.ellipk"><tt class="xref py py-func docutils literal"><span class="pre">ellipk()</span></tt></a>) when <span class="math">\(\phi = \frac{\pi}{2}\)</span>; that is,</p>
+<div class="math">
+\[F\left(\frac{\pi}{2}, m\right) = K(m).\]</div>
+<p>In the defining integral, it is assumed that the principal branch
+of the square root is taken and that the path of integration avoids
+crossing any branch cuts. Outside <span class="math">\(-\pi/2 \le \Re(z) \le \pi/2\)</span>,
+the function extends quasi-periodically as</p>
+<div class="math">
+\[F(\phi + n \pi, m) = 2 n K(m) + F(\phi,m), n \in \mathbb{Z}.\]</div>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Elliptic integral F(z,m) for some different m</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">f5</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">,</span><span class="n">f5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">pi</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/ellipf.png" src="../../../_images/ellipf.png" />
+<p><strong>Examples</strong></p>
+<p>Basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">ellipf</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="go">(2.0 + 3.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span> <span class="n">log</span><span class="p">(</span><span class="n">sec</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">tan</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">1.226191170883517070813061</span>
+<span class="go">1.226191170883517070813061</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">);</span> <span class="n">ellipk</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.415737208425956198892166</span>
+<span class="go">1.415737208425956198892166</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="n">eps</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">ellipf</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="n">eps</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">3.340677542798311003320813</span>
+</pre></div>
+</div>
+<p>Comparing with numerical integration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="go">0.5287219202206327872978255</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">z</span><span class="p">])</span>
+<span class="go">0.5287219202206327872978255</span>
+</pre></div>
+</div>
+<p>The arguments may be complex numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">(0.0 + 1.713602407841590234804143j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="mi">5</span><span class="o">-</span><span class="mi">6</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.269131241950351323305741 - 0.3561052815014558335412538j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mf">1.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="mi">1011</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="n">pi</span><span class="o">*</span><span class="n">k</span><span class="p">,</span><span class="n">m</span><span class="p">);</span> <span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">ellipk</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="go">(4086.184383622179764082821 - 3003.003538923749396546871j)</span>
+<span class="go">(4086.184383622179764082821 - 3003.003538923749396546871j)</span>
+</pre></div>
+</div>
+<p>For <span class="math">\(|\Re(z)| &lt; \pi/2\)</span>, the function can be expressed as a
+hypergeometric series of two variables
+(see <a class="reference internal" href="hypergeometric.html#mpmath.appellf1" title="mpmath.appellf1"><tt class="xref py py-func docutils literal"><span class="pre">appellf1()</span></tt></a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="go">0.5050887275786480788831083</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">appellf1</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.5050887275786480788831083</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="ellipe">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ellipe()</span></tt><a class="headerlink" href="#ellipe" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ellipe">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ellipe</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#mpmath.ellipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called with a single argument <span class="math">\(m\)</span>, evaluates the Legendre complete
+elliptic integral of the second kind, <span class="math">\(E(m)\)</span>, defined by</p>
+<blockquote>
+<div><div class="math">
+\[E(m) = \int_0^{\pi/2} \sqrt{1-m \sin^2 t} \, dt \,=\,
+\frac{\pi}{2}
+\,_2F_1\left(\frac{1}{2}, -\frac{1}{2}, 1, m\right).\]</div>
+</div></blockquote>
+<p>Called with two arguments <span class="math">\(\phi, m\)</span>, evaluates the incomplete elliptic
+integral of the second kind</p>
+<blockquote>
+<div><div class="math">
+\[E(\phi,m) = \int_0^{\phi} \sqrt{1-m \sin^2 t} \, dt =
+            \int_0^{\sin z}
+            \frac{\sqrt{1-mt^2}}{\sqrt{1-t^2}} \, dt.\]</div>
+</div></blockquote>
+<p>The incomplete integral reduces to a complete integral when
+<span class="math">\(\phi = \frac{\pi}{2}\)</span>; that is,</p>
+<div class="math">
+\[E\left(\frac{\pi}{2}, m\right) = E(m).\]</div>
+<p>In the defining integral, it is assumed that the principal branch
+of the square root is taken and that the path of integration avoids
+crossing any branch cuts. Outside <span class="math">\(-\pi/2 \le \Re(z) \le \pi/2\)</span>,
+the function extends quasi-periodically as</p>
+<div class="math">
+\[E(\phi + n \pi, m) = 2 n E(m) + F(\phi,m), n \in \mathbb{Z}.\]</div>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Elliptic integral E(z,m) for some different m</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">f5</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">,</span><span class="n">f5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">pi</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/ellipe.png" src="../../../_images/ellipe.png" />
+<p><strong>Examples for the complete integral</strong></p>
+<p>Basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.910098894513856008952381</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(0.5990701173677961037199612 + 0.5990701173677961037199612j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">(0.0 + +infj)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="o">-</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>Verifying the defining integral and hypergeometric
+representation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.350643881047675502520175</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.5</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">1.350643881047675502520175</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="o">*</span><span class="n">hyp2f1</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.350643881047675502520175</span>
+</pre></div>
+</div>
+<p>Evaluation is supported for arbitrary complex <span class="math">\(m\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mf">0.5</span><span class="o">+</span><span class="mf">0.25</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.360868682163129682716687 - 0.1238733442561786843557315j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(1.499553520933346954333612 - 1.577879007912758274533309j)</span>
+</pre></div>
+</div>
+<p>A definite integral:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">ellipe</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">1.333333333333333333333333</span>
+</pre></div>
+</div>
+<p><strong>Examples for the incomplete integral</strong></p>
+<p>Basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">(2.0 + 3.0j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span> <span class="n">sin</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.8414709848078965066525023</span>
+<span class="go">0.8414709848078965066525023</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">);</span> <span class="n">ellipe</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.751771275694817862026502</span>
+<span class="go">1.751771275694817862026502</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">ellipe</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="go">-1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">0.9974949866040544309417234</span>
+</pre></div>
+</div>
+<p>Comparing with numerical integration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="go">0.4740152182652628394264449</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">z</span><span class="p">])</span>
+<span class="go">0.4740152182652628394264449</span>
+</pre></div>
+</div>
+<p>The arguments may be complex numbers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">(0.0 + 7.551991234890371873502105j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="mi">5</span><span class="o">-</span><span class="mi">6</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(24.15299022574220502424466 + 75.2503670480325997418156j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="mi">35</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="mi">2</span><span class="o">+</span><span class="mi">3</span><span class="n">j</span><span class="p">,</span> <span class="mf">1.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="n">pi</span><span class="o">*</span><span class="n">k</span><span class="p">,</span><span class="n">m</span><span class="p">);</span> <span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">ellipe</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="go">(48.30138799412005235090766 + 17.47255216721987688224357j)</span>
+<span class="go">(48.30138799412005235090766 + 17.47255216721987688224357j)</span>
+</pre></div>
+</div>
+<p>For <span class="math">\(|\Re(z)| &lt; \pi/2\)</span>, the function can be expressed as a
+hypergeometric series of two variables
+(see <a class="reference internal" href="hypergeometric.html#mpmath.appellf1" title="mpmath.appellf1"><tt class="xref py py-func docutils literal"><span class="pre">appellf1()</span></tt></a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="go">0.4950017030164151928870375</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">appellf1</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">,</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span><span class="n">m</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.4950017030164151928870376</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="ellippi">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ellippi()</span></tt><a class="headerlink" href="#ellippi" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ellippi">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ellippi</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#mpmath.ellippi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Called with three arguments <span class="math">\(n, \phi, m\)</span>, evaluates the Legendre
+incomplete elliptic integral of the third kind</p>
+<div class="math">
+\[\Pi(n; \phi, m) = \int_0^{\phi}
+    \frac{dt}{(1-n \sin^2 t) \sqrt{1-m \sin^2 t}} =
+    \int_0^{\sin \phi}
+    \frac{dt}{(1-nt^2) \sqrt{1-t^2} \sqrt{1-mt^2}}.\]</div>
+<p>Called with two arguments <span class="math">\(n, m\)</span>, evaluates the complete
+elliptic integral of the third kind
+<span class="math">\(\Pi(n,m) = \Pi(n; \frac{\pi}{2},m)\)</span>.</p>
+<p>In the defining integral, it is assumed that the principal branch
+of the square root is taken and that the path of integration avoids
+crossing any branch cuts. Outside <span class="math">\(-\pi/2 \le \Re(z) \le \pi/2\)</span>,
+the function extends quasi-periodically as</p>
+<div class="math">
+\[\Pi(n,\phi+k\pi,m) = 2k\Pi(n,m) + \Pi(n,\phi,m), k \in \mathbb{Z}.\]</div>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Elliptic integral Pi(n,z,m) for some different n, m</span>
+<span class="n">f1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellippi</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mf">0.9</span><span class="p">)</span>
+<span class="n">f2</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellippi</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">f3</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellippi</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="o">-</span><span class="mf">0.9</span><span class="p">)</span>
+<span class="n">f4</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellippi</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">f5</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">ellippi</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">plot</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span><span class="n">f2</span><span class="p">,</span><span class="n">f3</span><span class="p">,</span><span class="n">f4</span><span class="p">,</span><span class="n">f5</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">pi</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+</pre></div>
+</div>
+<img alt="../../../_images/ellippi.png" src="../../../_images/ellippi.png" />
+<p><strong>Examples for the complete integral</strong></p>
+<p>Some basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">5</span><span class="p">);</span> <span class="n">ellipk</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">0.9555039270640439337379334</span>
+<span class="go">0.9555039270640439337379334</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">ellippi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">ellippi</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>Evaluation in terms of simpler functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.25</span><span class="p">);</span> <span class="n">ellipe</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">1.956616279119236207279727</span>
+<span class="go">1.956616279119236207279727</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">(0.0 - 1.11072073453959156175397j)</span>
+<span class="go">(0.0 - 1.11072073453959156175397j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">0.7853981633974483096156609</span>
+<span class="go">0.7853981633974483096156609</span>
+</pre></div>
+</div>
+<p><strong>Examples for the incomplete integral</strong></p>
+<p>Basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">);</span> <span class="n">ellippi</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">1.622944760954741603710555</span>
+<span class="go">1.622944760954741603710555</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.5</span><span class="p">);</span> <span class="n">ellipf</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">0.2513040086544925794134591</span>
+<span class="go">0.2513040086544925794134591</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span> <span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">sec</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="n">tan</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">+</span><span class="n">sec</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">tan</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="mi">2</span>
+<span class="go">2.054332933256248668692452</span>
+<span class="go">2.054332933256248668692452</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mi">53</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">);</span> <span class="mi">53</span><span class="o">*</span><span class="n">ellippi</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="go">135.240868757890840755058</span>
+<span class="go">135.240868757890840755058</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="mf">0.5</span><span class="p">);</span> <span class="mi">2</span><span class="o">*</span><span class="n">ellipe</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.9190227391656969903987269</span>
+<span class="go">0.9190227391656969903987269</span>
+</pre></div>
+</div>
+<p>Complex arguments are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ellippi</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">5</span><span class="o">+</span><span class="mi">6</span><span class="n">j</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">8</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(-0.3612856620076747660410167 + 0.5217735339984807829755815j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="carlson-symmetric-elliptic-integrals">
+<h2>Carlson symmetric elliptic integrals<a class="headerlink" href="#carlson-symmetric-elliptic-integrals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="elliprf">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">elliprf()</span></tt><a class="headerlink" href="#elliprf" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.elliprf">
+<tt class="descclassname">mpmath.</tt><tt class="descname">elliprf</tt><big>(</big><em>x</em>, <em>y</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.elliprf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Carlson symmetric elliptic integral of the first kind</p>
+<div class="math">
+\[R_F(x,y,z) = \frac{1}{2}
+    \int_0^{\infty} \frac{dt}{\sqrt{(t+x)(t+y)(t+z)}}\]</div>
+<p>which is defined for <span class="math">\(x,y,z \notin (-\infty,0)\)</span>, and with
+at most one of <span class="math">\(x,y,z\)</span> being zero.</p>
+<p>For real <span class="math">\(x,y,z \ge 0\)</span>, the principal square root is taken in the integrand.
+For complex <span class="math">\(x,y,z\)</span>, the principal square root is taken as <span class="math">\(t \to \infty\)</span>
+and as <span class="math">\(t \to 0\)</span> non-principal branches are chosen as necessary so as to
+make the integrand continuous.</p>
+<p><strong>Examples</strong></p>
+<p>Some basic values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="go">1.570796326794896619231322</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span> <span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="go">+inf</span>
+<span class="go">+inf</span>
+<span class="go">+inf</span>
+</pre></div>
+</div>
+<p>Representing complete elliptic integrals in terms of <span class="math">\(R_F\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipk</span><span class="p">(</span><span class="n">m</span><span class="p">);</span> <span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="o">-</span><span class="n">m</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">2.156515647499643235438675</span>
+<span class="go">2.156515647499643235438675</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipe</span><span class="p">(</span><span class="n">m</span><span class="p">);</span> <span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="o">-</span><span class="n">m</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="n">m</span><span class="o">*</span><span class="n">elliprd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="o">-</span><span class="n">m</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span>
+<span class="go">1.211056027568459524803563</span>
+<span class="go">1.211056027568459524803563</span>
+</pre></div>
+</div>
+<p>Some symmetries and argument transformations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">);</span> <span class="n">elliprf</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">z</span><span class="p">);</span> <span class="n">elliprf</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">x</span><span class="p">)</span>
+<span class="go">0.5840828416771517066928492</span>
+<span class="go">0.5840828416771517066928492</span>
+<span class="go">0.5840828416771517066928492</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">100000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="n">k</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="n">k</span><span class="o">*</span><span class="n">z</span><span class="p">);</span> <span class="n">k</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">elliprf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="go">0.001847032121923321253219284</span>
+<span class="go">0.001847032121923321253219284</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">z</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">);</span> <span class="mi">2</span><span class="o">*</span><span class="n">elliprf</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">l</span><span class="p">,</span><span class="n">y</span><span class="o">+</span><span class="n">l</span><span class="p">,</span><span class="n">z</span><span class="o">+</span><span class="n">l</span><span class="p">)</span>
+<span class="go">0.5840828416771517066928492</span>
+<span class="go">0.5840828416771517066928492</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">((</span><span class="n">x</span><span class="o">+</span><span class="n">l</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">,(</span><span class="n">y</span><span class="o">+</span><span class="n">l</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">,(</span><span class="n">z</span><span class="o">+</span><span class="n">l</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">0.5840828416771517066928492</span>
+</pre></div>
+</div>
+<p>Comparing with numerical integration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="go">0.5840828416771517066928492</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">((</span><span class="n">t</span><span class="o">+</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="n">z</span><span class="p">))</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">extradps</span><span class="p">(</span><span class="mi">25</span><span class="p">)(</span><span class="n">quad</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">0.5840828416771517066928492</span>
+</pre></div>
+</div>
+<p>With the following arguments, the square root in the integrand becomes
+discontinuous at <span class="math">\(t = 1/2\)</span> if the principal branch is used. To obtain
+the right value, <span class="math">\(-\sqrt{r}\)</span> must be taken instead of <span class="math">\(\sqrt{r}\)</span>
+on <span class="math">\(t \in (0, 1/2)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">)</span>
+<span class="go">(0.7961258658423391329305694 - 1.213856669836495986430094j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">q</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">])</span> <span class="o">+</span> <span class="n">q</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">(0.7961258658423391329305694 - 1.213856669836495986430094j)</span>
+</pre></div>
+</div>
+<p>The so-called <em>first lemniscate constant</em>, a transcendental number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">elliprf</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">1.31102877714605990523242</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">extradps</span><span class="p">(</span><span class="mi">25</span><span class="p">)(</span><span class="n">quad</span><span class="p">)(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">t</span><span class="o">**</span><span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">1.31102877714605990523242</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gamma</span><span class="p">(</span><span class="s">&#39;1/4&#39;</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">))</span>
+<span class="go">1.31102877714605990523242</span>
+</pre></div>
+</div>
+<p><strong>References</strong></p>
+<ol class="arabic simple">
+<li><a class="reference internal" href="../references.html#carlson">[Carlson]</a></li>
+<li><a class="reference internal" href="../references.html#dlmf">[DLMF]</a> Chapter 19. Elliptic Integrals</li>
+</ol>
+</dd></dl>
+
+</div>
+<div class="section" id="elliprc">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">elliprc()</span></tt><a class="headerlink" href="#elliprc" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.elliprc">
+<tt class="descclassname">mpmath.</tt><tt class="descname">elliprc</tt><big>(</big><em>x</em>, <em>y</em>, <em>pv=True</em><big>)</big><a class="headerlink" href="#mpmath.elliprc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the degenerate Carlson symmetric elliptic integral
+of the first kind</p>
+<div class="math">
+\[R_C(x,y) = R_F(x,y,y) =
+    \frac{1}{2} \int_0^{\infty} \frac{dt}{(t+y) \sqrt{(t+x)}}.\]</div>
+<p>If <span class="math">\(y \in (-\infty,0)\)</span>, either a value defined by continuity,
+or with <em>pv=True</em> the Cauchy principal value, can be computed.</p>
+<p>If <span class="math">\(x \ge 0, y &gt; 0\)</span>, the value can be expressed in terms of
+elementary functions as</p>
+<div class="math">
+\[\begin{split}R_C(x,y) =
+\begin{cases}
+  \dfrac{1}{\sqrt{y-x}}
+    \cos^{-1}\left(\sqrt{\dfrac{x}{y}}\right),   &amp; x &lt; y \\
+  \dfrac{1}{\sqrt{y}},                          &amp; x = y \\
+  \dfrac{1}{\sqrt{x-y}}
+    \cosh^{-1}\left(\sqrt{\dfrac{x}{y}}\right),  &amp; x &gt; y \\
+\end{cases}.\end{split}\]</div>
+<p><strong>Examples</strong></p>
+<p>Some special values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="mi">4</span><span class="p">;</span> <span class="n">elliprc</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">;</span> <span class="o">+</span><span class="n">pi</span>
+<span class="go">3.141592653589793238462643</span>
+<span class="go">3.141592653589793238462643</span>
+<span class="go">3.141592653589793238462643</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">0.2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">);</span> <span class="n">elliprc</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span> <span class="n">elliprc</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>Comparing with the elementary closed-form solution:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="s">&#39;1/3&#39;</span><span class="p">,</span> <span class="s">&#39;1/5&#39;</span><span class="p">);</span> <span class="n">sqrt</span><span class="p">(</span><span class="mf">7.5</span><span class="p">)</span><span class="o">*</span><span class="n">acosh</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="s">&#39;5/3&#39;</span><span class="p">))</span>
+<span class="go">2.041630778983498390751238</span>
+<span class="go">2.041630778983498390751238</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="s">&#39;1/5&#39;</span><span class="p">,</span> <span class="s">&#39;1/3&#39;</span><span class="p">);</span> <span class="n">sqrt</span><span class="p">(</span><span class="mf">7.5</span><span class="p">)</span><span class="o">*</span><span class="n">acos</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="s">&#39;3/5&#39;</span><span class="p">))</span>
+<span class="go">1.875180765206547065111085</span>
+<span class="go">1.875180765206547065111085</span>
+</pre></div>
+</div>
+<p>Comparing with numerical integration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">extradps</span><span class="p">(</span><span class="mi">25</span><span class="p">)(</span><span class="n">quad</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">pv</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">0.3333969101113672670749334</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="n">pv</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">(0.3333969101113672670749334 + 0.7024814731040726393156375j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mf">0.5</span><span class="o">*</span><span class="n">q</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="mi">3</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="n">j</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">(0.3333969101113672670749334 + 0.7024814731040726393156375j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="elliprj">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">elliprj()</span></tt><a class="headerlink" href="#elliprj" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.elliprj">
+<tt class="descclassname">mpmath.</tt><tt class="descname">elliprj</tt><big>(</big><em>x</em>, <em>y</em>, <em>z</em>, <em>p</em><big>)</big><a class="headerlink" href="#mpmath.elliprj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Carlson symmetric elliptic integral of the third kind</p>
+<div class="math">
+\[R_J(x,y,z,p) = \frac{3}{2}
+    \int_0^{\infty} \frac{dt}{(t+p)\sqrt{(t+x)(t+y)(t+z)}}.\]</div>
+<p>Like <a class="reference internal" href="#mpmath.elliprf" title="mpmath.elliprf"><tt class="xref py py-func docutils literal"><span class="pre">elliprf()</span></tt></a>, the branch of the square root in the integrand
+is defined so as to be continuous along the path of integration for
+complex values of the arguments.</p>
+<p><strong>Examples</strong></p>
+<p>Some values and limits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">0.3535533905932737622004222</span>
+<span class="go">0.3535533905932737622004222</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">1.067937989667395702268688</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">gamma</span><span class="p">(</span><span class="s">&#39;5/4&#39;</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">gamma</span><span class="p">(</span><span class="s">&#39;1/4&#39;</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">))</span>
+<span class="go">1.067937989667395702268688</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span> <span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="mi">4</span>
+<span class="go">1.380226776765915172432054</span>
+<span class="go">1.380226776765915172432054</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">elliprj</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">elliprj</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">+inf</span>
+<span class="go">+inf</span>
+<span class="go">+inf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">inf</span><span class="p">)</span>
+<span class="go">0.0</span>
+<span class="go">0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">0.8505007163686739432927844</span>
+</pre></div>
+</div>
+<p>Scale transformation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">p</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">100000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">x</span><span class="p">,</span><span class="n">k</span><span class="o">*</span><span class="n">y</span><span class="p">,</span><span class="n">k</span><span class="o">*</span><span class="n">z</span><span class="p">,</span><span class="n">k</span><span class="o">*</span><span class="n">p</span><span class="p">);</span> <span class="n">k</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">)</span><span class="o">*</span><span class="n">elliprj</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
+<span class="go">4.521291677592745527851168e-9</span>
+<span class="go">4.521291677592745527851168e-9</span>
+</pre></div>
+</div>
+<p>Comparing with numerical integration:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">0.2398480997495677621758617</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">((</span><span class="n">t</span><span class="o">+</span><span class="mi">4</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">((</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">3</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mf">1.5</span><span class="o">*</span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">0.2398480997495677621758617</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="o">-</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.216888906014633498739952 + 0.04081912627366673332369512j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="p">((</span><span class="n">t</span><span class="o">+</span><span class="mi">4</span><span class="o">-</span><span class="mi">2</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">((</span><span class="n">t</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="mi">3</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mf">1.5</span><span class="o">*</span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">(0.216888906014633498739952 + 0.04081912627366673332369511j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="elliprd">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">elliprd()</span></tt><a class="headerlink" href="#elliprd" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.elliprd">
+<tt class="descclassname">mpmath.</tt><tt class="descname">elliprd</tt><big>(</big><em>x</em>, <em>y</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.elliprd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the degenerate Carlson symmetric elliptic integral
+of the third kind or Carlson elliptic integral of the
+second kind <span class="math">\(R_D(x,y,z) = R_J(x,y,z,z)\)</span>.</p>
+<p>See <a class="reference internal" href="#mpmath.elliprj" title="mpmath.elliprj"><tt class="xref py py-func docutils literal"><span class="pre">elliprj()</span></tt></a> for additional information.</p>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprd</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.2904602810289906442326534</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprj</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">0.2904602810289906442326534</span>
+</pre></div>
+</div>
+<p>The so-called <em>second lemniscate constant</em>, a transcendental number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">elliprd</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span>
+<span class="go">0.5990701173677961037199612</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">extradps</span><span class="p">(</span><span class="mi">25</span><span class="p">)(</span><span class="n">quad</span><span class="p">)(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">t</span><span class="o">**</span><span class="mi">4</span><span class="p">),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">0.5990701173677961037199612</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">gamma</span><span class="p">(</span><span class="s">&#39;3/4&#39;</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">0.5990701173677961037199612</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="elliprg">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">elliprg()</span></tt><a class="headerlink" href="#elliprg" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.elliprg">
+<tt class="descclassname">mpmath.</tt><tt class="descname">elliprg</tt><big>(</big><em>x</em>, <em>y</em>, <em>z</em><big>)</big><a class="headerlink" href="#mpmath.elliprg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Carlson completely symmetric elliptic integral
+of the second kind</p>
+<div class="math">
+\[R_G(x,y,z) = \frac{1}{4} \int_0^{\infty}
+    \frac{t}{\sqrt{(t+x)(t+y)(t+z)}}
+    \left( \frac{x}{t+x} + \frac{y}{t+y} + \frac{z}{t+z}\right) dt.\]</div>
+<p><strong>Examples</strong></p>
+<p>Evaluation for real and complex arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprg</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">4</span><span class="p">;</span> <span class="o">+</span><span class="n">pi</span>
+<span class="go">3.141592653589793238462643</span>
+<span class="go">3.141592653589793238462643</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elliprg</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.6753219405238377512600874</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">elliprg</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">1.172431327676416604532822</span>
+</pre></div>
+</div>
+<p>A double integral that can be evaluated in terms of <span class="math">\(R_G\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">u</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">st</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">);</span> <span class="n">ct</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">su</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">u</span><span class="p">);</span> <span class="n">cu</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="n">st</span><span class="o">*</span><span class="n">cu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="p">(</span><span class="n">st</span><span class="o">*</span><span class="n">su</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">z</span><span class="o">*</span><span class="n">ct</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">st</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">fp</span><span class="o">.</span><span class="n">pi</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">fp</span><span class="o">.</span><span class="n">pi</span><span class="p">)),</span> <span class="mi">13</span><span class="p">)</span>
+<span class="go">1.725503028069</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">elliprg</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">),</span> <span class="mi">13</span><span class="p">)</span>
+<span class="go">1.725503028069</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="jacobi-theta-functions">
+<h2>Jacobi theta functions<a class="headerlink" href="#jacobi-theta-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jtheta">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">jtheta()</span></tt><a class="headerlink" href="#jtheta" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.jtheta">
+<tt class="descclassname">mpmath.</tt><tt class="descname">jtheta</tt><big>(</big><em>n</em>, <em>z</em>, <em>q</em>, <em>derivative=0</em><big>)</big><a class="headerlink" href="#mpmath.jtheta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the Jacobi theta function <span class="math">\(\vartheta_n(z, q)\)</span>, where
+<span class="math">\(n = 1, 2, 3, 4\)</span>, defined by the infinite series:</p>
+<div class="math">
+\[\vartheta_1(z,q) = 2 q^{1/4} \sum_{n=0}^{\infty}
+  (-1)^n q^{n^2+n\,} \sin((2n+1)z)\]\[\vartheta_2(z,q) = 2 q^{1/4} \sum_{n=0}^{\infty}
+  q^{n^{2\,} + n} \cos((2n+1)z)\]\[\vartheta_3(z,q) = 1 + 2 \sum_{n=1}^{\infty}
+  q^{n^2\,} \cos(2 n z)\]\[\vartheta_4(z,q) = 1 + 2 \sum_{n=1}^{\infty}
+  (-q)^{n^2\,} \cos(2 n z)\]</div>
+<p>The theta functions are functions of two variables:</p>
+<ul class="simple">
+<li><span class="math">\(z\)</span> is the <em>argument</em>, an arbitrary real or complex number</li>
+<li><span class="math">\(q\)</span> is the <em>nome</em>, which must be a real or complex number
+in the unit disk (i.e. <span class="math">\(|q| &lt; 1\)</span>). For <span class="math">\(|q| \ll 1\)</span>, the
+series converge very quickly, so the Jacobi theta functions
+can efficiently be evaluated to high precision.</li>
+</ul>
+<p>The compact notations <span class="math">\(\vartheta_n(q) = \vartheta_n(0,q)\)</span>
+and <span class="math">\(\vartheta_n = \vartheta_n(0,q)\)</span> are also frequently
+encountered. Finally, Jacobi theta functions are frequently
+considered as functions of the half-period ratio <span class="math">\(\tau\)</span>
+and then usually denoted by <span class="math">\(\vartheta_n(z|\tau)\)</span>.</p>
+<p>Optionally, <tt class="docutils literal"><span class="pre">jtheta(n,</span> <span class="pre">z,</span> <span class="pre">q,</span> <span class="pre">derivative=d)</span></tt> with <span class="math">\(d &gt; 0\)</span> computes
+a <span class="math">\(d\)</span>-th derivative with respect to <span class="math">\(z\)</span>.</p>
+<p><strong>Examples and basic properties</strong></p>
+<p>Considered as functions of <span class="math">\(z\)</span>, the Jacobi theta functions may be
+viewed as generalizations of the ordinary trigonometric functions
+cos and sin. They are periodic functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="s">&#39;0.2&#39;</span><span class="p">)</span>
+<span class="go">0.2945120798627300045053104</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.25</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="s">&#39;0.2&#39;</span><span class="p">)</span>
+<span class="go">0.2945120798627300045053104</span>
+</pre></div>
+</div>
+<p>Indeed, the series defining the theta functions are essentially
+trigonometric Fourier series. The coefficients can be retrieved
+using <a class="reference internal" href="../calculus/approximation.html#mpmath.fourier" title="mpmath.fourier"><tt class="xref py py-func docutils literal"><span class="pre">fourier()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nprint</span><span class="p">(</span><span class="n">fourier</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">pi</span><span class="p">,</span> <span class="n">pi</span><span class="p">],</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">([0.0, 1.68179, 0.0, 0.420448, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0])</span>
+</pre></div>
+</div>
+<p>The Jacobi theta functions are also so-called quasiperiodic
+functions of <span class="math">\(z\)</span> and <span class="math">\(\tau\)</span>, meaning that for fixed <span class="math">\(\tau\)</span>,
+<span class="math">\(\vartheta_n(z, q)\)</span> and <span class="math">\(\vartheta_n(z+\pi \tau, q)\)</span> are the same
+except for an exponential factor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tau</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">j</span><span class="o">/</span><span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">tau</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">z</span><span class="o">+</span><span class="n">tau</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+<span class="go">(-0.682420280786034687520568 + 1.526683999721399103332021j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="n">q</span> <span class="o">*</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+<span class="go">(-0.682420280786034687520568 + 1.526683999721399103332021j)</span>
+</pre></div>
+</div>
+<p>The Jacobi theta functions satisfy a huge number of other
+functional equations, such as the following identity (valid for
+any <span class="math">\(q\)</span>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">q</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span>
+<span class="go">6.823744089352763305137427</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">q</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">q</span><span class="p">)</span><span class="o">**</span><span class="mi">4</span>
+<span class="go">6.823744089352763305137427</span>
+</pre></div>
+</div>
+<p>Extensive listings of identities satisfied by the Jacobi theta
+functions can be found in standard reference works.</p>
+<p>The Jacobi theta functions are related to the gamma function
+for special arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">pi</span><span class="p">))</span>
+<span class="go">1.086434811213308014575316</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mf">4.</span><span class="p">)</span> <span class="o">/</span> <span class="n">gamma</span><span class="p">(</span><span class="mi">3</span><span class="o">/</span><span class="mf">4.</span><span class="p">)</span>
+<span class="go">1.086434811213308014575316</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.jtheta" title="mpmath.jtheta"><tt class="xref py py-func docutils literal"><span class="pre">jtheta()</span></tt></a> supports arbitrary precision evaluation and complex
+arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">2.0549510717571539127004115835148878097035750653737</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="mi">2</span><span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">)</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">(7.180331760146805926356634 - 1.634292858119162417301683j)</span>
+</pre></div>
+</div>
+<p>Evaluation of derivatives:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">1.209857192844475388637236</span>
+<span class="go">1.209857192844475388637236</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">-0.2598718791650217206533052</span>
+<span class="go">-0.2598718791650217206533052</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">-1.150231437070259644461474</span>
+<span class="go">-1.150231437070259644461474</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">-0.6226636990043777445898114</span>
+<span class="go">-0.6226636990043777445898114</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">-0.9990312046096634316587882</span>
+<span class="go">-0.9990312046096634316587882</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">-0.1530388693066334936151174</span>
+<span class="go">-0.1530388693066334936151174</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">0.9820995967262793943571139</span>
+<span class="go">0.9820995967262793943571139</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span> <span class="n">diff</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">jtheta</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">),</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">0.3936902850291437081667755</span>
+<span class="go">0.3936902850291437081667755</span>
+</pre></div>
+</div>
+<p><strong>Possible issues</strong></p>
+<p>For <span class="math">\(|q| \ge 1\)</span> or <span class="math">\(\Im(\tau) \le 0\)</span>, <a class="reference internal" href="#mpmath.jtheta" title="mpmath.jtheta"><tt class="xref py py-func docutils literal"><span class="pre">jtheta()</span></tt></a> raises
+<tt class="docutils literal"><span class="pre">ValueError</span></tt>. This exception is also raised for <span class="math">\(|q|\)</span> extremely
+close to 1 (or equivalently <span class="math">\(\tau\)</span> very close to 0), since the
+series would converge too slowly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">jtheta</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">0.99999999</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="n">j</span><span class="p">))</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">abs(q) &gt; THETA_Q_LIM = 1.000000</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="jacobi-elliptic-functions">
+<h2>Jacobi elliptic functions<a class="headerlink" href="#jacobi-elliptic-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="ellipfun">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">ellipfun()</span></tt><a class="headerlink" href="#ellipfun" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.ellipfun">
+<tt class="descclassname">mpmath.</tt><tt class="descname">ellipfun</tt><big>(</big><em>kind</em>, <em>u=None</em>, <em>m=None</em>, <em>q=None</em>, <em>k=None</em>, <em>tau=None</em><big>)</big><a class="headerlink" href="#mpmath.ellipfun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes any of the Jacobi elliptic functions, defined
+in terms of Jacobi theta functions as</p>
+<div class="math">
+\[\mathrm{sn}(u,m) = \frac{\vartheta_3(0,q)}{\vartheta_2(0,q)}
+    \frac{\vartheta_1(t,q)}{\vartheta_4(t,q)}\]\[\mathrm{cn}(u,m) = \frac{\vartheta_4(0,q)}{\vartheta_2(0,q)}
+    \frac{\vartheta_2(t,q)}{\vartheta_4(t,q)}\]\[\mathrm{dn}(u,m) = \frac{\vartheta_4(0,q)}{\vartheta_3(0,q)}
+    \frac{\vartheta_3(t,q)}{\vartheta_4(t,q)},\]</div>
+<p>or more generally computes a ratio of two such functions. Here
+<span class="math">\(t = u/\vartheta_3(0,q)^2\)</span>, and <span class="math">\(q = q(m)\)</span> denotes the nome (see
+<tt class="xref py py-func docutils literal"><span class="pre">nome()</span></tt>). Optionally, you can specify the nome directly
+instead of <span class="math">\(m\)</span> by passing <tt class="docutils literal"><span class="pre">q=&lt;value&gt;</span></tt>, or you can directly
+specify the elliptic parameter <span class="math">\(k\)</span> with <tt class="docutils literal"><span class="pre">k=&lt;value&gt;</span></tt>.</p>
+<p>The first argument should be a two-character string specifying the
+function using any combination of <tt class="docutils literal"><span class="pre">'s'</span></tt>, <tt class="docutils literal"><span class="pre">'c'</span></tt>, <tt class="docutils literal"><span class="pre">'d'</span></tt>, <tt class="docutils literal"><span class="pre">'n'</span></tt>. These
+letters respectively denote the basic functions
+<span class="math">\(\mathrm{sn}(u,m)\)</span>, <span class="math">\(\mathrm{cn}(u,m)\)</span>, <span class="math">\(\mathrm{dn}(u,m)\)</span>, and <span class="math">\(1\)</span>.
+The identifier specifies the ratio of two such functions.
+For example, <tt class="docutils literal"><span class="pre">'ns'</span></tt> identifies the function</p>
+<div class="math">
+\[\mathrm{ns}(u,m) = \frac{1}{\mathrm{sn}(u,m)}\]</div>
+<p>and <tt class="docutils literal"><span class="pre">'cd'</span></tt> identifies the function</p>
+<div class="math">
+\[\mathrm{cd}(u,m) = \frac{\mathrm{cn}(u,m)}{\mathrm{dn}(u,m)}.\]</div>
+<p>If called with only the first argument, a function object
+evaluating the chosen function for given arguments is returned.</p>
+<p><strong>Examples</strong></p>
+<p>Basic evaluation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipfun</span><span class="p">(</span><span class="s">&#39;cd&#39;</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="go">-0.9891101840595543931308394</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ellipfun</span><span class="p">(</span><span class="s">&#39;cd&#39;</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.07111979240214668158441418</span>
+</pre></div>
+</div>
+<p>The sn-function is doubly periodic in the complex plane with periods
+<span class="math">\(4 K(m)\)</span> and <span class="math">\(2 i K(1-m)\)</span> (see <a class="reference internal" href="#mpmath.ellipk" title="mpmath.ellipk"><tt class="xref py py-func docutils literal"><span class="pre">ellipk()</span></tt></a>):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sn</span> <span class="o">=</span> <span class="n">ellipfun</span><span class="p">(</span><span class="s">&#39;sn&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.9628981775982774425751399</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sn</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">ellipk</span><span class="p">(</span><span class="mf">0.25</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.9628981775982774425751399</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">sn</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">ellipk</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.25</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.9628981775982774425751399</span>
+</pre></div>
+</div>
+<p>The cn-function is doubly periodic with periods <span class="math">\(4 K(m)\)</span> and <span class="math">\(4 i K(1-m)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">ellipfun</span><span class="p">(</span><span class="s">&#39;cn&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">-0.2698649654510865792581416</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">ellipk</span><span class="p">(</span><span class="mf">0.25</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">-0.2698649654510865792581416</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">cn</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">ellipk</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.25</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">))</span>
+<span class="go">-0.2698649654510865792581416</span>
+</pre></div>
+</div>
+<p>The dn-function is doubly periodic with periods <span class="math">\(2 K(m)\)</span> and <span class="math">\(4 i K(1-m)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">dn</span> <span class="o">=</span> <span class="n">ellipfun</span><span class="p">(</span><span class="s">&#39;dn&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.8764740583123262286931578</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dn</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">ellipk</span><span class="p">(</span><span class="mf">0.25</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">0.8764740583123262286931578</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="n">dn</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">4</span><span class="o">*</span><span class="n">j</span><span class="o">*</span><span class="n">ellipk</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mf">0.25</span><span class="p">),</span> <span class="mf">0.25</span><span class="p">))</span>
+<span class="go">0.8764740583123262286931578</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="modular-functions">
+<h2>Modular functions<a class="headerlink" href="#modular-functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="kleinj">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">kleinj()</span></tt><a class="headerlink" href="#kleinj" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.kleinj">
+<tt class="descclassname">mpmath.</tt><tt class="descname">kleinj</tt><big>(</big><em>tau=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.kleinj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the Klein j-invariant, which is a modular function defined for
+<span class="math">\(\tau\)</span> in the upper half-plane as</p>
+<div class="math">
+\[J(\tau) = \frac{g_2^3(\tau)}{g_2^3(\tau) - 27 g_3^2(\tau)}\]</div>
+<p>where <span class="math">\(g_2\)</span> and <span class="math">\(g_3\)</span> are the modular invariants of the Weierstrass
+elliptic function,</p>
+<div class="math">
+\[g_2(\tau) = 60 \sum_{(m,n) \in \mathbb{Z}^2 \setminus (0,0)} (m \tau+n)^{-4}\]\[g_3(\tau) = 140 \sum_{(m,n) \in \mathbb{Z}^2 \setminus (0,0)} (m \tau+n)^{-6}.\]</div>
+<p>An alternative, common notation is that of the j-function
+<span class="math">\(j(\tau) = 1728 J(\tau)\)</span>.</p>
+<p><strong>Plots</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Klein J-function as function of the number-theoretic nome</span>
+<span class="n">fp</span><span class="o">.</span><span class="n">cplot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">fp</span><span class="o">.</span><span class="n">kleinj</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="n">q</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="mi">50000</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../_images/kleinj.png" src="../../../_images/kleinj.png" />
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Klein J-function as function of the half-period ratio</span>
+<span class="n">fp</span><span class="o">.</span><span class="n">cplot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">fp</span><span class="o">.</span><span class="n">kleinj</span><span class="p">(</span><span class="n">tau</span><span class="o">=</span><span class="n">t</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mf">1.5</span><span class="p">],</span> <span class="n">points</span><span class="o">=</span><span class="mi">50000</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="../../../_images/kleinj2.png" src="../../../_images/kleinj2.png" />
+<p><strong>Examples</strong></p>
+<p>Verifying the functional equation <span class="math">\(J(\tau) = J(\tau+1) = J(-\tau^{-1})\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tau</span> <span class="o">=</span> <span class="mf">0.625</span><span class="o">+</span><span class="mf">0.75</span><span class="o">*</span><span class="n">j</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tau</span> <span class="o">=</span> <span class="mf">0.625</span><span class="o">+</span><span class="mf">0.75</span><span class="o">*</span><span class="n">j</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kleinj</span><span class="p">(</span><span class="n">tau</span><span class="p">)</span>
+<span class="go">(-0.1507492166511182267125242 + 0.07595948379084571927228948j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kleinj</span><span class="p">(</span><span class="n">tau</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(-0.1507492166511182267125242 + 0.07595948379084571927228948j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kleinj</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">tau</span><span class="p">)</span>
+<span class="go">(-0.1507492166511182267125242 + 0.07595948379084571927228946j)</span>
+</pre></div>
+</div>
+<p>The j-function has a famous Laurent series expansion in terms of the nome
+<span class="math">\(\bar{q}\)</span>, <span class="math">\(j(\tau) = \bar{q}^{-1} + 744 + 196884\bar{q} + \ldots\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="mi">1728</span><span class="o">*</span><span class="n">q</span><span class="o">*</span><span class="n">kleinj</span><span class="p">(</span><span class="n">qbar</span><span class="o">=</span><span class="n">q</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">singular</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[1.0, 744.0, 196884.0, 21493760.0, 864299970.0, 20245856256.0]</span>
+</pre></div>
+</div>
+<p>The j-function admits exact evaluation at special algebraic points
+related to the Heegner numbers 1, 2, 3, 7, 11, 19, 43, 67, 163:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@extraprec</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">h</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">v</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="n">j</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">v</span> <span class="o">*=</span> <span class="mf">0.5</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">v</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">11</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">43</span><span class="p">,</span><span class="mi">67</span><span class="p">,</span><span class="mi">163</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="n">n</span><span class="p">,</span> <span class="n">chop</span><span class="p">(</span><span class="mi">1728</span><span class="o">*</span><span class="n">kleinj</span><span class="p">(</span><span class="n">h</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">(1, 1728.0)</span>
+<span class="go">(2, 8000.0)</span>
+<span class="go">(3, 0.0)</span>
+<span class="go">(7, -3375.0)</span>
+<span class="go">(11, -32768.0)</span>
+<span class="go">(19, -884736.0)</span>
+<span class="go">(43, -884736000.0)</span>
+<span class="go">(67, -147197952000.0)</span>
+<span class="go">(163, -262537412640768000.0)</span>
+</pre></div>
+</div>
+<p>Also at other special points, the j-function assumes explicit
+algebraic values, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">chop</span><span class="p">(</span><span class="mi">1728</span><span class="o">*</span><span class="n">kleinj</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span>
+<span class="go">1264538.909475140509320227</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">identify</span><span class="p">(</span><span class="n">cbrt</span><span class="p">(</span><span class="n">_</span><span class="p">))</span>      <span class="c"># note: not simplified</span>
+<span class="go">&#39;((100+sqrt(13520))/2)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">50</span><span class="o">+</span><span class="mi">26</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span><span class="o">**</span><span class="mi">3</span>
+<span class="go">1264538.909475140509320227</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Elliptic functions</a><ul>
+<li><a class="reference internal" href="#elliptic-arguments">Elliptic arguments</a><ul>
+<li><a class="reference internal" href="#qfrom"><tt class="docutils literal"><span class="pre">qfrom()</span></tt></a></li>
+<li><a class="reference internal" href="#qbarfrom"><tt class="docutils literal"><span class="pre">qbarfrom()</span></tt></a></li>
+<li><a class="reference internal" href="#mfrom"><tt class="docutils literal"><span class="pre">mfrom()</span></tt></a></li>
+<li><a class="reference internal" href="#kfrom"><tt class="docutils literal"><span class="pre">kfrom()</span></tt></a></li>
+<li><a class="reference internal" href="#taufrom"><tt class="docutils literal"><span class="pre">taufrom()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#legendre-elliptic-integrals">Legendre elliptic integrals</a><ul>
+<li><a class="reference internal" href="#ellipk"><tt class="docutils literal"><span class="pre">ellipk()</span></tt></a></li>
+<li><a class="reference internal" href="#ellipf"><tt class="docutils literal"><span class="pre">ellipf()</span></tt></a></li>
+<li><a class="reference internal" href="#ellipe"><tt class="docutils literal"><span class="pre">ellipe()</span></tt></a></li>
+<li><a class="reference internal" href="#ellippi"><tt class="docutils literal"><span class="pre">ellippi()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#carlson-symmetric-elliptic-integrals">Carlson symmetric elliptic integrals</a><ul>
+<li><a class="reference internal" href="#elliprf"><tt class="docutils literal"><span class="pre">elliprf()</span></tt></a></li>
+<li><a class="reference internal" href="#elliprc"><tt class="docutils literal"><span class="pre">elliprc()</span></tt></a></li>
+<li><a class="reference internal" href="#elliprj"><tt class="docutils literal"><span class="pre">elliprj()</span></tt></a></li>
+<li><a class="reference internal" href="#elliprd"><tt class="docutils literal"><span class="pre">elliprd()</span></tt></a></li>
+<li><a class="reference internal" href="#elliprg"><tt class="docutils literal"><span class="pre">elliprg()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#jacobi-theta-functions">Jacobi theta functions</a><ul>
+<li><a class="reference internal" href="#jtheta"><tt class="docutils literal"><span class="pre">jtheta()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#jacobi-elliptic-functions">Jacobi elliptic functions</a><ul>
+<li><a class="reference internal" href="#ellipfun"><tt class="docutils literal"><span class="pre">ellipfun()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#modular-functions">Modular functions</a><ul>
+<li><a class="reference internal" href="#kleinj"><tt class="docutils literal"><span class="pre">kleinj()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="hypergeometric.html"
+                        title="previous chapter">Hypergeometric functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="zeta.html"
+                        title="next chapter">Zeta functions, L-series and polylogarithms</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/elliptic.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="zeta.html" title="Zeta functions, L-series and polylogarithms"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="hypergeometric.html" title="Hypergeometric functions"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

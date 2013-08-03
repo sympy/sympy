@@ -1,0 +1,451 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.mechanics.lagrange &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.mechanics.lagrange</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;LagrangesMethod&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">diff</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">eye</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="p">(</span><span class="n">dynamicsymbols</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Point</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LagrangesMethod"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.lagrange.LagrangesMethod">[docs]</a><span class="k">class</span> <span class="nc">LagrangesMethod</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lagrange&#39;s method object.</span>
+
+<span class="sd">    This object generates the equations of motion in a two step procedure. The</span>
+<span class="sd">    first step involves the initialization of LagrangesMethod by supplying the</span>
+<span class="sd">    Lagrangian and a list of the generalized coordinates, at the bare minimum.</span>
+<span class="sd">    If there are any constraint equations, they can be supplied as keyword</span>
+<span class="sd">    arguments. The Lagrangian multipliers are automatically generated and are</span>
+<span class="sd">    equal in number to the constraint equations.Similarly any non-conservative</span>
+<span class="sd">    forces can be supplied in a list (as described below and also shown in the</span>
+<span class="sd">    example) along with a ReferenceFrame. This is also discussed further in the</span>
+<span class="sd">    __init__ method.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mass_matrix : Matrix</span>
+<span class="sd">        The system&#39;s mass matrix</span>
+
+<span class="sd">    forcing : Matrix</span>
+<span class="sd">        The system&#39;s forcing vector</span>
+
+<span class="sd">    mass_matrix_full : Matrix</span>
+<span class="sd">        The &quot;mass matrix&quot; for the qdot&#39;s, qdoubledot&#39;s, and the</span>
+<span class="sd">        lagrange multipliers (lam)</span>
+
+<span class="sd">    forcing_full : Matrix</span>
+<span class="sd">        The forcing vector for the qdot&#39;s, qdoubledot&#39;s and</span>
+<span class="sd">        lagrange multipliers (lam)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    This is a simple example for a one degree of freedom translational</span>
+<span class="sd">    spring-mass-damper.</span>
+
+<span class="sd">    In this example, we first need to do the kinematics.$</span>
+<span class="sd">    This involves creating generalized coordinates and its derivative.</span>
+<span class="sd">    Then we create a point and set its velocity in a frame::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import LagrangesMethod, Lagrangian</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import ReferenceFrame, Particle, Point</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import dynamicsymbols, kinetic_energy</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; q = dynamicsymbols(&#39;q&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; qd = dynamicsymbols(&#39;q&#39;, 1)</span>
+<span class="sd">        &gt;&gt;&gt; m, k, b = symbols(&#39;m k b&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; N = ReferenceFrame(&#39;N&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P = Point(&#39;P&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P.set_vel(N, qd * N.x)</span>
+
+<span class="sd">    We need to then prepare the information as required by LagrangesMethod to</span>
+<span class="sd">    generate equations of motion.</span>
+<span class="sd">    First we create the Particle, which has a point attached to it.</span>
+<span class="sd">    Following this the lagrangian is created from the kinetic and potential</span>
+<span class="sd">    energies.</span>
+<span class="sd">    Then, a list of nonconservative forces/torques must be constructed, where</span>
+<span class="sd">    each entry in is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where</span>
+<span class="sd">    the Vectors represent the nonconservative force or torque.</span>
+
+<span class="sd">        &gt;&gt;&gt; Pa = Particle(&#39;Pa&#39;, P, m)</span>
+<span class="sd">        &gt;&gt;&gt; Pa.set_potential_energy(k * q**2 / 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; L = Lagrangian(N, Pa)</span>
+<span class="sd">        &gt;&gt;&gt; fl = [(P, -b * qd * N.x)]</span>
+
+<span class="sd">     Finally we can generate the equations of motion.</span>
+<span class="sd">     First we create the LagrangesMethod object.To do this one must supply an</span>
+<span class="sd">     the Lagrangian, the list of generalized coordinates. Also supplied are the</span>
+<span class="sd">     constraint equations, the forcelist and the inertial frame, if relevant.</span>
+<span class="sd">     Next we generate Lagrange&#39;s equations of motion, such that:</span>
+<span class="sd">     Lagrange&#39;s equations of motion = 0.</span>
+<span class="sd">     We have the equations of motion at this point.</span>
+
+<span class="sd">        &gt;&gt;&gt; l = LagrangesMethod(L, [q], forcelist = fl, frame = N)</span>
+<span class="sd">        &gt;&gt;&gt; print(l.form_lagranges_equations())</span>
+<span class="sd">        Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), t, t)]])</span>
+
+<span class="sd">    We can also solve for the states using the &#39;rhs&#39; method.</span>
+
+<span class="sd">        &gt;&gt;&gt; print(l.rhs())</span>
+<span class="sd">        Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])</span>
+
+<span class="sd">    Please refer to the docstrings on each method for more details.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Lagrangian</span><span class="p">,</span> <span class="n">q_list</span><span class="p">,</span> <span class="n">coneqs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">forcelist</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">frame</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Supply the following for the initialization of LagrangesMethod</span>
+
+<span class="sd">        Lagrangian : Sympifyable</span>
+
+<span class="sd">        q_list : list</span>
+<span class="sd">            A list of the generalized coordinates</span>
+
+<span class="sd">        coneqs : list</span>
+<span class="sd">            A list of the holonomic and non-holonomic constraint equations.</span>
+<span class="sd">            VERY IMPORTANT NOTE- The holonomic constraints must be</span>
+<span class="sd">            differentiated with respect to time and then included in coneqs.</span>
+
+<span class="sd">        forcelist : list</span>
+<span class="sd">            Takes a list of (Point, Vector) or (ReferenceFrame, Vector) tuples</span>
+<span class="sd">            which represent the force at a point or torque on a frame. This</span>
+<span class="sd">            feature is primarily to account for the nonconservative forces</span>
+<span class="sd">            amd/or moments.</span>
+
+<span class="sd">        frame : ReferenceFrame</span>
+<span class="sd">            Supply the inertial frame. This is used to determine the</span>
+<span class="sd">            generalized forces due to non-sonservative forces.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_L</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">Lagrangian</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eom</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c"># initializing the eom Matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m_cd</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>  <span class="c"># Mass Matrix of differentiated coneqs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m_d</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>  <span class="c"># Mass Matrix of dynamic equations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_cd</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>  <span class="c"># Forcing part of the diff coneqs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>  <span class="c"># Forcing part of the dynamic equations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lam_coeffs</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>  <span class="c"># Initializing the coeffecients of lams</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">forcelist</span> <span class="o">=</span> <span class="n">forcelist</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inertial</span> <span class="o">=</span> <span class="n">frame</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lam_vec</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_term1</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_term2</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_term3</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_term4</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+
+        <span class="c"># Creating the qs, qdots and qdoubledots</span>
+
+        <span class="n">q_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">q_list</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">q_list</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Generalized coords. must be supplied in a list&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">q_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdots</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdoubledots</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdots</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">coneqs</span> <span class="o">=</span> <span class="n">coneqs</span>
+
+<div class="viewcode-block" id="LagrangesMethod.form_lagranges_equations"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.lagrange.LagrangesMethod.form_lagranges_equations">[docs]</a>    <span class="k">def</span> <span class="nf">form_lagranges_equations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Method to form Lagrange&#39;s equations of motion.</span>
+
+<span class="sd">        Returns a vector of equations of motion using Lagrange&#39;s equations of</span>
+<span class="sd">        the second kind.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span>
+        <span class="n">qd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdots</span>
+        <span class="n">qdd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdoubledots</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+
+        <span class="c">#Putting the Lagrangian in a Matrix</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_L</span><span class="p">])</span>
+
+        <span class="c">#Determining the first term in Lagrange&#39;s EOM</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_term1</span> <span class="o">=</span> <span class="n">L</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_term1</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_term1</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">))</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+        <span class="c">#Determining the second term in Lagrange&#39;s EOM</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_term2</span> <span class="o">=</span> <span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">q</span><span class="p">))</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+
+        <span class="c">#term1 and term2 will be there no matter what so leave them as they are</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coneqs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">coneqs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coneqs</span>
+            <span class="c">#If there are coneqs supplied then the following will be created</span>
+            <span class="n">coneqs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coneqs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coneqs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Enter the constraint equations in a list&#39;</span><span class="p">)</span>
+
+            <span class="n">o</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coneqs</span><span class="p">)</span>
+
+            <span class="c">#Creating the multipliers</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lam_vec</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;lam1:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+
+            <span class="c">#Extracting the coeffecients of the multipliers</span>
+            <span class="n">coneqs_mat</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">coneqs</span><span class="p">)</span>
+            <span class="n">qd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdots</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lam_coeffs</span> <span class="o">=</span> <span class="o">-</span><span class="n">coneqs_mat</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+
+            <span class="c">#Determining the third term in Lagrange&#39;s EOM</span>
+            <span class="c">#term3 = ((self.lam_vec).transpose() * self.lam_coeffs).transpose()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_term3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_coeffs</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_vec</span>
+
+            <span class="c">#Taking the time derivative of the constraint equations</span>
+            <span class="n">diffconeqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">coneqs</span><span class="p">]</span>
+
+            <span class="c">#Extracting the coeffecients of the qdds from the diff coneqs</span>
+            <span class="n">diffconeqs_mat</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">diffconeqs</span><span class="p">)</span>
+            <span class="n">qdd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdoubledots</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_m_cd</span> <span class="o">=</span> <span class="n">diffconeqs_mat</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qdd</span><span class="p">)</span>
+
+            <span class="c">#The remaining terms i.e. the &#39;forcing&#39; terms in diff coneqs</span>
+            <span class="n">qddzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">qdd</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_f_cd</span> <span class="o">=</span> <span class="o">-</span><span class="n">diffconeqs_mat</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">qddzero</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_term3</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">forcelist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">forcelist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forcelist</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inertial</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Enter a valid ReferenceFrame&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forcelist</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Forces must be supplied in a list of: lists&#39;</span>
+                        <span class="s">&#39; or tuples&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_term4</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">qd</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">forcelist</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ReferenceFrame</span><span class="p">):</span>
+                        <span class="n">speed</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_term4</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">speed</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Point</span><span class="p">):</span>
+                        <span class="n">speed</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_term4</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">speed</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;First entry in force pair is a point&#39;</span>
+                                        <span class="s">&#39; or frame&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_term4</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">eom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_term1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_term2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_term3</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_term4</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eom</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LagrangesMethod.mass_matrix"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.lagrange.LagrangesMethod.mass_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">mass_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the mass matrix, which is augmented by the Lagrange</span>
+<span class="sd">        multipliers, if necessary.</span>
+
+<span class="sd">        If the system is described by &#39;n&#39; generalized coordinates and there are</span>
+<span class="sd">        no constraint equations then an n X n matrix is returned.</span>
+
+<span class="sd">        If there are &#39;n&#39; generalized coordinates and &#39;m&#39; constraint equations</span>
+<span class="sd">        have been supplied during initialization then an n X (n+m) matrix is</span>
+<span class="sd">        returned. The (n + m - 1)th and (n + m)th columns contain the</span>
+<span class="sd">        coefficients of the Lagrange multipliers.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eom</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute the equations of motion first&#39;</span><span class="p">)</span>
+
+        <span class="c">#The &#39;dynamic&#39; mass matrix is generated by the following</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_m_d</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eom</span><span class="p">)</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdoubledots</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_coeffs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_m_d</span><span class="p">)</span><span class="o">.</span><span class="n">row_join</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_coeffs</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_m_d</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LagrangesMethod.mass_matrix_full"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.lagrange.LagrangesMethod.mass_matrix_full">[docs]</a>    <span class="k">def</span> <span class="nf">mass_matrix_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Augments the coefficients of qdots to the mass_matrix. &quot;&quot;&quot;</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eom</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute the equations of motion first&#39;</span><span class="p">)</span>
+        <span class="c">#THE FIRST TWO ROWS OF THE MATRIX</span>
+        <span class="n">row1</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">row2</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass_matrix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coneqs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coneqs</span><span class="p">)</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">))</span>
+            <span class="n">below_eye</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">col_join</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_m_cd</span><span class="p">)</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">)))</span>
+            <span class="n">below_I</span> <span class="o">=</span> <span class="n">below_eye</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">I</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="n">below_I</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">row1</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="n">row2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">A</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LagrangesMethod.forcing"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.lagrange.LagrangesMethod.forcing">[docs]</a>    <span class="k">def</span> <span class="nf">forcing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the forcing vector from &#39;lagranges_equations&#39; method. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eom</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute the equations of motion first&#39;</span><span class="p">)</span>
+
+        <span class="n">qdd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdoubledots</span>
+        <span class="n">qddzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">qdd</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">qdd</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coneqs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">lam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_vec</span>
+            <span class="n">lamzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">lam</span><span class="p">)))</span>
+
+            <span class="c">#The forcing terms from the eoms</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span> <span class="o">=</span> <span class="o">-</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">eom</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">qddzero</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">lamzero</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c">#The forcing terms from the eoms</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eom</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">qddzero</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="LagrangesMethod.forcing_full"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.lagrange.LagrangesMethod.forcing_full">[docs]</a>    <span class="k">def</span> <span class="nf">forcing_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Augments qdots to the forcing vector above. &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eom</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute the equations of motion first&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coneqs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdots</span><span class="p">))</span><span class="o">.</span><span class="n">col_join</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">forcing</span><span class="p">)</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f_cd</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdots</span><span class="p">))</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forcing</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LagrangesMethod.rhs"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.lagrange.LagrangesMethod.rhs">[docs]</a>    <span class="k">def</span> <span class="nf">rhs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&quot;GE&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns equations that can be solved numerically</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        method : string</span>
+<span class="sd">            The method by which matrix inversion of mass_matrix_full must be</span>
+<span class="sd">            performed such as Gauss Elimination or LU decomposition.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># TODO- should probably use the matinvmul method from Kane</span>
+
+        <span class="k">return</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mass_matrix_full</span><span class="p">)</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">try_block_diag</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">*</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">forcing_full</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

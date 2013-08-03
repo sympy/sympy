@@ -1,0 +1,504 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Dense Matrices &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Matrices" href="index.html" />
+    <link rel="next" title="Sparse Matrices" href="sparse.html" />
+    <link rel="prev" title="Matrices (linear algebra)" href="matrices.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sparse.html" title="Sparse Matrices"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices (linear algebra)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Matrices</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="dense-matrices">
+<h1>Dense Matrices<a class="headerlink" href="#dense-matrices" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="matrix-class-reference">
+<h2>Matrix Class Reference<a class="headerlink" href="#matrix-class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.matrices.dense.MutableDenseMatrix">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.dense.</tt><tt class="descname">MutableDenseMatrix</tt><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.col_del">
+<tt class="descname">col_del</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.col_del"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.col_del" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the given column.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">col</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">row_del</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">col_del</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0],</span>
+<span class="go">[0, 0],</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.col_op">
+<tt class="descname">col_op</tt><big>(</big><em>j</em>, <em>f</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.col_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.col_op" title="Permalink to this definition">¶</a></dt>
+<dd><p>In-place operation on col j using two-arg functor whose args are
+interpreted as (self[i, j], i).</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">col</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">row_op</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">col_op</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">v</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]);</span> <span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 2, 0],</span>
+<span class="go">[0, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.col_swap">
+<tt class="descname">col_swap</tt><big>(</big><em>i</em>, <em>j</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.col_swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.col_swap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Swap the two given columns of the matrix in-place.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">col</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">row_swap</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0],</span>
+<span class="go">[1, 0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">col_swap</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, 1],</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.copyin_list">
+<tt class="descname">copyin_list</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.copyin_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.copyin_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy in elements from a list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>key</strong> : slice</p>
+<blockquote>
+<div><p>The section of this matrix to replace.</p>
+</div></blockquote>
+<p><strong>value</strong> : iterable</p>
+<blockquote class="last">
+<div><p>The iterable to copy values from.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">copyin_matrix</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="p">[:</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="c"># col</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[2, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[3, 4, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.copyin_matrix">
+<tt class="descname">copyin_matrix</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.copyin_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.copyin_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy in values from a matrix into the given bounds.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>key</strong> : slice</p>
+<blockquote>
+<div><p>The section of this matrix to replace.</p>
+</div></blockquote>
+<p><strong>value</strong> : Matrix</p>
+<blockquote class="last">
+<div><p>The matrix to copy values from.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">copyin_list</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="p">[:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">M</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, 1, 0],</span>
+<span class="go">[2, 3, 0],</span>
+<span class="go">[4, 5, 1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">M</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, 0, 1],</span>
+<span class="go">[2, 2, 3],</span>
+<span class="go">[4, 4, 5]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.fill">
+<tt class="descname">fill</tt><big>(</big><em>value</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.fill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.fill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fill the matrix with the scalar value.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">zeros</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">ones</span></tt></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.row_del">
+<tt class="descname">row_del</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.row_del"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.row_del" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the given row.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">row</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">col_del</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">row_del</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.row_op">
+<tt class="descname">row_op</tt><big>(</big><em>i</em>, <em>f</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.row_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.row_op" title="Permalink to this definition">¶</a></dt>
+<dd><p>In-place operation on row <tt class="docutils literal"><span class="pre">i</span></tt> using two-arg functor whose args are
+interpreted as <tt class="docutils literal"><span class="pre">(self[i,</span> <span class="pre">j],</span> <span class="pre">j)</span></tt>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">row</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">zip_row_op</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">col_op</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">row_op</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">v</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">]);</span> <span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[2, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.row_swap">
+<tt class="descname">row_swap</tt><big>(</big><em>i</em>, <em>j</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.row_swap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.row_swap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Swap the two given rows of the matrix in-place.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">row</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">col_swap</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, 1],</span>
+<span class="go">[1, 0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">row_swap</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0],</span>
+<span class="go">[0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.simplify">
+<tt class="descname">simplify</tt><big>(</big><em>ratio=1.7</em>, <em>measure=&lt;function count_ops at 0x2dd3aa0&gt;</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies simplify to the elements of a matrix in place.</p>
+<p>This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../simplify/simplify.html#sympy.simplify.simplify.simplify" title="sympy.simplify.simplify.simplify"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.simplify.simplify.simplify</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.dense.MutableDenseMatrix.zip_row_op">
+<tt class="descname">zip_row_op</tt><big>(</big><em>i</em>, <em>k</em>, <em>f</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/dense.html#MutableDenseMatrix.zip_row_op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.dense.MutableDenseMatrix.zip_row_op" title="Permalink to this definition">¶</a></dt>
+<dd><p>In-place operation on row <tt class="docutils literal"><span class="pre">i</span></tt> using two-arg functor whose args are
+interpreted as <tt class="docutils literal"><span class="pre">(self[i,</span> <span class="pre">j],</span> <span class="pre">self[k,</span> <span class="pre">j])</span></tt>.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">row</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">row_op</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">col_op</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">zip_row_op</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">v</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">v</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">u</span><span class="p">);</span> <span class="n">M</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[2, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="immutablematrix-class-reference">
+<h2>ImmutableMatrix Class Reference<a class="headerlink" href="#immutablematrix-class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">sympy.matrices.immutable.</tt><tt class="descname">ImmutableMatrix</tt><a class="reference internal" href="../../_modules/sympy/matrices/immutable.html#ImmutableMatrix"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Create an immutable version of a matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">ImmutableMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ImmutableMatrix</span><span class="p">(</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[0, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError</span>: <span class="n">Cannot set values of ImmutableDenseMatrix</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt>
+<tt class="descclassname">ImmutableMatrix.</tt><tt class="descname">C</tt></dt>
+<dd><p>By-element conjugation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">ImmutableMatrix.</tt><tt class="descname">adjoint</tt><big>(</big><big>)</big></dt>
+<dd><p>Conjugate transpose or Hermitian conjugation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">ImmutableMatrix.</tt><tt class="descname">as_mutable</tt><big>(</big><big>)</big></dt>
+<dd><p>Returns a mutable version of this matrix</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ImmutableMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">ImmutableMatrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">as_mutable</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span> <span class="c"># Can set values in Y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 2],</span>
+<span class="go">[3, 5]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">ImmutableMatrix.</tt><tt class="descname">equals</tt><big>(</big><em>other</em>, <em>failing_expression=False</em><big>)</big></dt>
+<dd><p>Applies <tt class="docutils literal"><span class="pre">equals</span></tt> to corresponding elements of the matrices,
+trying to prove that the elements are equivalent, returning True
+if they are, False if any pair is not, and None (or the first
+failing expression if failing_expression is True) if it cannot
+be decided if the expressions are equivalent or not. This is, in
+general, an expensive operation.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.core.expr.equals</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cos</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="n">x</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">==</span> <span class="n">B</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span> <span class="o">==</span> <span class="n">B</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dense Matrices</a><ul>
+<li><a class="reference internal" href="#matrix-class-reference">Matrix Class Reference</a></li>
+<li><a class="reference internal" href="#immutablematrix-class-reference">ImmutableMatrix Class Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="matrices.html"
+                        title="previous chapter">Matrices (linear algebra)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sparse.html"
+                        title="next chapter">Sparse Matrices</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/matrices/dense.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sparse.html" title="Sparse Matrices"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="matrices.html" title="Matrices (linear algebra)"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Matrices</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

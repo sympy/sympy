@@ -1,0 +1,631 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.monomials &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.monomials</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Tools and arithmetics for monomials of distributed polynomials. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">textwrap</span> <span class="kn">import</span> <span class="n">dedent</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">exec_</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyutils</span> <span class="kn">import</span> <span class="n">PicklableWithSlots</span><span class="p">,</span> <span class="n">dict_from_expr</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">ExactQuotientFailed</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">public</span>
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="itermonomials"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.monomials.itermonomials">[docs]</a><span class="k">def</span> <span class="nf">itermonomials</span><span class="p">(</span><span class="n">variables</span><span class="p">,</span> <span class="n">degree</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Generate a set of monomials of the given total degree or less.</span>
+
+<span class="sd">    Given a set of variables `V` and a total degree `N` generate</span>
+<span class="sd">    a set of monomials of degree at most `N`. The total number of</span>
+<span class="sd">    monomials is huge and is given by the following formula:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \frac{(\#V + N)!}{\#V! N!}</span>
+
+<span class="sd">    For example if we would like to generate a dense polynomial of</span>
+<span class="sd">    a total degree `N = 50` in 5 variables, assuming that exponents</span>
+<span class="sd">    and all of coefficients are 32-bit long and stored in an array we</span>
+<span class="sd">    would need almost 80 GiB of memory! Fortunately most polynomials,</span>
+<span class="sd">    that we will encounter, are sparse.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Consider monomials in variables `x` and `y`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import itermonomials</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.orderings import monomial_key</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">        &gt;&gt;&gt; sorted(itermonomials([x, y], 2), key=monomial_key(&#39;grlex&#39;, [y, x]))</span>
+<span class="sd">        [1, x, y, x**2, x*y, y**2]</span>
+
+<span class="sd">        &gt;&gt;&gt; sorted(itermonomials([x, y], 3), key=monomial_key(&#39;grlex&#39;, [y, x]))</span>
+<span class="sd">        [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">variables</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">variables</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">monoms</span> <span class="o">=</span> <span class="n">itermonomials</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">degree</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">degree</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">monoms</span> <span class="o">|=</span> <span class="nb">set</span><span class="p">([</span> <span class="n">x</span><span class="o">**</span><span class="n">i</span> <span class="o">*</span> <span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">itermonomials</span><span class="p">(</span><span class="n">tail</span><span class="p">,</span> <span class="n">degree</span> <span class="o">-</span> <span class="n">i</span><span class="p">)</span> <span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">monoms</span>
+</div>
+<div class="viewcode-block" id="monomial_count"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.monomials.monomial_count">[docs]</a><span class="k">def</span> <span class="nf">monomial_count</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Computes the number of monomials.</span>
+
+<span class="sd">    The number of monomials is given by the following formula:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \frac{(\#V + N)!}{\#V! N!}</span>
+
+<span class="sd">    where `N` is a total degree and `V` is a set of variables.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.monomials import itermonomials, monomial_count</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.orderings import monomial_key</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">    &gt;&gt;&gt; monomial_count(2, 2)</span>
+<span class="sd">    6</span>
+
+<span class="sd">    &gt;&gt;&gt; M = itermonomials([x, y], 2)</span>
+
+<span class="sd">    &gt;&gt;&gt; sorted(M, key=monomial_key(&#39;grlex&#39;, [y, x]))</span>
+<span class="sd">    [1, x, y, x**2, x*y, y**2]</span>
+<span class="sd">    &gt;&gt;&gt; len(M)</span>
+<span class="sd">    6</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">V</span> <span class="o">+</span> <span class="n">N</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">V</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">monomial_mul</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiplication of tuples representing monomials.</span>
+
+<span class="sd">    Lets multiply `x**3*y**4*z` with `x*y**2`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import monomial_mul</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_mul((3, 4, 1), (1, 2, 0))</span>
+<span class="sd">        (4, 6, 1)</span>
+
+<span class="sd">    which gives `x**4*y**5*z`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">monomial_div</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Division of tuples representing monomials.</span>
+
+<span class="sd">    Lets divide `x**3*y**4*z` by `x*y**2`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import monomial_div</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_div((3, 4, 1), (1, 2, 0))</span>
+<span class="sd">        (2, 2, 1)</span>
+
+<span class="sd">    which gives `x**2*y**2*z`. However::</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_div((3, 4, 1), (1, 2, 2)) is None</span>
+<span class="sd">        True</span>
+
+<span class="sd">    `x*y**2*z**2` does not divide `x**3*y**4*z`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">monomial_ldiv</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">c</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">C</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+<span class="k">def</span> <span class="nf">monomial_ldiv</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Division of tuples representing monomials.</span>
+
+<span class="sd">    Lets divide `x**3*y**4*z` by `x*y**2`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import monomial_ldiv</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_ldiv((3, 4, 1), (1, 2, 0))</span>
+<span class="sd">        (2, 2, 1)</span>
+
+<span class="sd">    which gives `x**2*y**2*z`.</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_ldiv((3, 4, 1), (1, 2, 2))</span>
+<span class="sd">        (2, 2, -1)</span>
+
+<span class="sd">    which gives `x**2*y**2*z**-1`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">monomial_pow</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the n-th pow of the monomial. &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span> <span class="n">a</span><span class="o">*</span><span class="n">n</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span> <span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">monomial_gcd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Greatest common divisor of tuples representing monomials.</span>
+
+<span class="sd">    Lets compute GCD of `x*y**4*z` and `x**3*y**2`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import monomial_gcd</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_gcd((1, 4, 1), (3, 2, 0))</span>
+<span class="sd">        (1, 2, 0)</span>
+
+<span class="sd">    which gives `x*y**2`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span> <span class="nb">min</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">monomial_lcm</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Least common multiple of tuples representing monomials.</span>
+
+<span class="sd">    Lets compute LCM of `x*y**4*z` and `x**3*y**2`::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import monomial_lcm</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_lcm((1, 4, 1), (3, 2, 0))</span>
+<span class="sd">        (3, 4, 1)</span>
+
+<span class="sd">    which gives `x**3*y**4*z`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span> <span class="nb">max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">])</span>
+
+<span class="k">def</span> <span class="nf">monomial_divides</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Does there exist a monomial X such that XA == B?</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.monomials import monomial_divides</span>
+<span class="sd">    &gt;&gt;&gt; monomial_divides((1, 2), (3, 4))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; monomial_divides((1, 2), (0, 2))</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">monomial_max</span><span class="p">(</span><span class="o">*</span><span class="n">monoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns maximal degree for each variable in a set of monomials.</span>
+
+<span class="sd">    Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.</span>
+<span class="sd">    We wish to find out what is the maximal degree for each of `x`, `y`</span>
+<span class="sd">    and `z` variables::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import monomial_max</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_max((3,4,5), (0,5,1), (6,3,9))</span>
+<span class="sd">        (6, 5, 9)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">monoms</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">N</span> <span class="ow">in</span> <span class="n">monoms</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">monomial_min</span><span class="p">(</span><span class="o">*</span><span class="n">monoms</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns minimal degree for each variable in a set of monomials.</span>
+
+<span class="sd">    Consider monomials `x**3*y**4*z**5`, `y**5*z` and `x**6*y**3*z**9`.</span>
+<span class="sd">    We wish to find out what is the minimal degree for each of `x`, `y`</span>
+<span class="sd">    and `z` variables::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.monomials import monomial_min</span>
+
+<span class="sd">        &gt;&gt;&gt; monomial_min((3,4,5), (0,5,1), (6,3,9))</span>
+<span class="sd">        (0, 3, 1)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">monoms</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">N</span> <span class="ow">in</span> <span class="n">monoms</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">monomial_deg</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the total degree of a monomial.</span>
+
+<span class="sd">    For example, the total degree of `xy^2` is 3:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.monomials import monomial_deg</span>
+<span class="sd">    &gt;&gt;&gt; monomial_deg((1, 2))</span>
+<span class="sd">    3</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">term_div</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Division of two terms in over a ring/field. &quot;&quot;&quot;</span>
+    <span class="n">a_lm</span><span class="p">,</span> <span class="n">a_lc</span> <span class="o">=</span> <span class="n">a</span>
+    <span class="n">b_lm</span><span class="p">,</span> <span class="n">b_lc</span> <span class="o">=</span> <span class="n">b</span>
+
+    <span class="n">monom</span> <span class="o">=</span> <span class="n">monomial_div</span><span class="p">(</span><span class="n">a_lm</span><span class="p">,</span> <span class="n">b_lm</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">domain</span><span class="o">.</span><span class="n">has_Field</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">monom</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">monom</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">a_lc</span><span class="p">,</span> <span class="n">b_lc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">monom</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">a_lc</span> <span class="o">%</span> <span class="n">b_lc</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">monom</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">a_lc</span><span class="p">,</span> <span class="n">b_lc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+<span class="k">class</span> <span class="nc">MonomialOps</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Code generator of fast monomial arithmetic functions. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ngens</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ngens</span> <span class="o">=</span> <span class="n">ngens</span>
+
+    <span class="k">def</span> <span class="nf">_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">exec_</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ns</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="s">&quot;</span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngens</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;monomial_mul&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">        def </span><span class="si">%(name)s</span><span class="s">(A, B):</span>
+<span class="s">            (</span><span class="si">%(A)s</span><span class="s">,) = A</span>
+<span class="s">            (</span><span class="si">%(B)s</span><span class="s">,) = B</span>
+<span class="s">            return (</span><span class="si">%(AB)s</span><span class="s">,)</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
+        <span class="n">AB</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> + </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">AB</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">AB</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;monomial_pow&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">        def </span><span class="si">%(name)s</span><span class="s">(A, k):</span>
+<span class="s">            (</span><span class="si">%(A)s</span><span class="s">,) = A</span>
+<span class="s">            return (</span><span class="si">%(Ak)s</span><span class="s">,)</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">Ak</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">*k&quot;</span> <span class="o">%</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">A</span> <span class="p">]</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">Ak</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Ak</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">mulpow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;monomial_mulpow&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">        def </span><span class="si">%(name)s</span><span class="s">(A, B, k):</span>
+<span class="s">            (</span><span class="si">%(A)s</span><span class="s">,) = A</span>
+<span class="s">            (</span><span class="si">%(B)s</span><span class="s">,) = B</span>
+<span class="s">            return (</span><span class="si">%(ABk)s</span><span class="s">,)</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
+        <span class="n">ABk</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> + </span><span class="si">%s</span><span class="s">*k&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">ABk</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ABk</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">ldiv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;monomial_ldiv&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">        def </span><span class="si">%(name)s</span><span class="s">(A, B):</span>
+<span class="s">            (</span><span class="si">%(A)s</span><span class="s">,) = A</span>
+<span class="s">            (</span><span class="si">%(B)s</span><span class="s">,) = B</span>
+<span class="s">            return (</span><span class="si">%(AB)s</span><span class="s">,)</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
+        <span class="n">AB</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">AB</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">AB</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;monomial_div&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">        def </span><span class="si">%(name)s</span><span class="s">(A, B):</span>
+<span class="s">            (</span><span class="si">%(A)s</span><span class="s">,) = A</span>
+<span class="s">            (</span><span class="si">%(B)s</span><span class="s">,) = B</span>
+<span class="s">            </span><span class="si">%(RAB)s</span><span class="s"></span>
+<span class="s">            return (</span><span class="si">%(R)s</span><span class="s">,)</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
+        <span class="n">RAB</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;r</span><span class="si">%(i)s</span><span class="s"> = a</span><span class="si">%(i)s</span><span class="s"> - b</span><span class="si">%(i)s</span><span class="se">\n</span><span class="s">    if r</span><span class="si">%(i)s</span><span class="s"> &lt; 0: return None&quot;</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ngens</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;r&quot;</span><span class="p">)</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">RAB</span><span class="o">=</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">    &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">RAB</span><span class="p">),</span> <span class="n">R</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">R</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">lcm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;monomial_lcm&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">        def </span><span class="si">%(name)s</span><span class="s">(A, B):</span>
+<span class="s">            (</span><span class="si">%(A)s</span><span class="s">,) = A</span>
+<span class="s">            (</span><span class="si">%(B)s</span><span class="s">,) = B</span>
+<span class="s">            return (</span><span class="si">%(AB)s</span><span class="s">,)</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
+        <span class="n">AB</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> if </span><span class="si">%s</span><span class="s"> &gt;= </span><span class="si">%s</span><span class="s"> else </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">AB</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">AB</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">gcd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;monomial_gcd&quot;</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="n">dedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">        def </span><span class="si">%(name)s</span><span class="s">(A, B):</span>
+<span class="s">            (</span><span class="si">%(A)s</span><span class="s">,) = A</span>
+<span class="s">            (</span><span class="si">%(B)s</span><span class="s">,) = B</span>
+<span class="s">            return (</span><span class="si">%(AB)s</span><span class="s">,)</span>
+<span class="s">        &quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vars</span><span class="p">(</span><span class="s">&quot;b&quot;</span><span class="p">)</span>
+        <span class="n">AB</span> <span class="o">=</span> <span class="p">[</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> if </span><span class="si">%s</span><span class="s"> &lt;= </span><span class="si">%s</span><span class="s"> else </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">B</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">B</span><span class="p">),</span> <span class="n">AB</span><span class="o">=</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">AB</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="Monomial"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.monomials.Monomial">[docs]</a><span class="k">class</span> <span class="nc">Monomial</span><span class="p">(</span><span class="n">PicklableWithSlots</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing a monomial, i.e. a product of powers. &quot;&quot;&quot;</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;exponents&#39;</span><span class="p">,</span> <span class="s">&#39;gens&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">monom</span><span class="p">,</span> <span class="n">gens</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">iterable</span><span class="p">(</span><span class="n">monom</span><span class="p">):</span>
+            <span class="n">rep</span><span class="p">,</span> <span class="n">gens</span> <span class="o">=</span> <span class="n">dict_from_expr</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">monom</span><span class="p">),</span> <span class="n">gens</span><span class="o">=</span><span class="n">gens</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rep</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">list</span><span class="p">(</span><span class="n">rep</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">monom</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">rep</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Expected a monomial got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">monom</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">monom</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gens</span> <span class="o">=</span> <span class="n">gens</span>
+
+    <span class="k">def</span> <span class="nf">rebuild</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exponents</span><span class="p">,</span> <span class="n">gens</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">exponents</span><span class="p">,</span> <span class="n">gens</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">[</span><span class="n">item</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;*&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">**</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">gen</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span> <span class="k">for</span> <span class="n">gen</span><span class="p">,</span> <span class="n">exp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">)</span> <span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a monomial instance to a SymPy expression. &quot;&quot;&quot;</span>
+        <span class="n">gens</span> <span class="o">=</span> <span class="n">gens</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">gens</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;can&#39;t convert </span><span class="si">%s</span><span class="s"> to an expression without generators&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">gen</span><span class="o">**</span><span class="n">exp</span> <span class="k">for</span> <span class="n">gen</span><span class="p">,</span> <span class="n">exp</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">)</span> <span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Monomial</span><span class="p">):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">exponents</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">)):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span> <span class="o">==</span> <span class="n">exponents</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Monomial</span><span class="p">):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">exponents</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">)):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">NotImplementedError</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">monomial_mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">,</span> <span class="n">exponents</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Monomial</span><span class="p">):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">exponents</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">)):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">NotImplementedError</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">monomial_div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">,</span> <span class="n">exponents</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ExactQuotientFailed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Monomial</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="n">__floordiv__</span> <span class="o">=</span> <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rebuild</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+                <span class="n">exponents</span> <span class="o">=</span> <span class="n">monomial_mul</span><span class="p">(</span><span class="n">exponents</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">exponents</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;a non-negative integer expected, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">gcd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Greatest common divisor of monomials. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Monomial</span><span class="p">):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">exponents</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">)):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s">&quot;an instance of Monomial class expected, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">monomial_gcd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">,</span> <span class="n">exponents</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">lcm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Least common multiple of monomials. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Monomial</span><span class="p">):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">exponents</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">)):</span>
+            <span class="n">exponents</span> <span class="o">=</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s">&quot;an instance of Monomial class expected, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">monomial_lcm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exponents</span><span class="p">,</span> <span class="n">exponents</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

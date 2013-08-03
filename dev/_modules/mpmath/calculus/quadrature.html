@@ -1,0 +1,1126 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mpmath.calculus.quadrature &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="mpmath" href="../../mpmath.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../mpmath.html" accesskey="U">mpmath</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for mpmath.calculus.quadrature</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">..libmp.backend</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<div class="viewcode-block" id="QuadratureRule"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule">[docs]</a><span class="k">class</span> <span class="nc">QuadratureRule</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quadrature rules are implemented using this class, in order to</span>
+<span class="sd">    simplify the code and provide a common infrastructure</span>
+<span class="sd">    for tasks such as error estimation and node caching.</span>
+
+<span class="sd">    You can implement a custom quadrature rule by subclassing</span>
+<span class="sd">    :class:`QuadratureRule` and implementing the appropriate</span>
+<span class="sd">    methods. The subclass can then be used by :func:`~mpmath.quad` by</span>
+<span class="sd">    passing it as the *method* argument.</span>
+
+<span class="sd">    :class:`QuadratureRule` instances are supposed to be singletons.</span>
+<span class="sd">    :class:`QuadratureRule` therefore implements instance caching</span>
+<span class="sd">    in :func:`~mpmath.__new__`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ctx</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span> <span class="o">=</span> <span class="n">ctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">standard_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformed_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interval_count</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="QuadratureRule.clear"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete cached node data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">standard_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformed_cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">interval_count</span> <span class="o">=</span> <span class="p">{}</span>
+</div>
+<div class="viewcode-block" id="QuadratureRule.calc_nodes"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.calc_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">calc_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Compute nodes for the standard interval `[-1, 1]`. Subclasses</span>
+<span class="sd">        should probably implement only this method, and use</span>
+<span class="sd">        :func:`~mpmath.get_nodes` method to retrieve the nodes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="QuadratureRule.get_nodes"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.get_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return nodes for given interval, degree and precision. The</span>
+<span class="sd">        nodes are retrieved from a cache if already computed;</span>
+<span class="sd">        otherwise they are computed by calling :func:`~mpmath.calc_nodes`</span>
+<span class="sd">        and are then cached.</span>
+
+<span class="sd">        Subclasses should probably not implement this method,</span>
+<span class="sd">        but just implement :func:`~mpmath.calc_nodes` for the actual</span>
+<span class="sd">        node computation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformed_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformed_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">orig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">prec</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">prec</span><span class="o">+</span><span class="mi">20</span>
+            <span class="c"># Get nodes on standard interval</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_cache</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">standard_cache</span><span class="p">[</span><span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calc_nodes</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">standard_cache</span><span class="p">[</span><span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodes</span>
+            <span class="c"># Transform to general interval</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">interval_count</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">transformed_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodes</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interval_count</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">orig</span>
+        <span class="k">return</span> <span class="n">nodes</span>
+</div>
+<div class="viewcode-block" id="QuadratureRule.transform_nodes"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.transform_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">transform_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Rescale standardized nodes (for `[-1, 1]`) to a general</span>
+<span class="sd">        interval `[a, b]`. For a finite interval, a simple linear</span>
+<span class="sd">        change of variables is used. Otherwise, the following</span>
+<span class="sd">        transformations are used:</span>
+
+<span class="sd">        .. math ::</span>
+
+<span class="sd">            [a, \infty] : t = \frac{1}{x} + (a-1)</span>
+
+<span class="sd">            [-\infty, b] : t = (b+1) - \frac{1}{x}</span>
+
+<span class="sd">            [-\infty, \infty] : t = \frac{x}{\sqrt{1-x^2}}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">one</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">one</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="n">one</span><span class="p">,</span> <span class="n">one</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">nodes</span>
+        <span class="n">half</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">new_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="ow">or</span> <span class="n">ctx</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">ninf</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+                <span class="n">p05</span> <span class="o">=</span> <span class="o">-</span><span class="n">half</span>
+                <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                    <span class="n">x2</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span>
+                    <span class="n">px1</span> <span class="o">=</span> <span class="n">one</span><span class="o">-</span><span class="n">x2</span>
+                    <span class="n">spx1</span> <span class="o">=</span> <span class="n">px1</span><span class="o">**</span><span class="n">p05</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">spx1</span>
+                    <span class="n">w</span> <span class="o">*=</span> <span class="n">spx1</span><span class="o">/</span><span class="n">px1</span>
+                    <span class="n">new_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ninf</span><span class="p">:</span>
+                <span class="n">b1</span> <span class="o">=</span> <span class="n">b</span><span class="o">+</span><span class="mi">1</span>
+                <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">one</span><span class="p">)</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">b1</span><span class="o">-</span><span class="n">u</span>
+                    <span class="n">w</span> <span class="o">*=</span> <span class="n">half</span><span class="o">*</span><span class="n">u</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">new_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">b</span> <span class="o">==</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                <span class="n">a1</span> <span class="o">=</span> <span class="n">a</span><span class="o">-</span><span class="mi">1</span>
+                <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="n">one</span><span class="p">)</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">a1</span><span class="o">+</span><span class="n">u</span>
+                    <span class="n">w</span> <span class="o">*=</span> <span class="n">half</span><span class="o">*</span><span class="n">u</span><span class="o">**</span><span class="mi">2</span>
+                    <span class="n">new_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="n">a</span> <span class="o">==</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">b</span> <span class="o">==</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ninf</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[(</span><span class="n">x</span><span class="p">,</span><span class="o">-</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_nodes</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># Simple linear change of variables</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="o">+</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                <span class="n">new_nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">D</span><span class="o">+</span><span class="n">C</span><span class="o">*</span><span class="n">x</span><span class="p">,</span> <span class="n">C</span><span class="o">*</span><span class="n">w</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">new_nodes</span>
+</div>
+<div class="viewcode-block" id="QuadratureRule.guess_degree"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.guess_degree">[docs]</a>    <span class="k">def</span> <span class="nf">guess_degree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a desired precision `p` in bits, estimate the degree `m`</span>
+<span class="sd">        of the quadrature required to accomplish full accuracy for</span>
+<span class="sd">        typical integrals. By default, :func:`~mpmath.quad` will perform up</span>
+<span class="sd">        to `m` iterations. The value of `m` should be a slight</span>
+<span class="sd">        overestimate, so that &quot;slightly bad&quot; integrals can be dealt</span>
+<span class="sd">        with automatically using a few extra iterations. On the</span>
+<span class="sd">        other hand, it should not be too big, so :func:`~mpmath.quad` can</span>
+<span class="sd">        quit within a reasonable amount of time when it is given</span>
+<span class="sd">        an &quot;unsolvable&quot; integral.</span>
+
+<span class="sd">        The default formula used by :func:`~mpmath.guess_degree` is tuned</span>
+<span class="sd">        for both :class:`TanhSinh` and :class:`GaussLegendre`.</span>
+<span class="sd">        The output is roughly as follows:</span>
+
+<span class="sd">            +---------+---------+</span>
+<span class="sd">            | `p`     | `m`     |</span>
+<span class="sd">            +=========+=========+</span>
+<span class="sd">            | 50      | 6       |</span>
+<span class="sd">            +---------+---------+</span>
+<span class="sd">            | 100     | 7       |</span>
+<span class="sd">            +---------+---------+</span>
+<span class="sd">            | 500     | 10      |</span>
+<span class="sd">            +---------+---------+</span>
+<span class="sd">            | 3000    | 12      |</span>
+<span class="sd">            +---------+---------+</span>
+
+<span class="sd">        This formula is based purely on a limited amount of</span>
+<span class="sd">        experimentation and will sometimes be wrong.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Expected degree</span>
+        <span class="c"># XXX: use mag</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">prec</span><span class="o">/</span><span class="mf">30.0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="c"># Reasonable &quot;worst case&quot;</span>
+        <span class="n">g</span> <span class="o">+=</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">g</span>
+</div>
+<div class="viewcode-block" id="QuadratureRule.estimate_error"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.estimate_error">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Given results from integrations `[I_1, I_2, \ldots, I_k]` done</span>
+<span class="sd">        with a quadrature of rule of degree `1, 2, \ldots, k`, estimate</span>
+<span class="sd">        the error of `I_k`.</span>
+
+<span class="sd">        For `k = 2`, we estimate  `|I_{\infty}-I_2|` as `|I_2-I_1|`.</span>
+
+<span class="sd">        For `k &gt; 2`, we extrapolate `|I_{\infty}-I_k| \approx |I_{k+1}-I_k|`</span>
+<span class="sd">        from `|I_k-I_{k-1}|` and `|I_k-I_{k-2}|` under the assumption</span>
+<span class="sd">        that each degree increment roughly doubles the accuracy of</span>
+<span class="sd">        the quadrature rule (this is true for both :class:`TanhSinh`</span>
+<span class="sd">        and :class:`GaussLegendre`). The extrapolation formula is given</span>
+<span class="sd">        by Borwein, Bailey &amp; Girgensohn. Although not very conservative,</span>
+<span class="sd">        this method seems to be very robust in practice.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">results</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">zero</span>
+            <span class="n">D1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]),</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">D2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]),</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">epsilon</span>
+        <span class="n">D3</span> <span class="o">=</span> <span class="o">-</span><span class="n">prec</span>
+        <span class="n">D4</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">D1</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">D2</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">D1</span><span class="p">,</span> <span class="n">D3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">**</span> <span class="nb">int</span><span class="p">(</span><span class="n">D4</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QuadratureRule.summation"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.summation">[docs]</a>    <span class="k">def</span> <span class="nf">summation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">max_degree</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Main integration function. Computes the 1D integral over</span>
+<span class="sd">        the interval specified by *points*. For each subinterval,</span>
+<span class="sd">        performs quadrature of degree from 1 up to *max_degree*</span>
+<span class="sd">        until :func:`~mpmath.estimate_error` signals convergence.</span>
+
+<span class="sd">        :func:`~mpmath.summation` transforms each subintegration to</span>
+<span class="sd">        the standard interval and then calls :func:`~mpmath.sum_next`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">err</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">zero</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c"># XXX: we could use a single variable transformation,</span>
+            <span class="c"># but this is not good in practice. We get better accuracy</span>
+            <span class="c"># by having 0 as an endpoint.</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">ninf</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+                <span class="n">_f</span> <span class="o">=</span> <span class="n">f</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">_f</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">_f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">degree</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_degree</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nodes</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Integrating from </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s"> (degree </span><span class="si">%s</span><span class="s"> of </span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> \
+                        <span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">nstr</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">ctx</span><span class="o">.</span><span class="n">nstr</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">degree</span><span class="p">,</span> <span class="n">max_degree</span><span class="p">))</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sum_next</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">verbose</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">degree</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate_error</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">err</span> <span class="o">&lt;=</span> <span class="n">epsilon</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Estimated error:&quot;</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">nstr</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+            <span class="n">I</span> <span class="o">+=</span> <span class="n">results</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">err</span> <span class="o">&gt;</span> <span class="n">epsilon</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;Failed to reach full accuracy. Estimated error:&quot;</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">nstr</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">I</span><span class="p">,</span> <span class="n">err</span>
+</div>
+<div class="viewcode-block" id="QuadratureRule.sum_next"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.QuadratureRule.sum_next">[docs]</a>    <span class="k">def</span> <span class="nf">sum_next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">previous</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates the step sum `\sum w_k f(x_k)` where the *nodes* list</span>
+<span class="sd">        contains the `(w_k, x_k)` pairs.</span>
+
+<span class="sd">        :func:`~mpmath.summation` will supply the list *results* of</span>
+<span class="sd">        values computed by :func:`~mpmath.sum_next` at previous degrees, in</span>
+<span class="sd">        case the quadrature rule is able to reuse them.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">fdot</span><span class="p">((</span><span class="n">w</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="TanhSinh"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.TanhSinh">[docs]</a><span class="k">class</span> <span class="nc">TanhSinh</span><span class="p">(</span><span class="n">QuadratureRule</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    This class implements &quot;tanh-sinh&quot; or &quot;doubly exponential&quot;</span>
+<span class="sd">    quadrature. This quadrature rule is based on the Euler-Maclaurin</span>
+<span class="sd">    integral formula. By performing a change of variables involving</span>
+<span class="sd">    nested exponentials / hyperbolic functions (hence the name), the</span>
+<span class="sd">    derivatives at the endpoints vanish rapidly. Since the error term</span>
+<span class="sd">    in the Euler-Maclaurin formula depends on the derivatives at the</span>
+<span class="sd">    endpoints, a simple step sum becomes extremely accurate. In</span>
+<span class="sd">    practice, this means that doubling the number of evaluation</span>
+<span class="sd">    points roughly doubles the number of accurate digits.</span>
+
+<span class="sd">    Comparison to Gauss-Legendre:</span>
+<span class="sd">      * Initial computation of nodes is usually faster</span>
+<span class="sd">      * Handles endpoint singularities better</span>
+<span class="sd">      * Handles infinite integration intervals better</span>
+<span class="sd">      * Is slower for smooth integrands once nodes have been computed</span>
+
+<span class="sd">    The implementation of the tanh-sinh algorithm is based on the</span>
+<span class="sd">    description given in Borwein, Bailey &amp; Girgensohn, &quot;Experimentation</span>
+<span class="sd">    in Mathematics - Computational Paths to Discovery&quot;, A K Peters,</span>
+<span class="sd">    2003, pages 312-313. In the present implementation, a few</span>
+<span class="sd">    improvements have been made:</span>
+
+<span class="sd">      * A more efficient scheme is used to compute nodes (exploiting</span>
+<span class="sd">        recurrence for the exponential function)</span>
+<span class="sd">      * The nodes are computed successively instead of all at once</span>
+
+<span class="sd">    Various documents describing the algorithm are available online, e.g.:</span>
+
+<span class="sd">      * http://crd.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf</span>
+<span class="sd">      * http://users.cs.dal.ca/~jborwein/tanh-sinh.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TanhSinh.sum_next"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.TanhSinh.sum_next">[docs]</a>    <span class="k">def</span> <span class="nf">sum_next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">previous</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Step sum for tanh-sinh quadrature of degree `m`. We exploit the</span>
+<span class="sd">        fact that half of the abscissas at degree `m` are precisely the</span>
+<span class="sd">        abscissas from degree `m-1`. Thus reusing the result from</span>
+<span class="sd">        the previous level allows a 2x speedup.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">degree</span><span class="p">)</span>
+        <span class="c"># Abscissas overlap, so reusing saves half of the time</span>
+        <span class="k">if</span> <span class="n">previous</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="n">previous</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">h</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">zero</span>
+        <span class="n">S</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span><span class="o">.</span><span class="n">fdot</span><span class="p">((</span><span class="n">w</span><span class="p">,</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">h</span><span class="o">*</span><span class="n">S</span>
+</div>
+<div class="viewcode-block" id="TanhSinh.calc_nodes"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.TanhSinh.calc_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">calc_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        The abscissas and weights for tanh-sinh quadrature of degree</span>
+<span class="sd">        `m` are given by</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            x_k = \tanh(\pi/2 \sinh(t_k))</span>
+
+<span class="sd">            w_k = \pi/2 \cosh(t_k) / \cosh(\pi/2 \sinh(t_k))^2</span>
+
+<span class="sd">        where `t_k = t_0 + hk` for a step length `h \sim 2^{-m}`. The</span>
+<span class="sd">        list of nodes is actually infinite, but the weights die off so</span>
+<span class="sd">        rapidly that only a few are needed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">extra</span> <span class="o">=</span> <span class="mi">20</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">+=</span> <span class="n">extra</span>
+        <span class="n">tol</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ldexp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">prec</span><span class="o">-</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">pi4</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span>
+
+        <span class="c"># For simplicity, we work in steps h = 1/2^n, with the first point</span>
+        <span class="c"># offset so that we can reuse the sum from the previous degree</span>
+
+        <span class="c"># We define degree 1 to include the &quot;degree 0&quot; steps, including</span>
+        <span class="c"># the point x = 0. (It doesn&#39;t work well otherwise; not sure why.)</span>
+        <span class="n">t0</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ldexp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">degree</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">degree</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c">#nodes.append((mpf(0), pi4))</span>
+            <span class="c">#nodes.append((-mpf(0), pi4))</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ctx</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">t0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">t0</span><span class="o">*</span><span class="mi">2</span>
+
+        <span class="c"># Since h is fixed, we can compute the next exponential</span>
+        <span class="c"># by simply multiplying by exp(h)</span>
+        <span class="n">expt0</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">pi4</span> <span class="o">*</span> <span class="n">expt0</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">pi4</span> <span class="o">/</span> <span class="n">expt0</span>
+        <span class="n">udelta</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        <span class="n">urdelta</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">udelta</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="o">*</span><span class="mi">2</span><span class="o">**</span><span class="n">degree</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c"># Reference implementation:</span>
+            <span class="c"># t = t0 + k*h</span>
+            <span class="c"># x = tanh(pi/2 * sinh(t))</span>
+            <span class="c"># w = pi/2 * cosh(t) / cosh(pi/2 * sinh(t))**2</span>
+
+            <span class="c"># Fast implementation. Note that c = exp(pi/2 * sinh(t))</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">b</span><span class="p">)</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">c</span>
+            <span class="n">co</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="o">+</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">si</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">si</span> <span class="o">/</span> <span class="n">co</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">co</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">diff</span> <span class="o">&lt;=</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">break</span>
+
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+
+            <span class="n">a</span> <span class="o">*=</span> <span class="n">udelta</span>
+            <span class="n">b</span> <span class="o">*=</span> <span class="n">urdelta</span>
+
+            <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">%</span> <span class="mi">300</span> <span class="o">==</span> <span class="mi">150</span><span class="p">:</span>
+                <span class="c"># Note: the number displayed is rather arbitrary. Should</span>
+                <span class="c"># figure out how to print something that looks more like a</span>
+                <span class="c"># percentage</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;Calculating nodes:&quot;</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">nstr</span><span class="p">(</span><span class="o">-</span><span class="n">ctx</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">/</span> <span class="n">prec</span><span class="p">))</span>
+
+        <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">-=</span> <span class="n">extra</span>
+        <span class="k">return</span> <span class="n">nodes</span>
+
+</div></div>
+<div class="viewcode-block" id="GaussLegendre"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.GaussLegendre">[docs]</a><span class="k">class</span> <span class="nc">GaussLegendre</span><span class="p">(</span><span class="n">QuadratureRule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class implements Gauss-Legendre quadrature, which is</span>
+<span class="sd">    exceptionally efficient for polynomials and polynomial-like (i.e.</span>
+<span class="sd">    very smooth) integrands.</span>
+
+<span class="sd">    The abscissas and weights are given by roots and values of</span>
+<span class="sd">    Legendre polynomials, which are the orthogonal polynomials</span>
+<span class="sd">    on `[-1, 1]` with respect to the unit weight</span>
+<span class="sd">    (see :func:`~mpmath.legendre`).</span>
+
+<span class="sd">    In this implementation, we take the &quot;degree&quot; `m` of the quadrature</span>
+<span class="sd">    to denote a Gauss-Legendre rule of degree `3 \cdot 2^m` (following</span>
+<span class="sd">    Borwein, Bailey &amp; Girgensohn). This way we get quadratic, rather</span>
+<span class="sd">    than linear, convergence as the degree is incremented.</span>
+
+<span class="sd">    Comparison to tanh-sinh quadrature:</span>
+<span class="sd">      * Is faster for smooth integrands once nodes have been computed</span>
+<span class="sd">      * Initial computation of nodes is usually slower</span>
+<span class="sd">      * Handles endpoint singularities worse</span>
+<span class="sd">      * Handles infinite integration intervals worse</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="GaussLegendre.calc_nodes"><a class="viewcode-back" href="../../../modules/mpmath/calculus/integration.html#mpmath.calculus.quadrature.GaussLegendre.calc_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">calc_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">degree</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculates the abscissas and weights for Gauss-Legendre</span>
+<span class="sd">        quadrature of degree of given degree (actually `3 \cdot 2^m`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ctx</span>
+        <span class="c"># It is important that the epsilon is set lower than the</span>
+        <span class="c"># &quot;real&quot; epsilon</span>
+        <span class="n">epsilon</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ldexp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="n">prec</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+        <span class="c"># Fairly high precision might be required for accurate</span>
+        <span class="c"># evaluation of the roots</span>
+        <span class="n">orig</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">prec</span><span class="o">*</span><span class="mf">1.5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">degree</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">/</span><span class="mi">5</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">/</span><span class="mi">9</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">),(</span><span class="n">ctx</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span><span class="n">ctx</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span><span class="o">/</span><span class="mi">9</span><span class="p">),(</span><span class="n">x</span><span class="p">,</span><span class="n">w</span><span class="p">)]</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">orig</span>
+            <span class="k">return</span> <span class="n">nodes</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">degree</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">upto</span> <span class="o">=</span> <span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">upto</span><span class="p">):</span>
+            <span class="c"># Asymptotic formula for the roots</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="mf">0.25</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)))</span>
+            <span class="c"># Newton iteration</span>
+            <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">t1</span><span class="p">,</span> <span class="n">t2</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
+                <span class="c"># Evaluates the Legendre polynomial using its defining</span>
+                <span class="c"># recurrence relation</span>
+                <span class="k">for</span> <span class="n">j1</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">t3</span><span class="p">,</span> <span class="n">t2</span><span class="p">,</span> <span class="n">t1</span> <span class="o">=</span> <span class="n">t2</span><span class="p">,</span> <span class="n">t1</span><span class="p">,</span> <span class="p">((</span><span class="mi">2</span><span class="o">*</span><span class="n">j1</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">r</span><span class="o">*</span><span class="n">t1</span> <span class="o">-</span> <span class="p">(</span><span class="n">j1</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">t2</span><span class="p">)</span><span class="o">/</span><span class="n">j1</span>
+                <span class="n">t4</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">t1</span><span class="o">-</span> <span class="n">t2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">t5</span> <span class="o">=</span> <span class="n">r</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">t1</span><span class="o">/</span><span class="n">t4</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">r</span> <span class="o">-</span> <span class="n">a</span>
+                <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">epsilon</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">r</span>
+            <span class="n">w</span> <span class="o">=</span> <span class="mi">2</span><span class="o">/</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">t4</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span>  <span class="ow">and</span> <span class="n">j</span> <span class="o">%</span> <span class="mi">30</span> <span class="o">==</span> <span class="mi">15</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;Computing nodes (</span><span class="si">%i</span><span class="s"> of </span><span class="si">%i</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">upto</span><span class="p">))</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+            <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="o">-</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">orig</span>
+        <span class="k">return</span> <span class="n">nodes</span>
+</div></div>
+<span class="k">class</span> <span class="nc">QuadratureMethods</span><span class="p">:</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">_gauss_legendre</span> <span class="o">=</span> <span class="n">GaussLegendre</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+        <span class="n">ctx</span><span class="o">.</span><span class="n">_tanh_sinh</span> <span class="o">=</span> <span class="n">TanhSinh</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">quad</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">points</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Computes a single, double or triple integral over a given</span>
+<span class="sd">        1D interval, 2D rectangle, or 3D cuboid. A basic example::</span>
+
+<span class="sd">            &gt;&gt;&gt; from mpmath import *</span>
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15; mp.pretty = True</span>
+<span class="sd">            &gt;&gt;&gt; quad(sin, [0, pi])</span>
+<span class="sd">            2.0</span>
+
+<span class="sd">        A basic 2D integral::</span>
+
+<span class="sd">            &gt;&gt;&gt; f = lambda x, y: cos(x+y/2)</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [-pi/2, pi/2], [0, pi])</span>
+<span class="sd">            4.0</span>
+
+<span class="sd">        **Interval format**</span>
+
+<span class="sd">        The integration range for each dimension may be specified</span>
+<span class="sd">        using a list or tuple. Arguments are interpreted as follows:</span>
+
+<span class="sd">        ``quad(f, [x1, x2])`` -- calculates</span>
+<span class="sd">        `\int_{x_1}^{x_2} f(x) \, dx`</span>
+
+<span class="sd">        ``quad(f, [x1, x2], [y1, y2])`` -- calculates</span>
+<span class="sd">        `\int_{x_1}^{x_2} \int_{y_1}^{y_2} f(x,y) \, dy \, dx`</span>
+
+<span class="sd">        ``quad(f, [x1, x2], [y1, y2], [z1, z2])`` -- calculates</span>
+<span class="sd">        `\int_{x_1}^{x_2} \int_{y_1}^{y_2} \int_{z_1}^{z_2} f(x,y,z)</span>
+<span class="sd">        \, dz \, dy \, dx`</span>
+
+<span class="sd">        Endpoints may be finite or infinite. An interval descriptor</span>
+<span class="sd">        may also contain more than two points. In this</span>
+<span class="sd">        case, the integration is split into subintervals, between</span>
+<span class="sd">        each pair of consecutive points. This is useful for</span>
+<span class="sd">        dealing with mid-interval discontinuities, or integrating</span>
+<span class="sd">        over large intervals where the function is irregular or</span>
+<span class="sd">        oscillates.</span>
+
+<span class="sd">        **Options**</span>
+
+<span class="sd">        :func:`~mpmath.quad` recognizes the following keyword arguments:</span>
+
+<span class="sd">        *method*</span>
+<span class="sd">            Chooses integration algorithm (described below).</span>
+<span class="sd">        *error*</span>
+<span class="sd">            If set to true, :func:`~mpmath.quad` returns `(v, e)` where `v` is the</span>
+<span class="sd">            integral and `e` is the estimated error.</span>
+<span class="sd">        *maxdegree*</span>
+<span class="sd">            Maximum degree of the quadrature rule to try before</span>
+<span class="sd">            quitting.</span>
+<span class="sd">        *verbose*</span>
+<span class="sd">            Print details about progress.</span>
+
+<span class="sd">        **Algorithms**</span>
+
+<span class="sd">        Mpmath presently implements two integration algorithms: tanh-sinh</span>
+<span class="sd">        quadrature and Gauss-Legendre quadrature. These can be selected</span>
+<span class="sd">        using *method=&#39;tanh-sinh&#39;* or *method=&#39;gauss-legendre&#39;* or by</span>
+<span class="sd">        passing the classes *method=TanhSinh*, *method=GaussLegendre*.</span>
+<span class="sd">        The functions :func:`~mpmath.quadts` and :func:`~mpmath.quadgl` are also available</span>
+<span class="sd">        as shortcuts.</span>
+
+<span class="sd">        Both algorithms have the property that doubling the number of</span>
+<span class="sd">        evaluation points roughly doubles the accuracy, so both are ideal</span>
+<span class="sd">        for high precision quadrature (hundreds or thousands of digits).</span>
+
+<span class="sd">        At high precision, computing the nodes and weights for the</span>
+<span class="sd">        integration can be expensive (more expensive than computing the</span>
+<span class="sd">        function values). To make repeated integrations fast, nodes</span>
+<span class="sd">        are automatically cached.</span>
+
+<span class="sd">        The advantages of the tanh-sinh algorithm are that it tends to</span>
+<span class="sd">        handle endpoint singularities well, and that the nodes are cheap</span>
+<span class="sd">        to compute on the first run. For these reasons, it is used by</span>
+<span class="sd">        :func:`~mpmath.quad` as the default algorithm.</span>
+
+<span class="sd">        Gauss-Legendre quadrature often requires fewer function</span>
+<span class="sd">        evaluations, and is therefore often faster for repeated use, but</span>
+<span class="sd">        the algorithm does not handle endpoint singularities as well and</span>
+<span class="sd">        the nodes are more expensive to compute. Gauss-Legendre quadrature</span>
+<span class="sd">        can be a better choice if the integrand is smooth and repeated</span>
+<span class="sd">        integrations are required (e.g. for multiple integrals).</span>
+
+<span class="sd">        See the documentation for :class:`TanhSinh` and</span>
+<span class="sd">        :class:`GaussLegendre` for additional details.</span>
+
+<span class="sd">        **Examples of 1D integrals**</span>
+
+<span class="sd">        Intervals may be infinite or half-infinite. The following two</span>
+<span class="sd">        examples evaluate the limits of the inverse tangent function</span>
+<span class="sd">        (`\int 1/(1+x^2) = \tan^{-1} x`), and the Gaussian integral</span>
+<span class="sd">        `\int_{\infty}^{\infty} \exp(-x^2)\,dx = \sqrt{\pi}`::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; quad(lambda x: 2/(x**2+1), [0, inf])</span>
+<span class="sd">            3.14159265358979</span>
+<span class="sd">            &gt;&gt;&gt; quad(lambda x: exp(-x**2), [-inf, inf])**2</span>
+<span class="sd">            3.14159265358979</span>
+
+<span class="sd">        Integrals can typically be resolved to high precision.</span>
+<span class="sd">        The following computes 50 digits of `\pi` by integrating the</span>
+<span class="sd">        area of the half-circle defined by `x^2 + y^2 \le 1`,</span>
+<span class="sd">        `-1 \le x \le 1`, `y \ge 0`::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 50</span>
+<span class="sd">            &gt;&gt;&gt; 2*quad(lambda x: sqrt(1-x**2), [-1, 1])</span>
+<span class="sd">            3.1415926535897932384626433832795028841971693993751</span>
+
+<span class="sd">        One can just as well compute 1000 digits (output truncated)::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 1000</span>
+<span class="sd">            &gt;&gt;&gt; 2*quad(lambda x: sqrt(1-x**2), [-1, 1])  #doctest:+ELLIPSIS</span>
+<span class="sd">            3.141592653589793238462643383279502884...216420198</span>
+
+<span class="sd">        Complex integrals are supported. The following computes</span>
+<span class="sd">        a residue at `z = 0` by integrating counterclockwise along the</span>
+<span class="sd">        diamond-shaped path from `1` to `+i` to `-1` to `-i` to `1`::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; chop(quad(lambda z: 1/z, [1,j,-1,-j,1]))</span>
+<span class="sd">            (0.0 + 6.28318530717959j)</span>
+
+<span class="sd">        **Examples of 2D and 3D integrals**</span>
+
+<span class="sd">        Here are several nice examples of analytically solvable</span>
+<span class="sd">        2D integrals (taken from MathWorld [1]) that can be evaluated</span>
+<span class="sd">        to high precision fairly rapidly by :func:`~mpmath.quad`::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 30</span>
+<span class="sd">            &gt;&gt;&gt; f = lambda x, y: (x-1)/((1-x*y)*log(x*y))</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [0, 1], [0, 1])</span>
+<span class="sd">            0.577215664901532860606512090082</span>
+<span class="sd">            &gt;&gt;&gt; +euler</span>
+<span class="sd">            0.577215664901532860606512090082</span>
+
+<span class="sd">            &gt;&gt;&gt; f = lambda x, y: 1/sqrt(1+x**2+y**2)</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [-1, 1], [-1, 1])</span>
+<span class="sd">            3.17343648530607134219175646705</span>
+<span class="sd">            &gt;&gt;&gt; 4*log(2+sqrt(3))-2*pi/3</span>
+<span class="sd">            3.17343648530607134219175646705</span>
+
+<span class="sd">            &gt;&gt;&gt; f = lambda x, y: 1/(1-x**2 * y**2)</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [0, 1], [0, 1])</span>
+<span class="sd">            1.23370055013616982735431137498</span>
+<span class="sd">            &gt;&gt;&gt; pi**2 / 8</span>
+<span class="sd">            1.23370055013616982735431137498</span>
+
+<span class="sd">            &gt;&gt;&gt; quad(lambda x, y: 1/(1-x*y), [0, 1], [0, 1])</span>
+<span class="sd">            1.64493406684822643647241516665</span>
+<span class="sd">            &gt;&gt;&gt; pi**2 / 6</span>
+<span class="sd">            1.64493406684822643647241516665</span>
+
+<span class="sd">        Multiple integrals may be done over infinite ranges::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; print(quad(lambda x,y: exp(-x-y), [0, inf], [1, inf]))</span>
+<span class="sd">            0.367879441171442</span>
+<span class="sd">            &gt;&gt;&gt; print(1/e)</span>
+<span class="sd">            0.367879441171442</span>
+
+<span class="sd">        For nonrectangular areas, one can call :func:`~mpmath.quad` recursively.</span>
+<span class="sd">        For example, we can replicate the earlier example of calculating</span>
+<span class="sd">        `\pi` by integrating over the unit-circle, and actually use double</span>
+<span class="sd">        quadrature to actually measure the area circle::</span>
+
+<span class="sd">            &gt;&gt;&gt; f = lambda x: quad(lambda y: 1, [-sqrt(1-x**2), sqrt(1-x**2)])</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [-1, 1])</span>
+<span class="sd">            3.14159265358979</span>
+
+<span class="sd">        Here is a simple triple integral::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; f = lambda x,y,z: x*y/(1+z)</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [0,1], [0,1], [1,2], method=&#39;gauss-legendre&#39;)</span>
+<span class="sd">            0.101366277027041</span>
+<span class="sd">            &gt;&gt;&gt; (log(3)-log(2))/4</span>
+<span class="sd">            0.101366277027041</span>
+
+<span class="sd">        **Singularities**</span>
+
+<span class="sd">        Both tanh-sinh and Gauss-Legendre quadrature are designed to</span>
+<span class="sd">        integrate smooth (infinitely differentiable) functions. Neither</span>
+<span class="sd">        algorithm copes well with mid-interval singularities (such as</span>
+<span class="sd">        mid-interval discontinuities in `f(x)` or `f&#39;(x)`).</span>
+<span class="sd">        The best solution is to split the integral into parts::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; quad(lambda x: abs(sin(x)), [0, 2*pi])   # Bad</span>
+<span class="sd">            3.99900894176779</span>
+<span class="sd">            &gt;&gt;&gt; quad(lambda x: abs(sin(x)), [0, pi, 2*pi])  # Good</span>
+<span class="sd">            4.0</span>
+
+<span class="sd">        The tanh-sinh rule often works well for integrands having a</span>
+<span class="sd">        singularity at one or both endpoints::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; quad(log, [0, 1], method=&#39;tanh-sinh&#39;)  # Good</span>
+<span class="sd">            -1.0</span>
+<span class="sd">            &gt;&gt;&gt; quad(log, [0, 1], method=&#39;gauss-legendre&#39;)  # Bad</span>
+<span class="sd">            -0.999932197413801</span>
+
+<span class="sd">        However, the result may still be inaccurate for some functions::</span>
+
+<span class="sd">            &gt;&gt;&gt; quad(lambda x: 1/sqrt(x), [0, 1], method=&#39;tanh-sinh&#39;)</span>
+<span class="sd">            1.99999999946942</span>
+
+<span class="sd">        This problem is not due to the quadrature rule per se, but to</span>
+<span class="sd">        numerical amplification of errors in the nodes. The problem can be</span>
+<span class="sd">        circumvented by temporarily increasing the precision::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 30</span>
+<span class="sd">            &gt;&gt;&gt; a = quad(lambda x: 1/sqrt(x), [0, 1], method=&#39;tanh-sinh&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; +a</span>
+<span class="sd">            2.0</span>
+
+<span class="sd">        **Highly variable functions**</span>
+
+<span class="sd">        For functions that are smooth (in the sense of being infinitely</span>
+<span class="sd">        differentiable) but contain sharp mid-interval peaks or many</span>
+<span class="sd">        &quot;bumps&quot;, :func:`~mpmath.quad` may fail to provide full accuracy. For</span>
+<span class="sd">        example, with default settings, :func:`~mpmath.quad` is able to integrate</span>
+<span class="sd">        `\sin(x)` accurately over an interval of length 100 but not over</span>
+<span class="sd">        length 1000::</span>
+
+<span class="sd">            &gt;&gt;&gt; quad(sin, [0, 100]); 1-cos(100)   # Good</span>
+<span class="sd">            0.137681127712316</span>
+<span class="sd">            0.137681127712316</span>
+<span class="sd">            &gt;&gt;&gt; quad(sin, [0, 1000]); 1-cos(1000)   # Bad</span>
+<span class="sd">            -37.8587612408485</span>
+<span class="sd">            0.437620923709297</span>
+
+<span class="sd">        One solution is to break the integration into 10 intervals of</span>
+<span class="sd">        length 100::</span>
+
+<span class="sd">            &gt;&gt;&gt; quad(sin, linspace(0, 1000, 10))   # Good</span>
+<span class="sd">            0.437620923709297</span>
+
+<span class="sd">        Another is to increase the degree of the quadrature::</span>
+
+<span class="sd">            &gt;&gt;&gt; quad(sin, [0, 1000], maxdegree=10)   # Also good</span>
+<span class="sd">            0.437620923709297</span>
+
+<span class="sd">        Whether splitting the interval or increasing the degree is</span>
+<span class="sd">        more efficient differs from case to case. Another example is the</span>
+<span class="sd">        function `1/(1+x^2)`, which has a sharp peak centered around</span>
+<span class="sd">        `x = 0`::</span>
+
+<span class="sd">            &gt;&gt;&gt; f = lambda x: 1/(1+x**2)</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [-100, 100])   # Bad</span>
+<span class="sd">            3.64804647105268</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [-100, 100], maxdegree=10)   # Good</span>
+<span class="sd">            3.12159332021646</span>
+<span class="sd">            &gt;&gt;&gt; quad(f, [-100, 0, 100])   # Also good</span>
+<span class="sd">            3.12159332021646</span>
+
+<span class="sd">        **References**</span>
+
+<span class="sd">        1. http://mathworld.wolfram.com/DoubleIntegral.html</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rule</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;method&#39;</span><span class="p">,</span> <span class="s">&#39;tanh-sinh&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">rule</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rule</span> <span class="o">==</span> <span class="s">&#39;tanh-sinh&#39;</span><span class="p">:</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">_tanh_sinh</span>
+            <span class="k">elif</span> <span class="n">rule</span> <span class="o">==</span> <span class="s">&#39;gauss-legendre&#39;</span><span class="p">:</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">_gauss_legendre</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;unknown quadrature rule: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">rule</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rule</span> <span class="o">=</span> <span class="n">rule</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+        <span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;verbose&#39;</span><span class="p">)</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">orig</span> <span class="o">=</span> <span class="n">prec</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span>
+        <span class="n">epsilon</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">eps</span><span class="o">/</span><span class="mi">8</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;maxdegree&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">rule</span><span class="o">.</span><span class="n">guess_degree</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">ctx</span><span class="o">.</span><span class="n">_as_points</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">points</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">+=</span> <span class="mi">20</span>
+            <span class="k">if</span> <span class="n">dim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">v</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">summation</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">v</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">summation</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> \
+                        <span class="n">rule</span><span class="o">.</span><span class="n">summation</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">),</span> \
+                        <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">m</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">dim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">v</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">summation</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> \
+                        <span class="n">rule</span><span class="o">.</span><span class="n">summation</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> \
+                            <span class="n">rule</span><span class="o">.</span><span class="n">summation</span><span class="p">(</span><span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">),</span> \
+                            <span class="n">points</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">m</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                        <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">m</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">prec</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;quadrature must have dim 1, 2 or 3&quot;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">ctx</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="n">orig</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;error&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">+</span><span class="n">v</span><span class="p">,</span> <span class="n">err</span>
+        <span class="k">return</span> <span class="o">+</span><span class="n">v</span>
+
+    <span class="k">def</span> <span class="nf">quadts</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs tanh-sinh quadrature. The call</span>
+
+<span class="sd">            quadts(func, *points, ...)</span>
+
+<span class="sd">        is simply a shortcut for:</span>
+
+<span class="sd">            quad(func, *points, ..., method=TanhSinh)</span>
+
+<span class="sd">        For example, a single integral and a double integral:</span>
+
+<span class="sd">            quadts(lambda x: exp(cos(x)), [0, 1])</span>
+<span class="sd">            quadts(lambda x, y: exp(cos(x+y)), [0, 1], [0, 1])</span>
+
+<span class="sd">        See the documentation for quad for information about how points</span>
+<span class="sd">        arguments and keyword arguments are parsed.</span>
+
+<span class="sd">        See documentation for TanhSinh for algorithmic information about</span>
+<span class="sd">        tanh-sinh quadrature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;tanh-sinh&#39;</span>
+        <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">quadgl</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs Gauss-Legendre quadrature. The call</span>
+
+<span class="sd">            quadgl(func, *points, ...)</span>
+
+<span class="sd">        is simply a shortcut for:</span>
+
+<span class="sd">            quad(func, *points, ..., method=GaussLegendre)</span>
+
+<span class="sd">        For example, a single integral and a double integral:</span>
+
+<span class="sd">            quadgl(lambda x: exp(cos(x)), [0, 1])</span>
+<span class="sd">            quadgl(lambda x, y: exp(cos(x+y)), [0, 1], [0, 1])</span>
+
+<span class="sd">        See the documentation for quad for information about how points</span>
+<span class="sd">        arguments and keyword arguments are parsed.</span>
+
+<span class="sd">        See documentation for TanhSinh for algorithmic information about</span>
+<span class="sd">        tanh-sinh quadrature.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;gauss-legendre&#39;</span>
+        <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">quadosc</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interval</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">zeros</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Calculates</span>
+
+<span class="sd">        .. math ::</span>
+
+<span class="sd">            I = \int_a^b f(x) dx</span>
+
+<span class="sd">        where at least one of `a` and `b` is infinite and where</span>
+<span class="sd">        `f(x) = g(x) \cos(\omega x  + \phi)` for some slowly</span>
+<span class="sd">        decreasing function `g(x)`. With proper input, :func:`~mpmath.quadosc`</span>
+<span class="sd">        can also handle oscillatory integrals where the oscillation</span>
+<span class="sd">        rate is different from a pure sine or cosine wave.</span>
+
+<span class="sd">        In the standard case when `|a| &lt; \infty, b = \infty`,</span>
+<span class="sd">        :func:`~mpmath.quadosc` works by evaluating the infinite series</span>
+
+<span class="sd">        .. math ::</span>
+
+<span class="sd">            I = \int_a^{x_1} f(x) dx +</span>
+<span class="sd">            \sum_{k=1}^{\infty} \int_{x_k}^{x_{k+1}} f(x) dx</span>
+
+<span class="sd">        where `x_k` are consecutive zeros (alternatively</span>
+<span class="sd">        some other periodic reference point) of `f(x)`.</span>
+<span class="sd">        Accordingly, :func:`~mpmath.quadosc` requires information about the</span>
+<span class="sd">        zeros of `f(x)`. For a periodic function, you can specify</span>
+<span class="sd">        the zeros by either providing the angular frequency `\omega`</span>
+<span class="sd">        (*omega*) or the *period* `2 \pi/\omega`. In general, you can</span>
+<span class="sd">        specify the `n`-th zero by providing the *zeros* arguments.</span>
+<span class="sd">        Below is an example of each::</span>
+
+<span class="sd">            &gt;&gt;&gt; from mpmath import *</span>
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15; mp.pretty = True</span>
+<span class="sd">            &gt;&gt;&gt; f = lambda x: sin(3*x)/(x**2+1)</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [0,inf], omega=3)</span>
+<span class="sd">            0.37833007080198</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [0,inf], period=2*pi/3)</span>
+<span class="sd">            0.37833007080198</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [0,inf], zeros=lambda n: pi*n/3)</span>
+<span class="sd">            0.37833007080198</span>
+<span class="sd">            &gt;&gt;&gt; (ei(3)*exp(-3)-exp(3)*ei(-3))/2  # Computed by Mathematica</span>
+<span class="sd">            0.37833007080198</span>
+
+<span class="sd">        Note that *zeros* was specified to multiply `n` by the</span>
+<span class="sd">        *half-period*, not the full period. In theory, it does not matter</span>
+<span class="sd">        whether each partial integral is done over a half period or a full</span>
+<span class="sd">        period. However, if done over half-periods, the infinite series</span>
+<span class="sd">        passed to :func:`~mpmath.nsum` becomes an *alternating series* and this</span>
+<span class="sd">        typically makes the extrapolation much more efficient.</span>
+
+<span class="sd">        Here is an example of an integration over the entire real line,</span>
+<span class="sd">        and a half-infinite integration starting at `-\infty`::</span>
+
+<span class="sd">            &gt;&gt;&gt; quadosc(lambda x: cos(x)/(1+x**2), [-inf, inf], omega=1)</span>
+<span class="sd">            1.15572734979092</span>
+<span class="sd">            &gt;&gt;&gt; pi/e</span>
+<span class="sd">            1.15572734979092</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(lambda x: cos(x)/x**2, [-inf, -1], period=2*pi)</span>
+<span class="sd">            -0.0844109505595739</span>
+<span class="sd">            &gt;&gt;&gt; cos(1)+si(1)-pi/2</span>
+<span class="sd">            -0.0844109505595738</span>
+
+<span class="sd">        Of course, the integrand may contain a complex exponential just as</span>
+<span class="sd">        well as a real sine or cosine::</span>
+
+<span class="sd">            &gt;&gt;&gt; quadosc(lambda x: exp(3*j*x)/(1+x**2), [-inf,inf], omega=3)</span>
+<span class="sd">            (0.156410688228254 + 0.0j)</span>
+<span class="sd">            &gt;&gt;&gt; pi/e**3</span>
+<span class="sd">            0.156410688228254</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(lambda x: exp(3*j*x)/(2+x+x**2), [-inf,inf], omega=3)</span>
+<span class="sd">            (0.00317486988463794 - 0.0447701735209082j)</span>
+<span class="sd">            &gt;&gt;&gt; 2*pi/sqrt(7)/exp(3*(j+sqrt(7))/2)</span>
+<span class="sd">            (0.00317486988463794 - 0.0447701735209082j)</span>
+
+<span class="sd">        **Non-periodic functions**</span>
+
+<span class="sd">        If `f(x) = g(x) h(x)` for some function `h(x)` that is not</span>
+<span class="sd">        strictly periodic, *omega* or *period* might not work, and it might</span>
+<span class="sd">        be necessary to use *zeros*.</span>
+
+<span class="sd">        A notable exception can be made for Bessel functions which, though not</span>
+<span class="sd">        periodic, are &quot;asymptotically periodic&quot; in a sufficiently strong sense</span>
+<span class="sd">        that the sum extrapolation will work out::</span>
+
+<span class="sd">            &gt;&gt;&gt; quadosc(j0, [0, inf], period=2*pi)</span>
+<span class="sd">            1.0</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(j1, [0, inf], period=2*pi)</span>
+<span class="sd">            1.0</span>
+
+<span class="sd">        More properly, one should provide the exact Bessel function zeros::</span>
+
+<span class="sd">            &gt;&gt;&gt; j0zero = lambda n: findroot(j0, pi*(n-0.25))</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(j0, [0, inf], zeros=j0zero)</span>
+<span class="sd">            1.0</span>
+
+<span class="sd">        For an example where *zeros* becomes necessary, consider the</span>
+<span class="sd">        complete Fresnel integrals</span>
+
+<span class="sd">        .. math ::</span>
+
+<span class="sd">            \int_0^{\infty} \cos x^2\,dx = \int_0^{\infty} \sin x^2\,dx</span>
+<span class="sd">            = \sqrt{\frac{\pi}{8}}.</span>
+
+<span class="sd">        Although the integrands do not decrease in magnitude as</span>
+<span class="sd">        `x \to \infty`, the integrals are convergent since the oscillation</span>
+<span class="sd">        rate increases (causing consecutive periods to asymptotically</span>
+<span class="sd">        cancel out). These integrals are virtually impossible to calculate</span>
+<span class="sd">        to any kind of accuracy using standard quadrature rules. However,</span>
+<span class="sd">        if one provides the correct asymptotic distribution of zeros</span>
+<span class="sd">        (`x_n \sim \sqrt{n}`), :func:`~mpmath.quadosc` works::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 30</span>
+<span class="sd">            &gt;&gt;&gt; f = lambda x: cos(x**2)</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [0,inf], zeros=lambda n:sqrt(pi*n))</span>
+<span class="sd">            0.626657068657750125603941321203</span>
+<span class="sd">            &gt;&gt;&gt; f = lambda x: sin(x**2)</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [0,inf], zeros=lambda n:sqrt(pi*n))</span>
+<span class="sd">            0.626657068657750125603941321203</span>
+<span class="sd">            &gt;&gt;&gt; sqrt(pi/8)</span>
+<span class="sd">            0.626657068657750125603941321203</span>
+
+<span class="sd">        (Interestingly, these integrals can still be evaluated if one</span>
+<span class="sd">        places some other constant than `\pi` in the square root sign.)</span>
+
+<span class="sd">        In general, if `f(x) \sim g(x) \cos(h(x))`, the zeros follow</span>
+<span class="sd">        the inverse-function distribution `h^{-1}(x)`::</span>
+
+<span class="sd">            &gt;&gt;&gt; mp.dps = 15</span>
+<span class="sd">            &gt;&gt;&gt; f = lambda x: sin(exp(x))</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [1,inf], zeros=lambda n: log(n))</span>
+<span class="sd">            -0.25024394235267</span>
+<span class="sd">            &gt;&gt;&gt; pi/2-si(e)</span>
+<span class="sd">            -0.250243942352671</span>
+
+<span class="sd">        **Non-alternating functions**</span>
+
+<span class="sd">        If the integrand oscillates around a positive value, without</span>
+<span class="sd">        alternating signs, the extrapolation might fail. A simple trick</span>
+<span class="sd">        that sometimes works is to multiply or divide the frequency by 2::</span>
+
+<span class="sd">            &gt;&gt;&gt; f = lambda x: 1/x**2+sin(x)/x**4</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [1,inf], omega=1)  # Bad</span>
+<span class="sd">            1.28642190869861</span>
+<span class="sd">            &gt;&gt;&gt; quadosc(f, [1,inf], omega=0.5)  # Perfect</span>
+<span class="sd">            1.28652953559617</span>
+<span class="sd">            &gt;&gt;&gt; 1+(cos(1)+ci(1)+sin(1))/6</span>
+<span class="sd">            1.28652953559617</span>
+
+<span class="sd">        **Fast decay**</span>
+
+<span class="sd">        :func:`~mpmath.quadosc` is primarily useful for slowly decaying</span>
+<span class="sd">        integrands. If the integrand decreases exponentially or faster,</span>
+<span class="sd">        :func:`~mpmath.quad` will likely handle it without trouble (and generally be</span>
+<span class="sd">        much faster than :func:`~mpmath.quadosc`)::</span>
+
+<span class="sd">            &gt;&gt;&gt; quadosc(lambda x: cos(x)/exp(x), [0, inf], omega=1)</span>
+<span class="sd">            0.5</span>
+<span class="sd">            &gt;&gt;&gt; quad(lambda x: cos(x)/exp(x), [0, inf])</span>
+<span class="sd">            0.5</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">_as_points</span><span class="p">(</span><span class="n">interval</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">[</span><span class="n">omega</span><span class="p">,</span> <span class="n">period</span><span class="p">,</span> <span class="n">zeros</span><span class="p">]</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span> \
+                <span class="s">&quot;must specify exactly one of omega, period, zeros&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ninf</span> <span class="ow">and</span> <span class="n">b</span> <span class="o">==</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">zeros</span><span class="o">=</span><span class="n">zeros</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">)</span>
+            <span class="n">s2</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quadosc</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">zeros</span><span class="o">=</span><span class="n">zeros</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">s1</span> <span class="o">+</span> <span class="n">s2</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">ctx</span><span class="o">.</span><span class="n">ninf</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">zeros</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="n">f</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span><span class="p">,</span><span class="o">-</span><span class="n">a</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">zeros</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quadosc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="n">f</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">[</span><span class="o">-</span><span class="n">b</span><span class="p">,</span><span class="o">-</span><span class="n">a</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">b</span> <span class="o">!=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;quadosc requires an infinite integration interval&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">zeros</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">omega</span><span class="p">:</span>
+                <span class="n">period</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">ctx</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">omega</span>
+            <span class="n">zeros</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">n</span><span class="o">*</span><span class="n">period</span><span class="o">/</span><span class="mi">2</span>
+        <span class="c">#for n in range(1,10):</span>
+        <span class="c">#    p = zeros(n)</span>
+        <span class="c">#    if p &gt; a:</span>
+        <span class="c">#        break</span>
+        <span class="c">#if n &gt;= 9:</span>
+        <span class="c">#    raise ValueError(&quot;zeros do not appear to be correctly indexed&quot;)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quadgl</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)])</span>
+        <span class="k">def</span> <span class="nf">term</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ctx</span><span class="o">.</span><span class="n">quadgl</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="n">zeros</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">zeros</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">nsum</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">ctx</span><span class="o">.</span><span class="n">inf</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../mpmath.html" >mpmath</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

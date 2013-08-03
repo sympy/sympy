@@ -1,0 +1,215 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Shor’s Algorithm &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Particle in a Box" href="piab.html" />
+    <link rel="prev" title="Qubit" href="qubit.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="piab.html" title="Particle in a Box"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="qubit.html" title="Qubit"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.shor">
+<span id="shor-s-algorithm"></span><h1>Shor&#8217;s Algorithm<a class="headerlink" href="#module-sympy.physics.quantum.shor" title="Permalink to this headline">¶</a></h1>
+<p>Shor&#8217;s algorithm and helper functions.</p>
+<p>Todo:</p>
+<ul class="simple">
+<li>Get the CMod gate working again using the new Gate API.</li>
+<li>Fix everything.</li>
+<li>Update docstrings and reformat.</li>
+<li>Remove print statements. We may want to think about a better API for this.</li>
+</ul>
+<dl class="class">
+<dt id="sympy.physics.quantum.shor.CMod">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.shor.</tt><tt class="descname">CMod</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/shor.html#CMod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.shor.CMod" title="Permalink to this definition">¶</a></dt>
+<dd><p>A controlled mod gate.</p>
+<p>This is black box controlled Mod function for use by shor&#8217;s algorithm.
+TODO implement a decompose property that returns how to do this in terms
+of elementary gates</p>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.shor.CMod.N">
+<tt class="descname">N</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/shor.html#CMod.N"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.shor.CMod.N" title="Permalink to this definition">¶</a></dt>
+<dd><p>N is the type of modular arithmetic we are doing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.shor.CMod.a">
+<tt class="descname">a</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/shor.html#CMod.a"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.shor.CMod.a" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base of the controlled mod function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.shor.CMod.t">
+<tt class="descname">t</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/shor.html#CMod.t"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.shor.CMod.t" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size of 1/2 input register.  First 1/2 holds output.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.shor.continued_fraction">
+<tt class="descclassname">sympy.physics.quantum.shor.</tt><tt class="descname">continued_fraction</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/shor.html#continued_fraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.shor.continued_fraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>This applies the continued fraction expansion to two numbers x/y</p>
+<p>x is the numerator and y is the denominator</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.shor</span> <span class="kn">import</span> <span class="n">continued_fraction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">continued_fraction</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="go">[0, 2, 1, 2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.shor.period_find">
+<tt class="descclassname">sympy.physics.quantum.shor.</tt><tt class="descname">period_find</tt><big>(</big><em>a</em>, <em>N</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/shor.html#period_find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.shor.period_find" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the period of a in modulo N arithmetic</p>
+<p>This is quantum part of Shor&#8217;s algorithm.It takes two registers,
+puts first in superposition of states with Hadamards so: <tt class="docutils literal"><span class="pre">|k&gt;|0&gt;</span></tt>
+with k being all possible choices. It then does a controlled mod and
+a QFT to determine the order of a.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.shor.shor">
+<tt class="descclassname">sympy.physics.quantum.shor.</tt><tt class="descname">shor</tt><big>(</big><em>N</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/shor.html#shor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.shor.shor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function implements Shor&#8217;s factoring algorithm on the Integer N</p>
+<p>The algorithm starts by picking a random number (a) and seeing if it is
+coprime with N. If it isn&#8217;t, then the gcd of the two numbers is a factor
+and we are done. Otherwise, it begins the period_finding subroutine which
+finds the period of a in modulo N arithmetic. This period, if even, can
+be used to calculate factors by taking a**(r/2)-1 and a**(r/2)+1.
+These values are returned.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="qubit.html"
+                        title="previous chapter">Qubit</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="piab.html"
+                        title="next chapter">Particle in a Box</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/shor.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="piab.html" title="Particle in a Box"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="qubit.html" title="Qubit"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,691 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>State &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Circuit Plot" href="circuitplot.html" />
+    <link rel="prev" title="Spin" href="spin.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuitplot.html" title="Circuit Plot"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="spin.html" title="Spin"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.state">
+<span id="state"></span><h1>State<a class="headerlink" href="#module-sympy.physics.quantum.state" title="Permalink to this headline">¶</a></h1>
+<p>Dirac notation for states.</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.state.KetBase">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">KetBase</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#KetBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.KetBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for Kets.</p>
+<p>This class defines the dual property and the brackets for printing. This is
+an abstract base class and you should not instantiate it directly, instead
+use Ket.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.BraBase">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">BraBase</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#BraBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.BraBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for Bras.</p>
+<p>This class defines the dual property and the brackets for printing. This
+is an abstract base class and you should not instantiate it directly,
+instead use Bra.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.StateBase">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">StateBase</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#StateBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.StateBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract base class for general abstract states in quantum mechanics.</p>
+<p>All other state classes defined will need to inherit from this class. It
+carries the basic structure for all other states such as dual, _eval_adjoint
+and label.</p>
+<p>This is an abstract base class and you should not instantiate it directly,
+instead use State.</p>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.StateBase.dual">
+<tt class="descname">dual</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#StateBase.dual"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.StateBase.dual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the dual state of this one.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="sympy.physics.quantum.state.StateBase.dual_class">
+<em class="property">classmethod </em><tt class="descname">dual_class</tt><big>(</big><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#StateBase.dual_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.StateBase.dual_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the class used to construt the dual.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.StateBase.operators">
+<tt class="descname">operators</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#StateBase.operators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.StateBase.operators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the operator(s) that this state is an eigenstate of</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.State">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">State</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#State"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.State" title="Permalink to this definition">¶</a></dt>
+<dd><p>General abstract quantum state used as a base class for Ket and Bra.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.Ket">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">Ket</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Ket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Ket" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general time-independent Ket in quantum mechanics.</p>
+<p>Inherits from State and KetBase. This class should be used as the base
+class for all physical, time-independent Kets in a system. This class
+and its subclasses will be the main classes that users will use for
+expressing Kets in Dirac notation <a class="reference internal" href="#r230">[R230]</a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>args</strong> : tuple</p>
+<blockquote class="last">
+<div><p>The list of numbers or parameters that uniquely specify the
+ket. This will usually be its symbol or its quantum numbers. For
+time-dependent state, this will include the time.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r230" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R230]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Bra-ket_notation">http://en.wikipedia.org/wiki/Bra-ket_notation</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create a simple Ket and looking at its properties:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">Ket</span><span class="p">,</span> <span class="n">Bra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">Ket</span><span class="p">(</span><span class="s">&#39;psi&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span>
+<span class="go">|psi&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">hilbert_space</span>
+<span class="go">H</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">is_commutative</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">label</span>
+<span class="go">(psi,)</span>
+</pre></div>
+</div>
+<p>Ket&#8217;s know about their associated bra:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">dual</span>
+<span class="go">&lt;psi|</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()</span>
+<span class="go">&lt;class &#39;sympy.physics.quantum.state.Bra&#39;&gt;</span>
+</pre></div>
+</div>
+<p>Take a linear combination of two kets:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">k0</span> <span class="o">=</span> <span class="n">Ket</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k1</span> <span class="o">=</span> <span class="n">Ket</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">I</span><span class="o">*</span><span class="n">k0</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">k1</span>
+<span class="go">2*I*|0&gt; - 4*|1&gt;</span>
+</pre></div>
+</div>
+<p>Compound labels are passed as tuples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n,m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">Ket</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span>
+<span class="go">|nm&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.Bra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">Bra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Bra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Bra" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general time-independent Bra in quantum mechanics.</p>
+<p>Inherits from State and BraBase. A Bra is the dual of a Ket <a class="reference internal" href="#r231">[R231]</a>. This
+class and its subclasses will be the main classes that users will use for
+expressing Bras in Dirac notation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>args</strong> : tuple</p>
+<blockquote class="last">
+<div><p>The list of numbers or parameters that uniquely specify the
+ket. This will usually be its symbol or its quantum numbers. For
+time-dependent state, this will include the time.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r231" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R231]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Bra-ket_notation">http://en.wikipedia.org/wiki/Bra-ket_notation</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create a simple Bra and look at its properties:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">Ket</span><span class="p">,</span> <span class="n">Bra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Bra</span><span class="p">(</span><span class="s">&#39;psi&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">&lt;psi|</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">hilbert_space</span>
+<span class="go">H</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">is_commutative</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Bra&#8217;s know about their dual Ket&#8217;s:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">dual</span>
+<span class="go">|psi&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()</span>
+<span class="go">&lt;class &#39;sympy.physics.quantum.state.Ket&#39;&gt;</span>
+</pre></div>
+</div>
+<p>Like Kets, Bras can have compound labels and be manipulated in a similar
+manner:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n,m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Bra</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">)</span> <span class="o">-</span> <span class="n">I</span><span class="o">*</span><span class="n">Bra</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">-I*&lt;mn| + &lt;nm|</span>
+</pre></div>
+</div>
+<p>Symbols in a Bra can be substituted using <tt class="docutils literal"><span class="pre">.subs</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="go">&lt;mm| - I*&lt;mm|</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.TimeDepState">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">TimeDepState</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#TimeDepState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.TimeDepState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for a general time-dependent quantum state.</p>
+<p>This class is used as a base class for any time-dependent state. The main
+difference between this class and the time-independent state is that this
+class takes a second argument that is the time in addition to the usual
+label argument.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>args</strong> : tuple</p>
+<blockquote class="last">
+<div><p>The list of numbers or parameters that uniquely specify the ket. This
+will usually be its symbol or its quantum numbers. For time-dependent
+state, this will include the time as the final argument.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.TimeDepState.label">
+<tt class="descname">label</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#TimeDepState.label"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.TimeDepState.label" title="Permalink to this definition">¶</a></dt>
+<dd><p>The label of the state.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.TimeDepState.time">
+<tt class="descname">time</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#TimeDepState.time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.TimeDepState.time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time of the state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.TimeDepBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">TimeDepBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#TimeDepBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.TimeDepBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>General time-dependent Bra in quantum mechanics.</p>
+<p>This inherits from TimeDepState and BraBase and is the main class that
+should be used for Bras that vary with time. Its dual is a TimeDepBra.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>args</strong> : tuple</p>
+<blockquote class="last">
+<div><p>The list of numbers or parameters that uniquely specify the ket. This
+will usually be its symbol or its quantum numbers. For time-dependent
+state, this will include the time as the final argument.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">TimeDepBra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">TimeDepBra</span><span class="p">(</span><span class="s">&#39;psi&#39;</span><span class="p">,</span> <span class="s">&#39;t&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">&lt;psi;t|</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">time</span>
+<span class="go">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">label</span>
+<span class="go">(psi,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">hilbert_space</span>
+<span class="go">H</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">dual</span>
+<span class="go">|psi;t&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.TimeDepKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">TimeDepKet</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#TimeDepKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.TimeDepKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>General time-dependent Ket in quantum mechanics.</p>
+<p>This inherits from <tt class="docutils literal"><span class="pre">TimeDepState</span></tt> and <tt class="docutils literal"><span class="pre">KetBase</span></tt> and is the main class
+that should be used for Kets that vary with time. Its dual is a
+<tt class="docutils literal"><span class="pre">TimeDepBra</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>args</strong> : tuple</p>
+<blockquote class="last">
+<div><p>The list of numbers or parameters that uniquely specify the ket. This
+will usually be its symbol or its quantum numbers. For time-dependent
+state, this will include the time as the final argument.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Create a TimeDepKet and look at its attributes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">TimeDepKet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span> <span class="o">=</span> <span class="n">TimeDepKet</span><span class="p">(</span><span class="s">&#39;psi&#39;</span><span class="p">,</span> <span class="s">&#39;t&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span>
+<span class="go">|psi;t&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">time</span>
+<span class="go">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">label</span>
+<span class="go">(psi,)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">hilbert_space</span>
+<span class="go">H</span>
+</pre></div>
+</div>
+<p>TimeDepKets know about their dual bra:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">dual</span>
+<span class="go">&lt;psi;t|</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="o">.</span><span class="n">dual_class</span><span class="p">()</span>
+<span class="go">&lt;class &#39;sympy.physics.quantum.state.TimeDepBra&#39;&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.state.Wavefunction">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.state.</tt><tt class="descname">Wavefunction</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for representations in continuous bases</p>
+<p>This class takes an expression and coordinates in its constructor. It can
+be used to easily calculate normalizations and probabilities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : Expr</p>
+<blockquote>
+<div><p>The expression representing the functional form of the w.f.</p>
+</div></blockquote>
+<p><strong>coords</strong> : Symbol or tuple</p>
+<blockquote class="last">
+<div><p>The coordinates to be integrated over, and their bounds</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Particle in a box, specifying bounds in the more primitive way of using
+Piecewise:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">N</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Piecewise</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">L</span><span class="p">),</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">//</span><span class="n">L</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">L</span><span class="p">),</span> <span class="bp">True</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">norm</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">is_normalized</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">prob</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="p">(</span><span class="mf">0.85</span><span class="o">*</span><span class="n">L</span><span class="p">)</span>
+<span class="go">2*sin(0.85*pi)**2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="p">(</span><span class="n">p</span><span class="p">(</span><span class="mf">0.85</span><span class="o">*</span><span class="n">L</span><span class="p">))</span>
+<span class="go">0.412214747707527</span>
+</pre></div>
+</div>
+<p>Additionally, you can specify the bounds of the function and the indices in
+a more compact way:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">diff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,L&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">L</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">L</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">norm</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">L</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">L</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">sqrt(2)*sin(pi*n*(L - 1)/L)/sqrt(L)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mf">0.85</span><span class="p">)</span>
+<span class="go">sqrt(2)*sin(0.85*pi*n/L)/sqrt(L)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">L</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">sqrt(2)*sin(0.85*pi)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">is_commutative</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>All arguments are automatically sympified, so you can define the variables
+as strings rather than symbols:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">&lt;class &#39;sympy.core.symbol.Symbol&#39;&gt;</span>
+</pre></div>
+</div>
+<p>Derivatives of Wavefunctions will return Wavefunctions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">Wavefunction(2*x, x)</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.Wavefunction.expr">
+<tt class="descname">expr</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the expression which is the functional form of the Wavefunction</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x, y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">expr</span>
+<span class="go">x**2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.Wavefunction.is_commutative">
+<tt class="descname">is_commutative</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.is_commutative"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.is_commutative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override Function&#8217;s is_commutative so that order is preserved in
+represented expressions</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.Wavefunction.is_normalized">
+<tt class="descname">is_normalized</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.is_normalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.is_normalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the Wavefunction is properly normalized</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,L&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">L</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">L</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">is_normalized</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.Wavefunction.limits">
+<tt class="descname">limits</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.limits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the limits of the coordinates which the w.f. depends on If no
+limits are specified, defaults to <tt class="docutils literal"><span class="pre">(-oo,</span> <span class="pre">oo)</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x, y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">limits</span>
+<span class="go">{x: (0, 1)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">limits</span>
+<span class="go">{x: (-oo, oo)}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">limits</span>
+<span class="go">{x: (-oo, oo), y: (-1, 2)}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.Wavefunction.norm">
+<tt class="descname">norm</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the normalization of the specified functional form.</p>
+<p>This function integrates over the coordinates of the Wavefunction, with
+the bounds specified.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,L&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">L</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">L</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">norm</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">L</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">norm</span>
+<span class="go">sqrt(2)*sqrt(L)/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.state.Wavefunction.normalize">
+<tt class="descname">normalize</tt><big>(</big><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a normalized version of the Wavefunction</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;L&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">L</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span>
+<span class="go">Wavefunction(sqrt(2)*sin(pi*n*x/L)/sqrt(L), (x, 0, L))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.state.Wavefunction.prob">
+<tt class="descname">prob</tt><big>(</big><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.prob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.prob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the absolute magnitude of the w.f., <span class="math">\(|\psi(x)|^2\)</span></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,L&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="n">L</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">prob</span><span class="p">()</span>
+<span class="go">Wavefunction(sin(pi*n*x/L)**2, x)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.state.Wavefunction.variables">
+<tt class="descname">variables</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/state.html#Wavefunction.variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.state.Wavefunction.variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the coordinates which the wavefunction depends on</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Wavefunction</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">variables</span>
+<span class="go">(x, y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Wavefunction</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">variables</span>
+<span class="go">(x,)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="spin.html"
+                        title="previous chapter">Spin</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="circuitplot.html"
+                        title="next chapter">Circuit Plot</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/state.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="circuitplot.html" title="Circuit Plot"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="spin.html" title="Spin"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

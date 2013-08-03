@@ -1,0 +1,565 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.special.tensor_functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.special.tensor_functions</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Integer</span>
+<span class="kn">from</span> <span class="nn">sympy.core.mul</span> <span class="kn">import</span> <span class="n">prod</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="p">(</span><span class="n">has_dups</span><span class="p">,</span> <span class="n">default_sort_key</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">###################### Kronecker Delta, Levi-Civita etc. ######################</span>
+<span class="c">###############################################################################</span>
+
+
+<div class="viewcode-block" id="Eijk"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.Eijk">[docs]</a><span class="k">def</span> <span class="nf">Eijk</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represent the Levi-Civita symbol.</span>
+
+<span class="sd">    This is just compatibility wrapper to ``LeviCivita()``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    LeviCivita</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">LeviCivita</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="eval_levicivita"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.eval_levicivita">[docs]</a><span class="k">def</span> <span class="nf">eval_levicivita</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluate Levi-Civita symbol.&quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorial</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prod</span><span class="p">(</span>
+        <span class="n">prod</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="o">/</span> <span class="n">factorial</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="c"># converting factorial(i) to int is slightly faster</span>
+
+</div>
+<div class="viewcode-block" id="LeviCivita"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.LeviCivita">[docs]</a><span class="k">class</span> <span class="nc">LeviCivita</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represent the Levi-Civita symbol.</span>
+
+<span class="sd">    For even permutations of indices it returns 1, for odd permutations -1, and</span>
+<span class="sd">    for everything else (a repeated index) it returns 0.</span>
+
+<span class="sd">    Thus it represents an alternating pseudotensor.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import LeviCivita</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import i, j, k</span>
+<span class="sd">    &gt;&gt;&gt; LeviCivita(1, 2, 3)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; LeviCivita(1, 3, 2)</span>
+<span class="sd">    -1</span>
+<span class="sd">    &gt;&gt;&gt; LeviCivita(1, 2, 2)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; LeviCivita(i, j, k)</span>
+<span class="sd">    LeviCivita(i, j, k)</span>
+<span class="sd">    &gt;&gt;&gt; LeviCivita(i, j, i)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Eijk</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_integer</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">Integer</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">eval_levicivita</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_dups</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">eval_levicivita</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="KroneckerDelta"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta">[docs]</a><span class="k">class</span> <span class="nc">KroneckerDelta</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The discrete, or Kronecker, delta function.</span>
+
+<span class="sd">    A function that takes in two integers `i` and `j`. It returns `0` if `i` and `j` are</span>
+<span class="sd">    not equal or it returns `1` if `i` and `j` are equal.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    i : Number, Symbol</span>
+<span class="sd">        The first index of the delta function.</span>
+<span class="sd">    j : Number, Symbol</span>
+<span class="sd">        The second index of the delta function.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    A simple example with integer indices::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(1, 2)</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(3, 3)</span>
+<span class="sd">        1</span>
+
+<span class="sd">    Symbolic indices::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import i, j, k</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, j)</span>
+<span class="sd">        KroneckerDelta(i, j)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, i)</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, i + 1)</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, i + 1 + k)</span>
+<span class="sd">        KroneckerDelta(i, i + k + 1)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    eval</span>
+<span class="sd">    sympy.functions.special.delta_functions.DiracDelta</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Kronecker_delta</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="n">is_integer</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="KroneckerDelta.eval"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.eval">[docs]</a>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates the discrete delta function.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import i, j, k</span>
+
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, j)</span>
+<span class="sd">        KroneckerDelta(i, j)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, i)</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, i + 1)</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, i + 1 + k)</span>
+<span class="sd">        KroneckerDelta(i, i + k + 1)</span>
+
+<span class="sd">        # indirect doctest</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;</span> <span class="n">j</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+        <span class="n">diff</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Abs</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="n">j</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">diff</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="k">elif</span> <span class="n">diff</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">diff</span><span class="o">.</span><span class="n">is_nonzero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">diff</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="n">j</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">j</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">)</span> <span class="ow">and</span> \
+                <span class="n">i</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="c"># to make KroneckerDelta canonical</span>
+        <span class="c"># following lines will check if inputs are in order</span>
+        <span class="c"># if not, will return KroneckerDelta with correct order</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expt</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="n">expt</span><span class="o">.</span><span class="n">is_negative</span> <span class="ow">and</span> <span class="ow">not</span> <span class="o">-</span><span class="n">expt</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="bp">self</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KroneckerDelta.is_above_fermi"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.is_above_fermi">[docs]</a>    <span class="k">def</span> <span class="nf">is_above_fermi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if Delta can be non-zero above fermi</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, above_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Symbol(&#39;i&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; p = Symbol(&#39;p&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; q = Symbol(&#39;q&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, a).is_above_fermi</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, i).is_above_fermi</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, q).is_above_fermi</span>
+<span class="sd">        True</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        is_below_fermi, is_only_below_fermi, is_only_above_fermi</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KroneckerDelta.is_below_fermi"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.is_below_fermi">[docs]</a>    <span class="k">def</span> <span class="nf">is_below_fermi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if Delta can be non-zero below fermi</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, above_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Symbol(&#39;i&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; p = Symbol(&#39;p&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; q = Symbol(&#39;q&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, a).is_below_fermi</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, i).is_below_fermi</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, q).is_below_fermi</span>
+<span class="sd">        True</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        is_above_fermi, is_only_above_fermi, is_only_below_fermi</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KroneckerDelta.is_only_above_fermi"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.is_only_above_fermi">[docs]</a>    <span class="k">def</span> <span class="nf">is_only_above_fermi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if Delta is restricted to above fermi</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, above_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Symbol(&#39;i&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; p = Symbol(&#39;p&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; q = Symbol(&#39;q&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, a).is_only_above_fermi</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, q).is_only_above_fermi</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, i).is_only_above_fermi</span>
+<span class="sd">        False</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        is_above_fermi, is_below_fermi, is_only_below_fermi</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">)</span>
+                <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">)</span>
+                <span class="p">)</span> <span class="ow">or</span> <span class="bp">False</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KroneckerDelta.is_only_below_fermi"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.is_only_below_fermi">[docs]</a>    <span class="k">def</span> <span class="nf">is_only_below_fermi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        True if Delta is restricted to below fermi</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, above_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Symbol(&#39;i&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; p = Symbol(&#39;p&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; q = Symbol(&#39;q&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, i).is_only_below_fermi</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, q).is_only_below_fermi</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, a).is_only_below_fermi</span>
+<span class="sd">        False</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        is_above_fermi, is_below_fermi, is_only_above_fermi</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">)</span>
+                <span class="ow">or</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">)</span>
+                <span class="p">)</span> <span class="ow">or</span> <span class="bp">False</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KroneckerDelta.indices_contain_equal_information"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.indices_contain_equal_information">[docs]</a>    <span class="k">def</span> <span class="nf">indices_contain_equal_information</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if indices are either both above or below fermi.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, above_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Symbol(&#39;i&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; p = Symbol(&#39;p&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; q = Symbol(&#39;q&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, q).indices_contain_equal_information</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, q+1).indices_contain_equal_information</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, p).indices_contain_equal_information</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="c"># if both indices are general we are True, else false</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_below_fermi</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_above_fermi</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KroneckerDelta.preferred_index"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.preferred_index">[docs]</a>    <span class="k">def</span> <span class="nf">preferred_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the index which is preferred to keep in the final expression.</span>
+
+<span class="sd">        The preferred index is the index with more information regarding fermi</span>
+<span class="sd">        level.  If indices contain same information, &#39;a&#39; is preferred before</span>
+<span class="sd">        &#39;b&#39;.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, above_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Symbol(&#39;i&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; j = Symbol(&#39;j&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; p = Symbol(&#39;p&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, i).preferred_index</span>
+<span class="sd">        i</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, a).preferred_index</span>
+<span class="sd">        a</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, j).preferred_index</span>
+<span class="sd">        i</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        killable_index</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_preferred_index</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="KroneckerDelta.killable_index"><a class="viewcode-back" href="../../../../modules/functions/special.html#sympy.functions.special.tensor_functions.KroneckerDelta.killable_index">[docs]</a>    <span class="k">def</span> <span class="nf">killable_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the index which is preferred to substitute in the final</span>
+<span class="sd">        expression.</span>
+
+<span class="sd">        The index to substitute is the index with less information regarding</span>
+<span class="sd">        fermi level.  If indices contain same information, &#39;a&#39; is preferred</span>
+<span class="sd">        before &#39;b&#39;.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.functions.special.tensor_functions import KroneckerDelta</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; a = Symbol(&#39;a&#39;, above_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; i = Symbol(&#39;i&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; j = Symbol(&#39;j&#39;, below_fermi=True)</span>
+<span class="sd">        &gt;&gt;&gt; p = Symbol(&#39;p&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, i).killable_index</span>
+<span class="sd">        p</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(p, a).killable_index</span>
+<span class="sd">        p</span>
+<span class="sd">        &gt;&gt;&gt; KroneckerDelta(i, j).killable_index</span>
+<span class="sd">        j</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        preferred_index</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_preferred_index</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_preferred_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the index which is preferred to keep in the final expression.</span>
+
+<span class="sd">        The preferred index is the index with more information regarding fermi</span>
+<span class="sd">        level.  If indices contain same information, index 0 is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_above_fermi</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;below_fermi&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_below_fermi</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">assumptions0</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;above_fermi&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_latex_no_arg</span><span class="p">(</span><span class="n">printer</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">r&#39;\delta&#39;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

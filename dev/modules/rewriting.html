@@ -1,0 +1,239 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Term rewriting &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Series Expansions" href="series.html" />
+    <link rel="prev" title="Sets" href="assumptions/handlers/sets.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="series.html" title="Series Expansions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="assumptions/handlers/sets.html" title="Sets"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="term-rewriting">
+<h1>Term rewriting<a class="headerlink" href="#term-rewriting" title="Permalink to this headline">¶</a></h1>
+<p>Term rewriting is a very general class of functionalities which are used to
+convert expressions of one type in terms of expressions of different kind. For
+example expanding, combining and converting expressions apply to term
+rewriting, and also simplification routines can be included here. Currently
+SymPy has several functions and basic built-in methods for performing various
+types of rewriting.</p>
+<div class="section" id="expanding">
+<h2>Expanding<a class="headerlink" href="#expanding" title="Permalink to this headline">¶</a></h2>
+<p>The simplest rewrite rule is expanding expressions into a _sparse_ form.
+Expanding has several flavors and include expanding complex valued expressions,
+arithmetic expand of products and powers but also expanding functions in terms
+of more general functions is possible. Below are listed all currently available
+expand rules.</p>
+<dl class="docutils">
+<dt>Expanding of arithmetic expressions involving products and powers:</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x,y,z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">basic</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x**2 - y**2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">basic</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x**2 + 2*x*y + 2*x*z + y**2 + 2*y*z + z**2</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>Arithmetic expand is done by default in <tt class="docutils literal"><span class="pre">expand()</span></tt> so the keyword <tt class="docutils literal"><span class="pre">basic</span></tt> can
+be omitted. However you can set <tt class="docutils literal"><span class="pre">basic=False</span></tt> to avoid this type of expand if
+you use rules described below. This give complete control on what is done with
+the expression.</p>
+<p>Another type of expand rule is expanding complex valued expressions and putting
+them into a normal form. For this <tt class="docutils literal"><span class="pre">complex</span></tt> keyword is used. Note that it will
+always perform arithmetic expand to obtain the desired normal form:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="nb">complex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">re(x) + I*re(y) + I*im(x) - im(y)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sin</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="nb">complex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">sin(re(x) - im(y))*cosh(re(y) + im(x)) + I*cos(re(x) - im(y))*sinh(re(y) + im(x))</span>
+</pre></div>
+</div>
+<p>Note also that the same behavior can be obtained by using <tt class="docutils literal"><span class="pre">as_real_imag()</span></tt>
+method. However it will return a tuple containing the real part in the first
+place and the imaginary part in the other. This can be also done in a two step
+process by using <tt class="docutils literal"><span class="pre">collect</span></tt> function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()</span>
+<span class="go">(re(x) - im(y), re(y) + im(x))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">collect</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="n">I</span><span class="o">*</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="nb">complex</span><span class="o">=</span><span class="bp">True</span><span class="p">),</span> <span class="n">I</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">{1: re(x) - im(y), I: re(y) + im(x)}</span>
+</pre></div>
+</div>
+<p>There is also possibility for expanding expressions in terms of expressions of
+different kind. This is very general type of expanding and usually you would
+use <tt class="docutils literal"><span class="pre">rewrite()</span></tt> to do specific type of rewrite:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">GoldenRatio</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">1/2 + sqrt(5)/2</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-sympy.simplify.cse_main">
+<span id="common-subexpression-detection-and-collection"></span><h2>Common Subexpression Detection and Collection<a class="headerlink" href="#module-sympy.simplify.cse_main" title="Permalink to this headline">¶</a></h2>
+<p>Before evaluating a large expression, it is often useful to identify common
+subexpressions, collect them and evaluate them at once. This is implemented
+in the <tt class="docutils literal"><span class="pre">cse</span></tt> function. Examples:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cse</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">cse</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">⎛    ⎡  ________⎤⎞</span>
+<span class="go">⎝[], ⎣╲╱ sin(x) ⎦⎠</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">cse</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="mi">5</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="mi">4</span><span class="p">)),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">⎛                ⎡  ________   ________⎤⎞</span>
+<span class="go">⎝[(x₀, sin(x))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">cse</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">5</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">y</span><span class="p">))</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">y</span><span class="p">))),</span>
+<span class="gp">... </span>    <span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">⎛                             ⎡  ________   ________⎤⎞</span>
+<span class="go">⎝[(x₀, sin(x + 1) + cos(y))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">cse</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">-</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">sqrt</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">-</span><span class="n">y</span><span class="p">))),</span> <span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">⎛                          ⎡  ____     ⎤⎞</span>
+<span class="go">⎝[(x₀, -(x - y)⋅(y - z))], ⎣╲╱ x₀  + x₀⎦⎠</span>
+</pre></div>
+</div>
+<p>More information:</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Term rewriting</a><ul>
+<li><a class="reference internal" href="#expanding">Expanding</a></li>
+<li><a class="reference internal" href="#module-sympy.simplify.cse_main">Common Subexpression Detection and Collection</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="assumptions/handlers/sets.html"
+                        title="previous chapter">Sets</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="series.html"
+                        title="next chapter">Series Expansions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/rewriting.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="series.html" title="Series Expansions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="assumptions/handlers/sets.html" title="Sets"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

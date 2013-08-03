@@ -1,0 +1,670 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.elementary.piecewise &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.elementary.piecewise</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Expr</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Equality</span><span class="p">,</span> <span class="n">Relational</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">Max</span><span class="p">,</span> <span class="n">Min</span>
+<span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">And</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">,</span> <span class="n">distribute_and_over_or</span><span class="p">,</span> <span class="n">Not</span><span class="p">,</span> <span class="n">Or</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">default_sort_key</span><span class="p">,</span> <span class="nb">xrange</span>
+
+
+<div class="viewcode-block" id="ExprCondPair"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.piecewise.ExprCondPair">[docs]</a><span class="k">class</span> <span class="nc">ExprCondPair</span><span class="p">(</span><span class="n">Tuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an expression, condition pair.&quot;&quot;&quot;</span>
+
+    <span class="n">true_sentinel</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;True&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">cond</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="n">ExprCondPair</span><span class="o">.</span><span class="n">true_sentinel</span>
+        <span class="k">return</span> <span class="n">Tuple</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="ExprCondPair.expr"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.piecewise.ExprCondPair.expr">[docs]</a>    <span class="k">def</span> <span class="nf">expr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the expression of this pair.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="ExprCondPair.cond"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.piecewise.ExprCondPair.cond">[docs]</a>    <span class="k">def</span> <span class="nf">cond</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the condition of this pair.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">ExprCondPair</span><span class="o">.</span><span class="n">true_sentinel</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="ExprCondPair.free_symbols"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.piecewise.ExprCondPair.free_symbols">[docs]</a>    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the free symbols of this pair.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Overload Basic.free_symbols because self.args[1] may contain non-Basic</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">free_symbols</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cond</span><span class="p">,</span> <span class="s">&#39;free_symbols&#39;</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">|=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond</span><span class="o">.</span><span class="n">free_symbols</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_commutative</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">expr</span>
+        <span class="k">yield</span> <span class="bp">self</span><span class="o">.</span><span class="n">cond</span>
+
+</div>
+<div class="viewcode-block" id="Piecewise"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.piecewise.Piecewise">[docs]</a><span class="k">class</span> <span class="nc">Piecewise</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a piecewise function.</span>
+
+<span class="sd">    Usage:</span>
+
+<span class="sd">      Piecewise( (expr,cond), (expr,cond), ... )</span>
+<span class="sd">        - Each argument is a 2-tuple defining a expression and condition</span>
+<span class="sd">        - The conds are evaluated in turn returning the first that is True.</span>
+<span class="sd">          If any of the evaluated conds are not determined explicitly False,</span>
+<span class="sd">          e.g. x &lt; 1, the function is returned in symbolic form.</span>
+<span class="sd">        - If the function is evaluated at a place where all conditions are False,</span>
+<span class="sd">          a ValueError exception will be raised.</span>
+<span class="sd">        - Pairs where the cond is explicitly False, will be removed.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">      &gt;&gt;&gt; from sympy import Piecewise, log</span>
+<span class="sd">      &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">      &gt;&gt;&gt; f = x**2</span>
+<span class="sd">      &gt;&gt;&gt; g = log(x)</span>
+<span class="sd">      &gt;&gt;&gt; p = Piecewise( (0, x&lt;-1), (f, x&lt;=1), (g, True))</span>
+<span class="sd">      &gt;&gt;&gt; p.subs(x,1)</span>
+<span class="sd">      1</span>
+<span class="sd">      &gt;&gt;&gt; p.subs(x,5)</span>
+<span class="sd">      log(5)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    piecewise_fold</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">is_Piecewise</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="c"># (Try to) sympify args first</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ec</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">pair</span> <span class="o">=</span> <span class="n">ExprCondPair</span><span class="p">(</span><span class="o">*</span><span class="n">ec</span><span class="p">)</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="n">pair</span><span class="o">.</span><span class="n">cond</span>
+            <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">Relational</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s">&quot;Cond </span><span class="si">%s</span><span class="s"> is of type </span><span class="si">%s</span><span class="s">, but must be a Relational,&quot;</span>
+                    <span class="s">&quot; Boolean, or a built-in bool.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">cond</span><span class="p">)))</span>
+            <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;evaluate&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">newargs</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">r</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c"># Check for situations where we can evaluate the Piecewise object.</span>
+        <span class="c"># 1) Hit an unevaluable cond (e.g. x&lt;1) -&gt; keep object</span>
+        <span class="c"># 2) Hit a true condition -&gt; return that expr</span>
+        <span class="c"># 3) Remove false conditions, if no conditions left -&gt; raise ValueError</span>
+        <span class="n">all_conds_evaled</span> <span class="o">=</span> <span class="bp">True</span>    <span class="c"># Do all conds eval to a bool?</span>
+        <span class="n">piecewise_again</span> <span class="o">=</span> <span class="bp">False</span>    <span class="c"># Should we pass args to Piecewise again?</span>
+        <span class="n">non_false_ecpairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">or1</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">cond</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span> <span class="ow">in</span> <span class="n">args</span> <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="c"># Check here if expr is a Piecewise and collapse if one of</span>
+            <span class="c"># the conds in expr matches cond. This allows the collapsing</span>
+            <span class="c"># of Piecewise((Piecewise(x,x&lt;0),x&lt;0)) to Piecewise((x,x&lt;0)).</span>
+            <span class="c"># This is important when using piecewise_fold to simplify</span>
+            <span class="c"># multiple Piecewise instances having the same conds.</span>
+            <span class="c"># Eventually, this code should be able to collapse Piecewise&#39;s</span>
+            <span class="c"># having different intervals, but this will probably require</span>
+            <span class="c"># using the new assumptions.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">):</span>
+                <span class="n">or2</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                    <span class="c"># Don&#39;t collapse if cond is &quot;True&quot; as this leads to</span>
+                    <span class="c"># incorrect simplifications with nested Piecewises.</span>
+                    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="n">cond</span> <span class="ow">and</span> <span class="p">(</span><span class="n">or1</span> <span class="o">==</span> <span class="n">or2</span> <span class="ow">or</span> <span class="n">cond</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">):</span>
+                        <span class="n">expr</span> <span class="o">=</span> <span class="n">e</span>
+                        <span class="n">piecewise_again</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">cond_eval</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">cond</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cond_eval</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">all_conds_evaled</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">elif</span> <span class="n">cond_eval</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">all_conds_evaled</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">expr</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_false_ecpairs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">non_false_ecpairs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cond</span> <span class="o">==</span> <span class="n">cond</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">elif</span> <span class="n">non_false_ecpairs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">expr</span> <span class="o">==</span> <span class="n">expr</span><span class="p">:</span>
+                    <span class="n">newcond</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">non_false_ecpairs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">cond</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">newcond</span><span class="p">,</span> <span class="p">(</span><span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">)):</span>
+                        <span class="n">newcond</span> <span class="o">=</span> <span class="n">distribute_and_over_or</span><span class="p">(</span><span class="n">newcond</span><span class="p">)</span>
+                    <span class="n">non_false_ecpairs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">ExprCondPair</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">newcond</span><span class="p">)</span>
+                    <span class="k">continue</span>
+            <span class="n">non_false_ecpairs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ExprCondPair</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">cond</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_false_ecpairs</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="ow">or</span> <span class="n">piecewise_again</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">*</span><span class="n">non_false_ecpairs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Piecewise.doit"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.piecewise.Piecewise.doit">[docs]</a>    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluate this piecewise function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;deep&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                    <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+            <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">e</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_as_leading_term</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">or</span> <span class="n">c</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">e</span><span class="o">.</span><span class="n">as_leading_term</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[(</span><span class="n">e</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(),</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[(</span><span class="n">e</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[(</span><span class="n">diff</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[(</span><span class="n">e</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">),</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_integral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.integrals</span> <span class="kn">import</span> <span class="n">integrate</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[(</span><span class="n">integrate</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates the function along the sym in a given interval ab&quot;&quot;&quot;</span>
+        <span class="c"># FIXME: Currently complex intervals are not supported.  A possible</span>
+        <span class="c"># replacement algorithm, discussed in issue 2128, can be found in the</span>
+        <span class="c"># following papers;</span>
+        <span class="c">#     http://portal.acm.org/citation.cfm?id=281649</span>
+        <span class="c">#     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&amp;rep=rep1&amp;type=pdf</span>
+
+        <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">b</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># In this case, it is just simple substitution</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Piecewise</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_eval_interval</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="n">mul</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">mul</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">intervals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_expr_cond</span><span class="p">(</span>
+                    <span class="n">sym</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="ow">in</span> <span class="n">intervals</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">lower</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="n">mid</span> <span class="o">=</span> <span class="n">lower</span>
+                        <span class="n">rep</span> <span class="o">=</span> <span class="n">b</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span>
+                        <span class="n">val</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_interval</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="n">mid</span> <span class="o">=</span> <span class="n">upper</span>
+                        <span class="n">rep</span> <span class="o">=</span> <span class="n">b</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span>
+                        <span class="n">val</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_interval</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;=</span> <span class="n">lower</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">upper</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="n">rep</span> <span class="o">=</span> <span class="n">b</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="p">(</span><span class="n">b</span> <span class="o">&lt;</span> <span class="n">lower</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="n">mid</span> <span class="o">=</span> <span class="n">lower</span>
+                        <span class="n">rep</span> <span class="o">=</span> <span class="n">a</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span> <span class="o">-</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+                        <span class="n">val</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_interval</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">mid</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="p">(</span><span class="n">b</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="n">mid</span> <span class="o">=</span> <span class="n">upper</span>
+                        <span class="n">rep</span> <span class="o">=</span> <span class="n">a</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">mid</span><span class="p">)</span> <span class="o">-</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+                        <span class="n">val</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_interval</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">mid</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="p">((</span><span class="n">b</span> <span class="o">&gt;=</span> <span class="n">lower</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">)</span> <span class="ow">and</span> <span class="p">((</span><span class="n">b</span> <span class="o">&lt;=</span> <span class="n">upper</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">):</span>
+                        <span class="n">rep</span> <span class="o">=</span> <span class="n">a</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                            <span class="sd">&quot;&quot;&quot;The evaluation of a Piecewise interval when both the lower</span>
+<span class="sd">                            and the upper limit are symbolic is not yet implemented.&quot;&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">rep</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                    <span class="n">e</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">e</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
+                        <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="n">c</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span>
+                            <span class="n">And</span><span class="p">(</span><span class="n">rep</span> <span class="o">&gt;=</span> <span class="n">intervals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">rep</span> <span class="o">&lt;=</span> <span class="n">intervals</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">])))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+
+        <span class="c"># Determine what intervals the expr,cond pairs affect.</span>
+        <span class="n">int_expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_expr_cond</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+        <span class="c"># Finally run through the intervals and sum the evaluation.</span>
+        <span class="n">ret_fun</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">int_a</span><span class="p">,</span> <span class="n">int_b</span><span class="p">,</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">int_expr</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">):</span>
+                <span class="c"># If we still have a Piecewise by now, _sort_expr_cond would</span>
+                <span class="c"># already have determined that its conditions are independent</span>
+                <span class="c"># of the integration variable, thus we just use substitution.</span>
+                <span class="n">ret_fun</span> <span class="o">+=</span> <span class="n">piecewise_fold</span><span class="p">(</span>
+                    <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">int_b</span><span class="p">))</span> <span class="o">-</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">Max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">int_a</span><span class="p">)))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ret_fun</span> <span class="o">+=</span> <span class="n">expr</span><span class="o">.</span><span class="n">_eval_interval</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">Max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">int_a</span><span class="p">),</span> <span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">int_b</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">mul</span> <span class="o">*</span> <span class="n">ret_fun</span>
+
+    <span class="k">def</span> <span class="nf">_sort_expr_cond</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sym</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">targetcond</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determine what intervals the expr, cond pairs affect.</span>
+
+<span class="sd">        1) If cond is True, then log it as default</span>
+<span class="sd">        1.1) Currently if cond can&#39;t be evaluated, throw NotImplementedError.</span>
+<span class="sd">        2) For each inequality, if previous cond defines part of the interval</span>
+<span class="sd">           update the new conds interval.</span>
+<span class="sd">           -  eg x &lt; 1, x &lt; 3 -&gt; [oo,1],[1,3] instead of [oo,1],[oo,3]</span>
+<span class="sd">        3) Sort the intervals to make it easier to find correct exprs</span>
+
+<span class="sd">        Under normal use, we return the expr,cond pairs in increasing order</span>
+<span class="sd">        along the real axis corresponding to the symbol sym.  If targetcond</span>
+<span class="sd">        is given, we return a list of (lowerbound, upperbound) pairs for</span>
+<span class="sd">        this condition.&quot;&quot;&quot;</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">int_expr</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">expr_cond</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">or_cond</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">or_intervals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">independent_expr_cond</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">Or</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">cond2</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">cond</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">):</span>
+                    <span class="n">expr_cond</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span> <span class="n">cond2</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">expr_cond</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span> <span class="n">cond</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">expr_cond</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">independent_expr_cond</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span> <span class="n">cond</span><span class="p">))</span>
+                <span class="n">default</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">independent_expr_cond</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">sym</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cond</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+                <span class="n">independent_expr_cond</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">expr</span><span class="p">,</span> <span class="n">cond</span><span class="p">))</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">And</span><span class="p">):</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+                <span class="n">upper</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                <span class="k">for</span> <span class="n">cond2</span> <span class="ow">in</span> <span class="n">cond</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">cond2</span><span class="o">.</span><span class="n">lts</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">sym</span><span class="p">):</span>
+                        <span class="n">upper</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="n">cond2</span><span class="o">.</span><span class="n">gts</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">cond2</span><span class="o">.</span><span class="n">gts</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">sym</span><span class="p">):</span>
+                        <span class="n">lower</span> <span class="o">=</span> <span class="n">Max</span><span class="p">(</span><span class="n">cond2</span><span class="o">.</span><span class="n">lts</span><span class="p">,</span> <span class="n">lower</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">cond</span><span class="o">.</span><span class="n">lts</span><span class="p">,</span> <span class="n">cond</span><span class="o">.</span><span class="n">gts</span>  <span class="c"># part 1: initialize with givens</span>
+                <span class="k">if</span> <span class="n">cond</span><span class="o">.</span><span class="n">lts</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">sym</span><span class="p">):</span>     <span class="c"># part 1a: expand the side ...</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>   <span class="c"># e.g. x &lt;= 0 ---&gt; -oo &lt;= 0</span>
+                <span class="k">elif</span> <span class="n">cond</span><span class="o">.</span><span class="n">gts</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">sym</span><span class="p">):</span>   <span class="c"># part 1a: ... that can be expanded</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>           <span class="c"># e.g. x &gt;= 0 ---&gt;  oo &gt;= 0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                        <span class="s">&quot;Unable to handle interval evaluation of expression.&quot;</span><span class="p">)</span>
+
+            <span class="c"># part 1b: Reduce (-)infinity to what was passed in.</span>
+            <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">Max</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">lower</span><span class="p">),</span> <span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">)):</span>
+                <span class="c"># Part 2: remove any interval overlap.  For any conflicts, the</span>
+                <span class="c"># iterval already there wins, and the incoming interval updates</span>
+                <span class="c"># its bounds accordingly.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">lower</span> <span class="o">&lt;</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="ow">and</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">lower</span> <span class="o">&gt;=</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="n">lower</span> <span class="o">=</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">lower</span> <span class="o">&gt;=</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">lower</span> <span class="o">==</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+                        <span class="n">lower</span> <span class="o">=</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="n">lower</span> <span class="o">&lt;</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="n">upper</span><span class="p">,</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">upper</span> <span class="o">&gt;</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="ow">and</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">upper</span> <span class="o">&lt;=</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">upper</span> <span class="o">=</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span> <span class="ow">and</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">upper</span> <span class="o">&lt;</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]):</span>
+                    <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">Max</span><span class="p">(</span><span class="n">upper</span><span class="p">,</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eval_cond</span><span class="p">(</span><span class="n">lower</span> <span class="o">&gt;=</span> <span class="n">upper</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>  <span class="c"># Is it still an interval?</span>
+                <span class="n">int_expr</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">expr</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="n">targetcond</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">targetcond</span><span class="p">,</span> <span class="n">Or</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cond</span> <span class="ow">in</span> <span class="n">targetcond</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">or_cond</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="n">or_cond</span><span class="p">,</span> <span class="n">cond</span><span class="p">)</span>
+                <span class="n">or_intervals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">or_cond</span> <span class="o">==</span> <span class="n">targetcond</span><span class="p">:</span>
+                    <span class="n">or_intervals</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                    <span class="k">return</span> <span class="n">or_intervals</span>
+
+        <span class="n">int_expr</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">sort_key</span><span class="p">(</span>
+        <span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">is_number</span> <span class="k">else</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="o">.</span><span class="n">sort_key</span><span class="p">())</span>
+        <span class="n">int_expr</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sort_key</span><span class="p">(</span>
+        <span class="p">)</span> <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_number</span> <span class="k">else</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="o">.</span><span class="n">sort_key</span><span class="p">())</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">MinMaxBase</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">Min</span><span class="p">)</span> <span class="ow">or</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+                    <span class="n">newval</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="o">*</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">newval</span>
+                    <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">newval</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">newval</span> <span class="o">=</span> <span class="n">Max</span><span class="p">(</span><span class="o">*</span><span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">int_expr</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">newval</span>
+                    <span class="n">int_expr</span><span class="p">[</span><span class="n">n</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">newval</span>
+
+        <span class="c"># Add holes to list of intervals if there is a default value,</span>
+        <span class="c"># otherwise raise a ValueError.</span>
+        <span class="n">holes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">curr_low</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="k">for</span> <span class="n">int_a</span><span class="p">,</span> <span class="n">int_b</span><span class="p">,</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">int_expr</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">curr_low</span> <span class="o">&lt;</span> <span class="n">int_a</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">holes</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">curr_low</span><span class="p">,</span> <span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">int_a</span><span class="p">),</span> <span class="n">default</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">curr_low</span> <span class="o">&gt;=</span> <span class="n">int_a</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">holes</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">curr_low</span><span class="p">,</span> <span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">int_a</span><span class="p">),</span> <span class="n">default</span><span class="p">])</span>
+            <span class="n">curr_low</span> <span class="o">=</span> <span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">int_b</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">curr_low</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">holes</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">curr_low</span><span class="p">),</span> <span class="n">b</span><span class="p">,</span> <span class="n">default</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">curr_low</span> <span class="o">&gt;=</span> <span class="n">b</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">holes</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">Min</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">curr_low</span><span class="p">),</span> <span class="n">b</span><span class="p">,</span> <span class="n">default</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">holes</span> <span class="ow">and</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">int_expr</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">holes</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">targetcond</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[(</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">holes</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">holes</span> <span class="ow">and</span> <span class="n">default</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Called interval evaluation over piecewise &quot;</span>
+                             <span class="s">&quot;function on undefined intervals </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span>
+                             <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">((</span><span class="n">h</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">holes</span><span class="p">]))</span>
+
+        <span class="k">return</span> <span class="n">int_expr</span>
+
+    <span class="k">def</span> <span class="nf">_eval_nseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">logx</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">ec</span><span class="o">.</span><span class="n">expr</span><span class="o">.</span><span class="n">_eval_nseries</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">logx</span><span class="p">),</span> <span class="n">ec</span><span class="o">.</span><span class="n">cond</span><span class="p">)</span> <span class="k">for</span> <span class="n">ec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[(</span><span class="n">e</span><span class="o">**</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Piecewise conditions may contain bool which are not of Basic type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+            <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[(</span><span class="n">e</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_eval_template_is_attr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_attr</span><span class="p">,</span> <span class="n">when_multiple</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">expr</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">is_attr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">a</span>
+            <span class="k">elif</span> <span class="n">b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">a</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">when_multiple</span>
+        <span class="k">return</span> <span class="n">b</span>
+
+    <span class="n">_eval_is_bounded</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span>
+        <span class="s">&#39;is_bounded&#39;</span><span class="p">,</span> <span class="n">when_multiple</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">_eval_is_complex</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_complex&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_even</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_even&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_imaginary</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span>
+        <span class="s">&#39;is_imaginary&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_integer</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_integer&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_irrational</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span>
+        <span class="s">&#39;is_irrational&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_negative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_negative&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_nonnegative</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span>
+        <span class="s">&#39;is_nonnegative&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_nonpositive</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span>
+        <span class="s">&#39;is_nonpositive&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_nonzero</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span>
+        <span class="s">&#39;is_nonzero&#39;</span><span class="p">,</span> <span class="n">when_multiple</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="n">_eval_is_odd</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_odd&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_polar</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_polar&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_positive</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_positive&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_real</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span><span class="s">&#39;is_real&#39;</span><span class="p">)</span>
+    <span class="n">_eval_is_zero</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_template_is_attr</span><span class="p">(</span>
+        <span class="s">&#39;is_zero&#39;</span><span class="p">,</span> <span class="n">when_multiple</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">__eval_cond</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">cond</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the truth value of the condition.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.solvers.solvers</span> <span class="kn">import</span> <span class="n">checksol</span>
+        <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">checksol</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="p">{},</span> <span class="n">minimal</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                <span class="c"># the equality is trivially solved</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">cond</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">cond</span><span class="o">.</span><span class="n">rhs</span>
+            <span class="k">if</span> <span class="n">diff</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">diff</span><span class="o">.</span><span class="n">is_zero</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+</div>
+<div class="viewcode-block" id="piecewise_fold"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.piecewise.piecewise_fold">[docs]</a><span class="k">def</span> <span class="nf">piecewise_fold</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes an expression containing a piecewise function and returns the</span>
+<span class="sd">    expression in piecewise form.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Piecewise, piecewise_fold, sympify as S</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; p = Piecewise((x, x &lt; 1), (1, S(1) &lt;= x))</span>
+<span class="sd">    &gt;&gt;&gt; piecewise_fold(x*p)</span>
+<span class="sd">    Piecewise((x**2, x &lt; 1), (x, 1 &lt;= x))</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Piecewise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">Piecewise</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">new_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">piecewise_fold</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">ExprCondPair</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ExprCondPair</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+    <span class="n">piecewise_args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">new_args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">):</span>
+            <span class="n">piecewise_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">piecewise_args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">piecewise_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">new_args</span> <span class="o">=</span> <span class="p">[(</span><span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">new_args</span><span class="p">[:</span><span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">+</span> <span class="n">new_args</span><span class="p">[</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])),</span> <span class="n">c</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">new_args</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Boolean</span><span class="p">):</span>
+            <span class="c"># If expr is Boolean, we must return some kind of PiecewiseBoolean.</span>
+            <span class="c"># This is constructed by means of Or, And and Not.</span>
+            <span class="c"># piecewise_fold(0 &lt; Piecewise( (sin(x), x&lt;0), (cos(x), True)))</span>
+            <span class="c"># can&#39;t return Piecewise((0 &lt; sin(x), x &lt; 0), (0 &lt; cos(x), True))</span>
+            <span class="c"># but instead Or(And(x &lt; 0, 0 &lt; sin(x)), And(0 &lt; cos(x), Not(x&lt;0)))</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">rtn</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">new_args</span><span class="p">:</span>
+                <span class="n">rtn</span> <span class="o">=</span> <span class="n">Or</span><span class="p">(</span><span class="n">rtn</span><span class="p">,</span> <span class="n">And</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Not</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">piecewise_args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">piecewise_fold</span><span class="p">(</span><span class="n">rtn</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">rtn</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">piecewise_args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">piecewise_fold</span><span class="p">(</span><span class="n">Piecewise</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

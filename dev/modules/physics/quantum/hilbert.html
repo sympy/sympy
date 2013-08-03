@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Hilbert Space &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Operator" href="operator.html" />
+    <link rel="prev" title="Cartesian Operators and States" href="cartesian.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="operator.html" title="Operator"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cartesian.html" title="Cartesian Operators and States"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.hilbert">
+<span id="hilbert-space"></span><h1>Hilbert Space<a class="headerlink" href="#module-sympy.physics.quantum.hilbert" title="Permalink to this headline">¶</a></h1>
+<p>Hilbert spaces for quantum mechanics.</p>
+<p>Authors:
+* Brian Granger
+* Matt Curry</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.hilbert.HilbertSpace">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.hilbert.</tt><tt class="descname">HilbertSpace</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/hilbert.html#HilbertSpace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.hilbert.HilbertSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>An abstract Hilbert space for quantum mechanics.</p>
+<p>In short, a Hilbert space is an abstract vector space that is complete
+with inner products defined <a class="reference internal" href="#r222">[R222]</a>.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r222" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R222]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Hilbert_space">http://en.wikipedia.org/wiki/Hilbert_space</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.hilbert</span> <span class="kn">import</span> <span class="n">HilbertSpace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span> <span class="o">=</span> <span class="n">HilbertSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span>
+<span class="go">H</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.hilbert.HilbertSpace.dimension">
+<tt class="descname">dimension</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/hilbert.html#HilbertSpace.dimension"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.hilbert.HilbertSpace.dimension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Hilbert dimension of the space.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.hilbert.ComplexSpace">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.hilbert.</tt><tt class="descname">ComplexSpace</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/hilbert.html#ComplexSpace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.hilbert.ComplexSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finite dimensional Hilbert space of complex vectors.</p>
+<p>The elements of this Hilbert space are n-dimensional complex valued
+vectors with the usual inner product that takes the complex conjugate
+of the vector on the right.</p>
+<p>A classic example of this type of Hilbert space is spin-1/2, which is
+<tt class="docutils literal"><span class="pre">ComplexSpace(2)</span></tt>. Generalizing to spin-s, the space is
+<tt class="docutils literal"><span class="pre">ComplexSpace(2*s+1)</span></tt>.  Quantum computing with N qubits is done with the
+direct product space <tt class="docutils literal"><span class="pre">ComplexSpace(2)**N</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.hilbert</span> <span class="kn">import</span> <span class="n">ComplexSpace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c1</span> <span class="o">=</span> <span class="n">ComplexSpace</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c1</span>
+<span class="go">C(2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c1</span><span class="o">.</span><span class="n">dimension</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c2</span> <span class="o">=</span> <span class="n">ComplexSpace</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c2</span>
+<span class="go">C(n)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c2</span><span class="o">.</span><span class="n">dimension</span>
+<span class="go">n</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.hilbert.L2">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.hilbert.</tt><tt class="descname">L2</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/hilbert.html#L2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.hilbert.L2" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Hilbert space of square integrable functions on an interval.</p>
+<p>An L2 object takes in a single sympy Interval argument which represents
+the interval its functions (vectors) are defined on.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.hilbert</span> <span class="kn">import</span> <span class="n">L2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span> <span class="o">=</span> <span class="n">L2</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">oo</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span>
+<span class="go">L2([0, oo))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span><span class="o">.</span><span class="n">dimension</span>
+<span class="go">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span><span class="o">.</span><span class="n">interval</span>
+<span class="go">[0, oo)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.hilbert.FockSpace">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.hilbert.</tt><tt class="descname">FockSpace</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/hilbert.html#FockSpace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.hilbert.FockSpace" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Hilbert space for second quantization.</p>
+<p>Technically, this Hilbert space is a infinite direct sum of direct
+products of single particle Hilbert spaces <a class="reference internal" href="#r223">[R223]</a>. This is a mess, so we have
+a class to represent it directly.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r223" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R223]</td><td><em>(<a class="fn-backref" href="#id3">1</a>, <a class="fn-backref" href="#id4">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Fock_space">http://en.wikipedia.org/wiki/Fock_space</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.hilbert</span> <span class="kn">import</span> <span class="n">FockSpace</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span> <span class="o">=</span> <span class="n">FockSpace</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span>
+<span class="go">F</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hs</span><span class="o">.</span><span class="n">dimension</span>
+<span class="go">oo</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="cartesian.html"
+                        title="previous chapter">Cartesian Operators and States</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="operator.html"
+                        title="next chapter">Operator</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/hilbert.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="operator.html" title="Operator"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cartesian.html" title="Cartesian Operators and States"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

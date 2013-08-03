@@ -1,0 +1,492 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.geometry.entity &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.geometry.entity</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;The definition of the base geometrical entity with attributes common to</span>
+<span class="sd">all derived geometrical entities.</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">GeometryEntity</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">is_sequence</span>
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">sympy.core.sympify</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+
+<span class="c"># How entities are ordered; used by __cmp__ in GeometryEntity</span>
+<span class="n">ordering_of_classes</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&quot;Point&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Segment&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Ray&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Line&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Triangle&quot;</span><span class="p">,</span>
+    <span class="s">&quot;RegularPolygon&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Polygon&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Circle&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Ellipse&quot;</span><span class="p">,</span>
+    <span class="s">&quot;Curve&quot;</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="GeometryEntity"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.entity.GeometryEntity">[docs]</a><span class="k">class</span> <span class="nc">GeometryEntity</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The base class for all geometrical entities.</span>
+
+<span class="sd">    This class doesn&#39;t represent any particular geometric entity, it only</span>
+<span class="sd">    provides the implementation of some methods common to all subclasses.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympy_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GeometryEntity.intersection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.entity.GeometryEntity.intersection">[docs]</a>    <span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of all of the intersections of self with o.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        An entity is not required to implement this method.</span>
+
+<span class="sd">        If two different types of entities can intersect, the item with</span>
+<span class="sd">        higher index in ordering_of_classes should implement</span>
+<span class="sd">        intersections with anything having a lower index.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.util.intersection</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="GeometryEntity.rotate"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.entity.GeometryEntity.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rotate ``angle`` radians counterclockwise about Point ``pt``.</span>
+
+<span class="sd">        The default pt is the origin, Point(0, 0)</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        scale, translate</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Point, RegularPolygon, Polygon, pi</span>
+<span class="sd">        &gt;&gt;&gt; t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)</span>
+<span class="sd">        &gt;&gt;&gt; t # vertex on x axis</span>
+<span class="sd">        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))</span>
+<span class="sd">        &gt;&gt;&gt; t.rotate(pi/2) # vertex on y axis now</span>
+<span class="sd">        Triangle(Point(0, 1), Point(-sqrt(3)/2, -1/2), Point(sqrt(3)/2, -1/2))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">GeometryEntity</span><span class="p">):</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="n">pt</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="GeometryEntity.scale"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.entity.GeometryEntity.scale">[docs]</a>    <span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scale the object by multiplying the x,y-coordinates by x and y.</span>
+
+<span class="sd">        If pt is given, the scaling is done relative to that point; the</span>
+<span class="sd">        object is shifted by -pt, scaled, and shifted by pt.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        rotate, translate</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import RegularPolygon, Point, Polygon</span>
+<span class="sd">        &gt;&gt;&gt; t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)</span>
+<span class="sd">        &gt;&gt;&gt; t</span>
+<span class="sd">        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))</span>
+<span class="sd">        &gt;&gt;&gt; t.scale(2)</span>
+<span class="sd">        Triangle(Point(2, 0), Point(-1, sqrt(3)/2), Point(-1, -sqrt(3)/2))</span>
+<span class="sd">        &gt;&gt;&gt; t.scale(2,2)</span>
+<span class="sd">        Triangle(Point(2, 0), Point(-1, sqrt(3)), Point(-1, -sqrt(3)))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.geometry.point</span> <span class="kn">import</span> <span class="n">Point</span>
+        <span class="k">if</span> <span class="n">pt</span><span class="p">:</span>
+            <span class="n">pt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">pt</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="o">*</span><span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>  <span class="c"># if this fails, override this class</span>
+</div>
+<div class="viewcode-block" id="GeometryEntity.translate"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.entity.GeometryEntity.translate">[docs]</a>    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Shift the object by adding to the x,y-coordinates the values x and y.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        rotate, scale</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import RegularPolygon, Point, Polygon</span>
+<span class="sd">        &gt;&gt;&gt; t = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)</span>
+<span class="sd">        &gt;&gt;&gt; t</span>
+<span class="sd">        Triangle(Point(1, 0), Point(-1/2, sqrt(3)/2), Point(-1/2, -sqrt(3)/2))</span>
+<span class="sd">        &gt;&gt;&gt; t.translate(2)</span>
+<span class="sd">        Triangle(Point(3, 0), Point(3/2, sqrt(3)/2), Point(3/2, -sqrt(3)/2))</span>
+<span class="sd">        &gt;&gt;&gt; t.translate(2, 2)</span>
+<span class="sd">        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2),</span>
+<span class="sd">            Point(3/2, -sqrt(3)/2 + 2))</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">GeometryEntity</span><span class="p">):</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">reflect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">atan</span><span class="p">,</span> <span class="n">Line</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">oo</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="n">line</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">l</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">y</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">y</span><span class="p">:</span>  <span class="c"># x-axis</span>
+                <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">y</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">reps</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Point</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="n">l</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">x</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="p">:</span>  <span class="c"># y-axis</span>
+                <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">x</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">reps</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">)))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Point</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s">&#39;reflect&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Point</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s">&#39;reflect undefined or non-Point args in </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">g</span><span class="p">)</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">atan</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">slope</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">coefficients</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="n">c</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c"># y-intercept</span>
+            <span class="c"># apply the transform to a single point</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(),</span> <span class="n">Dummy</span><span class="p">()</span>
+            <span class="n">xf</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">xf</span> <span class="o">=</span> <span class="n">xf</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">y</span><span class="o">=-</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">y</span><span class="o">=-</span><span class="mi">1</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="n">d</span><span class="p">)</span>
+            <span class="c"># replace every point using that transform</span>
+            <span class="n">reps</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">xf</span><span class="o">.</span><span class="n">xreplace</span><span class="p">({</span><span class="n">x</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="p">}))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Point</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">reps</span><span class="p">))</span>
+
+<div class="viewcode-block" id="GeometryEntity.encloses"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.entity.GeometryEntity.encloses">[docs]</a>    <span class="k">def</span> <span class="nf">encloses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if o is inside (not on or outside) the boundaries of self.</span>
+
+<span class="sd">        The object will be decomposed into Points and individual Entities need</span>
+<span class="sd">        only define an encloses_point method for their class.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.geometry.ellipse.Ellipse.encloses_point</span>
+<span class="sd">        sympy.geometry.polygon.Polygon.encloses_point</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import RegularPolygon, Point, Polygon</span>
+<span class="sd">        &gt;&gt;&gt; t  = Polygon(*RegularPolygon(Point(0, 0), 1, 3).vertices)</span>
+<span class="sd">        &gt;&gt;&gt; t2 = Polygon(*RegularPolygon(Point(0, 0), 2, 3).vertices)</span>
+<span class="sd">        &gt;&gt;&gt; t2.encloses(t)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; t.encloses(t2)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.geometry.point</span> <span class="kn">import</span> <span class="n">Point</span>
+        <span class="kn">from</span> <span class="nn">sympy.geometry.line</span> <span class="kn">import</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">Ray</span><span class="p">,</span> <span class="n">Line</span>
+        <span class="kn">from</span> <span class="nn">sympy.geometry.ellipse</span> <span class="kn">import</span> <span class="n">Ellipse</span>
+        <span class="kn">from</span> <span class="nn">sympy.geometry.polygon</span> <span class="kn">import</span> <span class="n">Polygon</span><span class="p">,</span> <span class="n">RegularPolygon</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encloses_point</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encloses_point</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">o</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Line</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Ellipse</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encloses_point</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">center</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">RegularPolygon</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">encloses_point</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">center</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encloses_point</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">o</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="GeometryEntity.is_similar"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.entity.GeometryEntity.is_similar">[docs]</a>    <span class="k">def</span> <span class="nf">is_similar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Is this geometrical entity similar to another geometrical entity?</span>
+
+<span class="sd">        Two entities are similar if a uniform scaling (enlarging or</span>
+<span class="sd">        shrinking) of one of the entities will allow one to obtain the other.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        This method is not intended to be used directly but rather</span>
+<span class="sd">        through the `are_similar` function found in util.py.</span>
+<span class="sd">        An entity is not required to implement this method.</span>
+<span class="sd">        If two different types of entities can be similar, it is only</span>
+<span class="sd">        required that one of them be able to determine this.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        scale</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test inequality of two geometrical entities.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rdiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String representation of a GeometryEntity.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.printing</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String representation of a GeometryEntity that can be evaluated</span>
+<span class="sd">        by sympy.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__cmp__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Comparison of two GeometryEntities.&quot;&quot;&quot;</span>
+        <span class="n">n1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="n">n2</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">n1</span> <span class="o">&gt;</span> <span class="n">n2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">n1</span> <span class="o">&lt;</span> <span class="n">n2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+        <span class="n">i1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__mro__</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i1</span> <span class="o">=</span> <span class="n">ordering_of_classes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">i1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i1</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">c</span>
+
+        <span class="n">i2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__mro__</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="n">ordering_of_classes</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">i2</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">c</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">i1</span> <span class="o">&gt;</span> <span class="n">i2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">i1</span> <span class="o">&lt;</span> <span class="n">i2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subclasses should implement this method for anything more complex than equality.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_eval_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.geometry.point</span> <span class="kn">import</span> <span class="n">Point</span>
+        <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">old</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">new</span><span class="p">):</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the matrix to translate a 2-D point by x and y.&quot;&quot;&quot;</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">rv</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="n">rv</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+    <span class="k">return</span> <span class="n">rv</span>
+
+
+<span class="k">def</span> <span class="nf">scale</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pt</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the matrix to multiply a 2-D point&#39;s coordinates by x and y.</span>
+
+<span class="sd">    If pt is given, the scaling is done relative to that point.&quot;&quot;&quot;</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">rv</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="n">rv</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">y</span>
+    <span class="k">if</span> <span class="n">pt</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sympy.geometry.point</span> <span class="kn">import</span> <span class="n">Point</span>
+        <span class="n">pt</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">pt</span><span class="p">)</span>
+        <span class="n">tr1</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="n">pt</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">tr2</span> <span class="o">=</span> <span class="n">translate</span><span class="p">(</span><span class="o">*</span><span class="n">pt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tr1</span><span class="o">*</span><span class="n">rv</span><span class="o">*</span><span class="n">tr2</span>
+    <span class="k">return</span> <span class="n">rv</span>
+
+
+<span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="n">th</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the matrix to rotate a 2-D point about the origin by ``angle``.</span>
+
+<span class="sd">    The angle is measured in radians. To Point a point about a point other</span>
+<span class="sd">    then the origin, translate the Point, do the rotation, and</span>
+<span class="sd">    translate it back:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry.entity import rotate, translate</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Point, pi</span>
+<span class="sd">    &gt;&gt;&gt; rot_about_11 = translate(-1, -1)*rotate(pi/2)*translate(1, 1)</span>
+<span class="sd">    &gt;&gt;&gt; Point(1, 1).transform(rot_about_11)</span>
+<span class="sd">    Point(1, 1)</span>
+<span class="sd">    &gt;&gt;&gt; Point(0, 0).transform(rot_about_11)</span>
+<span class="sd">    Point(2, 0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
+    <span class="n">rv</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">th</span><span class="p">)</span>
+    <span class="n">rv</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="n">rv</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">s</span>
+    <span class="n">rv</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">rv</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

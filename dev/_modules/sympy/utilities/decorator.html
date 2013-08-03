@@ -1,0 +1,309 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.utilities.decorator &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.utilities.decorator</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Useful utility decorators. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">types</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.decorators</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">class_types</span><span class="p">,</span> <span class="n">get_function_globals</span><span class="p">,</span> <span class="n">get_function_name</span><span class="p">,</span> <span class="n">iterable</span>
+
+<div class="viewcode-block" id="threaded_factory"><a class="viewcode-back" href="../../../modules/utilities/decorator.html#sympy.utilities.decorator.threaded_factory">[docs]</a><span class="k">def</span> <span class="nf">threaded_factory</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">use_add</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A factory for ``threaded`` decorators. &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">sympify</span>
+    <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">threaded_func</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">applyfunc</span><span class="p">(</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">func</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">iterable</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">([</span><span class="n">func</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">expr</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">use_add</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">func</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span> <span class="p">])</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Relational</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                                      <span class="n">func</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">threaded_func</span>
+
+</div>
+<div class="viewcode-block" id="threaded"><a class="viewcode-back" href="../../../modules/utilities/decorator.html#sympy.utilities.decorator.threaded">[docs]</a><span class="k">def</span> <span class="nf">threaded</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply ``func`` to sub--elements of an object, including :class:`Add`.</span>
+
+<span class="sd">    This decorator is intended to make it uniformly possible to apply a</span>
+<span class="sd">    function to all elements of composite objects, e.g. matrices, lists, tuples</span>
+<span class="sd">    and other iterable containers, or just expressions.</span>
+
+<span class="sd">    This version of :func:`threaded` decorator allows threading over</span>
+<span class="sd">    elements of :class:`Add` class. If this behavior is not desirable</span>
+<span class="sd">    use :func:`xthreaded` decorator.</span>
+
+<span class="sd">    Functions using this decorator must have the following signature::</span>
+
+<span class="sd">      @threaded</span>
+<span class="sd">      def function(expr, *args, **kwargs):</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">threaded_factory</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="xthreaded"><a class="viewcode-back" href="../../../modules/utilities/decorator.html#sympy.utilities.decorator.xthreaded">[docs]</a><span class="k">def</span> <span class="nf">xthreaded</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Apply ``func`` to sub--elements of an object, excluding :class:`Add`.</span>
+
+<span class="sd">    This decorator is intended to make it uniformly possible to apply a</span>
+<span class="sd">    function to all elements of composite objects, e.g. matrices, lists, tuples</span>
+<span class="sd">    and other iterable containers, or just expressions.</span>
+
+<span class="sd">    This version of :func:`threaded` decorator disallows threading over</span>
+<span class="sd">    elements of :class:`Add` class. If this behavior is not desirable</span>
+<span class="sd">    use :func:`threaded` decorator.</span>
+
+<span class="sd">    Functions using this decorator must have the following signature::</span>
+
+<span class="sd">      @xthreaded</span>
+<span class="sd">      def function(expr, *args, **kwargs):</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">threaded_factory</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="conserve_mpmath_dps"><a class="viewcode-back" href="../../../modules/utilities/decorator.html#sympy.utilities.decorator.conserve_mpmath_dps">[docs]</a><span class="k">def</span> <span class="nf">conserve_mpmath_dps</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;After the function finishes, resets the value of mpmath.mp.dps to</span>
+<span class="sd">    the value it had before the function was run.&quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">functools</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">mpmath</span>
+
+    <span class="k">def</span> <span class="nf">func_wrapper</span><span class="p">():</span>
+        <span class="n">dps</span> <span class="o">=</span> <span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">func</span><span class="p">()</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="n">dps</span>
+
+    <span class="n">func_wrapper</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">update_wrapper</span><span class="p">(</span><span class="n">func_wrapper</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">func_wrapper</span>
+
+</div>
+<div class="viewcode-block" id="no_attrs_in_subclass"><a class="viewcode-back" href="../../../modules/utilities/decorator.html#sympy.utilities.decorator.no_attrs_in_subclass">[docs]</a><span class="k">class</span> <span class="nc">no_attrs_in_subclass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Don&#39;t &#39;inherit&#39; certain attributes from a base class</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.decorator import no_attrs_in_subclass</span>
+
+<span class="sd">    &gt;&gt;&gt; class A(object):</span>
+<span class="sd">    ...     x = &#39;test&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; A.x = no_attrs_in_subclass(A, A.x)</span>
+
+<span class="sd">    &gt;&gt;&gt; class B(A):</span>
+<span class="sd">    ...     pass</span>
+
+<span class="sd">    &gt;&gt;&gt; hasattr(A, &#39;x&#39;)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; hasattr(B, &#39;x&#39;)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cls</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls</span> <span class="o">=</span> <span class="n">cls</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+
+    <span class="k">def</span> <span class="nf">__get__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">owner</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="s">&#39;__get__&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">__get__</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">owner</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+</div>
+<div class="viewcode-block" id="doctest_depends_on"><a class="viewcode-back" href="../../../modules/utilities/decorator.html#sympy.utilities.decorator.doctest_depends_on">[docs]</a><span class="k">def</span> <span class="nf">doctest_depends_on</span><span class="p">(</span><span class="n">exe</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">disable_viewers</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds metadata about the depenencies which need to be met for doctesting</span>
+<span class="sd">    the docstrings of the decorated objects.&quot;&quot;&quot;</span>
+    <span class="n">pyglet</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">modules</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="s">&#39;pyglet&#39;</span> <span class="ow">in</span> <span class="n">modules</span><span class="p">:</span>
+        <span class="n">pyglet</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">depends_on_deco</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+        <span class="n">fn</span><span class="o">.</span><span class="n">_doctest_depends_on</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">exe</span><span class="o">=</span><span class="n">exe</span><span class="p">,</span> <span class="n">modules</span><span class="o">=</span><span class="n">modules</span><span class="p">,</span>
+                                      <span class="n">disable_viewers</span><span class="o">=</span><span class="n">disable_viewers</span><span class="p">,</span>
+                                      <span class="n">pyglet</span><span class="o">=</span><span class="n">pyglet</span><span class="p">)</span>
+
+        <span class="c"># once we drop py2.5 support and use class decorators this evaluates</span>
+        <span class="c"># to True</span>
+        <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="n">fn</span><span class="o">.</span><span class="n">_doctest_depdends_on</span> <span class="o">=</span> <span class="n">no_attrs_in_subclass</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">fn</span><span class="o">.</span><span class="n">_doctest_depends_on</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span>
+    <span class="k">return</span> <span class="n">depends_on_deco</span>
+</div>
+<div class="viewcode-block" id="public"><a class="viewcode-back" href="../../../modules/utilities/decorator.html#sympy.utilities.decorator.public">[docs]</a><span class="k">def</span> <span class="nf">public</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Append ``obj``&#39;s name to global ``__all__`` variable (call site).</span>
+
+<span class="sd">    By using this decorator on functions or classes you achieve the same goal</span>
+<span class="sd">    as by filling ``__all__`` variables manually, you just don&#39;t have to repeat</span>
+<span class="sd">    your self (object&#39;s name). You also know if object is public at definition</span>
+<span class="sd">    site, not at some random location (where ``__all__`` was set).</span>
+
+<span class="sd">    Note that in multiple decorator setup, in almost all cases, ``@public``</span>
+<span class="sd">    decorator must be applied before any other decorators, because it relies</span>
+<span class="sd">    on the pointer to object&#39;s global namespace. If you apply other decorators</span>
+<span class="sd">    first, ``@public`` may end up modifying wrong namespace.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.utilities.decorator import public</span>
+
+<span class="sd">    &gt;&gt;&gt; __all__</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    NameError: name &#39;__all__&#39; is not defined</span>
+
+<span class="sd">    &gt;&gt;&gt; @public</span>
+<span class="sd">    ... def some_function():</span>
+<span class="sd">    ...     pass</span>
+
+<span class="sd">    &gt;&gt;&gt; __all__</span>
+<span class="sd">    [&#39;some_function&#39;]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">FunctionType</span><span class="p">):</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="n">get_function_globals</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">get_function_name</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="nb">type</span><span class="p">),</span> <span class="n">class_types</span><span class="p">)):</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">__module__</span><span class="p">]</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">__name__</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;expected a function or a class, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">obj</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">&quot;__all__&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ns</span><span class="p">:</span>
+        <span class="n">ns</span><span class="p">[</span><span class="s">&quot;__all__&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ns</span><span class="p">[</span><span class="s">&quot;__all__&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">obj</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

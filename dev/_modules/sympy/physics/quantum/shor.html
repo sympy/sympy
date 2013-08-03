@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.shor &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.shor</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Shor&#39;s algorithm and helper functions.</span>
+
+<span class="sd">Todo:</span>
+
+<span class="sd">* Get the CMod gate working again using the new Gate API.</span>
+<span class="sd">* Fix everything.</span>
+<span class="sd">* Update docstrings and reformat.</span>
+<span class="sd">* Remove print statements. We may want to think about a better API for this.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">igcd</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">variations</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.gate</span> <span class="kn">import</span> <span class="n">Gate</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qubit</span> <span class="kn">import</span> <span class="n">Qubit</span><span class="p">,</span> <span class="n">measure_partial_oneshot</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qapply</span> <span class="kn">import</span> <span class="n">qapply</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qft</span> <span class="kn">import</span> <span class="n">QFT</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.qexpr</span> <span class="kn">import</span> <span class="n">QuantumError</span>
+
+
+<span class="k">class</span> <span class="nc">OrderFindingException</span><span class="p">(</span><span class="n">QuantumError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="CMod"><a class="viewcode-back" href="../../../../modules/physics/quantum/shor.html#sympy.physics.quantum.shor.CMod">[docs]</a><span class="k">class</span> <span class="nc">CMod</span><span class="p">(</span><span class="n">Gate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A controlled mod gate.</span>
+
+<span class="sd">    This is black box controlled Mod function for use by shor&#39;s algorithm.</span>
+<span class="sd">    TODO implement a decompose property that returns how to do this in terms</span>
+<span class="sd">    of elementary gates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_args</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="c"># t = args[0]</span>
+        <span class="c"># a = args[1]</span>
+        <span class="c"># N = args[2]</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;The CMod gate has not been completed.&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CMod.t"><a class="viewcode-back" href="../../../../modules/physics/quantum/shor.html#sympy.physics.quantum.shor.CMod.t">[docs]</a>    <span class="k">def</span> <span class="nf">t</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Size of 1/2 input register.  First 1/2 holds output.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CMod.a"><a class="viewcode-back" href="../../../../modules/physics/quantum/shor.html#sympy.physics.quantum.shor.CMod.a">[docs]</a>    <span class="k">def</span> <span class="nf">a</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Base of the controlled mod function.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="CMod.N"><a class="viewcode-back" href="../../../../modules/physics/quantum/shor.html#sympy.physics.quantum.shor.CMod.N">[docs]</a>    <span class="k">def</span> <span class="nf">N</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;N is the type of modular arithmetic we are doing.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_apply_operator_Qubit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qubits</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            This directly calculates the controlled mod of the second half of</span>
+<span class="sd">            the register and puts it in the second</span>
+<span class="sd">            This will look pretty when we get Tensor Symbolically working</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c"># Determine the value stored in high memory.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">):</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="n">n</span><span class="o">*</span><span class="n">qubits</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="mi">2</span>
+
+        <span class="c"># The value to go in low memory will be out.</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">**</span><span class="n">k</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
+
+        <span class="c"># Create array for new qbit-ket which will have high memory unaffected</span>
+        <span class="n">outarray</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">qubits</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">])</span>
+
+        <span class="c"># Place out in low memory</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t</span><span class="p">)):</span>
+            <span class="n">outarray</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">out</span> <span class="o">&gt;&gt;</span> <span class="n">i</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Qubit</span><span class="p">(</span><span class="o">*</span><span class="n">outarray</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="shor"><a class="viewcode-back" href="../../../../modules/physics/quantum/shor.html#sympy.physics.quantum.shor.shor">[docs]</a><span class="k">def</span> <span class="nf">shor</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This function implements Shor&#39;s factoring algorithm on the Integer N</span>
+
+<span class="sd">    The algorithm starts by picking a random number (a) and seeing if it is</span>
+<span class="sd">    coprime with N. If it isn&#39;t, then the gcd of the two numbers is a factor</span>
+<span class="sd">    and we are done. Otherwise, it begins the period_finding subroutine which</span>
+<span class="sd">    finds the period of a in modulo N arithmetic. This period, if even, can</span>
+<span class="sd">    be used to calculate factors by taking a**(r/2)-1 and a**(r/2)+1.</span>
+<span class="sd">    These values are returned.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="n">igcd</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;got lucky with rand&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">igcd</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;a= &quot;</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;N= &quot;</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">period_find</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;r= &quot;</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;r is not even, begin again&quot;</span><span class="p">)</span>
+        <span class="n">shor</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+    <span class="n">answer</span> <span class="o">=</span> <span class="p">(</span><span class="n">igcd</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="p">(</span><span class="n">r</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">igcd</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="p">(</span><span class="n">r</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">answer</span>
+
+</div>
+<span class="k">def</span> <span class="nf">getr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+    <span class="n">fraction</span> <span class="o">=</span> <span class="n">continued_fraction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="c"># Now convert into r</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="n">ratioize</span><span class="p">(</span><span class="n">fraction</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">total</span>
+
+
+<span class="k">def</span> <span class="nf">ratioize</span><span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">N</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">ratioize</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">N</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="continued_fraction"><a class="viewcode-back" href="../../../../modules/physics/quantum/shor.html#sympy.physics.quantum.shor.continued_fraction">[docs]</a><span class="k">def</span> <span class="nf">continued_fraction</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This applies the continued fraction expansion to two numbers x/y</span>
+
+<span class="sd">    x is the numerator and y is the denominator</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.physics.quantum.shor import continued_fraction</span>
+<span class="sd">    &gt;&gt;&gt; continued_fraction(3, 8)</span>
+<span class="sd">    [0, 2, 1, 2]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">x</span><span class="o">//</span><span class="n">y</span>
+    <span class="k">if</span> <span class="n">temp</span><span class="o">*</span><span class="n">y</span> <span class="o">==</span> <span class="n">x</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">temp</span><span class="p">,</span> <span class="p">]</span>
+
+    <span class="nb">list</span> <span class="o">=</span> <span class="n">continued_fraction</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">temp</span><span class="o">*</span><span class="n">y</span><span class="p">)</span>
+    <span class="nb">list</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span>
+
+</div>
+<div class="viewcode-block" id="period_find"><a class="viewcode-back" href="../../../../modules/physics/quantum/shor.html#sympy.physics.quantum.shor.period_find">[docs]</a><span class="k">def</span> <span class="nf">period_find</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds the period of a in modulo N arithmetic</span>
+
+<span class="sd">    This is quantum part of Shor&#39;s algorithm.It takes two registers,</span>
+<span class="sd">    puts first in superposition of states with Hadamards so: ``|k&gt;|0&gt;``</span>
+<span class="sd">    with k being all possible choices. It then does a controlled mod and</span>
+<span class="sd">    a QFT to determine the order of a.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">epsilon</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span>
+    <span class="c">#picks out t&#39;s such that maintains accuracy within epsilon</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+    <span class="c"># make the first half of register be 0&#39;s |000...000&gt;</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span>
+    <span class="c">#Put second half into superposition of states so we have |1&gt;x|0&gt; + |2&gt;x|0&gt; + ... |k&gt;x&gt;|0&gt; + ... + |2**n-1&gt;x|0&gt;</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">qubits</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">arr</span> <span class="ow">in</span> <span class="n">variations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">t</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">qbitArray</span> <span class="o">=</span> <span class="n">arr</span> <span class="o">+</span> <span class="n">start</span>
+        <span class="n">qubits</span> <span class="o">=</span> <span class="n">qubits</span> <span class="o">+</span> <span class="n">Qubit</span><span class="p">(</span><span class="o">*</span><span class="n">qbitArray</span><span class="p">)</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="p">(</span><span class="n">factor</span><span class="o">*</span><span class="n">qubits</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="c">#Controlled second half of register so that we have:</span>
+    <span class="c"># |1&gt;x|a**1 %N&gt; + |2&gt;x|a**2 %N&gt; + ... + |k&gt;x|a**k %N &gt;+ ... + |2**n-1=k&gt;x|a**k % n&gt;</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">CMod</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span><span class="o">*</span><span class="n">circuit</span>
+    <span class="c">#will measure first half of register giving one of the a**k%N&#39;s</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">qapply</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;controlled Mod&#39;d&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="n">circuit</span> <span class="o">=</span> <span class="n">measure_partial_oneshot</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="c"># circuit = measure(i)*circuit</span>
+    <span class="c"># circuit = qapply(circuit)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;measured 1&quot;</span><span class="p">)</span>
+    <span class="c">#Now apply Inverse Quantum Fourier Transform on the second half of the register</span>
+    <span class="n">circuit</span> <span class="o">=</span> <span class="n">qapply</span><span class="p">(</span><span class="n">QFT</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span><span class="o">*</span><span class="n">circuit</span><span class="p">,</span> <span class="n">floatingPoint</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;QFT&#39;d&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="n">circuit</span> <span class="o">=</span> <span class="n">measure_partial_oneshot</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">t</span><span class="p">)</span>
+        <span class="c"># circuit = measure(i+t)*circuit</span>
+    <span class="c"># circuit = qapply(circuit)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">circuit</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Qubit</span><span class="p">):</span>
+        <span class="n">register</span> <span class="o">=</span> <span class="n">circuit</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="n">register</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">register</span> <span class="o">=</span> <span class="n">circuit</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="n">register</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">answer</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">register</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">answer</span> <span class="o">+=</span> <span class="n">n</span><span class="o">*</span><span class="n">register</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">t</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">n</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">answer</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">OrderFindingException</span><span class="p">(</span>
+            <span class="s">&quot;Order finder returned 0. Happens with chance </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">epsilon</span><span class="p">)</span>
+    <span class="c">#turn answer into r using continued fractions</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">getr</span><span class="p">(</span><span class="n">answer</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="n">t</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">g</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

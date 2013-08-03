@@ -1,0 +1,420 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Gotchas &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Basic Operations" href="basic_operations.html" />
+    <link rel="prev" title="Printing" href="printing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="basic_operations.html" title="Basic Operations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="gotchas">
+<h1>Gotchas<a class="headerlink" href="#gotchas" title="Permalink to this headline">¶</a></h1>
+<p>To begin, we should make something about SymPy clear.  SymPy is nothing more
+than a Python library, like <tt class="docutils literal"><span class="pre">NumPy</span></tt>, <tt class="docutils literal"><span class="pre">Django</span></tt>, or even modules in the
+Python standard library <tt class="docutils literal"><span class="pre">sys</span></tt> or <tt class="docutils literal"><span class="pre">re</span></tt>.  What this means is that SymPy does
+not add anything to the Python language.  Limitations that are inherent in the
+Python language are also inherent in SymPy.  It also means that SymPy tries to
+use Python idioms whenever possible, making programming with SymPy easy for
+those already familiar with programming with Python.  As a simple example,
+SymPy uses Python syntax to build expressions.  Implicit multiplication (like
+<tt class="docutils literal"><span class="pre">3x</span></tt> or <tt class="docutils literal"><span class="pre">3</span> <span class="pre">x</span></tt>) is not allowed in Python, and thus not allowed in SymPy.
+To multiply <tt class="docutils literal"><span class="pre">3</span></tt> and <tt class="docutils literal"><span class="pre">x</span></tt>, you must type <tt class="docutils literal"><span class="pre">3*x</span></tt> with the <tt class="docutils literal"><span class="pre">*</span></tt>.</p>
+<div class="section" id="symbols">
+<span id="tutorial-gotchas-symbols"></span><h2>Symbols<a class="headerlink" href="#symbols" title="Permalink to this headline">¶</a></h2>
+<p>One consequence of this fact is that SymPy can be used in any environment
+where Python is available.  We just import it, like we would any other
+library:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>This imports all the functions and classes from SymPy into our interactive
+Python session.  Now, suppose we start to do a computation.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">NameError</span>: <span class="n">name &#39;x&#39; is not defined</span>
+</pre></div>
+</div>
+<p>Oops! What happened here?  We tried to use the variable <tt class="docutils literal"><span class="pre">x</span></tt>, but it tells us
+that <tt class="docutils literal"><span class="pre">x</span></tt> is not defined.  In Python, variables have no meaning until they
+are defined.  SymPy is no different.  Unlike many symbolic manipulation
+systems you may have used, in SymPy, variables are not defined automatically.
+To define variables, we must use <tt class="docutils literal"><span class="pre">symbols</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="go">x + 1</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">symbols</span></tt> takes a string of variable names separated by spaces or commas,
+and creates Symbols out of them.  We can then assign these to variable names.
+Later, we will investigate some convenient ways we can work around this issue.
+For now, let us just define the most common variable names, <tt class="docutils literal"><span class="pre">x</span></tt>, <tt class="docutils literal"><span class="pre">y</span></tt>, and
+<tt class="docutils literal"><span class="pre">z</span></tt>, for use through the rest of this section</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y z&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As a final note, we note that the name of a Symbol and the name of the
+variable it is assigned to need not have anything to do with one another.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;b a&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">b</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span>
+<span class="go">a</span>
+</pre></div>
+</div>
+<p>Here we have done the very confusing thing of assigning a Symbol with the name
+<tt class="docutils literal"><span class="pre">a</span></tt> to the variable <tt class="docutils literal"><span class="pre">b</span></tt>, and a Symbol of the name <tt class="docutils literal"><span class="pre">b</span></tt> to the variable
+<tt class="docutils literal"><span class="pre">a</span></tt>.  Now the Python variable named <tt class="docutils literal"><span class="pre">a</span></tt> points to the SymPy Symbol named
+<tt class="docutils literal"><span class="pre">b</span></tt>, and visa versa.  How confusing.  We could have also done something like</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">crazy</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;unrelated&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">crazy</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="go">unrelated + 1</span>
+</pre></div>
+</div>
+<p>This also shows that Symbols can have names longer than one character if we
+want.</p>
+<p>Usually, the best practice is to assign Symbols to Python variables of the
+same name, although there are exceptions:  Symbol names can contain characters
+that are not allowed in Python variable names, or may just want to avoid
+typing long names by assigning Symbols with long names to single letter Python
+variables.</p>
+<p>To avoid confusion, throughout this tutorial, Symbol names and Python variable
+names will always coincide.  Furthermore, the word &#8220;Symbol&#8221; will refer to a
+SymPy Symbol and the word &#8220;variable&#8221; will refer to a Python variable.</p>
+<p>Finally, let us be sure we understand the difference between SymPy Symbols and
+Python variables.  Consider the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">expr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="k">print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>What do you think the output of this code will be?  If you thought <tt class="docutils literal"><span class="pre">3</span></tt>,
+you&#8217;re wrong.  Let&#8217;s see what really happens</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">x + 1</span>
+</pre></div>
+</div>
+<p>Changing <tt class="docutils literal"><span class="pre">x</span></tt> to <tt class="docutils literal"><span class="pre">2</span></tt> had no effect on <tt class="docutils literal"><span class="pre">expr</span></tt>.  This is because <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">2</span></tt>
+changes the Python variable <tt class="docutils literal"><span class="pre">x</span></tt> to <tt class="docutils literal"><span class="pre">2</span></tt>, but has no effect on the SymPy
+Symbol <tt class="docutils literal"><span class="pre">x</span></tt>, which was what we used in creating <tt class="docutils literal"><span class="pre">expr</span></tt>.  When we created
+<tt class="docutils literal"><span class="pre">expr</span></tt>, the Python variable <tt class="docutils literal"><span class="pre">x</span></tt> was a Symbol.  After we created, it, we
+changed the Python variable <tt class="docutils literal"><span class="pre">x</span></tt> to 2.  But <tt class="docutils literal"><span class="pre">expr</span></tt> remains the same.  This
+behavior is not unique to SymPy.  All Python programs work this way: if a
+variable is changed, expressions that were already created with that variable
+do not change automatically.  For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="s">&#39;abc&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="s">&#39;def&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">&#39;abcdef&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="s">&#39;ABC&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">&#39;abcdef&#39;</span>
+</pre></div>
+</div>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p>To change the value of a Symbol in an expression, use <tt class="docutils literal"><span class="pre">subs</span></tt></p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</div>
+<p>In this example, if we want to know what <tt class="docutils literal"><span class="pre">expr</span></tt> is with the new value of
+<tt class="docutils literal"><span class="pre">x</span></tt>, we need to reevaluate the code that created <tt class="docutils literal"><span class="pre">expr</span></tt>, namely, <tt class="docutils literal"><span class="pre">expr</span> <span class="pre">=</span>
+<span class="pre">x</span> <span class="pre">+</span> <span class="pre">1</span></tt>.  This can be complicated if several lines created <tt class="docutils literal"><span class="pre">expr</span></tt>.  One
+advantage of using a symbolic computation system like SymPy is that we can
+build a symbolic representation for <tt class="docutils literal"><span class="pre">expr</span></tt>, and then substitute <tt class="docutils literal"><span class="pre">x</span></tt> with
+values.  The correct way to do this in SymPy is to use <tt class="docutils literal"><span class="pre">subs</span></tt>, which will be
+discussed in more detail later.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="equals-signs">
+<span id="tutorial-gotchas-equals"></span><h2>Equals signs<a class="headerlink" href="#equals-signs" title="Permalink to this headline">¶</a></h2>
+<p>Another very important consequence of the fact that SymPy does not extend
+Python syntax is that <tt class="docutils literal"><span class="pre">=</span></tt> does not represent equality in SymPy.  Rather it
+is Python variable assignment.  This is hard-coded into the Python language,
+and SymPy makes no attempts to change that.</p>
+<p>You may think, however, that <tt class="docutils literal"><span class="pre">==</span></tt>, which is used for equality testing in
+Python, is used for SymPy as equality.  This is not quite correct either.  Let
+us see what happens when we use <tt class="docutils literal"><span class="pre">==</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">4</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Instead of treating <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">1</span> <span class="pre">==</span> <span class="pre">4</span></tt> symbolically, we just got <tt class="docutils literal"><span class="pre">False</span></tt>.  In
+SymPy, <tt class="docutils literal"><span class="pre">==</span></tt> represents exact structural equality testing.  This means that
+<tt class="docutils literal"><span class="pre">a</span> <span class="pre">==</span> <span class="pre">b</span></tt> means that we are <em>asking</em> if <span class="math">\(a = b\)</span>.  We always get a <tt class="docutils literal"><span class="pre">bool</span></tt> as
+the result of <tt class="docutils literal"><span class="pre">==</span></tt>.  There is a separate object, called <tt class="docutils literal"><span class="pre">Eq</span></tt>, which can be
+used to create symbolic equalities</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Eq</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">x + 1 == 4</span>
+</pre></div>
+</div>
+<p>There is one additional caveat about <tt class="docutils literal"><span class="pre">==</span></tt> as well.  Suppose we want to know
+if <span class="math">\((x + 1)^2 = x^2 + 2x + 1\)</span>.  We might try something like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">==</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>We got <tt class="docutils literal"><span class="pre">False</span></tt> again. However, <span class="math">\((x + 1)^2\)</span> <em>does</em> equal <span class="math">\(x^2 + 2x + 1\)</span>. What
+is going on here?  Did we find a bug in SymPy, or is it just not powerful
+enough to recognize this basic algebraic fact?</p>
+<p>Recall from above that <tt class="docutils literal"><span class="pre">==</span></tt> represents <em>exact</em> structural equality testing.
+&#8220;Exact&#8221; here means that two expressions will compare equal with <tt class="docutils literal"><span class="pre">==</span></tt> only if
+they are exactly equal structurally.  Here, <span class="math">\((x + 1)^2\)</span> and <span class="math">\(x^2 + 2x + 1\)</span> are
+not the same symbolically. One is the power of an addition of two terms, and
+the other is the addition of three terms.</p>
+<p>It turns out that when using SymPy as a library, having <tt class="docutils literal"><span class="pre">==</span></tt> test for exact
+symbolic equality is far more useful than having it represent symbolic
+equality, or having it test for mathematical equality.  However, as a new
+user, you will probably care more about the latter two.  We have already seen
+an alternative to representing equalities symbolically, <tt class="docutils literal"><span class="pre">Eq</span></tt>.  To test if
+two things are equal, it is best to recall the basic fact that if <span class="math">\(a = b\)</span>,
+then <span class="math">\(a - b = 0\)</span>.  Thus, the best way to check if <span class="math">\(a = b\)</span> is to take <span class="math">\(a - b\)</span>
+and simplify it, and see if it goes to 0.  We will learn <a class="reference internal" href="simplification.html#tutorial-simplify"><em>later</em></a> that the function to do this is called <tt class="docutils literal"><span class="pre">simplify</span></tt>. This
+method is not infallible&#8212;in fact, it can be <a class="reference external" href="http://en.wikipedia.org/wiki/Richardson%27s_theorem">theoretically proven</a> that it is impossible
+to determine if two symbolic expressions are identically equal in
+general&#8212;but for most common expressions, it works quite well.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">c</span><span class="p">)</span>
+<span class="go">4*x</span>
+</pre></div>
+</div>
+<p>There is also a method called <tt class="docutils literal"><span class="pre">equals</span></tt> that tests if two expressions are
+equal by evaluating them numerically at random points.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="two-final-notes-and">
+<h2>Two Final Notes: <tt class="docutils literal"><span class="pre">^</span></tt> and <tt class="docutils literal"><span class="pre">/</span></tt><a class="headerlink" href="#two-final-notes-and" title="Permalink to this headline">¶</a></h2>
+<p>You may have noticed that we have been using <tt class="docutils literal"><span class="pre">**</span></tt> for exponentiation instead
+of the standard <tt class="docutils literal"><span class="pre">^</span></tt>.  That&#8217;s because SymPy follows Python&#8217;s conventions.  In
+Python, <tt class="docutils literal"><span class="pre">^</span></tt> represents logical exclusive or.  SymPy follows this convention:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="bp">True</span> <span class="o">^</span> <span class="bp">False</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="bp">True</span> <span class="o">^</span> <span class="bp">True</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">^</span><span class="n">y</span>
+<span class="go">Or(And(Not(x), y), And(Not(y), x))</span>
+</pre></div>
+</div>
+<p>Finally, a small technical discussion on how SymPy works is in order.  When
+you type something like <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">1</span></tt>, the SymPy Symbol <tt class="docutils literal"><span class="pre">x</span></tt> is added to the
+Python int <tt class="docutils literal"><span class="pre">1</span></tt>.  Python&#8217;s operator rules then allow SymPy to tell Python
+that SymPy objects know how to be added to Python ints, and so <tt class="docutils literal"><span class="pre">1</span></tt> is
+automatically converted to the SymPy Integer object.</p>
+<p>This sort of operator magic happens automatically behind the scenes, and you
+rarely need to even know that it is happening.  However, there is one
+exception.  Whenever you combine a SymPy object and a SymPy object, or a SymPy
+object and a Python object, you get a SymPy object, but whenever you combine
+two Python objects, SymPy never comes into play, and so you get a Python
+object.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">Integer</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.Integer&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">&lt;... &#39;int&#39;&gt;</span>
+</pre></div>
+</div>
+<p>This is usually not a big deal. Python ints work much the same as SymPy
+Integers, but there is one important exception:  division.  In SymPy, the
+division of two Integers gives a Rational:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Integer</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">Integer</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1/3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">Integer</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">Integer</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.Rational&#39;&gt;</span>
+</pre></div>
+</div>
+<p>But in Python <tt class="docutils literal"><span class="pre">/</span></tt> represents either integer division or floating point
+division, depending on whether you are in Python 2 or Python 3, and depending
+on whether or not you have run <tt class="docutils literal"><span class="pre">from</span> <span class="pre">__future__</span> <span class="pre">import</span> <span class="pre">division</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span> 
+<span class="go">0.5</span>
+</pre></div>
+</div>
+<p>To avoid this, we can construct the rational object explicitly</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">1/2</span>
+</pre></div>
+</div>
+<p>This problem also comes up whenever we have a larger symbolic expression with
+<tt class="docutils literal"><span class="pre">int/int</span></tt> in it.  For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span> 
+<span class="go">x + 0.5</span>
+</pre></div>
+</div>
+<p>This happens because Python first evaluates <tt class="docutils literal"><span class="pre">1/2</span></tt> into <tt class="docutils literal"><span class="pre">0.5</span></tt>, and then
+that is cast into a SymPy type when it is added to <tt class="docutils literal"><span class="pre">x</span></tt>.  Again, we can get
+around this by explicitly creating a Rational:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">x + 1/2</span>
+</pre></div>
+</div>
+<p>There are several tips on avoiding this situation in the <a class="reference internal" href="../gotchas.html#gotchas"><em>Gotchas and Pitfalls</em></a>
+document.</p>
+</div>
+<div class="section" id="further-reading">
+<h2>Further Reading<a class="headerlink" href="#further-reading" title="Permalink to this headline">¶</a></h2>
+<p>For more discussion on the topics covered in this section, see <a class="reference internal" href="../gotchas.html#gotchas"><em>Gotchas and Pitfalls</em></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Gotchas</a><ul>
+<li><a class="reference internal" href="#symbols">Symbols</a></li>
+<li><a class="reference internal" href="#equals-signs">Equals signs</a></li>
+<li><a class="reference internal" href="#two-final-notes-and">Two Final Notes: <tt class="docutils literal"><span class="pre">^</span></tt> and <tt class="docutils literal"><span class="pre">/</span></tt></a></li>
+<li><a class="reference internal" href="#further-reading">Further Reading</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="printing.html"
+                        title="previous chapter">Printing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="basic_operations.html"
+                        title="next chapter">Basic Operations</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/gotchas.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="basic_operations.html" title="Basic Operations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

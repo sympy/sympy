@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Operator/State Helper Functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Qapply" href="qapply.html" />
+    <link rel="prev" title="Operator" href="operator.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="qapply.html" title="Qapply"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="operator.html" title="Operator"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.operatorset">
+<span id="operator-state-helper-functions"></span><h1>Operator/State Helper Functions<a class="headerlink" href="#module-sympy.physics.quantum.operatorset" title="Permalink to this headline">¶</a></h1>
+<p>A module for mapping operators to their corresponding eigenstates
+and vice versa</p>
+<p>It contains a global dictionary with eigenstate-operator pairings.
+If a new state-operator pair is created, this dictionary should be
+updated as well.</p>
+<p>It also contains functions operators_to_state and state_to_operators
+for mapping between the two. These can handle both classes and
+instances of operators and states. See the individual function
+descriptions for details.</p>
+<p>TODO List:
+- Update the dictionary with a complete list of state-operator pairs</p>
+<dl class="function">
+<dt id="sympy.physics.quantum.operatorset.operators_to_state">
+<tt class="descclassname">sympy.physics.quantum.operatorset.</tt><tt class="descname">operators_to_state</tt><big>(</big><em>operators</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/operatorset.html#operators_to_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.operatorset.operators_to_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the eigenstate of the given operator or set of operators</p>
+<p>A global function for mapping operator classes to their associated
+states. It takes either an Operator or a set of operators and
+returns the state associated with these.</p>
+<p>This function can handle both instances of a given operator or
+just the class itself (i.e. both XOp() and XOp)</p>
+<p>There are multiple use cases to consider:</p>
+<p>1) A class or set of classes is passed: First, we try to
+instantiate default instances for these operators. If this fails,
+then the class is simply returned. If we succeed in instantiating
+default instances, then we try to call state._operators_to_state
+on the operator instances. If this fails, the class is returned.
+Otherwise, the instance returned by _operators_to_state is returned.</p>
+<p>2) An instance or set of instances is passed: In this case,
+state._operators_to_state is called on the instances passed. If
+this fails, a state class is returned. If the method returns an
+instance, that instance is returned.</p>
+<p>In both cases, if the operator class or set does not exist in the
+state_mapping dictionary, None is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>arg: Operator or set</strong> :</p>
+<blockquote class="last">
+<div><p>The class or instance of the operator or set of operators
+to be mapped to a state</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XOp</span><span class="p">,</span> <span class="n">PxOp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.operatorset</span> <span class="kn">import</span> <span class="n">operators_to_state</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">Operator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators_to_state</span><span class="p">(</span><span class="n">XOp</span><span class="p">)</span>
+<span class="go">|x&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators_to_state</span><span class="p">(</span><span class="n">XOp</span><span class="p">())</span>
+<span class="go">|x&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators_to_state</span><span class="p">(</span><span class="n">PxOp</span><span class="p">)</span>
+<span class="go">|px&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators_to_state</span><span class="p">(</span><span class="n">PxOp</span><span class="p">())</span>
+<span class="go">|px&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators_to_state</span><span class="p">(</span><span class="n">Operator</span><span class="p">)</span>
+<span class="go">|psi&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">operators_to_state</span><span class="p">(</span><span class="n">Operator</span><span class="p">())</span>
+<span class="go">|psi&gt;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.operatorset.state_to_operators">
+<tt class="descclassname">sympy.physics.quantum.operatorset.</tt><tt class="descname">state_to_operators</tt><big>(</big><em>state</em>, <em>**options</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/operatorset.html#state_to_operators"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.operatorset.state_to_operators" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the operator or set of operators corresponding to the
+given eigenstate</p>
+<p>A global function for mapping state classes to their associated
+operators or sets of operators. It takes either a state class
+or instance.</p>
+<p>This function can handle both instances of a given state or just
+the class itself (i.e. both XKet() and XKet)</p>
+<p>There are multiple use cases to consider:</p>
+<p>1) A state class is passed: In this case, we first try
+instantiating a default instance of the class. If this succeeds,
+then we try to call state._state_to_operators on that instance.
+If the creation of the default instance or if the calling of
+_state_to_operators fails, then either an operator class or set of
+operator classes is returned. Otherwise, the appropriate
+operator instances are returned.</p>
+<p>2) A state instance is returned: Here, state._state_to_operators
+is called for the instance. If this fails, then a class or set of
+operator classes is returned. Otherwise, the instances are returned.</p>
+<p>In either case, if the state&#8217;s class does not exist in
+state_mapping, None is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>arg: StateBase class or instance (or subclasses)</strong> :</p>
+<blockquote class="last">
+<div><p>The class or instance of the state to be mapped to an
+operator or set of operators</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.cartesian</span> <span class="kn">import</span> <span class="n">XKet</span><span class="p">,</span> <span class="n">PxKet</span><span class="p">,</span> <span class="n">XBra</span><span class="p">,</span> <span class="n">PxBra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.operatorset</span> <span class="kn">import</span> <span class="n">state_to_operators</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Ket</span><span class="p">,</span> <span class="n">Bra</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">XKet</span><span class="p">)</span>
+<span class="go">X</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">XKet</span><span class="p">())</span>
+<span class="go">X</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">PxKet</span><span class="p">)</span>
+<span class="go">Px</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">PxKet</span><span class="p">())</span>
+<span class="go">Px</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">PxBra</span><span class="p">)</span>
+<span class="go">Px</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">XBra</span><span class="p">)</span>
+<span class="go">X</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">Ket</span><span class="p">)</span>
+<span class="go">O</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state_to_operators</span><span class="p">(</span><span class="n">Bra</span><span class="p">)</span>
+<span class="go">O</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="operator.html"
+                        title="previous chapter">Operator</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="qapply.html"
+                        title="next chapter">Qapply</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/operatorset.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="qapply.html" title="Qapply"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="operator.html" title="Operator"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

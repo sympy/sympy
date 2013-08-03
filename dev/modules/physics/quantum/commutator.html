@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Commutator &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Constants" href="constants.html" />
+    <link rel="prev" title="Clebsch-Gordan Coefficients" href="cg.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Constants"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="cg.html" title="Clebsch-Gordan Coefficients"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.commutator">
+<span id="commutator"></span><h1>Commutator<a class="headerlink" href="#module-sympy.physics.quantum.commutator" title="Permalink to this headline">¶</a></h1>
+<p>The commutator: [A,B] = A*B - B*A.</p>
+<dl class="class">
+<dt id="sympy.physics.quantum.commutator.Commutator">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.commutator.</tt><tt class="descname">Commutator</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/commutator.html#Commutator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.commutator.Commutator" title="Permalink to this definition">¶</a></dt>
+<dd><p>The standard commutator, in an unevaluated state.</p>
+<p>Evaluating a commutator is defined <a class="reference internal" href="#r219">[R219]</a> as: <tt class="docutils literal"><span class="pre">[A,</span> <span class="pre">B]</span> <span class="pre">=</span> <span class="pre">A*B</span> <span class="pre">-</span> <span class="pre">B*A</span></tt>. This
+class returns the commutator in an unevaluated form. To evaluate the
+commutator, use the <tt class="docutils literal"><span class="pre">.doit()</span></tt> method.</p>
+<p>Cannonical ordering of a commutator is <tt class="docutils literal"><span class="pre">[A,</span> <span class="pre">B]</span></tt> for <tt class="docutils literal"><span class="pre">A</span> <span class="pre">&lt;</span> <span class="pre">B</span></tt>. The
+arguments of the commutator are put into canonical order using <tt class="docutils literal"><span class="pre">__cmp__</span></tt>.
+If <tt class="docutils literal"><span class="pre">B</span> <span class="pre">&lt;</span> <span class="pre">A</span></tt>, then <tt class="docutils literal"><span class="pre">[B,</span> <span class="pre">A]</span></tt> is returned as <tt class="docutils literal"><span class="pre">-[A,</span> <span class="pre">B]</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>A</strong> : Expr</p>
+<blockquote>
+<div><p>The first argument of the commutator [A,B].</p>
+</div></blockquote>
+<p><strong>B</strong> : Expr</p>
+<blockquote class="last">
+<div><p>The second argument of the commutator [A,B].</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r219" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R219]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Commutator">http://en.wikipedia.org/wiki/Commutator</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.quantum</span> <span class="kn">import</span> <span class="n">Commutator</span><span class="p">,</span> <span class="n">Dagger</span><span class="p">,</span> <span class="n">Operator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Create a commutator and use <tt class="docutils literal"><span class="pre">.doit()</span></tt> to evaluate it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span>
+<span class="go">[A,B]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">A*B - B*A</span>
+</pre></div>
+</div>
+<p>The commutator orders it arguments in canonical order:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">comm</span> <span class="o">=</span> <span class="n">Commutator</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">A</span><span class="p">);</span> <span class="n">comm</span>
+<span class="go">-[A,B]</span>
+</pre></div>
+</div>
+<p>Commutative constants are factored out:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">A</span><span class="p">,</span> <span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">B</span><span class="p">)</span>
+<span class="go">3*x**2*y*[A,B]</span>
+</pre></div>
+</div>
+<p>Using <tt class="docutils literal"><span class="pre">.expand(commutator=True)</span></tt>, the standard commutator expansion rules
+can be applied:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="o">+</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">commutator</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[A,C] + [B,C]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="o">+</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">commutator</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[A,B] + [A,C]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">commutator</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[A,C]*B + A*[B,C]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="o">*</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">commutator</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">[A,B]*C + B*[A,C]</span>
+</pre></div>
+</div>
+<p>Adjoint operations applied to the commutator are properly applied to the
+arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Dagger</span><span class="p">(</span><span class="n">Commutator</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">))</span>
+<span class="go">-[Dagger(A),Dagger(B)]</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.physics.quantum.commutator.Commutator.doit">
+<tt class="descname">doit</tt><big>(</big><em>**hints</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/commutator.html#Commutator.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.commutator.Commutator.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate commutator</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="cg.html"
+                        title="previous chapter">Clebsch-Gordan Coefficients</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="constants.html"
+                        title="next chapter">Constants</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/commutator.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="constants.html" title="Constants"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="cg.html" title="Clebsch-Gordan Coefficients"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

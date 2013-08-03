@@ -1,0 +1,214 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.ntheory.partitions_ &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.ntheory.partitions_</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.mpmath.libmp</span> <span class="kn">import</span> <span class="p">(</span><span class="n">fzero</span><span class="p">,</span>
+    <span class="n">from_man_exp</span><span class="p">,</span> <span class="n">from_int</span><span class="p">,</span> <span class="n">from_rational</span><span class="p">,</span>
+    <span class="n">fone</span><span class="p">,</span> <span class="n">fhalf</span><span class="p">,</span> <span class="n">bitcount</span><span class="p">,</span> <span class="n">to_int</span><span class="p">,</span> <span class="n">to_str</span><span class="p">,</span> <span class="n">mpf_mul</span><span class="p">,</span> <span class="n">mpf_div</span><span class="p">,</span> <span class="n">mpf_sub</span><span class="p">,</span>
+    <span class="n">mpf_add</span><span class="p">,</span> <span class="n">mpf_sqrt</span><span class="p">,</span> <span class="n">mpf_pi</span><span class="p">,</span> <span class="n">mpf_cosh_sinh</span><span class="p">,</span> <span class="n">pi_fixed</span><span class="p">,</span> <span class="n">mpf_cos</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">igcd</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+
+<span class="k">def</span> <span class="nf">_a</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">prec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the inner sum in the HRR formula.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">fone</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">fzero</span>
+    <span class="n">pi</span> <span class="o">=</span> <span class="n">pi_fixed</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">igcd</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c"># &amp; with mask to compute fractional part of fixed-point number</span>
+        <span class="n">one</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">prec</span>
+        <span class="n">onemask</span> <span class="o">=</span> <span class="n">one</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">half</span> <span class="o">=</span> <span class="n">one</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">h</span><span class="o">*</span><span class="n">k</span><span class="o">*</span><span class="n">one</span><span class="o">//</span><span class="n">j</span>
+                <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">frac</span> <span class="o">=</span> <span class="n">t</span> <span class="o">&amp;</span> <span class="n">onemask</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">frac</span> <span class="o">=</span> <span class="o">-</span><span class="p">((</span><span class="o">-</span><span class="n">t</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">onemask</span><span class="p">)</span>
+                <span class="n">g</span> <span class="o">+=</span> <span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">frac</span> <span class="o">-</span> <span class="n">half</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="p">((</span><span class="n">g</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">h</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">one</span><span class="p">)</span><span class="o">*</span><span class="n">pi</span><span class="o">//</span><span class="n">j</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">prec</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mpf_add</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">mpf_cos</span><span class="p">(</span><span class="n">from_man_exp</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="o">-</span><span class="n">prec</span><span class="p">),</span> <span class="n">prec</span><span class="p">),</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">def</span> <span class="nf">_d</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">prec</span><span class="p">,</span> <span class="n">sq23pi</span><span class="p">,</span> <span class="n">sqrt8</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the sinh term in the outer sum of the HRR formula.</span>
+<span class="sd">    The constants sqrt(2/3*pi) and sqrt(8) must be precomputed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">from_int</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+    <span class="n">pi</span> <span class="o">=</span> <span class="n">mpf_pi</span><span class="p">(</span><span class="n">prec</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">mpf_div</span><span class="p">(</span><span class="n">sq23pi</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">mpf_sub</span><span class="p">(</span><span class="n">from_int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">from_rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="n">prec</span><span class="p">),</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">mpf_sqrt</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="n">ch</span><span class="p">,</span> <span class="n">sh</span> <span class="o">=</span> <span class="n">mpf_cosh_sinh</span><span class="p">(</span><span class="n">mpf_mul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">mpf_div</span><span class="p">(</span><span class="n">mpf_sqrt</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">prec</span><span class="p">),</span> <span class="n">mpf_mul</span><span class="p">(</span><span class="n">mpf_mul</span><span class="p">(</span><span class="n">sqrt8</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">pi</span><span class="p">),</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">mpf_sub</span><span class="p">(</span><span class="n">mpf_mul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ch</span><span class="p">),</span> <span class="n">mpf_div</span><span class="p">(</span><span class="n">sh</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">prec</span><span class="p">),</span> <span class="n">prec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mpf_mul</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">E</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="npartitions"><a class="viewcode-back" href="../../../modules/ntheory.html#sympy.ntheory.partitions_.npartitions">[docs]</a><span class="k">def</span> <span class="nf">npartitions</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the partition function P(n), i.e. the number of ways that</span>
+<span class="sd">    n can be written as a sum of positive integers.</span>
+
+<span class="sd">    P(n) is computed using the Hardy-Ramanujan-Rademacher formula,</span>
+<span class="sd">    described e.g. at http://mathworld.wolfram.com/PartitionFunctionP.html</span>
+
+<span class="sd">    The correctness of this implementation has been tested for 10**n</span>
+<span class="sd">    up to n = 8.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.ntheory import npartitions</span>
+<span class="sd">    &gt;&gt;&gt; npartitions(25)</span>
+<span class="sd">    1958</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">][</span><span class="n">n</span><span class="p">]</span>
+    <span class="c"># Estimate number of bits in p(n). This formula could be tidied</span>
+    <span class="n">pbits</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">/</span><span class="mf">3.</span><span class="p">)</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">n</span><span class="p">))</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">prec</span> <span class="o">=</span> <span class="n">p</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pbits</span><span class="o">*</span><span class="mf">1.1</span> <span class="o">+</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">fzero</span>
+    <span class="n">M</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.24</span><span class="o">*</span><span class="n">n</span><span class="o">**</span><span class="mf">0.5</span> <span class="o">+</span> <span class="mi">4</span><span class="p">))</span>
+    <span class="n">sq23pi</span> <span class="o">=</span> <span class="n">mpf_mul</span><span class="p">(</span><span class="n">mpf_sqrt</span><span class="p">(</span><span class="n">from_rational</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">p</span><span class="p">),</span> <span class="n">p</span><span class="p">),</span> <span class="n">mpf_pi</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">p</span><span class="p">)</span>
+    <span class="n">sqrt8</span> <span class="o">=</span> <span class="n">mpf_sqrt</span><span class="p">(</span><span class="n">from_int</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="n">p</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">M</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">_a</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">_d</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">sq23pi</span><span class="p">,</span> <span class="n">sqrt8</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">mpf_add</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">mpf_mul</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">d</span><span class="p">),</span> <span class="n">prec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;step&quot;</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="s">&quot;of&quot;</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">to_str</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">to_str</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+        <span class="c"># On average, the terms decrease rapidly in magnitude. Dynamically</span>
+        <span class="c"># reducing the precision greatly improves performance.</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">bitcount</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">to_int</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span> <span class="o">+</span> <span class="mi">50</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">to_int</span><span class="p">(</span><span class="n">mpf_add</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">fhalf</span><span class="p">,</span> <span class="n">prec</span><span class="p">)))</span>
+</div>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;npartitions&#39;</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,647 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.domains.domain &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy.polys.domains" href="../domains.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../domains.html" accesskey="U">sympy.polys.domains</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.domains.domain</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Implementation of :class:`Domain` class. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.domains.domainelement</span> <span class="kn">import</span> <span class="n">DomainElement</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">SYMPY_INTS</span><span class="p">,</span> <span class="n">HAS_GMPY</span><span class="p">,</span> <span class="n">integer_types</span><span class="p">,</span> <span class="n">is_sequence</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">UnificationFailed</span><span class="p">,</span> <span class="n">CoercionFailed</span><span class="p">,</span> <span class="n">DomainError</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.orderings</span> <span class="kn">import</span> <span class="n">lex</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyutils</span> <span class="kn">import</span> <span class="n">_unify_gens</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">public</span>
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="Domain"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain">[docs]</a><span class="k">class</span> <span class="nc">Domain</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an abstract domain. &quot;&quot;&quot;</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">one</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">has_Ring</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">has_Field</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">has_assoc_Ring</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">has_assoc_Field</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">is_FiniteField</span> <span class="o">=</span> <span class="n">is_FF</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_IntegerRing</span> <span class="o">=</span> <span class="n">is_ZZ</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_RationalField</span> <span class="o">=</span> <span class="n">is_QQ</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_RealField</span> <span class="o">=</span> <span class="n">is_RR</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_ComplexField</span> <span class="o">=</span> <span class="n">is_CC</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_AlgebraicField</span> <span class="o">=</span> <span class="n">is_Algebraic</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_PolynomialRing</span> <span class="o">=</span> <span class="n">is_Poly</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_FractionField</span> <span class="o">=</span> <span class="n">is_Frac</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_SymbolicDomain</span> <span class="o">=</span> <span class="n">is_EX</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">is_Exact</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">is_Numerical</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">is_Simple</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Composite</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">has_CharacteristicZero</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">rep</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">alias</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rep</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Construct an element of ``self`` domain from ``args``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Domain.convert_from"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.convert_from">[docs]</a>    <span class="k">def</span> <span class="nf">convert_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert ``element`` to ``self.dtype`` given the base domain. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">base</span><span class="o">.</span><span class="n">alias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&quot;from_&quot;</span> <span class="o">+</span> <span class="n">base</span><span class="o">.</span><span class="n">alias</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="s">&quot;from_&quot;</span> <span class="o">+</span> <span class="n">base</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+
+        <span class="n">_convert</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">_convert</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">_convert</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">raise</span> <span class="n">CoercionFailed</span><span class="p">(</span><span class="s">&quot;can&#39;t convert </span><span class="si">%s</span><span class="s"> of type </span><span class="si">%s</span><span class="s"> from </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">),</span> <span class="n">base</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Domain.convert"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert ``element`` to ``self.dtype``. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_from</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">of_type</span><span class="p">(</span><span class="n">element</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">element</span>
+
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains</span> <span class="kn">import</span> <span class="n">PythonIntegerRing</span><span class="p">,</span> <span class="n">GMPYIntegerRing</span><span class="p">,</span> <span class="n">GMPYRationalField</span><span class="p">,</span> <span class="n">RealField</span><span class="p">,</span> <span class="n">ComplexField</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">integer_types</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_from</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">PythonIntegerRing</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">HAS_GMPY</span><span class="p">:</span>
+            <span class="n">integers</span> <span class="o">=</span> <span class="n">GMPYIntegerRing</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">integers</span><span class="o">.</span><span class="n">tp</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_from</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">integers</span><span class="p">)</span>
+
+            <span class="n">rationals</span> <span class="o">=</span> <span class="n">GMPYRationalField</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">rationals</span><span class="o">.</span><span class="n">tp</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_from</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">rationals</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">RealField</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_from</span><span class="p">(</span><span class="n">parent</span><span class="p">(</span><span class="n">element</span><span class="p">),</span> <span class="n">parent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">ComplexField</span><span class="p">(</span><span class="n">tol</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_from</span><span class="p">(</span><span class="n">parent</span><span class="p">(</span><span class="n">element</span><span class="p">),</span> <span class="n">parent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">DomainElement</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_from</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">element</span><span class="o">.</span><span class="n">parent</span><span class="p">())</span>
+
+        <span class="c"># TODO: implement this in from_ methods</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_Numerical</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="s">&#39;is_ground&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">element</span><span class="o">.</span><span class="n">LC</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c"># TODO: remove this branch</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">element</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">element</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">element</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                    <span class="k">pass</span>
+
+        <span class="k">raise</span> <span class="n">CoercionFailed</span><span class="p">(</span><span class="s">&quot;can&#39;t convert </span><span class="si">%s</span><span class="s"> of type </span><span class="si">%s</span><span class="s"> to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">element</span><span class="p">),</span> <span class="bp">self</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Domain.of_type"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.of_type">[docs]</a>    <span class="k">def</span> <span class="nf">of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if ``a`` is of type ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tp</span><span class="p">)</span> <span class="c"># XXX: this isn&#39;t correct, e.g. PolyElement</span>
+</div>
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if ``a`` belongs to this domain. &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="Domain.to_sympy"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.to_sympy">[docs]</a>    <span class="k">def</span> <span class="nf">to_sympy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert ``a`` to a SymPy object. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.from_sympy"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_sympy">[docs]</a>    <span class="k">def</span> <span class="nf">from_sympy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a SymPy object to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.from_FF_python"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_FF_python">[docs]</a>    <span class="k">def</span> <span class="nf">from_FF_python</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert ``ModularInteger(int)`` to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_ZZ_python"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_ZZ_python">[docs]</a>    <span class="k">def</span> <span class="nf">from_ZZ_python</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a Python ``int`` object to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_QQ_python"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_QQ_python">[docs]</a>    <span class="k">def</span> <span class="nf">from_QQ_python</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a Python ``Fraction`` object to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_FF_gmpy"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_FF_gmpy">[docs]</a>    <span class="k">def</span> <span class="nf">from_FF_gmpy</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert ``ModularInteger(mpz)`` to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_ZZ_gmpy"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_ZZ_gmpy">[docs]</a>    <span class="k">def</span> <span class="nf">from_ZZ_gmpy</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a GMPY ``mpz`` object to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_QQ_gmpy"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_QQ_gmpy">[docs]</a>    <span class="k">def</span> <span class="nf">from_QQ_gmpy</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a GMPY ``mpq`` object to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_RealField"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_RealField">[docs]</a>    <span class="k">def</span> <span class="nf">from_RealField</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a real element object to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_ComplexField"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_ComplexField">[docs]</a>    <span class="k">def</span> <span class="nf">from_ComplexField</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a complex element to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_AlgebraicField"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_AlgebraicField">[docs]</a>    <span class="k">def</span> <span class="nf">from_AlgebraicField</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert an algebraic number to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_PolynomialRing"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_PolynomialRing">[docs]</a>    <span class="k">def</span> <span class="nf">from_PolynomialRing</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a polynomial to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_ground</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K1</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">LC</span><span class="p">,</span> <span class="n">K0</span><span class="o">.</span><span class="n">dom</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.from_FractionField"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_FractionField">[docs]</a>    <span class="k">def</span> <span class="nf">from_FractionField</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a rational function to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Domain.from_ExpressionDomain"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_ExpressionDomain">[docs]</a>    <span class="k">def</span> <span class="nf">from_ExpressionDomain</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a ``EX`` object to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">K1</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ex</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.from_GlobalPolynomialRing"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.from_GlobalPolynomialRing">[docs]</a>    <span class="k">def</span> <span class="nf">from_GlobalPolynomialRing</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Convert a polynomial to ``dtype``. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K1</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">LC</span><span class="p">(),</span> <span class="n">K0</span><span class="o">.</span><span class="n">dom</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">from_GeneralizedPolynomialRing</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">K1</span><span class="o">.</span><span class="n">from_FractionField</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">K0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">unify_with_symbols</span><span class="p">(</span><span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">symbols</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">is_Composite</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">symbols</span><span class="p">)))</span> <span class="ow">or</span> <span class="p">(</span><span class="n">K1</span><span class="o">.</span><span class="n">is_Composite</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">K1</span><span class="o">.</span><span class="n">symbols</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">symbols</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="n">UnificationFailed</span><span class="p">(</span><span class="s">&quot;can&#39;t unify </span><span class="si">%s</span><span class="s"> with </span><span class="si">%s</span><span class="s">, given </span><span class="si">%s</span><span class="s"> generators&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">symbols</span><span class="p">)))</span>
+
+        <span class="k">return</span> <span class="n">K0</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="n">K1</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Domain.unify"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.unify">[docs]</a>    <span class="k">def</span> <span class="nf">unify</span><span class="p">(</span><span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">symbols</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a minimal domain that contains elements of ``K0`` and ``K1``.</span>
+
+<span class="sd">        Known domains (from smallest to largest):</span>
+
+<span class="sd">        - ``GF(p)``</span>
+<span class="sd">        - ``ZZ``</span>
+<span class="sd">        - ``QQ``</span>
+<span class="sd">        - ``RR(prec, tol)``</span>
+<span class="sd">        - ``CC(prec, tol)``</span>
+<span class="sd">        - ``ALG(a, b, c)``</span>
+<span class="sd">        - ``K[x, y, z]``</span>
+<span class="sd">        - ``K(x, y, z)``</span>
+<span class="sd">        - ``EX``</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">symbols</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span><span class="o">.</span><span class="n">unify_with_symbols</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span> <span class="n">symbols</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">K0</span> <span class="o">==</span> <span class="n">K1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span>
+
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_EX</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span>
+        <span class="k">if</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_EX</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K1</span>
+
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_Composite</span> <span class="ow">or</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_Composite</span><span class="p">:</span>
+            <span class="n">K0_ground</span> <span class="o">=</span> <span class="n">K0</span><span class="o">.</span><span class="n">dom</span> <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_Composite</span> <span class="k">else</span> <span class="n">K0</span>
+            <span class="n">K1_ground</span> <span class="o">=</span> <span class="n">K1</span><span class="o">.</span><span class="n">dom</span> <span class="k">if</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_Composite</span> <span class="k">else</span> <span class="n">K1</span>
+
+            <span class="n">K0_symbols</span> <span class="o">=</span> <span class="n">K0</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_Composite</span> <span class="k">else</span> <span class="p">()</span>
+            <span class="n">K1_symbols</span> <span class="o">=</span> <span class="n">K1</span><span class="o">.</span><span class="n">symbols</span> <span class="k">if</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_Composite</span> <span class="k">else</span> <span class="p">()</span>
+
+            <span class="n">domain</span> <span class="o">=</span> <span class="n">K0_ground</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="n">K1_ground</span><span class="p">)</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="n">_unify_gens</span><span class="p">(</span><span class="n">K0_symbols</span><span class="p">,</span> <span class="n">K1_symbols</span><span class="p">)</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">K0</span><span class="o">.</span><span class="n">order</span> <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_Composite</span> <span class="k">else</span> <span class="n">K1</span><span class="o">.</span><span class="n">order</span>
+
+            <span class="k">if</span> <span class="p">((</span><span class="n">K0</span><span class="o">.</span><span class="n">is_FractionField</span> <span class="ow">and</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_PolynomialRing</span> <span class="ow">or</span>
+                 <span class="n">K1</span><span class="o">.</span><span class="n">is_FractionField</span> <span class="ow">and</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_PolynomialRing</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="p">(</span><span class="ow">not</span> <span class="n">K0_ground</span><span class="o">.</span><span class="n">has_Field</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">K1_ground</span><span class="o">.</span><span class="n">has_Field</span><span class="p">)</span> <span class="ow">and</span> <span class="n">domain</span><span class="o">.</span><span class="n">has_Field</span><span class="p">):</span>
+                <span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">get_ring</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_Composite</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_Composite</span> <span class="ow">or</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_FractionField</span> <span class="ow">or</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_PolynomialRing</span><span class="p">):</span>
+                <span class="n">cls</span> <span class="o">=</span> <span class="n">K0</span><span class="o">.</span><span class="n">__class__</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cls</span> <span class="o">=</span> <span class="n">K1</span><span class="o">.</span><span class="n">__class__</span>
+
+            <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">mkinexact</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">):</span>
+            <span class="n">prec</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">precision</span><span class="p">,</span> <span class="n">K1</span><span class="o">.</span><span class="n">precision</span><span class="p">)</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">tolerance</span><span class="p">,</span> <span class="n">K1</span><span class="o">.</span><span class="n">tolerance</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">prec</span><span class="o">=</span><span class="n">prec</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_ComplexField</span> <span class="ow">and</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_ComplexField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mkinexact</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_ComplexField</span> <span class="ow">and</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_RealField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mkinexact</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_RealField</span> <span class="ow">and</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_ComplexField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mkinexact</span><span class="p">(</span><span class="n">K1</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="n">K1</span><span class="p">,</span> <span class="n">K0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_RealField</span> <span class="ow">and</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_RealField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">mkinexact</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">__class__</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_ComplexField</span> <span class="ow">or</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_RealField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span>
+        <span class="k">if</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_ComplexField</span> <span class="ow">or</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_RealField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K1</span>
+
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_AlgebraicField</span> <span class="ow">and</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_AlgebraicField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">dom</span><span class="o">.</span><span class="n">unify</span><span class="p">(</span><span class="n">K1</span><span class="o">.</span><span class="n">dom</span><span class="p">),</span> <span class="o">*</span><span class="n">_unify_gens</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">orig_ext</span><span class="p">,</span> <span class="n">K1</span><span class="o">.</span><span class="n">orig_ext</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_AlgebraicField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span>
+        <span class="k">elif</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_AlgebraicField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K1</span>
+
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_RationalField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span>
+        <span class="k">if</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_RationalField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K1</span>
+
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_IntegerRing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span>
+        <span class="k">if</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_IntegerRing</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K1</span>
+
+        <span class="k">if</span> <span class="n">K0</span><span class="o">.</span><span class="n">is_FiniteField</span> <span class="ow">and</span> <span class="n">K1</span><span class="o">.</span><span class="n">is_FiniteField</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K0</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">K0</span><span class="o">.</span><span class="n">mod</span><span class="p">,</span> <span class="n">K1</span><span class="o">.</span><span class="n">mod</span><span class="p">))</span>
+
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains</span> <span class="kn">import</span> <span class="n">EX</span>
+        <span class="k">return</span> <span class="n">EX</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``True`` if two domains are equivalent. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Domain</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``False`` if two domains are equivalent. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Domain.map"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rersively apply ``self`` to all elements of ``seq``. &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elt</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">elt</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="p">(</span><span class="n">elt</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="Domain.get_ring"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.get_ring">[docs]</a>    <span class="k">def</span> <span class="nf">get_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a ring associated with ``self``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="n">DomainError</span><span class="p">(</span><span class="s">&#39;there is no ring associated with </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.get_field"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.get_field">[docs]</a>    <span class="k">def</span> <span class="nf">get_field</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a field associated with ``self``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="n">DomainError</span><span class="p">(</span><span class="s">&#39;there is no field associated with </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.get_exact"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.get_exact">[docs]</a>    <span class="k">def</span> <span class="nf">get_exact</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an exact domain associated with ``self``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The mathematical way to make a polynomial ring. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">symbols</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly_ring</span><span class="p">(</span><span class="o">*</span><span class="n">symbols</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly_ring</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Domain.poly_ring"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.poly_ring">[docs]</a>    <span class="k">def</span> <span class="nf">poly_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a polynomial ring, i.e. `K[X]`. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains.polynomialring</span> <span class="kn">import</span> <span class="n">PolynomialRing</span>
+        <span class="k">return</span> <span class="n">PolynomialRing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;order&quot;</span><span class="p">,</span> <span class="n">lex</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Domain.frac_field"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.frac_field">[docs]</a>    <span class="k">def</span> <span class="nf">frac_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a fraction field, i.e. `K(X)`. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains.fractionfield</span> <span class="kn">import</span> <span class="n">FractionField</span>
+        <span class="k">return</span> <span class="n">FractionField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;order&quot;</span><span class="p">,</span> <span class="n">lex</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Domain.old_poly_ring"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.old_poly_ring">[docs]</a>    <span class="k">def</span> <span class="nf">old_poly_ring</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a polynomial ring, i.e. `K[X]`. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains.old_polynomialring</span> <span class="kn">import</span> <span class="n">PolynomialRing</span>
+        <span class="k">return</span> <span class="n">PolynomialRing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.old_frac_field"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.old_frac_field">[docs]</a>    <span class="k">def</span> <span class="nf">old_frac_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a fraction field, i.e. `K(X)`. &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains.old_fractionfield</span> <span class="kn">import</span> <span class="n">FractionField</span>
+        <span class="k">return</span> <span class="n">FractionField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.algebraic_field"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.algebraic_field">[docs]</a>    <span class="k">def</span> <span class="nf">algebraic_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">extension</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an algebraic field, i.e. `K(\\alpha, \dots)`. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="n">DomainError</span><span class="p">(</span><span class="s">&quot;can&#39;t create algebraic field over </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.inject"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.inject">[docs]</a>    <span class="k">def</span> <span class="nf">inject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Inject generators into this domain. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.is_zero"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``a`` is zero. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">a</span>
+</div>
+<div class="viewcode-block" id="Domain.is_one"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.is_one">[docs]</a>    <span class="k">def</span> <span class="nf">is_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``a`` is one. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">one</span>
+</div>
+<div class="viewcode-block" id="Domain.is_positive"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.is_positive">[docs]</a>    <span class="k">def</span> <span class="nf">is_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``a`` is positive. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="Domain.is_negative"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.is_negative">[docs]</a>    <span class="k">def</span> <span class="nf">is_negative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``a`` is negative. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="Domain.is_nonpositive"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.is_nonpositive">[docs]</a>    <span class="k">def</span> <span class="nf">is_nonpositive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``a`` is non-positive. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="Domain.is_nonnegative"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.is_nonnegative">[docs]</a>    <span class="k">def</span> <span class="nf">is_nonnegative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``a`` is non-negative. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="Domain.abs"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.abs">[docs]</a>    <span class="k">def</span> <span class="nf">abs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Absolute value of ``a``, implies ``__abs__``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Domain.neg"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.neg">[docs]</a>    <span class="k">def</span> <span class="nf">neg</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``a`` negated, implies ``__neg__``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">a</span>
+</div>
+<div class="viewcode-block" id="Domain.pos"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.pos">[docs]</a>    <span class="k">def</span> <span class="nf">pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``a`` positive, implies ``__pos__``. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">+</span><span class="n">a</span>
+</div>
+<div class="viewcode-block" id="Domain.add"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sum of ``a`` and ``b``, implies ``__add__``.  &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="Domain.sub"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.sub">[docs]</a>    <span class="k">def</span> <span class="nf">sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Difference of ``a`` and ``b``, implies ``__sub__``.  &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="Domain.mul"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.mul">[docs]</a>    <span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Product of ``a`` and ``b``, implies ``__mul__``.  &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="Domain.pow"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.pow">[docs]</a>    <span class="k">def</span> <span class="nf">pow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Raise ``a`` to power ``b``, implies ``__pow__``.  &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">**</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="Domain.exquo"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.exquo">[docs]</a>    <span class="k">def</span> <span class="nf">exquo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Exact quotient of ``a`` and ``b``, implies something. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.quo"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.quo">[docs]</a>    <span class="k">def</span> <span class="nf">quo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Quotient of ``a`` and ``b``, implies something.  &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.rem"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.rem">[docs]</a>    <span class="k">def</span> <span class="nf">rem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remainder of ``a`` and ``b``, implies ``__mod__``.  &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.div"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.div">[docs]</a>    <span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Division of ``a`` and ``b``, implies something. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.invert"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.invert">[docs]</a>    <span class="k">def</span> <span class="nf">invert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns inversion of ``a mod b``, implies something. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.revert"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.revert">[docs]</a>    <span class="k">def</span> <span class="nf">revert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``a**(-1)`` if possible. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.numer"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.numer">[docs]</a>    <span class="k">def</span> <span class="nf">numer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns numerator of ``a``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.denom"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.denom">[docs]</a>    <span class="k">def</span> <span class="nf">denom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns denominator of ``a``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.half_gcdex"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.half_gcdex">[docs]</a>    <span class="k">def</span> <span class="nf">half_gcdex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Half extended GCD of ``a`` and ``b``. &quot;&quot;&quot;</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gcdex</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="n">h</span>
+</div>
+<div class="viewcode-block" id="Domain.gcdex"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.gcdex">[docs]</a>    <span class="k">def</span> <span class="nf">gcdex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extended GCD of ``a`` and ``b``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.cofactors"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.cofactors">[docs]</a>    <span class="k">def</span> <span class="nf">cofactors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns GCD and cofactors of ``a`` and ``b``. &quot;&quot;&quot;</span>
+        <span class="n">gcd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">cfa</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">gcd</span><span class="p">)</span>
+        <span class="n">cfb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quo</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">gcd</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gcd</span><span class="p">,</span> <span class="n">cfa</span><span class="p">,</span> <span class="n">cfb</span>
+</div>
+<div class="viewcode-block" id="Domain.gcd"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.gcd">[docs]</a>    <span class="k">def</span> <span class="nf">gcd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns GCD of ``a`` and ``b``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.lcm"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.lcm">[docs]</a>    <span class="k">def</span> <span class="nf">lcm</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns LCM of ``a`` and ``b``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.log"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.log">[docs]</a>    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns b-base logarithm of ``a``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.sqrt"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.sqrt">[docs]</a>    <span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns square root of ``a``. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Domain.evalf"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.evalf">[docs]</a>    <span class="k">def</span> <span class="nf">evalf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">prec</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns numerical approximation of ``a``. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">prec</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_sympy</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_sympy</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">prec</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+</div>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">evalf</span>
+
+    <span class="k">def</span> <span class="nf">real</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span>
+
+    <span class="k">def</span> <span class="nf">imag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero</span>
+
+<div class="viewcode-block" id="Domain.almosteq"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.almosteq">[docs]</a>    <span class="k">def</span> <span class="nf">almosteq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">tolerance</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check if ``a`` and ``b`` are almost equal. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span>
+</div>
+<div class="viewcode-block" id="Domain.characteristic"><a class="viewcode-back" href="../../../../modules/polys/internals.html#sympy.polys.domains.domain.Domain.characteristic">[docs]</a>    <span class="k">def</span> <span class="nf">characteristic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the characteristic of this domain. &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;characteristic()&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../domains.html" >sympy.polys.domains</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

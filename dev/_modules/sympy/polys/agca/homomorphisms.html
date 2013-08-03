@@ -1,0 +1,781 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.agca.homomorphisms &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.agca.homomorphisms</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Computations with homomorphisms of modules and rings.</span>
+
+<span class="sd">This module implements classes for representing homomorphisms of rings and</span>
+<span class="sd">their modules. Instead of instantiating the classes directly, you should use</span>
+<span class="sd">the function ``homomorphism(from, to, matrix)`` to create homomorphism objects.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.agca.modules</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Module</span><span class="p">,</span> <span class="n">FreeModule</span><span class="p">,</span> <span class="n">QuotientModule</span><span class="p">,</span>
+    <span class="n">SubModule</span><span class="p">,</span> <span class="n">SubQuotientModule</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">CoercionFailed</span>
+
+<span class="c"># The main computational task for module homomorphisms is kernels.</span>
+<span class="c"># For this reason, the concrete classes are organised by domain module type.</span>
+
+
+<div class="viewcode-block" id="ModuleHomomorphism"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism">[docs]</a><span class="k">class</span> <span class="nc">ModuleHomomorphism</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for module homomoprhisms. Do not instantiate.</span>
+
+<span class="sd">    Instead, use the ``homomorphism`` function:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">    &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">    &gt;&gt;&gt; homomorphism(F, F, [[1, 0], [0, 1]])</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">    [0, 1]])</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - ring - the ring over which we are considering modules</span>
+<span class="sd">    - domain - the domain module</span>
+<span class="sd">    - codomain - the codomain module</span>
+<span class="sd">    - _ker - cached kernel</span>
+<span class="sd">    - _img - cachd image</span>
+
+<span class="sd">    Non-implemented methods:</span>
+
+<span class="sd">    - _kernel</span>
+<span class="sd">    - _image</span>
+<span class="sd">    - _restrict_domain</span>
+<span class="sd">    - _restrict_codomain</span>
+<span class="sd">    - _quotient_domain</span>
+<span class="sd">    - _quotient_codomain</span>
+<span class="sd">    - _apply</span>
+<span class="sd">    - _mul_scalar</span>
+<span class="sd">    - _compose</span>
+<span class="sd">    - _add</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">codomain</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Source must be a module, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">domain</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">codomain</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Target must be a module, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">codomain</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">domain</span><span class="o">.</span><span class="n">ring</span> <span class="o">!=</span> <span class="n">codomain</span><span class="o">.</span><span class="n">ring</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Source and codomain must be over same ring, &#39;</span>
+                             <span class="s">&#39;got </span><span class="si">%s</span><span class="s"> != </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">codomain</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span> <span class="o">=</span> <span class="n">codomain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">ring</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ker</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="ModuleHomomorphism.kernel"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.kernel">[docs]</a>    <span class="k">def</span> <span class="nf">kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Compute the kernel of ``self``.</span>
+
+<span class="sd">        That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute</span>
+<span class="sd">        `ker(\phi) = \{x \in M | \phi(x) = 0\}`.  This is a submodule of `M`.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; homomorphism(F, F, [[1, 0], [x, 0]]).kernel()</span>
+<span class="sd">        &lt;[x, -1]&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ker</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ker</span>
+</div>
+<div class="viewcode-block" id="ModuleHomomorphism.image"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.image">[docs]</a>    <span class="k">def</span> <span class="nf">image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Compute the image of ``self``.</span>
+
+<span class="sd">        That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute</span>
+<span class="sd">        `im(\phi) = \{\phi(x) | x \in M \}`.  This is a submodule of `N`.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; homomorphism(F, F, [[1, 0], [x, 0]]).image() == F.submodule([1, 0])</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_img</span>
+</div>
+    <span class="k">def</span> <span class="nf">_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the kernel of ``self``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the image of ``self``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_restrict_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of domain restriction.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_restrict_codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of codomain restriction.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_quotient_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of domain quotient.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_quotient_codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of codomain quotient.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="ModuleHomomorphism.restrict_domain"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.restrict_domain">[docs]</a>    <span class="k">def</span> <span class="nf">restrict_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return ``self``, with the domain restricted to ``sm``.</span>
+
+<span class="sd">        Here ``sm`` has to be a submodule of ``self.domain``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h.restrict_domain(F.submodule([1, 0]))</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : &lt;[1, 0]&gt; -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 0]])</span>
+
+<span class="sd">        This is the same as just composing on the right with the submodule</span>
+<span class="sd">        inclusion:</span>
+
+<span class="sd">        &gt;&gt;&gt; h * F.submodule([1, 0]).inclusion_hom()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : &lt;[1, 0]&gt; -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">sm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;sm must be a submodule of </span><span class="si">%s</span><span class="s">, got </span><span class="si">%s</span><span class="s">&#39;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">sm</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sm</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_restrict_domain</span><span class="p">(</span><span class="n">sm</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ModuleHomomorphism.restrict_codomain"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.restrict_codomain">[docs]</a>    <span class="k">def</span> <span class="nf">restrict_codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return ``self``, with codomain restricted to to ``sm``.</span>
+
+<span class="sd">        Here ``sm`` has to be a submodule of ``self.codomain`` containing the</span>
+<span class="sd">        image.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h.restrict_codomain(F.submodule([1, 0]))</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2 -&gt; &lt;[1, 0]&gt;</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sm</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;the image </span><span class="si">%s</span><span class="s"> must contain sm, got </span><span class="si">%s</span><span class="s">&#39;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(),</span> <span class="n">sm</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sm</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_restrict_codomain</span><span class="p">(</span><span class="n">sm</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ModuleHomomorphism.quotient_domain"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.quotient_domain">[docs]</a>    <span class="k">def</span> <span class="nf">quotient_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return ``self`` with domain replaced by ``domain/sm``.</span>
+
+<span class="sd">        Here ``sm`` must be a submodule of ``self.kernel()``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h.quotient_domain(F.submodule([-x, 1]))</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2/&lt;[-x, 1]&gt; -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">sm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;kernel </span><span class="si">%s</span><span class="s"> must contain sm, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span>
+                             <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">(),</span> <span class="n">sm</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sm</span><span class="o">.</span><span class="n">is_zero</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quotient_domain</span><span class="p">(</span><span class="n">sm</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ModuleHomomorphism.quotient_codomain"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.quotient_codomain">[docs]</a>    <span class="k">def</span> <span class="nf">quotient_codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return ``self`` with codomain replaced by ``codomain/sm``.</span>
+
+<span class="sd">        Here ``sm`` must be a submodule of ``self.codomain``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h.quotient_codomain(F.submodule([1, 1]))</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2 -&gt; QQ[x]**2/&lt;[1, 1]&gt;</span>
+<span class="sd">        [0, 0]])</span>
+
+<span class="sd">        This is the same as composing with the quotient map on the left:</span>
+
+<span class="sd">        &gt;&gt;&gt; (F/[(1, 1)]).quotient_hom() * h</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, x], : QQ[x]**2 -&gt; QQ[x]**2/&lt;[1, 1]&gt;</span>
+<span class="sd">        [0, 0]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">sm</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;sm must be a submodule of codomain </span><span class="si">%s</span><span class="s">, got </span><span class="si">%s</span><span class="s">&#39;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="n">sm</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sm</span><span class="o">.</span><span class="n">is_zero</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quotient_codomain</span><span class="p">(</span><span class="n">sm</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply ``self`` to ``elem``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">elem</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compose ``self`` with ``oth``, that is, return the homomorphism</span>
+<span class="sd">        obtained by first applying then ``self``, then ``oth``.</span>
+
+<span class="sd">        (This method is private since in this syntax, it is non-obvious which</span>
+<span class="sd">        homomorphism is executed first.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_mul_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Scalar multiplication. ``c`` is guaranteed in self.ring.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Homomorphism addition.</span>
+<span class="sd">        ``oth`` is guaranteed to be a homomorphism with same domain/codomain.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_check_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper to check that oth is a homomorphism with same domain/codomain.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">oth</span><span class="p">,</span> <span class="n">ModuleHomomorphism</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">oth</span><span class="o">.</span><span class="n">domain</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="ow">and</span> <span class="n">oth</span><span class="o">.</span><span class="n">codomain</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">oth</span><span class="p">,</span> <span class="n">ModuleHomomorphism</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">==</span> <span class="n">oth</span><span class="o">.</span><span class="n">codomain</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">oth</span><span class="o">.</span><span class="n">_compose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mul_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">oth</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="c"># NOTE: _compose will never be called from rmul</span>
+    <span class="n">__rmul__</span> <span class="o">=</span> <span class="n">__mul__</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mul_scalar</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">oth</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_hom</span><span class="p">(</span><span class="n">oth</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">oth</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_hom</span><span class="p">(</span><span class="n">oth</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add</span><span class="p">(</span><span class="n">oth</span><span class="o">.</span><span class="n">_mul_scalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+<div class="viewcode-block" id="ModuleHomomorphism.is_injective"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_injective">[docs]</a>    <span class="k">def</span> <span class="nf">is_injective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is injective.</span>
+
+<span class="sd">        That is, check if the elements of the domain are mapped to the same</span>
+<span class="sd">        codomain element.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h.is_injective()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; h.quotient_domain(h.kernel()).is_injective()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ModuleHomomorphism.is_surjective"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_surjective">[docs]</a>    <span class="k">def</span> <span class="nf">is_surjective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is surjective.</span>
+
+<span class="sd">        That is, check if every element of the codomain has at least one</span>
+<span class="sd">        preimage.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h.is_surjective()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; h.restrict_codomain(h.image()).is_surjective()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">()</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span>
+</div>
+<div class="viewcode-block" id="ModuleHomomorphism.is_isomorphism"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_isomorphism">[docs]</a>    <span class="k">def</span> <span class="nf">is_isomorphism</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is an isomorphism.</span>
+
+<span class="sd">        That is, check if every element of the codomain has precisely one</span>
+<span class="sd">        preimage. Equivalently, ``self`` is both injective and surjective.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h = h.restrict_codomain(h.image())</span>
+<span class="sd">        &gt;&gt;&gt; h.is_isomorphism()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; h.quotient_domain(h.kernel()).is_isomorphism()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_injective</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_surjective</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="ModuleHomomorphism.is_zero"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.ModuleHomomorphism.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is a zero morphism.</span>
+
+<span class="sd">        That is, check if every element of the domain is mapped to zero</span>
+<span class="sd">        under self.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; h = homomorphism(F, F, [[1, 0], [x, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; h.is_zero()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; h.restrict_domain(F.submodule()).is_zero()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; h.quotient_codomain(h.image()).is_zero()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">()</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="o">-</span> <span class="n">oth</span><span class="p">)</span><span class="o">.</span><span class="n">is_zero</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">oth</span><span class="p">)</span>
+
+</div>
+<span class="k">class</span> <span class="nc">MatrixHomomorphism</span><span class="p">(</span><span class="n">ModuleHomomorphism</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper class for all homomoprhisms which are expressed via a matrix.</span>
+
+<span class="sd">    That is, for such homomorphisms ``domain`` is contained in a module</span>
+<span class="sd">    generated by finitely many elements `e_1, \dots, e_n`, so that the</span>
+<span class="sd">    homomorphism is determined uniquely by its action on the `e_i`. It</span>
+<span class="sd">    can thus be represented as a vector of elements of the codomain module,</span>
+<span class="sd">    or potentially a supermodule of the codomain module</span>
+<span class="sd">    (and hence conventionally as a matrix, if there is a similar interpretation</span>
+<span class="sd">    for elements of the codomain module).</span>
+
+<span class="sd">    Note that this class does *not* assume that the `e_i` freely generate a</span>
+<span class="sd">    submodule, nor that ``domain`` is even all of this submodule. It exists</span>
+<span class="sd">    only to unify the interface.</span>
+
+<span class="sd">    Do not instantiate.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - matrix - the list of images determining the homomorphism.</span>
+<span class="sd">    NOTE: the elements of matrix belong to either self.codomain or</span>
+<span class="sd">          self.codomain.container</span>
+
+<span class="sd">    Still non-implemented methods:</span>
+
+<span class="sd">    - kernel</span>
+<span class="sd">    - _apply</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">codomain</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
+        <span class="n">ModuleHomomorphism</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">codomain</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="o">!=</span> <span class="n">domain</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to provide </span><span class="si">%s</span><span class="s"> elements, got </span><span class="si">%s</span><span class="s">&#39;</span>
+                             <span class="o">%</span> <span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">matrix</span><span class="p">)))</span>
+
+        <span class="n">converter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">.</span><span class="n">convert</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="p">(</span><span class="n">SubModule</span><span class="p">,</span> <span class="n">SubQuotientModule</span><span class="p">)):</span>
+            <span class="n">converter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">convert</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">converter</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">matrix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_sympy_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function which returns a sympy matrix ``self.matrix``.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="p">(</span><span class="n">QuotientModule</span><span class="p">,</span> <span class="n">SubQuotientModule</span><span class="p">)):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">return</span> <span class="n">Matrix</span><span class="p">([[</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">to_sympy</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">c</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sympy_matrix</span><span class="p">())</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="s">&quot; : </span><span class="si">%s</span><span class="s"> -&gt; </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s">&#39; &#39;</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">s</span>
+        <span class="n">lines</span><span class="p">[</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">t</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">s</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_restrict_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of domain restriction.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SubModuleHomomorphism</span><span class="p">(</span><span class="n">sm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_restrict_codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of codomain restriction.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">sm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_quotient_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of domain quotient.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">/</span><span class="n">sm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_quotient_codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of codomain quotient.&quot;&quot;&quot;</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">/</span><span class="n">sm</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">convert</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="n">SubModule</span><span class="p">):</span>
+            <span class="n">converter</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">convert</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">/</span><span class="n">sm</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">converter</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span>
+                              <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">oth</span><span class="o">.</span><span class="n">matrix</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">_mul_scalar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_compose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">oth</span><span class="o">.</span><span class="n">codomain</span><span class="p">,</span> <span class="p">[</span><span class="n">oth</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">])</span>
+
+
+<span class="k">class</span> <span class="nc">FreeModuleHomomorphism</span><span class="p">(</span><span class="n">MatrixHomomorphism</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Concrete class for homomorphisms with domain a free module or a quotient</span>
+<span class="sd">    thereof.</span>
+
+<span class="sd">    Do not instantiate; the constructor does not check that your data is well</span>
+<span class="sd">    defined. Use the ``homomorphism`` function instead:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">    &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">    &gt;&gt;&gt; homomorphism(F, F, [[1, 0], [0, 1]])</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">    [0, 1]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">QuotientModule</span><span class="p">):</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">e</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># The domain is either a free module or a quotient thereof.</span>
+        <span class="c"># It does not matter if it is a quotient, because that won&#39;t increase</span>
+        <span class="c"># the kernel.</span>
+        <span class="c"># Our generators {e_i} are sent to the matrix entries {b_i}.</span>
+        <span class="c"># The kernel is essentially the syzygy module of these {b_i}.</span>
+        <span class="n">syz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">()</span><span class="o">.</span><span class="n">syzygy_module</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="n">syz</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SubModuleHomomorphism</span><span class="p">(</span><span class="n">MatrixHomomorphism</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Concrete class for homomorphism with domain a submodule of a free module</span>
+<span class="sd">    or a quotient thereof.</span>
+
+<span class="sd">    Do not instantiate; the constructor does not check that your data is well</span>
+<span class="sd">    defined. Use the ``homomorphism`` function instead:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">    &gt;&gt;&gt; M = QQ.old_poly_ring(x).free_module(2)*x</span>
+<span class="sd">    &gt;&gt;&gt; homomorphism(M, M, [[1, 0], [0, 1]])</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0], : &lt;[x, 0], [0, x]&gt; -&gt; &lt;[x, 0], [0, x]&gt;</span>
+<span class="sd">    [0, 1]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">SubQuotientModule</span><span class="p">):</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="n">elem</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">e</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">codomain</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="bp">self</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">gens</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">syz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">()</span><span class="o">.</span><span class="n">syzygy_module</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span><span class="nb">sum</span><span class="p">(</span><span class="n">xi</span><span class="o">*</span><span class="n">gi</span> <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">gi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">gens</span><span class="p">))</span>
+              <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">syz</span><span class="o">.</span><span class="n">gens</span><span class="p">])</span>
+
+
+<div class="viewcode-block" id="homomorphism"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.homomorphisms.homomorphism">[docs]</a><span class="k">def</span> <span class="nf">homomorphism</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">codomain</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a homomorphism object.</span>
+
+<span class="sd">    This function tries to build a homomorphism from ``domain`` to ``codomain``</span>
+<span class="sd">    via the matrix ``matrix``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.agca import homomorphism</span>
+
+<span class="sd">    &gt;&gt;&gt; R = QQ.old_poly_ring(x)</span>
+<span class="sd">    &gt;&gt;&gt; T = R.free_module(2)</span>
+
+<span class="sd">    If ``domain`` is a free module generated by `e_1, \dots, e_n`, then</span>
+<span class="sd">    ``matrix`` should be an n-element iterable `(b_1, \dots, b_n)` where</span>
+<span class="sd">    the `b_i` are elements of ``codomain``. The constructed homomorphism is the</span>
+<span class="sd">    unique homomorphism sending `e_i` to `b_i`.</span>
+
+<span class="sd">    &gt;&gt;&gt; F = R.free_module(2)</span>
+<span class="sd">    &gt;&gt;&gt; h = homomorphism(F, T, [[1, x], [x**2, 0]])</span>
+<span class="sd">    &gt;&gt;&gt; h</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, x**2], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">    [x,    0]])</span>
+<span class="sd">    &gt;&gt;&gt; h([1, 0])</span>
+<span class="sd">    [1, x]</span>
+<span class="sd">    &gt;&gt;&gt; h([0, 1])</span>
+<span class="sd">    [x**2, 0]</span>
+<span class="sd">    &gt;&gt;&gt; h([1, 1])</span>
+<span class="sd">    [x**2 + 1, x]</span>
+
+<span class="sd">    If ``domain`` is a submodule of a free module, them ``matrix`` determines</span>
+<span class="sd">    a homomoprhism from the containing free module to ``codomain``, and the</span>
+<span class="sd">    homomorphism returned is obtained by restriction to ``domain``.</span>
+
+<span class="sd">    &gt;&gt;&gt; S = F.submodule([1, 0], [0, x])</span>
+<span class="sd">    &gt;&gt;&gt; homomorphism(S, T, [[1, x], [x**2, 0]])</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, x**2], : &lt;[1, 0], [0, x]&gt; -&gt; QQ[x]**2</span>
+<span class="sd">    [x,    0]])</span>
+
+<span class="sd">    If ``domain`` is a (sub)quotient `N/K`, then ``matrix`` determines a</span>
+<span class="sd">    homomorphism from `N` to ``codomain``. If the kernel contains `K`, this</span>
+<span class="sd">    homomorphism descends to ``domain`` and is returned; otherwise an exception</span>
+<span class="sd">    is raised.</span>
+
+<span class="sd">    &gt;&gt;&gt; homomorphism(S/[(1, 0)], T, [0, [x**2, 0]])</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [0, x**2], : &lt;[1, 0] + &lt;[1, 0]&gt;, [0, x] + &lt;[1, 0]&gt;, [1, 0] + &lt;[1, 0]&gt;&gt; -&gt; QQ[x]**2</span>
+<span class="sd">    [0,    0]])</span>
+<span class="sd">    &gt;&gt;&gt; homomorphism(S/[(0, x)], T, [0, [x**2, 0]])</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ValueError: kernel &lt;[1, 0], [0, 0]&gt; must contain sm, got &lt;[0,x]&gt;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">freepres</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a tuple ``(F, S, Q, c)`` where ``F`` is a free module, ``S`` is a</span>
+<span class="sd">        submodule of ``F``, and ``Q`` a submodule of ``S``, such that</span>
+<span class="sd">        ``module = S/Q``, and ``c`` is a conversion function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">FreeModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">module</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">submodule</span><span class="p">(),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">module</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">QuotientModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">killed_module</span><span class="p">,</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">module</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">SubQuotientModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">container</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">killed_module</span><span class="p">,</span>
+                    <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">module</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="c"># an ordinary submodule</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">container</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">module</span><span class="o">.</span><span class="n">submodule</span><span class="p">(),</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">module</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+    <span class="n">SF</span><span class="p">,</span> <span class="n">SS</span><span class="p">,</span> <span class="n">SQ</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">freepres</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span>
+    <span class="n">TF</span><span class="p">,</span> <span class="n">TS</span><span class="p">,</span> <span class="n">TQ</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">freepres</span><span class="p">(</span><span class="n">codomain</span><span class="p">)</span>
+    <span class="c"># NOTE this is probably a bit inefficient (redundant checks)</span>
+    <span class="k">return</span> <span class="n">FreeModuleHomomorphism</span><span class="p">(</span><span class="n">SF</span><span class="p">,</span> <span class="n">TF</span><span class="p">,</span> <span class="p">[</span><span class="n">c</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">matrix</span><span class="p">]</span>
+         <span class="p">)</span><span class="o">.</span><span class="n">restrict_domain</span><span class="p">(</span><span class="n">SS</span><span class="p">)</span><span class="o">.</span><span class="n">restrict_codomain</span><span class="p">(</span><span class="n">TS</span>
+         <span class="p">)</span><span class="o">.</span><span class="n">quotient_codomain</span><span class="p">(</span><span class="n">TQ</span><span class="p">)</span><span class="o">.</span><span class="n">quotient_domain</span><span class="p">(</span><span class="n">SQ</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

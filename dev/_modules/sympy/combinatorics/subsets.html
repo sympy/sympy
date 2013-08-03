@@ -1,0 +1,707 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.combinatorics.subsets &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.combinatorics" href="../combinatorics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" accesskey="U">sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.combinatorics.subsets</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">sympy.combinatorics.graycode</span> <span class="kn">import</span> <span class="n">GrayCode</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+
+<div class="viewcode-block" id="Subset"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset">[docs]</a><span class="k">class</span> <span class="nc">Subset</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a basic subset object.</span>
+
+<span class="sd">    We generate subsets using essentially two techniques,</span>
+<span class="sd">    binary enumeration and lexicographic enumeration.</span>
+<span class="sd">    The Subset class takes two arguments, the first one</span>
+<span class="sd">    describes the initial subset to consider and the second</span>
+<span class="sd">    describes the superset.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">    &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; a.next_binary().subset</span>
+<span class="sd">    [&#39;b&#39;]</span>
+<span class="sd">    &gt;&gt;&gt; a.prev_binary().subset</span>
+<span class="sd">    [&#39;c&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_rank_binary</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_rank_lex</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_rank_graycode</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_subset</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_superset</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">subset</span><span class="p">,</span> <span class="n">superset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Default constructor.</span>
+
+<span class="sd">        It takes the subset and its superset as its parameters.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.subset</span>
+<span class="sd">        [&#39;c&#39;, &#39;d&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; a.superset</span>
+<span class="sd">        [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; a.size</span>
+<span class="sd">        2</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">superset</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Invalid arguments have been provided. The superset must be larger than the subset.&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">subset</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">elem</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">superset</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;The superset provided is invalid as it does not contain the element </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">elem</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_subset</span> <span class="o">=</span> <span class="n">subset</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_superset</span> <span class="o">=</span> <span class="n">superset</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<div class="viewcode-block" id="Subset.iterate_binary"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.iterate_binary">[docs]</a>    <span class="k">def</span> <span class="nf">iterate_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a helper function. It iterates over the</span>
+<span class="sd">        binary subsets by k steps. This variable can be</span>
+<span class="sd">        both positive or negative.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.iterate_binary(-2).subset</span>
+<span class="sd">        [&#39;d&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.iterate_binary(2).subset</span>
+<span class="sd">        []</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        next_binary, prev_binary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bin_list</span> <span class="o">=</span> <span class="n">Subset</span><span class="o">.</span><span class="n">bitlist_from_subset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bin_list</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span>
+        <span class="n">bits</span> <span class="o">=</span> <span class="nb">bin</span><span class="p">(</span><span class="n">n</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span><span class="p">,</span> <span class="s">&#39;0&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_from_bitlist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">,</span> <span class="n">bits</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Subset.next_binary"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.next_binary">[docs]</a>    <span class="k">def</span> <span class="nf">next_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the next binary ordered subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.next_binary().subset</span>
+<span class="sd">        [&#39;b&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.next_binary().subset</span>
+<span class="sd">        []</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        prev_binary, iterate_binary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterate_binary</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Subset.prev_binary"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.prev_binary">[docs]</a>    <span class="k">def</span> <span class="nf">prev_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the previous binary ordered subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.prev_binary().subset</span>
+<span class="sd">        [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.prev_binary().subset</span>
+<span class="sd">        [&#39;c&#39;]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        next_binary, iterate_binary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterate_binary</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Subset.next_lexicographic"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.next_lexicographic">[docs]</a>    <span class="k">def</span> <span class="nf">next_lexicographic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the next lexicographically ordered subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.next_lexicographic().subset</span>
+<span class="sd">        [&#39;d&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.next_lexicographic().subset</span>
+<span class="sd">        []</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        prev_lexicographic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+                <span class="n">indices</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">indices</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">while</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">indices</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">indices</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">ret_set</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">super_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">ret_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">super_set</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Subset</span><span class="p">(</span><span class="n">ret_set</span><span class="p">,</span> <span class="n">super_set</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Subset.prev_lexicographic"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.prev_lexicographic">[docs]</a>    <span class="k">def</span> <span class="nf">prev_lexicographic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the previous lexicographically ordered subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.prev_lexicographic().subset</span>
+<span class="sd">        [&#39;d&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.prev_lexicographic().subset</span>
+<span class="sd">        [&#39;c&#39;]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        next_lexicographic</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">)</span>
+
+        <span class="k">while</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">indices</span> <span class="ow">and</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">indices</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">indices</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">ret_set</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">super_set</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="n">ret_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">super_set</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Subset</span><span class="p">(</span><span class="n">ret_set</span><span class="p">,</span> <span class="n">super_set</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Subset.iterate_graycode"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.iterate_graycode">[docs]</a>    <span class="k">def</span> <span class="nf">iterate_graycode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function used for prev_gray and next_gray.</span>
+<span class="sd">        It performs k step overs to get the respective Gray codes.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([1,2,3], [1,2,3,4])</span>
+<span class="sd">        &gt;&gt;&gt; a.iterate_graycode(3).subset</span>
+<span class="sd">        [1, 4]</span>
+<span class="sd">        &gt;&gt;&gt; a.iterate_graycode(-2).subset</span>
+<span class="sd">        [1, 2, 4]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        next_gray, prev_gray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">unranked_code</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="o">.</span><span class="n">unrank</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span><span class="p">,</span>
+                                       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank_gray</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">cardinality</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_from_bitlist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">,</span>
+                                          <span class="n">unranked_code</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Subset.next_gray"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.next_gray">[docs]</a>    <span class="k">def</span> <span class="nf">next_gray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the next Gray code ordered subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([1,2,3], [1,2,3,4])</span>
+<span class="sd">        &gt;&gt;&gt; a.next_gray().subset</span>
+<span class="sd">        [1, 3]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        iterate_graycode, prev_gray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterate_graycode</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Subset.prev_gray"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.prev_gray">[docs]</a>    <span class="k">def</span> <span class="nf">prev_gray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generates the previous Gray code ordered subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([2,3,4], [1,2,3,4,5])</span>
+<span class="sd">        &gt;&gt;&gt; a.prev_gray().subset</span>
+<span class="sd">        [2, 3, 4, 5]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        iterate_graycode, next_gray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iterate_graycode</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.rank_binary"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.rank_binary">[docs]</a>    <span class="k">def</span> <span class="nf">rank_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the binary ordered rank.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.rank_binary</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.rank_binary</span>
+<span class="sd">        3</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        iterate_binary, unrank_binary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_binary</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rank_binary</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">Subset</span><span class="o">.</span><span class="n">bitlist_from_subset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_binary</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.rank_lexicographic"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.rank_lexicographic">[docs]</a>    <span class="k">def</span> <span class="nf">rank_lexicographic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the lexicographic ranking of the subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.rank_lexicographic</span>
+<span class="sd">        14</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([2,4,5], [1,2,3,4,5,6])</span>
+<span class="sd">        &gt;&gt;&gt; a.rank_lexicographic</span>
+<span class="sd">        43</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_lex</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">def</span> <span class="nf">_ranklex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset_index</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">subset_index</span> <span class="o">==</span> <span class="p">[]</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="mi">0</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subset_index</span><span class="p">:</span>
+                    <span class="n">subset_index</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">_ranklex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset_index</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+                <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">_ranklex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset_index</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_indices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rank_lex</span> <span class="o">=</span> <span class="n">_ranklex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_lex</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.rank_gray"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.rank_gray">[docs]</a>    <span class="k">def</span> <span class="nf">rank_gray</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes the Gray code ranking of the subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.rank_gray</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([2,4,5], [1,2,3,4,5,6])</span>
+<span class="sd">        &gt;&gt;&gt; a.rank_gray</span>
+<span class="sd">        27</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        iterate_graycode, unrank_gray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_graycode</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">bits</span> <span class="o">=</span> <span class="n">Subset</span><span class="o">.</span><span class="n">bitlist_from_subset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rank_graycode</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bits</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="n">bits</span><span class="p">)</span><span class="o">.</span><span class="n">rank</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank_graycode</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.subset"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.subset">[docs]</a>    <span class="k">def</span> <span class="nf">subset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the subset represented by the current instance.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.subset</span>
+<span class="sd">        [&#39;c&#39;, &#39;d&#39;]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        superset, size, superset_size, cardinality</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_subset</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.size"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.size">[docs]</a>    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the size of the subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.size</span>
+<span class="sd">        2</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        subset, superset, superset_size, cardinality</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.superset"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.superset">[docs]</a>    <span class="k">def</span> <span class="nf">superset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the superset of the subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.superset</span>
+<span class="sd">        [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        subset, size, superset_size, cardinality</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_superset</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.superset_size"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.superset_size">[docs]</a>    <span class="k">def</span> <span class="nf">superset_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the size of the superset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.superset_size</span>
+<span class="sd">        4</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        subset, superset, size, cardinality</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">superset</span><span class="p">)</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Subset.cardinality"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.cardinality">[docs]</a>    <span class="k">def</span> <span class="nf">cardinality</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the number of all possible subsets.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; a = Subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &gt;&gt;&gt; a.cardinality</span>
+<span class="sd">        16</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        subset, superset, size, superset_size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">superset_size</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Subset.subset_from_bitlist"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.subset_from_bitlist">[docs]</a>    <span class="k">def</span> <span class="nf">subset_from_bitlist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">super_set</span><span class="p">,</span> <span class="n">bitlist</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the subset defined by the bitlist.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; Subset.subset_from_bitlist([&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;], &#39;0011&#39;).subset</span>
+<span class="sd">        [&#39;c&#39;, &#39;d&#39;]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        bitlist_from_subset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">super_set</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bitlist</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;The sizes of the lists are not equal&quot;</span><span class="p">)</span>
+        <span class="n">ret_set</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bitlist</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">bitlist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;1&#39;</span><span class="p">:</span>
+                <span class="n">ret_set</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">super_set</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Subset</span><span class="p">(</span><span class="n">ret_set</span><span class="p">,</span> <span class="n">super_set</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Subset.bitlist_from_subset"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.bitlist_from_subset">[docs]</a>    <span class="k">def</span> <span class="nf">bitlist_from_subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">,</span> <span class="n">superset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the bitlist corresponding to a subset.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; Subset.bitlist_from_subset([&#39;c&#39;,&#39;d&#39;], [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;])</span>
+<span class="sd">        &#39;0011&#39;</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        subset_from_bitlist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bitlist</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;0&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">superset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Subset</span><span class="p">:</span>
+            <span class="n">subset</span> <span class="o">=</span> <span class="n">subset</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_indices</span><span class="p">(</span><span class="n">subset</span><span class="p">,</span> <span class="n">superset</span><span class="p">):</span>
+            <span class="n">bitlist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;1&#39;</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bitlist</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Subset.unrank_binary"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.unrank_binary">[docs]</a>    <span class="k">def</span> <span class="nf">unrank_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">superset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the binary ordered subset of the specified rank.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; Subset.unrank_binary(4, [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;,&#39;d&#39;]).subset</span>
+<span class="sd">        [&#39;b&#39;]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        iterate_binary, rank_binary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bits</span> <span class="o">=</span> <span class="nb">bin</span><span class="p">(</span><span class="n">rank</span><span class="p">)[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">superset</span><span class="p">),</span> <span class="s">&#39;0&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_from_bitlist</span><span class="p">(</span><span class="n">superset</span><span class="p">,</span> <span class="n">bits</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Subset.unrank_gray"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.unrank_gray">[docs]</a>    <span class="k">def</span> <span class="nf">unrank_gray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">superset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets the Gray code ordered subset of the specified rank.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.subsets import Subset</span>
+<span class="sd">        &gt;&gt;&gt; Subset.unrank_gray(4, [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;]).subset</span>
+<span class="sd">        [&#39;a&#39;, &#39;b&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; Subset.unrank_gray(0, [&#39;a&#39;,&#39;b&#39;,&#39;c&#39;]).subset</span>
+<span class="sd">        []</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        iterate_graycode, rank_gray</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">graycode_bitlist</span> <span class="o">=</span> <span class="n">GrayCode</span><span class="o">.</span><span class="n">unrank</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">superset</span><span class="p">),</span> <span class="n">rank</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Subset</span><span class="o">.</span><span class="n">subset_from_bitlist</span><span class="p">(</span><span class="n">superset</span><span class="p">,</span> <span class="n">graycode_bitlist</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Subset.subset_indices"><a class="viewcode-back" href="../../../modules/combinatorics/subsets.html#sympy.combinatorics.subsets.Subset.subset_indices">[docs]</a>    <span class="k">def</span> <span class="nf">subset_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subset</span><span class="p">,</span> <span class="n">superset</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return indices of subset in superset in a list; the list is empty</span>
+<span class="sd">        if all elements of subset are not in superset.</span>
+
+<span class="sd">        Examples::</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.combinatorics import Subset</span>
+<span class="sd">            &gt;&gt;&gt; superset = [1, 3, 2, 5, 4]</span>
+<span class="sd">            &gt;&gt;&gt; Subset.subset_indices([3, 2, 1], superset)</span>
+<span class="sd">            [1, 2, 0]</span>
+<span class="sd">            &gt;&gt;&gt; Subset.subset_indices([1, 6], superset)</span>
+<span class="sd">            []</span>
+<span class="sd">            &gt;&gt;&gt; Subset.subset_indices([], superset)</span>
+<span class="sd">            []</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">superset</span><span class="p">,</span> <span class="n">subset</span>
+        <span class="n">sb</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ai</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">ai</span> <span class="ow">in</span> <span class="n">sb</span><span class="p">:</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">ai</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="n">sb</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ai</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">sb</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">d</span><span class="p">[</span><span class="n">bi</span><span class="p">]</span> <span class="k">for</span> <span class="n">bi</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">ksubsets</span><span class="p">(</span><span class="n">superset</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Finds the subsets of size k in lexicographic order.</span>
+
+<span class="sd">    This uses the itertools generator.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.combinatorics.subsets import ksubsets</span>
+<span class="sd">    &gt;&gt;&gt; list(ksubsets([1,2,3], 2))</span>
+<span class="sd">    [(1, 2), (1, 3), (2, 3)]</span>
+<span class="sd">    &gt;&gt;&gt; list(ksubsets([1,2,3,4,5], 2))</span>
+<span class="sd">    [(1, 2), (1, 3), (1, 4), (1, 5), (2, 3), (2, 4), \</span>
+<span class="sd">    (2, 5), (3, 4), (3, 5), (4, 5)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    class:Subset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">combinations</span><span class="p">(</span><span class="n">superset</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" >sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

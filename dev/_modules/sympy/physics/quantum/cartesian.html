@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.quantum.cartesian &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.quantum.cartesian</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Operators and states for 1D cartesian position and momentum.</span>
+
+<span class="sd">TODO:</span>
+
+<span class="sd">* Add 3D classes to mappings in operatorset.py</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">DiracDelta</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">sqrt</span>
+
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.constants</span> <span class="kn">import</span> <span class="n">hbar</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.hilbert</span> <span class="kn">import</span> <span class="n">L2</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.operator</span> <span class="kn">import</span> <span class="n">DifferentialOperator</span><span class="p">,</span> <span class="n">HermitianOperator</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.quantum.state</span> <span class="kn">import</span> <span class="n">Ket</span><span class="p">,</span> <span class="n">Bra</span><span class="p">,</span> <span class="n">State</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s">&#39;XOp&#39;</span><span class="p">,</span>
+    <span class="s">&#39;YOp&#39;</span><span class="p">,</span>
+    <span class="s">&#39;ZOp&#39;</span><span class="p">,</span>
+    <span class="s">&#39;PxOp&#39;</span><span class="p">,</span>
+    <span class="s">&#39;X&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Y&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Z&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Px&#39;</span><span class="p">,</span>
+    <span class="s">&#39;XKet&#39;</span><span class="p">,</span>
+    <span class="s">&#39;XBra&#39;</span><span class="p">,</span>
+    <span class="s">&#39;PxKet&#39;</span><span class="p">,</span>
+    <span class="s">&#39;PxBra&#39;</span><span class="p">,</span>
+    <span class="s">&#39;PositionState3D&#39;</span><span class="p">,</span>
+    <span class="s">&#39;PositionKet3D&#39;</span><span class="p">,</span>
+    <span class="s">&#39;PositionBra3D&#39;</span>
+<span class="p">]</span>
+
+<span class="c">#-------------------------------------------------------------------------</span>
+<span class="c"># Position operators</span>
+<span class="c">#-------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="XOp"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.XOp">[docs]</a><span class="k">class</span> <span class="nc">XOp</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1D cartesian position operator.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;X&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">L2</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_commutator_PxOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">I</span><span class="o">*</span><span class="n">hbar</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator_XKet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ket</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ket</span><span class="o">.</span><span class="n">position</span><span class="o">*</span><span class="n">ket</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator_PositionKet3D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ket</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ket</span><span class="o">.</span><span class="n">position_x</span><span class="o">*</span><span class="n">ket</span>
+
+    <span class="k">def</span> <span class="nf">_represent_PxKet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;index&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">states</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">_enumerate_state</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">start_index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">coord1</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">momentum</span>
+        <span class="n">coord2</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">momentum</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">DifferentialOperator</span><span class="p">(</span><span class="n">coord1</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="n">coord1</span> <span class="o">-</span> <span class="n">coord2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">I</span><span class="o">*</span><span class="n">hbar</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="o">*</span><span class="n">delta</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="YOp"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.YOp">[docs]</a><span class="k">class</span> <span class="nc">YOp</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Y cartesian coordinate operator (for 2D or 3D systems) &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;Y&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">L2</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator_PositionKet3D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ket</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ket</span><span class="o">.</span><span class="n">position_y</span><span class="o">*</span><span class="n">ket</span>
+
+</div>
+<div class="viewcode-block" id="ZOp"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.ZOp">[docs]</a><span class="k">class</span> <span class="nc">ZOp</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Z cartesian coordinate operator (for 3D systems) &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;Z&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">L2</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator_PositionKet3D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ket</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ket</span><span class="o">.</span><span class="n">position_z</span><span class="o">*</span><span class="n">ket</span>
+
+<span class="c">#-------------------------------------------------------------------------</span>
+<span class="c"># Momentum operators</span>
+<span class="c">#-------------------------------------------------------------------------</span>
+
+</div>
+<div class="viewcode-block" id="PxOp"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PxOp">[docs]</a><span class="k">class</span> <span class="nc">PxOp</span><span class="p">(</span><span class="n">HermitianOperator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1D cartesian momentum operator.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;Px&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_eval_hilbert_space</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">L2</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_apply_operator_PxKet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ket</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ket</span><span class="o">.</span><span class="n">momentum</span><span class="o">*</span><span class="n">ket</span>
+
+    <span class="k">def</span> <span class="nf">_represent_XKet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basis</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&quot;index&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">states</span> <span class="o">=</span> <span class="n">basis</span><span class="o">.</span><span class="n">_enumerate_state</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">start_index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">coord1</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">position</span>
+        <span class="n">coord2</span> <span class="o">=</span> <span class="n">states</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">position</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">DifferentialOperator</span><span class="p">(</span><span class="n">coord1</span><span class="p">)</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="n">coord1</span> <span class="o">-</span> <span class="n">coord2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="n">I</span><span class="o">*</span><span class="n">hbar</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="o">*</span><span class="n">delta</span><span class="p">)</span>
+</div>
+<span class="n">X</span> <span class="o">=</span> <span class="n">XOp</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">)</span>
+<span class="n">Y</span> <span class="o">=</span> <span class="n">YOp</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">ZOp</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">)</span>
+<span class="n">Px</span> <span class="o">=</span> <span class="n">PxOp</span><span class="p">(</span><span class="s">&#39;Px&#39;</span><span class="p">)</span>
+
+<span class="c">#-------------------------------------------------------------------------</span>
+<span class="c"># Position eigenstates</span>
+<span class="c">#-------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="XKet"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.XKet">[docs]</a><span class="k">class</span> <span class="nc">XKet</span><span class="p">(</span><span class="n">Ket</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1D cartesian position eigenket.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_operators_to_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">_lowercase_labels</span><span class="p">(</span><span class="n">op</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_state_to_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_class</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">op_class</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">op_class</span><span class="p">,</span>
+                                <span class="o">*</span><span class="n">_uppercase_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">dual_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">XBra</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="XKet.position"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.XKet.position">[docs]</a>    <span class="k">def</span> <span class="nf">position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The position of the state.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_enumerate_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_states</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_enumerate_continuous_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_states</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_innerproduct_XBra</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bra</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span> <span class="o">-</span> <span class="n">bra</span><span class="o">.</span><span class="n">position</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_innerproduct_PxBra</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bra</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">I</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="o">*</span><span class="n">bra</span><span class="o">.</span><span class="n">momentum</span><span class="o">/</span><span class="n">hbar</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">hbar</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="XBra"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.XBra">[docs]</a><span class="k">class</span> <span class="nc">XBra</span><span class="p">(</span><span class="n">Bra</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1D cartesian position eigenbra.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">dual_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">XKet</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="XBra.position"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.XBra.position">[docs]</a>    <span class="k">def</span> <span class="nf">position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The position of the state.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="PositionState3D"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PositionState3D">[docs]</a><span class="k">class</span> <span class="nc">PositionState3D</span><span class="p">(</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Base class for 3D cartesian position eigenstates &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_operators_to_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">_lowercase_labels</span><span class="p">(</span><span class="n">op</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_state_to_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_class</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">op_class</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">op_class</span><span class="p">,</span>
+                                <span class="o">*</span><span class="n">_uppercase_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">,</span> <span class="s">&quot;y&quot;</span><span class="p">,</span> <span class="s">&quot;z&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PositionState3D.position_x"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PositionState3D.position_x">[docs]</a>    <span class="k">def</span> <span class="nf">position_x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The x coordinate of the state &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PositionState3D.position_y"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PositionState3D.position_y">[docs]</a>    <span class="k">def</span> <span class="nf">position_y</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The y coordinate of the state &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PositionState3D.position_z"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PositionState3D.position_z">[docs]</a>    <span class="k">def</span> <span class="nf">position_z</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The z coordinate of the state &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+</div></div>
+<div class="viewcode-block" id="PositionKet3D"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PositionKet3D">[docs]</a><span class="k">class</span> <span class="nc">PositionKet3D</span><span class="p">(</span><span class="n">Ket</span><span class="p">,</span> <span class="n">PositionState3D</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; 3D cartesian position eigenket &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_eval_innerproduct_PositionBra3D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bra</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="n">x_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_x</span> <span class="o">-</span> <span class="n">bra</span><span class="o">.</span><span class="n">position_x</span>
+        <span class="n">y_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_y</span> <span class="o">-</span> <span class="n">bra</span><span class="o">.</span><span class="n">position_y</span>
+        <span class="n">z_diff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_z</span> <span class="o">-</span> <span class="n">bra</span><span class="o">.</span><span class="n">position_z</span>
+
+        <span class="k">return</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="n">x_diff</span><span class="p">)</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">y_diff</span><span class="p">)</span><span class="o">*</span><span class="n">DiracDelta</span><span class="p">(</span><span class="n">z_diff</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">dual_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PositionBra3D</span>
+
+</div>
+<div class="viewcode-block" id="PositionBra3D"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PositionBra3D">[docs]</a><span class="k">class</span> <span class="nc">PositionBra3D</span><span class="p">(</span><span class="n">Bra</span><span class="p">,</span> <span class="n">PositionState3D</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; 3D cartesian position eigenbra &quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">dual_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PositionKet3D</span>
+
+<span class="c">#-------------------------------------------------------------------------</span>
+<span class="c"># Momentum eigenstates</span>
+<span class="c">#-------------------------------------------------------------------------</span>
+
+</div>
+<div class="viewcode-block" id="PxKet"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PxKet">[docs]</a><span class="k">class</span> <span class="nc">PxKet</span><span class="p">(</span><span class="n">Ket</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1D cartesian momentum eigenket.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_operators_to_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">_lowercase_labels</span><span class="p">(</span><span class="n">op</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_state_to_operators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_class</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">op_class</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">op_class</span><span class="p">,</span>
+                                <span class="o">*</span><span class="n">_uppercase_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;px&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">dual_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PxBra</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PxKet.momentum"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PxKet.momentum">[docs]</a>    <span class="k">def</span> <span class="nf">momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The momentum of the state.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+    <span class="k">def</span> <span class="nf">_enumerate_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_enumerate_continuous_1D</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_innerproduct_XBra</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bra</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="n">I</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="o">*</span><span class="n">bra</span><span class="o">.</span><span class="n">position</span><span class="o">/</span><span class="n">hbar</span><span class="p">)</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">hbar</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_innerproduct_PxBra</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bra</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DiracDelta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span> <span class="o">-</span> <span class="n">bra</span><span class="o">.</span><span class="n">momentum</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="PxBra"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PxBra">[docs]</a><span class="k">class</span> <span class="nc">PxBra</span><span class="p">(</span><span class="n">Bra</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1D cartesian momentum eigenbra.&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s">&quot;px&quot;</span><span class="p">,)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">dual_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PxKet</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="PxBra.momentum"><a class="viewcode-back" href="../../../../modules/physics/quantum/cartesian.html#sympy.physics.quantum.cartesian.PxBra.momentum">[docs]</a>    <span class="k">def</span> <span class="nf">momentum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The momentum of the state.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c">#-------------------------------------------------------------------------</span>
+<span class="c"># Global helper functions</span>
+<span class="c">#-------------------------------------------------------------------------</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">_enumerate_continuous_1D</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">num_states</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">state_class</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">__class__</span>
+    <span class="n">index_list</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;index_list&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">start_index</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;start_index&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">index_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start_index</span><span class="p">,</span> <span class="n">start_index</span> <span class="o">+</span> <span class="n">num_states</span><span class="p">))</span>
+
+    <span class="n">enum_states</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index_list</span><span class="p">))]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">index_list</span><span class="p">):</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">enum_states</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_class</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">label</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ind</span><span class="p">),</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">enum_states</span>
+
+
+<span class="k">def</span> <span class="nf">_lowercase_labels</span><span class="p">(</span><span class="n">ops</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+        <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">ops</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_uppercase_labels</span><span class="p">(</span><span class="n">ops</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+        <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">ops</span><span class="p">]</span>
+
+    <span class="n">new_args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span>
+                <span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">label</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">new_args</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

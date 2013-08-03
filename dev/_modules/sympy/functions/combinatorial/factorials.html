@@ -1,0 +1,700 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.combinatorial.factorials &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.combinatorial.factorials</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">sieve</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span> <span class="k">as</span> <span class="n">_sqrt</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">reduce</span><span class="p">,</span> <span class="n">as_int</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.core.cache</span> <span class="kn">import</span> <span class="n">cacheit</span>
+
+
+
+<span class="k">class</span> <span class="nc">CombinatorialFunction</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for combinatorial functions. &quot;&quot;&quot;</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">######################## FACTORIAL and MULTI-FACTORIAL ########################</span>
+<span class="c">###############################################################################</span>
+
+
+<div class="viewcode-block" id="factorial"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.factorials.factorial">[docs]</a><span class="k">class</span> <span class="nc">factorial</span><span class="p">(</span><span class="n">CombinatorialFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implementation of factorial function over nonnegative integers.</span>
+<span class="sd">       For the sake of convenience and simplicity of procedures using</span>
+<span class="sd">       this function it is defined for negative integers and returns</span>
+<span class="sd">       zero in this case.</span>
+
+<span class="sd">       The factorial is very important in combinatorics where it gives</span>
+<span class="sd">       the number of ways in which &#39;n&#39; objects can be permuted. It also</span>
+<span class="sd">       arises in calculus, probability, number theory etc.</span>
+
+<span class="sd">       There is strict relation of factorial with gamma function. In</span>
+<span class="sd">       fact n! = gamma(n+1) for nonnegative integers. Rewrite of this</span>
+<span class="sd">       kind is very useful in case of combinatorial simplification.</span>
+
+<span class="sd">       Computation of the factorial is done using two algorithms. For</span>
+<span class="sd">       small arguments naive product is evaluated. However for bigger</span>
+<span class="sd">       input algorithm Prime-Swing is used. It is the fastest algorithm</span>
+<span class="sd">       known and computes n! via prime factorization of special class</span>
+<span class="sd">       of numbers, called here the &#39;Swing Numbers&#39;.</span>
+
+<span class="sd">       Examples</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       &gt;&gt;&gt; from sympy import Symbol, factorial</span>
+<span class="sd">       &gt;&gt;&gt; n = Symbol(&#39;n&#39;, integer=True)</span>
+
+<span class="sd">       &gt;&gt;&gt; factorial(-2)</span>
+<span class="sd">       0</span>
+
+<span class="sd">       &gt;&gt;&gt; factorial(0)</span>
+<span class="sd">       1</span>
+
+<span class="sd">       &gt;&gt;&gt; factorial(7)</span>
+<span class="sd">       5040</span>
+
+<span class="sd">       &gt;&gt;&gt; factorial(n)</span>
+<span class="sd">       factorial(n)</span>
+
+<span class="sd">       &gt;&gt;&gt; factorial(2*n)</span>
+<span class="sd">       factorial(2*n)</span>
+
+<span class="sd">       See Also</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       factorial2, RisingFactorial, FallingFactorial</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">polygamma</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="n">_small_swing</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">315</span><span class="p">,</span> <span class="mi">63</span><span class="p">,</span> <span class="mi">693</span><span class="p">,</span> <span class="mi">231</span><span class="p">,</span> <span class="mi">3003</span><span class="p">,</span> <span class="mi">429</span><span class="p">,</span> <span class="mi">6435</span><span class="p">,</span> <span class="mi">6435</span><span class="p">,</span> <span class="mi">109395</span><span class="p">,</span>
+        <span class="mi">12155</span><span class="p">,</span> <span class="mi">230945</span><span class="p">,</span> <span class="mi">46189</span><span class="p">,</span> <span class="mi">969969</span><span class="p">,</span> <span class="mi">88179</span><span class="p">,</span> <span class="mi">2028117</span><span class="p">,</span> <span class="mi">676039</span><span class="p">,</span> <span class="mi">16900975</span><span class="p">,</span> <span class="mi">1300075</span><span class="p">,</span>
+        <span class="mi">35102025</span><span class="p">,</span> <span class="mi">5014575</span><span class="p">,</span> <span class="mi">145422675</span><span class="p">,</span> <span class="mi">9694845</span><span class="p">,</span> <span class="mi">300540195</span><span class="p">,</span> <span class="mi">300540195</span>
+    <span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_swing</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">33</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_small_swing</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">N</span><span class="p">,</span> <span class="n">primes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">prime</span> <span class="ow">in</span> <span class="n">sieve</span><span class="o">.</span><span class="n">primerange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span>
+
+                <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="n">q</span> <span class="o">//=</span> <span class="n">prime</span>
+
+                    <span class="k">if</span> <span class="n">q</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">q</span> <span class="o">&amp;</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                            <span class="n">p</span> <span class="o">*=</span> <span class="n">prime</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">break</span>
+
+                <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">primes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">prime</span> <span class="ow">in</span> <span class="n">sieve</span><span class="o">.</span><span class="n">primerange</span><span class="p">(</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="o">//</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="n">prime</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">primes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prime</span><span class="p">)</span>
+
+            <span class="n">L_product</span> <span class="o">=</span> <span class="n">R_product</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">prime</span> <span class="ow">in</span> <span class="n">sieve</span><span class="o">.</span><span class="n">primerange</span><span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">L_product</span> <span class="o">*=</span> <span class="n">prime</span>
+
+            <span class="k">for</span> <span class="n">prime</span> <span class="ow">in</span> <span class="n">primes</span><span class="p">:</span>
+                <span class="n">R_product</span> <span class="o">*=</span> <span class="n">prime</span>
+
+            <span class="k">return</span> <span class="n">L_product</span><span class="o">*</span><span class="n">R_product</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_recursive</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_recursive</span><span class="p">(</span><span class="n">n</span><span class="o">//</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">cls</span><span class="o">.</span><span class="n">_swing</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">n</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="mi">1</span>
+
+                    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                            <span class="n">result</span> <span class="o">*=</span> <span class="n">i</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">N</span><span class="p">,</span> <span class="n">bits</span> <span class="o">=</span> <span class="n">n</span><span class="p">,</span> <span class="mi">0</span>
+
+                        <span class="k">while</span> <span class="n">N</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">N</span> <span class="o">&amp;</span> <span class="mi">1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">bits</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                            <span class="n">N</span> <span class="o">=</span> <span class="n">N</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span>
+
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_recursive</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">bits</span><span class="p">)</span>
+
+                    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Integer</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_integer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_integer</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_positive</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="MultiFactorial"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.factorials.MultiFactorial">[docs]</a><span class="k">class</span> <span class="nc">MultiFactorial</span><span class="p">(</span><span class="n">CombinatorialFunction</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+</div>
+<span class="k">class</span> <span class="nc">subfactorial</span><span class="p">(</span><span class="n">CombinatorialFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The subfactorial counts the derangements of n items and is</span>
+<span class="sd">    defined for non-negative integers as::</span>
+
+<span class="sd">              ,</span>
+<span class="sd">             |  1                             for n = 0</span>
+<span class="sd">        !n = {  0                             for n = 1</span>
+<span class="sd">             |  (n - 1)*(!(n - 1) + !(n - 2)) for n &gt; 1</span>
+<span class="sd">              `</span>
+
+<span class="sd">    It can also be written as int(round(n!/exp(1))) but the recursive</span>
+<span class="sd">    definition with caching is implemented for this function.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Subfactorial</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import subfactorial</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import n</span>
+<span class="sd">    &gt;&gt;&gt; subfactorial(n + 1)</span>
+<span class="sd">    subfactorial(n + 1)</span>
+<span class="sd">    &gt;&gt;&gt; subfactorial(5)</span>
+<span class="sd">    44</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    factorial, sympy.utilities.iterables.generate_derangements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">_eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_eval</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">arg</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Integer</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_eval</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sympify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;argument must be a nonnegative integer&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="factorial2"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.factorials.factorial2">[docs]</a><span class="k">class</span> <span class="nc">factorial2</span><span class="p">(</span><span class="n">CombinatorialFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The double factorial n!!, not to be confused with (n!)!</span>
+
+<span class="sd">    The double factorial is defined for integers &gt;= -1 as::</span>
+
+<span class="sd">               ,</span>
+<span class="sd">              |  n*(n - 2)*(n - 4)* ... * 1    for n odd</span>
+<span class="sd">        n!! = {  n*(n - 2)*(n - 4)* ... * 2    for n even</span>
+<span class="sd">              |  1                             for n = 0, -1</span>
+<span class="sd">               `</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import factorial2, var</span>
+<span class="sd">    &gt;&gt;&gt; var(&#39;n&#39;)</span>
+<span class="sd">    n</span>
+<span class="sd">    &gt;&gt;&gt; factorial2(n + 1)</span>
+<span class="sd">    factorial2(n + 1)</span>
+<span class="sd">    &gt;&gt;&gt; factorial2(5)</span>
+<span class="sd">    15</span>
+<span class="sd">    &gt;&gt;&gt; factorial2(-1)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    factorial, RisingFactorial, FallingFactorial</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span> <span class="ow">or</span> <span class="n">arg</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">return</span> <span class="n">factorial2</span><span class="p">(</span><span class="n">arg</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">arg</span>
+
+
+<span class="c">###############################################################################</span>
+<span class="c">######################## RISING and FALLING FACTORIALS ########################</span>
+<span class="c">###############################################################################</span>
+
+</div>
+<div class="viewcode-block" id="RisingFactorial"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.factorials.RisingFactorial">[docs]</a><span class="k">class</span> <span class="nc">RisingFactorial</span><span class="p">(</span><span class="n">CombinatorialFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rising factorial (also called Pochhammer symbol) is a double valued</span>
+<span class="sd">       function arising in concrete mathematics, hypergeometric functions</span>
+<span class="sd">       and series expansions. It is defined by:</span>
+
+<span class="sd">                   rf(x, k) = x * (x+1) * ... * (x + k-1)</span>
+
+<span class="sd">       where &#39;x&#39; can be arbitrary expression and &#39;k&#39; is an integer. For</span>
+<span class="sd">       more information check &quot;Concrete mathematics&quot; by Graham, pp. 66</span>
+<span class="sd">       or visit http://mathworld.wolfram.com/RisingFactorial.html page.</span>
+
+<span class="sd">       Examples</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       &gt;&gt;&gt; from sympy import rf</span>
+<span class="sd">       &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">       &gt;&gt;&gt; rf(x, 0)</span>
+<span class="sd">       1</span>
+
+<span class="sd">       &gt;&gt;&gt; rf(1, 5)</span>
+<span class="sd">       120</span>
+
+<span class="sd">       &gt;&gt;&gt; rf(x, 5) == x*(1 + x)*(2 + x)*(3 + x)*(4 + x)</span>
+<span class="sd">       True</span>
+
+<span class="sd">       See Also</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       factorial, factorial2, FallingFactorial</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">r</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">i</span><span class="p">),</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">r</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">i</span><span class="p">),</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="FallingFactorial"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.factorials.FallingFactorial">[docs]</a><span class="k">class</span> <span class="nc">FallingFactorial</span><span class="p">(</span><span class="n">CombinatorialFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Falling factorial (related to rising factorial) is a double valued</span>
+<span class="sd">       function arising in concrete mathematics, hypergeometric functions</span>
+<span class="sd">       and series expansions. It is defined by</span>
+
+<span class="sd">                   ff(x, k) = x * (x-1) * ... * (x - k+1)</span>
+
+<span class="sd">       where &#39;x&#39; can be arbitrary expression and &#39;k&#39; is an integer. For</span>
+<span class="sd">       more information check &quot;Concrete mathematics&quot; by Graham, pp. 66</span>
+<span class="sd">       or visit http://mathworld.wolfram.com/FallingFactorial.html page.</span>
+
+<span class="sd">       &gt;&gt;&gt; from sympy import ff</span>
+<span class="sd">       &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">       &gt;&gt;&gt; ff(x, 0)</span>
+<span class="sd">       1</span>
+
+<span class="sd">       &gt;&gt;&gt; ff(5, 5)</span>
+<span class="sd">       120</span>
+
+<span class="sd">       &gt;&gt;&gt; ff(x, 5) == x*(x-1)*(x-2)*(x-3)*(x-4)</span>
+<span class="sd">       True</span>
+
+<span class="sd">       See Also</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       factorial, factorial2, RisingFactorial</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+        <span class="k">elif</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">r</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">i</span><span class="p">),</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="n">r</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">i</span><span class="p">),</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="o">-</span><span class="n">x</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">)</span>
+</div>
+<span class="n">rf</span> <span class="o">=</span> <span class="n">RisingFactorial</span>
+<span class="n">ff</span> <span class="o">=</span> <span class="n">FallingFactorial</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">########################### BINOMIAL COEFFICIENTS #############################</span>
+<span class="c">###############################################################################</span>
+
+
+<div class="viewcode-block" id="binomial"><a class="viewcode-back" href="../../../../modules/functions/combinatorial.html#sympy.functions.combinatorial.factorials.binomial">[docs]</a><span class="k">class</span> <span class="nc">binomial</span><span class="p">(</span><span class="n">CombinatorialFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implementation of the binomial coefficient. It can be defined</span>
+<span class="sd">       in two ways depending on its desired interpretation:</span>
+
+<span class="sd">           C(n,k) = n!/(k!(n-k)!)   or   C(n, k) = ff(n, k)/k!</span>
+
+<span class="sd">       First, in a strict combinatorial sense it defines the</span>
+<span class="sd">       number of ways we can choose &#39;k&#39; elements from a set of</span>
+<span class="sd">       &#39;n&#39; elements. In this case both arguments are nonnegative</span>
+<span class="sd">       integers and binomial is computed using an efficient</span>
+<span class="sd">       algorithm based on prime factorization.</span>
+
+<span class="sd">       The other definition is generalization for arbitrary &#39;n&#39;,</span>
+<span class="sd">       however &#39;k&#39; must also be nonnegative. This case is very</span>
+<span class="sd">       useful when evaluating summations.</span>
+
+<span class="sd">       For the sake of convenience for negative &#39;k&#39; this function</span>
+<span class="sd">       will return zero no matter what valued is the other argument.</span>
+
+<span class="sd">       To expand the binomial when n is a symbol, use either</span>
+<span class="sd">       expand_func() or expand(func=True). The former will keep the</span>
+<span class="sd">       polynomial in factored form while the latter will expand the</span>
+<span class="sd">       polynomial itself. See examples for details.</span>
+
+<span class="sd">       Examples</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       &gt;&gt;&gt; from sympy import Symbol, Rational, binomial, expand_func</span>
+<span class="sd">       &gt;&gt;&gt; n = Symbol(&#39;n&#39;, integer=True)</span>
+
+<span class="sd">       &gt;&gt;&gt; binomial(15, 8)</span>
+<span class="sd">       6435</span>
+
+<span class="sd">       &gt;&gt;&gt; binomial(n, -1)</span>
+<span class="sd">       0</span>
+
+<span class="sd">       &gt;&gt;&gt; [ binomial(0, i) for i in range(1)]</span>
+<span class="sd">       [1]</span>
+<span class="sd">       &gt;&gt;&gt; [ binomial(1, i) for i in range(2)]</span>
+<span class="sd">       [1, 1]</span>
+<span class="sd">       &gt;&gt;&gt; [ binomial(2, i) for i in range(3)]</span>
+<span class="sd">       [1, 2, 1]</span>
+<span class="sd">       &gt;&gt;&gt; [ binomial(3, i) for i in range(4)]</span>
+<span class="sd">       [1, 3, 3, 1]</span>
+<span class="sd">       &gt;&gt;&gt; [ binomial(4, i) for i in range(5)]</span>
+<span class="sd">       [1, 4, 6, 4, 1]</span>
+
+<span class="sd">       &gt;&gt;&gt; binomial(Rational(5,4), 3)</span>
+<span class="sd">       -5/128</span>
+
+<span class="sd">       &gt;&gt;&gt; binomial(n, 3)</span>
+<span class="sd">       binomial(n, 3)</span>
+
+<span class="sd">       &gt;&gt;&gt; binomial(n, 3).expand(func=True)</span>
+<span class="sd">       n**3/6 - n**2/2 + n/3</span>
+
+<span class="sd">       &gt;&gt;&gt; expand_func(binomial(n, 3))</span>
+<span class="sd">       n*(n - 2)*(n - 1)/6</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">polygamma</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">polygamma</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">argindex</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c"># http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">polygamma</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">polygamma</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                <span class="k">elif</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">==</span> <span class="n">k</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+                <span class="k">elif</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">n</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                    <span class="k">elif</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="n">k</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span>
+
+                    <span class="n">M</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)),</span> <span class="mi">1</span>
+
+                    <span class="k">for</span> <span class="n">prime</span> <span class="ow">in</span> <span class="n">sieve</span><span class="o">.</span><span class="n">primerange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">prime</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">:</span>
+                            <span class="n">result</span> <span class="o">*=</span> <span class="n">prime</span>
+                        <span class="k">elif</span> <span class="n">prime</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="k">elif</span> <span class="n">prime</span> <span class="o">&gt;</span> <span class="n">M</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="n">prime</span> <span class="o">&lt;</span> <span class="n">k</span> <span class="o">%</span> <span class="n">prime</span><span class="p">:</span>
+                                <span class="n">result</span> <span class="o">*=</span> <span class="n">prime</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">N</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span>
+                            <span class="n">exp</span> <span class="o">=</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span>
+
+                            <span class="k">while</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">a</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">N</span> <span class="o">%</span> <span class="n">prime</span><span class="p">)</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">K</span> <span class="o">%</span> <span class="n">prime</span> <span class="o">+</span> <span class="n">a</span><span class="p">))</span>
+                                <span class="n">N</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">N</span> <span class="o">//</span> <span class="n">prime</span><span class="p">,</span> <span class="n">K</span> <span class="o">//</span> <span class="n">prime</span>
+                                <span class="n">exp</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">exp</span>
+
+                            <span class="k">if</span> <span class="n">exp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">result</span> <span class="o">*=</span> <span class="n">prime</span><span class="o">**</span><span class="n">exp</span>
+
+                    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Integer</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">result</span> <span class="o">*=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="n">i</span>
+                        <span class="n">result</span> <span class="o">/=</span> <span class="n">i</span>
+                    <span class="k">return</span> <span class="n">result</span>
+
+        <span class="k">elif</span> <span class="n">k</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span>
+
+            <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_expand_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Function to expand binomial(n,k) when m is positive integer</span>
+<span class="sd">        Also,</span>
+<span class="sd">        n is self.args[0] and k is self.args[1] while using binomial(n, k)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">binomial</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Add</span> <span class="ow">and</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">k</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span>
+
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">elif</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">result</span> <span class="o">*=</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="n">i</span>
+                    <span class="n">result</span> <span class="o">/=</span> <span class="n">i</span>
+                <span class="k">return</span> <span class="n">result</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">binomial</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_factorial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_rewrite_as_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">C</span><span class="o">.</span><span class="n">gamma</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_eval_is_integer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">is_integer</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

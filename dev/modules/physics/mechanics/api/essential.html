@@ -1,0 +1,928 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Essential Components (Docstrings) &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="../index.html" />
+    <link rel="next" title="Related Essential Functions (Docstrings)" href="functions.html" />
+    <link rel="prev" title="References for Physics/Mechanics" href="../reference.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="functions.html" title="Related Essential Functions (Docstrings)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../reference.html" title="References for Physics/Mechanics"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="essential-components-docstrings">
+<h1>Essential Components (Docstrings)<a class="headerlink" href="#essential-components-docstrings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="referenceframe">
+<h2>ReferenceFrame<a class="headerlink" href="#referenceframe" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.essential.</tt><tt class="descname">ReferenceFrame</tt><big>(</big><em>name</em>, <em>indices=None</em>, <em>latexs=None</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame" title="Permalink to this definition">¶</a></dt>
+<dd><p>A reference frame in classical mechanics.</p>
+<p>ReferenceFrame is a class used to represent a reference frame in classical
+mechanics. It has a standard basis of three unit vectors in the frame&#8217;s
+x, y, and z directions.</p>
+<p>It also can have a rotation relative to a parent frame; this rotation is
+defined by a direction cosine matrix relating this frame&#8217;s basis vectors to
+the parent frame&#8217;s basis vectors.  It can also have an angular velocity
+vector, defined in another frame.</p>
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.ang_acc_in">
+<tt class="descname">ang_acc_in</tt><big>(</big><em>otherframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.ang_acc_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.ang_acc_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the angular acceleration Vector of the ReferenceFrame.</p>
+<p>Effectively returns the Vector:
+^N alpha ^B
+which represent the angular acceleration of B in N, where B is self, and
+N is otherframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The ReferenceFrame which the angular acceleration is returned in.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">V</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_ang_acc</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">ang_acc_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.ang_vel_in">
+<tt class="descname">ang_vel_in</tt><big>(</big><em>otherframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.ang_vel_in"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.ang_vel_in" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the angular velocity Vector of the ReferenceFrame.</p>
+<p>Effectively returns the Vector:
+^N omega ^B
+which represent the angular velocity of B in N, where B is self, and
+N is otherframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The ReferenceFrame which the angular velocity is returned in.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">V</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.dcm">
+<tt class="descname">dcm</tt><big>(</big><em>otherframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.dcm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.dcm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The direction cosine matrix between frames.</p>
+<p>This gives the DCM between this frame and the otherframe.
+The format is N.xyz = N.dcm(B) * B.xyz
+A SymPy Matrix is returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The otherframe which the DCM is generated to.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">dcm</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[1,       0,        0],</span>
+<span class="go">[0, cos(q1), -sin(q1)],</span>
+<span class="go">[0, sin(q1),  cos(q1)]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.orient">
+<tt class="descname">orient</tt><big>(</big><em>parent</em>, <em>rot_type</em>, <em>amounts</em>, <em>rot_order=''</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.orient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.orient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the orientation of this frame relative to a parent frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>parent</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame that this ReferenceFrame will have its orientation matrix
+defined in relation to.</p>
+</div></blockquote>
+<p><strong>rot_type</strong> : str</p>
+<blockquote>
+<div><p>The type of orientation matrix that is being created. Supported
+types are &#8216;Body&#8217;, &#8216;Space&#8217;, &#8216;Quaternion&#8217;, and &#8216;Axis&#8217;. See examples
+for correct usage.</p>
+</div></blockquote>
+<p><strong>amounts</strong> : list OR value</p>
+<blockquote>
+<div><p>The quantities that the orientation matrix will be defined by.</p>
+</div></blockquote>
+<p><strong>rot_order</strong> : str</p>
+<blockquote class="last">
+<div><p>If applicable, the order of a series of rotations.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q0</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;q0 q1 q2 q3 q4&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we have a choice of how to implement the orientation. First is
+Body. Body orientation takes this reference frame through three
+successive simple rotations. Acceptable rotation orders are of length
+3, expressed in XYZ or 123, and cannot have a rotation about about an
+axis twice in a row.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Body&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">],</span> <span class="s">&#39;123&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Body&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s">&#39;ZXZ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Body&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s">&#39;XYX&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next is Space. Space is like Body, but the rotations are applied in the
+opposite order.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Space&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">],</span> <span class="s">&#39;312&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next is Quaternion. This orients the new ReferenceFrame with
+Quaternions, defined as a finite rotation about lambda, a unit vector,
+by some amount theta.
+This orientation is described by four parameters:
+q0 = cos(theta/2)
+q1 = lambda_x sin(theta/2)
+q2 = lambda_y sin(theta/2)
+q3 = lambda_z sin(theta/2)
+Quaternion does not take in a rotation order.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Quaternion&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q0</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Last is Axis. This is a rotation about an arbitrary, non-time-varying
+axis by some angle. The axis is supplied as a Vector. This is how
+simple rotations are defined.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.orientnew">
+<tt class="descname">orientnew</tt><big>(</big><em>newname</em>, <em>rot_type</em>, <em>amounts</em>, <em>rot_order=''</em>, <em>indices=None</em>, <em>latexs=None</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.orientnew"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.orientnew" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new ReferenceFrame oriented with respect to this Frame.</p>
+<p>See ReferenceFrame.orient() for acceptable rotation types, amounts,
+and orders. Parent is going to be self.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>parent</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame that this ReferenceFrame will have its orientation matrix
+defined in relation to.</p>
+</div></blockquote>
+<p><strong>rot_type</strong> : str</p>
+<blockquote>
+<div><p>The type of orientation matrix that is being created. Supported
+types are &#8216;Body&#8217;, &#8216;Space&#8217;, &#8216;Quaternion&#8217;, and &#8216;Axis&#8217;. See examples
+for correct usage.</p>
+</div></blockquote>
+<p><strong>amounts</strong> : list OR value</p>
+<blockquote>
+<div><p>The quantities that the orientation matrix will be defined by.</p>
+</div></blockquote>
+<p><strong>rot_order</strong> : str</p>
+<blockquote class="last">
+<div><p>If applicable, the order of a series of rotations.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q0</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;q0 q1 q2 q3 q4&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we have a choice of how to implement the orientation. First is
+Body. Body orientation takes this reference frame through three
+successive simple rotations. Acceptable rotation orders are of length
+3, expressed in XYZ or 123, and cannot have a rotation about about an
+axis twice in a row.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Body&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">],</span> <span class="s">&#39;123&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Body&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s">&#39;ZXZ&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Body&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="s">&#39;XYX&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next is Space. Space is like Body, but the rotations are applied in the
+opposite order.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Space&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">],</span> <span class="s">&#39;312&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next is Quaternion. This orients the new ReferenceFrame with
+Quaternions, defined as a finite rotation about lambda, a unit vector,
+by some amount theta.
+This orientation is described by four parameters:
+q0 = cos(theta/2)
+q1 = lambda_x sin(theta/2)
+q2 = lambda_y sin(theta/2)
+q3 = lambda_z sin(theta/2)
+Quaternion does not take in a rotation order.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Quaternion&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q0</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Last is Axis. This is a rotation about an arbitrary, non-time-varying
+axis by some angle. The axis is supplied as a Vector. This is how
+simple rotations are defined.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">orient</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.set_ang_acc">
+<tt class="descname">set_ang_acc</tt><big>(</big><em>otherframe</em>, <em>value</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.set_ang_acc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.set_ang_acc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the angular acceleration Vector in a ReferenceFrame.</p>
+<p>Defines the angular acceleration of this ReferenceFrame, in another.
+Angular acceleration can be defined with respect to multiple different
+ReferenceFrames. Care must be taken to not create loops which are
+inconsistent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>A ReferenceFrame to define the angular acceleration in</p>
+</div></blockquote>
+<p><strong>value</strong> : Vector</p>
+<blockquote class="last">
+<div><p>The Vector representing angular acceleration</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">V</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_ang_acc</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">ang_acc_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.set_ang_vel">
+<tt class="descname">set_ang_vel</tt><big>(</big><em>otherframe</em>, <em>value</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.set_ang_vel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.set_ang_vel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define the angular velocity vector in a ReferenceFrame.</p>
+<p>Defines the angular velocity of this ReferenceFrame, in another.
+Angular velocity can be defined with respect to multiple different
+ReferenceFrames. Care must be taken to not create loops which are
+inconsistent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>A ReferenceFrame to define the angular velocity in</p>
+</div></blockquote>
+<p><strong>value</strong> : Vector</p>
+<blockquote class="last">
+<div><p>The Vector representing angular velocity</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">V</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">V</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">10*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.x">
+<tt class="descname">x</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>The basis Vector for the ReferenceFrame, in the x direction.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.y">
+<tt class="descname">y</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.y" title="Permalink to this definition">¶</a></dt>
+<dd><p>The basis Vector for the ReferenceFrame, in the y direction.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.essential.ReferenceFrame.z">
+<tt class="descname">z</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#ReferenceFrame.z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.ReferenceFrame.z" title="Permalink to this definition">¶</a></dt>
+<dd><p>The basis Vector for the ReferenceFrame, in the z direction.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="vector">
+<h2>Vector<a class="headerlink" href="#vector" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.essential.Vector">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.essential.</tt><tt class="descname">Vector</tt><big>(</big><em>inlist</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>The class used to define vectors.</p>
+<p>It along with ReferenceFrame are the building blocks of describing a
+classical mechanics system in PyDy.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="7%" />
+<col width="12%" />
+<col width="82%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>simp</td>
+<td>Boolean</td>
+<td>Let certain methods use trigsimp on their outputs</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.cross">
+<tt class="descname">cross</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.cross"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>The cross product operator for two Vectors.</p>
+<p>Returns a Vector, expressed in the same ReferenceFrames as self.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>other</strong> : Vector</p>
+<blockquote class="last">
+<div><p>The Vector which we are crossing with</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">^</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">N.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span> <span class="o">^</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span>
+<span class="go">N.z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">y</span> <span class="o">^</span> <span class="n">A</span><span class="o">.</span><span class="n">x</span>
+<span class="go">- sin(q1)*A.y - cos(q1)*A.z</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.diff">
+<tt class="descname">diff</tt><big>(</big><em>wrt</em>, <em>otherframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.diff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes the partial derivative, with respect to a value, in a frame.</p>
+<p>Returns a Vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>wrt</strong> : Symbol</p>
+<blockquote>
+<div><p>What the partial derivative is taken with respect to.</p>
+</div></blockquote>
+<p><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The ReferenceFrame that the partial derivative is taken in.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Vector</span><span class="o">.</span><span class="n">simp</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">- q1&#39;*A.z</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.doit">
+<tt class="descname">doit</tt><big>(</big><em>**hints</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls .doit() on each term in the Vector</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.dot">
+<tt class="descname">dot</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.dot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dot product of two vectors.</p>
+<p>Returns a scalar, the dot product of the two Vectors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>other</strong> : Vector</p>
+<blockquote class="last">
+<div><p>The Vector which we are dotting with</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">dot</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">cos(q1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.dt">
+<tt class="descname">dt</tt><big>(</big><em>otherframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.dt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the time derivative of the Vector in a ReferenceFrame.</p>
+<p>Returns a Vector which is the time derivative of the self Vector, taken
+in frame otherframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The ReferenceFrame that the partial derivative is taken in.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span> <span class="o">=</span> <span class="n">u1</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">set_ang_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">10</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dt</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">v</span><span class="o">.</span><span class="n">dt</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">u1&#39;*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.express">
+<tt class="descname">express</tt><big>(</big><em>otherframe</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.express"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.express" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a vector, expressed in the other frame.</p>
+<p>A new Vector is returned, equalivalent to this Vector, but its
+components are all defined in only the otherframe.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>otherframe</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame for this Vector to be described in</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">express</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+<span class="go">cos(q1)*N.x - sin(q1)*N.z</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.magnitude">
+<tt class="descname">magnitude</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.magnitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.magnitude" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the magnitude (Euclidean norm) of self.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.normalize">
+<tt class="descname">normalize</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Vector of magnitude 1, codirectional with self.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.outer">
+<tt class="descname">outer</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.outer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.outer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outer product between two Vectors.</p>
+<p>A rank increasing operation, which returns a Dyadic from two Vectors</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>other</strong> : Vector</p>
+<blockquote class="last">
+<div><p>The Vector to take the outer product with</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="go">(N.x|N.x)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.simplify">
+<tt class="descname">simplify</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a simplified Vector.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Vector.subs">
+<tt class="descname">subs</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Vector.subs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Vector.subs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substituion on the Vector.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;s&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">*</span> <span class="n">s</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">s</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">2*N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="dyadic">
+<h2>Dyadic<a class="headerlink" href="#dyadic" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.essential.Dyadic">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.essential.</tt><tt class="descname">Dyadic</tt><big>(</big><em>inlist</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Dyadic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Dyadic object.</p>
+<p>See:
+<a class="reference external" href="http://en.wikipedia.org/wiki/Dyadic_tensor">http://en.wikipedia.org/wiki/Dyadic_tensor</a>
+Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill</p>
+<p>A more powerful way to represent a rigid body&#8217;s inertia. While it is more
+complex, by choosing Dyadic components to be in body fixed basis vectors,
+the resulting matrix is equivalent to the inertia tensor.</p>
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Dyadic.cross">
+<tt class="descname">cross</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic.cross" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a cross product in the form: Dyadic x Vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>other</strong> : Vector</p>
+<blockquote class="last">
+<div><p>The Vector that we are crossing this Dyadic with</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">cross</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cross</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">(N.x|N.z)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Dyadic.doit">
+<tt class="descname">doit</tt><big>(</big><em>**hints</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Dyadic.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls .doit() on each term in the Dyadic</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Dyadic.dot">
+<tt class="descname">dot</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic.dot" title="Permalink to this definition">¶</a></dt>
+<dd><p>The inner product operator for a Dyadic and a Dyadic or Vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>other</strong> : Dyadic or Vector</p>
+<blockquote class="last">
+<div><p>The other Dyadic or Vector to take the inner product with</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D1</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D2</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D1</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">D2</span><span class="p">)</span>
+<span class="go">(N.x|N.y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">D1</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">N.x</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Dyadic.dt">
+<tt class="descname">dt</tt><big>(</big><em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Dyadic.dt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic.dt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take the time derivative of this Dyadic in a frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The frame to take the time derivative in</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">dt</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">- q&#39;*(N.y|N.x) - q&#39;*(N.x|N.y)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Dyadic.express">
+<tt class="descname">express</tt><big>(</big><em>frame1</em>, <em>frame2=None</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Dyadic.express"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic.express" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expresses this Dyadic in alternate frame(s)</p>
+<p>The first frame is the list side expression, the second frame is the
+right side; if Dyadic is in form A.x|B.y, you can express it in two
+different frames. If no second frame is given, the Dyadic is expressed in
+only one frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>frame1</strong> : ReferenceFrame</p>
+<blockquote>
+<div><p>The frame to express the left side of the Dyadic in</p>
+</div></blockquote>
+<p><strong>frame2</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>If provided, the frame to express the right side of the Dyadic in</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">outer</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">N</span><span class="o">.</span><span class="n">orientnew</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;Axis&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">q</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">z</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="o">.</span><span class="n">express</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Dyadic.simplify">
+<tt class="descname">simplify</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Dyadic.simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a simplified Dyadic.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.essential.Dyadic.subs">
+<tt class="descname">subs</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/essential.html#Dyadic.subs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.essential.Dyadic.subs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substituion on the Dyadic.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;s&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="o">|</span><span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">s</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="go">2*(N.x|N.x)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Essential Components (Docstrings)</a><ul>
+<li><a class="reference internal" href="#referenceframe">ReferenceFrame</a></li>
+<li><a class="reference internal" href="#vector">Vector</a></li>
+<li><a class="reference internal" href="#dyadic">Dyadic</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../reference.html"
+                        title="previous chapter">References for Physics/Mechanics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="functions.html"
+                        title="next chapter">Related Essential Functions (Docstrings)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../../_sources/modules/physics/mechanics/api/essential.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="functions.html" title="Related Essential Functions (Docstrings)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../reference.html" title="References for Physics/Mechanics"
+             >previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

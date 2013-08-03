@@ -1,0 +1,561 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.printing.fcode &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.printing.fcode</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Fortran code printer</span>
+
+<span class="sd">The FCodePrinter converts single sympy expressions into single Fortran</span>
+<span class="sd">expressions, using the functions defined in the Fortran 77 standard where</span>
+<span class="sd">possible. Some useful pointers to Fortran can be found on wikipedia:</span>
+
+<span class="sd">http://en.wikipedia.org/wiki/Fortran</span>
+
+<span class="sd">Most of the code below is based on the &quot;Professional Programmer\&#39;s Guide to</span>
+<span class="sd">Fortran77&quot; by Clive G. Page:</span>
+
+<span class="sd">http://www.star.le.ac.uk/~cgp/prof77.html</span>
+
+<span class="sd">Fortran is a case-insensitive language. This might cause trouble because</span>
+<span class="sd">SymPy is case sensitive. The implementation below does not care and leaves</span>
+<span class="sd">the responsibility for generating properly cased Fortran code to the user.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">string</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">N</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">string_types</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.codeprinter</span> <span class="kn">import</span> <span class="n">CodePrinter</span>
+<span class="kn">from</span> <span class="nn">sympy.printing.precedence</span> <span class="kn">import</span> <span class="n">precedence</span>
+
+<div class="viewcode-block" id="FCodePrinter"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.fcode.FCodePrinter">[docs]</a><span class="k">class</span> <span class="nc">FCodePrinter</span><span class="p">(</span><span class="n">CodePrinter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A printer to convert sympy expressions to strings of Fortran code&quot;&quot;&quot;</span>
+    <span class="n">printmethod</span> <span class="o">=</span> <span class="s">&quot;_fcode&quot;</span>
+
+    <span class="n">_default_settings</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;order&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+        <span class="s">&#39;full_prec&#39;</span><span class="p">:</span> <span class="s">&#39;auto&#39;</span><span class="p">,</span>
+        <span class="s">&#39;assign_to&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span>
+        <span class="s">&#39;precision&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+        <span class="s">&#39;user_functions&#39;</span><span class="p">:</span> <span class="p">{},</span>
+        <span class="s">&#39;human&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+        <span class="s">&#39;source_format&#39;</span><span class="p">:</span> <span class="s">&#39;fixed&#39;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">_implicit_functions</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span>
+        <span class="s">&quot;sin&quot;</span><span class="p">,</span> <span class="s">&quot;cos&quot;</span><span class="p">,</span> <span class="s">&quot;tan&quot;</span><span class="p">,</span> <span class="s">&quot;asin&quot;</span><span class="p">,</span> <span class="s">&quot;acos&quot;</span><span class="p">,</span> <span class="s">&quot;atan&quot;</span><span class="p">,</span> <span class="s">&quot;atan2&quot;</span><span class="p">,</span> <span class="s">&quot;sinh&quot;</span><span class="p">,</span>
+        <span class="s">&quot;cosh&quot;</span><span class="p">,</span> <span class="s">&quot;tanh&quot;</span><span class="p">,</span> <span class="s">&quot;sqrt&quot;</span><span class="p">,</span> <span class="s">&quot;log&quot;</span><span class="p">,</span> <span class="s">&quot;exp&quot;</span><span class="p">,</span> <span class="s">&quot;erf&quot;</span><span class="p">,</span> <span class="s">&quot;Abs&quot;</span><span class="p">,</span> <span class="s">&quot;sign&quot;</span><span class="p">,</span> <span class="s">&quot;conjugate&quot;</span><span class="p">,</span>
+    <span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">CodePrinter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_init_leading_padding</span><span class="p">()</span>
+        <span class="n">assign_to</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;assign_to&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">assign_to</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;assign_to&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="n">assign_to</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">assign_to</span><span class="p">,</span> <span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="n">Basic</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">None</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;FCodePrinter cannot assign to object of type </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">assign_to</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_rate_index_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;function to calculate score based on position among indices</span>
+
+<span class="sd">        This method is used to sort loops in an optimized order, see</span>
+<span class="sd">        CodePrinter._sort_optimized()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">p</span><span class="o">*</span><span class="mi">5</span>
+
+    <span class="k">def</span> <span class="nf">_get_statement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codestring</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">codestring</span>
+
+    <span class="k">def</span> <span class="nf">_init_leading_padding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># leading columns depend on fixed or free format</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;source_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;fixed&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lead_code</span> <span class="o">=</span> <span class="s">&quot;      &quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lead_cont</span> <span class="o">=</span> <span class="s">&quot;     @ &quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lead_comment</span> <span class="o">=</span> <span class="s">&quot;C     &quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;source_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;free&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lead_code</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lead_cont</span> <span class="o">=</span> <span class="s">&quot;      &quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lead_comment</span> <span class="o">=</span> <span class="s">&quot;! &quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;Unknown source format: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span>
+                <span class="s">&#39;source_format&#39;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_pad_leading_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;!&#39;</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lead_comment</span> <span class="o">+</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lead_code</span> <span class="o">+</span> <span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">_get_loop_opening_ending</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a tuple (open_lines, close_lines) containing lists of codelines</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">open_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">close_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">:</span>
+            <span class="c"># fortran arrays start at 1 and end at dimension</span>
+            <span class="n">var</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">,</span>
+                    <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">lower</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">.</span><span class="n">upper</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">open_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;do </span><span class="si">%s</span><span class="s"> = </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
+            <span class="n">close_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;end do&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">open_lines</span><span class="p">,</span> <span class="n">close_lines</span>
+
+<div class="viewcode-block" id="FCodePrinter.doprint"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.fcode.FCodePrinter.doprint">[docs]</a>    <span class="k">def</span> <span class="nf">doprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns Fortran code for expr (as a string)&quot;&quot;&quot;</span>
+        <span class="c"># find all number symbols</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_number_symbols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="c"># keep a set of expressions that are not strictly translatable to</span>
+        <span class="c"># Fortran.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_not_supported</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">Piecewise</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">):</span>
+            <span class="c"># support for top-level Piecewise function</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;if (</span><span class="si">%s</span><span class="s">) then&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;else&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;else if (</span><span class="si">%s</span><span class="s">) then&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+                <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_doprint_a_piece</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;assign_to&#39;</span><span class="p">]))</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;end if&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_doprint_a_piece</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;assign_to&#39;</span><span class="p">]))</span>
+
+        <span class="c"># format the output</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&quot;human&quot;</span><span class="p">]:</span>
+            <span class="n">frontlines</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_not_supported</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">frontlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;! Not Fortran:&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_not_supported</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">):</span>
+                    <span class="n">frontlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;! </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">repr</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_number_symbols</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="p">):</span>
+                <span class="n">frontlines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;parameter (</span><span class="si">%s</span><span class="s"> = </span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">value</span><span class="p">))</span>
+            <span class="n">frontlines</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">frontlines</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_code</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_fortran</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_code</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_fortran</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_symbols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_not_supported</span><span class="p">,</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">lines</span><span class="p">)</span>
+
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_not_supported</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_symbols</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="k">def</span> <span class="nf">_print_Add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="c"># purpose: print complex numbers nicely in Fortran.</span>
+        <span class="c"># collect the purely real and purely imaginary parts:</span>
+        <span class="n">pure_real</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">pure_imaginary</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">mixed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_number</span> <span class="ow">and</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_real</span><span class="p">:</span>
+                <span class="n">pure_real</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_number</span> <span class="ow">and</span> <span class="n">arg</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+                <span class="n">pure_imaginary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mixed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pure_imaginary</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">mixed</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">PREC</span> <span class="o">=</span> <span class="n">precedence</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+                <span class="n">term</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">mixed</span><span class="p">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;-&#39;</span><span class="p">):</span>
+                    <span class="n">sign</span> <span class="o">=</span> <span class="s">&quot;-&quot;</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sign</span> <span class="o">=</span> <span class="s">&quot;+&quot;</span>
+                <span class="k">if</span> <span class="n">precedence</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">PREC</span><span class="p">:</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="s">&quot;(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">t</span>
+
+                <span class="k">return</span> <span class="s">&quot;cmplx(</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">) </span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">pure_real</span><span class="p">)),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="o">*</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">pure_imaginary</span><span class="p">)),</span>
+                    <span class="n">sign</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&quot;cmplx(</span><span class="si">%s</span><span class="s">,</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">pure_real</span><span class="p">)),</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="o">*</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">pure_imaginary</span><span class="p">)),</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">_print_Add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_Function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&quot;user_functions&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span>
+        <span class="n">eargs</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">conjugate</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">conjugate</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s">&quot;conjg&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&#39;_imp_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">_imp_</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">Lambda</span><span class="p">):</span>
+                <span class="c"># inlined function.</span>
+                <span class="c"># the expression is printed with _print to avoid loops</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">_imp_</span><span class="p">(</span><span class="o">*</span><span class="n">eargs</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">__name__</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_implicit_functions</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_not_supported</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c"># convert all args to floats</span>
+                <span class="n">eargs</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">eargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stringify</span><span class="p">(</span><span class="n">eargs</span><span class="p">,</span> <span class="s">&quot;, &quot;</span><span class="p">))</span>
+
+    <span class="n">_print_factorial</span> <span class="o">=</span> <span class="n">_print_Function</span>
+
+    <span class="k">def</span> <span class="nf">_print_ImaginaryUnit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="c"># purpose: print complex numbers nicely in Fortran.</span>
+        <span class="k">return</span> <span class="s">&quot;cmplx(0,1)&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_print_int</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_Mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="c"># purpose: print complex numbers nicely in Fortran.</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_imaginary</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;cmplx(0,</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="o">-</span><span class="n">S</span><span class="o">.</span><span class="n">ImaginaryUnit</span><span class="o">*</span><span class="n">expr</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">_print_Mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+
+    <span class="n">_print_Exp1</span> <span class="o">=</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">_print_NumberSymbol</span>
+    <span class="n">_print_Pi</span> <span class="o">=</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">_print_NumberSymbol</span>
+
+    <span class="k">def</span> <span class="nf">_print_Pow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">PREC</span> <span class="o">=</span> <span class="n">precedence</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;1.0/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parenthesize</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">PREC</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span> <span class="o">==</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+                <span class="c"># Fortan intrinsic sqrt() does not accept integer argument</span>
+                <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s">&#39;sqrt(</span><span class="si">%s</span><span class="s">.0d0)&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s">&#39;sqrt(dble(</span><span class="si">%s</span><span class="s">))&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;sqrt(</span><span class="si">%s</span><span class="s">)&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">_print_Pow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_Rational</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">p</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%d</span><span class="s">.0d0/</span><span class="si">%d</span><span class="s">.0d0&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_print_Float</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">printed</span> <span class="o">=</span> <span class="n">CodePrinter</span><span class="o">.</span><span class="n">_print_Float</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">printed</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;e&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">d</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">printed</span><span class="p">[:</span><span class="n">e</span><span class="p">],</span> <span class="n">printed</span><span class="p">[</span><span class="n">e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">d0&quot;</span> <span class="o">%</span> <span class="n">printed</span>
+
+    <span class="k">def</span> <span class="nf">_print_Indexed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="n">inds</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">indices</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">label</span><span class="p">),</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">inds</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_print_Idx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">label</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_wrap_fortran</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Wrap long Fortran lines</span>
+
+<span class="sd">           Argument:</span>
+<span class="sd">             lines  --  a list of lines (without \\n character)</span>
+
+<span class="sd">           A comment line is split at white space. Code lines are split with a more</span>
+<span class="sd">           complex rule to give nice results.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># routine to find split point in a code line</span>
+        <span class="n">my_alnum</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="s">&quot;_+-.&quot;</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">digits</span> <span class="o">+</span> <span class="n">string</span><span class="o">.</span><span class="n">ascii_letters</span><span class="p">)</span>
+        <span class="n">my_white</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="s">&quot; </span><span class="se">\t</span><span class="s">()&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">split_pos_code</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">endpos</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">endpos</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">endpos</span>
+            <span class="n">split</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">pos</span><span class="p">:</span> \
+                <span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="ow">in</span> <span class="n">my_alnum</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">my_alnum</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">my_alnum</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">my_alnum</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="ow">in</span> <span class="n">my_white</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">my_white</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">my_white</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">my_white</span><span class="p">)</span>
+            <span class="k">while</span> <span class="ow">not</span> <span class="n">split</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+                <span class="n">pos</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">endpos</span>
+            <span class="k">return</span> <span class="n">pos</span>
+        <span class="c"># split line by line and add the splitted lines to result</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;source_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;free&#39;</span><span class="p">:</span>
+            <span class="n">trailing</span> <span class="o">=</span> <span class="s">&#39; &amp;&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">trailing</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lead_comment</span><span class="p">):</span>
+                <span class="c"># comment line</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">72</span><span class="p">:</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">72</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">pos</span> <span class="o">=</span> <span class="mi">72</span>
+                    <span class="n">hunk</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hunk</span><span class="p">)</span>
+                    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">pos</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">66</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">pos</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">66</span><span class="p">:</span>
+                            <span class="n">pos</span> <span class="o">=</span> <span class="mi">66</span>
+                        <span class="n">hunk</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span>
+                        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+                        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lead_comment</span><span class="p">,</span> <span class="n">hunk</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lead_code</span><span class="p">):</span>
+                <span class="c"># code line</span>
+                <span class="n">pos</span> <span class="o">=</span> <span class="n">split_pos_code</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="mi">72</span><span class="p">)</span>
+                <span class="n">hunk</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                    <span class="n">hunk</span> <span class="o">+=</span> <span class="n">trailing</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hunk</span><span class="p">)</span>
+                <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">pos</span> <span class="o">=</span> <span class="n">split_pos_code</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="mi">65</span><span class="p">)</span>
+                    <span class="n">hunk</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="n">hunk</span> <span class="o">+=</span> <span class="n">trailing</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lead_cont</span><span class="p">,</span> <span class="n">hunk</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+<div class="viewcode-block" id="FCodePrinter.indent_code"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.fcode.FCodePrinter.indent_code">[docs]</a>    <span class="k">def</span> <span class="nf">indent_code</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Accepts a string of code or a list of code lines&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+            <span class="n">code_lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indent_code</span><span class="p">(</span><span class="n">code</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="bp">True</span><span class="p">))</span>
+            <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">code_lines</span><span class="p">)</span>
+
+        <span class="n">free</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;source_format&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;free&#39;</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="p">[</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s">&#39; </span><span class="se">\t</span><span class="s">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">code</span> <span class="p">]</span>
+
+        <span class="n">inc_keyword</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;do &#39;</span><span class="p">,</span> <span class="s">&#39;if(&#39;</span><span class="p">,</span> <span class="s">&#39;if &#39;</span><span class="p">,</span> <span class="s">&#39;do</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="s">&#39;else&#39;</span><span class="p">)</span>
+        <span class="n">dec_keyword</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;end do&#39;</span><span class="p">,</span> <span class="s">&#39;enddo&#39;</span><span class="p">,</span> <span class="s">&#39;end if&#39;</span><span class="p">,</span> <span class="s">&#39;endif&#39;</span><span class="p">,</span> <span class="s">&#39;else&#39;</span><span class="p">)</span>
+
+        <span class="n">increase</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">,</span> <span class="n">inc_keyword</span><span class="p">)))</span>
+                     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">code</span> <span class="p">]</span>
+        <span class="n">decrease</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">,</span> <span class="n">dec_keyword</span><span class="p">)))</span>
+                     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">code</span> <span class="p">]</span>
+        <span class="n">continuation</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;&amp;&#39;</span><span class="p">,</span> <span class="s">&#39;&amp;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">])))</span>
+                         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">code</span> <span class="p">]</span>
+
+        <span class="n">level</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">cont_padding</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">tabwidth</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="n">new_code</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s">&#39;&#39;</span> <span class="ow">or</span> <span class="n">line</span> <span class="o">==</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">:</span>
+                <span class="n">new_code</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">level</span> <span class="o">-=</span> <span class="n">decrease</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="n">free</span><span class="p">:</span>
+                <span class="n">padding</span> <span class="o">=</span> <span class="s">&quot; &quot;</span><span class="o">*</span><span class="p">(</span><span class="n">level</span><span class="o">*</span><span class="n">tabwidth</span> <span class="o">+</span> <span class="n">cont_padding</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">padding</span> <span class="o">=</span> <span class="s">&quot; &quot;</span><span class="o">*</span><span class="n">level</span><span class="o">*</span><span class="n">tabwidth</span>
+
+            <span class="n">line</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">free</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_leading_columns</span><span class="p">([</span><span class="n">line</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">new_code</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">continuation</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="n">cont_padding</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">tabwidth</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cont_padding</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">level</span> <span class="o">+=</span> <span class="n">increase</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">free</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_fortran</span><span class="p">(</span><span class="n">new_code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">new_code</span>
+
+</div></div>
+<div class="viewcode-block" id="fcode"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.fcode.fcode">[docs]</a><span class="k">def</span> <span class="nf">fcode</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts an expr to a string of Fortran 77 code</span>
+
+<span class="sd">       Parameters</span>
+<span class="sd">       ==========</span>
+
+<span class="sd">       expr : sympy.core.Expr</span>
+<span class="sd">           a sympy expression to be converted</span>
+<span class="sd">       assign_to : optional</span>
+<span class="sd">           When given, the argument is used as the name of the</span>
+<span class="sd">           variable to which the Fortran expression is assigned.</span>
+<span class="sd">           (This is helpful in case of line-wrapping.)</span>
+<span class="sd">       precision : optional</span>
+<span class="sd">           the precision for numbers such as pi [default=15]</span>
+<span class="sd">       user_functions : optional</span>
+<span class="sd">           A dictionary where keys are FunctionClass instances and values</span>
+<span class="sd">           are there string representations.</span>
+<span class="sd">       human : optional</span>
+<span class="sd">           If True, the result is a single string that may contain some</span>
+<span class="sd">           parameter statements for the number symbols. If False, the same</span>
+<span class="sd">           information is returned in a more programmer-friendly data</span>
+<span class="sd">           structure.</span>
+<span class="sd">       source_format : optional</span>
+<span class="sd">           The source format can be either &#39;fixed&#39; or &#39;free&#39;.</span>
+<span class="sd">           [default=&#39;fixed&#39;]</span>
+
+<span class="sd">       Examples</span>
+<span class="sd">       ========</span>
+
+<span class="sd">       &gt;&gt;&gt; from sympy import fcode, symbols, Rational, pi, sin</span>
+<span class="sd">       &gt;&gt;&gt; x, tau = symbols(&#39;x,tau&#39;)</span>
+<span class="sd">       &gt;&gt;&gt; fcode((2*tau)**Rational(7,2))</span>
+<span class="sd">       &#39;      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)&#39;</span>
+<span class="sd">       &gt;&gt;&gt; fcode(sin(x), assign_to=&quot;s&quot;)</span>
+<span class="sd">       &#39;      s = sin(x)&#39;</span>
+<span class="sd">       &gt;&gt;&gt; print(fcode(pi))</span>
+<span class="sd">             parameter (pi = 3.14159265358979d0)</span>
+<span class="sd">             pi</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># run the printer</span>
+    <span class="n">printer</span> <span class="o">=</span> <span class="n">FCodePrinter</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">printer</span><span class="o">.</span><span class="n">doprint</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="print_fcode"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.fcode.print_fcode">[docs]</a><span class="k">def</span> <span class="nf">print_fcode</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints the Fortran representation of the given expression.</span>
+
+<span class="sd">       See fcode for the meaning of the optional arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">fcode</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

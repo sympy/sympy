@@ -1,0 +1,218 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Quantum Harmonic Oscillator in 3-D &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Physics Module" href="index.html" />
+    <link rel="next" title="Second Quantization" href="secondquant.html" />
+    <link rel="prev" title="Quantum Harmonic Oscillator in 1-D" href="qho_1d.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="secondquant.html" title="Second Quantization"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="qho_1d.html" title="Quantum Harmonic Oscillator in 1-D"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Physics Module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.sho">
+<span id="quantum-harmonic-oscillator-in-3-d"></span><h1>Quantum Harmonic Oscillator in 3-D<a class="headerlink" href="#module-sympy.physics.sho" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="sympy.physics.sho.E_nl">
+<tt class="descclassname">sympy.physics.sho.</tt><tt class="descname">E_nl</tt><big>(</big><em>n</em>, <em>l</em>, <em>hw</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/sho.html#E_nl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.sho.E_nl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Energy of an isotropic harmonic oscillator</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">n</span></tt></dt>
+<dd>the &#8220;nodal&#8221; quantum number</dd>
+<dt><tt class="docutils literal"><span class="pre">l</span></tt></dt>
+<dd>the orbital angular momentum</dd>
+<dt><tt class="docutils literal"><span class="pre">hw</span></tt></dt>
+<dd>the harmonic oscillator parameter.</dd>
+</dl>
+<p>The unit of the returned value matches the unit of hw, since the energy is
+calculated as:</p>
+<blockquote>
+<div>E_nl = (2*n + l + 3/2)*hw</div></blockquote>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.sho</span> <span class="kn">import</span> <span class="n">E_nl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x, y, z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E_nl</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">z*(2*x + y + 3/2)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.sho.R_nl">
+<tt class="descclassname">sympy.physics.sho.</tt><tt class="descname">R_nl</tt><big>(</big><em>n</em>, <em>l</em>, <em>nu</em>, <em>r</em><big>)</big><a class="reference internal" href="../../_modules/sympy/physics/sho.html#R_nl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.sho.R_nl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radial wavefunction R_{nl} for a 3d isotropic harmonic
+oscillator.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">n</span></tt></dt>
+<dd>the &#8220;nodal&#8221; quantum number.  Corresponds to the number of nodes in
+the wavefunction.  n &gt;= 0</dd>
+<dt><tt class="docutils literal"><span class="pre">l</span></tt></dt>
+<dd>the quantum number for orbital angular momentum</dd>
+<dt><tt class="docutils literal"><span class="pre">nu</span></tt></dt>
+<dd>mass-scaled frequency: nu = m*omega/(2*hbar) where <span class="math">\(m' is the mass
+and `omega\)</span> the frequency of the oscillator.
+(in atomic units nu == omega/2)</dd>
+<dt><tt class="docutils literal"><span class="pre">r</span></tt></dt>
+<dd>Radial coordinate</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.sho</span> <span class="kn">import</span> <span class="n">R_nl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">var</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">var</span><span class="p">(</span><span class="s">&quot;r nu l&quot;</span><span class="p">)</span>
+<span class="go">(r, nu, l)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R_nl</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<span class="go">2*2**(3/4)*exp(-r**2)/pi**(1/4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R_nl</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<span class="go">4*2**(1/4)*sqrt(3)*(-2*r**2 + 3/2)*exp(-r**2)/(3*pi**(1/4))</span>
+</pre></div>
+</div>
+<p>l, nu and r may be symbolic:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">R_nl</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<span class="go">2*2**(3/4)*sqrt(nu**(3/2))*exp(-nu*r**2)/pi**(1/4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">R_nl</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+<span class="go">r**l*sqrt(2**(l + 3/2)*2**(l + 2)/factorial2(2*l + 1))*exp(-r**2)/pi**(1/4)</span>
+</pre></div>
+</div>
+<p>The normalization of the radial wavefunction is:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Integral</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">R_nl</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">1.00000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">R_nl</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">1.00000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Integral</span><span class="p">(</span><span class="n">R_nl</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">n</span><span class="p">()</span>
+<span class="go">1.00000000000000</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="qho_1d.html"
+                        title="previous chapter">Quantum Harmonic Oscillator in 1-D</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="secondquant.html"
+                        title="next chapter">Second Quantization</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/physics/sho.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="secondquant.html" title="Second Quantization"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="qho_1d.html" title="Quantum Harmonic Oscillator in 1-D"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Physics Module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

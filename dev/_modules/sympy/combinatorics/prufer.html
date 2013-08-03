@@ -1,0 +1,552 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.combinatorics.prufer &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.combinatorics" href="../combinatorics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" accesskey="U">sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.combinatorics.prufer</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">as_int</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">flatten</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+
+
+<div class="viewcode-block" id="Prufer"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer">[docs]</a><span class="k">class</span> <span class="nc">Prufer</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Prufer correspondence is an algorithm that describes the</span>
+<span class="sd">    bijection between labeled trees and the Prufer code. A Prufer</span>
+<span class="sd">    code of a labeled tree is unique up to isomorphism and has</span>
+<span class="sd">    a length of n - 2.</span>
+
+<span class="sd">    Prufer sequences were first used by Heinz Prufer to give a</span>
+<span class="sd">    proof of Cayley&#39;s formula.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://mathworld.wolfram.com/LabeledTree.html</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_prufer_repr</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_tree_repr</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_nodes</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">_rank</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Prufer.prufer_repr"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.prufer_repr">[docs]</a>    <span class="k">def</span> <span class="nf">prufer_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns Prufer sequence for the Prufer object.</span>
+
+<span class="sd">        This sequence is found by removing the highest numbered vertex,</span>
+<span class="sd">        recording the node it was attached to, and continuuing until only</span>
+<span class="sd">        two verices remain. The Prufer sequence is the list of recorded nodes.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).prufer_repr</span>
+<span class="sd">        [3, 3, 3, 4]</span>
+<span class="sd">        &gt;&gt;&gt; Prufer([1, 0, 0]).prufer_repr</span>
+<span class="sd">        [1, 0, 0]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        to_prufer</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prufer_repr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prufer_repr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_prufer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tree_repr</span><span class="p">[:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prufer_repr</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Prufer.tree_repr"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.tree_repr">[docs]</a>    <span class="k">def</span> <span class="nf">tree_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the tree representation of the Prufer object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).tree_repr</span>
+<span class="sd">        [[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]</span>
+<span class="sd">        &gt;&gt;&gt; Prufer([1, 0, 0]).tree_repr</span>
+<span class="sd">        [[1, 2], [0, 1], [0, 3], [0, 4]]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        to_tree</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree_repr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_tree_repr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_tree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prufer_repr</span><span class="p">[:])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tree_repr</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Prufer.nodes"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.nodes">[docs]</a>    <span class="k">def</span> <span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the number of nodes in the tree.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]]).nodes</span>
+<span class="sd">        6</span>
+<span class="sd">        &gt;&gt;&gt; Prufer([1, 0, 0]).nodes</span>
+<span class="sd">        5</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Prufer.rank"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.rank">[docs]</a>    <span class="k">def</span> <span class="nf">rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the rank of the Prufer sequence.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; p = Prufer([[0, 3], [1, 3], [2, 3], [3, 4], [4, 5]])</span>
+<span class="sd">        &gt;&gt;&gt; p.rank</span>
+<span class="sd">        778</span>
+<span class="sd">        &gt;&gt;&gt; p.next(1).rank</span>
+<span class="sd">        779</span>
+<span class="sd">        &gt;&gt;&gt; p.prev().rank</span>
+<span class="sd">        777</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        prufer_rank, next, prev, size</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prufer_rank</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rank</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Prufer.size"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.size">[docs]</a>    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the number of possible trees of this Prufer object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; Prufer([0]*4).size == Prufer([6]*4).size == 1296</span>
+<span class="sd">        True</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        prufer_rank, rank, next, prev</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span><span class="o">.</span><span class="n">prev</span><span class="p">()</span><span class="o">.</span><span class="n">rank</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Prufer.to_prufer"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.to_prufer">[docs]</a>    <span class="k">def</span> <span class="nf">to_prufer</span><span class="p">(</span><span class="n">tree</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the Prufer sequence for a tree given as a list of edges where</span>
+<span class="sd">        ``n`` is the number of nodes in the tree.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; a = Prufer([[0, 1], [0, 2], [0, 3]])</span>
+<span class="sd">        &gt;&gt;&gt; a.prufer_repr</span>
+<span class="sd">        [0, 0]</span>
+<span class="sd">        &gt;&gt;&gt; Prufer.to_prufer([[0, 1], [0, 2], [0, 3]], 4)</span>
+<span class="sd">        [0, 0]</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        prufer_repr: returns Prufer sequence of a Prufer object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">tree</span><span class="p">:</span>
+            <span class="c"># Increment the value of the corresponding</span>
+            <span class="c"># node in the degree list as we encounter an</span>
+            <span class="c"># edge involving it.</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="c"># find the smallest leaf</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="c"># find the node it was connected to</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">tree</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span> <span class="o">==</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">x</span> <span class="o">==</span> <span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="c"># record and update</span>
+            <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                <span class="n">d</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">d</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                    <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">L</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Prufer.to_tree"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.to_tree">[docs]</a>    <span class="k">def</span> <span class="nf">to_tree</span><span class="p">(</span><span class="n">prufer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the tree (as a list of edges) of the given Prufer sequence.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; a = Prufer([0, 2], 4)</span>
+<span class="sd">        &gt;&gt;&gt; a.tree_repr</span>
+<span class="sd">        [[0, 1], [0, 2], [2, 3]]</span>
+<span class="sd">        &gt;&gt;&gt; Prufer.to_tree([0, 2])</span>
+<span class="sd">        [[0, 1], [0, 2], [2, 3]]</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        - http://hamberg.no/erlend/2010/11/06/prufer-sequence/</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        tree_repr: returns tree representation of a Prufer object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tree</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prufer</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">prufer</span><span class="p">:</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">prufer</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="c"># find the smallest leaf (degree = 1)</span>
+                <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">break</span>
+            <span class="c"># (i, j) is the new edge that we append to the tree</span>
+            <span class="c"># and remove from the degree dictionary</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">d</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">tree</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]))</span>
+        <span class="n">last</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">tree</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">last</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tree</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Prufer.edges"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.edges">[docs]</a>    <span class="k">def</span> <span class="nf">edges</span><span class="p">(</span><span class="o">*</span><span class="n">runs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of edges and the number of nodes from the given runs</span>
+<span class="sd">        that connect nodes in an integer-labelled tree.</span>
+
+<span class="sd">        All node numbers will be shifted so that the minimum node is 0. It is</span>
+<span class="sd">        not a problem if edges are repeated in the runs; only unique edges are</span>
+<span class="sd">        returned. There is no assumption made about what the range of the node</span>
+<span class="sd">        labels should be, but all nodes from the smallest through the largest</span>
+<span class="sd">        must be present.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; Prufer.edges([1, 2, 3], [2, 4, 5]) # a T</span>
+<span class="sd">        ([[0, 1], [1, 2], [1, 3], [3, 4]], 5)</span>
+
+<span class="sd">        Duplicate edges are removed:</span>
+
+<span class="sd">        &gt;&gt;&gt; Prufer.edges([0, 1, 2, 3], [1, 4, 5], [1, 4, 6]) # a K</span>
+<span class="sd">        ([[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]], 7)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">nmin</span> <span class="o">=</span> <span class="n">runs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">runs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">b</span> <span class="o">&lt;</span> <span class="n">a</span><span class="p">:</span>
+                    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">got</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">nmin</span> <span class="o">=</span> <span class="n">nmax</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">ei</span> <span class="ow">in</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ei</span><span class="p">:</span>
+                <span class="n">got</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">nmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ei</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">nmin</span><span class="p">)</span> <span class="k">if</span> <span class="n">nmin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">ei</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">ei</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">nmax</span><span class="p">)</span> <span class="k">if</span> <span class="n">nmax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">ei</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">rv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ei</span><span class="p">))</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nmin</span><span class="p">,</span> <span class="n">nmax</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="n">got</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">nmin</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">missing</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Node </span><span class="si">%s</span><span class="s"> is missing.&#39;</span> <span class="o">%</span> <span class="n">missing</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Nodes </span><span class="si">%s</span><span class="s"> are missing.&#39;</span> <span class="o">%</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nmin</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ei</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rv</span><span class="p">):</span>
+                <span class="n">rv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">nmin</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ei</span><span class="p">]</span>
+            <span class="n">nmax</span> <span class="o">-=</span> <span class="n">nmin</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rv</span><span class="p">),</span> <span class="n">nmax</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="Prufer.prufer_rank"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.prufer_rank">[docs]</a>    <span class="k">def</span> <span class="nf">prufer_rank</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Computes the rank of a Prufer sequence.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; a = Prufer([[0, 1], [0, 2], [0, 3]])</span>
+<span class="sd">        &gt;&gt;&gt; a.prufer_rank()</span>
+<span class="sd">        0</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        rank, next, prev, size</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">+=</span> <span class="n">p</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">prufer_repr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">p</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span>
+        <span class="k">return</span> <span class="n">r</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Prufer.unrank"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.unrank">[docs]</a>    <span class="k">def</span> <span class="nf">unrank</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finds the unranked Prufer sequence.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; Prufer.unrank(0, 4)</span>
+<span class="sd">        Prufer([0, 0])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">rank</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">as_int</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">rank</span> <span class="o">%</span> <span class="n">n</span>
+            <span class="n">rank</span> <span class="o">=</span> <span class="p">(</span><span class="n">rank</span> <span class="o">-</span> <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">//</span><span class="n">n</span>
+        <span class="k">return</span> <span class="n">Prufer</span><span class="p">([</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">))])</span>
+</div>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The constructor for the Prufer object.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+
+<span class="sd">        A Prufer object can be constructed from a list of edges:</span>
+
+<span class="sd">        &gt;&gt;&gt; a = Prufer([[0, 1], [0, 2], [0, 3]])</span>
+<span class="sd">        &gt;&gt;&gt; a.prufer_repr</span>
+<span class="sd">        [0, 0]</span>
+
+<span class="sd">        If the number of nodes is given, no checking of the nodes will</span>
+<span class="sd">        be performed; it will be assumed that nodes 0 through n - 1 are</span>
+<span class="sd">        present:</span>
+
+<span class="sd">        &gt;&gt;&gt; Prufer([[0, 1], [0, 2], [0, 3]], 4)</span>
+<span class="sd">        Prufer([[0, 1], [0, 2], [0, 3]], 4)</span>
+
+<span class="sd">        A Prufer object can be constructed from a Prufer sequence:</span>
+
+<span class="sd">        &gt;&gt;&gt; b = Prufer([1, 3])</span>
+<span class="sd">        &gt;&gt;&gt; b.tree_repr</span>
+<span class="sd">        [[0, 1], [1, 3], [2, 3]]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret_obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kw_args</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">iterable</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s">&#39;Prufer expects at least one edge in the tree.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">nnodes</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">flatten</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="n">nnodes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">nnodes</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+                    <span class="n">missing</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nnodes</span><span class="p">))</span> <span class="o">-</span> <span class="n">nodes</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Node </span><span class="si">%s</span><span class="s"> is missing.&#39;</span> <span class="o">%</span> <span class="n">missing</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Nodes </span><span class="si">%s</span><span class="s"> are missing.&#39;</span> <span class="o">%</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">))</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">ret_obj</span><span class="o">.</span><span class="n">_tree_repr</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">ret_obj</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="n">nnodes</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret_obj</span><span class="o">.</span><span class="n">_prufer_repr</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ret_obj</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret_obj</span><span class="o">.</span><span class="n">_prufer_repr</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">ret_obj</span>
+
+<div class="viewcode-block" id="Prufer.next"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.next">[docs]</a>    <span class="k">def</span> <span class="nf">next</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates the Prufer sequence that is delta beyond the current one.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; a = Prufer([[0, 1], [0, 2], [0, 3]])</span>
+<span class="sd">        &gt;&gt;&gt; b = a.next(1) # == a.next()</span>
+<span class="sd">        &gt;&gt;&gt; b.tree_repr</span>
+<span class="sd">        [[0, 2], [0, 1], [1, 3]]</span>
+<span class="sd">        &gt;&gt;&gt; b.rank</span>
+<span class="sd">        1</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        prufer_rank, rank, prev, size</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Prufer</span><span class="o">.</span><span class="n">unrank</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">+</span> <span class="n">delta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Prufer.prev"><a class="viewcode-back" href="../../../modules/combinatorics/prufer.html#sympy.combinatorics.prufer.Prufer.prev">[docs]</a>    <span class="k">def</span> <span class="nf">prev</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates the Prufer sequence that is -delta before the current one.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.combinatorics.prufer import Prufer</span>
+<span class="sd">        &gt;&gt;&gt; a = Prufer([[0, 1], [1, 2], [2, 3], [1, 4]])</span>
+<span class="sd">        &gt;&gt;&gt; a.rank</span>
+<span class="sd">        36</span>
+<span class="sd">        &gt;&gt;&gt; b = a.prev()</span>
+<span class="sd">        &gt;&gt;&gt; b</span>
+<span class="sd">        Prufer([1, 2, 0])</span>
+<span class="sd">        &gt;&gt;&gt; b.rank</span>
+<span class="sd">        35</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        prufer_rank, rank, next, size</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Prufer</span><span class="o">.</span><span class="n">unrank</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span><span class="n">delta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../combinatorics.html" >sympy.combinatorics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

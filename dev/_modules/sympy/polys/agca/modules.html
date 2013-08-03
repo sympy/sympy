@@ -1,0 +1,1500 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.agca.modules &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.agca.modules</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Computations with modules over polynomial rings.</span>
+
+<span class="sd">This module implements various classes that encapsulate groebner basis</span>
+<span class="sd">computations for modules. Most of them should not be instantiated by hand.</span>
+<span class="sd">Instead, use the constructing routines on objects you already have.</span>
+
+<span class="sd">For example, to construct a free module over ``QQ[x, y]``, call</span>
+<span class="sd">``QQ[x, y].free_module(rank)`` instead of the ``FreeModule`` constructor.</span>
+<span class="sd">In fact ``FreeModule`` is an abstract base class that should not be</span>
+<span class="sd">instantiated, the ``free_module`` method instead returns the implementing class</span>
+<span class="sd">``FreeModulePolyRing``.</span>
+
+<span class="sd">In general, the abstract base classes implement most functionality in terms of</span>
+<span class="sd">a few non-implemented methods. The concrete base classes supply only these</span>
+<span class="sd">non-implemented methods. They may also supply new implementations of the</span>
+<span class="sd">convenience methods, for example if there are faster algorithms available.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">CoercionFailed</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.orderings</span> <span class="kn">import</span> <span class="n">ProductOrder</span><span class="p">,</span> <span class="n">monomial_key</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.domains.field</span> <span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.agca.ideals</span> <span class="kn">import</span> <span class="n">Ideal</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">iterable</span><span class="p">,</span> <span class="nb">reduce</span>
+
+<span class="c"># TODO</span>
+<span class="c"># - module saturation</span>
+<span class="c"># - module quotient/intersection for quotient rings</span>
+<span class="c"># - free resoltutions / syzygies</span>
+<span class="c"># - finding small/minimal generating sets</span>
+<span class="c"># - ...</span>
+
+<span class="c">##########################################################################</span>
+<span class="c">## Abstract base classes #################################################</span>
+<span class="c">##########################################################################</span>
+
+
+<div class="viewcode-block" id="Module"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module">[docs]</a><span class="k">class</span> <span class="nc">Module</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for modules.</span>
+
+<span class="sd">    Do not instantiate - use ring explicit constructors instead:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">    QQ[x]**2</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - dtype - type of elements</span>
+<span class="sd">    - ring - containing ring</span>
+
+<span class="sd">    Non-implemented methods:</span>
+
+<span class="sd">    - submodule</span>
+<span class="sd">    - quotient_module</span>
+<span class="sd">    - is_zero</span>
+<span class="sd">    - is_submodule</span>
+<span class="sd">    - multiply_ideal</span>
+
+<span class="sd">    The method convert likely needs to be changed in subclasses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="o">=</span> <span class="n">ring</span>
+
+<div class="viewcode-block" id="Module.convert"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert ``elem`` into internal representation of this module.</span>
+
+<span class="sd">        If ``M`` is not None, it should be a module containing it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">CoercionFailed</span>
+        <span class="k">return</span> <span class="n">elem</span>
+</div>
+<div class="viewcode-block" id="Module.submodule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.submodule">[docs]</a>    <span class="k">def</span> <span class="nf">submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a submodule.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Module.quotient_module"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.quotient_module">[docs]</a>    <span class="k">def</span> <span class="nf">quotient_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate a quotient module.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quotient_module</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+<div class="viewcode-block" id="Module.contains"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.contains">[docs]</a>    <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if ``elem`` is an element of this module.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Module.subset"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.subset">[docs]</a>    <span class="k">def</span> <span class="nf">subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if ``other`` is is a subset of ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; F.subset([(1, x), (x, 2)])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; F.subset([(1/x, x), (x, 2)])</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">other</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Module.is_zero"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``self`` is a zero module.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Module.is_submodule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.is_submodule">[docs]</a>    <span class="k">def</span> <span class="nf">is_submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns True if ``other`` is a submodule of ``self``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+<div class="viewcode-block" id="Module.multiply_ideal"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.multiply_ideal">[docs]</a>    <span class="k">def</span> <span class="nf">multiply_ideal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multiply ``self`` by the ideal ``other``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</div>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Ideal</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">CoercionFailed</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">multiply_ideal</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="n">__rmul__</span> <span class="o">=</span> <span class="n">__mul__</span>
+
+<div class="viewcode-block" id="Module.identity_hom"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.Module.identity_hom">[docs]</a>    <span class="k">def</span> <span class="nf">identity_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the identity homomorphism on ``self``.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">ModuleElement</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for module element wrappers.</span>
+
+<span class="sd">    Use this class to wrap primitive data types as module elements. It stores</span>
+<span class="sd">    a reference to the containing module, and implements all the arithmetic</span>
+<span class="sd">    operators.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - module - containing module</span>
+<span class="sd">    - data - internal data</span>
+
+<span class="sd">    Methods that likely need change in subclasses:</span>
+
+<span class="sd">    - add</span>
+<span class="sd">    - mul</span>
+<span class="sd">    - div</span>
+<span class="sd">    - eq</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="n">module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add data ``d1`` and ``d2``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">d1</span> <span class="o">+</span> <span class="n">d2</span>
+
+    <span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Multiply module data ``m`` by coefficient d.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">m</span> <span class="o">*</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Divide module data ``m`` by coefficient d.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">m</span> <span class="o">/</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">eq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return true if d1 and d2 represent the same element.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">d1</span> <span class="o">==</span> <span class="n">d2</span>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span> <span class="ow">or</span> <span class="n">om</span><span class="o">.</span><span class="n">module</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">om</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">om</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+
+    <span class="n">__radd__</span> <span class="o">=</span> <span class="n">__add__</span>
+
+    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span> <span class="ow">or</span> <span class="n">om</span><span class="o">.</span><span class="n">module</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">om</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__add__</span><span class="p">(</span><span class="o">-</span><span class="n">om</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__add__</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">o</span><span class="p">))</span>
+
+    <span class="n">__rmul__</span> <span class="o">=</span> <span class="n">__mul__</span>
+
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">o</span><span class="p">))</span>
+
+    <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">om</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">)</span> <span class="ow">or</span> <span class="n">om</span><span class="o">.</span><span class="n">module</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">om</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">om</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">om</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="n">om</span><span class="p">)</span>
+
+<span class="c">##########################################################################</span>
+<span class="c">## Free Modules ##########################################################</span>
+<span class="c">##########################################################################</span>
+
+
+<span class="k">class</span> <span class="nc">FreeModuleElement</span><span class="p">(</span><span class="n">ModuleElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Element of a free module. Data stored as a tuple.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">p</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">div</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">p</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="k">return</span> <span class="s">&#39;[&#39;</span> <span class="o">+</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sstr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;]&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">__iter__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="FreeModule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule">[docs]</a><span class="k">class</span> <span class="nc">FreeModule</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract base class for free modules.</span>
+
+<span class="sd">    Additional attributes:</span>
+
+<span class="sd">    - rank - rank of the free module</span>
+
+<span class="sd">    Non-implemented methods:</span>
+
+<span class="sd">    - submodule</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">FreeModuleElement</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">rank</span><span class="p">):</span>
+        <span class="n">Module</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">rank</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;**&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FreeModule.is_submodule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule.is_submodule">[docs]</a>    <span class="k">def</span> <span class="nf">is_submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if ``other`` is a submodule of ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; M = F.submodule([2, x])</span>
+<span class="sd">        &gt;&gt;&gt; F.is_submodule(F)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; F.is_submodule(M)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; M.is_submodule(F)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SubModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">FreeModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">ring</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="FreeModule.convert"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert ``elem`` into the internal representation.</span>
+
+<span class="sd">        This method is called implicitly whenever computations involve elements</span>
+<span class="sd">        not in the internal representation.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; F.convert([1, 0])</span>
+<span class="sd">        [1, 0]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">FreeModuleElement</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">module</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">elem</span>
+            <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CoercionFailed</span>
+            <span class="k">return</span> <span class="n">FreeModuleElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                     <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">elem</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">ring</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">elem</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">iterable</span><span class="p">(</span><span class="n">elem</span><span class="p">):</span>
+            <span class="n">tpl</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">elem</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tpl</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">CoercionFailed</span>
+            <span class="k">return</span> <span class="n">FreeModuleElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tpl</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">elem</span> <span class="ow">is</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">FreeModuleElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="mi">0</span><span class="p">),)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">CoercionFailed</span>
+</div>
+<div class="viewcode-block" id="FreeModule.is_zero"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if ``self`` is a zero module.</span>
+
+<span class="sd">        (If, as this implementation assumes, the coefficient ring is not the</span>
+<span class="sd">        zero ring, then this is equivalent to the rank being zero.)</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(0).is_zero()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(1).is_zero()</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="FreeModule.basis"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule.basis">[docs]</a>    <span class="k">def</span> <span class="nf">basis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a set of basis elements.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(3).basis()</span>
+<span class="sd">        ([1, 0, 0], [0, 1, 0], [0, 0, 1])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="FreeModule.quotient_module"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule.quotient_module">[docs]</a>    <span class="k">def</span> <span class="nf">quotient_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submodule</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a quotient module.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; M.quotient_module(M.submodule([1, x], [x, 2]))</span>
+<span class="sd">        QQ[x]**2/&lt;[1, x], [x, 2]&gt;</span>
+
+<span class="sd">        Or more conicisely, using the overloaded division operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(2) / [[1, x], [x, 2]]</span>
+<span class="sd">        QQ[x]**2/&lt;[1, x], [x, 2]&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">QuotientModule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">submodule</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreeModule.multiply_ideal"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule.multiply_ideal">[docs]</a>    <span class="k">def</span> <span class="nf">multiply_ideal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multiply ``self`` by the ideal ``other``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; I = QQ.old_poly_ring(x).ideal(x)</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; F.multiply_ideal(I)</span>
+<span class="sd">        &lt;[x, 0], [0, x]&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">())</span><span class="o">.</span><span class="n">multiply_ideal</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FreeModule.identity_hom"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.FreeModule.identity_hom">[docs]</a>    <span class="k">def</span> <span class="nf">identity_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the identity homomorphism on ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(2).identity_hom()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0], : QQ[x]**2 -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 1]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.agca.homomorphisms</span> <span class="kn">import</span> <span class="n">homomorphism</span>
+        <span class="k">return</span> <span class="n">homomorphism</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">basis</span><span class="p">())</span>
+
+</div></div>
+<span class="k">class</span> <span class="nc">FreeModulePolyRing</span><span class="p">(</span><span class="n">FreeModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Free module over a generalized polynomial ring.</span>
+
+<span class="sd">    Do not instantiate this, use the constructor method of the ring instead:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(3)</span>
+<span class="sd">    &gt;&gt;&gt; F</span>
+<span class="sd">    QQ[x]**3</span>
+<span class="sd">    &gt;&gt;&gt; F.contains([x, 1, 0])</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; F.contains([1/x, 0, 1])</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">rank</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains.old_polynomialring</span> <span class="kn">import</span> <span class="n">PolynomialRingBase</span>
+        <span class="n">FreeModule</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">PolynomialRingBase</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;This implementation only works over &#39;</span>
+                                      <span class="o">+</span> <span class="s">&#39;polynomial rings, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ring</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">dom</span><span class="p">,</span> <span class="n">Field</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Ground domain must be a field, &#39;</span>
+                                      <span class="o">+</span> <span class="s">&#39;got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ring</span><span class="o">.</span><span class="n">dom</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a submodule.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x, y).free_module(2).submodule([x, x + y])</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        &lt;[x, x + y]&gt;</span>
+<span class="sd">        &gt;&gt;&gt; M.contains([2*x, 2*x + 2*y])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; M.contains([x, y])</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SubModulePolyRing</span><span class="p">(</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">FreeModuleQuotientRing</span><span class="p">(</span><span class="n">FreeModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Free module over a quotient ring.</span>
+
+<span class="sd">    Do not instantiate this, use the constructor method of the ring instead:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; F = (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(3)</span>
+<span class="sd">    &gt;&gt;&gt; F</span>
+<span class="sd">    (QQ[x]/&lt;x**2 + 1&gt;)**3</span>
+
+<span class="sd">    Attributes</span>
+
+<span class="sd">    - quot - the quotient module `R^n / IR^n`, where `R/I` is our ring</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">rank</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.domains.quotientring</span> <span class="kn">import</span> <span class="n">QuotientRing</span>
+        <span class="n">FreeModule</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">rank</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">QuotientRing</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;This implementation only works over &#39;</span>
+                             <span class="o">+</span> <span class="s">&#39;quotient rings, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ring</span><span class="p">)</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quot</span> <span class="o">=</span> <span class="n">F</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">base_ideal</span><span class="o">*</span><span class="n">F</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;(&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span> <span class="o">+</span> <span class="s">&quot;**&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a submodule.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = (QQ.old_poly_ring(x, y)/[x**2 - y**2]).free_module(2).submodule([x, x + y])</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        &lt;[x + &lt;x**2 - y**2&gt;, x + y + &lt;x**2 - y**2&gt;]&gt;</span>
+<span class="sd">        &gt;&gt;&gt; M.contains([y**2, x**2 + x*y])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; M.contains([x, y])</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SubModuleQuotientRing</span><span class="p">(</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">lift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lift the element ``elem`` of self to the module self.quot.</span>
+
+<span class="sd">        Note that self.quot is the same set as self, just as an R-module</span>
+<span class="sd">        and not as an R/I-module, so this makes sense.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; e = F.convert([1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; e</span>
+<span class="sd">        [1 + &lt;x**2 + 1&gt;, 0 + &lt;x**2 + 1&gt;]</span>
+<span class="sd">        &gt;&gt;&gt; L = F.quot</span>
+<span class="sd">        &gt;&gt;&gt; l = F.lift(e)</span>
+<span class="sd">        &gt;&gt;&gt; l</span>
+<span class="sd">        [1, 0] + &lt;[x**2 + 1, 0], [0, x**2 + 1]&gt;</span>
+<span class="sd">        &gt;&gt;&gt; L.contains(l)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quot</span><span class="o">.</span><span class="n">convert</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">elem</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">unlift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Push down an element of self.quot to self.</span>
+
+<span class="sd">        This undoes ``lift``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; e = F.convert([1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; l = F.lift(e)</span>
+<span class="sd">        &gt;&gt;&gt; e == l</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; e == F.unlift(l)</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+<span class="c">##########################################################################</span>
+<span class="c">## Submodules and subquotients ###########################################</span>
+<span class="c">##########################################################################</span>
+
+
+<div class="viewcode-block" id="SubModule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule">[docs]</a><span class="k">class</span> <span class="nc">SubModule</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for submodules.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - container - containing module</span>
+<span class="sd">    - gens - generators (subset of containing module)</span>
+<span class="sd">    - rank - rank of containing module</span>
+
+<span class="sd">    Non-implemented methods:</span>
+
+<span class="sd">    - _contains</span>
+<span class="sd">    - _syzygies</span>
+<span class="sd">    - _in_terms_of_generators</span>
+<span class="sd">    - _intersect</span>
+<span class="sd">    - _module_quotient</span>
+
+<span class="sd">    Methods that likely need change in subclasses:</span>
+
+<span class="sd">    - reduce_element</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">container</span><span class="p">):</span>
+        <span class="n">Module</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">container</span><span class="o">.</span><span class="n">ring</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gens</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gens</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">=</span> <span class="n">container</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">rank</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ring</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">ring</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;&lt;&quot;</span> <span class="o">+</span> <span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;&gt;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of containment.</span>
+<span class="sd">           Other is guaranteed to be FreeModuleElement.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_syzygies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of syzygy computation wrt self generators.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_in_terms_of_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of expression in terms of generators.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="SubModule.convert"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert ``elem`` into the internal represantition.</span>
+
+<span class="sd">        Mostly called implicitly.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x).free_module(2).submodule([1, x])</span>
+<span class="sd">        &gt;&gt;&gt; M.convert([2, 2*x])</span>
+<span class="sd">        [2, 2*x]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">module</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">elem</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">M</span><span class="p">))</span>
+        <span class="n">r</span><span class="o">.</span><span class="n">module</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_contains</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">CoercionFailed</span>
+        <span class="k">return</span> <span class="n">r</span>
+</div>
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of intersection.</span>
+<span class="sd">           Other is guaranteed to be a submodule of same free module.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span> <span class="nf">_module_quotient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Implementation of quotient.</span>
+<span class="sd">           Other is guaranteed to be a submodule of same free module.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="SubModule.intersect"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.intersect">[docs]</a>    <span class="k">def</span> <span class="nf">intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the intersection of ``self`` with submodule ``other``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x, y).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; F.submodule([x, x]).intersect(F.submodule([y, y]))</span>
+<span class="sd">        &lt;[x*y, x*y]&gt;</span>
+
+<span class="sd">        Some implementation allow further options to be passed. Currently, to</span>
+<span class="sd">        only one implemented is ``relations=True``, in which case the function</span>
+<span class="sd">        will return a triple ``(res, rela, relb)``, where ``res`` is the</span>
+<span class="sd">        intersection module, and ``rela`` and ``relb`` are lists of coefficient</span>
+<span class="sd">        vectors, expressing the generators of ``res`` in terms of the</span>
+<span class="sd">        generators of ``self`` (``rela``) and ``other`` (``relb``).</span>
+
+<span class="sd">        &gt;&gt;&gt; F.submodule([x, x]).intersect(F.submodule([y, y]), relations=True)</span>
+<span class="sd">        (&lt;[x*y, x*y]&gt;, [(y,)], [(x,)])</span>
+
+<span class="sd">        The above result says: the intersection module is generated by the</span>
+<span class="sd">        single element `(-xy, -xy) = -y (x, x) = -x (y, y)`, where</span>
+<span class="sd">        `(x, x)` and `(y, y)` respectively are the unique generators of</span>
+<span class="sd">        the two modules being intersected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SubModule</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a SubModule&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">container</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;</span><span class="si">%s</span><span class="s"> is contained in a different free module&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_intersect</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.module_quotient"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.module_quotient">[docs]</a>    <span class="k">def</span> <span class="nf">module_quotient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Returns the module quotient of ``self`` by submodule ``other``.</span>
+
+<span class="sd">        That is, if ``self`` is the module `M` and ``other`` is `N`, then</span>
+<span class="sd">        return the ideal `\{f \in R | fN \subset M\}`.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x, y).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; S = F.submodule([x*y, x*y])</span>
+<span class="sd">        &gt;&gt;&gt; T = F.submodule([x, x])</span>
+<span class="sd">        &gt;&gt;&gt; S.module_quotient(T)</span>
+<span class="sd">        &lt;y&gt;</span>
+
+<span class="sd">        Some implementations allow further options to be passed. Currently, the</span>
+<span class="sd">        only one implemented is ``relations=True``, which may only be passed</span>
+<span class="sd">        if ``other`` is prinicipal. In this case the function</span>
+<span class="sd">        will return a pair ``(res, rel)`` where ``res`` is the ideal, and</span>
+<span class="sd">        ``rel`` is a list of coefficient vectors, expressing the generators of</span>
+<span class="sd">        the ideal, multiplied by the generator of ``other`` in terms of</span>
+<span class="sd">        generators of ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; S.module_quotient(T, relations=True)</span>
+<span class="sd">        (&lt;y&gt;, [[1]])</span>
+
+<span class="sd">        This means that the quotient ideal is generated by the single element</span>
+<span class="sd">        `y`, and that `y (x, x) = 1 (xy, xy)`, `(x, x)` and `(xy, xy)` being</span>
+<span class="sd">        the generators of `T` and `S`, respectively.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SubModule</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a SubModule&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">container</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;</span><span class="si">%s</span><span class="s"> is contained in a different free module&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_quotient</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.union"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.union">[docs]</a>    <span class="k">def</span> <span class="nf">union</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the module generated by the union of ``self`` and ``other``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(1)</span>
+<span class="sd">        &gt;&gt;&gt; M = F.submodule([x**2 + x]) # &lt;x(x+1)&gt;</span>
+<span class="sd">        &gt;&gt;&gt; N = F.submodule([x**2 - 1]) # &lt;(x-1)(x+1)&gt;</span>
+<span class="sd">        &gt;&gt;&gt; M.union(N) == F.submodule([x+1])</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SubModule</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a SubModule&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">container</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&#39;</span><span class="si">%s</span><span class="s"> is contained in a different free module&#39;</span> <span class="o">%</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.is_zero"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is a zero module.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; F.submodule([x, 1]).is_zero()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; F.submodule([0, 0]).is_zero()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.submodule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.submodule">[docs]</a>    <span class="k">def</span> <span class="nf">submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a submodule.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x).free_module(2).submodule([x, 1])</span>
+<span class="sd">        &gt;&gt;&gt; M.submodule([x**2, x])</span>
+<span class="sd">        &lt;[x**2, x]&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">subset</span><span class="p">(</span><span class="n">gens</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> not a subset of </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.is_full_module"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.is_full_module">[docs]</a>    <span class="k">def</span> <span class="nf">is_full_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is the entire free module.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; F.submodule([x, 1]).is_full_module()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; F.submodule([1, 1], [1, 2]).is_full_module()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">basis</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="SubModule.is_submodule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.is_submodule">[docs]</a>    <span class="k">def</span> <span class="nf">is_submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns True if ``other`` is a submodule of ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; M = F.submodule([2, x])</span>
+<span class="sd">        &gt;&gt;&gt; N = M.submodule([2*x, x**2])</span>
+<span class="sd">        &gt;&gt;&gt; M.is_submodule(M)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; M.is_submodule(N)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; N.is_submodule(M)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SubModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">container</span> <span class="ow">and</span> \
+                <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">FreeModule</span><span class="p">,</span> <span class="n">QuotientModule</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="n">other</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_full_module</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="SubModule.syzygy_module"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.syzygy_module">[docs]</a>    <span class="k">def</span> <span class="nf">syzygy_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">        Compute the syzygy module of the generators of ``self``.</span>
+
+<span class="sd">        Suppose `M` is generated by `f_1, \dots, f_n` over the ring</span>
+<span class="sd">        `R`. Consider the homomorphism `\phi: R^n \to M`, given by</span>
+<span class="sd">        sending `(r_1, \dots, r_n) \to r_1 f_1 + \dots + r_n f_n`.</span>
+<span class="sd">        The syzygy module is defined to be the kernel of `\phi`.</span>
+
+<span class="sd">        The syzygy module is zero iff the generators generate freely a free</span>
+<span class="sd">        submodule:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(2).submodule([1, 0], [1, 1]).syzygy_module().is_zero()</span>
+<span class="sd">        True</span>
+
+<span class="sd">        A slightly more interesting example:</span>
+
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x, y).free_module(2).submodule([x, 2*x], [y, 2*y])</span>
+<span class="sd">        &gt;&gt;&gt; S = QQ.old_poly_ring(x, y).free_module(2).submodule([y, -x])</span>
+<span class="sd">        &gt;&gt;&gt; M.syzygy_module() == S</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">))</span>
+        <span class="c"># NOTE we filter out zero syzygies. This is for convenience of the</span>
+        <span class="c"># _syzygies function and not meant to replace any real &quot;generating set</span>
+        <span class="c"># reduction&quot; algorithm</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_syzygies</span><span class="p">()</span> <span class="k">if</span> <span class="n">F</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">],</span>
+                           <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.in_terms_of_generators"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.in_terms_of_generators">[docs]</a>    <span class="k">def</span> <span class="nf">in_terms_of_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Express element ``e`` of ``self`` in terms of the generators.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; M = F.submodule([1, 0], [1, 1])</span>
+<span class="sd">        &gt;&gt;&gt; M.in_terms_of_generators([x, x**2])</span>
+<span class="sd">        [-x**2 + x, x**2]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">CoercionFailed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not an element of </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_terms_of_generators</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.reduce_element"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.reduce_element">[docs]</a>    <span class="k">def</span> <span class="nf">reduce_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reduce the element ``x`` of our ring modulo the ideal ``self``.</span>
+
+<span class="sd">        Here &quot;reduce&quot; has no specific meaning, it could return a unique normal</span>
+<span class="sd">        form, simplify the expression a bit, or just do nothing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">x</span>
+</div>
+<div class="viewcode-block" id="SubModule.quotient_module"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.quotient_module">[docs]</a>    <span class="k">def</span> <span class="nf">quotient_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a quotient module.</span>
+
+<span class="sd">        This is the same as taking a submodule of a quotient of the containing</span>
+<span class="sd">        module.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; S1 = F.submodule([x, 1])</span>
+<span class="sd">        &gt;&gt;&gt; S2 = F.submodule([x**2, x])</span>
+<span class="sd">        &gt;&gt;&gt; S1.quotient_module(S2)</span>
+<span class="sd">        &lt;[x, 1] + &lt;[x**2, x]&gt;&gt;</span>
+
+<span class="sd">        Or more coincisely, using the overloaded division operator:</span>
+
+<span class="sd">        &gt;&gt;&gt; F.submodule([x, 1]) / [(x**2, x)]</span>
+<span class="sd">        &lt;[x, 1] + &lt;[x**2, x]&gt;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> not a submodule of </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">SubQuotientModule</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">quotient_module</span><span class="p">(</span><span class="n">other</span><span class="p">),</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oth</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">quotient_module</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">oth</span><span class="p">)</span>
+
+    <span class="n">__radd__</span> <span class="o">=</span> <span class="n">__add__</span>
+
+<div class="viewcode-block" id="SubModule.multiply_ideal"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.multiply_ideal">[docs]</a>    <span class="k">def</span> <span class="nf">multiply_ideal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">I</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Multiply ``self`` by the ideal ``I``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; I = QQ.old_poly_ring(x).ideal(x**2)</span>
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x).free_module(2).submodule([1, 1])</span>
+<span class="sd">        &gt;&gt;&gt; I*M</span>
+<span class="sd">        &lt;[x**2, x**2]&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">x</span><span class="o">*</span><span class="n">g</span> <span class="k">for</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="ow">in</span> <span class="n">I</span><span class="o">.</span><span class="n">_module</span><span class="o">.</span><span class="n">gens</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="SubModule.inclusion_hom"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.inclusion_hom">[docs]</a>    <span class="k">def</span> <span class="nf">inclusion_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a homomorphism representing the inclusion map of ``self``.</span>
+
+<span class="sd">        That is, the natural map from ``self`` to ``self.container``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(2).submodule([x, x]).inclusion_hom()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0], : &lt;[x, x]&gt; -&gt; QQ[x]**2</span>
+<span class="sd">        [0, 1]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span><span class="o">.</span><span class="n">restrict_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SubModule.identity_hom"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubModule.identity_hom">[docs]</a>    <span class="k">def</span> <span class="nf">identity_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the identity homomorphism on ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; QQ.old_poly_ring(x).free_module(2).submodule([x, x]).identity_hom()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0], : &lt;[x, x]&gt; -&gt; &lt;[x, x]&gt;</span>
+<span class="sd">        [0, 1]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span><span class="o">.</span><span class="n">restrict_domain</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">restrict_codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="SubQuotientModule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubQuotientModule">[docs]</a><span class="k">class</span> <span class="nc">SubQuotientModule</span><span class="p">(</span><span class="n">SubModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Submodule of a quotient module.</span>
+
+<span class="sd">    Equivalently, quotient module of a submodule.</span>
+
+<span class="sd">    Do not instantiate this, instead use the submodule or quotient_module</span>
+<span class="sd">    constructing methods:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">    &gt;&gt;&gt; S = F.submodule([1, 0], [1, x])</span>
+<span class="sd">    &gt;&gt;&gt; Q = F/[(1, 0)]</span>
+<span class="sd">    &gt;&gt;&gt; S/[(1, 0)] == Q.submodule([5, x])</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - base - base module we are quotient of</span>
+<span class="sd">    - killed_module - submodule used to form the quotient</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">container</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="n">SubModule</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">container</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">killed_module</span>
+        <span class="c"># XXX it is important for some code below that the generators of base</span>
+        <span class="c">#     are in this particular order!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">],</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_syzygies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># let N = self.killed_module be generated by e_1, ..., e_r</span>
+        <span class="c"># let F = self.base be generated by f_1, ..., f_s and e_1, ..., e_r</span>
+        <span class="c"># Then self = F/N.</span>
+        <span class="c"># Let phi: R**s --&gt; self be the evident surjection.</span>
+        <span class="c"># Similarly psi: R**(s + r) --&gt; F.</span>
+        <span class="c"># We need to find generators for ker(phi). Let chi: R**s --&gt; F be the</span>
+        <span class="c"># evident lift of phi. For X in R**s, phi(X) = 0 iff chi(X) is</span>
+        <span class="c"># contained in N, iff there exists Y in R**r such that</span>
+        <span class="c"># psi(X, Y) = 0.</span>
+        <span class="c"># Hence if alpha: R**(s + r) --&gt; R**s is the projection map, then</span>
+        <span class="c"># ker(phi) = alpha ker(psi).</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">X</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">)]</span> <span class="k">for</span> <span class="n">X</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">_syzygies</span><span class="p">()]</span>
+
+    <span class="k">def</span> <span class="nf">_in_terms_of_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">_in_terms_of_generators</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">data</span><span class="p">)[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">)]</span>
+
+<div class="viewcode-block" id="SubQuotientModule.is_full_module"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubQuotientModule.is_full_module">[docs]</a>    <span class="k">def</span> <span class="nf">is_full_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is the entire free module.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; F.submodule([x, 1]).is_full_module()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; F.submodule([1, 1], [1, 2]).is_full_module()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">is_full_module</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="SubQuotientModule.quotient_hom"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.SubQuotientModule.quotient_hom">[docs]</a>    <span class="k">def</span> <span class="nf">quotient_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the quotient homomorphism to self.</span>
+
+<span class="sd">        That is, return the natural map from ``self.base`` to ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = (QQ.old_poly_ring(x).free_module(2) / [(1, x)]).submodule([1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; M.quotient_hom()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0], : &lt;[1, 0], [1, x]&gt; -&gt; &lt;[1, 0] + &lt;[1, x]&gt;, [1, x] + &lt;[1, x]&gt;&gt;</span>
+<span class="sd">        [0, 1]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span><span class="o">.</span><span class="n">quotient_codomain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span><span class="p">)</span>
+
+</div></div>
+<span class="n">_subs0</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">_subs1</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+
+<span class="k">class</span> <span class="nc">ModuleOrder</span><span class="p">(</span><span class="n">ProductOrder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A product monomial order with a zeroth term as module index.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">TOP</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">TOP</span><span class="p">:</span>
+            <span class="n">ProductOrder</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">o2</span><span class="p">,</span> <span class="n">_subs1</span><span class="p">),</span> <span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">_subs0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ProductOrder</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">_subs0</span><span class="p">),</span> <span class="p">(</span><span class="n">o2</span><span class="p">,</span> <span class="n">_subs1</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">SubModulePolyRing</span><span class="p">(</span><span class="n">SubModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Submodule of a free module over a generalized polynomial ring.</span>
+
+<span class="sd">    Do not instantiate this, use the constructor method of FreeModule instead:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; F = QQ.old_poly_ring(x, y).free_module(2)</span>
+<span class="sd">    &gt;&gt;&gt; F.submodule([x, y], [1, 0])</span>
+<span class="sd">    &lt;[x, y], [1, 0]&gt;</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - order - monomial order used</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">#self._gb - cached groebner basis</span>
+    <span class="c">#self._gbe - cached groebner basis relations</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">container</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&quot;lex&quot;</span><span class="p">,</span> <span class="n">TOP</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">SubModule</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">container</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">FreeModulePolyRing</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;This implementation is for submodules of &#39;</span>
+                             <span class="o">+</span> <span class="s">&#39;FreeModulePolyRing, got </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">container</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">=</span> <span class="n">ModuleOrder</span><span class="p">(</span><span class="n">monomial_key</span><span class="p">(</span><span class="n">order</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="n">TOP</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gb</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gbe</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SubModulePolyRing</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">order</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">SubModule</span><span class="o">.</span><span class="n">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_groebner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a standard basis in sdm form.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.distributedmodules</span> <span class="kn">import</span> <span class="n">sdm_groebner</span><span class="p">,</span> <span class="n">sdm_nf_mora</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gbe</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">extended</span><span class="p">:</span>
+            <span class="n">gb</span><span class="p">,</span> <span class="n">gbe</span> <span class="o">=</span> <span class="n">sdm_groebner</span><span class="p">(</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_vector_to_sdm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">],</span>
+                <span class="n">sdm_nf_mora</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dom</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gbe</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">gb</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">gbe</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gb</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gb</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">sdm_groebner</span><span class="p">(</span>
+                             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_vector_to_sdm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">],</span>
+               <span class="n">sdm_nf_mora</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dom</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">extended</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gb</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gbe</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gb</span>
+
+    <span class="k">def</span> <span class="nf">_groebner_vec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extended</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a standard basis in element form.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">extended</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_sdm_to_vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groebner</span><span class="p">()]</span>
+        <span class="n">gb</span><span class="p">,</span> <span class="n">gbe</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groebner</span><span class="p">(</span><span class="n">extended</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_sdm_to_vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+                 <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gb</span><span class="p">],</span>
+                <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_sdm_to_vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">gbe</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.distributedmodules</span> <span class="kn">import</span> <span class="n">sdm_zero</span><span class="p">,</span> <span class="n">sdm_nf_mora</span>
+        <span class="k">return</span> <span class="n">sdm_nf_mora</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_vector_to_sdm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">),</span>
+                           <span class="bp">self</span><span class="o">.</span><span class="n">_groebner</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dom</span><span class="p">)</span> <span class="o">==</span> \
+            <span class="n">sdm_zero</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_syzygies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute syzygies. See [SCA, algorithm 2.5.4].&quot;&quot;&quot;</span>
+        <span class="c"># NOTE if self.gens is a standard basis, this can be done more</span>
+        <span class="c">#      efficiently using Schreyer&#39;s theorem</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">eye</span>
+
+        <span class="c"># First bullet point</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="n">Rkr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+        <span class="n">newgens</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">):</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+                <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+                <span class="n">m</span><span class="p">[</span><span class="n">r</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">im</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">newgens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Rkr</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+        <span class="c"># Note: we need *descending* order on module index, and TOP=False to</span>
+        <span class="c">#       get an eliminetaion order</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">Rkr</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="n">newgens</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;ilex&#39;</span><span class="p">,</span> <span class="n">TOP</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="c"># Second bullet point: standard basis of F</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">_groebner_vec</span><span class="p">()</span>
+
+        <span class="c"># Third bullet point: G0 = G intersect the new k components</span>
+        <span class="n">G0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">r</span><span class="p">:]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                                      <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[:</span><span class="n">r</span><span class="p">])]</span>
+
+        <span class="c"># Fourth and fifth bullet points: we are done</span>
+        <span class="k">return</span> <span class="n">G0</span>
+
+    <span class="k">def</span> <span class="nf">_in_terms_of_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Expression in terms of generators. See [SCA, 2.8.1].&quot;&quot;&quot;</span>
+        <span class="c"># NOTE: if gens is a standard basis, this can be done more efficiently</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="p">((</span><span class="n">e</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">))</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">syzygy_module</span><span class="p">(</span>
+            <span class="n">order</span><span class="o">=</span><span class="s">&quot;ilex&quot;</span><span class="p">,</span> <span class="n">TOP</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>  <span class="c"># We want decreasing order!</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">_groebner_vec</span><span class="p">()</span>
+        <span class="c"># This list cannot not be empty since e is an element</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">G</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">is_unit</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+
+    <span class="k">def</span> <span class="nf">reduce_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">NF</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reduce the element ``x`` of our container modulo ``self``.</span>
+
+<span class="sd">        This applies the normal form ``NF`` to ``x``. If ``NF`` is passed</span>
+<span class="sd">        as none, the default Mora normal form is used (which is not unique!).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys.distributedmodules</span> <span class="kn">import</span> <span class="n">sdm_nf_mora</span>
+        <span class="k">if</span> <span class="n">NF</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">NF</span> <span class="o">=</span> <span class="n">sdm_nf_mora</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_sdm_to_vector</span><span class="p">(</span><span class="n">NF</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">_vector_to_sdm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_groebner</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">order</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">dom</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">relations</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="c"># See: [SCA, section 2.8.2]</span>
+        <span class="n">fi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span>
+        <span class="n">hi</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">gens</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rank</span>
+        <span class="n">ci</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">ci</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">ci</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">r</span> <span class="o">+</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">di</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">r</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fi</span><span class="p">]</span>
+        <span class="n">ei</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">r</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hi</span><span class="p">]</span>
+        <span class="n">syz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">ci</span> <span class="o">+</span> <span class="n">di</span> <span class="o">+</span> <span class="n">ei</span><span class="p">))</span><span class="o">.</span><span class="n">_syzygies</span><span class="p">()</span>
+        <span class="n">nonzero</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">syz</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">y</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">zero</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[:</span><span class="n">r</span><span class="p">])]</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="o">-</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[:</span><span class="n">r</span><span class="p">]]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nonzero</span><span class="p">))</span>
+        <span class="n">reln1</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">r</span><span class="p">:</span><span class="n">r</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">fi</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nonzero</span><span class="p">]</span>
+        <span class="n">reln2</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">r</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">fi</span><span class="p">):]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">nonzero</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">relations</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">reln1</span><span class="p">,</span> <span class="n">reln2</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">_module_quotient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">relations</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="c"># See: [SCA, section 2.8.4]</span>
+        <span class="k">if</span> <span class="n">relations</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">gens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c"># We do some trickery. Let f be the (vector!) generating ``other``</span>
+            <span class="c"># and f1, .., fn be the (vectors) generating self.</span>
+            <span class="c"># Consider the submodule of R^{r+1} generated by (f, 1) and</span>
+            <span class="c"># {(fi, 0) | i}. Then the intersection with the last module</span>
+            <span class="c"># component yields the quotient.</span>
+            <span class="n">g1</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">gens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">gi</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">]</span>
+            <span class="c"># NOTE: We *need* to use an elimination order</span>
+            <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">free_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="n">g1</span><span class="p">]</span> <span class="o">+</span> <span class="n">gi</span><span class="p">),</span>
+                                            <span class="n">order</span><span class="o">=</span><span class="s">&#39;ilex&#39;</span><span class="p">,</span> <span class="n">TOP</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">relations</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">M</span><span class="o">.</span><span class="n">_groebner_vec</span><span class="p">()</span> <span class="k">if</span>
+                                         <span class="nb">all</span><span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">zero</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">G</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">_groebner_vec</span><span class="p">(</span><span class="n">extended</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+                <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="k">if</span>
+                           <span class="nb">all</span><span class="p">(</span><span class="n">y</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">zero</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])]</span>
+                <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">ideal</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">G</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">]),</span>
+                        <span class="p">[[</span><span class="o">-</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">:]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">])</span>
+        <span class="c"># For more generators, we use I : &lt;h1, .., hn&gt; = intersection of</span>
+        <span class="c">#                                    {I : &lt;hi&gt; | i}</span>
+        <span class="c"># TODO this can be done more efficiently</span>
+        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">y</span><span class="p">),</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_module_quotient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">gens</span><span class="p">))</span>
+
+
+<span class="k">class</span> <span class="nc">SubModuleQuotientRing</span><span class="p">(</span><span class="n">SubModule</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for submodules of free modules over quotient rings.</span>
+
+<span class="sd">    Do not instantiate this. Instead use the submodule methods.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">    &gt;&gt;&gt; M = (QQ.old_poly_ring(x, y)/[x**2 - y**2]).free_module(2).submodule([x, x + y])</span>
+<span class="sd">    &gt;&gt;&gt; M</span>
+<span class="sd">    &lt;[x + &lt;x**2 - y**2&gt;, x + y + &lt;x**2 - y**2&gt;]&gt;</span>
+<span class="sd">    &gt;&gt;&gt; M.contains([y**2, x**2 + x*y])</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; M.contains([x, y])</span>
+<span class="sd">    False</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - quot - the subquotient of `R^n/IR^n` generated by lifts of our generators</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">container</span><span class="p">):</span>
+        <span class="n">SubModule</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gens</span><span class="p">,</span> <span class="n">container</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">quot</span><span class="o">.</span><span class="n">submodule</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">lift</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gens</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">quot</span><span class="o">.</span><span class="n">_contains</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">lift</span><span class="p">(</span><span class="n">elem</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_syzygies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quot</span><span class="o">.</span><span class="n">ring</span><span class="p">)</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quot</span><span class="o">.</span><span class="n">_syzygies</span><span class="p">()]</span>
+
+    <span class="k">def</span> <span class="nf">_in_terms_of_generators</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quot</span><span class="o">.</span><span class="n">ring</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">quot</span><span class="o">.</span><span class="n">_in_terms_of_generators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">container</span><span class="o">.</span><span class="n">lift</span><span class="p">(</span><span class="n">elem</span><span class="p">))]</span>
+
+<span class="c">##########################################################################</span>
+<span class="c">## Quotient Modules ######################################################</span>
+<span class="c">##########################################################################</span>
+
+
+<span class="k">class</span> <span class="nc">QuotientModuleElement</span><span class="p">(</span><span class="n">ModuleElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Element of a quotient module.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">eq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equality comparison.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">killed_module</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">d1</span> <span class="o">-</span> <span class="n">d2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; + &quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">killed_module</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="QuotientModule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.QuotientModule">[docs]</a><span class="k">class</span> <span class="nc">QuotientModule</span><span class="p">(</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for quotient modules.</span>
+
+<span class="sd">    Do not instantiate this directly. For subquotients, see the</span>
+<span class="sd">    SubQuotientModule class.</span>
+
+<span class="sd">    Attributes:</span>
+
+<span class="sd">    - base - the base module we are a quotient of</span>
+<span class="sd">    - killed_module - the submodule used to form the quotient</span>
+<span class="sd">    - rank of the base</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">QuotientModuleElement</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">submodule</span><span class="p">):</span>
+        <span class="n">Module</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">base</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">submodule</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a submodule of </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="n">base</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="n">base</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span> <span class="o">=</span> <span class="n">submodule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rank</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">rank</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;/&quot;</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span><span class="p">)</span>
+
+<div class="viewcode-block" id="QuotientModule.is_zero"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.QuotientModule.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``self`` is a zero module.</span>
+
+<span class="sd">        This happens if and only if the base module is the same as the</span>
+<span class="sd">        submodule being killed.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2)</span>
+<span class="sd">        &gt;&gt;&gt; (F/[(1, 0)]).is_zero()</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; (F/[(1, 0), (0, 1)]).is_zero()</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span>
+</div>
+<div class="viewcode-block" id="QuotientModule.is_submodule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.QuotientModule.is_submodule">[docs]</a>    <span class="k">def</span> <span class="nf">is_submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if ``other`` is a submodule of ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; Q = QQ.old_poly_ring(x).free_module(2) / [(x, x)]</span>
+<span class="sd">        &gt;&gt;&gt; S = Q.submodule([1, 0])</span>
+<span class="sd">        &gt;&gt;&gt; Q.is_submodule(S)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; S.is_submodule(Q)</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">QuotientModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">killed_module</span> <span class="ow">and</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SubQuotientModule</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">container</span> <span class="o">==</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="QuotientModule.submodule"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.QuotientModule.submodule">[docs]</a>    <span class="k">def</span> <span class="nf">submodule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a submodule.</span>
+
+<span class="sd">        This is the same as taking a quotient of a submodule of the base</span>
+<span class="sd">        module.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; Q = QQ.old_poly_ring(x).free_module(2) / [(x, x)]</span>
+<span class="sd">        &gt;&gt;&gt; Q.submodule([x, 0])</span>
+<span class="sd">        &lt;[x, 0] + &lt;[x, x]&gt;&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">SubQuotientModule</span><span class="p">(</span><span class="n">gens</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">opts</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QuotientModule.convert"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.QuotientModule.convert">[docs]</a>    <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert ``elem`` into the internal representation.</span>
+
+<span class="sd">        This method is called implicitly whenever computations involve elements</span>
+<span class="sd">        not in the internal representation.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; F = QQ.old_poly_ring(x).free_module(2) / [(1, 2), (1, x)]</span>
+<span class="sd">        &gt;&gt;&gt; F.convert([1, 0])</span>
+<span class="sd">        [1, 0] + &lt;[1, 2], [1, x]&gt;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">QuotientModuleElement</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">module</span> <span class="ow">is</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">elem</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span><span class="o">.</span><span class="n">is_submodule</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">killed_module</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">QuotientModuleElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">elem</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">CoercionFailed</span>
+        <span class="k">return</span> <span class="n">QuotientModuleElement</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">elem</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="QuotientModule.identity_hom"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.QuotientModule.identity_hom">[docs]</a>    <span class="k">def</span> <span class="nf">identity_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the identity homomorphism on ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x).free_module(2) / [(1, 2), (1, x)]</span>
+<span class="sd">        &gt;&gt;&gt; M.identity_hom()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0], : QQ[x]**2/&lt;[1, 2], [1, x]&gt; -&gt; QQ[x]**2/&lt;[1, 2], [1, x]&gt;</span>
+<span class="sd">        [0, 1]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span><span class="o">.</span><span class="n">quotient_codomain</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span><span class="p">)</span><span class="o">.</span><span class="n">quotient_domain</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="QuotientModule.quotient_hom"><a class="viewcode-back" href="../../../../modules/polys/agca.html#sympy.polys.agca.modules.QuotientModule.quotient_hom">[docs]</a>    <span class="k">def</span> <span class="nf">quotient_hom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the quotient homomorphism to ``self``.</span>
+
+<span class="sd">        That is, return a homomorphism representing the natural map from</span>
+<span class="sd">        ``self.base`` to ``self``.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import QQ</span>
+<span class="sd">        &gt;&gt;&gt; M = QQ.old_poly_ring(x).free_module(2) / [(1, 2), (1, x)]</span>
+<span class="sd">        &gt;&gt;&gt; M.quotient_hom()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0], : QQ[x]**2 -&gt; QQ[x]**2/&lt;[1, 2], [1, x]&gt;</span>
+<span class="sd">        [0, 1]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">identity_hom</span><span class="p">()</span><span class="o">.</span><span class="n">quotient_codomain</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">killed_module</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

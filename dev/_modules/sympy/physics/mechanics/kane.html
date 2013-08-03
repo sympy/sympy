@@ -1,0 +1,991 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.physics.mechanics.kane &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.physics.mechanics.kane</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;KanesMethod&#39;</span><span class="p">]</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">solve_linear_system_LU</span><span class="p">,</span> <span class="n">eye</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">default_sort_key</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.mechanics.essential</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.mechanics.particle</span> <span class="kn">import</span> <span class="n">Particle</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.mechanics.point</span> <span class="kn">import</span> <span class="n">Point</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.mechanics.rigidbody</span> <span class="kn">import</span> <span class="n">RigidBody</span>
+<span class="kn">from</span> <span class="nn">sympy.physics.mechanics.functions</span> <span class="kn">import</span> <span class="p">(</span><span class="n">inertia_of_point_mass</span><span class="p">,</span>
+                                               <span class="n">partial_velocity</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KanesMethod"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.kane.KanesMethod">[docs]</a><span class="k">class</span> <span class="nc">KanesMethod</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Kane&#39;s method object.</span>
+
+<span class="sd">    This object is used to do the &quot;book-keeping&quot; as you go through and form</span>
+<span class="sd">    equations of motion in the way Kane presents in:</span>
+<span class="sd">    Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill</span>
+
+<span class="sd">    The attributes are for equations in the form [M] udot = forcing.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    auxiliary : Matrix</span>
+<span class="sd">        If applicable, the set of auxiliary Kane&#39;s</span>
+<span class="sd">        equations used to solve for non-contributing</span>
+<span class="sd">        forces.</span>
+<span class="sd">    mass_matrix : Matrix</span>
+<span class="sd">        The system&#39;s mass matrix</span>
+<span class="sd">    forcing : Matrix</span>
+<span class="sd">        The system&#39;s forcing vector</span>
+<span class="sd">    mass_matrix_full : Matrix</span>
+<span class="sd">        The &quot;mass matrix&quot; for the u&#39;s and q&#39;s</span>
+<span class="sd">    forcing_full : Matrix</span>
+<span class="sd">        The &quot;forcing vector&quot; for the u&#39;s and q&#39;s</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    This is a simple example for a one degree of freedom translational</span>
+<span class="sd">    spring-mass-damper.</span>
+
+<span class="sd">    In this example, we first need to do the kinematics.</span>
+<span class="sd">    This involves creating generalized speeds and coordinates and their</span>
+<span class="sd">    derivatives.</span>
+<span class="sd">    Then we create a point and set its velocity in a frame::</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.physics.mechanics import Point, Particle, KanesMethod</span>
+<span class="sd">        &gt;&gt;&gt; q, u = dynamicsymbols(&#39;q u&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; qd, ud = dynamicsymbols(&#39;q u&#39;, 1)</span>
+<span class="sd">        &gt;&gt;&gt; m, c, k = symbols(&#39;m c k&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; N = ReferenceFrame(&#39;N&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P = Point(&#39;P&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; P.set_vel(N, u * N.x)</span>
+
+<span class="sd">    Next we need to arrange/store information in the way that KanesMethod</span>
+<span class="sd">    requires.  The kinematic differential equations need to be stored in a</span>
+<span class="sd">    dict.  A list of forces/torques must be constructed, where each entry in</span>
+<span class="sd">    the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where the</span>
+<span class="sd">    Vectors represent the Force or Torque.</span>
+<span class="sd">    Next a particle needs to be created, and it needs to have a point and mass</span>
+<span class="sd">    assigned to it.</span>
+<span class="sd">    Finally, a list of all bodies and particles needs to be created::</span>
+
+<span class="sd">    &gt;&gt;&gt; kd = [qd - u]</span>
+<span class="sd">    &gt;&gt;&gt; FL = [(P, (-k * q - c * u) * N.x)]</span>
+<span class="sd">    &gt;&gt;&gt; pa = Particle(&#39;pa&#39;, P, m)</span>
+<span class="sd">    &gt;&gt;&gt; BL = [pa]</span>
+
+<span class="sd">    Finally we can generate the equations of motion.</span>
+<span class="sd">    First we create the KanesMethod object and supply an inertial frame,</span>
+<span class="sd">    coordinates, generalized speeds, and the kinematic differential equations.</span>
+<span class="sd">    Additional quantities such as configuration and motion constraints,</span>
+<span class="sd">    dependent coordinates and speeds, and auxiliary speeds are also supplied</span>
+<span class="sd">    here (see the online documentation).</span>
+<span class="sd">    Next we form FR* and FR to complete: Fr + Fr* = 0.</span>
+<span class="sd">    We have the equations of motion at this point.</span>
+<span class="sd">    It makes sense to rearrnge them though, so we calculate the mass matrix and</span>
+<span class="sd">    the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is</span>
+<span class="sd">    the mass matrix, udot is a vector of the time derivatives of the</span>
+<span class="sd">    generalized speeds, and forcing is a vector representing &quot;forcing&quot; terms::</span>
+
+<span class="sd">        &gt;&gt;&gt; KM = KanesMethod(N, q_ind=[q], u_ind=[u], kd_eqs=kd)</span>
+<span class="sd">        &gt;&gt;&gt; (fr, frstar) = KM.kanes_equations(FL, BL)</span>
+<span class="sd">        &gt;&gt;&gt; MM = KM.mass_matrix</span>
+<span class="sd">        &gt;&gt;&gt; forcing = KM.forcing</span>
+<span class="sd">        &gt;&gt;&gt; rhs = MM.inv() * forcing</span>
+<span class="sd">        &gt;&gt;&gt; rhs</span>
+<span class="sd">        Matrix([[(-c*u(t) - k*q(t))/m]])</span>
+<span class="sd">        &gt;&gt;&gt; KM.linearize()[0]</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [ 0,  1],</span>
+<span class="sd">        [-k, -c]])</span>
+
+<span class="sd">    Please look at the documentation pages for more information on how to</span>
+<span class="sd">    perform linearization and how to deal with dependent coordinates &amp; speeds,</span>
+<span class="sd">    and how do deal with bringing non-contributing forces into evidence.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">simp</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">___KDEqError</span> <span class="o">=</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;Create an instance of KanesMethod with&#39;</span> <span class="o">+</span>
+                                  <span class="s">&#39;kinematic differential equations to use&#39;</span> <span class="o">+</span>
+                                  <span class="s">&#39;this method.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frame</span><span class="p">,</span> <span class="n">q_ind</span><span class="p">,</span> <span class="n">u_ind</span><span class="p">,</span> <span class="n">kd_eqs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">q_dependent</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">configuration_constraints</span><span class="o">=</span><span class="p">[],</span> <span class="n">u_dependent</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">velocity_constraints</span><span class="o">=</span><span class="p">[],</span> <span class="n">acceleration_constraints</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">u_auxiliary</span><span class="o">=</span><span class="p">[]):</span>
+
+        <span class="sd">&quot;&quot;&quot;Please read the online documentation. &quot;&quot;&quot;</span>
+        <span class="c"># Big storage things</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;An intertial ReferenceFrame must be supplied&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inertial</span> <span class="o">=</span> <span class="n">frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forcelist</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bodylist</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rhs</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_aux_eq</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># States</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdep</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdot</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_u</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_udep</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_udot</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># Differential Equations Matrices and Map</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_d</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="c"># Constraint Matrices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_h</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_nh</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_nh</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_dnh</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coords</span><span class="p">(</span><span class="n">q_ind</span><span class="p">,</span> <span class="n">q_dependent</span><span class="p">,</span> <span class="n">configuration_constraints</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_speeds</span><span class="p">(</span><span class="n">u_ind</span><span class="p">,</span> <span class="n">u_dependent</span><span class="p">,</span> <span class="n">velocity_constraints</span><span class="p">,</span>
+                <span class="n">acceleration_constraints</span><span class="p">,</span> <span class="n">u_auxiliary</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kd_eqs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kindiffeq</span><span class="p">(</span><span class="n">kd_eqs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_find_dynamicsymbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inlist</span><span class="p">,</span> <span class="n">insyms</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="sd">&quot;&quot;&quot;Finds all non-supplied dynamicsymbols in the expressions.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">AppliedUndef</span><span class="p">,</span> <span class="n">Derivative</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span>
+        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="p">[</span><span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">inlist</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">j</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">AppliedUndef</span><span class="p">,</span> <span class="n">Derivative</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">atoms</span><span class="p">()</span> <span class="o">==</span> <span class="nb">set</span><span class="p">([</span><span class="n">t</span><span class="p">])],</span> <span class="nb">set</span><span class="p">())</span> <span class="o">-</span> <span class="n">insyms</span>
+
+        <span class="n">temp_f</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">AppliedUndef</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inlist</span><span class="p">])</span>
+        <span class="n">temp_d</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Derivative</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inlist</span><span class="p">])</span>
+        <span class="n">set_f</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">temp_f</span> <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">args</span> <span class="o">==</span> <span class="p">(</span><span class="n">t</span><span class="p">,)])</span>
+        <span class="n">set_d</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">temp_d</span> <span class="k">if</span> <span class="p">((</span><span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">set_f</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="n">i</span> <span class="o">==</span> <span class="n">t</span>
+                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">variables</span><span class="p">]))])</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">set_f</span><span class="p">,</span> <span class="n">set_d</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">insyms</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_find_othersymbols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inlist</span><span class="p">,</span> <span class="n">insyms</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="sd">&quot;&quot;&quot;Finds all non-dynamic symbols in the expressions.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reduce</span><span class="p">(</span><span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">,</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inlist</span><span class="p">])</span> <span class="o">-</span>
+                    <span class="nb">set</span><span class="p">(</span><span class="n">insyms</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_mat_inv_mul</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal Function</span>
+
+<span class="sd">        Computes A^-1 * B symbolically w/ substitution, where B is not</span>
+<span class="sd">        necessarily a vector, but can be a matrix.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">r1</span><span class="p">,</span> <span class="n">c1</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">r2</span><span class="p">,</span> <span class="n">c2</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">temp1</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">c1</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">r1</span> <span class="o">*</span> <span class="n">i</span><span class="p">)))</span>
+        <span class="n">temp2</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">r2</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;y&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">r2</span> <span class="o">*</span> <span class="n">i</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temp1</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">temp1</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">temp2</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">temp2</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">temp3</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">c2</span><span class="p">):</span>
+            <span class="n">temp3</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp1</span><span class="o">.</span><span class="n">LDLsolve</span><span class="p">(</span><span class="n">temp2</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]))</span>
+        <span class="n">temp3</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">T</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">temp3</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">return</span> <span class="n">temp3</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">temp1</span><span class="p">,</span> <span class="n">A</span><span class="p">))))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">temp2</span><span class="p">,</span> <span class="n">B</span><span class="p">))))</span>
+
+    <span class="k">def</span> <span class="nf">_coords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qind</span><span class="p">,</span> <span class="n">qdep</span><span class="o">=</span><span class="p">[],</span> <span class="n">coneqs</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="sd">&quot;&quot;&quot;Supply all the generalized coordinates in a list.</span>
+
+<span class="sd">        If some coordinates are dependent, supply them as part of qdep. Their</span>
+<span class="sd">        dependent nature will only show up in the linearization process though.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        qind : list</span>
+<span class="sd">            A list of independent generalized coords</span>
+<span class="sd">        qdep : list</span>
+<span class="sd">            List of dependent coordinates</span>
+<span class="sd">        coneq : list</span>
+<span class="sd">            List of expressions which are equal to zero; these are the</span>
+<span class="sd">            configuration constraint equations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qind</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Generalized coords. must be supplied in a list.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">=</span> <span class="n">qind</span> <span class="o">+</span> <span class="n">qdep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdot</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">qdep</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Dependent coordinates and constraints must each be &#39;</span>
+                            <span class="s">&#39;provided in their own list.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">qdep</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coneqs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;There must be an equal number of dependent &#39;</span>
+                             <span class="s">&#39;coordinates and constraints.&#39;</span><span class="p">)</span>
+        <span class="n">coneqs</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">coneqs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdep</span> <span class="o">=</span> <span class="n">qdep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_h</span> <span class="o">=</span> <span class="n">coneqs</span>
+
+    <span class="k">def</span> <span class="nf">_speeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uind</span><span class="p">,</span> <span class="n">udep</span><span class="o">=</span><span class="p">[],</span> <span class="n">coneqs</span><span class="o">=</span><span class="p">[],</span> <span class="n">diffconeqs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">u_auxiliary</span><span class="o">=</span><span class="p">[]):</span>
+        <span class="sd">&quot;&quot;&quot;Supply all the generalized speeds in a list.</span>
+
+<span class="sd">        If there are motion constraints or auxiliary speeds, they are provided</span>
+<span class="sd">        here as well (as well as motion constraints).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        uind : list</span>
+<span class="sd">            A list of independent generalized speeds</span>
+<span class="sd">        udep : list</span>
+<span class="sd">            Optional list of dependent speeds</span>
+<span class="sd">        coneqs : list</span>
+<span class="sd">            Optional List of constraint expressions; these are expressions</span>
+<span class="sd">            which are equal to zero which define a speed (motion) constraint.</span>
+<span class="sd">        diffconeqs : list</span>
+<span class="sd">            Optional, calculated automatically otherwise; list of constraint</span>
+<span class="sd">            equations; again equal to zero, but define an acceleration</span>
+<span class="sd">            constraint.</span>
+<span class="sd">        u_auxiliary : list</span>
+<span class="sd">            An optional list of auxiliary speeds used for brining</span>
+<span class="sd">            non-contributing forces into evidence</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">uind</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Supply generalized speeds in an iterable.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_u</span> <span class="o">=</span> <span class="n">uind</span> <span class="o">+</span> <span class="n">udep</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_udot</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span> <span class="o">=</span> <span class="n">u_auxiliary</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">udep</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Supply dependent speeds in an iterable.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">udep</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coneqs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;There must be an equal number of dependent &#39;</span>
+                             <span class="s">&#39;speeds and constraints.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">diffconeqs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">udep</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">diffconeqs</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;There must be an equal number of dependent &#39;</span>
+                                 <span class="s">&#39;speeds and constraints.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">udep</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_u</span>
+            <span class="n">uzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">))))</span>
+            <span class="n">coneqs</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">coneqs</span><span class="p">)</span>
+            <span class="n">udot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_udot</span>
+            <span class="n">udotzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">udot</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">udot</span><span class="p">))))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_udep</span> <span class="o">=</span> <span class="n">udep</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_f_nh</span> <span class="o">=</span> <span class="n">coneqs</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uzero</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_k_nh</span> <span class="o">=</span> <span class="p">(</span><span class="n">coneqs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_nh</span><span class="p">)</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+            <span class="c"># if no differentiated non holonomic constraints were given, calculate</span>
+            <span class="k">if</span> <span class="n">diffconeqs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_k_dnh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_nh</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_nh</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">_f_nh</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span> <span class="o">=</span> <span class="n">diffconeqs</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">udotzero</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_k_dnh</span> <span class="o">=</span> <span class="p">(</span><span class="n">diffconeqs</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span><span class="p">)</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">udot</span><span class="p">)</span>
+
+            <span class="n">o</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>  <span class="c"># number of generalized speeds</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">udep</span><span class="p">)</span>  <span class="c"># number of motion constraints</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">o</span> <span class="o">-</span> <span class="n">m</span>  <span class="c"># number of independent speeds</span>
+            <span class="c"># For a reminder, form of non-holonomic constraints is:</span>
+            <span class="c"># B u + C = 0</span>
+            <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_nh</span><span class="p">[:,</span> <span class="p">:]</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_nh</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+            <span class="c"># We partition B into indenpendent and dependent columns</span>
+            <span class="c"># Ars is then -Bdep.inv() * Bind, and it relates depedent speeds to</span>
+            <span class="c"># independent speeds as: udep = Ars uind, neglecting the C term here.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_depB</span> <span class="o">=</span> <span class="n">B</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_depC</span> <span class="o">=</span> <span class="n">C</span>
+            <span class="n">mr1</span> <span class="o">=</span> <span class="n">B</span><span class="p">[:,</span> <span class="p">:</span><span class="n">p</span><span class="p">]</span>
+            <span class="n">ml1</span> <span class="o">=</span> <span class="n">B</span><span class="p">[:,</span> <span class="n">p</span><span class="p">:</span><span class="n">o</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_Ars</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">ml1</span><span class="p">,</span> <span class="n">mr1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_partial_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vlist</span><span class="p">,</span> <span class="n">ulist</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the list of partial velocities, replacing qdot&#39;s in the</span>
+<span class="sd">        velocity list if necessary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">___KDEqError</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="p">[</span><span class="n">vel</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span><span class="p">)</span> <span class="k">for</span> <span class="n">vel</span> <span class="ow">in</span> <span class="n">vlist</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">partial_velocity</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">ulist</span><span class="p">,</span> <span class="n">frame</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KanesMethod.kindiffdict"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.kane.KanesMethod.kindiffdict">[docs]</a>    <span class="k">def</span> <span class="nf">kindiffdict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the qdot&#39;s in a dictionary. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">___KDEqError</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span>
+</div>
+    <span class="k">def</span> <span class="nf">_kindiffeq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kdeqs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Supply all the kinematic differential equations in a list.</span>
+
+<span class="sd">        They should be in the form [Expr1, Expr2, ...] where Expri is equal to</span>
+<span class="sd">        zero</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        kdeqs : list (of Expr)</span>
+<span class="sd">            The listof kinematic differential equations</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kdeqs</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;There must be an equal number of kinematic &#39;</span>
+                             <span class="s">&#39;differential equations and coordinates.&#39;</span><span class="p">)</span>
+
+        <span class="n">uaux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span>
+        <span class="c"># dictionary of auxiliary speeds which are equal to zero</span>
+        <span class="n">uaz</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">uaux</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">uaux</span><span class="p">))))</span>
+
+        <span class="c">#kdeqs = Matrix(kdeqs).subs(uaz)</span>
+        <span class="n">kdeqs</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">kdeqs</span><span class="p">)</span>
+
+        <span class="n">qdot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdot</span>
+        <span class="n">qdotzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">qdot</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">qdot</span><span class="p">))))</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_u</span>
+        <span class="n">uzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">))))</span>
+
+        <span class="n">f_k</span> <span class="o">=</span> <span class="n">kdeqs</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uzero</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">qdotzero</span><span class="p">)</span>
+        <span class="n">k_kqdot</span> <span class="o">=</span> <span class="p">(</span><span class="n">kdeqs</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uzero</span><span class="p">)</span> <span class="o">-</span> <span class="n">f_k</span><span class="p">)</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Matrix</span><span class="p">(</span><span class="n">qdot</span><span class="p">))</span>
+        <span class="n">k_ku</span> <span class="o">=</span> <span class="p">(</span><span class="n">kdeqs</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">qdotzero</span><span class="p">)</span> <span class="o">-</span> <span class="n">f_k</span><span class="p">)</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">Matrix</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">k_kqdot</span><span class="p">,</span> <span class="n">k_ku</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">k_kqdot</span><span class="p">,</span> <span class="n">f_k</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">qdot</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span> <span class="o">=</span> <span class="n">solve_linear_system_LU</span><span class="p">(</span><span class="n">Matrix</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+            <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdot</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">k_kqdot</span><span class="p">,</span> <span class="n">k_ku</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">k_kqdot</span><span class="p">,</span> <span class="n">f_k</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_form_fr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fl</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Form the generalized active force.</span>
+
+<span class="sd">        Computes the vector of the generalized active force vector.</span>
+<span class="sd">        Used to compute E.o.M. in the form Fr + Fr* = 0.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        fl : list</span>
+<span class="sd">            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)</span>
+<span class="sd">            tuples which represent the force at a point or torque on a frame.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fl</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Force pairs must be supplied in an iterable.&#39;</span><span class="p">)</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inertial</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forcelist</span> <span class="o">=</span> <span class="n">fl</span><span class="p">[:]</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_u</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>  <span class="c"># number of gen. speeds</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fl</span><span class="p">)</span>  <span class="c"># number of forces</span>
+
+        <span class="n">FR</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="c"># pull out relevant velocities for constructing partial velocities</span>
+        <span class="n">vel_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">f_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fl</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ReferenceFrame</span><span class="p">):</span>
+                <span class="n">vel_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Point</span><span class="p">):</span>
+                <span class="n">vel_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;First entry in pair must be point or frame.&#39;</span><span class="p">)</span>
+            <span class="n">f_list</span> <span class="o">+=</span> <span class="p">[</span><span class="n">i</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">partials</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partial_velocity</span><span class="p">(</span><span class="n">vel_list</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+
+        <span class="c"># Fill Fr with dot product of partial velocities and forces</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">b</span><span class="p">):</span>
+                <span class="n">FR</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">partials</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">f_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+        <span class="c"># In case there are dependent speeds</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_udep</span><span class="p">)</span>  <span class="c"># number of dependent speeds</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">o</span> <span class="o">-</span> <span class="n">m</span>
+            <span class="n">FRtilde</span> <span class="o">=</span> <span class="n">FR</span><span class="p">[:</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">FRold</span> <span class="o">=</span> <span class="n">FR</span><span class="p">[</span><span class="n">p</span><span class="p">:</span><span class="n">o</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">FRtilde</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ars</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">FRold</span>
+            <span class="n">FR</span> <span class="o">=</span> <span class="n">FRtilde</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="o">=</span> <span class="n">FR</span>
+        <span class="k">return</span> <span class="n">FR</span>
+
+    <span class="k">def</span> <span class="nf">_form_frstar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bl</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Form the generalized inertia force.</span>
+
+<span class="sd">        Computes the vector of the generalized inertia force vector.</span>
+<span class="sd">        Used to compute E.o.M. in the form Fr + Fr* = 0.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        bl : list</span>
+<span class="sd">            A list of all RigidBody&#39;s and Particle&#39;s in the system.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bl</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Bodies must be supplied in an iterable.&#39;</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inertial</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bodylist</span> <span class="o">=</span> <span class="n">bl</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_u</span>  <span class="c"># all speeds</span>
+        <span class="n">udep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_udep</span>  <span class="c"># dependent speeds</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">udep</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">o</span> <span class="o">-</span> <span class="n">m</span>
+        <span class="n">udot</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_udot</span>
+        <span class="n">udotzero</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">udot</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">o</span><span class="p">)))</span>
+        <span class="c"># auxiliary speeds</span>
+        <span class="n">uaux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span>
+        <span class="n">uauxdot</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">uaux</span><span class="p">]</span>
+        <span class="c"># dictionary of auxiliary speeds which are equal to zero</span>
+        <span class="n">uaz</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">uaux</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">uaux</span><span class="p">))))</span>
+        <span class="n">uadz</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">uauxdot</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">uauxdot</span><span class="p">))))</span>
+        <span class="c"># dictionary of qdot&#39;s to u&#39;s</span>
+        <span class="n">qdots</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                         <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span><span class="o">.</span><span class="n">values</span><span class="p">()))))</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">qdots</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="n">qdots</span><span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+        <span class="n">MM</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+        <span class="n">nonMM</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">partials</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># Fill up the list of partials: format is a list with no. elements</span>
+        <span class="c"># equal to number of entries in body list. Each of these elements is a</span>
+        <span class="c"># list - either of length 1 for the translational components of</span>
+        <span class="c"># particles or of length 2 for the translational and rotational</span>
+        <span class="c"># components of rigid bodies. The inner most list is the list of</span>
+        <span class="c"># partial velocities.</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">bl</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">RigidBody</span><span class="p">):</span>
+                <span class="n">partials</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_partial_velocity</span><span class="p">([</span><span class="n">v</span><span class="o">.</span><span class="n">masscenter</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">),</span>
+                                                     <span class="n">v</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)],</span>
+                                                    <span class="n">u</span><span class="p">,</span> <span class="n">N</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Particle</span><span class="p">):</span>
+                <span class="n">partials</span> <span class="o">+=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_partial_velocity</span><span class="p">([</span><span class="n">v</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)],</span> <span class="n">u</span><span class="p">,</span> <span class="n">N</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;The body list needs RigidBody or &#39;</span>
+                                <span class="s">&#39;Particle as list elements.&#39;</span><span class="p">)</span>
+
+        <span class="c"># This section does 2 things - computes the parts of Fr* that are</span>
+        <span class="c"># associated with the udots, and the parts that are not associated with</span>
+        <span class="c"># the udots. This happens for RigidBody and Particle a little</span>
+        <span class="c"># differently, but similar process overall.</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bl</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">RigidBody</span><span class="p">):</span>
+                <span class="n">M</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">mass</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+                <span class="n">I</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">central_inertia</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                        <span class="c"># translational</span>
+                        <span class="n">MM</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">M</span> <span class="o">*</span> <span class="p">(</span><span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">&amp;</span>
+                                         <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">])</span>
+                        <span class="c"># rotational</span>
+                        <span class="n">temp</span> <span class="o">=</span> <span class="p">(</span><span class="n">I</span> <span class="o">&amp;</span> <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+                        <span class="n">MM</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">temp</span> <span class="o">&amp;</span>
+                                     <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">])</span>
+                    <span class="c"># translational components</span>
+                    <span class="n">nonMM</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span> <span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span>
+                                   <span class="n">v</span><span class="o">.</span><span class="n">masscenter</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">&amp;</span>
+                                 <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+                    <span class="n">nonMM</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">M</span> <span class="o">*</span>
+                            <span class="n">v</span><span class="o">.</span><span class="n">masscenter</span><span class="o">.</span><span class="n">acc</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">udotzero</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+                            <span class="o">&amp;</span> <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+                    <span class="c"># rotational components</span>
+                    <span class="n">omega</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">ang_vel_in</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+                    <span class="n">nonMM</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">((</span><span class="n">I</span><span class="o">.</span><span class="n">dt</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">frame</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">omega</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">&amp;</span>
+                                 <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+                    <span class="n">nonMM</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">((</span><span class="n">I</span> <span class="o">&amp;</span>
+                        <span class="n">v</span><span class="o">.</span><span class="n">frame</span><span class="o">.</span><span class="n">ang_acc_in</span><span class="p">(</span><span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">udotzero</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+                        <span class="o">&amp;</span> <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+                    <span class="n">nonMM</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">((</span><span class="n">omega</span> <span class="o">^</span> <span class="p">(</span><span class="n">I</span> <span class="o">&amp;</span> <span class="n">omega</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">&amp;</span>
+                                 <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Particle</span><span class="p">):</span>
+                <span class="n">M</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">mass</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">o</span><span class="p">):</span>
+                        <span class="n">MM</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">M</span> <span class="o">*</span> <span class="p">(</span><span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">&amp;</span>
+                                         <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">k</span><span class="p">])</span>
+                    <span class="n">nonMM</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">M</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">&amp;</span>
+                                             <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+                    <span class="n">nonMM</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">M</span> <span class="o">*</span>
+                            <span class="n">v</span><span class="o">.</span><span class="n">point</span><span class="o">.</span><span class="n">acc</span><span class="p">(</span><span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">udotzero</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span> <span class="o">&amp;</span>
+                            <span class="n">partials</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="n">j</span><span class="p">])</span>
+        <span class="c"># Negate FRSTAR since Kane defines the inertia forces/torques</span>
+        <span class="c"># to be negative and we didn&#39;t do so above.</span>
+        <span class="n">MM</span> <span class="o">=</span> <span class="n">MM</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">qdots</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+        <span class="n">nonMM</span> <span class="o">=</span> <span class="n">nonMM</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">qdots</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">udotzero</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uadz</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uaz</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+        <span class="n">FRSTAR</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">MM</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">udot</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">uadz</span><span class="p">)</span> <span class="o">+</span> <span class="n">nonMM</span><span class="p">)</span>
+
+        <span class="c"># For motion constraints, m is the number of constraints</span>
+        <span class="c"># Really, one should just look at Kane&#39;s book for descriptions of this</span>
+        <span class="c"># process</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">FRSTARtilde</span> <span class="o">=</span> <span class="n">FRSTAR</span><span class="p">[:</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">FRSTARold</span> <span class="o">=</span> <span class="n">FRSTAR</span><span class="p">[</span><span class="n">p</span><span class="p">:</span><span class="n">o</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">FRSTARtilde</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ars</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">FRSTARold</span>
+            <span class="n">FRSTAR</span> <span class="o">=</span> <span class="n">FRSTARtilde</span>
+
+            <span class="n">MMi</span> <span class="o">=</span> <span class="n">MM</span><span class="p">[:</span><span class="n">p</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">MMd</span> <span class="o">=</span> <span class="n">MM</span><span class="p">[</span><span class="n">p</span><span class="p">:</span><span class="n">o</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">MM</span> <span class="o">=</span> <span class="n">MMi</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_Ars</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">MMd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="o">=</span> <span class="n">FRSTAR</span>
+
+        <span class="n">zeroeq</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span><span class="p">)</span>
+        <span class="n">zeroeq</span> <span class="o">=</span> <span class="n">zeroeq</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">udotzero</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k_d</span> <span class="o">=</span> <span class="n">MM</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span> <span class="o">=</span> <span class="n">zeroeq</span>
+        <span class="k">return</span> <span class="n">FRSTAR</span>
+
+<div class="viewcode-block" id="KanesMethod.kanes_equations"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.kane.KanesMethod.kanes_equations">[docs]</a>    <span class="k">def</span> <span class="nf">kanes_equations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">FL</span><span class="p">,</span> <span class="n">BL</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to form Kane&#39;s equations, Fr + Fr* = 0.</span>
+
+<span class="sd">        Returns (Fr, Fr*). In the case where auxiliary generalized speeds are</span>
+<span class="sd">        present (say, s auxiliary speeds, o generalized speeds, and m motion</span>
+<span class="sd">        constraints) the length of the returned vectors will be o - m + s in</span>
+<span class="sd">        length. The first o - m equations will be the constrained Kane&#39;s</span>
+<span class="sd">        equations, then the s auxiliary Kane&#39;s equations. These auxiliary</span>
+<span class="sd">        equations can be accessed with the auxiliary_eqs().</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        FL : list</span>
+<span class="sd">            Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)</span>
+<span class="sd">            tuples which represent the force at a point or torque on a frame.</span>
+<span class="sd">        BL : list</span>
+<span class="sd">            A list of all RigidBody&#39;s and Particle&#39;s in the system.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Speeds and coordinates must be supplied first.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">__KDEqError</span>
+
+
+        <span class="n">fr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_fr</span><span class="p">(</span><span class="n">FL</span><span class="p">)</span>
+        <span class="n">frstar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form_frstar</span><span class="p">(</span><span class="n">BL</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span> <span class="o">!=</span> <span class="p">[]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_udep</span> <span class="o">==</span> <span class="p">[]:</span>
+                <span class="n">km</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inertial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span><span class="p">,</span>
+                             <span class="n">u_auxiliary</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">km</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inertial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span><span class="p">,</span>
+                <span class="n">u_auxiliary</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span><span class="p">,</span> <span class="n">u_dependent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_udep</span><span class="p">,</span>
+                <span class="n">velocity_constraints</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_nh</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_nh</span><span class="p">))</span>
+            <span class="n">km</span><span class="o">.</span><span class="n">_qdot_u_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdot_u_map</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_km</span> <span class="o">=</span> <span class="n">km</span>
+            <span class="n">fraux</span> <span class="o">=</span> <span class="n">km</span><span class="o">.</span><span class="n">_form_fr</span><span class="p">(</span><span class="n">FL</span><span class="p">)</span>
+            <span class="n">frstaraux</span> <span class="o">=</span> <span class="n">km</span><span class="o">.</span><span class="n">_form_frstar</span><span class="p">(</span><span class="n">BL</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_aux_eq</span> <span class="o">=</span> <span class="n">fraux</span> <span class="o">+</span> <span class="n">frstaraux</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="o">=</span> <span class="n">fr</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="n">fraux</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="o">=</span> <span class="n">frstar</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="n">frstaraux</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">frstar</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="KanesMethod.linearize"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.kane.KanesMethod.linearize">[docs]</a>    <span class="k">def</span> <span class="nf">linearize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method used to generate linearized equations.</span>
+
+<span class="sd">        Note that for linearization, it is assumed that time is not perturbed,</span>
+<span class="sd">        but only coordinates and positions. The &quot;forcing&quot; vector&#39;s jacobian is</span>
+<span class="sd">        computed with respect to the state vector in the form [Qi, Qd, Ui, Ud].</span>
+<span class="sd">        This is the &quot;f_lin_A&quot; matrix.</span>
+
+<span class="sd">        It also finds any non-state dynamicsymbols and computes the jacobian of</span>
+<span class="sd">        the &quot;forcing&quot; vector with respect to them. This is the &quot;f_lin_B&quot;</span>
+<span class="sd">        matrix; if this is empty, an empty matrix is created.</span>
+
+<span class="sd">        Consider the following:</span>
+<span class="sd">        If our equations are: [M]qudot = f, where [M] is the full mass matrix,</span>
+<span class="sd">        qudot is a vector of the deriatives of the coordinates and speeds, and</span>
+<span class="sd">        f in the full forcing vector, the linearization process is as follows:</span>
+<span class="sd">        [M]qudot = [f_lin_A]qu + [f_lin_B]y, where qu is the state vector,</span>
+<span class="sd">        f_lin_A is the jacobian of the full forcing vector with respect to the</span>
+<span class="sd">        state vector, f_lin_B is the jacobian of the full forcing vector with</span>
+<span class="sd">        respect to any non-speed/coordinate dynamicsymbols which show up in the</span>
+<span class="sd">        full forcing vector, and y is a vector of those dynamic symbols (each</span>
+<span class="sd">        column in f_lin_B corresponds to a row of the y vector, each of which</span>
+<span class="sd">        is a non-speed/coordinate dynamicsymbol).</span>
+
+<span class="sd">        To get the traditional state-space A and B matrix, you need to multiply</span>
+<span class="sd">        the f_lin_A and f_lin_B matrices by the inverse of the mass matrix.</span>
+<span class="sd">        Caution needs to be taken when inverting large symbolic matrices;</span>
+<span class="sd">        substituting in numerical values before inverting will work better.</span>
+
+<span class="sd">        A tuple of (f_lin_A, f_lin_B, other_dynamicsymbols) is returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute Fr, Fr* first.&#39;</span><span class="p">)</span>
+
+        <span class="c"># Note that this is now unneccessary, and it should never be</span>
+        <span class="c"># encountered; I still think it should be in here in case the user</span>
+        <span class="c"># manually sets these matrices incorrectly.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Matrix K_kqdot must not depend on any q.&#39;</span><span class="p">)</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span>
+        <span class="n">uaux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span>
+        <span class="n">uauxdot</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">uaux</span><span class="p">]</span>
+        <span class="c"># dictionary of auxiliary speeds &amp; derivatives which are equal to zero</span>
+        <span class="n">subdict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">uaux</span> <span class="o">+</span> <span class="n">uauxdot</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">uaux</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">uauxdot</span><span class="p">)))))</span>
+
+        <span class="c"># Checking for dynamic symbols outside the dynamic differential</span>
+        <span class="c"># equations; throws error if there is.</span>
+        <span class="n">insyms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_q</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_qdot</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_u</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_udot</span> <span class="o">+</span> <span class="n">uaux</span> <span class="o">+</span> <span class="n">uauxdot</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_find_dynamicsymbols</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">insyms</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">_k_dnh</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span><span class="p">,</span>
+                                                              <span class="bp">self</span><span class="o">.</span><span class="n">_k_d</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Cannot have dynamicsymbols outside dynamic &#39;</span>
+                             <span class="s">&#39;forcing vector.&#39;</span><span class="p">)</span>
+        <span class="n">other_dyns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_find_dynamicsymbols</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subdict</span><span class="p">),</span>
+                                             <span class="n">insyms</span><span class="p">))</span>
+
+        <span class="c"># make it canonically ordered so the jacobian is canonical</span>
+        <span class="n">other_dyns</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">other_dyns</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">dynamicsymbols</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">other_dyns</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Cannot have derivatives of specified &#39;</span>
+                                 <span class="s">&#39;quantities when linearizing forcing terms.&#39;</span><span class="p">)</span>
+
+        <span class="n">o</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">)</span>  <span class="c"># number of speeds</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">)</span>  <span class="c"># number of coordinates</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdep</span><span class="p">)</span>  <span class="c"># number of configuration constraints</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_udep</span><span class="p">)</span>  <span class="c"># number of motion constraints</span>
+        <span class="n">qi</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">[:</span> <span class="n">n</span> <span class="o">-</span> <span class="n">l</span><span class="p">])</span>  <span class="c"># independent coords</span>
+        <span class="n">qd</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">l</span><span class="p">:</span> <span class="n">n</span><span class="p">])</span>  <span class="c"># dependent coords; could be empty</span>
+        <span class="n">ui</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">[:</span> <span class="n">o</span> <span class="o">-</span> <span class="n">m</span><span class="p">])</span>  <span class="c"># independent speeds</span>
+        <span class="n">ud</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">[</span><span class="n">o</span> <span class="o">-</span> <span class="n">m</span><span class="p">:</span> <span class="n">o</span><span class="p">])</span>  <span class="c"># dependent speeds; could be empty</span>
+        <span class="n">qdot</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_qdot</span><span class="p">)</span>  <span class="c"># time derivatives of coordinates</span>
+
+        <span class="c"># with equations in the form MM udot = forcing, expand that to:</span>
+        <span class="c"># MM_full [q,u].T = forcing_full. This combines coordinates and</span>
+        <span class="c"># speeds together for the linearization, which is necessary for the</span>
+        <span class="c"># linearization process, due to dependent coordinates. f1 is the rows</span>
+        <span class="c"># from the kinematic differential equations, f2 is the rows from the</span>
+        <span class="c"># dynamic differential equations (and differentiated non-holonomic</span>
+        <span class="c"># constraints).</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span>
+        <span class="n">f2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span>
+        <span class="c"># Only want to do this if these matrices have been filled in, which</span>
+        <span class="c"># occurs when there are dependent speeds</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">f2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span><span class="p">)</span>
+            <span class="n">fnh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_nh</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_nh</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">)</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subdict</span><span class="p">)</span>
+        <span class="n">f2</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subdict</span><span class="p">)</span>
+        <span class="n">fh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_h</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subdict</span><span class="p">)</span>
+        <span class="n">fku</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">))</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subdict</span><span class="p">)</span>
+        <span class="n">fkf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">subdict</span><span class="p">)</span>
+
+        <span class="c"># In the code below, we are applying the chain rule by hand on these</span>
+        <span class="c"># things. All the matrices have been changed into vectors (by</span>
+        <span class="c"># multiplying the dynamic symbols which it is paired with), so we can</span>
+        <span class="c"># take the jacobian of them. The basic operation is take the jacobian</span>
+        <span class="c"># of the f1, f2 vectors wrt all of the q&#39;s and u&#39;s. f1 is a function of</span>
+        <span class="c"># q, u, and t; f2 is a function of q, qdot, u, and t. In the code</span>
+        <span class="c"># below, we are not considering perturbations in t. So if f1 is a</span>
+        <span class="c"># function of the q&#39;s, u&#39;s but some of the q&#39;s or u&#39;s could be</span>
+        <span class="c"># dependent on other q&#39;s or u&#39;s (qd&#39;s might be dependent on qi&#39;s, ud&#39;s</span>
+        <span class="c"># might be dependent on ui&#39;s or qi&#39;s), so what we do is take the</span>
+        <span class="c"># jacobian of the f1 term wrt qi&#39;s and qd&#39;s, the jacobian wrt the qd&#39;s</span>
+        <span class="c"># gets multiplied by the jacobian of qd wrt qi, this is extended for</span>
+        <span class="c"># the ud&#39;s as well. dqd_dqi is computed by taking a taylor expansion of</span>
+        <span class="c"># the holonomic constraint equations about q*, treating q* - q as dq,</span>
+        <span class="c"># seperating into dqd (depedent q&#39;s) and dqi (independent q&#39;s) and the</span>
+        <span class="c"># rearranging for dqd/dqi. This is again extended for the speeds.</span>
+
+        <span class="c"># First case: configuration and motion constraints</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">l</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">m</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">fh_jac_qi</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span>
+            <span class="n">fh_jac_qd</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+            <span class="n">fnh_jac_qi</span> <span class="o">=</span> <span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span>
+            <span class="n">fnh_jac_qd</span> <span class="o">=</span> <span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+            <span class="n">fnh_jac_ui</span> <span class="o">=</span> <span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">fnh_jac_ud</span> <span class="o">=</span> <span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span>
+            <span class="n">fku_jac_qi</span> <span class="o">=</span> <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span>
+            <span class="n">fku_jac_qd</span> <span class="o">=</span> <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+            <span class="n">fku_jac_ui</span> <span class="o">=</span> <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">fku_jac_ud</span> <span class="o">=</span> <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span>
+            <span class="n">fkf_jac_qi</span> <span class="o">=</span> <span class="n">fkf</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span>
+            <span class="n">fkf_jac_qd</span> <span class="o">=</span> <span class="n">fkf</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+            <span class="n">f1_jac_qi</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span>
+            <span class="n">f1_jac_qd</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+            <span class="n">f1_jac_ui</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">f1_jac_ud</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span>
+            <span class="n">f2_jac_qi</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span>
+            <span class="n">f2_jac_qd</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span>
+            <span class="n">f2_jac_ui</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">f2_jac_ud</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span>
+            <span class="n">f2_jac_qdot</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qdot</span><span class="p">)</span>
+
+            <span class="n">dqd_dqi</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">fh_jac_qd</span><span class="p">,</span> <span class="n">fh_jac_qi</span><span class="p">)</span>
+            <span class="n">dud_dqi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">fnh_jac_ud</span><span class="p">,</span> <span class="p">(</span><span class="n">fnh_jac_qd</span> <span class="o">*</span>
+                                        <span class="n">dqd_dqi</span> <span class="o">-</span> <span class="n">fnh_jac_qi</span><span class="p">))</span>
+            <span class="n">dud_dui</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">fnh_jac_ud</span><span class="p">,</span> <span class="n">fnh_jac_ui</span><span class="p">)</span>
+            <span class="n">dqdot_dui</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">fku_jac_ui</span> <span class="o">+</span>
+                                                <span class="n">fku_jac_ud</span> <span class="o">*</span> <span class="n">dud_dui</span><span class="p">)</span>
+            <span class="n">dqdot_dqi</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">fku_jac_qi</span> <span class="o">+</span> <span class="n">fkf_jac_qi</span> <span class="o">+</span>
+                    <span class="p">(</span><span class="n">fku_jac_qd</span> <span class="o">+</span> <span class="n">fkf_jac_qd</span><span class="p">)</span> <span class="o">*</span> <span class="n">dqd_dqi</span> <span class="o">+</span> <span class="n">fku_jac_ud</span> <span class="o">*</span> <span class="n">dud_dqi</span><span class="p">)</span>
+            <span class="n">f1_q</span> <span class="o">=</span> <span class="n">f1_jac_qi</span> <span class="o">+</span> <span class="n">f1_jac_qd</span> <span class="o">*</span> <span class="n">dqd_dqi</span> <span class="o">+</span> <span class="n">f1_jac_ud</span> <span class="o">*</span> <span class="n">dud_dqi</span>
+            <span class="n">f1_u</span> <span class="o">=</span> <span class="n">f1_jac_ui</span> <span class="o">+</span> <span class="n">f1_jac_ud</span> <span class="o">*</span> <span class="n">dud_dui</span>
+            <span class="n">f2_q</span> <span class="o">=</span> <span class="p">(</span><span class="n">f2_jac_qi</span> <span class="o">+</span> <span class="n">f2_jac_qd</span> <span class="o">*</span> <span class="n">dqd_dqi</span> <span class="o">+</span> <span class="n">f2_jac_qdot</span> <span class="o">*</span> <span class="n">dqdot_dqi</span> <span class="o">+</span>
+                    <span class="n">f2_jac_ud</span> <span class="o">*</span> <span class="n">dud_dqi</span><span class="p">)</span>
+            <span class="n">f2_u</span> <span class="o">=</span> <span class="n">f2_jac_ui</span> <span class="o">+</span> <span class="n">f2_jac_ud</span> <span class="o">*</span> <span class="n">dud_dui</span> <span class="o">+</span> <span class="n">f2_jac_qdot</span> <span class="o">*</span> <span class="n">dqdot_dui</span>
+        <span class="c"># Second case: configuration constraints only</span>
+        <span class="k">elif</span> <span class="n">l</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dqd_dqi</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">fh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">),</span> <span class="n">fh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">))</span>
+            <span class="n">dqdot_dui</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">dqdot_dqi</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span>
+                <span class="n">fkf</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span> <span class="o">+</span> <span class="n">fkf</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">))</span> <span class="o">*</span>
+                <span class="n">dqd_dqi</span><span class="p">)</span>
+            <span class="n">f1_q</span> <span class="o">=</span> <span class="p">(</span><span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span> <span class="o">*</span> <span class="n">dqd_dqi</span><span class="p">)</span>
+            <span class="n">f1_u</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">f2_jac_qdot</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qdot</span><span class="p">)</span>
+            <span class="n">f2_q</span> <span class="o">=</span> <span class="p">(</span><span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qd</span><span class="p">)</span> <span class="o">*</span> <span class="n">dqd_dqi</span> <span class="o">+</span>
+                    <span class="n">f2</span><span class="o">.</span><span class="n">jac_qdot</span> <span class="o">*</span> <span class="n">dqdot_dqi</span><span class="p">)</span>
+            <span class="n">f2_u</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2_jac_qdot</span> <span class="o">*</span> <span class="n">dqdot_dui</span>
+        <span class="c"># Third case: motion constraints only</span>
+        <span class="k">elif</span> <span class="n">m</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">dud_dqi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">),</span> <span class="o">-</span> <span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">))</span>
+            <span class="n">dud_dui</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">),</span> <span class="n">fnh</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">))</span>
+            <span class="n">dqdot_dui</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span> <span class="o">+</span>
+                                                <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span> <span class="o">*</span> <span class="n">dud_dui</span><span class="p">)</span>
+            <span class="n">dqdot_dqi</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span>
+                    <span class="n">fkf</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span> <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span> <span class="o">*</span> <span class="n">dud_dqi</span><span class="p">)</span>
+            <span class="n">f1_jac_ud</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span>
+            <span class="n">f2_jac_qdot</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qdot</span><span class="p">)</span>
+            <span class="n">f2_jac_ud</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ud</span><span class="p">)</span>
+            <span class="n">f1_q</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span> <span class="n">f1_jac_ud</span> <span class="o">*</span> <span class="n">dud_dqi</span>
+            <span class="n">f1_u</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span> <span class="o">+</span> <span class="n">f1_jac_ud</span> <span class="o">*</span> <span class="n">dud_dui</span>
+            <span class="n">f2_q</span> <span class="o">=</span> <span class="p">(</span><span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2_jac_qdot</span> <span class="o">*</span> <span class="n">dqdot_dqi</span> <span class="o">+</span> <span class="n">f2_jac_ud</span>
+                    <span class="o">*</span> <span class="n">dud_dqi</span><span class="p">)</span>
+            <span class="n">f2_u</span> <span class="o">=</span> <span class="p">(</span><span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2_jac_ud</span> <span class="o">*</span> <span class="n">dud_dui</span> <span class="o">+</span> <span class="n">f2_jac_qdot</span> <span class="o">*</span>
+                    <span class="n">dqdot_dui</span><span class="p">)</span>
+        <span class="c"># Fourth case: No constraints</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dqdot_dui</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">dqdot_dqi</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="n">fku</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span>
+                    <span class="n">fkf</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">))</span>
+            <span class="n">f1_q</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span>
+            <span class="n">f1_u</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span>
+            <span class="n">f2_jac_qdot</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qdot</span><span class="p">)</span>
+            <span class="n">f2_q</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">qi</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2_jac_qdot</span> <span class="o">*</span> <span class="n">dqdot_dqi</span>
+            <span class="n">f2_u</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">ui</span><span class="p">)</span> <span class="o">+</span> <span class="n">f2_jac_qdot</span> <span class="o">*</span> <span class="n">dqdot_dui</span>
+        <span class="n">f_lin_A</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">f1_q</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">f1_u</span><span class="p">))</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="n">f2_q</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">f2_u</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">other_dyns</span><span class="p">:</span>
+            <span class="n">f1_oths</span> <span class="o">=</span> <span class="n">f1</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">other_dyns</span><span class="p">)</span>
+            <span class="n">f2_oths</span> <span class="o">=</span> <span class="n">f2</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">other_dyns</span><span class="p">)</span>
+            <span class="n">f_lin_B</span> <span class="o">=</span> <span class="o">-</span><span class="n">f1_oths</span><span class="o">.</span><span class="n">col_join</span><span class="p">(</span><span class="n">f2_oths</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f_lin_B</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">([])</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">f_lin_A</span><span class="p">,</span> <span class="n">f_lin_B</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">other_dyns</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="KanesMethod.rhs"><a class="viewcode-back" href="../../../../modules/physics/mechanics/api/kane.html#sympy.physics.mechanics.kane.KanesMethod.rhs">[docs]</a>    <span class="k">def</span> <span class="nf">rhs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inv_method</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the system&#39;s equations of motion in first order form.</span>
+
+<span class="sd">        The output of this will be the right hand side of:</span>
+
+<span class="sd">        [qdot, udot].T = f(q, u, t)</span>
+
+<span class="sd">        Or, the equations of motion in first order form.  The right hand side</span>
+<span class="sd">        is what is needed by most numerical ODE integrators.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        inv_method : str</span>
+<span class="sd">            The specific sympy inverse matrix calculation method to use.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">inv_method</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_inv_mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass_matrix_full</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">forcing_full</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rhs</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass_matrix_full</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">inv_method</span><span class="p">,</span>
+                         <span class="n">try_block_diag</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">forcing_full</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rhs</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">auxiliary_eqs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute Fr, Fr* first.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uaux</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;No auxiliary speeds have been declared.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aux_eq</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mass_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Returns the mass matrix, which is augmented by the differentiated non</span>
+        <span class="c"># holonomic equations if necessary</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute Fr, Fr* first.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Matrix</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_dnh</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">mass_matrix_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Returns the mass matrix from above, augmented by kin diff&#39;s k_kqdot</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute Fr, Fr* first.&#39;</span><span class="p">)</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_q</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_k_kqdot</span><span class="p">)</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">o</span><span class="p">)))</span><span class="o">.</span><span class="n">col_join</span><span class="p">((</span><span class="n">zeros</span><span class="p">(</span><span class="n">o</span><span class="p">,</span>
+                <span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">row_join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass_matrix</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">forcing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Returns the forcing vector, which is augmented by the differentiated</span>
+        <span class="c"># non holonomic equations if necessary</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute Fr, Fr* first.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">Matrix</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">forcing_full</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Returns the forcing vector, which is augmented by the differentiated</span>
+        <span class="c"># non holonomic equations if necessary</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_frstar</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Need to compute Fr, Fr* first.&#39;</span><span class="p">)</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_ku</span> <span class="o">*</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_u</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_k</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">Matrix</span><span class="p">([</span><span class="n">f1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_f_dnh</span><span class="p">])</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,370 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.series.limits &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.series.limits</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">PoleError</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">string_types</span>
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">tan</span><span class="p">,</span> <span class="n">cot</span><span class="p">,</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">gamma</span>
+<span class="kn">from</span> <span class="nn">.gruntz</span> <span class="kn">import</span> <span class="n">gruntz</span>
+
+
+<div class="viewcode-block" id="limit"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.limits.limit">[docs]</a><span class="k">def</span> <span class="nf">limit</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">&quot;+&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the limit of e(z) at the point z0.</span>
+
+<span class="sd">    z0 can be any expression, including oo and -oo.</span>
+
+<span class="sd">    For dir=&quot;+&quot; (default) it calculates the limit from the right</span>
+<span class="sd">    (z-&gt;z0+) and for dir=&quot;-&quot; the limit from the left (z-&gt;z0-). For infinite z0</span>
+<span class="sd">    (oo or -oo), the dir argument doesn&#39;t matter.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import limit, sin, Symbol, oo</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; limit(sin(x)/x, x, 0)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; limit(1/x, x, 0, dir=&quot;+&quot;)</span>
+<span class="sd">    oo</span>
+<span class="sd">    &gt;&gt;&gt; limit(1/x, x, 0, dir=&quot;-&quot;)</span>
+<span class="sd">    -oo</span>
+<span class="sd">    &gt;&gt;&gt; limit(1/x, x, oo)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    First we try some heuristics for easy and frequent cases like &quot;x&quot;, &quot;1/x&quot;,</span>
+<span class="sd">    &quot;x**2&quot; and similar, so that it&#39;s fast. For all other cases, we use the</span>
+<span class="sd">    Gruntz algorithm (see the gruntz() function).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Wild</span><span class="p">,</span> <span class="n">log</span>
+
+    <span class="n">e</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="n">z0</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">z0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">e</span> <span class="o">==</span> <span class="n">z</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">z0</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">e</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">e</span>
+
+    <span class="c"># gruntz fails on factorials but works with the gamma function</span>
+    <span class="c"># If no factorial term is present, e should remain unchanged.</span>
+    <span class="c"># factorial is defined to be zero for negative inputs (which</span>
+    <span class="c"># differs from gamma) so only rewrite for positive z0.</span>
+    <span class="k">if</span> <span class="n">z0</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">factorial</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">tan</span><span class="p">:</span>
+        <span class="c"># discontinuity at odd multiples of pi/2; 0 at even</span>
+        <span class="n">disc</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Pi</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span><span class="p">:</span>
+            <span class="n">sign</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">limit</span><span class="p">(</span><span class="n">sign</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">)</span><span class="o">/</span><span class="n">disc</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+            <span class="k">elif</span> <span class="n">i</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s">&#39;+&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">cot</span><span class="p">:</span>
+        <span class="c"># discontinuity at multiples of pi; 0 at odd pi/2 multiples</span>
+        <span class="n">disc</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Pi</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span><span class="p">:</span>
+            <span class="n">sign</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">limit</span><span class="p">(</span><span class="n">sign</span><span class="o">*</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">)</span><span class="o">/</span><span class="n">disc</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s">&#39;-&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">is_integer</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">ex</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c"># records sign of b if b is +/-z or has a bounded value</span>
+        <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="n">c</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">as_two_terms</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span> <span class="ow">and</span> <span class="n">b</span> <span class="o">==</span> <span class="n">z</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="s">&#39;-&#39;</span>
+        <span class="k">elif</span> <span class="n">b</span> <span class="o">==</span> <span class="n">z</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="s">&#39;+&#39;</span>
+
+        <span class="k">if</span> <span class="n">ex</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">base</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">base</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ex</span><span class="o">.</span><span class="n">is_bounded</span> <span class="ow">or</span> <span class="n">base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">base</span><span class="o">**</span><span class="n">ex</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">z0</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">ex</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">dir</span> <span class="o">!=</span> <span class="n">c</span><span class="p">:</span>
+                        <span class="c"># integer</span>
+                        <span class="k">if</span> <span class="n">ex</span><span class="o">.</span><span class="n">is_even</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                        <span class="k">elif</span> <span class="n">ex</span><span class="o">.</span><span class="n">is_odd</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+                        <span class="c"># rational</span>
+                        <span class="k">elif</span> <span class="n">ex</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="o">**</span><span class="n">ex</span><span class="p">)</span><span class="o">*</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                <span class="k">return</span> <span class="n">z0</span><span class="o">**</span><span class="n">ex</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Mul</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">z0</span> <span class="ow">and</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">func</span> <span class="ow">is</span> <span class="n">log</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z0</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+                <span class="c"># XXX todo: this should probably be stated in the</span>
+                <span class="c"># negative -- i.e. to exclude expressions that should</span>
+                <span class="c"># not be handled this way but I&#39;m not sure what that</span>
+                <span class="c"># condition is; when ok is True it means that the leading</span>
+                <span class="c"># term approach is going to succeed (hopefully)</span>
+                <span class="n">ok</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="p">(</span><span class="n">z</span> <span class="ow">in</span> <span class="n">w</span><span class="o">.</span><span class="n">free_symbols</span> <span class="ow">and</span>
+                     <span class="nb">any</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="ow">or</span>
+                     <span class="nb">any</span><span class="p">(</span><span class="n">z</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">free_symbols</span> <span class="ow">and</span> <span class="n">m</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+                     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">Mul</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+                     <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">Add</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">w</span><span class="p">)))</span>
+                <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">ok</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">d</span><span class="p">)):</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="n">positive</span><span class="o">=</span><span class="p">(</span><span class="n">z0</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">))</span>
+                    <span class="n">inve</span> <span class="o">=</span> <span class="p">(</span><span class="n">n</span><span class="o">/</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">u</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">limit</span><span class="p">(</span><span class="n">inve</span><span class="o">.</span><span class="n">as_leading_term</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">u</span><span class="p">,</span>
+                        <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="s">&quot;+&quot;</span> <span class="k">if</span> <span class="n">z0</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="k">else</span> <span class="s">&quot;-&quot;</span><span class="p">)</span>
+
+            <span class="c"># weed out the z-independent terms</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">as_independent</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span> <span class="ow">and</span> <span class="n">i</span><span class="o">.</span><span class="n">is_bounded</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">i</span><span class="o">*</span><span class="n">limit</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="n">e</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">z0</span><span class="p">:</span>
+            <span class="c"># look for log(z)**q or z**p*log(z)**q</span>
+            <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&quot;p&quot;</span><span class="p">),</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&quot;q&quot;</span><span class="p">)</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="n">p</span> <span class="o">*</span> <span class="n">log</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="n">q</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">r</span><span class="p">:</span>
+                <span class="n">p</span><span class="p">,</span> <span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">]]</span>
+                <span class="k">if</span> <span class="n">q</span> <span class="ow">and</span> <span class="n">q</span><span class="o">.</span><span class="n">is_number</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">q</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="o">-</span><span class="n">oo</span><span class="o">*</span><span class="n">i</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">return</span> <span class="o">-</span><span class="n">oo</span><span class="o">*</span><span class="n">i</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_polynomial</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">z0</span><span class="o">.</span><span class="n">is_unbounded</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">limit</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">is_rational_function</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+            <span class="n">rval</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">limit</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">rval</span> <span class="o">!=</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">rval</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">is_unbounded</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">]):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">normal</span><span class="p">()</span> <span class="c"># workaround for issue 3744</span>
+
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Order</span><span class="p">:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Order</span><span class="p">(</span><span class="n">limit</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">),</span> <span class="o">*</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">gruntz</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">r</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PoleError</span><span class="p">()</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">PoleError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">heuristics</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r</span>
+
+</div>
+<span class="k">def</span> <span class="nf">heuristics</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">z0</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">limit</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">z</span><span class="p">),</span> <span class="n">z</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="s">&quot;+&quot;</span> <span class="k">if</span> <span class="n">z0</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="k">else</span> <span class="s">&quot;-&quot;</span><span class="p">)</span>
+
+    <span class="n">rv</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">bad</span> <span class="o">=</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">is_bounded</span><span class="p">:</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">limit</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">bad</span><span class="p">:</span>
+                    <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="p">:</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">is_Add</span> <span class="ow">or</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">or</span> <span class="n">e</span><span class="o">.</span><span class="n">is_Function</span><span class="p">):</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">limit</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">rv</span> <span class="ow">in</span> <span class="n">bad</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Don&#39;t know how to calculate the limit(</span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, </span><span class="si">%s</span><span class="s">, dir=</span><span class="si">%s</span><span class="s">), sorry.&quot;</span>
+        <span class="k">raise</span> <span class="n">PoleError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">rv</span>
+
+
+<div class="viewcode-block" id="Limit"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.limits.Limit">[docs]</a><span class="k">class</span> <span class="nc">Limit</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an unevaluated limit.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Limit, sin, Symbol</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; Limit(sin(x)/x, x, 0)</span>
+<span class="sd">    Limit(sin(x)/x, x, 0)</span>
+<span class="sd">    &gt;&gt;&gt; Limit(1/x, x, 0, dir=&quot;-&quot;)</span>
+<span class="sd">    Limit(1/x, x, 0, dir=&#39;-&#39;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">&quot;+&quot;</span><span class="p">):</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">z0</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">z0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;direction must be of type basestring or Symbol, not </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="nb">dir</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;+&#39;</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;direction must be either &#39;+&#39; or &#39;-&#39;, not </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">dir</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<div class="viewcode-block" id="Limit.doit"><a class="viewcode-back" href="../../../modules/series.html#sympy.series.limits.Limit.doit">[docs]</a>    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluates limit&quot;&quot;&quot;</span>
+        <span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;deep&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+            <span class="n">z0</span> <span class="o">=</span> <span class="n">z0</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">limit</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">dir</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,259 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Cartesian Operators and States &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Hilbert Space" href="hilbert.html" />
+    <link rel="prev" title="Tensor Product" href="tensorproduct.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hilbert.html" title="Hilbert Space"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tensorproduct.html" title="Tensor Product"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.cartesian">
+<span id="cartesian-operators-and-states"></span><h1>Cartesian Operators and States<a class="headerlink" href="#module-sympy.physics.quantum.cartesian" title="Permalink to this headline">¶</a></h1>
+<p>Operators and states for 1D cartesian position and momentum.</p>
+<p>TODO:</p>
+<ul class="simple">
+<li>Add 3D classes to mappings in operatorset.py</li>
+</ul>
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.XOp">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">XOp</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#XOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.XOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D cartesian position operator.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.YOp">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">YOp</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#YOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.YOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Y cartesian coordinate operator (for 2D or 3D systems)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.ZOp">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">ZOp</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#ZOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.ZOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Z cartesian coordinate operator (for 3D systems)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.PxOp">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">PxOp</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PxOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PxOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D cartesian momentum operator.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.XKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">XKet</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#XKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.XKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D cartesian position eigenket.</p>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.cartesian.XKet.position">
+<tt class="descname">position</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#XKet.position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.XKet.position" title="Permalink to this definition">¶</a></dt>
+<dd><p>The position of the state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.XBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">XBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#XBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.XBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D cartesian position eigenbra.</p>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.cartesian.XBra.position">
+<tt class="descname">position</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#XBra.position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.XBra.position" title="Permalink to this definition">¶</a></dt>
+<dd><p>The position of the state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.PxKet">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">PxKet</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PxKet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PxKet" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D cartesian momentum eigenket.</p>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.cartesian.PxKet.momentum">
+<tt class="descname">momentum</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PxKet.momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PxKet.momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>The momentum of the state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.PxBra">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">PxBra</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PxBra"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PxBra" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D cartesian momentum eigenbra.</p>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.cartesian.PxBra.momentum">
+<tt class="descname">momentum</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PxBra.momentum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PxBra.momentum" title="Permalink to this definition">¶</a></dt>
+<dd><p>The momentum of the state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.PositionState3D">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">PositionState3D</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PositionState3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PositionState3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for 3D cartesian position eigenstates</p>
+<dl class="attribute">
+<dt id="sympy.physics.quantum.cartesian.PositionState3D.position_x">
+<tt class="descname">position_x</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PositionState3D.position_x"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PositionState3D.position_x" title="Permalink to this definition">¶</a></dt>
+<dd><p>The x coordinate of the state</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.cartesian.PositionState3D.position_y">
+<tt class="descname">position_y</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PositionState3D.position_y"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PositionState3D.position_y" title="Permalink to this definition">¶</a></dt>
+<dd><p>The y coordinate of the state</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.quantum.cartesian.PositionState3D.position_z">
+<tt class="descname">position_z</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PositionState3D.position_z"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PositionState3D.position_z" title="Permalink to this definition">¶</a></dt>
+<dd><p>The z coordinate of the state</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.PositionKet3D">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">PositionKet3D</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PositionKet3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PositionKet3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>3D cartesian position eigenket</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.cartesian.PositionBra3D">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.cartesian.</tt><tt class="descname">PositionBra3D</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/cartesian.html#PositionBra3D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.cartesian.PositionBra3D" title="Permalink to this definition">¶</a></dt>
+<dd><p>3D cartesian position eigenbra</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tensorproduct.html"
+                        title="previous chapter">Tensor Product</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="hilbert.html"
+                        title="next chapter">Hilbert Space</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/cartesian.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="hilbert.html" title="Hilbert Space"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tensorproduct.html" title="Tensor Product"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

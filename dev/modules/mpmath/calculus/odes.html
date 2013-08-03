@@ -1,0 +1,313 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Ordinary differential equations &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Numerical calculus" href="index.html" />
+    <link rel="next" title="Function approximation" href="approximation.html" />
+    <link rel="prev" title="Numerical integration (quadrature)" href="integration.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="approximation.html" title="Function approximation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="integration.html" title="Numerical integration (quadrature)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="ordinary-differential-equations">
+<h1>Ordinary differential equations<a class="headerlink" href="#ordinary-differential-equations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="solving-the-ode-initial-value-problem-odefun">
+<h2>Solving the ODE initial value problem (<tt class="docutils literal"><span class="pre">odefun</span></tt>)<a class="headerlink" href="#solving-the-ode-initial-value-problem-odefun" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mpmath.odefun">
+<tt class="descclassname">mpmath.</tt><tt class="descname">odefun</tt><big>(</big><em>ctx</em>, <em>F</em>, <em>x0</em>, <em>y0</em>, <em>tol=None</em>, <em>degree=None</em>, <em>method='taylor'</em>, <em>verbose=False</em><big>)</big><a class="headerlink" href="#mpmath.odefun" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a function <span class="math">\(y(x) = [y_0(x), y_1(x), \ldots, y_n(x)]\)</span>
+that is a numerical solution of the <span class="math">\(n+1\)</span>-dimensional first-order
+ordinary differential equation (ODE) system</p>
+<div class="math">
+\[y_0'(x) = F_0(x, [y_0(x), y_1(x), \ldots, y_n(x)])\]\[y_1'(x) = F_1(x, [y_0(x), y_1(x), \ldots, y_n(x)])\]\[\vdots\]\[y_n'(x) = F_n(x, [y_0(x), y_1(x), \ldots, y_n(x)])\]</div>
+<p>The derivatives are specified by the vector-valued function
+<em>F</em> that evaluates
+<span class="math">\([y_0', \ldots, y_n'] = F(x, [y_0, \ldots, y_n])\)</span>.
+The initial point <span class="math">\(x_0\)</span> is specified by the scalar argument <em>x0</em>,
+and the initial value <span class="math">\(y(x_0) =  [y_0(x_0), \ldots, y_n(x_0)]\)</span> is
+specified by the vector argument <em>y0</em>.</p>
+<p>For convenience, if the system is one-dimensional, you may optionally
+provide just a scalar value for <em>y0</em>. In this case, <em>F</em> should accept
+a scalar <em>y</em> argument and return a scalar. The solution function
+<em>y</em> will return scalar values instead of length-1 vectors.</p>
+<p>Evaluation of the solution function <span class="math">\(y(x)\)</span> is permitted
+for any <span class="math">\(x \ge x_0\)</span>.</p>
+<p>A high-order ODE can be solved by transforming it into first-order
+vector form. This transformation is described in standard texts
+on ODEs. Examples will also be given below.</p>
+<p><strong>Options, speed and accuracy</strong></p>
+<p>By default, <a class="reference internal" href="#mpmath.odefun" title="mpmath.odefun"><tt class="xref py py-func docutils literal"><span class="pre">odefun()</span></tt></a> uses a high-order Taylor series
+method. For reasonably well-behaved problems, the solution will
+be fully accurate to within the working precision. Note that
+<em>F</em> must be possible to evaluate to very high precision
+for the generation of Taylor series to work.</p>
+<p>To get a faster but less accurate solution, you can set a large
+value for <em>tol</em> (which defaults roughly to <em>eps</em>). If you just
+want to plot the solution or perform a basic simulation,
+<em>tol = 0.01</em> is likely sufficient.</p>
+<p>The <em>degree</em> argument controls the degree of the solver (with
+<em>method=&#8217;taylor&#8217;</em>, this is the degree of the Taylor series
+expansion). A higher degree means that a longer step can be taken
+before a new local solution must be generated from <em>F</em>,
+meaning that fewer steps are required to get from <span class="math">\(x_0\)</span> to a given
+<span class="math">\(x_1\)</span>. On the other hand, a higher degree also means that each
+local solution becomes more expensive (i.e., more evaluations of
+<em>F</em> are required per step, and at higher precision).</p>
+<p>The optimal setting therefore involves a tradeoff. Generally,
+decreasing the <em>degree</em> for Taylor series is likely to give faster
+solution at low precision, while increasing is likely to be better
+at higher precision.</p>
+<p>The function
+object returned by <a class="reference internal" href="#mpmath.odefun" title="mpmath.odefun"><tt class="xref py py-func docutils literal"><span class="pre">odefun()</span></tt></a> caches the solutions at all step
+points and uses polynomial interpolation between step points.
+Therefore, once <span class="math">\(y(x_1)\)</span> has been evaluated for some <span class="math">\(x_1\)</span>,
+<span class="math">\(y(x)\)</span> can be evaluated very quickly for any <span class="math">\(x_0 \le x \le x_1\)</span>.
+and continuing the evaluation up to <span class="math">\(x_2 &gt; x_1\)</span> is also fast.</p>
+<p><strong>Examples of first-order ODEs</strong></p>
+<p>We will solve the standard test problem <span class="math">\(y'(x) = y(x), y(0) = 1\)</span>
+which has explicit solution <span class="math">\(y(x) = \exp(x)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">odefun</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">((</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">(1.0, 1.0)</span>
+<span class="go">(2.71828182845905, 2.71828182845905)</span>
+<span class="go">(12.1824939607035, 12.1824939607035)</span>
+</pre></div>
+</div>
+<p>The solution with high precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">odefun</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">2.7182818284590452353602874713526624977572470937</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">2.7182818284590452353602874713526624977572470937</span>
+</pre></div>
+</div>
+<p>Using the more general vectorized form, the test problem
+can be input as (note that <em>f</em> returns a 1-element vector):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">odefun</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">[</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[2.71828182845905]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="#mpmath.odefun" title="mpmath.odefun"><tt class="xref py py-func docutils literal"><span class="pre">odefun()</span></tt></a> can solve nonlinear ODEs, which are generally
+impossible (and at best difficult) to solve analytically. As
+an example of a nonlinear ODE, we will solve <span class="math">\(y'(x) = x \sin(y(x))\)</span>
+for <span class="math">\(y(0) = \pi/2\)</span>. An exact solution happens to be known
+for this problem, and is given by
+<span class="math">\(y(x) = 2 \tan^{-1}\left(\exp\left(x^2/2\right)\right)\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">odefun</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">((</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="n">atan</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">mpf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">))))</span>
+<span class="gp">...</span>
+<span class="go">(2.87255666284091, 2.87255666284091)</span>
+<span class="go">(3.14158520028345, 3.14158520028345)</span>
+<span class="go">(3.14159265358979, 3.14159265358979)</span>
+</pre></div>
+</div>
+<p>If <span class="math">\(F\)</span> is independent of <span class="math">\(y\)</span>, an ODE can be solved using direct
+integration. We can therefore obtain a reference solution with
+<a class="reference internal" href="integration.html#mpmath.quad" title="mpmath.quad"><tt class="xref py py-func docutils literal"><span class="pre">quad()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">odefun</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">pi</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">0.72128263801696</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quad</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">[</span><span class="n">pi</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">])</span>
+<span class="go">0.72128263801696</span>
+</pre></div>
+</div>
+<p><strong>Examples of second-order ODEs</strong></p>
+<p>We will solve the harmonic oscillator equation <span class="math">\(y''(x) + y(x) = 0\)</span>.
+To do this, we introduce the helper functions <span class="math">\(y_0 = y, y_1 = y_0'\)</span>
+whereby the original equation can be written as <span class="math">\(y_1' + y_0' = 0\)</span>. Put
+together, we get the first-order, two-dimensional vector ODE</p>
+<div class="math">
+\[\begin{split}\begin{cases}
+y_0' = y_1 \\
+y_1' = -y_0
+\end{cases}\end{split}\]</div>
+<p>To get a well-defined IVP, we need two initial values. With
+<span class="math">\(y(0) = y_0(0) = 1\)</span> and <span class="math">\(-y'(0) = y_1(0) = 0\)</span>, the problem will of
+course be solved by <span class="math">\(y(x) = y_0(x) = \cos(x)\)</span> and
+<span class="math">\(-y'(x) = y_1(x) = \sin(x)\)</span>. We check this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">odefun</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mi">10</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="mi">15</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">nprint</span><span class="p">([</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)],</span> <span class="mi">15</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&quot;---&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">[1.0, 0.0]</span>
+<span class="go">[1.0, 0.0]</span>
+<span class="go">---</span>
+<span class="go">[0.54030230586814, 0.841470984807897]</span>
+<span class="go">[0.54030230586814, 0.841470984807897]</span>
+<span class="go">---</span>
+<span class="go">[-0.801143615546934, 0.598472144103957]</span>
+<span class="go">[-0.801143615546934, 0.598472144103957]</span>
+<span class="go">---</span>
+<span class="go">[-0.839071529076452, -0.54402111088937]</span>
+<span class="go">[-0.839071529076452, -0.54402111088937]</span>
+<span class="go">---</span>
+</pre></div>
+</div>
+<p>Note that we get both the sine and the cosine solutions
+simultaneously.</p>
+<p><strong>TODO</strong></p>
+<ul class="simple">
+<li>Better automatic choice of degree and step size</li>
+<li>Make determination of Taylor series convergence radius
+more robust</li>
+<li>Allow solution for <span class="math">\(x &lt; x_0\)</span></li>
+<li>Allow solution for complex <span class="math">\(x\)</span></li>
+<li>Test for difficult (ill-conditioned) problems</li>
+<li>Implement Runge-Kutta and other algorithms</li>
+</ul>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Ordinary differential equations</a><ul>
+<li><a class="reference internal" href="#solving-the-ode-initial-value-problem-odefun">Solving the ODE initial value problem (<tt class="docutils literal"><span class="pre">odefun</span></tt>)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="integration.html"
+                        title="previous chapter">Numerical integration (quadrature)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="approximation.html"
+                        title="next chapter">Function approximation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/calculus/odes.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="approximation.html" title="Function approximation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="integration.html" title="Numerical integration (quadrature)"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

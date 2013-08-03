@@ -1,0 +1,1944 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.core.basic &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.core.basic</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Base class for all the objects in SymPy&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.assumptions</span> <span class="kn">import</span> <span class="n">ManagedProperties</span>
+<span class="kn">from</span> <span class="nn">sympy.core.cache</span> <span class="kn">import</span> <span class="n">cacheit</span>
+<span class="kn">from</span> <span class="nn">sympy.core.core</span> <span class="kn">import</span> <span class="n">BasicType</span><span class="p">,</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">sympy.core.sympify</span> <span class="kn">import</span> <span class="n">_sympify</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">SympifyError</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="p">(</span><span class="nb">reduce</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">ordered</span><span class="p">,</span>
+    <span class="n">string_types</span><span class="p">,</span> <span class="n">with_metaclass</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.decorators</span> <span class="kn">import</span> <span class="n">deprecated</span>
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">S</span>
+
+
+<div class="viewcode-block" id="Basic"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic">[docs]</a><span class="k">class</span> <span class="nc">Basic</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">ManagedProperties</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for all objects in SymPy.</span>
+
+<span class="sd">    Conventions:</span>
+
+<span class="sd">    1) Always use ``.args``, when accessing parameters of some instance:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import cot</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">        &gt;&gt;&gt; cot(x).args</span>
+<span class="sd">        (x,)</span>
+
+<span class="sd">        &gt;&gt;&gt; cot(x).args[0]</span>
+<span class="sd">        x</span>
+
+<span class="sd">        &gt;&gt;&gt; (x*y).args</span>
+<span class="sd">        (x, y)</span>
+
+<span class="sd">        &gt;&gt;&gt; (x*y).args[1]</span>
+<span class="sd">        y</span>
+
+
+<span class="sd">    2) Never use internal methods or variables (the ones prefixed with ``_``):</span>
+
+<span class="sd">        &gt;&gt;&gt; cot(x)._args    # do not use this, use cot(x).args instead</span>
+<span class="sd">        (x,)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;_mhash&#39;</span><span class="p">,</span>              <span class="c"># hash value</span>
+                 <span class="s">&#39;_args&#39;</span><span class="p">,</span>               <span class="c"># arguments</span>
+                 <span class="s">&#39;_assumptions&#39;</span>
+                <span class="p">]</span>
+
+    <span class="c"># To be overridden with True in the appropriate subclasses</span>
+    <span class="n">is_Atom</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Symbol</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Dummy</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Wild</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Function</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Add</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Mul</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Pow</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Number</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Float</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Rational</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Integer</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_NumberSymbol</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Order</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Derivative</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Piecewise</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Poly</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_AlgebraicNumber</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Relational</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Equality</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Boolean</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Not</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">is_Matrix</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@deprecated</span><span class="p">(</span><span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;is_Float&quot;</span><span class="p">,</span> <span class="n">issue</span><span class="o">=</span><span class="mi">1721</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.0&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="Basic.is_Real"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.is_Real">[docs]</a>    <span class="k">def</span> <span class="nf">is_Real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+        <span class="sd">&quot;&quot;&quot;Deprecated alias for ``is_Float``&quot;&quot;&quot;</span>
+        <span class="c"># When this is removed, remove the piece of code disabling the warning</span>
+        <span class="c"># from test_pickling.py</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_Float</span>
+</div>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_assumptions</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">default_assumptions</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_mhash</span> <span class="o">=</span> <span class="bp">None</span>  <span class="c"># will be set by __hash__ method.</span>
+
+        <span class="n">obj</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="n">args</span>  <span class="c"># all items in args must be Basic objects</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__reduce_ex__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proto</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Pickling support.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getnewargs__</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getstate__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># hash cannot be cached using cache_it because infinite recurrence</span>
+        <span class="c"># occurs as hash is needed for setting cache dictionary keys</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mhash</span>
+        <span class="k">if</span> <span class="n">h</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mhash</span> <span class="o">=</span> <span class="n">h</span>
+        <span class="k">return</span> <span class="n">h</span>
+
+    <span class="k">def</span> <span class="nf">_hashable_content</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a tuple of information about self that can be used to</span>
+<span class="sd">        compute the hash. If a class defines additional attributes,</span>
+<span class="sd">        like ``name`` in Symbol, then this method should be updated</span>
+<span class="sd">        accordingly to return such relevent attributes.</span>
+
+<span class="sd">        Defining more than _hashable_content is necessary if __eq__ has</span>
+<span class="sd">        been defined by a class. See note about this in Basic.__eq__.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Basic.assumptions0"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.assumptions0">[docs]</a>    <span class="k">def</span> <span class="nf">assumptions0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return object `type` assumptions.</span>
+
+<span class="sd">        For example:</span>
+
+<span class="sd">          Symbol(&#39;x&#39;, real=True)</span>
+<span class="sd">          Symbol(&#39;x&#39;, integer=True)</span>
+
+<span class="sd">        are different objects. In other words, besides Python type (Symbol in</span>
+<span class="sd">        this case), the initial assumptions are also forming their typeinfo.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; x.assumptions0</span>
+<span class="sd">        {&#39;commutative&#39;: True}</span>
+<span class="sd">        &gt;&gt;&gt; x = Symbol(&quot;x&quot;, positive=True)</span>
+<span class="sd">        &gt;&gt;&gt; x.assumptions0</span>
+<span class="sd">        {&#39;commutative&#39;: True, &#39;complex&#39;: True, &#39;hermitian&#39;: True,</span>
+<span class="sd">        &#39;imaginary&#39;: False, &#39;negative&#39;: False, &#39;nonnegative&#39;: True,</span>
+<span class="sd">        &#39;nonpositive&#39;: False, &#39;nonzero&#39;: True, &#39;positive&#39;: True, &#39;real&#39;: True,</span>
+<span class="sd">        &#39;zero&#39;: False}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span>
+</div>
+<div class="viewcode-block" id="Basic.compare"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.compare">[docs]</a>    <span class="k">def</span> <span class="nf">compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return -1, 0, 1 if the object is smaller, equal, or greater than other.</span>
+
+<span class="sd">        Not in the mathematical sense. If the object is of a different type</span>
+<span class="sd">        from the &quot;other&quot; then their classes are ordered according to</span>
+<span class="sd">        the sorted_classes list.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; x.compare(y)</span>
+<span class="sd">        -1</span>
+<span class="sd">        &gt;&gt;&gt; x.compare(x)</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; y.compare(x)</span>
+<span class="sd">        1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># all redefinitions of __cmp__ method should start with the</span>
+        <span class="c"># following lines:</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="n">n1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span>
+        <span class="n">n2</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">__class__</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">n1</span> <span class="o">&gt;</span> <span class="n">n2</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">n1</span> <span class="o">&lt;</span> <span class="n">n2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">c</span>
+        <span class="c">#</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">()</span>
+        <span class="n">ot</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">()</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ot</span><span class="p">))</span> <span class="o">-</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ot</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">c</span>
+        <span class="k">for</span> <span class="n">l</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="n">ot</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="n">l</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">):</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="n">l</span> <span class="o">&gt;</span> <span class="n">r</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">l</span> <span class="o">&lt;</span> <span class="n">r</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">c</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">c</span>
+        <span class="k">return</span> <span class="mi">0</span>
+</div>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_compare_pretty</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.series.order</span> <span class="kn">import</span> <span class="n">Order</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Order</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Order</span><span class="p">):</span>
+            <span class="k">return</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Order</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Order</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> <span class="n">b</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="n">b</span><span class="o">.</span><span class="n">q</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">p</span> <span class="o">*</span> <span class="n">a</span><span class="o">.</span><span class="n">q</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">l</span> <span class="o">&gt;</span> <span class="n">r</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">l</span> <span class="o">&lt;</span> <span class="n">r</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Wild</span>
+            <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">p3</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&quot;p1&quot;</span><span class="p">),</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&quot;p2&quot;</span><span class="p">),</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&quot;p3&quot;</span><span class="p">)</span>
+            <span class="n">r_a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">p1</span> <span class="o">*</span> <span class="n">p2</span><span class="o">**</span><span class="n">p3</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">r_a</span> <span class="ow">and</span> <span class="n">p3</span> <span class="ow">in</span> <span class="n">r_a</span><span class="p">:</span>
+                <span class="n">a3</span> <span class="o">=</span> <span class="n">r_a</span><span class="p">[</span><span class="n">p3</span><span class="p">]</span>
+                <span class="n">r_b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">p1</span> <span class="o">*</span> <span class="n">p2</span><span class="o">**</span><span class="n">p3</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">r_b</span> <span class="ow">and</span> <span class="n">p3</span> <span class="ow">in</span> <span class="n">r_b</span><span class="p">:</span>
+                    <span class="n">b3</span> <span class="o">=</span> <span class="n">r_b</span><span class="p">[</span><span class="n">p3</span><span class="p">]</span>
+                    <span class="n">c</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">a3</span><span class="p">,</span> <span class="n">b3</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">c</span>
+
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">compare</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@deprecated</span><span class="p">(</span><span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;default_sort_key&quot;</span><span class="p">,</span> <span class="n">issue</span><span class="o">=</span><span class="mi">1491</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="Basic.compare_pretty"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.compare_pretty">[docs]</a>    <span class="k">def</span> <span class="nf">compare_pretty</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Is a &gt; b in the sense of ordering in printing?</span>
+
+<span class="sd">        THIS FUNCTION IS DEPRECATED.  Use ``default_sort_key`` instead.</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">          yes ..... return 1</span>
+<span class="sd">          no ...... return -1</span>
+<span class="sd">          equal ... return 0</span>
+
+<span class="sd">        Strategy:</span>
+
+<span class="sd">        It uses Basic.compare as a fallback, but improves it in many cases,</span>
+<span class="sd">        like ``x**3``, ``x**4``, ``O(x**3)`` etc. In those simple cases, it just parses the</span>
+<span class="sd">        expression and returns the &quot;sane&quot; ordering such as::</span>
+
+<span class="sd">          1 &lt; x &lt; x**2 &lt; x**3 &lt; O(x**4) etc.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import Basic, Number</span>
+<span class="sd">        &gt;&gt;&gt; Basic._compare_pretty(x, x**2)</span>
+<span class="sd">        -1</span>
+<span class="sd">        &gt;&gt;&gt; Basic._compare_pretty(x**2, x**2)</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; Basic._compare_pretty(x**3, x**2)</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; Basic._compare_pretty(Number(1, 2), Number(1, 3))</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; Basic._compare_pretty(Number(0), Number(-1))</span>
+<span class="sd">        1</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">_sympify</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">_sympify</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">+</span><span class="mi">1</span>   <span class="c"># sympy &gt; other</span>
+
+        <span class="c"># now both objects are from SymPy, so we can proceed to usual comparison</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">sort_key</span><span class="p">()</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">sort_key</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Basic.fromiter"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.fromiter">[docs]</a>    <span class="k">def</span> <span class="nf">fromiter</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new object from an iterable.</span>
+
+<span class="sd">        This is a convenience function that allows one to create objects from</span>
+<span class="sd">        any iterable, without having to convert to a list or tuple first.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Tuple</span>
+<span class="sd">        &gt;&gt;&gt; Tuple.fromiter(i for i in range(5))</span>
+<span class="sd">        (0, 1, 2, 3, 4)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Basic.class_key"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.class_key">[docs]</a>    <span class="k">def</span> <span class="nf">class_key</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Nice order of classes. &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span>
+</div>
+    <span class="nd">@cacheit</span>
+<div class="viewcode-block" id="Basic.sort_key"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.sort_key">[docs]</a>    <span class="k">def</span> <span class="nf">sort_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a sort key.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.core import S, I</span>
+
+<span class="sd">        &gt;&gt;&gt; sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())</span>
+<span class="sd">        [1/2, -I, I]</span>
+
+<span class="sd">        &gt;&gt;&gt; S(&quot;[x, 1/x, 1/x**2, x**2, x**(1/2), x**(1/4), x**(3/2)]&quot;)</span>
+<span class="sd">        [x, 1/x, x**(-2), x**2, sqrt(x), x**(1/4), x**(3/2)]</span>
+<span class="sd">        &gt;&gt;&gt; sorted(_, key=lambda x: x.sort_key())</span>
+<span class="sd">        [x**(-2), 1/x, x**(1/4), sqrt(x), x, x**(3/2), x**2]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># XXX: remove this when issue #2070 is fixed</span>
+        <span class="k">def</span> <span class="nf">inner_key</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">arg</span><span class="o">.</span><span class="n">sort_key</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">arg</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sorted_args</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">([</span> <span class="n">inner_key</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span> <span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_key</span><span class="p">(),</span> <span class="n">args</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="o">.</span><span class="n">sort_key</span><span class="p">(),</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+</div>
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a boolean indicating whether a == b on the basis of</span>
+<span class="sd">        their symbolic trees.</span>
+
+<span class="sd">        This is the same as a.compare(b) == 0 but faster.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        If a class that overrides __eq__() needs to retain the</span>
+<span class="sd">        implementation of __hash__() from a parent class, the</span>
+<span class="sd">        interpreter must be told this explicitly by setting __hash__ =</span>
+<span class="sd">        &lt;ParentClass&gt;.__hash__. Otherwise the inheritance of __hash__()</span>
+<span class="sd">        will be blocked, just as if __hash__ had been explicitly set to</span>
+<span class="sd">        None.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="c"># issue 3001 a**1.0 == a like a**2.0 == a**2</span>
+            <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">Pow</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base</span>
+            <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">C</span><span class="o">.</span><span class="n">Pow</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">exp</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">base</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">_sympify</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>    <span class="c"># sympy != other</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;a != b  -&gt; Compare two symbolic trees and see whether they are different</span>
+
+<span class="sd">           this is the same as:</span>
+
+<span class="sd">             a.compare(b) != 0</span>
+
+<span class="sd">           but faster</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">other</span> <span class="o">=</span> <span class="n">_sympify</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>     <span class="c"># sympy != other</span>
+
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">()</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">_hashable_content</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Basic.dummy_eq"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.dummy_eq">[docs]</a>    <span class="k">def</span> <span class="nf">dummy_eq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compare two expressions and handle dummy symbols.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Dummy</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">        &gt;&gt;&gt; u = Dummy(&#39;u&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; (u**2 + 1).dummy_eq(x**2 + 1)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; (u**2 + 1) == (x**2 + 1)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &gt;&gt;&gt; (u**2 + y).dummy_eq(x**2 + y, x)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; (u**2 + y).dummy_eq(x**2 + y, y)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dummy_symbols</span> <span class="o">=</span> <span class="p">[</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_symbols</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">is_Dummy</span> <span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dummy_symbols</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dummy_symbols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">dummy</span> <span class="o">=</span> <span class="n">dummy_symbols</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;only one dummy symbol allowed on the left-hand side&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">symbol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">symbols</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">free_symbols</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">symbols</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">symbols</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">symbol</span> <span class="o">=</span> <span class="n">symbols</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;specify a symbol in which expressions should be compared&quot;</span><span class="p">)</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">dummy</span><span class="o">.</span><span class="n">__class__</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">dummy</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">tmp</span><span class="p">)</span>
+
+    <span class="c"># Note, we always use the default ordering (lex) in __str__ and __repr__,</span>
+    <span class="c"># regardless of the global setting.  See issue 2388.</span></div>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.printing</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="k">return</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.printing</span> <span class="kn">import</span> <span class="n">sstr</span>
+        <span class="k">return</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Basic.atoms"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.atoms">[docs]</a>    <span class="k">def</span> <span class="nf">atoms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">types</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the atoms that form the current object.</span>
+
+<span class="sd">           By default, only objects that are truly atomic and can&#39;t</span>
+<span class="sd">           be divided into smaller pieces are returned: symbols, numbers,</span>
+<span class="sd">           and number symbols like I and pi. It is possible to request</span>
+<span class="sd">           atoms of any type, however, as demonstrated below.</span>
+
+<span class="sd">           Examples</span>
+<span class="sd">           ========</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import I, pi, sin</span>
+<span class="sd">           &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms()</span>
+<span class="sd">           set([1, 2, I, pi, x, y])</span>
+
+<span class="sd">           If one or more types are given, the results will contain only</span>
+<span class="sd">           those types of atoms.</span>
+
+<span class="sd">           Examples</span>
+<span class="sd">           ========</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import Number, NumberSymbol, Symbol</span>
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(Symbol)</span>
+<span class="sd">           set([x, y])</span>
+
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(Number)</span>
+<span class="sd">           set([1, 2])</span>
+
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol)</span>
+<span class="sd">           set([1, 2, pi])</span>
+
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(Number, NumberSymbol, I)</span>
+<span class="sd">           set([1, 2, I, pi])</span>
+
+<span class="sd">           Note that I (imaginary unit) and zoo (complex infinity) are special</span>
+<span class="sd">           types of number symbols and are not part of the NumberSymbol class.</span>
+
+<span class="sd">           The type can be given implicitly, too:</span>
+
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(x) # x is a Symbol</span>
+<span class="sd">           set([x, y])</span>
+
+<span class="sd">           Be careful to check your assumptions when using the implicit option</span>
+<span class="sd">           since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type</span>
+<span class="sd">           of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all</span>
+<span class="sd">           integers in an expression:</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(S(1))</span>
+<span class="sd">           set([1])</span>
+
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(S(2))</span>
+<span class="sd">           set([1, 2])</span>
+
+<span class="sd">           Finally, arguments to atoms() can select more than atomic atoms: any</span>
+<span class="sd">           sympy type (loaded in core/__init__.py) can be listed as an argument</span>
+<span class="sd">           and those types of &quot;atoms&quot; as found in scanning the arguments of the</span>
+<span class="sd">           expression recursively:</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import Function, Mul</span>
+<span class="sd">           &gt;&gt;&gt; from sympy.core.function import AppliedUndef</span>
+<span class="sd">           &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">           &gt;&gt;&gt; (1 + f(x) + 2*sin(y + I*pi)).atoms(Function)</span>
+<span class="sd">           set([f(x), sin(y + I*pi)])</span>
+<span class="sd">           &gt;&gt;&gt; (1 + f(x) + 2*sin(y + I*pi)).atoms(AppliedUndef)</span>
+<span class="sd">           set([f(x)])</span>
+
+<span class="sd">           &gt;&gt;&gt; (1 + x + 2*sin(y + I*pi)).atoms(Mul)</span>
+<span class="sd">           set([I*pi, 2*sin(y + I*pi)])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">types</span><span class="p">:</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">t</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">types</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="p">(</span><span class="n">Atom</span><span class="p">,)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">types</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Basic.free_symbols"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.free_symbols">[docs]</a>    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return from the atoms of self those which are free symbols.</span>
+
+<span class="sd">        For most expressions, all symbols are free symbols. For some classes</span>
+<span class="sd">        this is not true. e.g. Integrals use Symbols for the dummy variables</span>
+<span class="sd">        which are bound variables, so Integral has a method to return all symbols</span>
+<span class="sd">        except those. Derivative keeps track of symbols with respect to which it</span>
+<span class="sd">        will perform a derivative; those are bound variables, too, so it has</span>
+<span class="sd">        its own symbols method.</span>
+
+<span class="sd">        Any other method that uses bound variables should implement a symbols</span>
+<span class="sd">        method.&quot;&quot;&quot;</span>
+        <span class="n">union</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span>
+        <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">union</span><span class="p">,</span> <span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">free_symbols</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">],</span> <span class="nb">set</span><span class="p">())</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Basic.canonical_variables"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.canonical_variables">[docs]</a>    <span class="k">def</span> <span class="nf">canonical_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a dictionary mapping any variable defined in</span>
+<span class="sd">        ``self.variables`` as underscore-suffixed numbers</span>
+<span class="sd">        corresponding to their position in ``self.variables``. Enough</span>
+<span class="sd">        underscores are added to ensure that there will be no clash with</span>
+<span class="sd">        existing free symbols.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Lambda</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; Lambda(x, 2*x).canonical_variables</span>
+<span class="sd">        {x: 0_}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;variables&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="s">&quot;_&quot;</span>
+        <span class="k">while</span> <span class="nb">any</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">):</span>
+            <span class="n">u</span> <span class="o">+=</span> <span class="s">&quot;_&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%%</span><span class="s">i</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">u</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="n">name</span> <span class="o">%</span> <span class="n">i</span><span class="p">,</span> <span class="o">**</span><span class="n">v</span><span class="o">.</span><span class="n">assumptions0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">V</span><span class="p">)])))</span>
+</div>
+    <span class="k">def</span> <span class="nf">is_hypergeometric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">hypersimp</span>
+        <span class="k">return</span> <span class="n">hypersimp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Basic.is_number"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.is_number">[docs]</a>    <span class="k">def</span> <span class="nf">is_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns ``True`` if &#39;self&#39; contains no free symbols.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        is_comparable</span>
+<span class="sd">        sympy.core.expr.is_number</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># should be overriden by subclasses</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Basic.is_comparable"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.is_comparable">[docs]</a>    <span class="k">def</span> <span class="nf">is_comparable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return True if self can be computed to a real number</span>
+<span class="sd">        with precision, else False.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import exp_polar, pi, I</span>
+<span class="sd">        &gt;&gt;&gt; (I*exp_polar(I*pi/2)).is_comparable</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; (I*exp_polar(I*pi*2)).is_comparable</span>
+<span class="sd">        False</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_real</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_real</span>
+        <span class="k">if</span> <span class="n">is_real</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">is_number</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_number</span>
+        <span class="k">if</span> <span class="n">is_number</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">is_real</span> <span class="ow">and</span> <span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_real_imag</span><span class="p">()]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="o">.</span><span class="n">is_Number</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">i</span><span class="p">:</span>
+            <span class="c"># if _prec = 1 we can&#39;t decide and if not,</span>
+            <span class="c"># the answer is False so return False</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">n</span><span class="o">.</span><span class="n">_prec</span> <span class="o">!=</span> <span class="mi">1</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Basic.func"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.func">[docs]</a>    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The top-level function in an expression.</span>
+
+<span class="sd">        The following should hold for all objects::</span>
+
+<span class="sd">            &gt;&gt; x == x.func(*x.args)</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; a = 2*x</span>
+<span class="sd">        &gt;&gt;&gt; a.func</span>
+<span class="sd">        &lt;class &#39;sympy.core.mul.Mul&#39;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; a.args</span>
+<span class="sd">        (2, x)</span>
+<span class="sd">        &gt;&gt;&gt; a.func(*a.args)</span>
+<span class="sd">        2*x</span>
+<span class="sd">        &gt;&gt;&gt; a == a.func(*a.args)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Basic.args"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.args">[docs]</a>    <span class="k">def</span> <span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a tuple of arguments of &#39;self&#39;.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import cot</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">        &gt;&gt;&gt; cot(x).args</span>
+<span class="sd">        (x,)</span>
+
+<span class="sd">        &gt;&gt;&gt; cot(x).args[0]</span>
+<span class="sd">        x</span>
+
+<span class="sd">        &gt;&gt;&gt; (x*y).args</span>
+<span class="sd">        (x, y)</span>
+
+<span class="sd">        &gt;&gt;&gt; (x*y).args[1]</span>
+<span class="sd">        y</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        Never use self._args, always use self.args.</span>
+<span class="sd">        Only use _args in __new__ when creating a new function.</span>
+<span class="sd">        Don&#39;t override .args() from Basic (so that it&#39;s easy to</span>
+<span class="sd">        change the interface in the future if needed).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sorted_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The same as ``args``.  Derived classes which don&#39;t fix an</span>
+<span class="sd">        order on their arguments should override this method to</span>
+<span class="sd">        produce the sorted representation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+<div class="viewcode-block" id="Basic.iter_basic_args"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.iter_basic_args">[docs]</a>    <span class="k">def</span> <span class="nf">iter_basic_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterates arguments of ``self``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; a = 2*x</span>
+<span class="sd">        &gt;&gt;&gt; a.iter_basic_args()</span>
+<span class="sd">        &lt;...iterator object at 0x...&gt;</span>
+<span class="sd">        &gt;&gt;&gt; list(a.iter_basic_args())</span>
+<span class="sd">        [2, x]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Basic.as_poly"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.as_poly">[docs]</a>    <span class="k">def</span> <span class="nf">as_poly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts ``self`` to a polynomial or returns ``None``.</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import sin</span>
+<span class="sd">           &gt;&gt;&gt; from sympy.abc import x, y</span>
+
+<span class="sd">           &gt;&gt;&gt; print((x**2 + x*y).as_poly())</span>
+<span class="sd">           Poly(x**2 + x*y, x, y, domain=&#39;ZZ&#39;)</span>
+
+<span class="sd">           &gt;&gt;&gt; print((x**2 + x*y).as_poly(x, y))</span>
+<span class="sd">           Poly(x**2 + x*y, x, y, domain=&#39;ZZ&#39;)</span>
+
+<span class="sd">           &gt;&gt;&gt; print((x**2 + sin(y)).as_poly(x, y))</span>
+<span class="sd">           None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.polys</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">PolynomialError</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">poly</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">gens</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">poly</span><span class="o">.</span><span class="n">is_Poly</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">poly</span>
+        <span class="k">except</span> <span class="n">PolynomialError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="Basic.as_content_primitive"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.as_content_primitive">[docs]</a>    <span class="k">def</span> <span class="nf">as_content_primitive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radical</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A stub to allow Basic args (like Tuple) to be skipped when computing</span>
+<span class="sd">        the content and primitive components of an expression.</span>
+
+<span class="sd">        See docstring of Expr.as_content_primitive</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="bp">self</span>
+</div>
+<div class="viewcode-block" id="Basic.subs"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.subs">[docs]</a>    <span class="k">def</span> <span class="nf">subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Substitutes old for new in an expression after sympifying args.</span>
+
+<span class="sd">        `args` is either:</span>
+<span class="sd">          - two arguments, e.g. foo.subs(old, new)</span>
+<span class="sd">          - one iterable argument, e.g. foo.subs(iterable). The iterable may be</span>
+<span class="sd">             o an iterable container with (old, new) pairs. In this case the</span>
+<span class="sd">               replacements are processed in the order given with successive</span>
+<span class="sd">               patterns possibly affecting replacements already made.</span>
+<span class="sd">             o a dict or set whose key/value items correspond to old/new pairs.</span>
+<span class="sd">               In this case the old/new pairs will be sorted by op count and in</span>
+<span class="sd">               case of a tie, by number of args and the default_sort_key. The</span>
+<span class="sd">               resulting sorted list is then processed as an iterable container</span>
+<span class="sd">               (see previous).</span>
+
+<span class="sd">        If the keyword ``simultaneous`` is True, the subexpressions will not be</span>
+<span class="sd">        evaluated until all the substitutions have been made.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import pi, exp</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; (1 + x*y).subs(x, pi)</span>
+<span class="sd">        pi*y + 1</span>
+<span class="sd">        &gt;&gt;&gt; (1 + x*y).subs({x:pi, y:2})</span>
+<span class="sd">        1 + 2*pi</span>
+<span class="sd">        &gt;&gt;&gt; (1 + x*y).subs([(x, pi), (y, 2)])</span>
+<span class="sd">        1 + 2*pi</span>
+<span class="sd">        &gt;&gt;&gt; reps = [(y, x**2), (x, 2)]</span>
+<span class="sd">        &gt;&gt;&gt; (x + y).subs(reps)</span>
+<span class="sd">        6</span>
+<span class="sd">        &gt;&gt;&gt; (x + y).subs(reversed(reps))</span>
+<span class="sd">        x**2 + 2</span>
+
+<span class="sd">        &gt;&gt;&gt; (x**2 + x**4).subs(x**2, y)</span>
+<span class="sd">        y**2 + y</span>
+
+<span class="sd">        To replace only the x**2 but not the x**4, use xreplace:</span>
+
+<span class="sd">        &gt;&gt;&gt; (x**2 + x**4).xreplace({x**2: y})</span>
+<span class="sd">        x**4 + y</span>
+
+<span class="sd">        To delay evaluation until all substitutions have been made,</span>
+<span class="sd">        set the keyword ``simultaneous`` to True:</span>
+
+<span class="sd">        &gt;&gt;&gt; (x/y).subs([(x, 0), (y, 0)])</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; (x/y).subs([(x, 0), (y, 0)], simultaneous=True)</span>
+<span class="sd">        nan</span>
+
+<span class="sd">        This has the added feature of not allowing subsequent substitutions</span>
+<span class="sd">        to affect those already made:</span>
+
+<span class="sd">        &gt;&gt;&gt; ((x + y)/y).subs({x + y: y, y: x + y})</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; ((x + y)/y).subs({x + y: y, y: x + y}, simultaneous=True)</span>
+<span class="sd">        y/(x + y)</span>
+
+<span class="sd">        In order to obtain a canonical result, unordered iterables are</span>
+<span class="sd">        sorted by count_op length, number of arguments and by the</span>
+<span class="sd">        default_sort_key to break any ties. All other iterables are left</span>
+<span class="sd">        unsorted.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import sqrt, sin, cos</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import a, b, c, d, e</span>
+
+<span class="sd">        &gt;&gt;&gt; A = (sqrt(sin(2*x)), a)</span>
+<span class="sd">        &gt;&gt;&gt; B = (sin(2*x), b)</span>
+<span class="sd">        &gt;&gt;&gt; C = (cos(2*x), c)</span>
+<span class="sd">        &gt;&gt;&gt; D = (x, d)</span>
+<span class="sd">        &gt;&gt;&gt; E = (exp(x), e)</span>
+
+<span class="sd">        &gt;&gt;&gt; expr = sqrt(sin(2*x))*sin(exp(x)*x)*cos(2*x) + sin(2*x)</span>
+
+<span class="sd">        &gt;&gt;&gt; expr.subs(dict([A,B,C,D,E]))</span>
+<span class="sd">        a*c*sin(d*e) + b</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        replace: replacement capable of doing wildcard-like matching,</span>
+<span class="sd">                 parsing of match, and conditional replacements</span>
+<span class="sd">        xreplace: exact node replacement in expr tree; also capable of</span>
+<span class="sd">                  using matching rules</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.core.containers</span> <span class="kn">import</span> <span class="n">Dict</span>
+        <span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">default_sort_key</span>
+
+        <span class="n">unordered</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">sequence</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                <span class="n">unordered</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="p">(</span><span class="n">Dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)):</span>
+                <span class="n">unordered</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="n">sequence</span> <span class="o">=</span> <span class="n">sequence</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">iterable</span><span class="p">(</span><span class="n">sequence</span><span class="p">):</span>
+                <span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">filldedent</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">filldedent</span><span class="p">(</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">                   When a single argument is passed to subs</span>
+<span class="s">                   it should be a dictionary of old: new pairs or an iterable</span>
+<span class="s">                   of (old, new) tuples.&quot;&quot;&quot;</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">sequence</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;subs accepts either 1 or 2 arguments&quot;</span><span class="p">)</span>
+
+        <span class="n">sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sequence</span><span class="p">)):</span>
+            <span class="n">o</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">so</span><span class="p">,</span> <span class="n">sn</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">o</span><span class="p">),</span> <span class="n">sympify</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">so</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+                    <span class="n">so</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Symbol</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+            <span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">so</span><span class="p">,</span> <span class="n">sn</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_aresame</span><span class="p">(</span><span class="n">so</span><span class="p">,</span> <span class="n">sn</span><span class="p">):</span>
+                <span class="n">sequence</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="k">continue</span>
+        <span class="n">sequence</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">sequence</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">unordered</span><span class="p">:</span>
+            <span class="n">sequence</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span><span class="o">.</span><span class="n">is_Atom</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">):</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">sequence</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">ops</span> <span class="o">=</span> <span class="n">o</span><span class="o">.</span><span class="n">count_ops</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                        <span class="n">ops</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="n">d</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">o</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+                <span class="n">newseq</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+                    <span class="n">newseq</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                        <span class="nb">sorted</span><span class="p">([</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]],</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">))</span>
+                <span class="n">sequence</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="n">sequence</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">newseq</span><span class="p">]</span>
+                <span class="k">del</span> <span class="n">newseq</span><span class="p">,</span> <span class="n">d</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sequence</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">sequence</span><span class="o">.</span><span class="n">items</span><span class="p">()],</span>
+                                  <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;simultaneous&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>  <span class="c"># XXX should this be the default for dict subs?</span>
+            <span class="n">reps</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">()</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">reps</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                    <span class="k">break</span>
+            <span class="k">return</span> <span class="n">rv</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span>
+            <span class="k">for</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">sequence</span><span class="p">:</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rv</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                    <span class="k">break</span>
+            <span class="k">return</span> <span class="n">rv</span>
+</div>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Substitutes an expression old -&gt; new.</span>
+
+<span class="sd">        If self is not equal to old then _eval_subs is called.</span>
+<span class="sd">        If _eval_subs doesn&#39;t want to make any special replacement</span>
+<span class="sd">        then a None is received which indicates that the fallback</span>
+<span class="sd">        should be applied wherein a search for replacements is made</span>
+<span class="sd">        amongst the arguments of self.</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Add</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        Add&#39;s _eval_subs knows how to target x + y in the following</span>
+<span class="sd">        so it makes the change:</span>
+
+<span class="sd">            &gt;&gt;&gt; (x + y + z).subs(x + y, 1)</span>
+<span class="sd">            z + 1</span>
+
+<span class="sd">        Add&#39;s _eval_subs doesn&#39;t need to know how to find x + y in</span>
+<span class="sd">        the following:</span>
+
+<span class="sd">            &gt;&gt;&gt; Add._eval_subs(z*(x + y) + 3, x + y, 1) is None</span>
+<span class="sd">            True</span>
+
+<span class="sd">        The returned None will cause the fallback routine to traverse the args and</span>
+<span class="sd">        pass the z*(x + y) arg to Mul where the change will take place and the</span>
+<span class="sd">        substitution will succeed:</span>
+
+<span class="sd">            &gt;&gt;&gt; (z*(x + y) + 3).subs(x + y, 1)</span>
+<span class="sd">            z + 3</span>
+
+<span class="sd">        ** Developers Notes **</span>
+
+<span class="sd">        An _eval_subs routine for a class should be written if:</span>
+
+<span class="sd">            1) any arguments are not instances of Basic (e.g. bool, tuple);</span>
+
+<span class="sd">            2) some arguments should not be targeted (as in integration</span>
+<span class="sd">               variables);</span>
+
+<span class="sd">            3) if there is something other than a literal replacement</span>
+<span class="sd">               that should be attempted (as in Piecewise where the condition</span>
+<span class="sd">               may be updated without doing a replacement).</span>
+
+<span class="sd">        If it is overridden, here are some special cases that might arise:</span>
+
+<span class="sd">            1) If it turns out that no special change was made and all</span>
+<span class="sd">               the original sub-arguments should be checked for</span>
+<span class="sd">               replacements then None should be returned.</span>
+
+<span class="sd">            2) If it is necessary to do substitutions on a portion of</span>
+<span class="sd">               the expression then _subs should be called. _subs will</span>
+<span class="sd">               handle the case of any sub-expression being equal to old</span>
+<span class="sd">               (which usually would not be the case) while its fallback</span>
+<span class="sd">               will handle the recursion into the sub-arguments. For</span>
+<span class="sd">               example, after Add&#39;s _eval_subs removes some matching terms</span>
+<span class="sd">               it must process the remaining terms so it calls _subs</span>
+<span class="sd">               on each of the un-matched terms and then adds them</span>
+<span class="sd">               onto the terms previously obtained.</span>
+
+<span class="sd">           3) If the initial expression should remain unchanged then</span>
+<span class="sd">              the original expression should be returned. (Whenever an</span>
+<span class="sd">              expression is returned, modified or not, no further</span>
+<span class="sd">              substitution of old -&gt; new is attempted.) Sum&#39;s _eval_subs</span>
+<span class="sd">              routine uses this strategy when a substitution is attempted</span>
+<span class="sd">              on any of its summation variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">fallback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Try to replace old with new in any of self&#39;s arguments.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">hit</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="s">&#39;_eval_subs&#39;</span><span class="p">):</span>
+                    <span class="k">continue</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">arg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">hit</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg</span>
+            <span class="k">if</span> <span class="n">hit</span><span class="p">:</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+                <span class="n">hack2</span> <span class="o">=</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;hack2&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">hack2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_Mul</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rv</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>  <span class="c"># 2-arg hack</span>
+                    <span class="n">coeff</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+                    <span class="n">nonnumber</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+                            <span class="n">coeff</span> <span class="o">*=</span> <span class="n">i</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">nonnumber</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                    <span class="n">nonnumber</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">nonnumber</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">coeff</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">nonnumber</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">nonnumber</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">rv</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="k">if</span> <span class="n">_aresame</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">new</span>
+
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_subs</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">fallback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+
+    <span class="k">def</span> <span class="nf">_eval_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override this stub if you want to do anything more than</span>
+<span class="sd">        attempt a replacement of old with new in the arguments of self.</span>
+
+<span class="sd">        See also: _subs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="Basic.xreplace"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.xreplace">[docs]</a>    <span class="k">def</span> <span class="nf">xreplace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replace occurrences of objects within the expression.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+<span class="sd">        rule : dict-like</span>
+<span class="sd">            Expresses a replacement rule</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        =======</span>
+<span class="sd">        xreplace : the result of the replacement</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols, pi, exp</span>
+<span class="sd">        &gt;&gt;&gt; x, y, z = symbols(&#39;x y z&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; (1 + x*y).xreplace({x: pi})</span>
+<span class="sd">        pi*y + 1</span>
+<span class="sd">        &gt;&gt;&gt; (1 + x*y).xreplace({x:pi, y:2})</span>
+<span class="sd">        1 + 2*pi</span>
+
+<span class="sd">        Replacements occur only if an entire node in the expression tree is</span>
+<span class="sd">        matched:</span>
+
+<span class="sd">        &gt;&gt;&gt; (x*y + z).xreplace({x*y: pi})</span>
+<span class="sd">        z + pi</span>
+<span class="sd">        &gt;&gt;&gt; (x*y*z).xreplace({x*y: pi})</span>
+<span class="sd">        x*y*z</span>
+<span class="sd">        &gt;&gt;&gt; (2*x).xreplace({2*x: y, x: z})</span>
+<span class="sd">        y</span>
+<span class="sd">        &gt;&gt;&gt; (2*2*x).xreplace({2*x: y, x: z})</span>
+<span class="sd">        4*z</span>
+<span class="sd">        &gt;&gt;&gt; (x + y + 2).xreplace({x + y: 2})</span>
+<span class="sd">        x + y + 2</span>
+<span class="sd">        &gt;&gt;&gt; (x + 2 + exp(x + 2)).xreplace({x + 2: y})</span>
+<span class="sd">        x + exp(y) + 2</span>
+
+<span class="sd">        xreplace doesn&#39;t differentiate between free and bound symbols. In the</span>
+<span class="sd">        following, subs(x, y) would not change x since it is a bound symbol,</span>
+<span class="sd">        but xreplace does:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Integral</span>
+<span class="sd">        &gt;&gt;&gt; Integral(x, (x, 1, 2*x)).xreplace({x: y})</span>
+<span class="sd">        Integral(y, (y, 1, 2*y))</span>
+
+<span class="sd">        Trying to replace x with an expression raises an error:</span>
+
+<span class="sd">        &gt;&gt;&gt; Integral(x, (x, 1, 2*x)).xreplace({x: 2*y}) #doctest: +SKIP</span>
+<span class="sd">        ValueError: Invalid limits given: ((2*y, 1, 4*y),)</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        replace: replacement capable of doing wildcard-like matching,</span>
+<span class="sd">                 parsing of match, and conditional replacements</span>
+<span class="sd">        subs: substitution of subexpressions as defined by the objects</span>
+<span class="sd">              themselves.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="ow">in</span> <span class="n">rule</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rule</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">rule</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">rule</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_aresame</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+</div>
+    <span class="nd">@deprecated</span><span class="p">(</span><span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;has&quot;</span><span class="p">,</span> <span class="n">issue</span><span class="o">=</span><span class="mi">2389</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">obj</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">obj</span> <span class="o">==</span> <span class="n">arg</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@cacheit</span>
+<div class="viewcode-block" id="Basic.has"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.has">[docs]</a>    <span class="k">def</span> <span class="nf">has</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">patterns</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Test whether any subexpression matches any of the patterns.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import sin</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+<span class="sd">        &gt;&gt;&gt; (x**2 + sin(x*y)).has(z)</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; (x**2 + sin(x*y)).has(x, y, z)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; x.has(x)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        Note that ``expr.has(*patterns)`` is exactly equivalent to</span>
+<span class="sd">        ``any(expr.has(p) for p in patterns)``. In particular, ``False`` is</span>
+<span class="sd">        returned when the list of patterns is empty.</span>
+
+<span class="sd">        &gt;&gt;&gt; x.has()</span>
+<span class="sd">        False</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_has</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span> <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">patterns</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_has</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper for .has()&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">UndefinedFunction</span><span class="p">,</span> <span class="n">Function</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">UndefinedFunction</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">pattern</span> <span class="ow">or</span> <span class="n">f</span> <span class="o">==</span> <span class="n">pattern</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Function</span><span class="p">,</span> <span class="n">UndefinedFunction</span><span class="p">))</span>
+
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">BasicType</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">_has_matcher</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">match</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">arg</span> <span class="o">==</span> <span class="n">pattern</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_has_matcher</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper for .has()&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__eq__</span>
+
+<div class="viewcode-block" id="Basic.replace"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.replace">[docs]</a>    <span class="k">def</span> <span class="nf">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="nb">map</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">simultaneous</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replace matching subexpressions of ``self`` with ``value``.</span>
+
+<span class="sd">        If ``map = True`` then also return the mapping {old: new} where ``old``</span>
+<span class="sd">        was a sub-expression found with query and ``new`` is the replacement</span>
+<span class="sd">        value for it. If the expression itself doesn&#39;t match the query, then</span>
+<span class="sd">        the returned value will be ``self.xreplace(map)`` otherwise it should</span>
+<span class="sd">        be ``self.subs(ordered(map.items()))``.</span>
+
+<span class="sd">        Traverses an expression tree and performs replacement of matching</span>
+<span class="sd">        subexpressions from the bottom to the top of the tree. The default</span>
+<span class="sd">        approach is to do the replacement in a simultaneous fashion so</span>
+<span class="sd">        changes made are targeted only once. If this is not desired or causes</span>
+<span class="sd">        problems, ``simultaneous`` can be set to False. In addition, if an</span>
+<span class="sd">        expression containing more than one Wild symbol is being used to match</span>
+<span class="sd">        subexpressions and  the ``exact`` flag is True, then the match will only</span>
+<span class="sd">        succeed if non-zero values are received for each Wild that appears in</span>
+<span class="sd">        the match pattern.</span>
+
+<span class="sd">        The list of possible combinations of queries and replacement values</span>
+<span class="sd">        is listed below:</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        Initial setup</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy import log, sin, cos, tan, Wild, Mul, Add</span>
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">            &gt;&gt;&gt; f = log(sin(x)) + tan(sin(x**2))</span>
+
+<span class="sd">        1.1. type -&gt; type</span>
+<span class="sd">            obj.replace(type, newtype)</span>
+
+<span class="sd">            When object of type ``type`` is found, replace it with the</span>
+<span class="sd">            result of passing its argument(s) to ``newtype``.</span>
+
+<span class="sd">            &gt;&gt;&gt; f.replace(sin, cos)</span>
+<span class="sd">            log(cos(x)) + tan(cos(x**2))</span>
+<span class="sd">            &gt;&gt;&gt; sin(x).replace(sin, cos, map=True)</span>
+<span class="sd">            (cos(x), {sin(x): cos(x)})</span>
+<span class="sd">            &gt;&gt;&gt; (x*y).replace(Mul, Add)</span>
+<span class="sd">            x + y</span>
+
+<span class="sd">        1.2. type -&gt; func</span>
+<span class="sd">            obj.replace(type, func)</span>
+
+<span class="sd">            When object of type ``type`` is found, apply ``func`` to its</span>
+<span class="sd">            argument(s). ``func`` must be written to handle the number</span>
+<span class="sd">            of arguments of ``type``.</span>
+
+<span class="sd">            &gt;&gt;&gt; f.replace(sin, lambda arg: sin(2*arg))</span>
+<span class="sd">            log(sin(2*x)) + tan(sin(2*x**2))</span>
+<span class="sd">            &gt;&gt;&gt; (x*y).replace(Mul, lambda *args: sin(2*Mul(*args)))</span>
+<span class="sd">            sin(2*x*y)</span>
+
+<span class="sd">        2.1. pattern -&gt; expr</span>
+<span class="sd">            obj.replace(pattern(wild), expr(wild))</span>
+
+<span class="sd">            Replace subexpressions matching ``pattern`` with the expression</span>
+<span class="sd">            written in terms of the Wild symbols in ``pattern``.</span>
+
+<span class="sd">            &gt;&gt;&gt; a = Wild(&#39;a&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; f.replace(sin(a), tan(a))</span>
+<span class="sd">            log(tan(x)) + tan(tan(x**2))</span>
+<span class="sd">            &gt;&gt;&gt; f.replace(sin(a), tan(a/2))</span>
+<span class="sd">            log(tan(x/2)) + tan(tan(x**2/2))</span>
+<span class="sd">            &gt;&gt;&gt; f.replace(sin(a), a)</span>
+<span class="sd">            log(x) + tan(x**2)</span>
+<span class="sd">            &gt;&gt;&gt; (x*y).replace(a*x, a)</span>
+<span class="sd">            y</span>
+
+<span class="sd">            When the default value of False is used with patterns that have</span>
+<span class="sd">            more than one Wild symbol, non-intuitive results may be obtained:</span>
+
+<span class="sd">            &gt;&gt;&gt; b = Wild(&#39;b&#39;)</span>
+<span class="sd">            &gt;&gt;&gt; (2*x).replace(a*x + b, b - a)</span>
+<span class="sd">            2/x</span>
+
+<span class="sd">            For this reason, the ``exact`` option can be used to make the</span>
+<span class="sd">            replacement only when the match gives non-zero values for all</span>
+<span class="sd">            Wild symbols:</span>
+
+<span class="sd">            &gt;&gt;&gt; (2*x + y).replace(a*x + b, b - a, exact=True)</span>
+<span class="sd">            y - 2</span>
+<span class="sd">            &gt;&gt;&gt; (2*x).replace(a*x + b, b - a, exact=True)</span>
+<span class="sd">            2*x</span>
+
+<span class="sd">        2.2. pattern -&gt; func</span>
+<span class="sd">            obj.replace(pattern(wild), lambda wild: expr(wild))</span>
+
+<span class="sd">            All behavior is the same as in 2.1 but now a function in terms of</span>
+<span class="sd">            pattern variables is used rather than an expression:</span>
+
+<span class="sd">            &gt;&gt;&gt; f.replace(sin(a), lambda a: sin(2*a))</span>
+<span class="sd">            log(sin(2*x)) + tan(sin(2*x**2))</span>
+
+<span class="sd">        3.1. func -&gt; func</span>
+<span class="sd">            obj.replace(filter, func)</span>
+
+<span class="sd">            Replace subexpression ``e`` with ``func(e)`` if ``filter(e)``</span>
+<span class="sd">            is True.</span>
+
+<span class="sd">            &gt;&gt;&gt; g = 2*sin(x**3)</span>
+<span class="sd">            &gt;&gt;&gt; g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)</span>
+<span class="sd">            4*sin(x**9)</span>
+
+<span class="sd">        The expression itself is also targeted by the query but is done in</span>
+<span class="sd">        such a fashion that changes are not made twice.</span>
+
+<span class="sd">            &gt;&gt;&gt; e = x*(x*y + 1)</span>
+<span class="sd">            &gt;&gt;&gt; e.replace(lambda x: x.is_Mul, lambda x: 2*x)</span>
+<span class="sd">            2*x*(2*x*y + 1)</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        subs: substitution of subexpressions as defined by the objects</span>
+<span class="sd">              themselves.</span>
+<span class="sd">        xreplace: exact node replacement in expr tree; also capable of</span>
+<span class="sd">                  using matching rules</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Dummy</span>
+        <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">bottom_up</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">query</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="n">_query</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+                <span class="n">_value</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">value</span><span class="p">(</span><span class="o">*</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="n">_value</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">value</span><span class="p">(</span><span class="o">*</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s">&quot;given a type, replace() expects another &quot;</span>
+                    <span class="s">&quot;type or a callable&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="n">_query</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="n">expr</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+            <span class="c"># XXX remove the exact flag and make multi-symbol</span>
+            <span class="c"># patterns use exact=True semantics; to do this the query must</span>
+            <span class="c"># be tested to find out how many Wild symbols are present.</span>
+            <span class="c"># See https://groups.google.com/forum/</span>
+            <span class="c"># ?fromgroups=#!topic/sympy/zPzo5FtRiqI</span>
+            <span class="c"># for a method of inspecting a function to know how many</span>
+            <span class="c"># parameters it has.</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">exact</span><span class="p">:</span>
+                    <span class="n">_value</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">else</span> <span class="n">expr</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_value</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="c"># match dictionary keys get the trailing underscore stripped</span>
+                <span class="c"># from them and are then passed as keywords to the callable;</span>
+                <span class="c"># if ``exact`` is True, only accept match if there are no null</span>
+                <span class="c"># values amongst those matched.</span>
+                <span class="k">if</span> <span class="n">exact</span><span class="p">:</span>
+                    <span class="n">_value</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="p">(</span><span class="n">value</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">([</span> <span class="p">(</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">()]))</span>
+                        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">else</span> <span class="n">expr</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">_value</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">value</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">([</span> <span class="p">(</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">items</span><span class="p">()]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s">&quot;given an expression, replace() expects &quot;</span>
+                    <span class="s">&quot;another expression or a callable&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+            <span class="n">_query</span> <span class="o">=</span> <span class="n">query</span>
+
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                <span class="n">_value</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="n">value</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s">&quot;given a callable, replace() expects &quot;</span>
+                    <span class="s">&quot;another callable&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s">&quot;first argument to replace() must be a &quot;</span>
+                <span class="s">&quot;type, an expression or a callable&quot;</span><span class="p">)</span>
+
+        <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c"># changes that took place</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># the dummies that were used as change placeholders</span>
+        <span class="k">def</span> <span class="nf">rec_replace</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">_query</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">or</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{}:</span>
+                <span class="n">new</span> <span class="o">=</span> <span class="n">_value</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">new</span> <span class="o">!=</span> <span class="n">expr</span><span class="p">:</span>
+                    <span class="n">mapping</span><span class="p">[</span><span class="n">expr</span><span class="p">]</span> <span class="o">=</span> <span class="n">new</span>
+                    <span class="k">if</span> <span class="n">simultaneous</span><span class="p">:</span>
+                        <span class="c"># don&#39;t let this expression be changed during rebuilding</span>
+                        <span class="n">d</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">()</span>
+                        <span class="n">mask</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">d</span><span class="p">,</span> <span class="n">new</span><span class="p">))</span>
+                        <span class="n">expr</span> <span class="o">=</span> <span class="n">d</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">expr</span> <span class="o">=</span> <span class="n">new</span>
+            <span class="k">return</span> <span class="n">expr</span>
+
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">bottom_up</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rec_replace</span><span class="p">,</span> <span class="n">atoms</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="c"># restore original expressions for Dummy symbols</span>
+        <span class="k">if</span> <span class="n">simultaneous</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">mask</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mask</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="p">{</span><span class="n">o</span><span class="p">:</span> <span class="n">n</span><span class="p">}</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">map</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rv</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">simultaneous</span><span class="p">:</span>
+                <span class="c"># restore subexpressions in mapping</span>
+                <span class="k">for</span> <span class="n">o</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">mask</span><span class="p">:</span>
+                    <span class="n">r</span> <span class="o">=</span> <span class="p">{</span><span class="n">o</span><span class="p">:</span> <span class="n">n</span><span class="p">}</span>
+                    <span class="n">mapping</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">v</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+            <span class="k">return</span> <span class="n">rv</span><span class="p">,</span> <span class="n">mapping</span>
+</div>
+<div class="viewcode-block" id="Basic.find"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.find">[docs]</a>    <span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find all subexpressions matching a query. &quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">_make_find_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">group</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                    <span class="n">groups</span><span class="p">[</span><span class="n">result</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">groups</span><span class="p">[</span><span class="n">result</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="k">return</span> <span class="n">groups</span>
+</div>
+<div class="viewcode-block" id="Basic.count"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.count">[docs]</a>    <span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Count the number of matching subexpressions. &quot;&quot;&quot;</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">_make_find_query</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">bool</span><span class="p">(</span><span class="n">query</span><span class="p">(</span><span class="n">sub</span><span class="p">))</span> <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Basic.matches"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.matches">[docs]</a>    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">repl_dict</span><span class="o">=</span><span class="p">{},</span> <span class="n">old</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper method for match() that looks for a match between Wild symbols</span>
+<span class="sd">        in self and expressions in expr.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import symbols, Wild, Basic</span>
+<span class="sd">        &gt;&gt;&gt; a, b, c = symbols(&#39;a b c&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; x = Wild(&#39;x&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; Basic(a + x, x).matches(Basic(a + b, c)) is None</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Basic(a + x, x).matches(Basic(a + b + c, b + c))</span>
+<span class="sd">        {x_: b + c}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">expr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">repl_dict</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="n">d</span> <span class="o">=</span> <span class="n">repl_dict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">arg</span><span class="p">,</span> <span class="n">other_arg</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">arg</span> <span class="o">==</span> <span class="n">other_arg</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">other_arg</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">old</span><span class="o">=</span><span class="n">old</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">d</span>
+</div>
+<div class="viewcode-block" id="Basic.match"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.match">[docs]</a>    <span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">old</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pattern matching.</span>
+
+<span class="sd">        Wild symbols match all.</span>
+
+<span class="sd">        Return ``None`` when expression (self) does not match</span>
+<span class="sd">        with pattern. Otherwise return a dictionary such that::</span>
+
+<span class="sd">          pattern.xreplace(self.match(pattern)) == self</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Wild</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; p = Wild(&quot;p&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; q = Wild(&quot;q&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; r = Wild(&quot;r&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; e = (x+y)**(x+y)</span>
+<span class="sd">        &gt;&gt;&gt; e.match(p**p)</span>
+<span class="sd">        {p_: x + y}</span>
+<span class="sd">        &gt;&gt;&gt; e.match(p**q)</span>
+<span class="sd">        {p_: x + y, q_: x + y}</span>
+<span class="sd">        &gt;&gt;&gt; e = (2*x)**2</span>
+<span class="sd">        &gt;&gt;&gt; e.match(p*q**r)</span>
+<span class="sd">        {p_: 4, q_: x, r_: 2}</span>
+<span class="sd">        &gt;&gt;&gt; (p*q**r).xreplace(e.match(p*q**r))</span>
+<span class="sd">        4*x**2</span>
+
+<span class="sd">        The ``old`` flag will give the old-style pattern matching where</span>
+<span class="sd">        expressions and patterns are essentially solved to give the</span>
+<span class="sd">        match. Both of the following give None unless ``old=True``:</span>
+
+<span class="sd">        &gt;&gt;&gt; (x - 2).match(p - x, old=True)</span>
+<span class="sd">        {p_: 2*x - 2}</span>
+<span class="sd">        &gt;&gt;&gt; (2/x).match(p*x, old=True)</span>
+<span class="sd">        {p_: 2/x**2}</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">signsimp</span>
+        <span class="n">pattern</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">signsimp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">signsimp</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="c"># if we still have the same relationship between the types of</span>
+        <span class="c"># input, then use the sign simplified forms</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">pattern</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">p</span><span class="o">.</span><span class="n">func</span><span class="p">):</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">old</span><span class="o">=</span><span class="n">old</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="o">=</span><span class="n">old</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rv</span>
+</div>
+<div class="viewcode-block" id="Basic.count_ops"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.count_ops">[docs]</a>    <span class="k">def</span> <span class="nf">count_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;wrapper for count_ops that returns the operation count.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">count_ops</span>
+        <span class="k">return</span> <span class="n">count_ops</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visual</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Basic.doit"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.doit">[docs]</a>    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate objects that are not evaluated by default like limits,</span>
+<span class="sd">           integrals, sums and products. All objects of this kind will be</span>
+<span class="sd">           evaluated recursively, unless some species were excluded via &#39;hints&#39;</span>
+<span class="sd">           or unless the &#39;deep&#39; hint was set to &#39;False&#39;.</span>
+
+<span class="sd">           &gt;&gt;&gt; from sympy import Integral</span>
+<span class="sd">           &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">           &gt;&gt;&gt; 2*Integral(x, x)</span>
+<span class="sd">           2*Integral(x, x)</span>
+
+<span class="sd">           &gt;&gt;&gt; (2*Integral(x, x)).doit()</span>
+<span class="sd">           x**2</span>
+
+<span class="sd">           &gt;&gt;&gt; (2*Integral(x, x)).doit(deep = False)</span>
+<span class="sd">           2*Integral(x, x)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;deep&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+            <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span> <span class="n">term</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span> <span class="k">else</span> <span class="n">term</span>
+                                         <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_rewrite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pattern</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">)()</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="n">sargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+        <span class="n">terms</span> <span class="o">=</span> <span class="p">[</span> <span class="n">t</span><span class="o">.</span><span class="n">_eval_rewrite</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span> <span class="k">else</span> <span class="n">t</span>
+                    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sargs</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">terms</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Basic.rewrite"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Basic.rewrite">[docs]</a>    <span class="k">def</span> <span class="nf">rewrite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Rewrite functions in terms of other functions.</span>
+
+<span class="sd">        Rewrites expression containing applications of functions</span>
+<span class="sd">        of one kind in terms of functions of different kind. For</span>
+<span class="sd">        example you can rewrite trigonometric functions as complex</span>
+<span class="sd">        exponentials or combinatorial functions as gamma function.</span>
+
+<span class="sd">        As a pattern this function accepts a list of functions to</span>
+<span class="sd">        to rewrite (instances of DefinedFunction class). As rule</span>
+<span class="sd">        you can use string or a destination function instance (in</span>
+<span class="sd">        this case rewrite() will use the str() function).</span>
+
+<span class="sd">        There is also possibility to pass hints on how to rewrite</span>
+<span class="sd">        the given expressions. For now there is only one such hint</span>
+<span class="sd">        defined called &#39;deep&#39;. When &#39;deep&#39; is set to False it will</span>
+<span class="sd">        forbid functions to rewrite their contents.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import sin, exp</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">        Unspecified pattern:</span>
+<span class="sd">        &gt;&gt;&gt; sin(x).rewrite(exp)</span>
+<span class="sd">        -I*(exp(I*x) - exp(-I*x))/2</span>
+
+<span class="sd">        Pattern as a single function:</span>
+<span class="sd">        &gt;&gt;&gt; sin(x).rewrite(sin, exp)</span>
+<span class="sd">        -I*(exp(I*x) - exp(-I*x))/2</span>
+
+<span class="sd">        Pattern as a list of functions:</span>
+<span class="sd">        &gt;&gt;&gt; sin(x).rewrite([sin, ], exp)</span>
+<span class="sd">        -I*(exp(I*x) - exp(-I*x))/2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pattern</span> <span class="o">=</span> <span class="n">args</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">string_types</span><span class="p">):</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="s">&#39;_eval_rewrite_as_&#39;</span> <span class="o">+</span> <span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rule</span> <span class="o">=</span> <span class="s">&#39;_eval_rewrite_as_&#39;</span> <span class="o">+</span> <span class="n">args</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">__name__</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pattern</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">iterable</span><span class="p">(</span><span class="n">pattern</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="n">pattern</span> <span class="o">=</span> <span class="p">[</span> <span class="n">p</span><span class="o">.</span><span class="n">__class__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pattern</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">pattern</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eval_rewrite</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pattern</span><span class="p">),</span> <span class="n">rule</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span>
+
+</div></div>
+<div class="viewcode-block" id="Atom"><a class="viewcode-back" href="../../../modules/core.html#sympy.core.basic.Atom">[docs]</a><span class="k">class</span> <span class="nc">Atom</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A parent class for atomic things. An atom is an expression with no subexpressions.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Symbol, Number, Rational, Integer, ...</span>
+<span class="sd">    But not: Add, Mul, Pow, ...</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_Atom</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">repl_dict</span><span class="o">=</span><span class="p">{},</span> <span class="n">old</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">expr</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">repl_dict</span>
+
+    <span class="k">def</span> <span class="nf">xreplace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">hack2</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">class_key</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span>
+
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">sort_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">class_key</span><span class="p">(),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">),)),</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="o">.</span><span class="n">sort_key</span><span class="p">(),</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+    <span class="k">def</span> <span class="nf">_eval_simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="p">,</span> <span class="n">measure</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sorted_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># this is here as a safeguard against accidentally using _sorted_args</span>
+        <span class="c"># on Atoms -- they cannot be rebuilt as atom.func(*atom._sorted_args)</span>
+        <span class="c"># since there are no args. So the calling routine should be checking</span>
+        <span class="c"># to see that this property is not called for Atoms.</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&#39;Atoms have no args. It might be necessary&#39;</span>
+        <span class="s">&#39; to make a check for Atoms in the calling code.&#39;</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_aresame</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if a and b are structurally the same, else False.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    To SymPy, 2.0 == 2:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">    &gt;&gt;&gt; 2.0 == S(2)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    Since a simple &#39;same or not&#39; result is sometimes useful, this routine was</span>
+<span class="sd">    written to provide that query:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.core.basic import _aresame</span>
+<span class="sd">    &gt;&gt;&gt; _aresame(S(2.0), S(2))</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">preorder_traversal</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="n">b</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+
+<span class="k">def</span> <span class="nf">_atomic</span><span class="p">(</span><span class="n">e</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return atom-like quantities as far as substitution is</span>
+<span class="sd">    concerned: Derivatives, Functions and Symbols. Don&#39;t</span>
+<span class="sd">    return any &#39;atoms&#39; that are inside such quantities unless</span>
+<span class="sd">    they also appear outside, too.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Derivative, Function, cos</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.core.basic import _atomic</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; _atomic(x + y)</span>
+<span class="sd">    set([x, y])</span>
+<span class="sd">    &gt;&gt;&gt; _atomic(x + f(y))</span>
+<span class="sd">    set([x, f(y)])</span>
+<span class="sd">    &gt;&gt;&gt; _atomic(Derivative(f(x), x) + cos(x) + y)</span>
+<span class="sd">    set([y, cos(x), Derivative(f(x), x)])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Derivative</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Symbol</span>
+    <span class="n">pot</span> <span class="o">=</span> <span class="n">preorder_traversal</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">free_symbols</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">e</span><span class="p">])</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pot</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">pot</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+            <span class="k">continue</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)</span> <span class="ow">and</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">free</span><span class="p">:</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="p">(</span><span class="n">Derivative</span><span class="p">,</span> <span class="n">Function</span><span class="p">)):</span>
+            <span class="n">pot</span><span class="o">.</span><span class="n">skip</span><span class="p">()</span>
+            <span class="n">atoms</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">atoms</span>
+
+
+<span class="k">class</span> <span class="nc">preorder_traversal</span><span class="p">(</span><span class="n">Iterator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Do a pre-order traversal of a tree.</span>
+
+<span class="sd">    This iterator recursively yields nodes that it has visited in a pre-order</span>
+<span class="sd">    fashion. That is, it yields the current node then descends through the</span>
+<span class="sd">    tree breadth-first to yield all of a node&#39;s children&#39;s pre-order</span>
+<span class="sd">    traversal.</span>
+
+
+<span class="sd">    For an expression, the order of the traversal depends on the order of</span>
+<span class="sd">    .args, which in many cases can be arbitrary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+<span class="sd">    node : sympy expression</span>
+<span class="sd">        The expression to traverse.</span>
+<span class="sd">    keys : (default None) sort key(s)</span>
+<span class="sd">        The key(s) used to sort args of Basic objects. When None, args of Basic</span>
+<span class="sd">        objects are processed in arbitrary order. If key is defined, it will</span>
+<span class="sd">        be passed along to ordered() as the only key(s) to use to sort the</span>
+<span class="sd">        arguments; if ``key`` is simply True then the default keys of ordered</span>
+<span class="sd">        will be used.</span>
+
+<span class="sd">    Yields</span>
+<span class="sd">    ======</span>
+<span class="sd">    subtree : sympy expression</span>
+<span class="sd">        All of the subtrees in the tree.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.core.basic import preorder_traversal</span>
+<span class="sd">    &gt;&gt;&gt; x, y, z = symbols(&#39;x y z&#39;)</span>
+
+<span class="sd">    The nodes are returned in the order that they are encountered unless key</span>
+<span class="sd">    is given; simply passing key=True will guarantee that the traversal is</span>
+<span class="sd">    unique.</span>
+
+<span class="sd">    &gt;&gt;&gt; list(preorder_traversal((x + y)*z, keys=None)) # doctest: +SKIP</span>
+<span class="sd">    [z*(x + y), z, x + y, y, x]</span>
+<span class="sd">    &gt;&gt;&gt; list(preorder_traversal((x + y)*z, keys=True))</span>
+<span class="sd">    [z*(x + y), z, x + y, x, y]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skip_flag</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preorder_traversal</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_preorder_traversal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">node</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_flag</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_skip_flag</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">if</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">keys</span> <span class="o">!=</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">subtree</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preorder_traversal</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">subtree</span>
+        <span class="k">elif</span> <span class="n">iterable</span><span class="p">(</span><span class="n">node</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">node</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">subtree</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preorder_traversal</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">subtree</span>
+
+    <span class="k">def</span> <span class="nf">skip</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Skip yielding current node&#39;s (last yielded node&#39;s) subtrees.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.core import symbols</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.core.basic import preorder_traversal</span>
+<span class="sd">        &gt;&gt;&gt; x, y, z = symbols(&#39;x y z&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; pt = preorder_traversal((x+y*z)*z)</span>
+<span class="sd">        &gt;&gt;&gt; for i in pt:</span>
+<span class="sd">        ...     print(i)</span>
+<span class="sd">        ...     if i == x+y*z:</span>
+<span class="sd">        ...             pt.skip()</span>
+<span class="sd">        z*(x + y*z)</span>
+<span class="sd">        z</span>
+<span class="sd">        x + y*z</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_skip_flag</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pt</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<span class="k">def</span> <span class="nf">_make_find_query</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the argument of Basic.find() into a callable&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">SympifyError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">expr</span><span class="p">:</span> <span class="n">expr</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">query</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

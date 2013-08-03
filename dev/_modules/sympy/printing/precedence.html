@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.printing.precedence &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.printing.precedence</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;A module providing information about the necessity of brackets&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">_coeff_isneg</span>
+
+<span class="c"># Default precedence values for some basic types</span>
+<span class="n">PRECEDENCE</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;Lambda&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s">&quot;Relational&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+    <span class="s">&quot;Or&quot;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+    <span class="s">&quot;And&quot;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="s">&quot;Add&quot;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span>
+    <span class="s">&quot;Mul&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="s">&quot;Pow&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+    <span class="s">&quot;Not&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s">&quot;Atom&quot;</span><span class="p">:</span> <span class="mi">1000</span>
+<span class="p">}</span>
+
+<span class="c"># A dictionary assigning precedence values to certain classes. These values are</span>
+<span class="c"># treated like they were inherited, so not every single class has to be named</span>
+<span class="c"># here.</span>
+<span class="n">PRECEDENCE_VALUES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;Or&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Or&quot;</span><span class="p">],</span>
+    <span class="s">&quot;And&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;And&quot;</span><span class="p">],</span>
+    <span class="s">&quot;Add&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">],</span>
+    <span class="s">&quot;Pow&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Pow&quot;</span><span class="p">],</span>
+    <span class="s">&quot;Relational&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Relational&quot;</span><span class="p">],</span>
+    <span class="s">&quot;Sub&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">],</span>
+    <span class="s">&quot;Not&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Not&quot;</span><span class="p">],</span>
+    <span class="s">&quot;factorial&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Pow&quot;</span><span class="p">],</span>
+    <span class="s">&quot;factorial2&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Pow&quot;</span><span class="p">],</span>
+    <span class="s">&quot;NegativeInfinity&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">],</span>
+    <span class="s">&quot;MatAdd&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">],</span>
+    <span class="s">&quot;MatMul&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Mul&quot;</span><span class="p">],</span>
+    <span class="s">&quot;HadamardProduct&quot;</span><span class="p">:</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Mul&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c"># Sometimes it&#39;s not enough to assign a fixed precedence value to a</span>
+<span class="c"># class. Then a function can be inserted in this dictionary that takes</span>
+<span class="c"># an instance of this class as argument and returns the appropriate</span>
+<span class="c"># precedence value.</span>
+
+<span class="c"># Precedence functions</span>
+
+
+<span class="k">def</span> <span class="nf">precedence_Mul</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">_coeff_isneg</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Mul&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">precedence_Rational</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">p</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Mul&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">precedence_Integer</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">p</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Atom&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">precedence_Float</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Atom&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">precedence_PolyElement</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">is_generator</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Atom&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">is_ground</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">precedence</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">coeff</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">item</span><span class="o">.</span><span class="n">is_term</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Mul&quot;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Add&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">precedence_FracElement</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">denom</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">precedence_PolyElement</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">numer</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Mul&quot;</span><span class="p">]</span>
+
+
+<span class="n">PRECEDENCE_FUNCTIONS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&quot;Integer&quot;</span><span class="p">:</span> <span class="n">precedence_Integer</span><span class="p">,</span>
+    <span class="s">&quot;Mul&quot;</span><span class="p">:</span> <span class="n">precedence_Mul</span><span class="p">,</span>
+    <span class="s">&quot;Rational&quot;</span><span class="p">:</span> <span class="n">precedence_Rational</span><span class="p">,</span>
+    <span class="s">&quot;Float&quot;</span><span class="p">:</span> <span class="n">precedence_Float</span><span class="p">,</span>
+    <span class="s">&quot;PolyElement&quot;</span><span class="p">:</span> <span class="n">precedence_PolyElement</span><span class="p">,</span>
+    <span class="s">&quot;FracElement&quot;</span><span class="p">:</span> <span class="n">precedence_FracElement</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="precedence"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.precedence.precedence">[docs]</a><span class="k">def</span> <span class="nf">precedence</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the precedence of a given object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="s">&quot;precedence&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">precedence</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">mro</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__mro__</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Atom&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">mro</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">__name__</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">PRECEDENCE_FUNCTIONS</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PRECEDENCE_FUNCTIONS</span><span class="p">[</span><span class="n">n</span><span class="p">](</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">PRECEDENCE_VALUES</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PRECEDENCE_VALUES</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">PRECEDENCE</span><span class="p">[</span><span class="s">&quot;Atom&quot;</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

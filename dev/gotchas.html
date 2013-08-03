@@ -1,0 +1,915 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Gotchas and Pitfalls &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="index.html" />
+    <link rel="next" title="SymPy User’s Guide" href="guide.html" />
+    <link rel="prev" title="Advanced Expression Manipulation" href="tutorial/manipulation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="guide.html" title="SymPy User’s Guide"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial/manipulation.html" title="Advanced Expression Manipulation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="gotchas-and-pitfalls">
+<span id="gotchas"></span><h1>Gotchas and Pitfalls<a class="headerlink" href="#gotchas-and-pitfalls" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>SymPy runs under the <a class="reference external" href="http://www.python.org/">Python Programming Language</a>, so there are some things that may behave
+differently than they do in other, independent computer algebra systems
+like Maple or Mathematica.  These are some of the gotchas and pitfalls
+that you may encounter when using SymPy.  See also the <a class="reference external" href="https://github.com/sympy/sympy/wiki/Faq">FAQ</a>, the <a class="reference internal" href="tutorial/index.html#tutorial"><em>Tutorial</em></a>, the
+remainder of the SymPy Docs, and the <a class="reference external" href="http://docs.python.org/tutorial/">official Python Tutorial</a>.</p>
+<p>If you are already familiar with C or Java, you might also want to look
+at this <a class="reference external" href="http://www.nerdparadise.com/tech/python/4minutecrashcourse/">4 minute Python tutorial</a>.</p>
+<p>Ignore <tt class="docutils literal"><span class="pre">#doctest:</span> <span class="pre">+SKIP</span></tt> in the examples.  That has to do with
+internal testing of the examples.</p>
+</div>
+<div class="section" id="equals-signs">
+<span id="id1"></span><h2>Equals Signs (=)<a class="headerlink" href="#equals-signs" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="single-equals-sign">
+<h3>Single Equals Sign<a class="headerlink" href="#single-equals-sign" title="Permalink to this headline">¶</a></h3>
+<p>The equals sign (<tt class="docutils literal"><span class="pre">=</span></tt>) is the assignment operator, not equality.  If
+you want to do <span class="math">\(x = y\)</span>, use <tt class="docutils literal"><span class="pre">Eq(x,</span> <span class="pre">y)</span></tt> for equality.
+Alternatively, all expressions are assumed to equal zero, so you can
+just subtract one side and use <tt class="docutils literal"><span class="pre">x</span> <span class="pre">-</span> <span class="pre">y</span></tt>.</p>
+<p>The proper use of the equals sign is to assign expressions to variables.</p>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">x - y</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="double-equals-signs">
+<h3>Double Equals Signs<a class="headerlink" href="#double-equals-signs" title="Permalink to this headline">¶</a></h3>
+<p>Double equals signs (<tt class="docutils literal"><span class="pre">==</span></tt>) are used to test equality.  However, this
+tests expressions exactly, not symbolically.  For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">==</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">==</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If you want to test for symbolic equality, one way is to subtract one
+expression from the other and run it through functions like
+<tt class="xref py py-func docutils literal"><span class="pre">expand()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">simplify()</span></tt>, and <tt class="xref py py-func docutils literal"><span class="pre">trigsimp()</span></tt> and see if the
+equation reduces to 0.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">simplify</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">expand</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eq</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">simplify</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expand</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">trig</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See also <a class="reference external" href="https://github.com/sympy/sympy/wiki/Faq">Why does SymPy say that two equal expressions are unequal?</a> in the FAQ.</p>
+</div>
+</div>
+</div>
+<div class="section" id="variables">
+<h2>Variables<a class="headerlink" href="#variables" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="variables-assignment-does-not-create-a-relation-between-expressions">
+<h3>Variables Assignment does not Create a Relation Between Expressions<a class="headerlink" href="#variables-assignment-does-not-create-a-relation-between-expressions" title="Permalink to this headline">¶</a></h3>
+<p>When you use <tt class="docutils literal"><span class="pre">=</span></tt> to do assignment, remember that in Python, as in most
+programming languages, the variable does not change if you change the
+value you assigned to it.  The equations you are typing use the values
+present at the time of creation to &#8220;fill in&#8221; values, just like regular
+Python definitions. They are not altered by changes made afterwards.
+Consider the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>  <span class="c"># Symbol, `a`, stored as variable &quot;a&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span>        <span class="c"># an expression involving `a` stored as variable &quot;b&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="go">a + 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="mi">4</span>            <span class="c"># &quot;a&quot; now points to literal integer 4, not Symbol(&#39;a&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>          <span class="c"># &quot;b&quot; is still pointing at the expression involving `a`</span>
+<span class="go">a + 1</span>
+</pre></div>
+</div>
+<p>Changing quantity <tt class="xref py py-obj docutils literal"><span class="pre">a</span></tt> does not change <tt class="xref py py-obj docutils literal"><span class="pre">b</span></tt>; you are not working
+with a set of simultaneous equations. It might be helpful to remember
+that the string that gets printed when you print a variable referring to
+a SymPy object is the string that was given to it when it was created;
+that string does not have to be the same as the variable that you assign
+it to.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">var</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">var</span><span class="p">(</span><span class="s">&#39;rate time short_life&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">r</span><span class="o">*</span><span class="n">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">rate*time</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>        <span class="c"># We haven&#39;t changed d, only r and t</span>
+<span class="go">rate*time</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">r</span><span class="o">*</span><span class="n">t</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>        <span class="c"># Now d is using the current values of r and t</span>
+<span class="go">160</span>
+</pre></div>
+</div>
+<p>If you need variables that have dependence on each other, you can define
+functions.  Use the <tt class="docutils literal"><span class="pre">def</span></tt> operator.  Indent the body of the function.
+See the Python docs for more information on defining functions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">var</span><span class="p">(</span><span class="s">&#39;c d&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="go">c</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+<span class="go">d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">ctimesd</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="sd">&quot;&quot;&quot;</span>
+<span class="gp">... </span><span class="sd">    This function returns whatever c is times whatever d is.</span>
+<span class="gp">... </span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">c</span><span class="o">*</span><span class="n">d</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ctimesd</span><span class="p">()</span>
+<span class="go">c*d</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ctimesd</span><span class="p">()</span>
+<span class="go">2*d</span>
+</pre></div>
+</div>
+<p>If you define a circular relationship, you will get a
+<tt class="xref py py-exc docutils literal"><span class="pre">RuntimeError</span></tt>.</p>
+<div class="highlight-python"><pre>&gt;&gt;&gt; def a():
+...     return b()
+...
+&gt;&gt;&gt; def b():
+...     return a()
+...
+&gt;&gt;&gt; a()
+Traceback (most recent call last):
+  File "...", line ..., in ...
+    compileflags, 1) in test.globs
+  File "&lt;...&gt;", line 1, in &lt;module&gt;
+    a()
+  File "&lt;...&gt;", line 2, in a
+    return b()
+  File "&lt;...&gt;", line 2, in b
+    return a()
+  File "&lt;...&gt;", line 2, in a
+    return b()
+...
+RuntimeError: maximum recursion depth exceeded</pre>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See also <a class="reference external" href="https://github.com/sympy/sympy/wiki/Faq">Why doesn&#8217;t changing one variable change another that depends on it?</a> in the FAQ.</p>
+</div>
+</div>
+<div class="section" id="symbols">
+<span id="id2"></span><h3>Symbols<a class="headerlink" href="#symbols" title="Permalink to this headline">¶</a></h3>
+<p>Symbols are variables, and like all other variables, they need to be
+assigned before you can use them.  For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sympy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="o">**</span><span class="mi">2</span>  <span class="c"># z is not defined yet </span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">NameError</span>: <span class="n">name &#39;z&#39; is not defined</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sympy</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">)</span>  <span class="c"># This is the easiest way to define z as a standard symbol</span>
+<span class="go">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">z**2</span>
+</pre></div>
+</div>
+<p>If you use <strong class="command">isympy</strong>, it runs the following commands for you,
+giving you some default Symbols and Functions.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y z t&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;k m n&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;f g h&#39;</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">Function</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can also import common symbol names from <tt class="xref py py-mod docutils literal"><span class="pre">sympy.abc</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">w</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">w</span>
+<span class="go">w</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sympy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">abc</span><span class="p">)</span>  
+<span class="go">[&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;, &#39;E&#39;, &#39;F&#39;, &#39;G&#39;, &#39;H&#39;, &#39;I&#39;, &#39;J&#39;, &#39;K&#39;, &#39;L&#39;, &#39;M&#39;, &#39;N&#39;, &#39;O&#39;,</span>
+<span class="go">&#39;P&#39;, &#39;Q&#39;, &#39;R&#39;, &#39;S&#39;, &#39;Symbol&#39;, &#39;T&#39;, &#39;U&#39;, &#39;V&#39;, &#39;W&#39;, &#39;X&#39;, &#39;Y&#39;, &#39;Z&#39;,</span>
+<span class="go">&#39;__builtins__&#39;, &#39;__doc__&#39;, &#39;__file__&#39;, &#39;__name__&#39;, &#39;__package__&#39;, &#39;_greek&#39;,</span>
+<span class="go">&#39;_latin&#39;, &#39;a&#39;, &#39;alpha&#39;, &#39;b&#39;, &#39;beta&#39;, &#39;c&#39;, &#39;chi&#39;, &#39;d&#39;, &#39;delta&#39;, &#39;e&#39;,</span>
+<span class="go">&#39;epsilon&#39;, &#39;eta&#39;, &#39;f&#39;, &#39;g&#39;, &#39;gamma&#39;, &#39;h&#39;, &#39;i&#39;, &#39;iota&#39;, &#39;j&#39;, &#39;k&#39;, &#39;kappa&#39;,</span>
+<span class="go">&#39;l&#39;, &#39;m&#39;, &#39;mu&#39;, &#39;n&#39;, &#39;nu&#39;, &#39;o&#39;, &#39;omega&#39;, &#39;omicron&#39;, &#39;p&#39;, &#39;phi&#39;, &#39;pi&#39;,</span>
+<span class="go">&#39;psi&#39;, &#39;q&#39;, &#39;r&#39;, &#39;rho&#39;, &#39;s&#39;, &#39;sigma&#39;, &#39;t&#39;, &#39;tau&#39;, &#39;theta&#39;, &#39;u&#39;, &#39;upsilon&#39;,</span>
+<span class="go">&#39;v&#39;, &#39;w&#39;, &#39;x&#39;, &#39;xi&#39;, &#39;y&#39;, &#39;z&#39;, &#39;zeta&#39;]</span>
+</pre></div>
+</div>
+<p>If you want control over the assumptions of the variables, use
+<tt class="xref py py-func docutils literal"><span class="pre">Symbol()</span></tt> and <tt class="xref py py-func docutils literal"><span class="pre">symbols()</span></tt>.  See <a class="reference internal" href="#keyword-arguments"><em>Keyword
+Arguments</em></a> below.</p>
+<p>Lastly, it is recommended that you not use <tt class="xref py py-obj docutils literal"><span class="pre">I</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">E</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">S</span></tt>,
+<tt class="xref py py-obj docutils literal"><span class="pre">N</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">C</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">O</span></tt>, or <tt class="xref py py-obj docutils literal"><span class="pre">Q</span></tt> for variable or symbol names, as those
+are used for the imaginary unit (<span class="math">\(i\)</span>), the base of the natural
+logarithm (<span class="math">\(e\)</span>), the <tt class="xref py py-func docutils literal"><span class="pre">sympify()</span></tt> function (see <a class="reference internal" href="#symbolic-expressions"><em>Symbolic
+Expressions</em></a> below), numeric evaluation (<tt class="xref py py-func docutils literal"><span class="pre">N()</span></tt>
+is equivalent to <a class="reference internal" href="modules/evalf.html#evalf-label"><em>evalf()</em></a> ), the class registry (for
+things like <tt class="xref py py-func docutils literal"><span class="pre">C.cos()</span></tt>, to prevent cyclic imports in some code),
+the <a class="reference external" href="http://en.wikipedia.org/wiki/Big_O_notation">big O</a> order symbol
+(as in <span class="math">\(O(n\log{n})\)</span>), and the assumptions object that holds a list of
+supported ask keys (such as <tt class="xref py py-obj docutils literal"><span class="pre">Q.real</span></tt>), respectively.  You can use the
+mnemonic <tt class="docutils literal"><span class="pre">QCOSINE</span></tt> to remember what Symbols are defined by default in SymPy.
+Or better yet, always use lowercase letters for Symbol names.  Python will
+not prevent you from overriding default SymPy names or functions, so be
+careful.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>  <span class="c"># cos and pi are a built-in sympy names.</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span> <span class="o">=</span> <span class="mi">3</span>   <span class="c"># Notice that there is no warning for overriding pi.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">cos(3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">cos</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>  <span class="c"># No warning for overriding built-in functions either.</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="mi">5</span><span class="o">*</span><span class="n">x</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="p">)</span>
+<span class="go">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cos</span>  <span class="c"># reimport to restore normal behavior</span>
+</pre></div>
+</div>
+<p>To get a full list of all default names in SymPy do:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sympy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">sympy</span><span class="p">)</span>  
+<span class="go"># A big list of all default sympy names and functions follows.</span>
+<span class="go"># Ignore everything that starts and ends with __.</span>
+</pre></div>
+</div>
+<p>If you have <a class="reference external" href="http://ipython.org/">IPython</a> installed and
+use <strong class="command">isympy</strong>, you can also press the TAB key to get a list of
+all built-in names and to autocomplete.  Also, see <a class="reference external" href="http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks">this page</a> for a
+trick for getting tab completion in the regular Python console.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See also <a class="reference external" href="https://github.com/sympy/sympy/wiki/Faq">What is the best way to create symbols?</a> in the FAQ.</p>
+</div>
+</div>
+</div>
+<div class="section" id="symbolic-expressions">
+<span id="id3"></span><h2>Symbolic Expressions<a class="headerlink" href="#symbolic-expressions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="python-numbers-vs-sympy-numbers">
+<span id="python-vs-sympy-numbers"></span><h3>Python numbers vs. SymPy Numbers<a class="headerlink" href="#python-numbers-vs-sympy-numbers" title="Permalink to this headline">¶</a></h3>
+<p>SymPy uses its own classes for integers, rational numbers, and floating
+point numbers instead of the default Python <tt class="xref py py-obj docutils literal"><span class="pre">int</span></tt> and <tt class="xref py py-obj docutils literal"><span class="pre">float</span></tt>
+types because it allows for more control.  But you have to be careful.
+If you type an expression that just has numbers in it, it will default
+to a Python expression.  Use the <tt class="xref py py-func docutils literal"><span class="pre">sympify()</span></tt> function, or just
+<tt class="xref py py-func docutils literal"><span class="pre">S()</span></tt>, to ensure that something is a SymPy expression.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mf">6.2</span>  <span class="c"># Python float. Notice the floating point accuracy problems.</span>
+<span class="go">6.2000000000000002</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="mf">6.2</span><span class="p">)</span>  <span class="c"># &lt;type &#39;float&#39;&gt; in Python 2.x,  &lt;class &#39;float&#39;&gt; in Py3k</span>
+<span class="go">&lt;... &#39;float&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="p">(</span><span class="mf">6.2</span><span class="p">)</span>  <span class="c"># SymPy Float has no such problems because of arbitrary precision.</span>
+<span class="go">6.20000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mf">6.2</span><span class="p">))</span>
+<span class="go">&lt;class &#39;sympy.core.numbers.Float&#39;&gt;</span>
+</pre></div>
+</div>
+<p>If you include numbers in a SymPy expression, they will be sympified
+automatically, but there is one gotcha you should be aware of.  If you
+do <tt class="docutils literal"><span class="pre">&lt;number&gt;/&lt;number&gt;</span></tt> inside of a SymPy expression, Python will
+evaluate the two numbers before SymPy has a chance to get
+to them.  The solution is to <tt class="xref py py-func docutils literal"><span class="pre">sympify()</span></tt> one of the numbers, or use
+<tt class="xref py py-mod docutils literal"><span class="pre">Rational</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>  <span class="c"># evaluates to x**0 or x**0.5</span>
+<span class="go">x**0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>  <span class="c"># sympyify one of the ints</span>
+<span class="go">sqrt(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">**</span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c"># use the Rational class</span>
+<span class="go">sqrt(x)</span>
+</pre></div>
+</div>
+<p>With a power of <tt class="docutils literal"><span class="pre">1/2</span></tt> you can also use <tt class="docutils literal"><span class="pre">sqrt</span></tt> shorthand:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="n">x</span><span class="o">**</span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If the two integers are not directly separated by a division sign then
+you don&#8217;t have to worry about this problem:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">x**(2*x/3)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>A common mistake is copying an expression that is printed and
+reusing it.  If the expression has a <tt class="xref py py-mod docutils literal"><span class="pre">Rational</span></tt> (i.e.,
+<tt class="docutils literal"><span class="pre">&lt;number&gt;/&lt;number&gt;</span></tt>) in it, you will not get the same result,
+obtaining the Python result for the division rather than a SymPy
+Rational.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">solve</span><span class="p">(</span><span class="mi">7</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span><span class="mi">22</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+<span class="go">[22/7]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">22</span><span class="o">/</span><span class="mi">7</span>  <span class="c"># If we just copy and paste we get int 3 or a float</span>
+<span class="go">3.142857142857143</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># One solution is to just assign the expression to a variable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># if we need to use it again.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="mi">7</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">22</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">[22/7]</span>
+</pre></div>
+</div>
+<p>The other solution is to put quotes around the expression
+and run it through S() (i.e., sympify it):</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="p">(</span><span class="s">&quot;22/7&quot;</span><span class="p">)</span>
+<span class="go">22/7</span>
+</pre></div>
+</div>
+</div>
+<p>Also, if you do not use <strong class="command">isympy</strong>, you could use <tt class="docutils literal"><span class="pre">from</span>
+<span class="pre">__future__</span> <span class="pre">import</span> <span class="pre">division</span></tt> to prevent the <tt class="docutils literal"><span class="pre">/</span></tt> sign from performing
+<a class="reference external" href="http://en.wikipedia.org/wiki/Integer_division">integer division</a>.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span>   <span class="c"># With division imported it evaluates to a python float</span>
+<span class="go">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span><span class="o">//</span><span class="mi">2</span>  <span class="c"># You can still achieve integer division with //</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>But be careful: you will now receive floats where you might have desired
+a Rational:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">x**0.5</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p><tt class="xref py py-mod docutils literal"><span class="pre">Rational</span></tt> only works for number/number and is only meant for
+rational numbers.  If you want a fraction with symbols or expressions in
+it, just use <tt class="docutils literal"><span class="pre">/</span></tt>.  If you do number/expression or expression/number,
+then the number will automatically be converted into a SymPy Number.
+You only need to be careful with number/number.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Rational</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError: invalid input</span>: <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">/</span><span class="n">x</span>
+<span class="go">2/x</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="evaluating-expressions-with-floats-and-rationals">
+<h3>Evaluating Expressions with Floats and Rationals<a class="headerlink" href="#evaluating-expressions-with-floats-and-rationals" title="Permalink to this headline">¶</a></h3>
+<p>SymPy keeps track of the precision of <tt class="docutils literal"><span class="pre">Float</span></tt> objects. The default precision is
+15 digits. When an expression involving a <tt class="docutils literal"><span class="pre">Float</span></tt> is evaluated, the result
+will be expressed to 15 digits of precision but those digits (depending
+on the numbers involved with the calculation) may not all be significant.</p>
+<p>The first issue to keep in mind is how the <tt class="docutils literal"><span class="pre">Float</span></tt> is created: it is created
+with a value and a precision. The precision indicates how precise of a value
+to use when that <tt class="docutils literal"><span class="pre">Float</span></tt> (or an expression it appears in) is evaluated.</p>
+<p>The values can be given as strings, integers, floats, or rationals.</p>
+<blockquote>
+<div><ul class="simple">
+<li>strings and integers are interpreted as exact</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">100.000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;100&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="go">100.00</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li>to have the precision match the number of digits, the null string
+can be used for the precision</li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+<span class="go">100.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;12.34&#39;</span><span class="p">)</span>
+<span class="go">12.3400000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;12.34&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+<span class="go">12.34</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="p">[</span><span class="n">Float</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;0.25&#39;</span><span class="p">,</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">r</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="go">0.250</span>
+<span class="go">0.143</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Next, notice that each of those values looks correct to 3 digits. But if we try
+to evaluate them to 20 digits, a difference will become apparent:</p>
+<blockquote>
+<div><p>The 0.25 (with precision of 3) represents a number that has a non-repeating
+binary decimal; 1/7 is repeating in binary and decimal &#8211; it cannot be
+represented accurately too far past those first 3 digits (the correct
+decimal is a repeating 142857):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">0.25000000000000000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="go">0.14285278320312500000</span>
+</pre></div>
+</div>
+<p>It is important to realize that although a Float is being displayed in
+decimal at aritrary precision, it is actually stored in binary. Once the
+Float is created, its binary information is set at the given precision.
+The accuracy of that value cannot be subsequently changed; so 1/7, at a
+precision of 3 digits, can be padded with binary zeros, but these will
+not make it a more accurate value of 1/7.</p>
+</div></blockquote>
+<p>If inexact, low-precision numbers are involved in a calculation with
+with higher precision values, the evalf engine will increase the precision
+of the low precision values and inexact results will be obtained. This is
+feature of calculations with limited precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Float</span><span class="p">(</span><span class="s">&#39;0.1&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="n">Float</span><span class="p">(</span><span class="s">&#39;0.1&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">0.2000061035</span>
+</pre></div>
+</div>
+<p>Although the <tt class="docutils literal"><span class="pre">evalf</span></tt> engine tried to maintain 10 digits of precision (since
+that was the highest precision represented) the 3-digit precision used
+limits the accuracy to about 4 digits &#8211; not all the digits you see
+are significant. evalf doesn&#8217;t try to keep track of the number of
+significant digits.</p>
+<p>That very simple expression involving the addition of two numbers with
+different precisions will hopefully be instructive in helping you
+understand why more complicated expressions (like trig expressions that
+may not be simplified) will not evaluate to an exact zero even though,
+with the right simplification, they should be zero. Consider this
+unsimplified trig identity, multiplied by a big number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">big</span> <span class="o">=</span> <span class="mi">12345678901234567890</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">big_trig_identity</span> <span class="o">=</span> <span class="n">big</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">big</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">big</span><span class="o">*</span><span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">abs</span><span class="p">(</span><span class="n">big_trig_identity</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1000</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>When the <span class="math">\(\cos\)</span> and <span class="math">\(\sin\)</span> terms were evaluated to 15 digits of precision and
+multiplied by the big number, they gave a large number that was only
+precise to 15 digits (approximately) and when the 20 digit big number
+was subtracted the result was not zero.</p>
+<p>There are three things that will help you obtain more precise numerical
+values for expressions:</p>
+<blockquote>
+<div><p>1) Pass the desired substitutions with the call to evaluate. By doing
+the subs first, the <tt class="docutils literal"><span class="pre">Float</span></tt> values can not be updated as necessary. By
+passing the desired substitutions with the call to evalf the ability
+to re-evaluate as necessary is gained and the results are impressively
+better:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">big_trig_identity</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">})</span>
+<span class="go">-0.e-91</span>
+</pre></div>
+</div>
+<p>2) Use Rationals, not Floats. During the evaluation process, the
+Rational can be computed to an arbitrary precision while the Float,
+once created &#8211; at a default of 15 digits &#8211; cannot. Compare the
+value of <tt class="docutils literal"><span class="pre">-1.4e+3</span></tt> above with the nearly zero value obtained when
+replacing x with a Rational representing 1/10 &#8211; before the call
+to evaluate:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">big_trig_identity</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">S</span><span class="p">(</span><span class="s">&#39;1/10&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">n</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">0.e-91</span>
+</pre></div>
+</div>
+<p>3) Try to simplify the expression. In this case, SymPy will recognize
+the trig identity and simplify it to zero so you don&#8217;t even have to
+evaluate it numerically:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">big_trig_identity</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="immutability-of-expressions">
+<span id="id4"></span><h3>Immutability of Expressions<a class="headerlink" href="#immutability-of-expressions" title="Permalink to this headline">¶</a></h3>
+<p>Expressions in SymPy are immutable, and cannot be modified by an in-place
+operation.  This means that a function will always return an object, and the
+original expression will not be modified. The following example snippet
+demonstrates how this works:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">var</span><span class="p">(</span><span class="s">&#39;x y a b&#39;</span><span class="p">)</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">y</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;original =&#39;</span><span class="p">,</span> <span class="n">expr</span><span class="p">)</span>
+    <span class="n">expr_modified</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">x</span><span class="p">:</span> <span class="n">a</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">b</span><span class="p">})</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;modified =&#39;</span><span class="p">,</span> <span class="n">expr_modified</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The output shows that the <tt class="xref py py-func docutils literal"><span class="pre">subs()</span></tt> function has replaced variable
+<tt class="xref py py-obj docutils literal"><span class="pre">x</span></tt> with variable <tt class="xref py py-obj docutils literal"><span class="pre">a</span></tt>, and variable <tt class="xref py py-obj docutils literal"><span class="pre">y</span></tt> with variable <tt class="xref py py-obj docutils literal"><span class="pre">b</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">original</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">y</span>
+<span class="n">modified</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">a</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">b</span>
+</pre></div>
+</div>
+<p>The <tt class="xref py py-func docutils literal"><span class="pre">subs()</span></tt> function does not modify the original expression <tt class="xref py py-obj docutils literal"><span class="pre">expr</span></tt>.
+Rather, a modified copy of the expression is returned. This returned object
+is stored in the variable <tt class="xref py py-obj docutils literal"><span class="pre">expr_modified</span></tt>. Note that unlike C/C++ and
+other high-level languages, Python does not require you to declare a variable
+before it is used.</p>
+</div>
+<div class="section" id="mathematical-operators">
+<h3>Mathematical Operators<a class="headerlink" href="#mathematical-operators" title="Permalink to this headline">¶</a></h3>
+<p>SymPy uses the same default operators as Python.  Most of these, like
+<tt class="docutils literal"><span class="pre">*/+-</span></tt>, are standard.  Aside from integer division discussed in
+<a class="reference internal" href="#python-vs-sympy-numbers"><em>Python numbers vs. SymPy Numbers</em></a> above,
+you should also be aware that implied multiplication is not allowed. You
+need to use <tt class="docutils literal"><span class="pre">*</span></tt> whenever you wish to multiply something.  Also, to
+raise something to a power, use <tt class="docutils literal"><span class="pre">**</span></tt>, not <tt class="docutils literal"><span class="pre">^</span></tt> as many computer
+algebra systems use.  Parentheses <tt class="docutils literal"><span class="pre">()</span></tt> change operator precedence as
+you would normally expect.</p>
+<p>In <strong class="command">isympy</strong>, with the <strong class="command">ipython</strong> shell:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="n">x</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">SyntaxError</span>: <span class="n">invalid syntax</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">x</span>
+<span class="go">2*x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span>  <span class="c"># This is not power.  Use ** instead.</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">TypeError: unsupported operand type(s) for ^</span>: <span class="n">&#39;Add&#39; and &#39;int&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">(x + 1)**2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="mi">3</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">    2*x</span>
+<span class="go">   x</span>
+<span class="go">- ----- + 3</span>
+<span class="go">  x + 1</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="inverse-trig-functions">
+<h3>Inverse Trig Functions<a class="headerlink" href="#inverse-trig-functions" title="Permalink to this headline">¶</a></h3>
+<p>SymPy uses different names for some functions than most computer algebra
+systems.  In particular, the inverse trig functions use the python names
+of <tt class="xref py py-func docutils literal"><span class="pre">asin()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">acos()</span></tt> and so on instead of the usual <tt class="docutils literal"><span class="pre">arcsin</span></tt>
+and <tt class="docutils literal"><span class="pre">arccos</span></tt>.  Use the methods described in <a class="reference internal" href="#symbols"><em>Symbols</em></a>
+above to see the names of all SymPy functions.</p>
+</div>
+</div>
+<div class="section" id="special-symbols">
+<h2>Special Symbols<a class="headerlink" href="#special-symbols" title="Permalink to this headline">¶</a></h2>
+<p>The symbols <tt class="docutils literal"><span class="pre">[]</span></tt>, <tt class="docutils literal"><span class="pre">{}</span></tt>, <tt class="docutils literal"><span class="pre">=</span></tt>, and <tt class="docutils literal"><span class="pre">()</span></tt> have special meanings in
+Python, and thus in SymPy.  See the Python docs linked to above for
+additional information.</p>
+<div class="section" id="lists">
+<span id="id5"></span><h3>Lists<a class="headerlink" href="#lists" title="Permalink to this headline">¶</a></h3>
+<p>Square brackets <tt class="docutils literal"><span class="pre">[]</span></tt> denote a list.  A list is a container that holds
+any number of different objects.  A list can contain anything, including
+items of different types.  Lists are mutable, which means that you can
+change the elements of a list after it has been created.  You access the
+items of a list also using square brackets, placing them after the list
+or list variable.  Items are numbered using the space before the item.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">List indexes begin at 0.</p>
+</div>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>  <span class="c"># A simple list of two items</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">[x, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c"># This is the first item</span>
+<span class="go">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c"># You can change values of lists after they have been created</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="go">[2, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span> <span class="c"># Some functions return lists</span>
+<span class="go">[-1 + sqrt(2), -sqrt(2) - 1]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See the Python docs for more information on lists and the square
+bracket notation for accessing elements of a list.</p>
+</div>
+</div>
+<div class="section" id="dictionaries">
+<h3>Dictionaries<a class="headerlink" href="#dictionaries" title="Permalink to this headline">¶</a></h3>
+<p>Curly brackets <tt class="docutils literal"><span class="pre">{}</span></tt> denote a dictionary, or a dict for short.  A
+dictionary is an unordered list of non-duplicate keys and values.  The
+syntax is <tt class="docutils literal"><span class="pre">{key:</span> <span class="pre">value}</span></tt>.  You can access values of keys using square
+bracket notation.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;a&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>  <span class="c"># A dictionary.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span>
+<span class="go">{&#39;a&#39;: 1, &#39;b&#39;: 2}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span><span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">]</span>  <span class="c"># How to access items in a dict</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roots</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">2</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>  <span class="c"># Some functions return dicts</span>
+<span class="go">{1: 2, 2: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Some SymPy functions return dictionaries.  For example,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># roots returns a dictionary of root:multiplicity items.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">roots</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">{-3: 1, 5: 2}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># This means that the root -3 occurs once and the root 5 occurs twice.</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See the Python docs for more information on dictionaries.</p>
+</div>
+</div>
+<div class="section" id="tuples">
+<h3>Tuples<a class="headerlink" href="#tuples" title="Permalink to this headline">¶</a></h3>
+<p>Parentheses <tt class="docutils literal"><span class="pre">()</span></tt>, aside from changing operator precedence and their
+use in function calls, (like <tt class="docutils literal"><span class="pre">cos(x)</span></tt>), are also used for tuples.  A
+<tt class="docutils literal"><span class="pre">tuple</span></tt> is identical to a <a class="reference internal" href="#lists"><em>list</em></a>, except that it is not
+mutable.  That means that you can not change their values after they
+have been created.  In general, you will not need tuples in SymPy, but
+sometimes it can be more convenient to type parentheses instead of
+square brackets.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>  <span class="c"># Tuples are like lists</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span>
+<span class="go">(1, 2, x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c"># Except you can not change them after they have been created</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;console&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">TypeError</span>: <span class="n">&#39;tuple&#39; object does not support item assignment</span>
+</pre></div>
+</div>
+<p>Single element tuples, unlike lists, must have a comma in them:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="p">,)</span>
+<span class="go">(x,)</span>
+</pre></div>
+</div>
+<p>Without the comma, a single expression without a comma is not a tuple:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+<p>integrate takes a sequence as the second argument if you want to integrate
+with limits (and a tuple or list will work):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">1/3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">1/3</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See the Python docs for more information on tuples.</p>
+</div>
+</div>
+<div class="section" id="keyword-arguments">
+<span id="id6"></span><h3>Keyword Arguments<a class="headerlink" href="#keyword-arguments" title="Permalink to this headline">¶</a></h3>
+<p>Aside from the usage described <a class="reference internal" href="#equals-signs"><em>above</em></a>, equals signs
+(<tt class="docutils literal"><span class="pre">=</span></tt>) are also used to give named arguments to functions.  Any
+function that has <tt class="docutils literal"><span class="pre">key=value</span></tt> in its parameters list (see below on how
+to find this out), then <tt class="docutils literal"><span class="pre">key</span></tt> is set to <tt class="docutils literal"><span class="pre">value</span></tt> by default.  You can
+change the value of the key by supplying your own value using the equals
+sign in the function call.  Also, functions that have <tt class="docutils literal"><span class="pre">**</span></tt> followed by
+a name in the parameters list (usually <tt class="docutils literal"><span class="pre">**kwargs</span></tt> or
+<tt class="docutils literal"><span class="pre">**assumptions</span></tt>) allow you to add any number of <tt class="docutils literal"><span class="pre">key=value</span></tt> pairs
+that you want, and they will all be evaluated according to the function.</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">sqrt(x**2)</span></tt> doesn&#8217;t auto simplify to x because x is assumed to be
+complex by default, and, for example, <tt class="docutils literal"><span class="pre">sqrt((-1)**2)</span> <span class="pre">==</span> <span class="pre">sqrt(1)</span> <span class="pre">==</span> <span class="pre">1</span> <span class="pre">!=</span> <span class="pre">-1</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">sqrt(x**2)</span>
+</pre></div>
+</div>
+<p>Giving assumptions to Symbols is an example of using the keyword argument:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The square root will now simplify since it knows that <tt class="docutils literal"><span class="pre">x</span> <span class="pre">&gt;=</span> <span class="pre">0</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+<p>powsimp has a default argument of <tt class="docutils literal"><span class="pre">combine='all'</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">m</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">m</span><span class="p">))</span>
+<span class="go">     m + n</span>
+<span class="go">(x*y)</span>
+</pre></div>
+</div>
+<p>Setting combine to the default value is the same as not setting it.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">m</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">m</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;all&#39;</span><span class="p">))</span>
+<span class="go">     m + n</span>
+<span class="go">(x*y)</span>
+</pre></div>
+</div>
+<p>The non-default options are <tt class="docutils literal"><span class="pre">'exp'</span></tt>, which combines exponents...</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">m</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">m</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;exp&#39;</span><span class="p">))</span>
+<span class="go"> m + n  m + n</span>
+<span class="go">x     *y</span>
+</pre></div>
+</div>
+<p>...and &#8216;base&#8217;, which combines bases.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">powsimp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">m</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">y</span><span class="o">**</span><span class="n">m</span><span class="p">,</span> <span class="n">combine</span><span class="o">=</span><span class="s">&#39;base&#39;</span><span class="p">))</span>
+<span class="go">     m      n</span>
+<span class="go">(x*y) *(x*y)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">See the Python docs for more information on function parameters.</p>
+</div>
+</div>
+</div>
+<div class="section" id="getting-help-from-within-sympy">
+<h2>Getting help from within SymPy<a class="headerlink" href="#getting-help-from-within-sympy" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="help">
+<h3>help()<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
+<p>Although all docs are available at <a class="reference external" href="http://docs.sympy.org/">docs.sympy.org</a> or on the
+<a class="reference external" href="http://wiki.sympy.org/">SymPy Wiki</a>, you can also get info on functions from within the
+Python interpreter that runs SymPy.  The easiest way to do this is to do
+<tt class="docutils literal"><span class="pre">help(function)</span></tt>, or <tt class="docutils literal"><span class="pre">function?</span></tt> if you are using <strong class="command">ipython</strong>:</p>
+<div class="highlight-python"><pre>In [1]: help(powsimp)  # help() works everywhere
+
+In [2]: # But in ipython, you can also use ?, which is better because it
+In [3]: # it gives you more information
+In [4]: powsimp?</pre>
+</div>
+<p>These will give you the function parameters and docstring for
+<tt class="xref py py-func docutils literal"><span class="pre">powsimp()</span></tt>.  The output will look something like this:</p>
+<span class="target" id="module-sympy.simplify.simplify"></span></div>
+<div class="section" id="source">
+<h3>source()<a class="headerlink" href="#source" title="Permalink to this headline">¶</a></h3>
+<p>Another useful option is the <tt class="xref py py-func docutils literal"><span class="pre">source()</span></tt> function.  This will print
+the source code of a function, including any docstring that it may have.
+You can also do <tt class="docutils literal"><span class="pre">function??</span></tt> in <strong class="command">ipython</strong>.  For example,
+from SymPy 0.6.5:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">source</span><span class="p">(</span><span class="n">simplify</span><span class="p">)</span>  <span class="c"># simplify() is actually only 2 lines of code. </span>
+<span class="go">In file: ./sympy/simplify/simplify.py</span>
+<span class="go">def simplify(expr):</span>
+<span class="go">    &quot;&quot;&quot;Naively simplifies the given expression.</span>
+<span class="go">       ...</span>
+<span class="go">       Simplification is not a well defined term and the exact strategies</span>
+<span class="go">       this function tries can change in the future versions of SymPy. If</span>
+<span class="go">       your algorithm relies on &quot;simplification&quot; (whatever it is), try to</span>
+<span class="go">       determine what you need exactly  -  is it powsimp()? radsimp()?</span>
+<span class="go">       together()?, logcombine()?, or something else? And use this particular</span>
+<span class="go">       function directly, because those are well defined and thus your algorithm</span>
+<span class="go">       will be robust.</span>
+<span class="go">       ...</span>
+<span class="go">    &quot;&quot;&quot;</span>
+<span class="go">    expr = Poly.cancel(powsimp(expr))</span>
+<span class="go">    return powsimp(together(expr.expand()), combine=&#39;exp&#39;, deep=True)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Gotchas and Pitfalls</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#equals-signs">Equals Signs (=)</a><ul>
+<li><a class="reference internal" href="#single-equals-sign">Single Equals Sign</a></li>
+<li><a class="reference internal" href="#double-equals-signs">Double Equals Signs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#variables">Variables</a><ul>
+<li><a class="reference internal" href="#variables-assignment-does-not-create-a-relation-between-expressions">Variables Assignment does not Create a Relation Between Expressions</a></li>
+<li><a class="reference internal" href="#symbols">Symbols</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#symbolic-expressions">Symbolic Expressions</a><ul>
+<li><a class="reference internal" href="#python-numbers-vs-sympy-numbers">Python numbers vs. SymPy Numbers</a></li>
+<li><a class="reference internal" href="#evaluating-expressions-with-floats-and-rationals">Evaluating Expressions with Floats and Rationals</a></li>
+<li><a class="reference internal" href="#immutability-of-expressions">Immutability of Expressions</a></li>
+<li><a class="reference internal" href="#mathematical-operators">Mathematical Operators</a></li>
+<li><a class="reference internal" href="#inverse-trig-functions">Inverse Trig Functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#special-symbols">Special Symbols</a><ul>
+<li><a class="reference internal" href="#lists">Lists</a></li>
+<li><a class="reference internal" href="#dictionaries">Dictionaries</a></li>
+<li><a class="reference internal" href="#tuples">Tuples</a></li>
+<li><a class="reference internal" href="#keyword-arguments">Keyword Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#getting-help-from-within-sympy">Getting help from within SymPy</a><ul>
+<li><a class="reference internal" href="#help">help()</a></li>
+<li><a class="reference internal" href="#source">source()</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial/manipulation.html"
+                        title="previous chapter">Advanced Expression Manipulation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="guide.html"
+                        title="next chapter">SymPy User&#8217;s Guide</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/gotchas.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="guide.html" title="SymPy User’s Guide"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial/manipulation.html" title="Advanced Expression Manipulation"
+             >previous</a> |</li>
+        <li><a href="index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

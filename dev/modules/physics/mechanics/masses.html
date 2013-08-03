@@ -1,0 +1,491 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Mechanics: Masses, Inertias, Particles and Rigid Bodies &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="index.html" />
+    <link rel="next" title="Kane’s Method in Physics/Mechanics" href="kane.html" />
+    <link rel="prev" title="Mechanics: Kinematics" href="kinematics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kane.html" title="Kane’s Method in Physics/Mechanics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="kinematics.html" title="Mechanics: Kinematics"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="mechanics-masses-inertias-particles-and-rigid-bodies">
+<h1>Mechanics: Masses, Inertias, Particles and Rigid Bodies<a class="headerlink" href="#mechanics-masses-inertias-particles-and-rigid-bodies" title="Permalink to this headline">¶</a></h1>
+<p>This document will describe how to represent masses and inertias in
+<tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> and use of the <tt class="docutils literal"><span class="pre">RigidBody</span></tt> and <tt class="docutils literal"><span class="pre">Particle</span></tt> classes.</p>
+<p>It is assumed that the reader is familiar with the basics of these topics, such
+as finding the center of mass for a system of particles, how to manipulate an
+inertia tensor, and the definition of a particle and rigid body. Any advanced
+dynamics text can provide a reference for these details.</p>
+<div class="section" id="mass">
+<h2>Mass<a class="headerlink" href="#mass" title="Permalink to this headline">¶</a></h2>
+<p>The only requirement for a mass is that it needs to be a <tt class="docutils literal"><span class="pre">sympify</span></tt>-able
+expression. Keep in mind that masses can be time varying.</p>
+</div>
+<div class="section" id="particle">
+<h2>Particle<a class="headerlink" href="#particle" title="Permalink to this headline">¶</a></h2>
+<p>Particles are created with the class <tt class="docutils literal"><span class="pre">Particle</span></tt> in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>.
+A <tt class="docutils literal"><span class="pre">Particle</span></tt> object has an associated point and an associated mass which are
+the only two attributes of the object.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">po</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;po&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># create a particle container</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;pa&#39;</span><span class="p">,</span> <span class="n">po</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The associated point contains the position, velocity and acceleration of the
+particle. <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> allows one to perform kinematic analysis of points
+separate from their association with masses.</p>
+</div>
+<div class="section" id="inertia">
+<h2>Inertia<a class="headerlink" href="#inertia" title="Permalink to this headline">¶</a></h2>
+<p>Dyadics are used to define the inertia of bodies within <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>.
+Inertia dyadics can be defined explicitly but the <tt class="docutils literal"><span class="pre">inertia</span></tt> function is
+typically much more convenient for the user:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">inertia</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+
+<span class="go">Supply a reference frame and the moments of inertia if the object</span>
+<span class="go">is symmetrical:</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inertia</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)</span>
+
+<span class="go">Supply a reference frame along with the products and moments of inertia</span>
+<span class="go">for a general object:</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inertia</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">(N.x|N.x) + 4*(N.x|N.y) + 6*(N.x|N.z) + 4*(N.y|N.x) + 2*(N.y|N.y) + 5*(N.y|N.z) + 6*(N.z|N.x) + 5*(N.z|N.y) + 3*(N.z|N.z)</span>
+</pre></div>
+</div>
+<p>Notice that the <tt class="docutils literal"><span class="pre">inertia</span></tt> function returns a dyadic with each component
+represented as two unit vectors separated by a <tt class="docutils literal"><span class="pre">|</span></tt>. Refer to the
+<a class="reference internal" href="#dyadic"><em>Dyadic</em></a> section for more information about dyadics.</p>
+</div>
+<div class="section" id="rigid-body">
+<h2>Rigid Body<a class="headerlink" href="#rigid-body" title="Permalink to this headline">¶</a></h2>
+<p>Rigid bodies are created in a similar fashion as particles. The <tt class="docutils literal"><span class="pre">RigidBody</span></tt>
+class generates objects with four attributes: mass, center of mass, a reference
+frame, and an inertia tuple:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Point</span><span class="p">,</span> <span class="n">RigidBody</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">outer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">outer</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># create a rigid body</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">RigidBody</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">P</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The mass is specified exactly as is in a particle. Similar to the
+<tt class="docutils literal"><span class="pre">Particle</span></tt>&#8216;s <tt class="docutils literal"><span class="pre">.point</span></tt>, the <tt class="docutils literal"><span class="pre">RigidBody</span></tt>&#8216;s center of mass, <tt class="docutils literal"><span class="pre">.masscenter</span></tt>
+must be specified. The reference frame is stored in an analogous fashion and
+holds information about the body&#8217;s orientation and angular velocity. Finally,
+the inertia for a rigid body needs to be specified about a point. In
+<tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>, you are allowed to specify any point for this. The most
+common is the center of mass, as shown in the above code. If a point is selected
+which is not the center of mass, ensure that the position between the point and
+the center of mass has been defined. The inertia is specified as a tuple of length
+two with the first entry being a <tt class="docutils literal"><span class="pre">Dyadic</span></tt> and the second entry being a
+<tt class="docutils literal"><span class="pre">Point</span></tt> of which the inertia dyadic is defined about.</p>
+</div>
+<div class="section" id="dyadic">
+<span id="id1"></span><h2>Dyadic<a class="headerlink" href="#dyadic" title="Permalink to this headline">¶</a></h2>
+<p>In <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>, dyadics are used to represent inertia (<a class="reference internal" href="reference.html#kane1985">[Kane1985]</a>,
+<a class="reference internal" href="reference.html#wikidyadics">[WikiDyadics]</a>, <a class="reference internal" href="reference.html#wikidyadicproducts">[WikiDyadicProducts]</a>). A dyadic is a linear polynomial of
+component unit dyadics, similar to a vector being a linear polynomial of
+component unit vectors. A dyadic is the outer product between two vectors which
+returns a new quantity representing the juxtaposition of these two vectors. For
+example:</p>
+<div class="math">
+\[\begin{split}\mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_x} &amp;= \mathbf{\hat{a}_x}
+\mathbf{\hat{a}_x}\\
+\mathbf{\hat{a}_x} \otimes \mathbf{\hat{a}_y} &amp;= \mathbf{\hat{a}_x}
+\mathbf{\hat{a}_y}\\\end{split}\]</div>
+<p>Where <span class="math">\(\mathbf{\hat{a}_x}\mathbf{\hat{a}_x}\)</span> and
+<span class="math">\(\mathbf{\hat{a}_x}\mathbf{\hat{a}_y}\)</span> are the outer products obtained by
+multiplying the left side as a column vector by the right side as a row vector.
+Note that the order is significant.</p>
+<p>Some additional properties of a dyadic are:</p>
+<div class="math">
+\[\begin{split}(x \mathbf{v}) \otimes \mathbf{w} &amp;= \mathbf{v} \otimes (x \mathbf{w}) = x
+(\mathbf{v} \otimes \mathbf{w})\\
+\mathbf{v} \otimes (\mathbf{w} + \mathbf{u}) &amp;= \mathbf{v} \otimes \mathbf{w}
++ \mathbf{v} \otimes \mathbf{u}\\
+(\mathbf{v} + \mathbf{w}) \otimes \mathbf{u} &amp;= \mathbf{v} \otimes \mathbf{u}
++ \mathbf{w} \otimes \mathbf{u}\\\end{split}\]</div>
+<p>A vector in a reference frame can be represented as
+<span class="math">\(\begin{bmatrix}a\\b\\c\end{bmatrix}\)</span> or <span class="math">\(a \mathbf{\hat{i}} + b
+\mathbf{\hat{j}} + c \mathbf{\hat{k}}\)</span>. Similarly, a dyadic can be represented
+in tensor form:</p>
+<div class="math">
+\[\begin{split}\begin{bmatrix}
+a_{11} &amp; a_{12} &amp; a_{13} \\
+a_{21} &amp; a_{22} &amp; a_{23} \\
+a_{31} &amp; a_{32} &amp; a_{33}
+\end{bmatrix}\\\end{split}\]</div>
+<p>or in dyadic form:</p>
+<div class="math">
+\[\begin{split}a_{11} \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} +
+a_{12} \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} +
+a_{13} \mathbf{\hat{a}_x}\mathbf{\hat{a}_z} +
+a_{21} \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} +
+a_{22} \mathbf{\hat{a}_y}\mathbf{\hat{a}_y} +
+a_{23} \mathbf{\hat{a}_y}\mathbf{\hat{a}_z} +
+a_{31} \mathbf{\hat{a}_z}\mathbf{\hat{a}_x} +
+a_{32} \mathbf{\hat{a}_z}\mathbf{\hat{a}_y} +
+a_{33} \mathbf{\hat{a}_z}\mathbf{\hat{a}_z}\\\end{split}\]</div>
+<p>Just as with vectors, the later representation makes it possible to keep track
+of which frames the dyadic is defined with respect to. Also, the two
+components of each term in the dyadic need not be in the same frame. The
+following is valid:</p>
+<div class="math">
+\[\mathbf{\hat{a}_x} \otimes \mathbf{\hat{b}_y} = \mathbf{\hat{a}_x}
+\mathbf{\hat{b}_y}\]</div>
+<p>Dyadics can also be crossed and dotted with vectors; again, order matters:</p>
+<div class="math">
+\[\begin{split}\mathbf{\hat{a}_x}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &amp;=
+\mathbf{\hat{a}_x}\\
+\mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x} &amp;=
+\mathbf{\hat{a}_y}\\
+\mathbf{\hat{a}_x}\mathbf{\hat{a}_y} \cdot \mathbf{\hat{a}_x} &amp;= 0\\
+\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &amp;=
+\mathbf{\hat{a}_x}\\
+\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_x}\mathbf{\hat{a}_y} &amp;=
+\mathbf{\hat{a}_y}\\
+\mathbf{\hat{a}_x} \cdot \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &amp;= 0\\
+\mathbf{\hat{a}_x} \times \mathbf{\hat{a}_y}\mathbf{\hat{a}_x} &amp;=
+\mathbf{\hat{a}_z}\mathbf{\hat{a}_x}\\
+\mathbf{\hat{a}_x} \times \mathbf{\hat{a}_x}\mathbf{\hat{a}_x} &amp;= 0\\
+\mathbf{\hat{a}_y}\mathbf{\hat{a}_x} \times \mathbf{\hat{a}_z} &amp;=
+- \mathbf{\hat{a}_y}\mathbf{\hat{a}_y}\\\end{split}\]</div>
+<p>One can also take the time derivative of dyadics or express them in different
+frames, just like with vectors.</p>
+</div>
+<div class="section" id="linear-momentum">
+<h2>Linear Momentum<a class="headerlink" href="#linear-momentum" title="Permalink to this headline">¶</a></h2>
+<p>The linear momentum of a particle P is defined as:</p>
+<div class="math">
+\[L_P = m\mathbf{v}\]</div>
+<p>where <span class="math">\(m\)</span> is the mass of the particle P and <span class="math">\(\mathbf{v}\)</span> is the
+velocity of the particle in the inertial frame.[Likins1973]_.</p>
+<p>Similarly the linear momentum of a rigid body is defined as:</p>
+<div class="math">
+\[L_B = m\mathbf{v^*}\]</div>
+<p>where <span class="math">\(m\)</span> is the mass of the rigid body, B, and <span class="math">\(\mathbf{v^*}\)</span> is
+the velocity of the mass center of B in the inertial frame.</p>
+</div>
+<div class="section" id="angular-momentum">
+<h2>Angular Momentum<a class="headerlink" href="#angular-momentum" title="Permalink to this headline">¶</a></h2>
+<p>The angular momentum of a particle P about an arbitrary point O in an inertial
+frame N is defined as:</p>
+<div class="math">
+\[^N \mathbf{H} ^ {P/O} = \mathbf{r} \times m\mathbf{v}\]</div>
+<p>where <span class="math">\(\mathbf{r}\)</span> is a position vector from point O to the particle of
+mass <span class="math">\(m\)</span> and <span class="math">\(\mathbf{v}\)</span> is the velocity of the particle in the
+inertial frame.</p>
+<p>Similarly the angular momentum of a rigid body B about a point O in an inertial
+frame N is defined as:</p>
+<div class="math">
+\[^N \mathbf{H} ^ {B/O} = ^N \mathbf{H} ^ {B/B^*} + ^N \mathbf{H} ^ {B^*/O}\]</div>
+<p>where the angular momentum of the body about it&#8217;s mass center is:</p>
+<div class="math">
+\[^N \mathbf{H} ^ {B/B^*} = \mathbf{I^*} \cdot \omega\]</div>
+<p>and the angular momentum of the mass center about O is:</p>
+<div class="math">
+\[^N \mathbf{H} ^ {B^*/O} = \mathbf{r^*} \times m \mathbf{v^*}\]</div>
+<p>where <span class="math">\(\mathbf{I^*}\)</span> is the central inertia dyadic of rigid body B,
+<span class="math">\(\omega\)</span> is the inertial angular velocity of B, <span class="math">\(\mathbf{r^*}\)</span> is a
+position vector from point O to the mass center of B, <span class="math">\(m\)</span> is the mass of
+B and <span class="math">\(\mathbf{v^*}\)</span> is the velocity of the mass center in the inertial
+frame.</p>
+</div>
+<div class="section" id="using-momenta-functions-in-mechanics">
+<h2>Using momenta functions in Mechanics<a class="headerlink" href="#using-momenta-functions-in-mechanics" title="Permalink to this headline">¶</a></h2>
+<p>The following example shows how to use the momenta functions in
+<tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>.</p>
+<p>One begins by creating the requisite symbols to describe the system. Then
+the reference frame is created and the kinematics are done.</p>
+<div class="highlight-python"><pre>&gt;&gt; from sympy import symbols
+&gt;&gt; from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame
+&gt;&gt; from sympy.physics.mechanics import RigidBody, Particle, Point, outer
+&gt;&gt; from symp.physics.mechanics import linear_momentum, angular_momentum
+&gt;&gt; m, M, l1 = symbols('m M l1')
+&gt;&gt; q1d = dynamicsymbols('q1d')
+&gt;&gt; N = ReferenceFrame('N')
+&gt;&gt; O = Point('O')
+&gt;&gt; O.set_vel(N, 0 * N.x)
+&gt;&gt; Ac = O.locatenew('Ac', l1 * N.x)
+&gt;&gt; P = Ac.locatenew('P', l1 * N.x)
+&gt;&gt; a = ReferenceFrame('a')
+&gt;&gt; a.set_ang_vel(N, q1d * N.z)
+&gt;&gt; Ac.v2pt_theory(O, N, a)
+&gt;&gt; P.v2pt_theory(O, N, a)</pre>
+</div>
+<p>Finally, the bodies that make up the system are created. In this case the
+system consists of a particle Pa and a RigidBody A.</p>
+<div class="highlight-python"><pre>&gt;&gt; Pa = Particle('Pa', P, m)
+&gt;&gt; I = outer(N.z, N.z)
+&gt;&gt; A = RigidBody('A', Ac, a, M, (I, Ac))</pre>
+</div>
+<p>Then one can either choose to evaluate the the momenta of individual components
+of the system or of the entire system itself.</p>
+<div class="highlight-python"><pre>&gt;&gt; linear_momentum(N,A)
+M*l1*q1d*N.y
+&gt;&gt; angular_momentum(O, N, Pa)
+4*l1**2*m*q1d*N.z
+&gt;&gt; linear_momentum(N, A, Pa)
+(M*l1*q1d + 2*l1*m*q1d)*N.y
+&gt;&gt; angular_momentum(O, N, A, Pa)
+(4*l1**2*m*q1d + q1d)*N.z</pre>
+</div>
+<p>It should be noted that the user can determine either momenta in any frame
+in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> as the user is allowed to specify the reference frame when
+calling the function. In other words the user is not limited to determining
+just inertial linear and angular momenta. Please refer to the docstrings on
+each function to learn more about how each function works precisely.</p>
+</div>
+<div class="section" id="kinetic-energy">
+<h2>Kinetic Energy<a class="headerlink" href="#kinetic-energy" title="Permalink to this headline">¶</a></h2>
+<p>The kinetic energy of a particle P is defined as</p>
+<div class="math">
+\[T_P = \frac{1}{2} m \mathbf{v^2}\]</div>
+<p>where <span class="math">\(m\)</span> is the mass of the particle P and <span class="math">\(\mathbf{v}\)</span>
+is the velocity of the particle in the inertial frame.</p>
+<p>Similarly the kinetic energy of a rigid body B is defined as</p>
+<div class="math">
+\[T_B = T_t + T_r\]</div>
+<p>where the translational kinetic energy is given by:</p>
+<div class="math">
+\[T_t = \frac{1}{2} m \mathbf{v^*} \cdot \mathbf{v^*}\]</div>
+<p>and the rotational kinetic energy is given by:</p>
+<div class="math">
+\[T_r = \frac{1}{2} \omega \cdot \mathbf{I^*} \cdot \omega\]</div>
+<p>where <span class="math">\(m\)</span> is the mass of the rigid body, <span class="math">\(\mathbf{v^*}\)</span> is the
+velocity of the mass center in the inertial frame, <span class="math">\(\omega\)</span> is the
+inertial angular velocity of the body and <span class="math">\(\mathbf{I^*}\)</span> is the central
+inertia dyadic.</p>
+</div>
+<div class="section" id="potential-energy">
+<h2>Potential Energy<a class="headerlink" href="#potential-energy" title="Permalink to this headline">¶</a></h2>
+<p>Potential energy is defined as the energy possessed by a body or system by
+virtue of its position or arrangement.</p>
+<p>Since there are a variety of definitions for potential energy, this is not
+discussed further here. One can learn more about this in any elementary text
+book on dynamics.</p>
+</div>
+<div class="section" id="lagrangian">
+<h2>Lagrangian<a class="headerlink" href="#lagrangian" title="Permalink to this headline">¶</a></h2>
+<p>The Lagrangian of a body or a system of bodies is defined as:</p>
+<div class="math">
+\[\mathcal{L} = T - V\]</div>
+<p>where <span class="math">\(T\)</span> and <span class="math">\(V\)</span> are the kinetic and potential energies
+respectively.</p>
+</div>
+<div class="section" id="using-energy-functions-in-mechanics">
+<h2>Using energy functions in Mechanics<a class="headerlink" href="#using-energy-functions-in-mechanics" title="Permalink to this headline">¶</a></h2>
+<p>The following example shows how to use the energy functions in
+<tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt>.</p>
+<p>As was discussed above in the momenta functions, one first creates the system
+by going through an identical procedure.</p>
+<div class="highlight-python"><pre>&gt;&gt; from sympy import symbols
+&gt;&gt; from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, outer
+&gt;&gt; from sympy.physics.mechanics import RigidBody, Particle, mechanics_printing
+&gt;&gt; from symp.physics.mechanics import kinetic_energy, potential_energy, Point
+&gt;&gt; mechanics_printing()
+&gt;&gt; m, M, l1, g, h, H = symbols('m M l1 g h H')
+&gt;&gt; omega = dynamicsymbols('omega')
+&gt;&gt; N = ReferenceFrame('N')
+&gt;&gt; O = Point('O')
+&gt;&gt; O.set_vel(N, 0 * N.x)
+&gt;&gt; Ac = O.locatenew('Ac', l1 * N.x)
+&gt;&gt; P = Ac.locatenew('P', l1 * N.x)
+&gt;&gt; a = ReferenceFrame('a')
+&gt;&gt; a.set_ang_vel(N, omega * N.z)
+&gt;&gt; Ac.v2pt_theory(O, N, a)
+&gt;&gt; P.v2pt_theory(O, N, a)
+&gt;&gt; Pa = Particle('Pa', P, m)
+&gt;&gt; I = outer(N.z, N.z)
+&gt;&gt; A = RigidBody('A', Ac, a, M, (I, Ac))</pre>
+</div>
+<p>The user can then determine the kinetic energy of any number of entities of the
+system:</p>
+<div class="highlight-python"><pre>&gt;&gt; kinetic_energy(N, Pa)
+2*l1**2*m*q1d**2
+&gt;&gt; kinetic_energy(N, Pa, A)
+M*l1**2*q1d**2/2 + 2*l1**2*m*q1d**2 + q1d**2/2</pre>
+</div>
+<p>It should be noted that the user can determine either kinetic energy relative
+to any frame in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> as the user is allowed to specify the
+reference frame when calling the function. In other words the user is not
+limited to determining just inertial kinetic energy.</p>
+<p>For potential energies, the user must first specify the potential energy of
+every entity of the system using the <tt class="xref py py-mod docutils literal"><span class="pre">set_potential_energy</span></tt> method. The
+potential energy of any number of entities comprising the system can then be
+determined:</p>
+<div class="highlight-python"><pre>&gt;&gt; Pa.set_potential_energy(m * g * h)
+&gt;&gt; A.set_potential_energy(M * g * H)
+&gt;&gt; potential_energy(A, Pa)
+H*M*g + g*h*m</pre>
+</div>
+<p>One can also determine the Lagrangian for this system:</p>
+<div class="highlight-python"><pre>&gt;&gt; Lagrangian(Pa, A)
+-H*M*g + M*l1**2*q1d**2/2 - g*h*m + 2*l1**2*m*q1d**2 + q1d**2/2</pre>
+</div>
+<p>Please refer to the docstrings to learn more about each function.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Mechanics: Masses, Inertias, Particles and Rigid Bodies</a><ul>
+<li><a class="reference internal" href="#mass">Mass</a></li>
+<li><a class="reference internal" href="#particle">Particle</a></li>
+<li><a class="reference internal" href="#inertia">Inertia</a></li>
+<li><a class="reference internal" href="#rigid-body">Rigid Body</a></li>
+<li><a class="reference internal" href="#dyadic">Dyadic</a></li>
+<li><a class="reference internal" href="#linear-momentum">Linear Momentum</a></li>
+<li><a class="reference internal" href="#angular-momentum">Angular Momentum</a></li>
+<li><a class="reference internal" href="#using-momenta-functions-in-mechanics">Using momenta functions in Mechanics</a></li>
+<li><a class="reference internal" href="#kinetic-energy">Kinetic Energy</a></li>
+<li><a class="reference internal" href="#potential-energy">Potential Energy</a></li>
+<li><a class="reference internal" href="#lagrangian">Lagrangian</a></li>
+<li><a class="reference internal" href="#using-energy-functions-in-mechanics">Using energy functions in Mechanics</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kinematics.html"
+                        title="previous chapter">Mechanics: Kinematics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kane.html"
+                        title="next chapter">Kane&#8217;s Method in Physics/Mechanics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/mechanics/masses.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="kane.html" title="Kane’s Method in Physics/Mechanics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="kinematics.html" title="Mechanics: Kinematics"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

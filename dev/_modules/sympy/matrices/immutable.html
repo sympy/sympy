@@ -1,0 +1,258 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.matrices.immutable &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.matrices.immutable</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span> <span class="nn">sympy.core.sympify</span> <span class="kn">import</span> <span class="n">converter</span> <span class="k">as</span> <span class="n">sympify_converter</span>
+
+<span class="kn">from</span> <span class="nn">sympy.matrices.matrices</span> <span class="kn">import</span> <span class="n">MatrixBase</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.dense</span> <span class="kn">import</span> <span class="n">DenseMatrix</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.sparse</span> <span class="kn">import</span> <span class="n">SparseMatrix</span><span class="p">,</span> <span class="n">MutableSparseMatrix</span>
+<span class="kn">from</span> <span class="nn">sympy.matrices.expressions</span> <span class="kn">import</span> <span class="n">MatrixExpr</span>
+
+
+<span class="k">def</span> <span class="nf">sympify_matrix</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">ImmutableMatrix</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+<span class="n">sympify_converter</span><span class="p">[</span><span class="n">MatrixBase</span><span class="p">]</span> <span class="o">=</span> <span class="n">sympify_matrix</span>
+
+<div class="viewcode-block" id="ImmutableMatrix"><a class="viewcode-back" href="../../../modules/matrices/immutablematrices.html#sympy.matrices.immutable.ImmutableMatrix">[docs]</a><span class="k">class</span> <span class="nc">ImmutableMatrix</span><span class="p">(</span><span class="n">MatrixExpr</span><span class="p">,</span> <span class="n">DenseMatrix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an immutable version of a matrix.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import eye</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import ImmutableMatrix</span>
+<span class="sd">    &gt;&gt;&gt; ImmutableMatrix(eye(3))</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0, 0],</span>
+<span class="sd">    [0, 1, 0],</span>
+<span class="sd">    [0, 0, 1]])</span>
+<span class="sd">    &gt;&gt;&gt; _[0, 0] = 42</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    TypeError: Cannot set values of ImmutableDenseMatrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_class_priority</span> <span class="o">=</span> <span class="mi">8</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ImmutableMatrix</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">flat_list</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_handle_creation_inputs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">(</span><span class="o">*</span><span class="n">flat_list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="mi">2</span><span class="p">]])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_mat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+    <span class="n">__getitem__</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">__getitem__</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Cannot set values of ImmutableMatrix&quot;</span><span class="p">)</span>
+
+    <span class="n">adjoint</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">adjoint</span>
+    <span class="n">conjugate</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">conjugate</span>
+    <span class="c"># C and T are defined in MatrixExpr...I don&#39;t know why C alone</span>
+    <span class="c"># needs to be defined here</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">C</span>
+
+    <span class="n">as_mutable</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">as_mutable</span>
+    <span class="n">_eval_trace</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">_eval_trace</span>
+    <span class="n">_eval_transpose</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">_eval_transpose</span>
+    <span class="n">_eval_conjugate</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">_eval_conjugate</span>
+    <span class="n">_eval_adjoint</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">_eval_adjoint</span>
+    <span class="n">_eval_inverse</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">_eval_inverse</span>
+    <span class="n">_eval_simplify</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">_eval_simplify</span>
+
+    <span class="n">equals</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">equals</span>
+    <span class="n">is_Identity</span> <span class="o">=</span> <span class="n">DenseMatrix</span><span class="o">.</span><span class="n">is_Identity</span>
+
+    <span class="n">__add__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__add__</span>
+    <span class="n">__radd__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__radd__</span>
+    <span class="n">__mul__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__mul__</span>
+    <span class="n">__rmul__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__rmul__</span>
+    <span class="n">__pow__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__pow__</span>
+    <span class="n">__sub__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__sub__</span>
+    <span class="n">__rsub__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__rsub__</span>
+    <span class="n">__neg__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__neg__</span>
+    <span class="n">__div__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__div__</span>
+    <span class="n">__truediv__</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">__truediv__</span>
+
+</div>
+<div class="viewcode-block" id="ImmutableSparseMatrix"><a class="viewcode-back" href="../../../modules/matrices/sparse.html#sympy.matrices.immutable.ImmutableSparseMatrix">[docs]</a><span class="k">class</span> <span class="nc">ImmutableSparseMatrix</span><span class="p">(</span><span class="n">Basic</span><span class="p">,</span> <span class="n">SparseMatrix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an immutable version of a sparse matrix.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import eye</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices.immutable import ImmutableSparseMatrix</span>
+<span class="sd">    &gt;&gt;&gt; ImmutableSparseMatrix(1, 1, {})</span>
+<span class="sd">    Matrix([[0]])</span>
+<span class="sd">    &gt;&gt;&gt; ImmutableSparseMatrix(eye(3))</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0, 0],</span>
+<span class="sd">    [0, 1, 0],</span>
+<span class="sd">    [0, 0, 1]])</span>
+<span class="sd">    &gt;&gt;&gt; _[0, 0] = 42</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    TypeError: Cannot set values of ImmutableSparseMatrix</span>
+<span class="sd">    &gt;&gt;&gt; _.shape</span>
+<span class="sd">    (3, 3)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_class_priority</span> <span class="o">=</span> <span class="mi">9</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">MutableSparseMatrix</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">Integer</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">_smat</span><span class="p">)</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">rows</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rows</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">cols</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_smat</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">_smat</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Cannot set values of ImmutableSparseMatrix&quot;</span><span class="p">)</span>
+
+    <span class="n">subs</span> <span class="o">=</span> <span class="n">MatrixBase</span><span class="o">.</span><span class="n">subs</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span><span class="p">,)</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_smat</span><span class="p">)))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

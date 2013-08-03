@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Basic Operations &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Simplification" href="simplification.html" />
+    <link rel="prev" title="Gotchas" href="gotchas.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplification.html" title="Simplification"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="gotchas.html" title="Gotchas"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="basic-operations">
+<span id="tutorial-basic"></span><h1>Basic Operations<a class="headerlink" href="#basic-operations" title="Permalink to this headline">¶</a></h1>
+<p>Here we discuss some of the most basic operations needed for expression
+manipulation in SymPy.  Some more advanced operations will be discussed later
+in the <a class="reference internal" href="manipulation.html#tutorial-manipulation"><em>advanced expression manipulation</em></a> section.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&quot;x y z&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="substitution">
+<h2>Substitution<a class="headerlink" href="#substitution" title="Permalink to this headline">¶</a></h2>
+<p>One of the most common things you might want to do with a mathematical
+expression is substitution.  Substitution replaces all instances of something
+in an expression with something else.  It is done using the <tt class="docutils literal"><span class="pre">subs</span></tt> method.
+For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">cos(y) + 1</span>
+</pre></div>
+</div>
+<p>Substitution is usually done for one of two reasons:</p>
+<ol class="arabic">
+<li><p class="first">Evaluating an expression at a point. For example, if our expression is
+<tt class="docutils literal"><span class="pre">cos(x)</span> <span class="pre">+</span> <span class="pre">1</span></tt> and we want to evaluate it at the point <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">0</span></tt>, so that
+we get <tt class="docutils literal"><span class="pre">cos(0)</span> <span class="pre">+</span> <span class="pre">1</span></tt>, which is 2.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Replacing a subexpression with another subexpression.  There are two
+reasons we might want to do this.  The first is if we are trying to build
+an expression that has some symmetry, such as <span class="math">\(x^{x^{x^x}}\)</span>.  To build
+this, we might start with <tt class="docutils literal"><span class="pre">x**y</span></tt>, and replace <tt class="docutils literal"><span class="pre">y</span></tt> with <tt class="docutils literal"><span class="pre">x**y</span></tt>.  We
+would then get <tt class="docutils literal"><span class="pre">x**(x**y)</span></tt>.  If we replaced <tt class="docutils literal"><span class="pre">y</span></tt> in this new expression
+with <tt class="docutils literal"><span class="pre">x**x</span></tt>, we would get <tt class="docutils literal"><span class="pre">x**(x**(x**x))</span></tt>, the desired expression.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">x**y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">x**(x**y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">x**(x**(x**x))</span>
+</pre></div>
+</div>
+<p>The second is if we want to perform a very controlled simplification, or
+perhaps a simplification that SymPy is otherwise unable to do.  For
+example, say we have <span class="math">\(\sin(2x) + \cos(2x)\)</span>, and we want to replace
+<span class="math">\(\sin(2x)\)</span> with <span class="math">\(2\sin(x)\cos(x)\)</span>.  As we will learn later, the function
+<tt class="docutils literal"><span class="pre">expand_trig</span></tt> does this.  However, this function will also expand
+<span class="math">\(\cos(2x)\)</span>, which we may not want.  While there are ways to perform such
+precise simplification, and we will learn some of them in the
+<a class="reference internal" href="manipulation.html#tutorial-manipulation"><em>advanced expression manipulation</em></a> section, an
+easy way is to just replace <span class="math">\(\sin(2x)\)</span> with <span class="math">\(2\sin(x)\cos(x)\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expand_trig</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">2*sin(x)*cos(x) + 2*cos(x)**2 - 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="mi">2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="go">2*sin(x)*cos(x) + cos(2*x)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>There are two important things to note about <tt class="docutils literal"><span class="pre">subs</span></tt>.  First, it returns a
+new expression.  SymPy objects are immutable.  That means that <tt class="docutils literal"><span class="pre">subs</span></tt> does
+not modify it in-place.  For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">cos(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span>
+<span class="go">x</span>
+</pre></div>
+</div>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p class="last">SymPy expressions are immutable.  No function will change them in-place.</p>
+</div>
+<p>Here, we see that performing <tt class="docutils literal"><span class="pre">expr.subs(x,</span> <span class="pre">0)</span></tt> leaves <tt class="docutils literal"><span class="pre">expr</span></tt> unchanged.
+In fact, since SymPy expressions are immutable, no function will change them
+in-place.  All functions will return new expressions.</p>
+<p>To perform multiple substitutions at once, pass a list of <tt class="docutils literal"><span class="pre">(old,</span> <span class="pre">new)</span></tt> pairs
+to <tt class="docutils literal"><span class="pre">subs</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">y</span> <span class="o">-</span> <span class="n">z</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">([(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">)])</span>
+<span class="go">40</span>
+</pre></div>
+</div>
+<p>It is often useful to combine this with a list comprehension to do a large set
+of similar replacements all at once.  For example, say we had <span class="math">\(x^4 - 4x^3 + 4x^2 -
+2x + 3\)</span> and we wanted to replace all instances of <span class="math">\(x\)</span> that have an even power
+with <span class="math">\(y\)</span>, to get <span class="math">\(y^4 - 4x^3 + 4y^2 - 2x + 3\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">replacements</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="n">y</span><span class="o">**</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">replacements</span><span class="p">)</span>
+<span class="go">-4*x**3 - 2*x + y**4 + 4*y**2 + 3</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="converting-strings-to-sympy-expressions">
+<h2>Converting Strings to SymPy Expressions<a class="headerlink" href="#converting-strings-to-sympy-expressions" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">sympify</span></tt> function (that&#8217;s <tt class="docutils literal"><span class="pre">sympify</span></tt>, not to be confused with
+<tt class="docutils literal"><span class="pre">simplify</span></tt>) can be used to convert strings into SymPy expressions.</p>
+<p>For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">str_expr</span> <span class="o">=</span> <span class="s">&quot;x**2 + 3*x - 1/2&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">str_expr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">x**2 + 3*x - 1/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">19/2</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last"><tt class="docutils literal"><span class="pre">sympify</span></tt> uses <tt class="docutils literal"><span class="pre">eval</span></tt>.  Don&#8217;t use it on unsanitized input.</p>
+</div>
+</div>
+<div class="section" id="evalf">
+<h2><tt class="docutils literal"><span class="pre">evalf</span></tt><a class="headerlink" href="#evalf" title="Permalink to this headline">¶</a></h2>
+<p>To evaluate a numerical expression into a floating point number, use
+<tt class="docutils literal"><span class="pre">evalf</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">2.82842712474619</span>
+</pre></div>
+</div>
+<p>SymPy can evaluate floating point expressions to arbitrary precision.  By
+default, 15 digits of precision are used, but you can pass any number as the
+argument to <tt class="docutils literal"><span class="pre">evalf</span></tt>.  Let&#8217;s compute the first 100 digits of <span class="math">\(\pi\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<span class="go">3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117068</span>
+</pre></div>
+</div>
+<p>To numerically evaluate an expression with a Symbol at a point, we might use
+<tt class="docutils literal"><span class="pre">subs</span></tt> followed by <tt class="docutils literal"><span class="pre">evalf</span></tt>, but it is more efficient and numerically
+stable to pass the substitution to <tt class="docutils literal"><span class="pre">evalf</span></tt> using the <tt class="docutils literal"><span class="pre">subs</span></tt> flag, which
+takes a dictionary of <tt class="docutils literal"><span class="pre">Symbol:</span> <span class="pre">point</span></tt> pairs.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="n">subs</span><span class="o">=</span><span class="p">{</span><span class="n">x</span><span class="p">:</span> <span class="mf">2.4</span><span class="p">})</span>
+<span class="go">    0.0874989834394464</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lambdify">
+<h2><tt class="docutils literal"><span class="pre">lambdify</span></tt><a class="headerlink" href="#lambdify" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">subs</span></tt> and <tt class="docutils literal"><span class="pre">evalf</span></tt> are good if you want to do simple evaluation, but if
+you intend to evaluate an expression at many points, there are more efficient
+ways.  For example, if you wanted to evaluate an expression at a thousand
+points, using SymPy would be far slower than it needs to be, especially if you
+only care about machine precision.  Instead, you should use libraries like
+<a class="reference external" href="http://www.numpy.org/">NumPy</a> and <a class="reference external" href="http://www.scipy.org/">SciPy</a>.</p>
+<p>The easiest way to convert a SymPy expression to an expression that can be
+numerically evaluated is to use the <tt class="docutils literal"><span class="pre">lambdify</span></tt> function.  <tt class="docutils literal"><span class="pre">lambdify</span></tt> acts
+like a <tt class="docutils literal"><span class="pre">lambda</span></tt> function, except it converts the SymPy names to the names of
+the given numerical library, usually NumPy.  For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="s">&quot;numpy&quot;</span><span class="p">)</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> 
+<span class="go">[ 0.          0.84147098  0.90929743  0.14112001 -0.7568025  -0.95892427</span>
+<span class="go"> -0.2794155   0.6569866   0.98935825  0.41211849]</span>
+</pre></div>
+</div>
+<p>You can use other libraries than NumPy. For example, to use the standard
+library math module, use <tt class="docutils literal"><span class="pre">&quot;math&quot;</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="s">&quot;math&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="go">0.0998334166468</span>
+</pre></div>
+</div>
+<p>To use lambdify with numerical libraries that it does not know about, pass a
+dictionary of <tt class="docutils literal"><span class="pre">sympy_name:numerical_function</span></tt> pairs.  For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">mysin</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="sd">&quot;&quot;&quot;</span>
+<span class="gp">... </span><span class="sd">    My sine. Not only accurate for small x.</span>
+<span class="gp">... </span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">lambdify</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="p">{</span><span class="s">&quot;sin&quot;</span><span class="p">:</span><span class="n">mysin</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="go">0.1</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Basic Operations</a><ul>
+<li><a class="reference internal" href="#substitution">Substitution</a></li>
+<li><a class="reference internal" href="#converting-strings-to-sympy-expressions">Converting Strings to SymPy Expressions</a></li>
+<li><a class="reference internal" href="#evalf"><tt class="docutils literal"><span class="pre">evalf</span></tt></a></li>
+<li><a class="reference internal" href="#lambdify"><tt class="docutils literal"><span class="pre">lambdify</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="gotchas.html"
+                        title="previous chapter">Gotchas</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="simplification.html"
+                        title="next chapter">Simplification</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/basic_operations.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplification.html" title="Simplification"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="gotchas.html" title="Gotchas"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Root-finding and optimization &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Numerical calculus" href="index.html" />
+    <link rel="next" title="Sums, products, limits and extrapolation" href="sums_limits.html" />
+    <link rel="prev" title="Polynomials" href="polynomials.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sums_limits.html" title="Sums, products, limits and extrapolation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="polynomials.html" title="Polynomials"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="root-finding-and-optimization">
+<h1>Root-finding and optimization<a class="headerlink" href="#root-finding-and-optimization" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="root-finding-findroot">
+<h2>Root-finding (<tt class="docutils literal"><span class="pre">findroot</span></tt>)<a class="headerlink" href="#root-finding-findroot" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="mpmath.findroot">
+<tt class="descclassname">mpmath.</tt><tt class="descname">findroot</tt><big>(</big><em>f</em>, <em>x0</em>, <em>solver=Secant</em>, <em>tol=None</em>, <em>verbose=False</em>, <em>verify=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.findroot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find a solution to <span class="math">\(f(x) = 0\)</span>, using <em>x0</em> as starting point or
+interval for <em>x</em>.</p>
+<p>Multidimensional overdetermined systems are supported.
+You can specify them using a function or a list of functions.</p>
+<p>If the found root does not satisfy <span class="math">\(|f(x)^2 &lt; \mathrm{tol}|\)</span>,
+an exception is raised (this can be disabled with <em>verify=False</em>).</p>
+<p><strong>Arguments</strong></p>
+<dl class="docutils">
+<dt><em>f</em></dt>
+<dd>one dimensional function</dd>
+<dt><em>x0</em></dt>
+<dd>starting point, several starting points or interval (depends on solver)</dd>
+<dt><em>tol</em></dt>
+<dd>the returned solution has an error smaller than this</dd>
+<dt><em>verbose</em></dt>
+<dd>print additional information for each iteration if true</dd>
+<dt><em>verify</em></dt>
+<dd>verify the solution and raise a ValueError if <span class="math">\(|f(x) &gt; \mathrm{tol}|\)</span></dd>
+<dt><em>solver</em></dt>
+<dd>a generator for <em>f</em> and <em>x0</em> returning approximative solution and error</dd>
+<dt><em>maxsteps</em></dt>
+<dd>after how many steps the solver will cancel</dd>
+<dt><em>df</em></dt>
+<dd>first derivative of <em>f</em> (used by some solvers)</dd>
+<dt><em>d2f</em></dt>
+<dd>second derivative of <em>f</em> (used by some solvers)</dd>
+<dt><em>multidimensional</em></dt>
+<dd>force multidimensional solving</dd>
+<dt><em>J</em></dt>
+<dd>Jacobian matrix of <em>f</em> (used by multidimensional solvers)</dd>
+<dt><em>norm</em></dt>
+<dd>used vector norm (used by multidimensional solvers)</dd>
+</dl>
+<p>solver has to be callable with <tt class="docutils literal"><span class="pre">(f,</span> <span class="pre">x0,</span> <span class="pre">**kwargs)</span></tt> and return an generator
+yielding pairs of approximative solution and estimated error (which is
+expected to be positive).
+You can use the following string aliases:
+&#8216;secant&#8217;, &#8216;mnewton&#8217;, &#8216;halley&#8217;, &#8216;muller&#8217;, &#8216;illinois&#8217;, &#8216;pegasus&#8217;, &#8216;anderson&#8217;,
+&#8216;ridder&#8217;, &#8216;anewton&#8217;, &#8216;bisect&#8217;</p>
+<p>See mpmath.optimization for their documentation.</p>
+<p><strong>Examples</strong></p>
+<p>The function <a class="reference internal" href="#mpmath.findroot" title="mpmath.findroot"><tt class="xref py py-func docutils literal"><span class="pre">findroot()</span></tt></a> locates a root of a given function using the
+secant method by default. A simple example use of the secant method is to
+compute <span class="math">\(\pi\)</span> as the root of <span class="math">\(\sin x\)</span> closest to <span class="math">\(x_0 = 3\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">3.14159265358979323846264338328</span>
+</pre></div>
+</div>
+<p>The secant method can be used to find complex roots of analytic functions,
+although it must in that case generally be given a nonreal starting value
+(or else it will never leave the real line):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+<span class="go">(0.226698825758202 + 1.46771150871022j)</span>
+</pre></div>
+</div>
+<p>A nice application is to compute nontrivial roots of the Riemann zeta
+function with many digits (good initial values are needed for convergence):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">zeta</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">+</span><span class="mi">14</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.5 + 14.1347251417346937904572519836j)</span>
+</pre></div>
+</div>
+<p>The secant method can also be used as an optimization algorithm, by passing
+it a derivative of a function. The following example locates the positive
+minimum of the gamma function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">diff</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">1.4616321449683623413</span>
+</pre></div>
+</div>
+<p>Finally, a useful application is to compute inverse functions, such as the
+Lambert W function which is the inverse of <span class="math">\(w e^w\)</span>, given the first
+term of the solution&#8217;s asymptotic expansion as the initial value. In basic
+cases, this gives identical results to mpmath&#8217;s built-in <tt class="docutils literal"><span class="pre">lambertw</span></tt>
+function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">lambert</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">w</span><span class="p">:</span> <span class="n">w</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambert</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="n">lambertw</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">0.567143290409784</span>
+<span class="go">0.567143290409784</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lambert</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span> <span class="n">lambert</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="go">5.2496028524016</span>
+<span class="go">5.2496028524016</span>
+</pre></div>
+</div>
+<p>Multidimensional functions are also supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">:</span> <span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x2</span><span class="p">,</span>
+<span class="gp">... </span>     <span class="k">lambda</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">:</span> <span class="mi">5</span><span class="o">*</span><span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="o">*</span><span class="n">x1</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x2</span> <span class="o">-</span> <span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">[-0.618033988749895]</span>
+<span class="go">[-0.381966011250105]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">[ 1.61803398874989]</span>
+<span class="go">[-2.61803398874989]</span>
+</pre></div>
+</div>
+<p>You can verify this by solving the system manually.</p>
+<p>Please note that the following (more general) syntax also works:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x2</span><span class="p">,</span> <span class="mi">5</span><span class="o">*</span><span class="n">x1</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">3</span><span class="o">*</span><span class="n">x1</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">x2</span> <span class="o">-</span> <span class="mi">3</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">[-0.618033988749895]</span>
+<span class="go">[-0.381966011250105]</span>
+</pre></div>
+</div>
+<p><strong>Multiple roots</strong></p>
+<p>For multiple roots all methods of the Newtonian family (including secant)
+converge slowly. Consider this example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">99</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="n">verify</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">0.918073542444929</span>
+</pre></div>
+</div>
+<p>Even for a very close starting point the secant method converges very
+slowly. Use <tt class="docutils literal"><span class="pre">verbose=True</span></tt> to illustrate this.</p>
+<p>It is possible to modify Newton&#8217;s method to make it converge regardless of
+the root&#8217;s multiplicity:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s">&#39;mnewton&#39;</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>This variant uses the first and second derivative of the function, which is
+not very efficient.</p>
+<p>Alternatively you can use an experimental Newtonian solver that keeps track
+of the speed of convergence and accelerates it using Steffensen&#8217;s method if
+necessary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s">&#39;anewton&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">x:     -9.88888888888888888889</span>
+<span class="go">error: 0.111111111111111111111</span>
+<span class="go">converging slowly</span>
+<span class="go">x:     -9.77890011223344556678</span>
+<span class="go">error: 0.10998877665544332211</span>
+<span class="go">converging slowly</span>
+<span class="go">x:     -9.67002233332199662166</span>
+<span class="go">error: 0.108877778911448945119</span>
+<span class="go">converging slowly</span>
+<span class="go">accelerating convergence</span>
+<span class="go">x:     -9.5622443299551077669</span>
+<span class="go">error: 0.107778003366888854764</span>
+<span class="go">converging slowly</span>
+<span class="go">x:     0.99999999999999999214</span>
+<span class="go">error: 10.562244329955107759</span>
+<span class="go">x:     1.0</span>
+<span class="go">error: 7.8598304758094664213e-18</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p><strong>Complex roots</strong></p>
+<p>For complex roots it&#8217;s recommended to use Muller&#8217;s method as it converges
+even for real starting points very fast:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">solver</span><span class="o">=</span><span class="s">&#39;muller&#39;</span><span class="p">)</span>
+<span class="go">(0.727136084491197 + 0.934099289460529j)</span>
+</pre></div>
+</div>
+<p><strong>Intersection methods</strong></p>
+<p>When you need to find a root in a known interval, it&#8217;s highly recommended to
+use an intersection-based solver like <tt class="docutils literal"><span class="pre">'anderson'</span></tt> or <tt class="docutils literal"><span class="pre">'ridder'</span></tt>.
+Usually they converge faster and more reliable. They have however problems
+with multiple roots and usually need a sign change to find a root:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">solver</span><span class="o">=</span><span class="s">&#39;anderson&#39;</span><span class="p">)</span>
+<span class="go">0.0</span>
+</pre></div>
+</div>
+<p>Be careful with symmetric functions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">solver</span><span class="o">=</span><span class="s">&#39;anderson&#39;</span><span class="p">)</span> 
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ZeroDivisionError</span>
+</pre></div>
+</div>
+<p>It fails even for better starting points, because there is no sign change:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">5</span><span class="p">),</span> <span class="n">solver</span><span class="o">=</span><span class="s">&#39;anderson&#39;</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">Could not find root within given tolerance. (1 &gt; 2.1684e-19)</span>
+<span class="go">Try another starting point or tweak arguments.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<div class="section" id="solvers">
+<h3>Solvers<a class="headerlink" href="#solvers" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Secant">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Secant</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Secant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Secant" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Needs starting points x0 and x1 close to the root.
+x1 defaults to x0 + 0.25.</p>
+<p>Pro:</p>
+<ul class="simple">
+<li>converges fast</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>converges slowly for multiple roots</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Newton">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Newton</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Newton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Newton" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Needs starting points x0 close to the root.</p>
+<p>Pro:</p>
+<ul class="simple">
+<li>converges fast</li>
+<li>sometimes more robust than secant with bad second starting point</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>converges slowly for multiple roots</li>
+<li>needs first derivative</li>
+<li>2 function evaluations per iteration</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.MNewton">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">MNewton</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#MNewton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.MNewton" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Needs starting point x0 close to the root.
+Uses modified Newton&#8217;s method that converges fast regardless of the
+multiplicity of the root.</p>
+<p>Pro:</p>
+<ul class="simple">
+<li>converges fast for multiple roots</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>needs first and second derivative of f</li>
+<li>3 function evaluations per iteration</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Halley">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Halley</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Halley"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Halley" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Needs a starting point x0 close to the root.
+Uses Halley&#8217;s method with cubic convergence rate.</p>
+<p>Pro:</p>
+<ul class="simple">
+<li>converges even faster the Newton&#8217;s method</li>
+<li>useful when computing with <em>many</em> digits</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>needs first and second derivative of f</li>
+<li>3 function evaluations per iteration</li>
+<li>converges slowly for multiple roots</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Muller">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Muller</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Muller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Muller" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Needs starting points x0, x1 and x2 close to the root.
+x1 defaults to x0 + 0.25; x2 to x1 + 0.25.
+Uses Muller&#8217;s method that converges towards complex roots.</p>
+<p>Pro:</p>
+<ul class="simple">
+<li>converges fast (somewhat faster than secant)</li>
+<li>can find complex roots</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>converges slowly for multiple roots</li>
+<li>may have complex values for real starting points and real roots</li>
+</ul>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/Muller's_method">http://en.wikipedia.org/wiki/Muller&#8217;s_method</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Bisection">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Bisection</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Bisection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Bisection" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Uses bisection method to find a root of f in [a, b].
+Might fail for multiple roots (needs sign change).</p>
+<p>Pro:</p>
+<ul class="simple">
+<li>robust and reliable</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>converges slowly</li>
+<li>needs sign change</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Illinois">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Illinois</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Illinois"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Illinois" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Uses Illinois method or similar to find a root of f in [a, b].
+Might fail for multiple roots (needs sign change).
+Combines bisect with secant (improved regula falsi).</p>
+<p>The only difference between the methods is the scaling factor m, which is
+used to ensure convergence (you can choose one using the &#8216;method&#8217; keyword):</p>
+<dl class="docutils">
+<dt>Illinois method (&#8216;illinois&#8217;):</dt>
+<dd>m = 0.5</dd>
+<dt>Pegasus method (&#8216;pegasus&#8217;):</dt>
+<dd>m = fb/(fb + fz)</dd>
+<dt>Anderson-Bjoerk method (&#8216;anderson&#8217;):</dt>
+<dd>m = 1 - fz/fb if positive else 0.5</dd>
+</dl>
+<p>Pro:</p>
+<ul class="simple">
+<li>converges very fast</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>has problems with multiple roots</li>
+<li>needs sign change</li>
+</ul>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Pegasus">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Pegasus</tt><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Pegasus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Pegasus" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Uses Pegasus method to find a root of f in [a, b].
+Wrapper for illinois to use method=&#8217;pegasus&#8217;.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Anderson">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Anderson</tt><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Anderson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Anderson" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Uses Anderson-Bjoerk method to find a root of f in [a, b].
+Wrapper for illinois to use method=&#8217;pegasus&#8217;.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.Ridder">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">Ridder</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#Ridder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.Ridder" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d-solver generating pairs of approximative root and error.</p>
+<p>Ridders&#8217; method to find a root of f in [a, b].
+Is told to perform as well as Brent&#8217;s method while being simpler.</p>
+<p>Pro:</p>
+<ul class="simple">
+<li>very fast</li>
+<li>simpler than Brent&#8217;s method</li>
+</ul>
+<p>Contra:</p>
+<ul class="simple">
+<li>two function evaluations per step</li>
+<li>has problems with multiple roots</li>
+<li>needs sign change</li>
+</ul>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/Ridders'_method">http://en.wikipedia.org/wiki/Ridders&#8217;_method</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.ANewton">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">ANewton</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#ANewton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.ANewton" title="Permalink to this definition">¶</a></dt>
+<dd><p>EXPERIMENTAL 1d-solver generating pairs of approximative root and error.</p>
+<p>Uses Newton&#8217;s method modified to use Steffensens method when convergence is
+slow. (I.e. for multiple roots.)</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mpmath.calculus.optimization.MDNewton">
+<em class="property">class </em><tt class="descclassname">mpmath.calculus.optimization.</tt><tt class="descname">MDNewton</tt><big>(</big><em>ctx</em>, <em>f</em>, <em>x0</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/mpmath/calculus/optimization.html#MDNewton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mpmath.calculus.optimization.MDNewton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the root of a vector function numerically using Newton&#8217;s method.</p>
+<p>f is a vector function representing a nonlinear equation system.</p>
+<p>x0 is the starting point close to the root.</p>
+<p>J is a function returning the Jacobian matrix for a point.</p>
+<p>Supports overdetermined systems.</p>
+<p>Use the &#8216;norm&#8217; keyword to specify which norm to use. Defaults to max-norm.
+The function to calculate the Jacobian matrix can be given using the
+keyword &#8216;J&#8217;. Otherwise it will be calculated numerically.</p>
+<p>Please note that this method converges only locally. Especially for high-
+dimensional systems it is not trivial to find a good starting point being
+close enough to the root.</p>
+<p>It is recommended to use a faster, low-precision solver from SciPy [1] or
+OpenOpt [2] to get an initial guess. Afterwards you can use this method for
+root-polishing to any precision.</p>
+<p>[1] <a class="reference external" href="http://scipy.org">http://scipy.org</a></p>
+<p>[2] <a class="reference external" href="http://openopt.org">http://openopt.org</a></p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Root-finding and optimization</a><ul>
+<li><a class="reference internal" href="#root-finding-findroot">Root-finding (<tt class="docutils literal"><span class="pre">findroot</span></tt>)</a><ul>
+<li><a class="reference internal" href="#solvers">Solvers</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="polynomials.html"
+                        title="previous chapter">Polynomials</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sums_limits.html"
+                        title="next chapter">Sums, products, limits and extrapolation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/calculus/optimization.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sums_limits.html" title="Sums, products, limits and extrapolation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="polynomials.html" title="Polynomials"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Numerical calculus</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

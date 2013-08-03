@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.sets.fancysets &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.sets.fancysets</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Dummy</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">ask</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">Min</span><span class="p">,</span>
+        <span class="n">Max</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.integers</span> <span class="kn">import</span> <span class="n">floor</span><span class="p">,</span> <span class="n">ceiling</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.complexes</span> <span class="kn">import</span> <span class="n">sign</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">as_int</span><span class="p">,</span> <span class="n">with_metaclass</span>
+<span class="kn">from</span> <span class="nn">sympy.core.sets</span> <span class="kn">import</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">FiniteSet</span><span class="p">,</span> <span class="n">Intersection</span>
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">Singleton</span><span class="p">,</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+
+<span class="n">oo</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+
+
+<div class="viewcode-block" id="Naturals"><a class="viewcode-back" href="../../../modules/sets.html#sympy.sets.fancysets.Naturals">[docs]</a><span class="k">class</span> <span class="nc">Naturals</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">Set</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the Natural Numbers. The Naturals are available as a singleton</span>
+<span class="sd">    as S.Naturals</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import S, Interval, pprint</span>
+<span class="sd">        &gt;&gt;&gt; 5 in S.Naturals</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; iterable = iter(S.Naturals)</span>
+<span class="sd">        &gt;&gt;&gt; print(next(iterable))</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; print(next(iterable))</span>
+<span class="sd">        2</span>
+<span class="sd">        &gt;&gt;&gt; print(next(iterable))</span>
+<span class="sd">        3</span>
+<span class="sd">        &gt;&gt;&gt; pprint(S.Naturals.intersect(Interval(0, 10)))</span>
+<span class="sd">        {1, 2, ..., 10}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_iterable</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="n">_inf</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">_sup</span> <span class="o">=</span> <span class="n">oo</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">is_Interval</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Intersection</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Integers</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inf</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">other</span><span class="p">))</span> <span class="ow">and</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">other</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inf</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">i</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+</div>
+<span class="k">class</span> <span class="nc">Naturals0</span><span class="p">(</span><span class="n">Naturals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The Natural Numbers starting at 0</span>
+
+<span class="sd">    See also:</span>
+<span class="sd">        S.Naturals - starts at 1</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_inf</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">other</span><span class="p">))</span> <span class="o">==</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">other</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="Integers"><a class="viewcode-back" href="../../../modules/sets.html#sympy.sets.fancysets.Integers">[docs]</a><span class="k">class</span> <span class="nc">Integers</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">Set</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the Integers. The Integers are available as a singleton</span>
+<span class="sd">    as S.Integers</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import S, Interval, pprint</span>
+<span class="sd">        &gt;&gt;&gt; 5 in S.Naturals</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; iterable = iter(S.Integers)</span>
+<span class="sd">        &gt;&gt;&gt; print(next(iterable))</span>
+<span class="sd">        0</span>
+<span class="sd">        &gt;&gt;&gt; print(next(iterable))</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; print(next(iterable))</span>
+<span class="sd">        -1</span>
+<span class="sd">        &gt;&gt;&gt; print(next(iterable))</span>
+<span class="sd">        2</span>
+
+<span class="sd">        &gt;&gt;&gt; pprint(S.Integers.intersect(Interval(-4, 4)))</span>
+<span class="sd">        {-4, -3, ..., 4}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_iterable</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">is_Interval</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">measure</span> <span class="o">&lt;</span> <span class="n">oo</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">Range</span><span class="p">(</span><span class="n">ceiling</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">floor</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">right</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>  <span class="c"># take out endpoints if open interval</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">other</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">i</span>
+            <span class="k">yield</span> <span class="o">-</span><span class="n">i</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">oo</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">oo</span>
+
+</div>
+<span class="k">class</span> <span class="nc">Reals</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">Interval</span><span class="p">)):</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TransformationSet"><a class="viewcode-back" href="../../../modules/sets.html#sympy.sets.fancysets.TransformationSet">[docs]</a><span class="k">class</span> <span class="nc">TransformationSet</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A set that is a transformation of another through some algebraic expression</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, S, TransformationSet, FiniteSet, Lambda</span>
+
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; N = S.Naturals</span>
+<span class="sd">    &gt;&gt;&gt; squares = TransformationSet(Lambda(x, x**2), N) # {x**2 for x in N}</span>
+<span class="sd">    &gt;&gt;&gt; 4 in squares</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; 5 in squares</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &gt;&gt;&gt; FiniteSet(0, 1, 2, 3, 4, 5, 6, 7, 9, 10).intersect(squares)</span>
+<span class="sd">    {1, 4, 9}</span>
+
+<span class="sd">    &gt;&gt;&gt; square_iterable = iter(squares)</span>
+<span class="sd">    &gt;&gt;&gt; for i in range(4):</span>
+<span class="sd">    ...     next(square_iterable)</span>
+<span class="sd">    1</span>
+<span class="sd">    4</span>
+<span class="sd">    9</span>
+<span class="sd">    16</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">lamda</span><span class="p">,</span> <span class="n">base_set</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">lamda</span><span class="p">,</span> <span class="n">base_set</span><span class="p">)</span>
+
+    <span class="n">lamda</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">base_set</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">already_seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_set</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lamda</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">already_seen</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">already_seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">_is_multivariate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lamda</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lamda</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_multivariate</span><span class="p">():</span>
+            <span class="n">solns</span> <span class="o">=</span> <span class="n">solve</span><span class="p">([</span><span class="n">expr</span> <span class="o">-</span> <span class="n">val</span> <span class="k">for</span> <span class="n">val</span><span class="p">,</span> <span class="n">expr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">expr</span><span class="p">)],</span>
+                    <span class="n">L</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">solns</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">expr</span> <span class="o">-</span> <span class="n">other</span><span class="p">,</span> <span class="n">L</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">for</span> <span class="n">soln</span> <span class="ow">in</span> <span class="n">solns</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">soln</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_set</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">soln</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_set</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_iterable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_set</span><span class="o">.</span><span class="n">is_iterable</span>
+
+</div>
+<span class="k">class</span> <span class="nc">Range</span><span class="p">(</span><span class="n">Set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a range of integers.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Range</span>
+<span class="sd">        &gt;&gt;&gt; list(Range(5)) # 0 to 5</span>
+<span class="sd">        [0, 1, 2, 3, 4]</span>
+<span class="sd">        &gt;&gt;&gt; list(Range(10, 15)) # 10 to 15</span>
+<span class="sd">        [10, 11, 12, 13, 14]</span>
+<span class="sd">        &gt;&gt;&gt; list(Range(10, 20, 2)) # 10 to 20 in steps of 2</span>
+<span class="sd">        [10, 12, 14, 16, 18]</span>
+<span class="sd">        &gt;&gt;&gt; list(Range(20, 10, -2)) # 20 to 10 backward in steps of 2</span>
+<span class="sd">        [12, 14, 16, 18, 20]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">is_iterable</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="c"># expand range</span>
+        <span class="n">slc</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span> <span class="o">=</span> <span class="n">slc</span><span class="o">.</span><span class="n">start</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">,</span> <span class="n">slc</span><span class="o">.</span><span class="n">stop</span><span class="p">,</span> <span class="n">slc</span><span class="o">.</span><span class="n">step</span> <span class="ow">or</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span> <span class="o">=</span> <span class="p">[</span><span class="n">S</span><span class="p">(</span><span class="n">as_int</span><span class="p">(</span><span class="n">w</span><span class="p">))</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">,</span> <span class="n">step</span><span class="p">)]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Inputs to Range must be Integer Valued</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span>
+                    <span class="s">&quot;Use TransformationSets of Ranges for other cases&quot;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">ceiling</span><span class="p">((</span><span class="n">stop</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span><span class="o">/</span><span class="n">step</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+
+        <span class="c"># normalize args: regardless of how they are entered they will show</span>
+        <span class="c"># canonically as Range(inf, sup, step) with step &gt; 0</span>
+        <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">step</span><span class="p">))</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">+</span> <span class="n">step</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">stop</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_intersect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">is_Interval</span><span class="p">:</span>
+            <span class="n">osup</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">sup</span>
+            <span class="n">oinf</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">inf</span>
+            <span class="c"># if other is [0, 10) we can only go up to 9</span>
+            <span class="k">if</span> <span class="n">osup</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">right_open</span><span class="p">:</span>
+                <span class="n">osup</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">oinf</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">left_open</span><span class="p">:</span>
+                <span class="n">oinf</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c"># Take the most restrictive of the bounds set by the two sets</span>
+            <span class="c"># round inwards</span>
+            <span class="n">inf</span> <span class="o">=</span> <span class="n">ceiling</span><span class="p">(</span><span class="n">Max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">oinf</span><span class="p">))</span>
+            <span class="n">sup</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">Min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sup</span><span class="p">,</span> <span class="n">osup</span><span class="p">))</span>
+            <span class="c"># if we are off the sequence, get back on</span>
+            <span class="n">off</span> <span class="o">=</span> <span class="p">(</span><span class="n">inf</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+            <span class="k">if</span> <span class="n">off</span><span class="p">:</span>
+                <span class="n">inf</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">-</span> <span class="n">off</span>
+
+            <span class="k">return</span> <span class="n">Range</span><span class="p">(</span><span class="n">inf</span><span class="p">,</span> <span class="n">sup</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Naturals</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_intersect</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">Integers</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">other</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">other</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sup</span> <span class="ow">and</span>
+                <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">other</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">i</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">)</span><span class="o">//</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_ith_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_last_element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ith_element</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_sup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

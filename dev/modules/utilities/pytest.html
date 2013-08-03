@@ -1,0 +1,202 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pytest &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Utilities" href="index.html" />
+    <link rel="next" title="Randomised Testing" href="randtest.html" />
+    <link rel="prev" title="PKGDATA" href="pkgdata.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="randtest.html" title="Randomised Testing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pkgdata.html" title="PKGDATA"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Utilities</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.utilities.pytest">
+<span id="pytest"></span><h1>pytest<a class="headerlink" href="#module-sympy.utilities.pytest" title="Permalink to this headline">¶</a></h1>
+<p>py.test hacks to support XFAIL/XPASS</p>
+<dl class="function">
+<dt id="sympy.utilities.pytest.SKIP">
+<tt class="descclassname">sympy.utilities.pytest.</tt><tt class="descname">SKIP</tt><big>(</big><em>reason</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/pytest.html#SKIP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.pytest.SKIP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to <tt class="xref py py-func docutils literal"><span class="pre">skip()</span></tt>, but this is a decorator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.pytest.raises">
+<tt class="descclassname">sympy.utilities.pytest.</tt><tt class="descname">raises</tt><big>(</big><em>expectedException</em>, <em>code=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/pytest.html#raises"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.pytest.raises" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests that <tt class="docutils literal"><span class="pre">code</span></tt> raises the exception <tt class="docutils literal"><span class="pre">expectedException</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">code</span></tt> may be a callable, such as a lambda expression or function
+name.</p>
+<p>If <tt class="docutils literal"><span class="pre">code</span></tt> is not given or None, <tt class="docutils literal"><span class="pre">raises</span></tt> will return a context
+manager for use in <tt class="docutils literal"><span class="pre">with</span></tt> statements; the code to execute then
+comes from the scope of the <tt class="docutils literal"><span class="pre">with</span></tt>.</p>
+<p><tt class="docutils literal"><span class="pre">raises()</span></tt> does nothing if the callable raises the expected exception,
+otherwise it raises an AssertionError.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.pytest</span> <span class="kn">import</span> <span class="n">raises</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">raises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">raises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">AssertionError</span>: <span class="n">DID NOT RAISE</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">AssertionError</span>: <span class="n">DID NOT RAISE</span>
+</pre></div>
+</div>
+<p>Note that you cannot test multiple statements via
+<tt class="docutils literal"><span class="pre">with</span> <span class="pre">raises</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">0</span>    <span class="c"># will execute and raise, aborting the ``with``</span>
+<span class="gp">... </span>    <span class="n">n</span> <span class="o">=</span> <span class="mi">9999</span><span class="o">/</span><span class="mi">0</span> <span class="c"># never executed</span>
+</pre></div>
+</div>
+<p>This is just what <tt class="docutils literal"><span class="pre">with</span></tt> is supposed to do: abort the
+contained statement sequence at the first exception and let
+the context manager deal with the exception.</p>
+<p>To test multiple statements, you&#8217;ll need a separate <tt class="docutils literal"><span class="pre">with</span></tt>
+for each:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">n</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">0</span>    <span class="c"># will execute and raise</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">raises</span><span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">n</span> <span class="o">=</span> <span class="mi">9999</span><span class="o">/</span><span class="mi">0</span> <span class="c"># will also execute and raise</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pkgdata.html"
+                        title="previous chapter">PKGDATA</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="randtest.html"
+                        title="next chapter">Randomised Testing</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/utilities/pytest.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="randtest.html" title="Randomised Testing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pkgdata.html" title="PKGDATA"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Utilities</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,642 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Matrix Expressions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Matrices" href="index.html" />
+    <link rel="next" title="Welcome to mpmath’s documentation!" href="../mpmath/index.html" />
+    <link rel="prev" title="Immutable Matrices" href="immutablematrices.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../mpmath/index.html" title="Welcome to mpmath’s documentation!"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="immutablematrices.html" title="Immutable Matrices"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Matrices</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.matrices.expressions">
+<span id="matrix-expressions"></span><h1>Matrix Expressions<a class="headerlink" href="#module-sympy.matrices.expressions" title="Permalink to this headline">¶</a></h1>
+<p>The Matrix expression module allows users to write down statements like</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">I</span><span class="o">*</span><span class="n">Y</span>
+<span class="go">X^-1*X&#39;^-1*Y</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Matrix</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[X[0, 0], X[0, 1], X[0, 2]],</span>
+<span class="go">[X[1, 0], X[1, 1], X[1, 2]],</span>
+<span class="go">[X[2, 0], X[2, 1], X[2, 2]]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">X</span><span class="o">*</span><span class="n">Y</span><span class="p">)[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="go">X[1, 0]*Y[0, 2] + X[1, 1]*Y[1, 2] + X[1, 2]*Y[2, 2]</span>
+</pre></div>
+</div>
+<p>where <tt class="docutils literal"><span class="pre">X</span></tt> and <tt class="docutils literal"><span class="pre">Y</span></tt> are <a class="reference internal" href="#sympy.matrices.expressions.MatrixSymbol" title="sympy.matrices.expressions.MatrixSymbol"><tt class="xref py py-class docutils literal"><span class="pre">MatrixSymbol</span></tt></a>&#8216;s rather than scalar symbols.</p>
+<div class="section" id="matrix-expressions-core-reference">
+<h2>Matrix Expressions Core Reference<a class="headerlink" href="#matrix-expressions-core-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.matrices.expressions.MatrixExpr">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">MatrixExpr</tt><a class="headerlink" href="#sympy.matrices.expressions.MatrixExpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matrix Expression Class
+Matrix Expressions subclass SymPy Expr&#8217;s so that
+MatAdd inherits from Add
+MatMul inherits from Mul
+MatPow inherits from Pow</p>
+<p>They use _op_priority to gain control with binary operations (+, <em>, -, *</em>)
+are used</p>
+<p>They implement operations specific to Matrix Algebra.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="sympy.matrices.expressions.MatrixExpr.T">
+<tt class="descname">T</tt><a class="headerlink" href="#sympy.matrices.expressions.MatrixExpr.T" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matrix transposition.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.expressions.MatrixExpr.as_explicit">
+<tt class="descname">as_explicit</tt><big>(</big><big>)</big><a class="headerlink" href="#sympy.matrices.expressions.MatrixExpr.as_explicit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dense Matrix with elements represented explicitly</p>
+<p>Returns an object of type ImmutableMatrix.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.matrices.expressions.MatrixExpr.as_mutable" title="sympy.matrices.expressions.MatrixExpr.as_mutable"><tt class="xref py py-obj docutils literal"><span class="pre">as_mutable</span></tt></a></dt>
+<dd>returns mutable Matrix type</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Identity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">Identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span>
+<span class="go">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">.</span><span class="n">as_explicit</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[0, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.expressions.MatrixExpr.as_mutable">
+<tt class="descname">as_mutable</tt><big>(</big><big>)</big><a class="headerlink" href="#sympy.matrices.expressions.MatrixExpr.as_mutable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dense, mutable matrix with elements represented explicitly</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.matrices.expressions.MatrixExpr.as_explicit" title="sympy.matrices.expressions.MatrixExpr.as_explicit"><tt class="xref py py-obj docutils literal"><span class="pre">as_explicit</span></tt></a></dt>
+<dd>returns ImmutableMatrix</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Identity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">Identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span>
+<span class="go">I</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">.</span><span class="n">as_mutable</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0],</span>
+<span class="go">[0, 1, 0],</span>
+<span class="go">[0, 0, 1]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.matrices.expressions.MatrixExpr.equals">
+<tt class="descname">equals</tt><big>(</big><em>other</em><big>)</big><a class="headerlink" href="#sympy.matrices.expressions.MatrixExpr.equals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test elementwise equality between matrices, potentially of different
+types</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Identity</span><span class="p">,</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.MatrixSymbol">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">MatrixSymbol</tt><a class="headerlink" href="#sympy.matrices.expressions.MatrixSymbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Symbolic representation of a Matrix object</p>
+<p>Creates a SymPy Symbol to represent a Matrix. This matrix has a shape and
+can be included in Matrix Expressions</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">Identity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="c"># A 3 by 4 Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c"># A 4 by 3 Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(3, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">2</span><span class="o">*</span><span class="n">A</span><span class="o">*</span><span class="n">B</span> <span class="o">+</span> <span class="n">Identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">I + 2*A*B</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.MatAdd">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">MatAdd</tt><a class="headerlink" href="#sympy.matrices.expressions.MatAdd" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Sum of Matrix Expressions</p>
+<p>MatAdd inherits from and operates like SymPy Add</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatAdd</span><span class="p">,</span> <span class="n">MatrixSymbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MatAdd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">A + B + C</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.MatMul">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">MatMul</tt><a class="headerlink" href="#sympy.matrices.expressions.MatMul" title="Permalink to this definition">¶</a></dt>
+<dd><p>A product of matrix expressions</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatMul</span><span class="p">,</span> <span class="n">MatrixSymbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MatMul</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+<span class="go">A*B*C</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.MatPow">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">MatPow</tt><a class="headerlink" href="#sympy.matrices.expressions.MatPow" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.Inverse">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">Inverse</tt><a class="headerlink" href="#sympy.matrices.expressions.Inverse" title="Permalink to this definition">¶</a></dt>
+<dd><p>The multiplicative inverse of a matrix expression</p>
+<p>This is a symbolic object that simply stores its argument without
+evaluating it. To actually compute the inverse, use the <tt class="docutils literal"><span class="pre">.inverse()</span></tt>
+method of matrices.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">Inverse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Inverse</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="go">A^-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span> <span class="o">==</span> <span class="n">Inverse</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="p">)</span><span class="o">.</span><span class="n">inverse</span><span class="p">()</span>
+<span class="go">B^-1*A^-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Inverse</span><span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="p">)</span>
+<span class="go">(A*B)^-1</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.Transpose">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">Transpose</tt><a class="headerlink" href="#sympy.matrices.expressions.Transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>The transpose of a matrix expression.</p>
+<p>This is a symbolic object that simply stores its argument without
+evaluating it. To actually compute the transpose, use the <tt class="docutils literal"><span class="pre">transpose()</span></tt>
+function, or the <tt class="docutils literal"><span class="pre">.T</span></tt> attribute of matrices.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">Transpose</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">transpose</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Transpose</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="go">A&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">T</span> <span class="o">==</span> <span class="n">transpose</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">==</span> <span class="n">Transpose</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Transpose</span><span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="p">)</span>
+<span class="go">(A*B)&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">transpose</span><span class="p">(</span><span class="n">A</span><span class="o">*</span><span class="n">B</span><span class="p">)</span>
+<span class="go">B&#39;*A&#39;</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.Trace">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">Trace</tt><a class="headerlink" href="#sympy.matrices.expressions.Trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matrix Trace</p>
+<p>Represents the trace of a matrix expression.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">Trace</span><span class="p">,</span> <span class="n">eye</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Trace</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+<span class="go">Trace(A)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd>trace</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.FunctionMatrix">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">FunctionMatrix</tt><a class="headerlink" href="#sympy.matrices.expressions.FunctionMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a Matrix using a function (Lambda)</p>
+<p>This class is an alternative to SparseMatrix</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FunctionMatrix</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">MatMul</span><span class="p">,</span> <span class="n">Matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;i,j&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">FunctionMatrix</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Matrix</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, 1, 2],</span>
+<span class="go">[1, 2, 3],</span>
+<span class="go">[2, 3, 4]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">FunctionMatrix</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">Y</span><span class="o">*</span><span class="n">Y</span><span class="p">,</span> <span class="n">MatMul</span><span class="p">)</span> <span class="c"># this is an expression object</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">Y</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">]</span> <span class="c"># So this is evaluated lazily</span>
+<span class="go">342923500</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.Identity">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">Identity</tt><a class="headerlink" href="#sympy.matrices.expressions.Identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Matrix Identity I - multiplicative identity</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Identity</span><span class="p">,</span> <span class="n">MatrixSymbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">Identity</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">I</span><span class="o">*</span><span class="n">A</span>
+<span class="go">A</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.ZeroMatrix">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.</tt><tt class="descname">ZeroMatrix</tt><a class="headerlink" href="#sympy.matrices.expressions.ZeroMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Matrix Zero 0 - additive identity</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">ZeroMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="n">ZeroMatrix</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">+</span><span class="n">Z</span>
+<span class="go">A</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span><span class="o">*</span><span class="n">A</span><span class="o">.</span><span class="n">T</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="52%" />
+<col width="48%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Identity</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="block-matrices">
+<h2>Block Matrices<a class="headerlink" href="#block-matrices" title="Permalink to this headline">¶</a></h2>
+<p>Block matrices allow you to construct larger matrices out of smaller
+sub-blocks. They can work with <a class="reference internal" href="#sympy.matrices.expressions.MatrixExpr" title="sympy.matrices.expressions.MatrixExpr"><tt class="xref py py-class docutils literal"><span class="pre">MatrixExpr</span></tt></a> or
+<tt class="xref py py-class docutils literal"><span class="pre">ImmutableMatrix</span></tt> objects.</p>
+<span class="target" id="module-sympy.matrices.expressions.blockmatrix"></span><dl class="class">
+<dt id="sympy.matrices.expressions.blockmatrix.BlockMatrix">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.blockmatrix.</tt><tt class="descname">BlockMatrix</tt><a class="reference internal" href="../../_modules/sympy/matrices/expressions/blockmatrix.html#BlockMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.expressions.blockmatrix.BlockMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>A BlockMatrix is a Matrix composed of other smaller, submatrices</p>
+<p>The submatrices are stored in a SymPy Matrix object but accessed as part of
+a Matrix Expression</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">Identity</span><span class="p">,</span> <span class="n">ZeroMatrix</span><span class="p">,</span> <span class="n">block_collapse</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">l</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n m l&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="n">m</span> <span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">],</span> <span class="p">[</span><span class="n">ZeroMatrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">),</span> <span class="n">Y</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[X, Z],</span>
+<span class="go">[0, Y]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">Identity</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">Z</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+<span class="go">Matrix([[I, Z]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">block_collapse</span><span class="p">(</span><span class="n">C</span><span class="o">*</span><span class="n">B</span><span class="p">))</span>
+<span class="go">Matrix([[X, Z*Y + Z]])</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.matrices.expressions.blockmatrix.BlockMatrix.transpose">
+<tt class="descname">transpose</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/expressions/blockmatrix.html#BlockMatrix.transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.expressions.blockmatrix.BlockMatrix.transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return transpose of matrix.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">,</span> <span class="n">ZeroMatrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">l</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="n">m</span> <span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">],</span> <span class="p">[</span><span class="n">ZeroMatrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">n</span><span class="p">),</span> <span class="n">Y</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[X&#39;,  0],</span>
+<span class="go">[Z&#39;, Y&#39;]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[X, Z],</span>
+<span class="go">[0, Y]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.matrices.expressions.blockmatrix.BlockDiagMatrix">
+<em class="property">class </em><tt class="descclassname">sympy.matrices.expressions.blockmatrix.</tt><tt class="descname">BlockDiagMatrix</tt><a class="reference internal" href="../../_modules/sympy/matrices/expressions/blockmatrix.html#BlockDiagMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.expressions.blockmatrix.BlockDiagMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">BlockDiagMatrix</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">Identity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">l</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n m l&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="n">m</span> <span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BlockDiagMatrix</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[X, 0],</span>
+<span class="go">[0, Y]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.matrices.expressions.blockmatrix.block_collapse">
+<tt class="descclassname">sympy.matrices.expressions.blockmatrix.</tt><tt class="descname">block_collapse</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/matrices/expressions/blockmatrix.html#block_collapse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.matrices.expressions.blockmatrix.block_collapse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates a block matrix expression</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">MatrixSymbol</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">,</span> <span class="n">symbols</span><span class="p">,</span>                           <span class="n">Identity</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">ZeroMatrix</span><span class="p">,</span> <span class="n">block_collapse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">l</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;n m l&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Y</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Y&#39;</span><span class="p">,</span> <span class="n">m</span> <span class="p">,</span><span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="n">MatrixSymbol</span><span class="p">(</span><span class="s">&#39;Z&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">],</span> <span class="p">[</span><span class="n">ZeroMatrix</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">Y</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">Matrix([</span>
+<span class="go">[X, Z],</span>
+<span class="go">[0, Y]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">BlockMatrix</span><span class="p">([[</span><span class="n">Identity</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">Z</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+<span class="go">Matrix([[I, Z]])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">block_collapse</span><span class="p">(</span><span class="n">C</span><span class="o">*</span><span class="n">B</span><span class="p">))</span>
+<span class="go">Matrix([[X, Z*Y + Z]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Matrix Expressions</a><ul>
+<li><a class="reference internal" href="#matrix-expressions-core-reference">Matrix Expressions Core Reference</a></li>
+<li><a class="reference internal" href="#block-matrices">Block Matrices</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="immutablematrices.html"
+                        title="previous chapter">Immutable Matrices</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../mpmath/index.html"
+                        title="next chapter">Welcome to mpmath&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/matrices/expressions.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../mpmath/index.html" title="Welcome to mpmath’s documentation!"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="immutablematrices.html" title="Immutable Matrices"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Matrices</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

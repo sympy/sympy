@@ -1,0 +1,1988 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.densebasic &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.densebasic</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">igcd</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.monomials</span> <span class="kn">import</span> <span class="n">monomial_min</span><span class="p">,</span> <span class="n">monomial_div</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.orderings</span> <span class="kn">import</span> <span class="n">monomial_key</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="k">def</span> <span class="nf">poly_LC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return leading coefficient of ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import poly_LC</span>
+
+<span class="sd">    &gt;&gt;&gt; poly_LC([], ZZ)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; poly_LC([ZZ(1), ZZ(2), ZZ(3)], ZZ)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">poly_TC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return trailing coefficient of ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import poly_TC</span>
+
+<span class="sd">    &gt;&gt;&gt; poly_TC([], ZZ)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; poly_TC([ZZ(1), ZZ(2), ZZ(3)], ZZ)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">dup_LC</span> <span class="o">=</span> <span class="n">dmp_LC</span> <span class="o">=</span> <span class="n">poly_LC</span>
+<span class="n">dup_TC</span> <span class="o">=</span> <span class="n">dmp_TC</span> <span class="o">=</span> <span class="n">poly_TC</span>
+
+
+<div class="viewcode-block" id="dmp_ground_LC"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_ground_LC">[docs]</a><span class="k">def</span> <span class="nf">dmp_ground_LC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the ground leading coefficient.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_ground_LC</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[[1], [2, 3]]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_ground_LC(f, 2, ZZ)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="n">u</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">dmp_LC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_ground_TC"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_ground_TC">[docs]</a><span class="k">def</span> <span class="nf">dmp_ground_TC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the ground trailing coefficient.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_ground_TC</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[[1], [2, 3]]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_ground_TC(f, 2, ZZ)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="n">u</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">dmp_TC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">dup_TC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_true_LT"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_true_LT">[docs]</a><span class="k">def</span> <span class="nf">dmp_true_LT</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the leading term ``c * x_1**n_1 ... x_k**n_k``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_true_LT</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[4], [2, 0], [3, 0, 0]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_true_LT(f, 1, ZZ)</span>
+<span class="sd">    ((2, 0), 4)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">monom</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">while</span> <span class="n">u</span><span class="p">:</span>
+        <span class="n">monom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">monom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">monom</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">monom</span><span class="p">),</span> <span class="n">dup_LC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the leading degree of ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_degree</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 2, 0, 3])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_degree(f)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+
+<div class="viewcode-block" id="dmp_degree"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_degree">[docs]</a><span class="k">def</span> <span class="nf">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the leading degree of ``f`` in ``x_0`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_degree</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_degree([[[]]], 2)</span>
+<span class="sd">    -1</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[2], [1, 2, 3]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_degree(f, 1)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_rec_degree_in</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive helper function for :func:`dmp_degree_in`.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="n">v</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">max</span><span class="p">([</span> <span class="n">_rec_degree_in</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span> <span class="p">])</span>
+
+
+<div class="viewcode-block" id="dmp_degree_in"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_degree_in">[docs]</a><span class="k">def</span> <span class="nf">dmp_degree_in</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the leading degree of ``f`` in ``x_j`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_degree_in</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[2], [1, 2, 3]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_degree_in(f, 0, 1)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; dmp_degree_in(f, 1, 1)</span>
+<span class="sd">    2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">j</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;0 &lt;= j &lt;= </span><span class="si">%s</span><span class="s"> expected, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">_rec_degree_in</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_rec_degree_list</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">degs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive helper for :func:`dmp_degree_list`.&quot;&quot;&quot;</span>
+    <span class="n">degs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">degs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">v</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">v</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="n">_rec_degree_list</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">degs</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_degree_list"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_degree_list">[docs]</a><span class="k">def</span> <span class="nf">dmp_degree_list</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of degrees of ``f`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_degree_list</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1], [1, 2, 3]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_degree_list(f, 1)</span>
+<span class="sd">    (1, 2)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">degs</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">_rec_degree_list</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">degs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">degs</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_strip</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove leading zeros from ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_strip</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_strip([0, 0, 1, 2, 3, 0])</span>
+<span class="sd">    [1, 2, 3, 0]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span> <span class="ow">or</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">cf</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cf</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
+
+
+<div class="viewcode-block" id="dmp_strip"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_strip">[docs]</a><span class="k">def</span> <span class="nf">dmp_strip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove leading zeros from ``f`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_strip</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_strip([[], [0, 1, 2], [1]], 1)</span>
+<span class="sd">    [[0, 1, 2], [1]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_rec_validate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive helper for :func:`dmp_validate`.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">K</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">K</span><span class="o">.</span><span class="n">of_type</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s"> in not of type </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">j</span><span class="p">,</span> <span class="n">levels</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">set</span><span class="p">([])</span>
+
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="n">levels</span> <span class="o">|=</span> <span class="n">_rec_validate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">levels</span>
+
+
+<span class="k">def</span> <span class="nf">_rec_strip</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive helper for :func:`_rec_strip`.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span> <span class="n">_rec_strip</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span> <span class="p">],</span> <span class="n">v</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_validate"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_validate">[docs]</a><span class="k">def</span> <span class="nf">dmp_validate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the number of levels in ``f`` and recursively strip it.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_validate</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_validate([[], [0, 1, 2], [1]])</span>
+<span class="sd">    ([[1, 2], [1]], 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_validate([[1], 1])</span>
+<span class="sd">    Traceback (most recent call last):</span>
+<span class="sd">    ...</span>
+<span class="sd">    ValueError: invalid data structure for a multivariate polynomial</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">levels</span> <span class="o">=</span> <span class="n">_rec_validate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">u</span> <span class="o">=</span> <span class="n">levels</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">levels</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_rec_strip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="n">u</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&quot;invalid data structure for a multivariate polynomial&quot;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dup_reverse"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dup_reverse">[docs]</a><span class="k">def</span> <span class="nf">dup_reverse</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute ``x**n * f(1/x)``, i.e.: reverse ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_reverse</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 2, 3, 0])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_reverse(f)</span>
+<span class="sd">    [3, 2, 1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">f</span><span class="p">)))</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_copy</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a new copy of a polynomial ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_copy</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 2, 3, 0])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_copy([1, 2, 3, 0])</span>
+<span class="sd">    [1, 2, 3, 0]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_copy"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_copy">[docs]</a><span class="k">def</span> <span class="nf">dmp_copy</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a new copy of a polynomial ``f`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_copy</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1], [1, 2]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_copy(f, 1)</span>
+<span class="sd">    [[1], [1, 2]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_copy</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_to_tuple</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert `f` into a tuple.</span>
+
+<span class="sd">    This is needed for hashing. This is similar to dup_copy().</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_copy</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 2, 3, 0])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_copy([1, 2, 3, 0])</span>
+<span class="sd">    [1, 2, 3, 0]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_to_tuple"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_to_tuple">[docs]</a><span class="k">def</span> <span class="nf">dmp_to_tuple</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert `f` into a nested tuple of tuples.</span>
+
+<span class="sd">    This is needed for hashing.  This is similar to dmp_copy().</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_to_tuple</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1], [1, 2]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_to_tuple(f, 1)</span>
+<span class="sd">    ((1,), (1, 2))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">dmp_to_tuple</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_normal</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize univariate polynomial in the given domain.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_normal</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_normal([0, 1.5, 2, 3], ZZ)</span>
+<span class="sd">    [1, 2, 3]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">([</span> <span class="n">K</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">])</span>
+
+
+<div class="viewcode-block" id="dmp_normal"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_normal">[docs]</a><span class="k">def</span> <span class="nf">dmp_normal</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Normalize a multivariate polynomial in the given domain.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_normal</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_normal([[], [0, 1.5, 2]], 1, ZZ)</span>
+<span class="sd">    [[1, 2]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_normal</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span> <span class="n">dmp_normal</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">],</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_convert</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the ground domain of ``f`` from ``K0`` to ``K1``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.rings import ring</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_convert</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_convert([R(1), R(2)], R.to_domain(), ZZ)</span>
+<span class="sd">    [1, 2]</span>
+<span class="sd">    &gt;&gt;&gt; dup_convert([ZZ(1), ZZ(2)], ZZ, R.to_domain())</span>
+<span class="sd">    [1, 2]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">K0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">K0</span> <span class="o">==</span> <span class="n">K1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_strip</span><span class="p">([</span> <span class="n">K1</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">K0</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">])</span>
+
+
+<div class="viewcode-block" id="dmp_convert"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_convert">[docs]</a><span class="k">def</span> <span class="nf">dmp_convert</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the ground domain of ``f`` from ``K0`` to ``K1``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.rings import ring</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_convert</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x = ring(&quot;x&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_convert([[R(1)], [R(2)]], 1, R.to_domain(), ZZ)</span>
+<span class="sd">    [[1], [2]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_convert([[ZZ(1)], [ZZ(2)]], 1, ZZ, R.to_domain())</span>
+<span class="sd">    [[1], [2]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_convert</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">K0</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">K0</span> <span class="o">==</span> <span class="n">K1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span> <span class="n">dmp_convert</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K0</span><span class="p">,</span> <span class="n">K1</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">],</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_from_sympy</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the ground domain of ``f`` from SymPy to ``K``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_from_sympy</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_from_sympy([S(1), S(2)], ZZ) == [ZZ(1), ZZ(2)]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">([</span> <span class="n">K</span><span class="o">.</span><span class="n">from_sympy</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">])</span>
+
+
+<div class="viewcode-block" id="dmp_from_sympy"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_from_sympy">[docs]</a><span class="k">def</span> <span class="nf">dmp_from_sympy</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert the ground domain of ``f`` from SymPy to ``K``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_from_sympy</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_from_sympy([[S(1)], [S(2)]], 1, ZZ) == [[ZZ(1)], [ZZ(2)]]</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_from_sympy</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">([</span> <span class="n">dmp_from_sympy</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">],</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_nth</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the ``n``-th coefficient of ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_nth</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 2, 3])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_nth(f, 0, ZZ)</span>
+<span class="sd">    3</span>
+<span class="sd">    &gt;&gt;&gt; dup_nth(f, 4, ZZ)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;&#39;n&#39; must be non-negative, got </span><span class="si">%i</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_nth"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_nth">[docs]</a><span class="k">def</span> <span class="nf">dmp_nth</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the ``n``-th coefficient of ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_nth</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1], [2], [3]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_nth(f, 0, 1, ZZ)</span>
+<span class="sd">    [3]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_nth(f, 4, 1, ZZ)</span>
+<span class="sd">    []</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;&#39;n&#39; must be non-negative, got </span><span class="si">%i</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dmp_ground_nth"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_ground_nth">[docs]</a><span class="k">def</span> <span class="nf">dmp_ground_nth</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the ground ``n``-th coefficient of ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_ground_nth</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1], [2, 3]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_ground_nth(f, (0, 1), 1, ZZ)</span>
+<span class="sd">    2</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">N</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;`n` must be non-negative, got </span><span class="si">%i</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="o">-</span> <span class="n">n</span><span class="p">],</span> <span class="n">v</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="dmp_zero_p"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_zero_p">[docs]</a><span class="k">def</span> <span class="nf">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``True`` if ``f`` is zero in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_zero_p</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_zero_p([[[[[]]]]], 4)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; dmp_zero_p([[[[[1]]]]], 4)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">u</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="ow">not</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="dmp_zero"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_zero">[docs]</a><span class="k">def</span> <span class="nf">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a multivariate zero.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_zero</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_zero(4)</span>
+<span class="sd">    [[[[[]]]]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">u</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">r</span>
+
+</div>
+<div class="viewcode-block" id="dmp_one_p"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_one_p">[docs]</a><span class="k">def</span> <span class="nf">dmp_one_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``True`` if ``f`` is one in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_one_p</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_one_p([[[ZZ(1)]]], 2, ZZ)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_ground_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">one</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_one"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_one">[docs]</a><span class="k">def</span> <span class="nf">dmp_one</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a multivariate one over ``K``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_one</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_one(2, ZZ)</span>
+<span class="sd">    [[[1]]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_ground</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">one</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_ground_p"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_ground_p">[docs]</a><span class="k">def</span> <span class="nf">dmp_ground_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return True if ``f`` is constant in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_ground_p</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_ground_p([[[3]]], 3, 2)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; dmp_ground_p([[[4]]], None, 2)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">u</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span> <span class="o">==</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dmp_ground"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_ground">[docs]</a><span class="k">def</span> <span class="nf">dmp_ground</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a multivariate constant.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_ground</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_ground(3, 5)</span>
+<span class="sd">    [[[[[[3]]]]]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_ground(1, -1)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">c</span>
+
+</div>
+<div class="viewcode-block" id="dmp_zeros"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_zeros">[docs]</a><span class="k">def</span> <span class="nf">dmp_zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of multivariate zeros.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_zeros</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_zeros(3, 2, ZZ)</span>
+<span class="sd">    [[[[]]], [[[]]], [[[]]]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_zeros(3, -1, ZZ)</span>
+<span class="sd">    [0, 0, 0]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dmp_grounds"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_grounds">[docs]</a><span class="k">def</span> <span class="nf">dmp_grounds</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a list of multivariate constants.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_grounds</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_grounds(ZZ(4), 3, 2)</span>
+<span class="sd">    [[[[4]]], [[[4]]], [[[4]]]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_grounds(ZZ(4), 3, -1)</span>
+<span class="sd">    [4, 4, 4]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">*</span><span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_ground</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="p">]</span>
+
+</div>
+<div class="viewcode-block" id="dmp_negative_p"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_negative_p">[docs]</a><span class="k">def</span> <span class="nf">dmp_negative_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``True`` if ``LC(f)`` is negative.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_negative_p</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_negative_p([[ZZ(1)], [-ZZ(1)]], 1, ZZ)</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; dmp_negative_p([[-ZZ(1)], [ZZ(1)]], 1, ZZ)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">is_negative</span><span class="p">(</span><span class="n">dmp_ground_LC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="dmp_positive_p"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_positive_p">[docs]</a><span class="k">def</span> <span class="nf">dmp_positive_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``True`` if ``LC(f)`` is positive.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_positive_p</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_positive_p([[ZZ(1)], [-ZZ(1)]], 1, ZZ)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; dmp_positive_p([[-ZZ(1)], [ZZ(1)]], 1, ZZ)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">K</span><span class="o">.</span><span class="n">is_positive</span><span class="p">(</span><span class="n">dmp_ground_LC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_from_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a ``K[x]`` polynomial from a ``dict``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_from_dict</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_from_dict({(0,): ZZ(7), (2,): ZZ(5), (4,): ZZ(1)}, ZZ)</span>
+<span class="sd">    [1, 0, 5, 0, 7]</span>
+<span class="sd">    &gt;&gt;&gt; dup_from_dict({}, ZZ)</span>
+<span class="sd">    []</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="p">(</span><span class="n">n</span><span class="p">,)</span> <span class="o">=</span> <span class="n">n</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">k</span><span class="p">,),</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">dup_from_raw_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a ``K[x]`` polynomial from a raw ``dict``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_from_raw_dict</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_from_raw_dict({0: ZZ(7), 2: ZZ(5), 4: ZZ(1)}, ZZ)</span>
+<span class="sd">    [1, 0, 5, 0, 7]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_from_dict"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_from_dict">[docs]</a><span class="k">def</span> <span class="nf">dmp_from_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a ``K[X]`` polynomial from a ``dict``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_from_dict</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_from_dict({(0, 0): ZZ(3), (0, 1): ZZ(2), (2, 1): ZZ(1)}, 1, ZZ)</span>
+<span class="sd">    [[1, 0], [], [2, 3]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_from_dict({}, 0, ZZ)</span>
+<span class="sd">    []</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_from_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">head</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">monom</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">monom</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">head</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+            <span class="n">coeffs</span><span class="p">[</span><span class="n">head</span><span class="p">][</span><span class="n">tail</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">coeffs</span><span class="p">[</span><span class="n">head</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="n">tail</span><span class="p">:</span> <span class="n">coeff</span> <span class="p">}</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">coeffs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">coeffs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">coeff</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dmp_zero</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert ``K[x]`` polynomial to a ``dict``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_to_dict</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_to_dict([1, 0, 5, 0, 7])</span>
+<span class="sd">    {(0,): 7, (2,): 5, (4,): 1}</span>
+<span class="sd">    &gt;&gt;&gt; dup_to_dict([])</span>
+<span class="sd">    {}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span> <span class="ow">and</span> <span class="n">zero</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,):</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">}</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">]:</span>
+            <span class="n">result</span><span class="p">[(</span><span class="n">k</span><span class="p">,)]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">dup_to_raw_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a ``K[x]`` polynomial to a raw ``dict``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_to_raw_dict</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_to_raw_dict([1, 0, 5, 0, 7])</span>
+<span class="sd">    {0: 7, 2: 5, 4: 1}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span> <span class="ow">and</span> <span class="n">zero</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">}</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">]:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="dmp_to_dict"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_to_dict">[docs]</a><span class="k">def</span> <span class="nf">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a ``K[X]`` polynomial to a ``dict````.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_to_dict</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_to_dict([[1, 0], [], [2, 3]], 1)</span>
+<span class="sd">    {(0, 0): 3, (0, 1): 2, (2, 1): 1}</span>
+<span class="sd">    &gt;&gt;&gt; dmp_to_dict([], 0)</span>
+<span class="sd">    {}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="n">zero</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span> <span class="ow">and</span> <span class="n">zero</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">}</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">result</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">],</span> <span class="n">v</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">exp</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">h</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">result</span><span class="p">[(</span><span class="n">k</span><span class="p">,)</span> <span class="o">+</span> <span class="n">exp</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="dmp_swap"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_swap">[docs]</a><span class="k">def</span> <span class="nf">dmp_swap</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transform ``K[..x_i..x_j..]`` to ``K[..x_j..x_i..]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_swap</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[[2], [1, 0]], []])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_swap(f, 0, 1, 2, ZZ)</span>
+<span class="sd">    [[[2], []], [[1, 0], []]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_swap(f, 1, 2, 2, ZZ)</span>
+<span class="sd">    [[[1], [2, 0]], [[]]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_swap(f, 0, 2, 2, ZZ)</span>
+<span class="sd">    [[[1, 0]], [[2, 0], []]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">u</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;0 &lt;= i &lt; j &lt;= </span><span class="si">%s</span><span class="s"> expected&quot;</span> <span class="o">%</span> <span class="n">u</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">F</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">exp</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">H</span><span class="p">[</span><span class="n">exp</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="n">j</span><span class="p">],)</span> <span class="o">+</span>
+          <span class="n">exp</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span>
+          <span class="p">(</span><span class="n">exp</span><span class="p">[</span><span class="n">i</span><span class="p">],)</span> <span class="o">+</span> <span class="n">exp</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_permute"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_permute">[docs]</a><span class="k">def</span> <span class="nf">dmp_permute</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a polynomial in ``K[x_{P(1)},..,x_{P(n)}]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_permute</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[[2], [1, 0]], []])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_permute(f, [1, 0, 2], 2, ZZ)</span>
+<span class="sd">    [[[2], []], [[1, 0], []]]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_permute(f, [1, 2, 0], 2, ZZ)</span>
+<span class="sd">    [[[1], []], [[2, 0], []]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">F</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">exp</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">new_exp</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+            <span class="n">new_exp</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="n">e</span>
+
+        <span class="n">H</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">new_exp</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_nest"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_nest">[docs]</a><span class="k">def</span> <span class="nf">dmp_nest</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a multivariate value nested ``l``-levels.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_nest</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_nest([[ZZ(1)]], 2, ZZ)</span>
+<span class="sd">    [[[[1]]]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dmp_ground</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">l</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">f</span>
+
+</div>
+<div class="viewcode-block" id="dmp_raise"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_raise">[docs]</a><span class="k">def</span> <span class="nf">dmp_raise</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a multivariate polynomial raised ``l``-levels.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_raise</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[], [1, 2]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_raise(f, 2, 1, ZZ)</span>
+<span class="sd">    [[[[]]], [[[1]], [[2]]]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">l</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dmp_zero</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="n">l</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_ground</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="p">[</span> <span class="n">dmp_raise</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span> <span class="p">]</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_deflate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map ``x**m`` to ``y`` in a polynomial in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_deflate</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 0, 0, 1, 0, 0, 1])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_deflate(f, ZZ)</span>
+<span class="sd">    (3, [1, 1, 1])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+            <span class="k">continue</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="n">igcd</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">g</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="n">f</span><span class="p">[::</span><span class="n">g</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_deflate"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_deflate">[docs]</a><span class="k">def</span> <span class="nf">dmp_deflate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map ``x_i**m_i`` to ``y_i`` in a polynomial in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_deflate</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1, 0, 0, 2], [], [3, 0, 0, 4]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_deflate(f, 1, ZZ)</span>
+<span class="sd">    ((2, 3), [[1, 2], [3, 4]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span><span class="o">*</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">f</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">M</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+            <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">igcd</span><span class="p">(</span><span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">m</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">B</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">b</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">B</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">A</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="p">[</span> <span class="n">a</span> <span class="o">//</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">H</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_multi_deflate</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map ``x**m`` to ``y`` in a set of polynomials in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_multi_deflate</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 0, 2, 0, 3])</span>
+<span class="sd">    &gt;&gt;&gt; g = ZZ.map([4, 0, 0])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_multi_deflate((f, g), ZZ)</span>
+<span class="sd">    (2, ([1, 2, 3], [4, 0]))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">polys</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">dup_degree</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="p">,</span> <span class="n">polys</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="p">[</span><span class="o">-</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="k">continue</span>
+
+            <span class="n">g</span> <span class="o">=</span> <span class="n">igcd</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">g</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="mi">1</span><span class="p">,</span> <span class="n">polys</span>
+
+        <span class="n">G</span> <span class="o">=</span> <span class="n">igcd</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">([</span> <span class="n">p</span><span class="p">[::</span><span class="n">G</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">polys</span> <span class="p">])</span>
+
+
+<div class="viewcode-block" id="dmp_multi_deflate"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_multi_deflate">[docs]</a><span class="k">def</span> <span class="nf">dmp_multi_deflate</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map ``x_i**m_i`` to ``y_i`` in a set of polynomials in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_multi_deflate</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1, 0, 0, 2], [], [3, 0, 0, 4]])</span>
+<span class="sd">    &gt;&gt;&gt; g = ZZ.map([[1, 0, 2], [], [3, 0, 4]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_multi_deflate((f, g), 1, ZZ)</span>
+<span class="sd">    ((2, 1), ([[1, 0, 0, 2], [3, 0, 0, 4]], [[1, 0, 2], [3, 0, 4]]))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="n">M</span><span class="p">,</span> <span class="n">H</span> <span class="o">=</span> <span class="n">dup_multi_deflate</span><span class="p">(</span><span class="n">polys</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">M</span><span class="p">,),</span> <span class="n">H</span>
+
+    <span class="n">F</span><span class="p">,</span> <span class="n">B</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">polys</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">M</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+                    <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">igcd</span><span class="p">(</span><span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">m</span><span class="p">)</span>
+
+        <span class="n">F</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">B</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">b</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">B</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="n">polys</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">F</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">A</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="p">[</span> <span class="n">a</span> <span class="o">//</span> <span class="n">b</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="p">]</span>
+            <span class="n">h</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+        <span class="n">H</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">B</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_inflate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map ``y`` to ``x**m`` in a polynomial in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_inflate</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 1, 1])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_inflate(f, 3, ZZ)</span>
+<span class="sd">    [1, 0, 0, 1, 0, 0, 1]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;&#39;m&#39; must be positive, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">m</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span> <span class="nf">_rec_inflate</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive helper for :func:`dmp_inflate`.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_inflate</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">K</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;all M[i] must be positive, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="n">w</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="p">[</span> <span class="n">_rec_inflate</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span> <span class="p">]</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">g</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">M</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dmp_zero</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>
+
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="dmp_inflate"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_inflate">[docs]</a><span class="k">def</span> <span class="nf">dmp_inflate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map ``y_i`` to ``x_i**k_i`` in a polynomial in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_inflate</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1, 2], [3, 4]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_inflate(f, (2, 3), 1, ZZ)</span>
+<span class="sd">    [[1, 0, 0, 2], [], [3, 0, 0, 4]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_inflate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">M</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">m</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">M</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_rec_inflate</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_exclude"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_exclude">[docs]</a><span class="k">def</span> <span class="nf">dmp_exclude</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Exclude useless levels from ``f``.</span>
+
+<span class="sd">    Return the levels excluded, the new excluded ``f``, and the new ``u``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_exclude</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[[1]], [[1], [2]]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_exclude(f, 2, ZZ)</span>
+<span class="sd">    ([2], [[1], [1, 2]], 1)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span> <span class="ow">or</span> <span class="n">dmp_ground_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="n">f</span><span class="p">,</span> <span class="n">u</span>
+
+    <span class="n">J</span><span class="p">,</span> <span class="n">F</span> <span class="o">=</span> <span class="p">[],</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">monom</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">monom</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">J</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">J</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="n">f</span><span class="p">,</span> <span class="n">u</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">monom</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">monom</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">J</span><span class="p">):</span>
+            <span class="k">del</span> <span class="n">monom</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+        <span class="n">f</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">monom</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="n">u</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">J</span><span class="p">,</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">),</span> <span class="n">u</span>
+
+</div>
+<div class="viewcode-block" id="dmp_include"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_include">[docs]</a><span class="k">def</span> <span class="nf">dmp_include</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Include useless levels in ``f``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_include</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1], [1, 2]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_include(f, [2], 1, ZZ)</span>
+<span class="sd">    [[[1]], [[1], [2]]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">J</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="n">F</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">monom</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">monom</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">J</span><span class="p">:</span>
+            <span class="n">monom</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">f</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">monom</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="n">u</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">J</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="dmp_inject"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_inject">[docs]</a><span class="k">def</span> <span class="nf">dmp_inject</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert ``f`` from ``K[X][Y]`` to ``K[X,Y]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.rings import ring</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_inject</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y = ring(&quot;x,y&quot;, ZZ)</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_inject([R(1), x + 2], 0, R.to_domain())</span>
+<span class="sd">    ([[[1]], [[1], [2]]], 2)</span>
+<span class="sd">    &gt;&gt;&gt; dmp_inject([R(1), x + 2], 0, R.to_domain(), front=True)</span>
+<span class="sd">    ([[[1]], [[1, 2]]], 2)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">ngens</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">f_monom</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">g_monom</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">front</span><span class="p">:</span>
+                <span class="n">h</span><span class="p">[</span><span class="n">g_monom</span> <span class="o">+</span> <span class="n">f_monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">h</span><span class="p">[</span><span class="n">f_monom</span> <span class="o">+</span> <span class="n">g_monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">u</span> <span class="o">+</span> <span class="n">v</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">K</span><span class="o">.</span><span class="n">dom</span><span class="p">),</span> <span class="n">w</span>
+
+</div>
+<div class="viewcode-block" id="dmp_eject"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_eject">[docs]</a><span class="k">def</span> <span class="nf">dmp_eject</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">front</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert ``f`` from ``K[X,Y]`` to ``K[X][Y]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_eject</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_eject([[[1]], [[1], [2]]], 2, ZZ[&#39;x&#39;, &#39;y&#39;])</span>
+<span class="sd">    [1, x + 2]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">ngens</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="n">u</span> <span class="o">-</span> <span class="n">K</span><span class="o">.</span><span class="n">ngens</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">front</span><span class="p">:</span>
+            <span class="n">g_monom</span><span class="p">,</span> <span class="n">f_monom</span> <span class="o">=</span> <span class="n">monom</span><span class="p">[:</span><span class="n">n</span><span class="p">],</span> <span class="n">monom</span><span class="p">[</span><span class="n">n</span><span class="p">:]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g_monom</span><span class="p">,</span> <span class="n">f_monom</span> <span class="o">=</span> <span class="n">monom</span><span class="p">[</span><span class="o">-</span><span class="n">n</span><span class="p">:],</span> <span class="n">monom</span><span class="p">[:</span><span class="o">-</span><span class="n">n</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">f_monom</span> <span class="ow">in</span> <span class="n">h</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">f_monom</span><span class="p">][</span><span class="n">g_monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span><span class="p">[</span><span class="n">f_monom</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">g_monom</span><span class="p">:</span> <span class="n">c</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">h</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">h</span><span class="p">[</span><span class="n">monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">v</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_terms_gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove GCD of terms from ``f`` in ``K[x]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_terms_gcd</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([1, 0, 1, 0, 0])</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_terms_gcd(f, ZZ)</span>
+<span class="sd">    (2, [1, 0, 1])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dup_TC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">[:</span><span class="o">-</span><span class="n">i</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="dmp_terms_gcd"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_terms_gcd">[docs]</a><span class="k">def</span> <span class="nf">dmp_terms_gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove GCD of terms from ``f`` in ``K[X]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_terms_gcd</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1, 0], [1, 0, 0], [], []])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_terms_gcd(f, 1, ZZ)</span>
+<span class="sd">    ((2, 1), [[1], [1, 0]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dmp_ground_TC</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dmp_zero_p</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">f</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">monomial_min</span><span class="p">(</span><span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+    <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">g</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="n">f</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">f</span><span class="p">[</span><span class="n">monomial_div</span><span class="p">(</span><span class="n">monom</span><span class="p">,</span> <span class="n">G</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">G</span><span class="p">,</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_rec_list_terms</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">monom</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive helper for :func:`dmp_list_terms`.&quot;&quot;&quot;</span>
+    <span class="n">d</span><span class="p">,</span> <span class="n">terms</span> <span class="o">=</span> <span class="n">dmp_degree</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">c</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">terms</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">monom</span> <span class="o">+</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">i</span><span class="p">,),</span> <span class="n">c</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+            <span class="n">terms</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_rec_list_terms</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">monom</span> <span class="o">+</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">i</span><span class="p">,)))</span>
+
+    <span class="k">return</span> <span class="n">terms</span>
+
+
+<div class="viewcode-block" id="dmp_list_terms"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_list_terms">[docs]</a><span class="k">def</span> <span class="nf">dmp_list_terms</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List all non-zero terms from ``f`` in the given order ``order``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_list_terms</span>
+
+<span class="sd">    &gt;&gt;&gt; f = ZZ.map([[1, 1], [2, 3]])</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_list_terms(f, 1, ZZ)</span>
+<span class="sd">    [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]</span>
+<span class="sd">    &gt;&gt;&gt; dmp_list_terms(f, 1, ZZ, order=&#39;grevlex&#39;)</span>
+<span class="sd">    [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">sort</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">O</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">term</span><span class="p">:</span> <span class="n">O</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">_rec_list_terms</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="p">())</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">terms</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[((</span><span class="mi">0</span><span class="p">,)</span><span class="o">*</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">)]</span>
+
+    <span class="k">if</span> <span class="n">order</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">terms</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sort</span><span class="p">(</span><span class="n">terms</span><span class="p">,</span> <span class="n">monomial_key</span><span class="p">(</span><span class="n">order</span><span class="p">))</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_apply_pairs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply ``h`` to pairs of coefficients of ``f`` and ``g``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_apply_pairs</span>
+
+<span class="sd">    &gt;&gt;&gt; h = lambda x, y, z: 2*x + y - z</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_apply_pairs([1, 2, 3], [3, 2, 1], h, (1,), ZZ)</span>
+<span class="sd">    [4, 5, 6]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="n">g</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dup_strip</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dmp_apply_pairs"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_apply_pairs">[docs]</a><span class="k">def</span> <span class="nf">dmp_apply_pairs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply ``h`` to pairs of coefficients of ``f`` and ``g``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dmp_apply_pairs</span>
+
+<span class="sd">    &gt;&gt;&gt; h = lambda x, y, z: 2*x + y - z</span>
+
+<span class="sd">    &gt;&gt;&gt; dmp_apply_pairs([[1], [2, 3]], [[3], [2, 1]], h, (1,), 1, ZZ)</span>
+<span class="sd">    [[4], [5, 6]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_apply_pairs</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="n">u</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">:</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">dmp_zeros</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">m</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">+</span> <span class="n">g</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">dmp_zeros</span><span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="n">n</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span> <span class="o">+</span> <span class="n">f</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dmp_apply_pairs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">K</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">dmp_strip</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dup_slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a continuous subsequence of terms of ``f`` in ``K[x]``. &quot;&quot;&quot;</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="n">m</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="n">m</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="n">n</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">N</span><span class="p">:</span><span class="n">M</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span> <span class="o">+</span> <span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">zero</span><span class="p">]</span><span class="o">*</span><span class="n">m</span>
+
+
+<div class="viewcode-block" id="dmp_slice"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dmp_slice">[docs]</a><span class="k">def</span> <span class="nf">dmp_slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a continuous subsequence of terms of ``f`` in ``K[X]``. &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dmp_slice_in</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">dmp_slice_in</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a continuous subsequence of terms of ``f`` in ``x_j`` in ``K[X]``. &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&gt;</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s">&quot;-</span><span class="si">%s</span><span class="s"> &lt;= j &lt; </span><span class="si">%s</span><span class="s"> expected, got </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">u</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">dup_slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+    <span class="n">f</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">dmp_to_dict</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">u</span><span class="p">),</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">monom</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;</span> <span class="n">m</span> <span class="ow">or</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">monom</span> <span class="o">=</span> <span class="n">monom</span><span class="p">[:</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="mi">0</span><span class="p">,)</span> <span class="o">+</span> <span class="n">monom</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">monom</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">monom</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coeff</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">g</span><span class="p">[</span><span class="n">monom</span><span class="p">]</span> <span class="o">=</span> <span class="n">coeff</span>
+
+    <span class="k">return</span> <span class="n">dmp_from_dict</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="dup_random"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.densebasic.dup_random">[docs]</a><span class="k">def</span> <span class="nf">dup_random</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a polynomial of degree ``n`` with coefficients in ``[a, b]``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.domains import ZZ</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.densebasic import dup_random</span>
+
+<span class="sd">    &gt;&gt;&gt; dup_random(3, -10, 10, ZZ) #doctest: +SKIP</span>
+<span class="sd">    [-2, -8, 9, -4]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="p">[</span> <span class="n">K</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">f</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

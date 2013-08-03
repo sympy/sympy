@@ -1,0 +1,671 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.functions.elementary.miscellaneous &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.functions.elementary.miscellaneous</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.add</span> <span class="kn">import</span> <span class="n">Add</span>
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">sympy.core.containers</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Rational</span>
+<span class="kn">from</span> <span class="nn">sympy.core.operations</span> <span class="kn">import</span> <span class="n">LatticeOp</span><span class="p">,</span> <span class="n">ShortCircuit</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Application</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">ArgumentIndexError</span>
+<span class="kn">from</span> <span class="nn">sympy.core.expr</span> <span class="kn">import</span> <span class="n">Expr</span>
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">Singleton</span>
+<span class="kn">from</span> <span class="nn">sympy.core.rules</span> <span class="kn">import</span> <span class="n">Transform</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">as_int</span><span class="p">,</span> <span class="n">with_metaclass</span><span class="p">,</span> <span class="nb">xrange</span>
+<span class="kn">from</span> <span class="nn">sympy.core.logic</span> <span class="kn">import</span> <span class="n">fuzzy_and</span>
+
+
+<div class="viewcode-block" id="IdentityFunction"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.miscellaneous.IdentityFunction">[docs]</a><span class="k">class</span> <span class="nc">IdentityFunction</span><span class="p">(</span><span class="n">with_metaclass</span><span class="p">(</span><span class="n">Singleton</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The identity function</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Id, Symbol</span>
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; Id(x)</span>
+<span class="sd">    x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+        <span class="c">#construct &quot;by hand&quot; to avoid infinite loop</span>
+        <span class="k">return</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span></div>
+<span class="n">Id</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">IdentityFunction</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">############################# ROOT and SQUARE ROOT FUNCTION ###################</span>
+<span class="c">###############################################################################</span>
+
+
+<div class="viewcode-block" id="sqrt"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.miscellaneous.sqrt">[docs]</a><span class="k">def</span> <span class="nf">sqrt</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The square root function</span>
+
+<span class="sd">    sqrt(x) -&gt; Returns the principal square root of x.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import sqrt, Symbol</span>
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+
+<span class="sd">    &gt;&gt;&gt; sqrt(x)</span>
+<span class="sd">    sqrt(x)</span>
+
+<span class="sd">    &gt;&gt;&gt; sqrt(x)**2</span>
+<span class="sd">    x</span>
+
+<span class="sd">    Note that sqrt(x**2) does not simplify to x.</span>
+
+<span class="sd">    &gt;&gt;&gt; sqrt(x**2)</span>
+<span class="sd">    sqrt(x**2)</span>
+
+<span class="sd">    This is because the two are not equal to each other in general.</span>
+<span class="sd">    For example, consider x == -1:</span>
+
+<span class="sd">    &gt;&gt;&gt; sqrt(x**2).subs(x, -1)</span>
+<span class="sd">    1</span>
+<span class="sd">    &gt;&gt;&gt; x.subs(x, -1)</span>
+<span class="sd">    -1</span>
+
+<span class="sd">    This is because sqrt computes the principal square root, so the square may</span>
+<span class="sd">    put the argument in a different branch.  This identity does hold if x is</span>
+<span class="sd">    positive:</span>
+
+<span class="sd">    &gt;&gt;&gt; y = Symbol(&#39;y&#39;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; sqrt(y**2)</span>
+<span class="sd">    y</span>
+
+<span class="sd">    You can force this simplification by using the powdenest() function with</span>
+<span class="sd">    the force option set to True:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import powdenest</span>
+<span class="sd">    &gt;&gt;&gt; sqrt(x**2)</span>
+<span class="sd">    sqrt(x**2)</span>
+<span class="sd">    &gt;&gt;&gt; powdenest(sqrt(x**2), force=True)</span>
+<span class="sd">    x</span>
+
+<span class="sd">    To get both branches of the square root you can use the RootOf function:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import RootOf</span>
+
+<span class="sd">    &gt;&gt;&gt; [ RootOf(x**2-3,i) for i in (0,1) ]</span>
+<span class="sd">    [-sqrt(3), sqrt(3)]</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.polys.rootoftools.RootOf, root</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    * http://en.wikipedia.org/wiki/Square_root</span>
+<span class="sd">    * http://en.wikipedia.org/wiki/Principal_value</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># arg = sympify(arg) is handled by Pow</span>
+    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Pow</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="root"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.miscellaneous.root">[docs]</a><span class="k">def</span> <span class="nf">root</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The n-th root function (a shortcut for ``arg**(1/n)``)</span>
+
+<span class="sd">    root(x, n) -&gt; Returns the principal n-th root of x.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import root, Rational</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, n</span>
+
+<span class="sd">    &gt;&gt;&gt; root(x, 2)</span>
+<span class="sd">    sqrt(x)</span>
+
+<span class="sd">    &gt;&gt;&gt; root(x, 3)</span>
+<span class="sd">    x**(1/3)</span>
+
+<span class="sd">    &gt;&gt;&gt; root(x, n)</span>
+<span class="sd">    x**(1/n)</span>
+
+<span class="sd">    &gt;&gt;&gt; root(x, -Rational(2, 3))</span>
+<span class="sd">    x**(-3/2)</span>
+
+
+<span class="sd">    To get all n n-th roots you can use the RootOf function.</span>
+<span class="sd">    The following examples show the roots of unity for n</span>
+<span class="sd">    equal 2, 3 and 4:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import RootOf, I</span>
+
+<span class="sd">    &gt;&gt;&gt; [ RootOf(x**2-1,i) for i in (0,1) ]</span>
+<span class="sd">    [-1, 1]</span>
+
+<span class="sd">    &gt;&gt;&gt; [ RootOf(x**3-1,i) for i in (0,1,2) ]</span>
+<span class="sd">    [1, -1/2 - sqrt(3)*I/2, -1/2 + sqrt(3)*I/2]</span>
+
+<span class="sd">    &gt;&gt;&gt; [ RootOf(x**4-1,i) for i in (0,1,2,3) ]</span>
+<span class="sd">    [-1, 1, -I, I]</span>
+
+<span class="sd">    SymPy, like other symbolic algebra systems, returns the</span>
+<span class="sd">    complex root of negative numbers. This is the principal</span>
+<span class="sd">    root and differs from the text-book result that one might</span>
+<span class="sd">    be expecting. For example, the cube root of -8 does not</span>
+<span class="sd">    come back as -2:</span>
+
+<span class="sd">    &gt;&gt;&gt; root(-8, 3)</span>
+<span class="sd">    2*(-1)**(1/3)</span>
+
+<span class="sd">    The real_root function can be used to either make such a result</span>
+<span class="sd">    real or simply return the real root in the first place:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import real_root</span>
+<span class="sd">    &gt;&gt;&gt; real_root(_)</span>
+<span class="sd">    -2</span>
+<span class="sd">    &gt;&gt;&gt; real_root(-32, 5)</span>
+<span class="sd">    -2</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.polys.rootoftools.RootOf</span>
+<span class="sd">    sympy.core.power.integer_nthroot</span>
+<span class="sd">    sqrt, real_root</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    * http://en.wikipedia.org/wiki/Square_root</span>
+<span class="sd">    * http://en.wikipedia.org/wiki/real_root</span>
+<span class="sd">    * http://en.wikipedia.org/wiki/Root_of_unity</span>
+<span class="sd">    * http://en.wikipedia.org/wiki/Principal_value</span>
+<span class="sd">    * http://mathworld.wolfram.com/CubeRoot.html</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">Pow</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">real_root</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the real nth-root of arg if possible. If n is omitted then</span>
+<span class="sd">    all instances of -1**(1/odd) will be changed to -1.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import root, real_root, Rational</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, n</span>
+
+<span class="sd">    &gt;&gt;&gt; real_root(-8, 3)</span>
+<span class="sd">    -2</span>
+<span class="sd">    &gt;&gt;&gt; root(-8, 3)</span>
+<span class="sd">    2*(-1)**(1/3)</span>
+<span class="sd">    &gt;&gt;&gt; real_root(_)</span>
+<span class="sd">    -2</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.polys.rootoftools.RootOf</span>
+<span class="sd">    sympy.core.power.integer_nthroot</span>
+<span class="sd">    root, sqrt</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Pow</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rv</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="n">n1pow</span> <span class="o">=</span> <span class="n">Transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span><span class="p">,</span>
+                      <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span>
+                      <span class="n">x</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span>
+                      <span class="n">x</span><span class="o">.</span><span class="n">base</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeOne</span> <span class="ow">and</span>
+                      <span class="n">x</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span>
+                      <span class="n">x</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">p</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">q</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rv</span><span class="o">.</span><span class="n">xreplace</span><span class="p">(</span><span class="n">n1pow</span><span class="p">)</span>
+
+<span class="c">###############################################################################</span>
+<span class="c">############################# MINIMUM and MAXIMUM #############################</span>
+<span class="c">###############################################################################</span>
+
+
+<span class="k">class</span> <span class="nc">MinMaxBase</span><span class="p">(</span><span class="n">Expr</span><span class="p">,</span> <span class="n">LatticeOp</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;The Max/Min functions must have arguments.&quot;</span><span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">)</span>
+
+        <span class="c"># first standard filter, for cls.zero and cls.identity</span>
+        <span class="c"># also reshape Max(a, Max(b, c)) to Max(a, b, c)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_args</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_new_args_filter</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">ShortCircuit</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">zero</span>
+
+        <span class="c"># second filter</span>
+        <span class="c"># variant I: remove ones which can be removed</span>
+        <span class="c"># args = cls._collapse_arguments(set(_args), **assumptions)</span>
+
+        <span class="c"># variant II: find local zeros</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_find_localzeros</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">_args</span><span class="p">),</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+
+        <span class="n">_args</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">identity</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">_args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">_args</span><span class="p">)</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># base creation</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">_args</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+            <span class="n">obj</span><span class="o">.</span><span class="n">_argset</span> <span class="o">=</span> <span class="n">_args</span>
+            <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_new_args_filter</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">arg_sequence</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generator filtering args.</span>
+
+<span class="sd">        first standard filter, for cls.zero and cls.identity.</span>
+<span class="sd">        Also reshape Max(a, Max(b, c)) to Max(a, b, c),</span>
+<span class="sd">        and check arguments for comparability</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">arg_sequence</span><span class="p">:</span>
+
+            <span class="c"># pre-filter, checking comparability of arguments</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">is_real</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">arg</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">ComplexInfinity</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;The argument &#39;</span><span class="si">%s</span><span class="s">&#39; is not comparable.&quot;</span> <span class="o">%</span> <span class="n">arg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">arg</span> <span class="o">==</span> <span class="n">cls</span><span class="o">.</span><span class="n">zero</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ShortCircuit</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">arg</span> <span class="o">==</span> <span class="n">cls</span><span class="o">.</span><span class="n">identity</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">arg</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="n">cls</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">iter_basic_args</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="n">x</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">arg</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_find_localzeros</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sequentially allocate values to localzeros.</span>
+
+<span class="sd">        When a value is identified as being more extreme than another member it</span>
+<span class="sd">        replaces that member; if this is never true, then the value is simply</span>
+<span class="sd">        appended to the localzeros.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">localzeros</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="n">is_newzero</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="n">localzeros_</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">localzeros</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">localzeros_</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">id</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="nb">id</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+                    <span class="n">is_newzero</span> <span class="o">=</span> <span class="bp">False</span>
+                <span class="k">elif</span> <span class="n">cls</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+                    <span class="n">is_newzero</span> <span class="o">=</span> <span class="bp">False</span>
+                    <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">_is_asneeded</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+                        <span class="n">localzeros</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+                        <span class="n">localzeros</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">v</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">is_newzero</span><span class="p">:</span>
+                <span class="n">localzeros</span><span class="o">.</span><span class="n">update</span><span class="p">([</span><span class="n">v</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">localzeros</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_is_connected</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if x and y are connected somehow.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">y</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_Number</span> <span class="ow">and</span> <span class="n">y</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_is_asneeded</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if x and y satisfy relation condition.</span>
+
+<span class="sd">        The relation condition for Max function is x &gt; y,</span>
+<span class="sd">        for Min function is x &lt; y. They are defined in children Max and Min</span>
+<span class="sd">        classes through the method _rel(cls, x, y)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_Number</span> <span class="ow">and</span> <span class="n">y</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">_rel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">xy</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_rel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">xy</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="n">yx</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_rel_inversed</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yx</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">yx</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>  <span class="c"># never occurs?</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="c"># f(x).diff(s) -&gt; x.diff(s) * f.fdiff(1)(s)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">l</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">da</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">da</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fdiff</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">ArgumentIndexError</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">Function</span><span class="o">.</span><span class="n">fdiff</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span> <span class="o">*</span> <span class="n">da</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">l</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fuzzy_and</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">is_real</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Max"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.miscellaneous.Max">[docs]</a><span class="k">class</span> <span class="nc">Max</span><span class="p">(</span><span class="n">MinMaxBase</span><span class="p">,</span> <span class="n">Application</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return, if possible, the maximum value of the list.</span>
+
+<span class="sd">    When number of arguments is equal one, then</span>
+<span class="sd">    return this argument.</span>
+
+<span class="sd">    When number of arguments is equal two, then</span>
+<span class="sd">    return, if possible, the value from (a, b) that is &gt;= the other.</span>
+
+<span class="sd">    In common case, when the length of list greater than 2, the task</span>
+<span class="sd">    is more complicated. Return only the arguments, which are greater</span>
+<span class="sd">    than others, if it is possible to determine directional relation.</span>
+
+<span class="sd">    If is not possible to determine such a relation, return a partially</span>
+<span class="sd">    evaluated result.</span>
+
+<span class="sd">    Assumptions are used to make the decision too.</span>
+
+<span class="sd">    Also, only comparable arguments are permitted.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Max, Symbol, oo</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; p = Symbol(&#39;p&#39;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; n = Symbol(&#39;n&#39;, negative=True)</span>
+
+<span class="sd">    &gt;&gt;&gt; Max(x, -2)                  #doctest: +SKIP</span>
+<span class="sd">    Max(x, -2)</span>
+
+<span class="sd">    &gt;&gt;&gt; Max(x, -2).subs(x, 3)</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &gt;&gt;&gt; Max(p, -2)</span>
+<span class="sd">    p</span>
+
+<span class="sd">    &gt;&gt;&gt; Max(x, y)                   #doctest: +SKIP</span>
+<span class="sd">    Max(x, y)</span>
+
+<span class="sd">    &gt;&gt;&gt; Max(x, y) == Max(y, x)</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &gt;&gt;&gt; Max(x, Max(y, z))           #doctest: +SKIP</span>
+<span class="sd">    Max(x, y, z)</span>
+
+<span class="sd">    &gt;&gt;&gt; Max(n, 8, p, 7, -oo)        #doctest: +SKIP</span>
+<span class="sd">    Max(8, p)</span>
+
+<span class="sd">    &gt;&gt;&gt; Max (1, x, oo)</span>
+<span class="sd">    oo</span>
+
+<span class="sd">    Algorithm</span>
+
+<span class="sd">    The task can be considered as searching of supremums in the</span>
+<span class="sd">    directed complete partial orders [1]_.</span>
+
+<span class="sd">    The source values are sequentially allocated by the isolated subsets</span>
+<span class="sd">    in which supremums are searched and result as Max arguments.</span>
+
+<span class="sd">    If the resulted supremum is single, then it is returned.</span>
+
+<span class="sd">    The isolated subsets are the sets of values which are only the comparable</span>
+<span class="sd">    with each other in the current set. E.g. natural numbers are comparable with</span>
+<span class="sd">    each other, but not comparable with the `x` symbol. Another example: the</span>
+<span class="sd">    symbol `x` with negative assumption is comparable with a natural number.</span>
+
+<span class="sd">    Also there are &quot;least&quot; elements, which are comparable with all others,</span>
+<span class="sd">    and have a zero property (maximum or minimum for all elements). E.g. `oo`.</span>
+<span class="sd">    In case of it the allocation operation is terminated and only this value is</span>
+<span class="sd">    returned.</span>
+
+<span class="sd">    Assumption:</span>
+<span class="sd">       - if A &gt; B &gt; C then A &gt; C</span>
+<span class="sd">       - if A==B then B can be removed</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Lattice_%28order%29</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Min : find minimum values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+    <span class="n">identity</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_rel</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if x &gt; y.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_rel_inversed</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if x &lt; y.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span> <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.special.delta_functions</span> <span class="kn">import</span> <span class="n">Heaviside</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">argindex</span> <span class="ow">and</span> <span class="n">argindex</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">argindex</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Heaviside</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">argindex</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="o">-</span><span class="n">argindex</span><span class="p">]</span> <span class="p">)</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">argindex</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">Heaviside</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">argindex</span><span class="p">]</span> <span class="o">-</span> <span class="n">Max</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Min"><a class="viewcode-back" href="../../../../modules/functions/elementary.html#sympy.functions.elementary.miscellaneous.Min">[docs]</a><span class="k">class</span> <span class="nc">Min</span><span class="p">(</span><span class="n">MinMaxBase</span><span class="p">,</span> <span class="n">Application</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return, if possible, the minimum value of the list.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Min, Symbol, oo</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; p = Symbol(&#39;p&#39;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; n = Symbol(&#39;n&#39;, negative=True)</span>
+
+<span class="sd">    &gt;&gt;&gt; Min(x, -2)                  #doctest: +SKIP</span>
+<span class="sd">    Min(x, -2)</span>
+
+<span class="sd">    &gt;&gt;&gt; Min(x, -2).subs(x, 3)</span>
+<span class="sd">    -2</span>
+
+<span class="sd">    &gt;&gt;&gt; Min(p, -3)</span>
+<span class="sd">    -3</span>
+
+<span class="sd">    &gt;&gt;&gt; Min(x, y)                   #doctest: +SKIP</span>
+<span class="sd">    Min(x, y)</span>
+
+<span class="sd">    &gt;&gt;&gt; Min(n, 8, p, -7, p, oo)     #doctest: +SKIP</span>
+<span class="sd">    Min(n, -7)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Max : find maximum values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+    <span class="n">identity</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_rel</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if x &lt; y.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_rel_inversed</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if x &gt; y.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">fdiff</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span> <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.functions.special.delta_functions</span> <span class="kn">import</span> <span class="n">Heaviside</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">argindex</span> <span class="ow">and</span> <span class="n">argindex</span> <span class="o">&lt;=</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">argindex</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Heaviside</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="o">-</span><span class="n">argindex</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">argindex</span><span class="p">]</span> <span class="p">)</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">argindex</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">Heaviside</span><span class="p">(</span> <span class="n">Min</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">argindex</span><span class="p">]</span> <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ArgumentIndexError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argindex</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1788 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.matrices.dense &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.matrices.dense</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">is_sequence</span><span class="p">,</span> <span class="n">as_int</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">count_ops</span>
+<span class="kn">from</span> <span class="nn">sympy.core.decorators</span> <span class="kn">import</span> <span class="n">call_highest_priority</span>
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Symbol</span>
+<span class="kn">from</span> <span class="nn">sympy.core.sympify</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.trigonometric</span> <span class="kn">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.miscellaneous</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">simplify</span> <span class="k">as</span> <span class="n">_simplify</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.exceptions</span> <span class="kn">import</span> <span class="n">SymPyDeprecationWarning</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">filldedent</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities.decorator</span> <span class="kn">import</span> <span class="n">doctest_depends_on</span>
+
+<span class="kn">from</span> <span class="nn">sympy.matrices.matrices</span> <span class="kn">import</span> <span class="p">(</span><span class="n">MatrixBase</span><span class="p">,</span>
+    <span class="n">ShapeError</span><span class="p">,</span> <span class="n">a2idx</span><span class="p">,</span> <span class="n">classof</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_iszero</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if x is zero.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">is_zero</span>
+
+
+<span class="k">class</span> <span class="nc">DenseMatrix</span><span class="p">(</span><span class="n">MatrixBase</span><span class="p">):</span>
+
+    <span class="n">is_MatrixExpr</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">_op_priority</span> <span class="o">=</span> <span class="mf">10.01</span>
+    <span class="n">_class_priority</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return portion of self defined by key. If the key involves a slice</span>
+<span class="sd">        then a list will be returned (if key is a single slice) or a matrix</span>
+<span class="sd">        (if key was a tuple involving a slice).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Matrix, I</span>
+<span class="sd">        &gt;&gt;&gt; m = Matrix([</span>
+<span class="sd">        ... [1, 2 + I],</span>
+<span class="sd">        ... [3, 4    ]])</span>
+
+<span class="sd">        If the key is a tuple that doesn&#39;t involve a slice then that element</span>
+<span class="sd">        is returned:</span>
+
+<span class="sd">        &gt;&gt;&gt; m[1, 0]</span>
+<span class="sd">        3</span>
+
+<span class="sd">        When a tuple key involves a slice, a matrix is returned. Here, the</span>
+<span class="sd">        first column is selected (all rows, column 0):</span>
+
+<span class="sd">        &gt;&gt;&gt; m[:, 0]</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1],</span>
+<span class="sd">        [3]])</span>
+
+<span class="sd">        If the slice is not a tuple then it selects from the underlying</span>
+<span class="sd">        list of elements that are arranged in row order and a list is</span>
+<span class="sd">        returned if a slice is involved:</span>
+
+<span class="sd">        &gt;&gt;&gt; m[0]</span>
+<span class="sd">        1</span>
+<span class="sd">        &gt;&gt;&gt; m[::2]</span>
+<span class="sd">        [1, 3]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">tuple</span><span class="p">:</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">key</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">slice</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">slice</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">submatrix</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key2ij</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># row-wise decomposition of matrix</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">slice</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">a2idx</span><span class="p">(</span><span class="n">key</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_Identity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_square</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]:</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">def</span> <span class="nf">tolist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the Matrix as a nested Python list.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Matrix, ones</span>
+<span class="sd">        &gt;&gt;&gt; m = Matrix(3, 3, range(9))</span>
+<span class="sd">        &gt;&gt;&gt; m</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 1, 2],</span>
+<span class="sd">        [3, 4, 5],</span>
+<span class="sd">        [6, 7, 8]])</span>
+<span class="sd">        &gt;&gt;&gt; m.tolist()</span>
+<span class="sd">        [[0, 1, 2], [3, 4, 5], [6, 7, 8]]</span>
+<span class="sd">        &gt;&gt;&gt; ones(3, 0).tolist()</span>
+<span class="sd">        [[], [], []]</span>
+
+<span class="sd">        When there are no rows then it will not be possible to tell how</span>
+<span class="sd">        many columns were in the original matrix:</span>
+
+<span class="sd">        &gt;&gt;&gt; ones(0, 3).tolist()</span>
+<span class="sd">        []</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Elementary row selector.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import eye</span>
+<span class="sd">        &gt;&gt;&gt; eye(2).row(0)</span>
+<span class="sd">        Matrix([[1, 0]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        col</span>
+<span class="sd">        row_op</span>
+<span class="sd">        row_swap</span>
+<span class="sd">        row_del</span>
+<span class="sd">        row_join</span>
+<span class="sd">        row_insert</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">SymPyDeprecationWarning</span><span class="p">(</span>
+            <span class="n">feature</span><span class="o">=</span><span class="s">&quot;calling .row(i, f)&quot;</span><span class="p">,</span>
+            <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;.row_op(i, f)&quot;</span><span class="p">,</span>
+            <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">row_op</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Elementary column selector.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import eye</span>
+<span class="sd">        &gt;&gt;&gt; eye(2).col(0)</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1],</span>
+<span class="sd">        [0]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        row</span>
+<span class="sd">        col_op</span>
+<span class="sd">        col_swap</span>
+<span class="sd">        col_del</span>
+<span class="sd">        col_join</span>
+<span class="sd">        col_insert</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
+        <span class="n">SymPyDeprecationWarning</span><span class="p">(</span>
+            <span class="n">feature</span><span class="o">=</span><span class="s">&quot;calling .col(j, f)&quot;</span><span class="p">,</span>
+            <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;.col_op(j, f)&quot;</span><span class="p">,</span>
+            <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">col_op</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the trace of a square matrix.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import eye</span>
+<span class="sd">        &gt;&gt;&gt; eye(3).trace()</span>
+<span class="sd">        3</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">trace</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+            <span class="n">trace</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">trace</span>
+
+    <span class="k">def</span> <span class="nf">_eval_determinant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Matrix transposition.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Matrix, I</span>
+<span class="sd">        &gt;&gt;&gt; m=Matrix(((1, 2+I), (3, 4)))</span>
+<span class="sd">        &gt;&gt;&gt; m</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 2 + I],</span>
+<span class="sd">        [3,     4]])</span>
+<span class="sd">        &gt;&gt;&gt; m.transpose()</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [    1, 3],</span>
+<span class="sd">        [2 + I, 4]])</span>
+<span class="sd">        &gt;&gt;&gt; m.T == m.transpose()</span>
+<span class="sd">        True</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        conjugate: By-element conjugation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="p">::</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;By-element conjugation.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        transpose: Matrix transposition</span>
+<span class="sd">        H: Hermite conjugation</span>
+<span class="sd">        D: Dirac conjugation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span>
+                <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">conjugate</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">C</span>
+
+    <span class="k">def</span> <span class="nf">_eval_inverse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the matrix inverse using the method indicated (default</span>
+<span class="sd">        is Gauss elimination).</span>
+
+<span class="sd">        kwargs</span>
+<span class="sd">        ======</span>
+
+<span class="sd">        method : (&#39;GE&#39;, &#39;LU&#39;, or &#39;ADJ&#39;)</span>
+<span class="sd">        iszerofunc</span>
+<span class="sd">        try_block_diag</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        =====</span>
+
+<span class="sd">        According to the ``method`` keyword, it calls the appropriate method:</span>
+
+<span class="sd">          GE .... inverse_GE(); default</span>
+<span class="sd">          LU .... inverse_LU()</span>
+<span class="sd">          ADJ ... inverse_ADJ()</span>
+
+<span class="sd">        According to the ``try_block_diag`` keyword, it will try to form block</span>
+<span class="sd">        diagonal matrices using the method get_diag_blocks(), invert these</span>
+<span class="sd">        individually, and then reconstruct the full inverse matrix.</span>
+
+<span class="sd">        Note, the GE and LU methods may require the matrix to be simplified</span>
+<span class="sd">        before it is inverted in order to properly detect zeros during</span>
+<span class="sd">        pivoting. In difficult cases a custom zero detection function can</span>
+<span class="sd">        be provided by setting the ``iszerosfunc`` argument to a function that</span>
+<span class="sd">        should return True if its argument is zero. The ADJ routine computes</span>
+<span class="sd">        the determinant and uses that to detect singular matrices in addition</span>
+<span class="sd">        to testing for zeros on the diagonal.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        inverse_LU</span>
+<span class="sd">        inverse_GE</span>
+<span class="sd">        inverse_ADJ</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">diag</span>
+
+        <span class="n">method</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;method&#39;</span><span class="p">,</span> <span class="s">&#39;GE&#39;</span><span class="p">)</span>
+        <span class="n">iszerofunc</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;iszerofunc&#39;</span><span class="p">,</span> <span class="n">_iszero</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;try_block_diag&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+            <span class="n">blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_diag_blocks</span><span class="p">()</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
+                <span class="n">r</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">iszerofunc</span><span class="o">=</span><span class="n">iszerofunc</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">diag</span><span class="p">(</span><span class="o">*</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_mutable</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;GE&quot;</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">inverse_GE</span><span class="p">(</span><span class="n">iszerofunc</span><span class="o">=</span><span class="n">iszerofunc</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;LU&quot;</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">inverse_LU</span><span class="p">(</span><span class="n">iszerofunc</span><span class="o">=</span><span class="n">iszerofunc</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s">&quot;ADJ&quot;</span><span class="p">:</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">inverse_ADJ</span><span class="p">(</span><span class="n">iszerofunc</span><span class="o">=</span><span class="n">iszerofunc</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># make sure to add an invertibility check (as in inverse_LU)</span>
+            <span class="c"># if a new method is added.</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Inversion method unrecognized&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">equals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">failing_expression</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Applies ``equals`` to corresponding elements of the matrices,</span>
+<span class="sd">        trying to prove that the elements are equivalent, returning True</span>
+<span class="sd">        if they are, False if any pair is not, and None (or the first</span>
+<span class="sd">        failing expression if failing_expression is True) if it cannot</span>
+<span class="sd">        be decided if the expressions are equivalent or not. This is, in</span>
+<span class="sd">        general, an expensive operation.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import Matrix</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; from sympy import cos</span>
+<span class="sd">        &gt;&gt;&gt; A = Matrix([x*(x - 1), 0])</span>
+<span class="sd">        &gt;&gt;&gt; B = Matrix([x**2 - x, 0])</span>
+<span class="sd">        &gt;&gt;&gt; A == B</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; A.simplify() == B.simplify()</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; A.equals(B)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; A.equals(2)</span>
+<span class="sd">        False</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        sympy.core.expr.equals</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+                    <span class="n">ans</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">other</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">failing_expression</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">ans</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="bp">False</span>
+                    <span class="k">elif</span> <span class="n">ans</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">True</span> <span class="ow">and</span> <span class="n">rv</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span>
+                        <span class="n">rv</span> <span class="o">=</span> <span class="n">ans</span>
+            <span class="k">return</span> <span class="n">rv</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_mat</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">MatrixBase</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">==</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="n">_mat</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="nf">_cholesky</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function of cholesky.</span>
+<span class="sd">        Without the error checks.</span>
+<span class="sd">        To be used privately. &quot;&quot;&quot;</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span>
+                    <span class="nb">sum</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">*</span><span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">)))</span>
+            <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span>
+                    <span class="nb">sum</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_LDLdecomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function of LDLdecomposition.</span>
+<span class="sd">        Without the error checks.</span>
+<span class="sd">        To be used privately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">D</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span>
+                    <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">*</span><span class="n">L</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">)))</span>
+            <span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">D</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">L</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">D</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_lower_triangular_solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function of function lower_triangular_solve.</span>
+<span class="sd">        Without the error checks.</span>
+<span class="sd">        To be used privately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">rhs</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Matrix must be non-singular.&quot;</span><span class="p">)</span>
+                <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">rhs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">)))</span> <span class="o">/</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_upper_triangular_solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function of function upper_triangular_solve.</span>
+<span class="sd">        Without the error checks, to be used privately. &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">rhs</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Matrix must be non-singular.&quot;</span><span class="p">)</span>
+                <span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">rhs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span><span class="o">*</span><span class="n">X</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)))</span> <span class="o">/</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_diagonal_solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function of function diagonal_solve,</span>
+<span class="sd">        without the error checks, to be used privately.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">rhs</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">rhs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">applyfunc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply a function to each element of the matrix.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Matrix</span>
+<span class="sd">        &gt;&gt;&gt; m = Matrix(2, 2, lambda i, j: i*2+j)</span>
+<span class="sd">        &gt;&gt;&gt; m</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 1],</span>
+<span class="sd">        [2, 3]])</span>
+<span class="sd">        &gt;&gt;&gt; m.applyfunc(lambda i: 2*i)</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 2],</span>
+<span class="sd">        [4, 6]])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;`f` must be callable.&quot;</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reshape the matrix. Total number of elements must remain the same.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Matrix</span>
+<span class="sd">        &gt;&gt;&gt; m = Matrix(2, 3, lambda i, j: 1)</span>
+<span class="sd">        &gt;&gt;&gt; m</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 1, 1],</span>
+<span class="sd">        [1, 1, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; m.reshape(1, 6)</span>
+<span class="sd">        Matrix([[1, 1, 1, 1, 1, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; m.reshape(3, 2)</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 1],</span>
+<span class="sd">        [1, 1],</span>
+<span class="sd">        [1, 1]])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">!=</span> <span class="n">rows</span><span class="o">*</span><span class="n">cols</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Invalid reshape parameters </span><span class="si">%d</span><span class="s"> </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">cols</span> <span class="o">+</span> <span class="n">j</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">as_mutable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a mutable version of this matrix</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import ImmutableMatrix</span>
+<span class="sd">        &gt;&gt;&gt; X = ImmutableMatrix([[1, 2], [3, 4]])</span>
+<span class="sd">        &gt;&gt;&gt; Y = X.as_mutable()</span>
+<span class="sd">        &gt;&gt;&gt; Y[1, 1] = 5 # Can set values in Y</span>
+<span class="sd">        &gt;&gt;&gt; Y</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 2],</span>
+<span class="sd">        [3, 5]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_immutable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an Immutable version of this Matrix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.immutable</span> <span class="kn">import</span> <span class="n">ImmutableMatrix</span> <span class="k">as</span> <span class="n">cls</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="p">[])</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">zeros</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an r x c matrix of zeros, square if c is omitted.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">SymPyDeprecationWarning</span><span class="p">(</span>
+                <span class="n">feature</span><span class="o">=</span><span class="s">&quot;The syntax zeros([</span><span class="si">%i</span><span class="s">, </span><span class="si">%i</span><span class="s">])&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+                <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;zeros(</span><span class="si">%i</span><span class="s">, </span><span class="si">%i</span><span class="s">).&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+                <span class="n">issue</span><span class="o">=</span><span class="mi">3381</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+            <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">r</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">r</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">c</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">_sympify</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span><span class="o">*</span><span class="n">r</span><span class="o">*</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">eye</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an n x n identity matrix.&quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">mat</span> <span class="o">=</span> <span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">_sympify</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="n">n</span>
+        <span class="n">mat</span><span class="p">[::</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">cls</span><span class="o">.</span><span class="n">_sympify</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="n">n</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">mat</span><span class="p">)</span>
+
+    <span class="c">############################</span>
+    <span class="c"># Mutable matrix operators #</span>
+    <span class="c">############################</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__radd__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__add__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__add__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__radd__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__rsub__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__sub__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__sub__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__rsub__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__rmul__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__mul__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__mul__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__rmul__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__div__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__div__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__truediv__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__truediv__</span><span class="p">(</span><span class="n">_force_mutable</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__rpow__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__pow__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="nd">@call_highest_priority</span><span class="p">(</span><span class="s">&#39;__pow__&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Matrix Power not defined&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_force_mutable</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a matrix as a Matrix, otherwise return x.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;is_Matrix&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">as_mutable</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&#39;__array__&#39;</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">__array__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">sympify</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<div class="viewcode-block" id="MutableDenseMatrix"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix">[docs]</a><span class="k">class</span> <span class="nc">MutableDenseMatrix</span><span class="p">(</span><span class="n">DenseMatrix</span><span class="p">,</span> <span class="n">MatrixBase</span><span class="p">):</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">flat_list</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_handle_creation_inputs</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">=</span> <span class="n">cols</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">flat_list</span><span class="p">)</span>  <span class="c"># create a shallow copy</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">as_mutable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Matrix, I, zeros, ones</span>
+<span class="sd">        &gt;&gt;&gt; m = Matrix(((1, 2+I), (3, 4)))</span>
+<span class="sd">        &gt;&gt;&gt; m</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 2 + I],</span>
+<span class="sd">        [3,     4]])</span>
+<span class="sd">        &gt;&gt;&gt; m[1, 0] = 9</span>
+<span class="sd">        &gt;&gt;&gt; m</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 2 + I],</span>
+<span class="sd">        [9,     4]])</span>
+<span class="sd">        &gt;&gt;&gt; m[1, 0] = [[0, 1]]</span>
+
+<span class="sd">        To replace row r you assign to position r*m where m</span>
+<span class="sd">        is the number of columns:</span>
+
+<span class="sd">        &gt;&gt;&gt; M = zeros(4)</span>
+<span class="sd">        &gt;&gt;&gt; m = M.cols</span>
+<span class="sd">        &gt;&gt;&gt; M[3*m] = ones(1, m)*2; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 0, 0, 0],</span>
+<span class="sd">        [0, 0, 0, 0],</span>
+<span class="sd">        [0, 0, 0, 0],</span>
+<span class="sd">        [2, 2, 2, 2]])</span>
+
+<span class="sd">        And to replace column c you can assign to position c:</span>
+
+<span class="sd">        &gt;&gt;&gt; M[2] = ones(m, 1)*4; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 0, 4, 0],</span>
+<span class="sd">        [0, 0, 4, 0],</span>
+<span class="sd">        [0, 0, 4, 0],</span>
+<span class="sd">        [2, 2, 4, 2]])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setitem</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">rv</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="MutableDenseMatrix.copyin_matrix"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.copyin_matrix">[docs]</a>    <span class="k">def</span> <span class="nf">copyin_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Copy in values from a matrix into the given bounds.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        key : slice</span>
+<span class="sd">            The section of this matrix to replace.</span>
+<span class="sd">        value : Matrix</span>
+<span class="sd">            The matrix to copy values from.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import Matrix, eye</span>
+<span class="sd">        &gt;&gt;&gt; M = Matrix([[0, 1], [2, 3], [4, 5]])</span>
+<span class="sd">        &gt;&gt;&gt; I = eye(3)</span>
+<span class="sd">        &gt;&gt;&gt; I[:3, :2] = M</span>
+<span class="sd">        &gt;&gt;&gt; I</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 1, 0],</span>
+<span class="sd">        [2, 3, 0],</span>
+<span class="sd">        [4, 5, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; I[0, 1] = M</span>
+<span class="sd">        &gt;&gt;&gt; I</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 0, 1],</span>
+<span class="sd">        [2, 2, 3],</span>
+<span class="sd">        [4, 4, 5]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        copyin_list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rlo</span><span class="p">,</span> <span class="n">rhi</span><span class="p">,</span> <span class="n">clo</span><span class="p">,</span> <span class="n">chi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key2bounds</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">dr</span><span class="p">,</span> <span class="n">dc</span> <span class="o">=</span> <span class="n">rhi</span> <span class="o">-</span> <span class="n">rlo</span><span class="p">,</span> <span class="n">chi</span> <span class="o">-</span> <span class="n">clo</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">dr</span><span class="p">,</span> <span class="n">dc</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ShapeError</span><span class="p">(</span><span class="n">filldedent</span><span class="p">(</span><span class="s">&quot;The Matrix `value` doesn&#39;t have the &quot;</span>
+                <span class="s">&quot;same dimensions &quot;</span>
+                <span class="s">&quot;as the in sub-Matrix given by `key`.&quot;</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">rlo</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="n">clo</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.copyin_list"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.copyin_list">[docs]</a>    <span class="k">def</span> <span class="nf">copyin_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Copy in elements from a list.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ==========</span>
+
+<span class="sd">        key : slice</span>
+<span class="sd">            The section of this matrix to replace.</span>
+<span class="sd">        value : iterable</span>
+<span class="sd">            The iterable to copy values from.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import eye</span>
+<span class="sd">        &gt;&gt;&gt; I = eye(3)</span>
+<span class="sd">        &gt;&gt;&gt; I[:2, 0] = [1, 2] # col</span>
+<span class="sd">        &gt;&gt;&gt; I</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0, 0],</span>
+<span class="sd">        [2, 1, 0],</span>
+<span class="sd">        [0, 0, 1]])</span>
+<span class="sd">        &gt;&gt;&gt; I[1, :2] = [[3, 4]]</span>
+<span class="sd">        &gt;&gt;&gt; I</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0, 0],</span>
+<span class="sd">        [3, 4, 0],</span>
+<span class="sd">        [0, 0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        copyin_matrix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;`value` must be an ordered iterable, not </span><span class="si">%s</span><span class="s">.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copyin_matrix</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.zip_row_op"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.zip_row_op">[docs]</a>    <span class="k">def</span> <span class="nf">zip_row_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;In-place operation on row ``i`` using two-arg functor whose args are</span>
+<span class="sd">        interpreted as ``(self[i, j], self[k, j])``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import eye</span>
+<span class="sd">        &gt;&gt;&gt; M = eye(3)</span>
+<span class="sd">        &gt;&gt;&gt; M.zip_row_op(1, 0, lambda v, u: v + 2*u); M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0, 0],</span>
+<span class="sd">        [2, 1, 0],</span>
+<span class="sd">        [0, 0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        row</span>
+<span class="sd">        row_op</span>
+<span class="sd">        col_op</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">i0</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span>
+        <span class="n">k0</span> <span class="o">=</span> <span class="n">k</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span>
+
+        <span class="n">ri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span> <span class="n">i0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+        <span class="n">rk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span> <span class="n">k0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span> <span class="n">i0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ri</span><span class="p">,</span> <span class="n">rk</span><span class="p">)</span> <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.row_op"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.row_op">[docs]</a>    <span class="k">def</span> <span class="nf">row_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;In-place operation on row ``i`` using two-arg functor whose args are</span>
+<span class="sd">        interpreted as ``(self[i, j], j)``.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import eye</span>
+<span class="sd">        &gt;&gt;&gt; M = eye(3)</span>
+<span class="sd">        &gt;&gt;&gt; M.row_op(1, lambda v, j: v + 2*M[0, j]); M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0, 0],</span>
+<span class="sd">        [2, 1, 0],</span>
+<span class="sd">        [0, 0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        row</span>
+<span class="sd">        zip_row_op</span>
+<span class="sd">        col_op</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">i0</span> <span class="o">=</span> <span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span>
+        <span class="n">ri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span> <span class="n">i0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span> <span class="n">i0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">ri</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">)))</span> <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.col_op"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.col_op">[docs]</a>    <span class="k">def</span> <span class="nf">col_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;In-place operation on col j using two-arg functor whose args are</span>
+<span class="sd">        interpreted as (self[i, j], i).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import eye</span>
+<span class="sd">        &gt;&gt;&gt; M = eye(3)</span>
+<span class="sd">        &gt;&gt;&gt; M.col_op(1, lambda v, i: v + 2*M[i, 0]); M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 2, 0],</span>
+<span class="sd">        [0, 1, 0],</span>
+<span class="sd">        [0, 0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+<span class="sd">        col</span>
+<span class="sd">        row_op</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">j</span><span class="p">::</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">t</span><span class="p">),</span>
+            <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">j</span><span class="p">::</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">],</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">))))))</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.row_swap"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.row_swap">[docs]</a>    <span class="k">def</span> <span class="nf">row_swap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Swap the two given rows of the matrix in-place.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import Matrix</span>
+<span class="sd">        &gt;&gt;&gt; M = Matrix([[0, 1], [1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 1],</span>
+<span class="sd">        [1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; M.row_swap(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0],</span>
+<span class="sd">        [0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        row</span>
+<span class="sd">        col_swap</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.col_swap"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.col_swap">[docs]</a>    <span class="k">def</span> <span class="nf">col_swap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Swap the two given columns of the matrix in-place.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import Matrix</span>
+<span class="sd">        &gt;&gt;&gt; M = Matrix([[1, 0], [1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0],</span>
+<span class="sd">        [1, 0]])</span>
+<span class="sd">        &gt;&gt;&gt; M.col_swap(0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [0, 1],</span>
+<span class="sd">        [0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        col</span>
+<span class="sd">        row_swap</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.row_del"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.row_del">[docs]</a>    <span class="k">def</span> <span class="nf">row_del</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete the given row.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import eye</span>
+<span class="sd">        &gt;&gt;&gt; M = eye(3)</span>
+<span class="sd">        &gt;&gt;&gt; M.row_del(1)</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0, 0],</span>
+<span class="sd">        [0, 0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        row</span>
+<span class="sd">        col_del</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[:</span><span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rows</span> <span class="o">-=</span> <span class="mi">1</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.col_del"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.col_del">[docs]</a>    <span class="k">def</span> <span class="nf">col_del</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Delete the given column.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy.matrices import eye</span>
+<span class="sd">        &gt;&gt;&gt; M = eye(3)</span>
+<span class="sd">        &gt;&gt;&gt; M.col_del(1)</span>
+<span class="sd">        &gt;&gt;&gt; M</span>
+<span class="sd">        Matrix([</span>
+<span class="sd">        [1, 0],</span>
+<span class="sd">        [0, 0],</span>
+<span class="sd">        [0, 1]])</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        col</span>
+<span class="sd">        row_del</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cols</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="c"># Utility functions</span></div>
+<div class="viewcode-block" id="MutableDenseMatrix.simplify"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.simplify">[docs]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratio</span><span class="o">=</span><span class="mf">1.7</span><span class="p">,</span> <span class="n">measure</span><span class="o">=</span><span class="n">count_ops</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Applies simplify to the elements of a matrix in place.</span>
+
+<span class="sd">        This is a shortcut for M.applyfunc(lambda x: simplify(x, ratio, measure))</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        sympy.simplify.simplify.simplify</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">_simplify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ratio</span><span class="o">=</span><span class="n">ratio</span><span class="p">,</span>
+                                     <span class="n">measure</span><span class="o">=</span><span class="n">measure</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="MutableDenseMatrix.fill"><a class="viewcode-back" href="../../../modules/matrices/dense.html#sympy.matrices.dense.MutableDenseMatrix.fill">[docs]</a>    <span class="k">def</span> <span class="nf">fill</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fill the matrix with the scalar value.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        zeros</span>
+<span class="sd">        ones</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</div></div>
+<span class="n">MutableMatrix</span> <span class="o">=</span> <span class="n">Matrix</span> <span class="o">=</span> <span class="n">MutableDenseMatrix</span>
+
+<span class="c">###########</span>
+<span class="c"># Numpy Utility Functions:</span>
+<span class="c"># list2numpy, matrix2numpy, symmarray, rot_axis[123]</span>
+<span class="c">###########</span>
+
+
+<div class="viewcode-block" id="list2numpy"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.list2numpy">[docs]</a><span class="k">def</span> <span class="nf">list2numpy</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;Converts python list of SymPy expressions to a NumPy array.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    matrix2numpy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">empty</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">l</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+</div>
+<div class="viewcode-block" id="matrix2numpy"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.matrix2numpy">[docs]</a><span class="k">def</span> <span class="nf">matrix2numpy</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;Converts SymPy&#39;s matrix to a NumPy array.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    list2numpy</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">empty</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">rows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">cols</span><span class="p">):</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">a</span>
+</div>
+<span class="nd">@doctest_depends_on</span><span class="p">(</span><span class="n">modules</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;numpy&#39;</span><span class="p">,))</span>
+<div class="viewcode-block" id="symarray"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.symarray">[docs]</a><span class="k">def</span> <span class="nf">symarray</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;Create a numpy ndarray of symbols (as an object array).</span>
+
+<span class="sd">    The created symbols are named ``prefix_i1_i2_``...  You should thus provide a</span>
+<span class="sd">    non-empty prefix if you want your symbols to be unique for different output</span>
+<span class="sd">    arrays, as SymPy symbols with identical names are the same object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    prefix : string</span>
+<span class="sd">      A prefix prepended to the name of every symbol.</span>
+
+<span class="sd">    shape : int or tuple</span>
+<span class="sd">      Shape of the created array.  If an int, the array is one-dimensional; for</span>
+<span class="sd">      more than one dimension the shape must be a tuple.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    These doctests require numpy.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import symarray</span>
+<span class="sd">    &gt;&gt;&gt; symarray(&#39;&#39;, 3)</span>
+<span class="sd">    [_0 _1 _2]</span>
+
+<span class="sd">    If you want multiple symarrays to contain distinct symbols, you *must*</span>
+<span class="sd">    provide unique prefixes:</span>
+
+<span class="sd">    &gt;&gt;&gt; a = symarray(&#39;&#39;, 3)</span>
+<span class="sd">    &gt;&gt;&gt; b = symarray(&#39;&#39;, 3)</span>
+<span class="sd">    &gt;&gt;&gt; a[0] is b[0]</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; a = symarray(&#39;a&#39;, 3)</span>
+<span class="sd">    &gt;&gt;&gt; b = symarray(&#39;b&#39;, 3)</span>
+<span class="sd">    &gt;&gt;&gt; a[0] is b[0]</span>
+<span class="sd">    False</span>
+
+<span class="sd">    Creating symarrays with a prefix:</span>
+
+<span class="sd">    &gt;&gt;&gt; symarray(&#39;a&#39;, 3)</span>
+<span class="sd">    [a_0 a_1 a_2]</span>
+
+<span class="sd">    For more than one dimension, the shape must be given as a tuple:</span>
+
+<span class="sd">    &gt;&gt;&gt; symarray(&#39;a&#39;, (2, 3))</span>
+<span class="sd">    [[a_0_0 a_0_1 a_0_2]</span>
+<span class="sd">     [a_1_0 a_1_1 a_1_2]]</span>
+<span class="sd">    &gt;&gt;&gt; symarray(&#39;a&#39;, (2, 3, 2))</span>
+<span class="sd">    [[[a_0_0_0 a_0_0_1]</span>
+<span class="sd">      [a_0_1_0 a_0_1_1]</span>
+<span class="sd">      [a_0_2_0 a_0_2_1]]</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">     [[a_1_0_0 a_1_0_1]</span>
+<span class="sd">      [a_1_1_0 a_1_1_1]</span>
+<span class="sd">      [a_1_2_0 a_1_2_1]]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">empty</span><span class="p">,</span> <span class="n">ndindex</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">ndindex</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+        <span class="n">arr</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">))))</span>
+    <span class="k">return</span> <span class="n">arr</span>
+
+</div>
+<div class="viewcode-block" id="rot_axis3"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.rot_axis3">[docs]</a><span class="k">def</span> <span class="nf">rot_axis3</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a rotation matrix for a rotation of theta (in radians) about</span>
+<span class="sd">    the 3-axis.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import rot_axis3</span>
+
+<span class="sd">    A rotation of pi/3 (60 degrees):</span>
+
+<span class="sd">    &gt;&gt;&gt; theta = pi/3</span>
+<span class="sd">    &gt;&gt;&gt; rot_axis3(theta)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [       1/2, sqrt(3)/2, 0],</span>
+<span class="sd">    [-sqrt(3)/2,       1/2, 0],</span>
+<span class="sd">    [         0,         0, 1]])</span>
+
+<span class="sd">    If we rotate by pi/2 (90 degrees):</span>
+
+<span class="sd">    &gt;&gt;&gt; rot_axis3(pi/2)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [ 0, 1, 0],</span>
+<span class="sd">    [-1, 0, 0],</span>
+<span class="sd">    [ 0, 0, 1]])</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)</span>
+<span class="sd">        about the 1-axis</span>
+<span class="sd">    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)</span>
+<span class="sd">        about the 2-axis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">st</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">lil</span> <span class="o">=</span> <span class="p">((</span><span class="n">ct</span><span class="p">,</span> <span class="n">st</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+           <span class="p">(</span><span class="o">-</span><span class="n">st</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+           <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">lil</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="rot_axis2"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.rot_axis2">[docs]</a><span class="k">def</span> <span class="nf">rot_axis2</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a rotation matrix for a rotation of theta (in radians) about</span>
+<span class="sd">    the 2-axis.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import rot_axis2</span>
+
+<span class="sd">    A rotation of pi/3 (60 degrees):</span>
+
+<span class="sd">    &gt;&gt;&gt; theta = pi/3</span>
+<span class="sd">    &gt;&gt;&gt; rot_axis2(theta)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [      1/2, 0, -sqrt(3)/2],</span>
+<span class="sd">    [        0, 1,          0],</span>
+<span class="sd">    [sqrt(3)/2, 0,        1/2]])</span>
+
+<span class="sd">    If we rotate by pi/2 (90 degrees):</span>
+
+<span class="sd">    &gt;&gt;&gt; rot_axis2(pi/2)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [0, 0, -1],</span>
+<span class="sd">    [0, 1,  0],</span>
+<span class="sd">    [1, 0,  0]])</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    rot_axis1: Returns a rotation matrix for a rotation of theta (in radians)</span>
+<span class="sd">        about the 1-axis</span>
+<span class="sd">    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)</span>
+<span class="sd">        about the 3-axis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">st</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">lil</span> <span class="o">=</span> <span class="p">((</span><span class="n">ct</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">st</span><span class="p">),</span>
+           <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+           <span class="p">(</span><span class="n">st</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">ct</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">lil</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="rot_axis1"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.rot_axis1">[docs]</a><span class="k">def</span> <span class="nf">rot_axis1</span><span class="p">(</span><span class="n">theta</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a rotation matrix for a rotation of theta (in radians) about</span>
+<span class="sd">    the 1-axis.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import rot_axis1</span>
+
+<span class="sd">    A rotation of pi/3 (60 degrees):</span>
+
+<span class="sd">    &gt;&gt;&gt; theta = pi/3</span>
+<span class="sd">    &gt;&gt;&gt; rot_axis1(theta)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1,          0,         0],</span>
+<span class="sd">    [0,        1/2, sqrt(3)/2],</span>
+<span class="sd">    [0, -sqrt(3)/2,       1/2]])</span>
+
+<span class="sd">    If we rotate by pi/2 (90 degrees):</span>
+
+<span class="sd">    &gt;&gt;&gt; rot_axis1(pi/2)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1,  0, 0],</span>
+<span class="sd">    [0,  0, 1],</span>
+<span class="sd">    [0, -1, 0]])</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    rot_axis2: Returns a rotation matrix for a rotation of theta (in radians)</span>
+<span class="sd">        about the 2-axis</span>
+<span class="sd">    rot_axis3: Returns a rotation matrix for a rotation of theta (in radians)</span>
+<span class="sd">        about the 3-axis</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">st</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">lil</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+           <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ct</span><span class="p">,</span> <span class="n">st</span><span class="p">),</span>
+           <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">st</span><span class="p">,</span> <span class="n">ct</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">lil</span><span class="p">)</span>
+
+<span class="c">###############</span>
+<span class="c"># Functions</span>
+<span class="c">###############</span>
+
+</div>
+<span class="k">def</span> <span class="nf">matrix_add</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="n">SymPyDeprecationWarning</span><span class="p">(</span>
+        <span class="n">feature</span><span class="o">=</span><span class="s">&quot;matrix_add(A, B)&quot;</span><span class="p">,</span>
+        <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;A + B&quot;</span><span class="p">,</span>
+        <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span>
+
+
+<span class="k">def</span> <span class="nf">matrix_multiply</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="n">SymPyDeprecationWarning</span><span class="p">(</span>
+        <span class="n">feature</span><span class="o">=</span><span class="s">&quot;matrix_multiply(A, B)&quot;</span><span class="p">,</span>
+        <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;A*B&quot;</span><span class="p">,</span>
+        <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">A</span><span class="o">*</span><span class="n">B</span>
+
+
+<div class="viewcode-block" id="matrix_multiply_elementwise"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.matrix_multiply_elementwise">[docs]</a><span class="k">def</span> <span class="nf">matrix_multiply_elementwise</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Hadamard product (elementwise product) of A and B</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import matrix_multiply_elementwise</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import Matrix</span>
+<span class="sd">    &gt;&gt;&gt; A = Matrix([[0, 1, 2], [3, 4, 5]])</span>
+<span class="sd">    &gt;&gt;&gt; B = Matrix([[1, 10, 100], [100, 10, 1]])</span>
+<span class="sd">    &gt;&gt;&gt; matrix_multiply_elementwise(A, B)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [  0, 10, 200],</span>
+<span class="sd">    [300, 40,   5]])</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    __mul__</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">B</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ShapeError</span><span class="p">()</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">return</span> <span class="n">classof</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+
+</div>
+<div class="viewcode-block" id="ones"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.ones">[docs]</a><span class="k">def</span> <span class="nf">ones</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a matrix of ones with ``r`` rows and ``c`` columns;</span>
+<span class="sd">    if ``c`` is omitted a square matrix will be returned.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    zeros</span>
+<span class="sd">    eye</span>
+<span class="sd">    diag</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.dense</span> <span class="kn">import</span> <span class="n">Matrix</span>
+
+    <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+        <span class="n">SymPyDeprecationWarning</span><span class="p">(</span>
+            <span class="n">feature</span><span class="o">=</span><span class="s">&quot;The syntax ones([</span><span class="si">%i</span><span class="s">, </span><span class="si">%i</span><span class="s">])&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+            <span class="n">useinstead</span><span class="o">=</span><span class="s">&quot;ones(</span><span class="si">%i</span><span class="s">, </span><span class="si">%i</span><span class="s">).&quot;</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">),</span>
+            <span class="n">issue</span><span class="o">=</span><span class="mi">3381</span><span class="p">,</span> <span class="n">deprecated_since_version</span><span class="o">=</span><span class="s">&quot;0.7.2&quot;</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">warn</span><span class="p">()</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">r</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">r</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">c</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">]</span><span class="o">*</span><span class="n">r</span><span class="o">*</span><span class="n">c</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="zeros"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.zeros">[docs]</a><span class="k">def</span> <span class="nf">zeros</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a matrix of zeros with ``r`` rows and ``c`` columns;</span>
+<span class="sd">    if ``c`` is omitted a square matrix will be returned.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    ones</span>
+<span class="sd">    eye</span>
+<span class="sd">    diag</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cls</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.dense</span> <span class="kn">import</span> <span class="n">Matrix</span> <span class="k">as</span> <span class="n">cls</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="eye"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.eye">[docs]</a><span class="k">def</span> <span class="nf">eye</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create square identity matrix n x n</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    diag</span>
+<span class="sd">    zeros</span>
+<span class="sd">    ones</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cls</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sympy.matrices</span> <span class="kn">import</span> <span class="n">Matrix</span> <span class="k">as</span> <span class="n">cls</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="diag"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.diag">[docs]</a><span class="k">def</span> <span class="nf">diag</span><span class="p">(</span><span class="o">*</span><span class="n">values</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a sparse, diagonal matrix from a list of diagonal values.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    When arguments are matrices they are fitted in resultant matrix.</span>
+
+<span class="sd">    The returned matrix is a mutable, dense matrix. To make it a different</span>
+<span class="sd">    type, send the desired class for keyword ``cls``.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import diag, Matrix, ones</span>
+<span class="sd">    &gt;&gt;&gt; diag(1, 2, 3)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0, 0],</span>
+<span class="sd">    [0, 2, 0],</span>
+<span class="sd">    [0, 0, 3]])</span>
+<span class="sd">    &gt;&gt;&gt; diag(*[1, 2, 3])</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0, 0],</span>
+<span class="sd">    [0, 2, 0],</span>
+<span class="sd">    [0, 0, 3]])</span>
+
+<span class="sd">    The diagonal elements can be matrices; diagonal filling will</span>
+<span class="sd">    continue on the diagonal from the last element of the matrix:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+<span class="sd">    &gt;&gt;&gt; a = Matrix([x, y, z])</span>
+<span class="sd">    &gt;&gt;&gt; b = Matrix([[1, 2], [3, 4]])</span>
+<span class="sd">    &gt;&gt;&gt; c = Matrix([[5, 6]])</span>
+<span class="sd">    &gt;&gt;&gt; diag(a, 7, b, c)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [x, 0, 0, 0, 0, 0],</span>
+<span class="sd">    [y, 0, 0, 0, 0, 0],</span>
+<span class="sd">    [z, 0, 0, 0, 0, 0],</span>
+<span class="sd">    [0, 7, 0, 0, 0, 0],</span>
+<span class="sd">    [0, 0, 1, 2, 0, 0],</span>
+<span class="sd">    [0, 0, 3, 4, 0, 0],</span>
+<span class="sd">    [0, 0, 0, 0, 5, 6]])</span>
+
+<span class="sd">    When diagonal elements are lists, they will be treated as arguments</span>
+<span class="sd">    to Matrix:</span>
+
+<span class="sd">    &gt;&gt;&gt; diag([1, 2, 3], 4)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 0],</span>
+<span class="sd">    [2, 0],</span>
+<span class="sd">    [3, 0],</span>
+<span class="sd">    [0, 4]])</span>
+<span class="sd">    &gt;&gt;&gt; diag([[1, 2, 3]], 4)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [1, 2, 3, 0],</span>
+<span class="sd">    [0, 0, 0, 4]])</span>
+
+<span class="sd">    A given band off the diagonal can be made by padding with a</span>
+<span class="sd">    vertical or horizontal &quot;kerning&quot; vector:</span>
+
+<span class="sd">    &gt;&gt;&gt; hpad = ones(0, 2)</span>
+<span class="sd">    &gt;&gt;&gt; vpad = ones(2, 0)</span>
+<span class="sd">    &gt;&gt;&gt; diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [0, 0, 4, 0, 0],</span>
+<span class="sd">    [0, 0, 0, 5, 0],</span>
+<span class="sd">    [1, 0, 0, 0, 6],</span>
+<span class="sd">    [0, 2, 0, 0, 0],</span>
+<span class="sd">    [0, 0, 3, 0, 0]])</span>
+
+
+
+<span class="sd">    The type is mutable by default but can be made immutable by setting</span>
+<span class="sd">    the ``mutable`` flag to False:</span>
+
+<span class="sd">    &gt;&gt;&gt; type(diag(1))</span>
+<span class="sd">    &lt;class &#39;sympy.matrices.dense.MutableDenseMatrix&#39;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import ImmutableMatrix</span>
+<span class="sd">    &gt;&gt;&gt; type(diag(1, cls=ImmutableMatrix))</span>
+<span class="sd">    &lt;class &#39;sympy.matrices.immutable.ImmutableMatrix&#39;&gt;</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    eye</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.sparse</span> <span class="kn">import</span> <span class="n">MutableSparseMatrix</span>
+
+    <span class="n">cls</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;cls&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cls</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.dense</span> <span class="kn">import</span> <span class="n">Matrix</span> <span class="k">as</span> <span class="n">cls</span>
+
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;unrecognized keyword</span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span>
+            <span class="s">&#39;s&#39;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">,</span>
+            <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">MatrixBase</span><span class="p">):</span>
+            <span class="n">rows</span> <span class="o">+=</span> <span class="n">m</span><span class="o">.</span><span class="n">rows</span>
+            <span class="n">cols</span> <span class="o">+=</span> <span class="n">m</span><span class="o">.</span><span class="n">cols</span>
+        <span class="k">elif</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">rows</span> <span class="o">+=</span> <span class="n">m</span><span class="o">.</span><span class="n">rows</span>
+            <span class="n">cols</span> <span class="o">+=</span> <span class="n">m</span><span class="o">.</span><span class="n">cols</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rows</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">cols</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">MutableSparseMatrix</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+    <span class="n">i_row</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">i_col</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">MatrixBase</span><span class="p">):</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">i_row</span><span class="p">:</span><span class="n">i_row</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">i_col</span><span class="p">:</span><span class="n">i_col</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+            <span class="n">i_row</span> <span class="o">+=</span> <span class="n">m</span><span class="o">.</span><span class="n">rows</span>
+            <span class="n">i_col</span> <span class="o">+=</span> <span class="n">m</span><span class="o">.</span><span class="n">cols</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span><span class="p">[</span><span class="n">i_row</span><span class="p">,</span> <span class="n">i_col</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span>
+            <span class="n">i_row</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">i_col</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="jordan_cell"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.jordan_cell">[docs]</a><span class="k">def</span> <span class="nf">jordan_cell</span><span class="p">(</span><span class="n">eigenval</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create matrix of Jordan cell kind:</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import jordan_cell</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; jordan_cell(x, 4)</span>
+<span class="sd">    Matrix([</span>
+<span class="sd">    [x, 1, 0, 0],</span>
+<span class="sd">    [0, x, 1, 0],</span>
+<span class="sd">    [0, 0, x, 1],</span>
+<span class="sd">    [0, 0, 0, x]])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">as_int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigenval</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+    <span class="n">out</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigenval</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+</div>
+<div class="viewcode-block" id="hessian"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.hessian">[docs]</a><span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">varlist</span><span class="p">,</span> <span class="n">constraints</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="sd">&quot;&quot;&quot;Compute Hessian matrix for a function f wrt parameters in varlist</span>
+<span class="sd">    which may be given as a sequence or a row/column vector. A list of</span>
+<span class="sd">    constraints may optionally be given.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Function, hessian, pprint</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">    &gt;&gt;&gt; f = Function(&#39;f&#39;)(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; g1 = Function(&#39;g&#39;)(x, y)</span>
+<span class="sd">    &gt;&gt;&gt; g2 = x**2 + 3*y</span>
+<span class="sd">    &gt;&gt;&gt; pprint(hessian(f, (x, y), [g1, g2]))</span>
+<span class="sd">    [                   d               d            ]</span>
+<span class="sd">    [     0        0    --(g(x, y))     --(g(x, y))  ]</span>
+<span class="sd">    [                   dx              dy           ]</span>
+<span class="sd">    [                                                ]</span>
+<span class="sd">    [     0        0        2*x              3       ]</span>
+<span class="sd">    [                                                ]</span>
+<span class="sd">    [                     2               2          ]</span>
+<span class="sd">    [d                   d               d           ]</span>
+<span class="sd">    [--(g(x, y))  2*x   ---(f(x, y))   -----(f(x, y))]</span>
+<span class="sd">    [dx                   2            dy dx         ]</span>
+<span class="sd">    [                   dx                           ]</span>
+<span class="sd">    [                                                ]</span>
+<span class="sd">    [                     2               2          ]</span>
+<span class="sd">    [d                   d               d           ]</span>
+<span class="sd">    [--(g(x, y))   3   -----(f(x, y))   ---(f(x, y)) ]</span>
+<span class="sd">    [dy                dy dx              2          ]</span>
+<span class="sd">    [                                   dy           ]</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    http://en.wikipedia.org/wiki/Hessian_matrix</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.matrices.mutable.Matrix.jacobian</span>
+<span class="sd">    wronskian</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># f is the expression representing a function f, return regular matrix</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">varlist</span><span class="p">,</span> <span class="n">MatrixBase</span><span class="p">):</span>
+        <span class="k">if</span> <span class="mi">1</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">varlist</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ShapeError</span><span class="p">(</span><span class="s">&quot;`varlist` must be a column or row vector.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">varlist</span><span class="o">.</span><span class="n">cols</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">varlist</span> <span class="o">=</span> <span class="n">varlist</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">varlist</span> <span class="o">=</span> <span class="n">varlist</span><span class="o">.</span><span class="n">tolist</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">is_sequence</span><span class="p">(</span><span class="n">varlist</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">varlist</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ShapeError</span><span class="p">(</span><span class="s">&quot;`len(varlist)` must not be zero.&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Improper variable list in hessian function&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="s">&#39;diff&#39;</span><span class="p">):</span>
+        <span class="c"># check differentiability</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Function `f` (</span><span class="si">%s</span><span class="s">) is not differentiable&quot;</span> <span class="o">%</span> <span class="n">f</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">constraints</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="n">n</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">constraints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s">&#39;diff&#39;</span><span class="p">):</span>
+            <span class="c"># check differentiability</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Function `f` (</span><span class="si">%s</span><span class="s">) is not differentiable&quot;</span> <span class="o">%</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varlist</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">j</span> <span class="o">+</span> <span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varlist</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">varlist</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">):</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+</div>
+<div class="viewcode-block" id="GramSchmidt"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.GramSchmidt">[docs]</a><span class="k">def</span> <span class="nf">GramSchmidt</span><span class="p">(</span><span class="n">vlist</span><span class="p">,</span> <span class="n">orthog</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply the Gram-Schmidt process to a set of vectors.</span>
+
+<span class="sd">    see: http://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vlist</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="n">tmp</span> <span class="o">=</span> <span class="n">vlist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">tmp</span> <span class="o">-=</span> <span class="n">vlist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tmp</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s">&quot;GramSchmidt: vector set not linearly independent&quot;</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">orthog</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">out</span><span class="p">)):</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">normalized</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+</div>
+<div class="viewcode-block" id="wronskian"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.wronskian">[docs]</a><span class="k">def</span> <span class="nf">wronskian</span><span class="p">(</span><span class="n">functions</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s">&#39;bareis&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute Wronskian for [] of functions</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">                         | f1       f2        ...   fn      |</span>
+<span class="sd">                         | f1&#39;      f2&#39;       ...   fn&#39;     |</span>
+<span class="sd">                         |  .        .        .      .      |</span>
+<span class="sd">        W(f1, ..., fn) = |  .        .         .     .      |</span>
+<span class="sd">                         |  .        .          .    .      |</span>
+<span class="sd">                         |  (n)      (n)            (n)     |</span>
+<span class="sd">                         | D   (f1) D   (f2)  ...  D   (fn) |</span>
+
+<span class="sd">    see: http://en.wikipedia.org/wiki/Wronskian</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.matrices.mutable.Matrix.jacobian</span>
+<span class="sd">    hessian</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.dense</span> <span class="kn">import</span> <span class="n">Matrix</span>
+
+    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">functions</span><span class="p">)):</span>
+        <span class="n">functions</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">functions</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">functions</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">functions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">W</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="casoratian"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.casoratian">[docs]</a><span class="k">def</span> <span class="nf">casoratian</span><span class="p">(</span><span class="n">seqs</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">zero</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given linear difference operator L of order &#39;k&#39; and homogeneous</span>
+<span class="sd">       equation Ly = 0 we want to compute kernel of L, which is a set</span>
+<span class="sd">       of &#39;k&#39; sequences: a(n), b(n), ... z(n).</span>
+
+<span class="sd">       Solutions of L are linearly independent iff their Casoratian,</span>
+<span class="sd">       denoted as C(a, b, ..., z), do not vanish for n = 0.</span>
+
+<span class="sd">       Casoratian is defined by k x k determinant::</span>
+
+<span class="sd">                  +  a(n)     b(n)     . . . z(n)     +</span>
+<span class="sd">                  |  a(n+1)   b(n+1)   . . . z(n+1)   |</span>
+<span class="sd">                  |    .         .     .        .     |</span>
+<span class="sd">                  |    .         .       .      .     |</span>
+<span class="sd">                  |    .         .         .    .     |</span>
+<span class="sd">                  +  a(n+k-1) b(n+k-1) . . . z(n+k-1) +</span>
+
+<span class="sd">       It proves very useful in rsolve_hyper() where it is applied</span>
+<span class="sd">       to a generating set of a recurrence to factor out linearly</span>
+<span class="sd">       dependent solutions and return a basis:</span>
+
+<span class="sd">       &gt;&gt;&gt; from sympy import Symbol, casoratian, factorial</span>
+<span class="sd">       &gt;&gt;&gt; n = Symbol(&#39;n&#39;, integer=True)</span>
+
+<span class="sd">       Exponential and factorial are linearly independent:</span>
+
+<span class="sd">       &gt;&gt;&gt; casoratian([2**n, factorial(n)], n) != 0</span>
+<span class="sd">       True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.dense</span> <span class="kn">import</span> <span class="n">Matrix</span>
+
+    <span class="n">seqs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">seqs</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">zero</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">seqs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">seqs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seqs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="randMatrix"><a class="viewcode-back" href="../../../modules/matrices/matrices.html#sympy.matrices.dense.randMatrix">[docs]</a><span class="k">def</span> <span class="nf">randMatrix</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">99</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">percent</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create random matrix with dimensions ``r`` x ``c``. If ``c`` is omitted</span>
+<span class="sd">    the matrix will be square. If ``symmetric`` is True the matrix must be</span>
+<span class="sd">    square. If ``percent`` is less than 100 then only approximately the given</span>
+<span class="sd">    percentage of elements will be non-zero.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.matrices import randMatrix</span>
+<span class="sd">    &gt;&gt;&gt; randMatrix(3) # doctest:+SKIP</span>
+<span class="sd">    [25, 45, 27]</span>
+<span class="sd">    [44, 54,  9]</span>
+<span class="sd">    [23, 96, 46]</span>
+<span class="sd">    &gt;&gt;&gt; randMatrix(3, 2) # doctest:+SKIP</span>
+<span class="sd">    [87, 29]</span>
+<span class="sd">    [23, 37]</span>
+<span class="sd">    [90, 26]</span>
+<span class="sd">    &gt;&gt;&gt; randMatrix(3, 3, 0, 2) # doctest:+SKIP</span>
+<span class="sd">    [0, 2, 0]</span>
+<span class="sd">    [2, 0, 1]</span>
+<span class="sd">    [0, 0, 1]</span>
+<span class="sd">    &gt;&gt;&gt; randMatrix(3, symmetric=True) # doctest:+SKIP</span>
+<span class="sd">    [85, 26, 29]</span>
+<span class="sd">    [26, 71, 43]</span>
+<span class="sd">    [29, 43, 57]</span>
+<span class="sd">    &gt;&gt;&gt; A = randMatrix(3, seed=1)</span>
+<span class="sd">    &gt;&gt;&gt; B = randMatrix(3, seed=2)</span>
+<span class="sd">    &gt;&gt;&gt; A == B # doctest:+SKIP</span>
+<span class="sd">    False</span>
+<span class="sd">    &gt;&gt;&gt; A == randMatrix(3, seed=1)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; randMatrix(3, symmetric=True, percent=50) # doctest:+SKIP</span>
+<span class="sd">    [0, 68, 43]</span>
+<span class="sd">    [0, 68,  0]</span>
+<span class="sd">    [0, 91, 34]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">r</span>
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">prng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">()</span>  <span class="c"># use system time</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">prng</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">Random</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">symmetric</span> <span class="ow">and</span> <span class="n">r</span> <span class="o">!=</span> <span class="n">c</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s">&#39;For symmetric matrices, r must equal c, but </span><span class="si">%i</span><span class="s"> != </span><span class="si">%i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">symmetric</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">Matrix</span><span class="o">.</span><span class="n">_new</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span> <span class="n">prng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+                <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">prng</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">min</span><span class="p">,</span> <span class="nb">max</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">percent</span> <span class="o">==</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">m</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">c</span><span class="o">*</span><span class="n">percent</span> <span class="o">//</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">_mat</span><span class="p">[:</span><span class="n">z</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">]</span><span class="o">*</span><span class="n">z</span>
+        <span class="n">prng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">_mat</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">m</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

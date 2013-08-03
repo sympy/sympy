@@ -1,0 +1,995 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Sets &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Simplify" href="simplify/simplify.html" />
+    <link rel="prev" title="Series Expansions" href="series.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplify/simplify.html" title="Simplify"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="series.html" title="Series Expansions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.core.sets">
+<span id="sets"></span><h1>Sets<a class="headerlink" href="#module-sympy.core.sets" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="set">
+<h2>Set<a class="headerlink" href="#set" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.Set">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">Set</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set" title="Permalink to this definition">¶</a></dt>
+<dd><p>The base class for any kind of set.</p>
+<p>This is not meant to be used directly as a container of items.
+It does not behave like the builtin set; see FiniteSet for that.</p>
+<p>Real intervals are represented by the Interval class and unions of sets
+by the Union class. The empty set is represented by the EmptySet class
+and available as a singleton as S.EmptySet.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="sympy.core.sets.Set.complement">
+<tt class="descname">complement</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.complement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.complement" title="Permalink to this definition">¶</a></dt>
+<dd><p>The complement of &#8216;self&#8217;.</p>
+<p>As a shortcut it is possible to use the &#8216;~&#8217; or &#8216;-&#8216; operators:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">complement</span>
+<span class="go">(-oo, 0) U (1, oo)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">~</span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(-oo, 0) U (1, oo)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(-oo, 0) U (1, oo)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.core.sets.Set.contains">
+<tt class="descname">contains</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if &#8216;other&#8217; is contained in &#8216;self&#8217; as an element.</p>
+<p>As a shortcut it is possible to use the &#8216;in&#8217; operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mf">0.5</span> <span class="ow">in</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Set.inf">
+<tt class="descname">inf</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.inf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.inf" title="Permalink to this definition">¶</a></dt>
+<dd><p>The infimum of &#8216;self&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">Union</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">inf</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Union</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">inf</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.core.sets.Set.intersect">
+<tt class="descname">intersect</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.intersect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.intersect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the intersection of &#8216;self&#8217; and &#8216;other&#8217;.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[1, 2]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Set.measure">
+<tt class="descname">measure</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.measure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.measure" title="Permalink to this definition">¶</a></dt>
+<dd><p>The (Lebesgue) measure of &#8216;self&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">Union</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">measure</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Union</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">measure</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.core.sets.Set.sort_key">
+<tt class="descname">sort_key</tt><big>(</big><em>order=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.sort_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.sort_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give sort_key of infimum (if possible) else sort_key of the set.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.core.sets.Set.subset">
+<tt class="descname">subset</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.subset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if &#8216;other&#8217; is a subset of &#8216;self&#8217;.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">left_open</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Set.sup">
+<tt class="descname">sup</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.sup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.sup" title="Permalink to this definition">¶</a></dt>
+<dd><p>The supremum of &#8216;self&#8217;</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">Union</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">sup</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Union</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">sup</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.core.sets.Set.transform">
+<tt class="descname">transform</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Image of set under transformation <tt class="docutils literal"><span class="pre">f</span></tt></p>
+<div class="math">
+\[{ f(x) | x \in self }\]</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="go">[0, 4]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+<span class="go">[0, 4]</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>See Also:</dt>
+<dd>TransformationSet</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.core.sets.Set.union">
+<tt class="descname">union</tt><big>(</big><em>other</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Set.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Set.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the union of &#8216;self&#8217; and &#8216;other&#8217;.</p>
+<p>As a shortcut it is possible to use the &#8216;+&#8217; operator:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">FiniteSet</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[0, 1] U [2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">[0, 1] U [2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">True</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span> <span class="o">+</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">(1, 2] U {3}</span>
+</pre></div>
+</div>
+<p>Similarly it is possible to use the &#8216;-&#8216; operator for set differences:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">(1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[1, 2) U (2, 3]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="elementary-sets">
+<h3>Elementary Sets<a class="headerlink" href="#elementary-sets" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="interval">
+<h2>Interval<a class="headerlink" href="#interval" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.Interval">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">Interval</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a real interval as a Set.</p>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd><p class="first">Returns an interval with end points &#8220;start&#8221; and &#8220;end&#8221;.</p>
+<p class="last">For left_open=True (default left_open is False) the interval
+will be open on the left. Similarly, for right_open=True the interval
+will be open on the right.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>Only real end points are supported</li>
+<li>Interval(a, b) with a &gt; b will return the empty set</li>
+<li>Use the evalf() method to turn an Interval into an mpmath
+&#8216;mpi&#8217; interval instance</li>
+</ul>
+<p class="rubric">References</p>
+<p>&lt;<a class="reference external" href="http://en.wikipedia.org/wiki/Interval_(mathematics)">http://en.wikipedia.org/wiki/Interval_(mathematics)</a>&gt;</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">[0, 1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">False</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+<span class="go">[0, 1)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+<span class="go">[0, a]</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.core.sets.Interval.as_relational">
+<tt class="descname">as_relational</tt><big>(</big><em>symbol</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval.as_relational"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval.as_relational" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rewrite an interval in terms of inequalities and logic operators.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.end">
+<tt class="descname">end</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval.end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>The right end point of &#8216;self&#8217;.</p>
+<p>This property takes the same value as the &#8216;sup&#8217; property.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">end</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.is_left_unbounded">
+<tt class="descname">is_left_unbounded</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval.is_left_unbounded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval.is_left_unbounded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">True</span></tt> if the left endpoint is negative infinity.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.is_right_unbounded">
+<tt class="descname">is_right_unbounded</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval.is_right_unbounded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval.is_right_unbounded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">True</span></tt> if the right endpoint is positive infinity.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.left">
+<tt class="descname">left</tt><a class="headerlink" href="#sympy.core.sets.Interval.left" title="Permalink to this definition">¶</a></dt>
+<dd><p>The left end point of &#8216;self&#8217;.</p>
+<p>This property takes the same value as the &#8216;inf&#8217; property.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">start</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.left_open">
+<tt class="descname">left_open</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval.left_open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval.left_open" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if &#8216;self&#8217; is left-open.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">left_open</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">left_open</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">left_open</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">left_open</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.right">
+<tt class="descname">right</tt><a class="headerlink" href="#sympy.core.sets.Interval.right" title="Permalink to this definition">¶</a></dt>
+<dd><p>The right end point of &#8216;self&#8217;.</p>
+<p>This property takes the same value as the &#8216;sup&#8217; property.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">end</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.right_open">
+<tt class="descname">right_open</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval.right_open"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval.right_open" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if &#8216;self&#8217; is right-open.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">right_open</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">right_open</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">right_open</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span><span class="o">.</span><span class="n">right_open</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.core.sets.Interval.start">
+<tt class="descname">start</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Interval.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Interval.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>The left end point of &#8216;self&#8217;.</p>
+<p>This property takes the same value as the &#8216;inf&#8217; property.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">start</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="finiteset">
+<h2>FiniteSet<a class="headerlink" href="#finiteset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.FiniteSet">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">FiniteSet</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#FiniteSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.FiniteSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a finite set of discrete numbers</p>
+<p class="rubric">References</p>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/Finite_set">http://en.wikipedia.org/wiki/Finite_set</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">FiniteSet</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FiniteSet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">{1, 2, 3, 4}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">3</span> <span class="ow">in</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.core.sets.FiniteSet.as_relational">
+<tt class="descname">as_relational</tt><big>(</big><em>symbol</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#FiniteSet.as_relational"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.FiniteSet.as_relational" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rewrite a FiniteSet in terms of equalities and logic operators.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="compound-sets">
+<h3>Compound Sets<a class="headerlink" href="#compound-sets" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="union">
+<h2>Union<a class="headerlink" href="#union" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.Union">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">Union</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a union of sets as a Set.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.core.sets.Intersection" title="sympy.core.sets.Intersection"><tt class="xref py py-obj docutils literal"><span class="pre">Intersection</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<p>&lt;<a class="reference external" href="http://en.wikipedia.org/wiki/Union_(set_theory)">http://en.wikipedia.org/wiki/Union_(set_theory)</a>&gt;</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Union</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">[1, 2] U [3, 4]</span>
+</pre></div>
+</div>
+<p>The Union constructor will always try to merge overlapping intervals,
+if possible. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Union</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="go">[1, 3]</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.core.sets.Union.as_relational">
+<tt class="descname">as_relational</tt><big>(</big><em>symbol</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Union.as_relational"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Union.as_relational" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rewrite a Union in terms of equalities and logic operators.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.core.sets.Union.reduce">
+<em class="property">static </em><tt class="descname">reduce</tt><big>(</big><em>args</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Union.reduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Union.reduce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplify a Union using known rules</p>
+<p>We first start with global rules like
+&#8216;Merge all FiniteSets&#8217;</p>
+<p>Then we iterate through all pairs and ask the constituent sets if they
+can simplify themselves with any other constituent</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="intersection">
+<h2>Intersection<a class="headerlink" href="#intersection" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.Intersection">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">Intersection</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#Intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an intersection of sets as a Set.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.core.sets.Union" title="sympy.core.sets.Union"><tt class="xref py py-obj docutils literal"><span class="pre">Union</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<p>&lt;<a class="reference external" href="http://en.wikipedia.org/wiki/Intersection_(set_theory)">http://en.wikipedia.org/wiki/Intersection_(set_theory)</a>&gt;</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Intersection</span><span class="p">,</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Intersection</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">[2, 3]</span>
+</pre></div>
+</div>
+<p>We often use the .intersect method</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">[2, 3]</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.core.sets.Intersection.as_relational">
+<tt class="descname">as_relational</tt><big>(</big><em>symbol</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Intersection.as_relational"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Intersection.as_relational" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rewrite an Intersection in terms of equalities and logic operators</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.core.sets.Intersection.reduce">
+<em class="property">static </em><tt class="descname">reduce</tt><big>(</big><em>args</em><big>)</big><a class="reference internal" href="../_modules/sympy/core/sets.html#Intersection.reduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.Intersection.reduce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplify an intersection using known rules</p>
+<p>We first start with global rules like
+&#8216;if any empty sets return empty set&#8217; and &#8216;distribute any unions&#8217;</p>
+<p>Then we iterate through all pairs and ask the constituent sets if they
+can simplify themselves with any other constituent</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="productset">
+<h2>ProductSet<a class="headerlink" href="#productset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.ProductSet">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">ProductSet</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#ProductSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.ProductSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a Cartesian Product of Sets.</p>
+<p>Returns a Cartesian product given several sets as either an iterable
+or individual arguments.</p>
+<p>Can use &#8216;*&#8217; operator on any sets for convenient shorthand.</p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>Passes most operations down to the argument sets</li>
+<li>Flattens Products of ProductSets</li>
+</ul>
+<p class="rubric">References</p>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/Cartesian_product">http://en.wikipedia.org/wiki/Cartesian_product</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">FiniteSet</span><span class="p">,</span> <span class="n">ProductSet</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">I</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span> <span class="n">S</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ProductSet</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span>
+<span class="go">[0, 5] x {1, 2, 3}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">ProductSet</span><span class="p">(</span><span class="n">I</span><span class="p">,</span> <span class="n">S</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># The unit square</span>
+<span class="go">[0, 1] x [0, 1]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">coin</span> <span class="o">=</span> <span class="n">FiniteSet</span><span class="p">(</span><span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="s">&#39;T&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">set</span><span class="p">(</span><span class="n">coin</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">set([(H, H), (H, T), (T, H), (T, T)])</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="singleton-sets">
+<h3>Singleton Sets<a class="headerlink" href="#singleton-sets" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="emptyset">
+<h2>EmptySet<a class="headerlink" href="#emptyset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.EmptySet">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">EmptySet</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#EmptySet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.EmptySet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the empty set. The empty set is available as a singleton
+as S.EmptySet.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.core.sets.UniversalSet" title="sympy.core.sets.UniversalSet"><tt class="xref py py-obj docutils literal"><span class="pre">UniversalSet</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/Empty_set">http://en.wikipedia.org/wiki/Empty_set</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span>
+<span class="go">EmptySet()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">EmptySet</span><span class="p">)</span>
+<span class="go">EmptySet()</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="universalset">
+<h2>UniversalSet<a class="headerlink" href="#universalset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.core.sets.UniversalSet">
+<em class="property">class </em><tt class="descclassname">sympy.core.sets.</tt><tt class="descname">UniversalSet</tt><a class="reference internal" href="../_modules/sympy/core/sets.html#UniversalSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.core.sets.UniversalSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the set of all things.
+The universal set is available as a singleton as S.UniversalSet</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.core.sets.EmptySet" title="sympy.core.sets.EmptySet"><tt class="xref py py-obj docutils literal"><span class="pre">EmptySet</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<p><a class="reference external" href="http://en.wikipedia.org/wiki/Universal_set">http://en.wikipedia.org/wiki/Universal_set</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Interval</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">UniversalSet</span>
+<span class="go">UniversalSet()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Interval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">UniversalSet</span><span class="p">)</span>
+<span class="go">[1, 2]</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="module-sympy.sets.fancysets">
+<span id="special-sets"></span><h3>Special Sets<a class="headerlink" href="#module-sympy.sets.fancysets" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="naturals">
+<h2>Naturals<a class="headerlink" href="#naturals" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.sets.fancysets.Naturals">
+<em class="property">class </em><tt class="descclassname">sympy.sets.fancysets.</tt><tt class="descname">Naturals</tt><a class="reference internal" href="../_modules/sympy/sets/fancysets.html#Naturals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.sets.fancysets.Naturals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the Natural Numbers. The Naturals are available as a singleton
+as S.Naturals</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">5</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">Naturals</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iterable</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Naturals</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Naturals</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)))</span>
+<span class="go">{1, 2, ..., 10}</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="integers">
+<h2>Integers<a class="headerlink" href="#integers" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.sets.fancysets.Integers">
+<em class="property">class </em><tt class="descclassname">sympy.sets.fancysets.</tt><tt class="descname">Integers</tt><a class="reference internal" href="../_modules/sympy/sets/fancysets.html#Integers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.sets.fancysets.Integers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the Integers. The Integers are available as a singleton
+as S.Integers</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">5</span> <span class="ow">in</span> <span class="n">S</span><span class="o">.</span><span class="n">Naturals</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iterable</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Integers</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Integers</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">Interval</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)))</span>
+<span class="go">{-4, -3, ..., 4}</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="transformationset">
+<h2>TransformationSet<a class="headerlink" href="#transformationset" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.sets.fancysets.TransformationSet">
+<em class="property">class </em><tt class="descclassname">sympy.sets.fancysets.</tt><tt class="descname">TransformationSet</tt><a class="reference internal" href="../_modules/sympy/sets/fancysets.html#TransformationSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.sets.fancysets.TransformationSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set that is a transformation of another through some algebraic expression</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">TransformationSet</span><span class="p">,</span> <span class="n">FiniteSet</span><span class="p">,</span> <span class="n">Lambda</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Naturals</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">squares</span> <span class="o">=</span> <span class="n">TransformationSet</span><span class="p">(</span><span class="n">Lambda</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">N</span><span class="p">)</span> <span class="c"># {x**2 for x in N}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">4</span> <span class="ow">in</span> <span class="n">squares</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">5</span> <span class="ow">in</span> <span class="n">squares</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">FiniteSet</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">squares</span><span class="p">)</span>
+<span class="go">{1, 4, 9}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">square_iterable</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">squares</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">next</span><span class="p">(</span><span class="n">square_iterable</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="go">4</span>
+<span class="go">9</span>
+<span class="go">16</span>
+</pre></div>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>is_EmptySet</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>is_Intersection</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-odd"><td>is_UniversalSet</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Sets</a><ul>
+<li><a class="reference internal" href="#set">Set</a><ul>
+<li><a class="reference internal" href="#elementary-sets">Elementary Sets</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#interval">Interval</a></li>
+<li><a class="reference internal" href="#finiteset">FiniteSet</a><ul>
+<li><a class="reference internal" href="#compound-sets">Compound Sets</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#union">Union</a></li>
+<li><a class="reference internal" href="#intersection">Intersection</a></li>
+<li><a class="reference internal" href="#productset">ProductSet</a><ul>
+<li><a class="reference internal" href="#singleton-sets">Singleton Sets</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#emptyset">EmptySet</a></li>
+<li><a class="reference internal" href="#universalset">UniversalSet</a><ul>
+<li><a class="reference internal" href="#module-sympy.sets.fancysets">Special Sets</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#naturals">Naturals</a></li>
+<li><a class="reference internal" href="#integers">Integers</a></li>
+<li><a class="reference internal" href="#transformationset">TransformationSet</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="series.html"
+                        title="previous chapter">Series Expansions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="simplify/simplify.html"
+                        title="next chapter">Simplify</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/sets.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simplify/simplify.html" title="Simplify"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="series.html" title="Series Expansions"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

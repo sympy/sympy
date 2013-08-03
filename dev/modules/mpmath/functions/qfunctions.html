@@ -1,0 +1,346 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>q-functions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Mathematical functions" href="index.html" />
+    <link rel="next" title="Numerical calculus" href="../calculus/index.html" />
+    <link rel="prev" title="Number-theoretical, combinatorial and integer functions" href="numtheory.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../calculus/index.html" title="Numerical calculus"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="numtheory.html" title="Number-theoretical, combinatorial and integer functions"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="q-functions">
+<h1>q-functions<a class="headerlink" href="#q-functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="q-pochhammer-symbol">
+<h2>q-Pochhammer symbol<a class="headerlink" href="#q-pochhammer-symbol" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="qp">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">qp()</span></tt><a class="headerlink" href="#qp" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.qp">
+<tt class="descclassname">mpmath.</tt><tt class="descname">qp</tt><big>(</big><em>a</em>, <em>q=None</em>, <em>n=None</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.qp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the q-Pochhammer symbol (or q-rising factorial)</p>
+<div class="math">
+\[(a; q)_n = \prod_{k=0}^{n-1} (1-a q^k)\]</div>
+<p>where <span class="math">\(n = \infty\)</span> is permitted if <span class="math">\(|q| &lt; 1\)</span>. Called with two arguments,
+<tt class="docutils literal"><span class="pre">qp(a,q)</span></tt> computes <span class="math">\((a;q)_{\infty}\)</span>; with a single argument, <tt class="docutils literal"><span class="pre">qp(q)</span></tt>
+computes <span class="math">\((q;q)_{\infty}\)</span>. The special case</p>
+<div class="math">
+\[\phi(q) = (q; q)_{\infty} = \prod_{k=1}^{\infty} (1-q^k) =
+    \sum_{k=-\infty}^{\infty} (-1)^k q^{(3k^2-k)/2}\]</div>
+<p>is also known as the Euler function, or (up to a factor <span class="math">\(q^{-1/24}\)</span>)
+the Dirichlet eta function.</p>
+<p><strong>Examples</strong></p>
+<p>If <span class="math">\(n\)</span> is a positive integer, the function amounts to a finite product:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qp</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">-725305.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fprod</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="mi">3</span><span class="o">**</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="go">-725305.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qp</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>Complex arguments are allowed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">qp</span><span class="p">(</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.75</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.4628842231660149089976379 + 4.481821753552703090628793j)</span>
+</pre></div>
+</div>
+<p>The regular Pochhammer symbol <span class="math">\((a)_n\)</span> is obtained in the
+following limit as <span class="math">\(q \to 1\)</span>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="n">qp</span><span class="p">(</span><span class="n">q</span><span class="o">**</span><span class="n">a</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">q</span><span class="p">)</span><span class="o">**</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">604800.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rf</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+<span class="go">604800.0</span>
+</pre></div>
+</div>
+<p>The Taylor series of the reciprocal Euler function gives
+the partition function <span class="math">\(P(n)\)</span>, i.e. the number of ways of writing
+<span class="math">\(n\)</span> as a sum of positive integers:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">taylor</span><span class="p">(</span><span class="k">lambda</span> <span class="n">q</span><span class="p">:</span> <span class="mi">1</span><span class="o">/</span><span class="n">qp</span><span class="p">(</span><span class="n">q</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">[1.0, 1.0, 2.0, 3.0, 5.0, 7.0, 11.0, 15.0, 22.0, 30.0, 42.0]</span>
+</pre></div>
+</div>
+<p>Special values include:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">qp</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">findroot</span><span class="p">(</span><span class="n">diffun</span><span class="p">(</span><span class="n">qp</span><span class="p">),</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">)</span>   <span class="c"># location of maximum</span>
+<span class="go">-0.4112484791779547734440257</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qp</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">1.228348867038575112586878</span>
+</pre></div>
+</div>
+<p>The q-Pochhammer symbol is related to the Jacobi theta functions.
+For example, the following identity holds:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>    <span class="c"># arbitrary</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qp</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="go">0.2887880950866024212788997</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">root</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">root</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="o">-</span><span class="mi">24</span><span class="p">)</span><span class="o">*</span><span class="n">jtheta</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">pi</span><span class="o">/</span><span class="mi">6</span><span class="p">,</span><span class="n">root</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+<span class="go">0.2887880950866024212788997</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="q-gamma-and-factorial">
+<h2>q-gamma and factorial<a class="headerlink" href="#q-gamma-and-factorial" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="qgamma">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">qgamma()</span></tt><a class="headerlink" href="#qgamma" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.qgamma">
+<tt class="descclassname">mpmath.</tt><tt class="descname">qgamma</tt><big>(</big><em>z</em>, <em>q</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.qgamma" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the q-gamma function</p>
+<div class="math">
+\[\Gamma_q(z) = \frac{(q; q)_{\infty}}{(q^z; q)_{\infty}} (1-q)^{1-z}.\]</div>
+<p><strong>Examples</strong></p>
+<p>Evaluation for real and complex arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qgamma</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mf">0.75</span><span class="p">)</span>
+<span class="go">4.046875</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qgamma</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">121226245.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qgamma</span><span class="p">(</span><span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">,</span> <span class="mf">0.5</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.1663082382255199834630088 + 0.01952474576025952984418217j)</span>
+</pre></div>
+</div>
+<p>The q-gamma function satisfies a functional equation similar
+to that of the ordinary gamma function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">z</span> <span class="o">=</span> <span class="n">mpf</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qgamma</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">q</span><span class="p">)</span>
+<span class="go">1.428277424823760954685912</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">q</span><span class="o">**</span><span class="n">z</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">q</span><span class="p">)</span><span class="o">*</span><span class="n">qgamma</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">q</span><span class="p">)</span>
+<span class="go">1.428277424823760954685912</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="qfac">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">qfac()</span></tt><a class="headerlink" href="#qfac" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.qfac">
+<tt class="descclassname">mpmath.</tt><tt class="descname">qfac</tt><big>(</big><em>z</em>, <em>q</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.qfac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the q-factorial,</p>
+<div class="math">
+\[[n]_q! = (1+q)(1+q+q^2)\cdots(1+q+\cdots+q^{n-1})\]</div>
+<p>or more generally</p>
+<div class="math">
+\[[z]_q! = \frac{(q;q)_z}{(1-q)^z}.\]</div>
+<p><strong>Examples</strong></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfac</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfac</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">2080.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfac</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">121226245.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qfac</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(0.4370556551322672478613695 + 0.2609739839216039203708921j)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="hypergeometric-q-series">
+<h2>Hypergeometric q-series<a class="headerlink" href="#hypergeometric-q-series" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="qhyper">
+<h3><tt class="xref py py-func docutils literal"><span class="pre">qhyper()</span></tt><a class="headerlink" href="#qhyper" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="mpmath.qhyper">
+<tt class="descclassname">mpmath.</tt><tt class="descname">qhyper</tt><big>(</big><em>a_s</em>, <em>b_s</em>, <em>q</em>, <em>z</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#mpmath.qhyper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the basic hypergeometric series or hypergeometric q-series</p>
+<div class="math">
+\[\begin{split}\,_r\phi_s \left[\begin{matrix}
+    a_1 &amp; a_2 &amp; \ldots &amp; a_r \\
+    b_1 &amp; b_2 &amp; \ldots &amp; b_s
+\end{matrix} ; q,z \right] =
+\sum_{n=0}^\infty
+\frac{(a_1;q)_n, \ldots, (a_r;q)_n}
+     {(b_1;q)_n, \ldots, (b_s;q)_n}
+\left((-1)^n q^{n\choose 2}\right)^{1+s-r}
+\frac{z^n}{(q;q)_n}\end{split}\]</div>
+<p>where <span class="math">\((a;q)_n\)</span> denotes the q-Pochhammer symbol (see <a class="reference internal" href="#mpmath.qp" title="mpmath.qp"><tt class="xref py py-func docutils literal"><span class="pre">qp()</span></tt></a>).</p>
+<p><strong>Examples</strong></p>
+<p>Evaluation works for real and complex arguments:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span> <span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qhyper</span><span class="p">([</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.25</span><span class="p">],</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">-0.1975849091263356009534385</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qhyper</span><span class="p">([</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.25</span><span class="p">],</span> <span class="mf">0.25</span><span class="o">-</span><span class="mf">0.25</span><span class="n">j</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">(2.806330244925716649839237 + 3.568997623337943121769938j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qhyper</span><span class="p">([</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">+</span><span class="mf">0.5</span><span class="n">j</span><span class="p">],</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mi">3</span><span class="o">+</span><span class="mi">4</span><span class="n">j</span><span class="p">)</span>
+<span class="go">(9.112885171773400017270226 - 1.272756997166375050700388j)</span>
+</pre></div>
+</div>
+<p>Comparing with a summation of the defining series, using
+<a class="reference internal" href="../calculus/sums_limits.html#mpmath.nsum" title="mpmath.nsum"><tt class="xref py py-func docutils literal"><span class="pre">nsum()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qhyper</span><span class="p">([],</span> <span class="p">[</span><span class="n">b</span><span class="p">],</span> <span class="n">q</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go">0.6221136748254495583228324</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nsum</span><span class="p">(</span><span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="n">z</span><span class="o">**</span><span class="n">n</span> <span class="o">/</span> <span class="n">qp</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">qp</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="n">q</span><span class="p">,</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">q</span><span class="o">**</span><span class="p">(</span><span class="n">n</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">inf</span><span class="p">])</span>
+<span class="go">0.6221136748254495583228324</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">q-functions</a><ul>
+<li><a class="reference internal" href="#q-pochhammer-symbol">q-Pochhammer symbol</a><ul>
+<li><a class="reference internal" href="#qp"><tt class="docutils literal"><span class="pre">qp()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#q-gamma-and-factorial">q-gamma and factorial</a><ul>
+<li><a class="reference internal" href="#qgamma"><tt class="docutils literal"><span class="pre">qgamma()</span></tt></a></li>
+<li><a class="reference internal" href="#qfac"><tt class="docutils literal"><span class="pre">qfac()</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hypergeometric-q-series">Hypergeometric q-series</a><ul>
+<li><a class="reference internal" href="#qhyper"><tt class="docutils literal"><span class="pre">qhyper()</span></tt></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="numtheory.html"
+                        title="previous chapter">Number-theoretical, combinatorial and integer functions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../calculus/index.html"
+                        title="next chapter">Numerical calculus</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/mpmath/functions/qfunctions.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../calculus/index.html" title="Numerical calculus"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="numtheory.html" title="Number-theoretical, combinatorial and integer functions"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li>
+          <li><a href="index.html" >Mathematical functions</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

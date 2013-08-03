@@ -1,0 +1,256 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Decorator &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Utilities" href="index.html" />
+    <link rel="next" title="Iterables" href="iterables.html" />
+    <link rel="prev" title="Codegen" href="codegen.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="iterables.html" title="Iterables"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="codegen.html" title="Codegen"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Utilities</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.utilities.decorator">
+<span id="decorator"></span><h1>Decorator<a class="headerlink" href="#module-sympy.utilities.decorator" title="Permalink to this headline">¶</a></h1>
+<p>Useful utility decorators.</p>
+<dl class="function">
+<dt id="sympy.utilities.decorator.conserve_mpmath_dps">
+<tt class="descclassname">sympy.utilities.decorator.</tt><tt class="descname">conserve_mpmath_dps</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/decorator.html#conserve_mpmath_dps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.decorator.conserve_mpmath_dps" title="Permalink to this definition">¶</a></dt>
+<dd><p>After the function finishes, resets the value of mpmath.mp.dps to
+the value it had before the function was run.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.decorator.doctest_depends_on">
+<tt class="descclassname">sympy.utilities.decorator.</tt><tt class="descname">doctest_depends_on</tt><big>(</big><em>exe=None</em>, <em>modules=None</em>, <em>disable_viewers=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/decorator.html#doctest_depends_on"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.decorator.doctest_depends_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds metadata about the depenencies which need to be met for doctesting
+the docstrings of the decorated objects.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.utilities.decorator.no_attrs_in_subclass">
+<tt class="descclassname">sympy.utilities.decorator.</tt><tt class="descname">no_attrs_in_subclass</tt><a class="reference internal" href="../../_modules/sympy/utilities/decorator.html#no_attrs_in_subclass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.decorator.no_attrs_in_subclass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Don&#8217;t &#8216;inherit&#8217; certain attributes from a base class</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.decorator</span> <span class="kn">import</span> <span class="n">no_attrs_in_subclass</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">A</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span> <span class="o">=</span> <span class="s">&#39;test&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">no_attrs_in_subclass</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.decorator.public">
+<tt class="descclassname">sympy.utilities.decorator.</tt><tt class="descname">public</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/decorator.html#public"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.decorator.public" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append <tt class="docutils literal"><span class="pre">obj</span></tt>&#8216;s name to global <tt class="docutils literal"><span class="pre">__all__</span></tt> variable (call site).</p>
+<p>By using this decorator on functions or classes you achieve the same goal
+as by filling <tt class="docutils literal"><span class="pre">__all__</span></tt> variables manually, you just don&#8217;t have to repeat
+your self (object&#8217;s name). You also know if object is public at definition
+site, not at some random location (where <tt class="docutils literal"><span class="pre">__all__</span></tt> was set).</p>
+<p>Note that in multiple decorator setup, in almost all cases, <tt class="docutils literal"><span class="pre">&#64;public</span></tt>
+decorator must be applied before any other decorators, because it relies
+on the pointer to object&#8217;s global namespace. If you apply other decorators
+first, <tt class="docutils literal"><span class="pre">&#64;public</span></tt> may end up modifying wrong namespace.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.decorator</span> <span class="kn">import</span> <span class="n">public</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">__all__</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">NameError</span>: <span class="n">name &#39;__all__&#39; is not defined</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nd">@public</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">some_function</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">__all__</span>
+<span class="go">[&#39;some_function&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.decorator.threaded">
+<tt class="descclassname">sympy.utilities.decorator.</tt><tt class="descname">threaded</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/decorator.html#threaded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.decorator.threaded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply <tt class="docutils literal"><span class="pre">func</span></tt> to sub&#8211;elements of an object, including <tt class="xref py py-class docutils literal"><span class="pre">Add</span></tt>.</p>
+<p>This decorator is intended to make it uniformly possible to apply a
+function to all elements of composite objects, e.g. matrices, lists, tuples
+and other iterable containers, or just expressions.</p>
+<p>This version of <a class="reference internal" href="#sympy.utilities.decorator.threaded" title="sympy.utilities.decorator.threaded"><tt class="xref py py-func docutils literal"><span class="pre">threaded()</span></tt></a> decorator allows threading over
+elements of <tt class="xref py py-class docutils literal"><span class="pre">Add</span></tt> class. If this behavior is not desirable
+use <a class="reference internal" href="#sympy.utilities.decorator.xthreaded" title="sympy.utilities.decorator.xthreaded"><tt class="xref py py-func docutils literal"><span class="pre">xthreaded()</span></tt></a> decorator.</p>
+<p>Functions using this decorator must have the following signature:</p>
+<div class="highlight-python"><pre>@threaded
+def function(expr, *args, **kwargs):</pre>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.decorator.threaded_factory">
+<tt class="descclassname">sympy.utilities.decorator.</tt><tt class="descname">threaded_factory</tt><big>(</big><em>func</em>, <em>use_add</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/decorator.html#threaded_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.decorator.threaded_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>A factory for <tt class="docutils literal"><span class="pre">threaded</span></tt> decorators.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.decorator.xthreaded">
+<tt class="descclassname">sympy.utilities.decorator.</tt><tt class="descname">xthreaded</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/decorator.html#xthreaded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.decorator.xthreaded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply <tt class="docutils literal"><span class="pre">func</span></tt> to sub&#8211;elements of an object, excluding <tt class="xref py py-class docutils literal"><span class="pre">Add</span></tt>.</p>
+<p>This decorator is intended to make it uniformly possible to apply a
+function to all elements of composite objects, e.g. matrices, lists, tuples
+and other iterable containers, or just expressions.</p>
+<p>This version of <a class="reference internal" href="#sympy.utilities.decorator.threaded" title="sympy.utilities.decorator.threaded"><tt class="xref py py-func docutils literal"><span class="pre">threaded()</span></tt></a> decorator disallows threading over
+elements of <tt class="xref py py-class docutils literal"><span class="pre">Add</span></tt> class. If this behavior is not desirable
+use <a class="reference internal" href="#sympy.utilities.decorator.threaded" title="sympy.utilities.decorator.threaded"><tt class="xref py py-func docutils literal"><span class="pre">threaded()</span></tt></a> decorator.</p>
+<p>Functions using this decorator must have the following signature:</p>
+<div class="highlight-python"><pre>@xthreaded
+def function(expr, *args, **kwargs):</pre>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="codegen.html"
+                        title="previous chapter">Codegen</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="iterables.html"
+                        title="next chapter">Iterables</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/utilities/decorator.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="iterables.html" title="Iterables"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="codegen.html" title="Codegen"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Utilities</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

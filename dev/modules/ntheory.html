@@ -1,0 +1,1641 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Number Theory &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Concrete Mathematics" href="concrete.html" />
+    <link rel="prev" title="Tensor Canonicalization" href="combinatorics/tensor_can.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="concrete.html" title="Concrete Mathematics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="combinatorics/tensor_can.html" title="Tensor Canonicalization"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.ntheory.generate">
+<span id="number-theory"></span><h1>Number Theory<a class="headerlink" href="#module-sympy.ntheory.generate" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ntheory-class-reference">
+<h2>Ntheory Class Reference<a class="headerlink" href="#ntheory-class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.ntheory.generate.Sieve">
+<em class="property">class </em><tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">Sieve</tt><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#Sieve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.Sieve" title="Permalink to this definition">¶</a></dt>
+<dd><p>An infinite list of prime numbers, implemented as a dynamically
+growing sieve of Eratosthenes. When a lookup is requested involving
+an odd number that has not been sieved, the sieve is automatically
+extended up to that number.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sieve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">array</span> <span class="kn">import</span> <span class="n">array</span> <span class="c"># this line and next for doctest only</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">_list</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="s">&#39;l&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">13</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="mi">25</span> <span class="ow">in</span> <span class="n">sieve</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">_list</span>
+<span class="go">array(&#39;l&#39;, [2, 3, 5, 7, 11, 13, 17, 19, 23])</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.ntheory.generate.Sieve.extend">
+<tt class="descname">extend</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#Sieve.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.Sieve.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Grow the sieve to cover all primes &lt;= n (a real number).</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sieve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">array</span> <span class="kn">import</span> <span class="n">array</span> <span class="c"># this line and next for doctest only</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">_list</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="s">&#39;l&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">13</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">==</span> <span class="mi">29</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.ntheory.generate.Sieve.extend_to_no">
+<tt class="descname">extend_to_no</tt><big>(</big><em>i</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#Sieve.extend_to_no"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.Sieve.extend_to_no" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extend to include the ith prime number.</p>
+<p>i must be an integer.</p>
+<p>The list is extended by 50% if it is too short, so it is
+likely that it will be longer than requested.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sieve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">array</span> <span class="kn">import</span> <span class="n">array</span> <span class="c"># this line and next for doctest only</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">_list</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="s">&#39;l&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">13</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">extend_to_no</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">_list</span>
+<span class="go">array(&#39;l&#39;, [2, 3, 5, 7, 11, 13, 17, 19, 23])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.ntheory.generate.Sieve.primerange">
+<tt class="descname">primerange</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#Sieve.primerange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.Sieve.primerange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate all prime numbers in the range [a, b).</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sieve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sieve</span><span class="o">.</span><span class="n">primerange</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">18</span><span class="p">)])</span>
+<span class="go">[7, 11, 13, 17]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.ntheory.generate.Sieve.search">
+<tt class="descname">search</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#Sieve.search"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.Sieve.search" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the indices i, j of the primes that bound n.</p>
+<p>If n is prime then i == j.</p>
+<p>Although n can be an expression, if ceiling cannot convert
+it to an integer then an n error will be raised.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sieve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="go">(9, 10)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sieve</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="mi">23</span><span class="p">)</span>
+<span class="go">(9, 9)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="ntheory-functions-reference">
+<h2>Ntheory Functions Reference<a class="headerlink" href="#ntheory-functions-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.ntheory.generate.prime">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">prime</tt><big>(</big><em>nth</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#prime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.prime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the nth prime, with the primes indexed as prime(1) = 2,
+prime(2) = 3, etc.... The nth prime is approximately n*log(n) and
+can never be larger than 2**n.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.primetest.isprime" title="sympy.ntheory.primetest.isprime"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.ntheory.primetest.isprime</span></tt></a></dt>
+<dd>Test if n is prime</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primerange" title="sympy.ntheory.generate.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">primerange</span></tt></a></dt>
+<dd>Generate all primes in a given range</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primepi" title="sympy.ntheory.generate.primepi"><tt class="xref py py-obj docutils literal"><span class="pre">primepi</span></tt></a></dt>
+<dd>Return the number of primes less than or equal to n</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><a class="reference external" href="http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html">http://primes.utm.edu/glossary/xpage/BertrandsPostulate.html</a></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">prime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prime</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">29</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prime</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.generate.primepi">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">primepi</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#primepi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.primepi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the value of the prime counting function pi(n) = the number
+of prime numbers less than or equal to n.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.primetest.isprime" title="sympy.ntheory.primetest.isprime"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.ntheory.primetest.isprime</span></tt></a></dt>
+<dd>Test if n is prime</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primerange" title="sympy.ntheory.generate.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">primerange</span></tt></a></dt>
+<dd>Generate all primes in a given range</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.prime" title="sympy.ntheory.generate.prime"><tt class="xref py py-obj docutils literal"><span class="pre">prime</span></tt></a></dt>
+<dd>Return the nth prime</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">primepi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primepi</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="go">9</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.generate.nextprime">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">nextprime</tt><big>(</big><em>n</em>, <em>ith=1</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#nextprime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.nextprime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the ith prime greater than n.</p>
+<p>i must be an integer.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.generate.prevprime" title="sympy.ntheory.generate.prevprime"><tt class="xref py py-obj docutils literal"><span class="pre">prevprime</span></tt></a></dt>
+<dd>Return the largest prime smaller than n</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primerange" title="sympy.ntheory.generate.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">primerange</span></tt></a></dt>
+<dd>Generate all primes in a given range</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>Potential primes are located at 6*j +/- 1. This
+property is used during searching.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">nextprime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">nextprime</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">)]</span>
+<span class="go">[(10, 11), (11, 13), (12, 13), (13, 17), (14, 17)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nextprime</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">ith</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c"># the 2nd prime after 2</span>
+<span class="go">5</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.generate.prevprime">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">prevprime</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#prevprime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.prevprime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the largest prime smaller than n.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.generate.nextprime" title="sympy.ntheory.generate.nextprime"><tt class="xref py py-obj docutils literal"><span class="pre">nextprime</span></tt></a></dt>
+<dd>Return the ith prime greater than n</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primerange" title="sympy.ntheory.generate.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">primerange</span></tt></a></dt>
+<dd>Generates all primes in a given range</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>Potential primes are located at 6*j +/- 1. This
+property is used during searching.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">prevprime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">prevprime</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">)]</span>
+<span class="go">[(10, 7), (11, 7), (12, 11), (13, 11), (14, 13)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.generate.primerange">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">primerange</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#primerange"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.primerange" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a list of all prime numbers in the range [a, b).</p>
+<p>If the range exists in the default sieve, the values will
+be returned from there; otherwise values will be returned
+but will not modifiy the sieve.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.generate.nextprime" title="sympy.ntheory.generate.nextprime"><tt class="xref py py-obj docutils literal"><span class="pre">nextprime</span></tt></a></dt>
+<dd>Return the ith prime greater than n</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.prevprime" title="sympy.ntheory.generate.prevprime"><tt class="xref py py-obj docutils literal"><span class="pre">prevprime</span></tt></a></dt>
+<dd>Return the largest prime smaller than n</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.randprime" title="sympy.ntheory.generate.randprime"><tt class="xref py py-obj docutils literal"><span class="pre">randprime</span></tt></a></dt>
+<dd>Returns a random prime in a given range</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primorial" title="sympy.ntheory.generate.primorial"><tt class="xref py py-obj docutils literal"><span class="pre">primorial</span></tt></a></dt>
+<dd>Returns the product of primes based on condition</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.Sieve.primerange" title="sympy.ntheory.generate.Sieve.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">Sieve.primerange</span></tt></a></dt>
+<dd>return range from already computed primes or extend the sieve to contain the requested range.</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>Some famous conjectures about the occurence of primes in a given
+range are [1]:</p>
+<ul>
+<li><dl class="first docutils">
+<dt>Twin primes: though often not, the following will give 2 primes</dt>
+<dd><dl class="first last docutils">
+<dt>an infinite number of times:</dt>
+<dd><p class="first last">primerange(6*n - 1, 6*n + 2)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Legendre&#8217;s: the following always yields at least one prime</dt>
+<dd><p class="first last">primerange(n**2, (n+1)**2+1)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Bertrand&#8217;s (proven): there is always a prime in the range</dt>
+<dd><p class="first last">primerange(n, 2*n)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Brocard&#8217;s: there are at least four primes in the range</dt>
+<dd><p class="first last">primerange(prime(n)**2, prime(n+1)**2)</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The average gap between primes is log(n) [2]; the gap between
+primes can be arbitrarily large since sequences of composite
+numbers are arbitrarily large, e.g. the numbers in the sequence
+n! + 2, n! + 3 ... n! + n are all composite.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Prime_number">http://en.wikipedia.org/wiki/Prime_number</a></li>
+<li><a class="reference external" href="http://primes.utm.edu/notes/gaps.html">http://primes.utm.edu/notes/gaps.html</a></li>
+</ol>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">primerange</span><span class="p">,</span> <span class="n">sieve</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">primerange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)])</span>
+<span class="go">[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]</span>
+</pre></div>
+</div>
+<p>The Sieve method, primerange, is generally faster but it will
+occupy more memory as the sieve stores values. The default
+instance of Sieve, named sieve, can be used:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">sieve</span><span class="o">.</span><span class="n">primerange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
+<span class="go">[2, 3, 5, 7, 11, 13, 17, 19, 23, 29]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.generate.randprime">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">randprime</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#randprime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.randprime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random prime number in the range [a, b).</p>
+<p>Bertrand&#8217;s postulate assures that
+randprime(a, 2*a) will always succeed for a &gt; 1.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primerange" title="sympy.ntheory.generate.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">primerange</span></tt></a></dt>
+<dd>Generate all primes in a given range</dd>
+</dl>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Bertrand's_postulate">http://en.wikipedia.org/wiki/Bertrand&#8217;s_postulate</a></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">randprime</span><span class="p">,</span> <span class="n">isprime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">randprime</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span> 
+<span class="go">13</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isprime</span><span class="p">(</span><span class="n">randprime</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.generate.primorial">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">primorial</tt><big>(</big><em>n</em>, <em>nth=True</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#primorial"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.primorial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the product of the first n primes (default) or
+the primes less than or equal to n (when <tt class="docutils literal"><span class="pre">nth=False</span></tt>).</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.generate</span> <span class="kn">import</span> <span class="n">primorial</span><span class="p">,</span> <span class="n">randprime</span><span class="p">,</span> <span class="n">primerange</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorint</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">primefactors</span><span class="p">,</span> <span class="n">sqrt</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primorial</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="c"># the first 4 primes are 2, 3, 5, 7</span>
+<span class="go">210</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primorial</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">nth</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="c"># primes &lt;= 4 are 2 and 3</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primorial</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primorial</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nth</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primorial</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">101</span><span class="p">),</span> <span class="n">nth</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">210</span>
+</pre></div>
+</div>
+<p>One can argue that the primes are infinite since if you take
+a set of primes and multiply them together (e.g. the primorial) and
+then add or subtract 1, the result cannot be divided by any of the
+original factors, hence either 1 or more new primes must divide this
+product of primes.</p>
+<p>In this case, the number itself is a new prime:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="n">primorial</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">{211: 1}</span>
+</pre></div>
+</div>
+<p>In this case two new primes are the factors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="n">primorial</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">{11: 1, 19: 1}</span>
+</pre></div>
+</div>
+<p>Here, some primes smaller and larger than the primes multiplied together
+are obtained:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">primerange</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">primefactors</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">p</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">p</span><span class="p">)))</span>
+<span class="go">[2, 5, 31, 149]</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primerange" title="sympy.ntheory.generate.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">primerange</span></tt></a></dt>
+<dd>Generate all primes in a given range</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.generate.cycle_length">
+<tt class="descclassname">sympy.ntheory.generate.</tt><tt class="descname">cycle_length</tt><big>(</big><em>f</em>, <em>x0</em>, <em>nmax=None</em>, <em>values=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/generate.html#cycle_length"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.generate.cycle_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>For a given iterated sequence, return a generator that gives
+the length of the iterated cycle (lambda) and the length of terms
+before the cycle begins (mu); if <tt class="docutils literal"><span class="pre">values</span></tt> is True then the
+terms of the sequence will be returned instead. The sequence is
+started with value <tt class="docutils literal"><span class="pre">x0</span></tt>.</p>
+<p>Note: more than the first lambda + mu terms may be returned and this
+is the cost of cycle detection with Brent&#8217;s method; there are, however,
+generally less terms calculated than would have been calculated if the
+proper ending point were determined, e.g. by using Floyd&#8217;s method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.generate</span> <span class="kn">import</span> <span class="n">cycle_length</span>
+</pre></div>
+</div>
+<p>This will yield successive values of i &lt;&#8211; func(i):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">ii</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="gp">... </span>        <span class="k">yield</span> <span class="n">ii</span>
+<span class="gp">... </span>        <span class="n">i</span> <span class="o">=</span> <span class="n">ii</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>A function is defined:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">51</span>
+</pre></div>
+</div>
+<p>and given a seed of 4 and the mu and lambda terms calculated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">next</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">(6, 2)</span>
+</pre></div>
+</div>
+<p>We can see what is meant by looking at the output:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="n">cycle_length</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">ni</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">n</span><span class="p">)</span>
+<span class="go">[17, 35, 2, 5, 26, 14, 44, 50, 2, 5, 26, 14]</span>
+</pre></div>
+</div>
+<p>There are 6 repeating values after the first 2.</p>
+<p>If a sequence is suspected of being longer than you might wish, <tt class="docutils literal"><span class="pre">nmax</span></tt>
+can be used to exit early (and mu will be returned as None):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">next</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">nmax</span> <span class="o">=</span> <span class="mi">4</span><span class="p">))</span>
+<span class="go">(4, None)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">ni</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">cycle_length</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">nmax</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="bp">True</span><span class="p">)]</span>
+<span class="go">[17, 35, 2, 5]</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Code modified from:</dt>
+<dd><a class="reference external" href="http://en.wikipedia.org/wiki/Cycle_detection">http://en.wikipedia.org/wiki/Cycle_detection</a>.</dd>
+</dl>
+</dd></dl>
+
+<span class="target" id="module-sympy.ntheory.factor_"></span><dl class="function">
+<dt id="sympy.ntheory.factor_.smoothness">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">smoothness</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#smoothness"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.smoothness" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the B-smooth and B-power smooth values of n.</p>
+<p>The smoothness of n is the largest prime factor of n; the power-
+smoothness is the largest divisor raised to its multiplicity.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.factor_</span> <span class="kn">import</span> <span class="n">smoothness</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">7</span><span class="o">*</span><span class="mi">3</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(3, 128)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">4</span><span class="o">*</span><span class="mi">13</span><span class="p">)</span>
+<span class="go">(13, 16)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">(2, 2)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.factor_.factorint" title="sympy.ntheory.factor_.factorint"><tt class="xref py py-obj docutils literal"><span class="pre">factorint</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.smoothness_p" title="sympy.ntheory.factor_.smoothness_p"><tt class="xref py py-obj docutils literal"><span class="pre">smoothness_p</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.smoothness_p">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">smoothness_p</tt><big>(</big><em>n</em>, <em>m=-1</em>, <em>power=0</em>, <em>visual=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#smoothness_p"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.smoothness_p" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of [m, (p, (M, sm(p + m), psm(p + m)))...]
+where:</p>
+<ol class="arabic simple">
+<li>p**M is the base-p divisor of n</li>
+<li>sm(p + m) is the smoothness of p + m (m = -1 by default)</li>
+<li>psm(p + n) is the power smoothness of p + m</li>
+</ol>
+<p>The list is sorted according to smoothness (default) or by power smoothness
+if power=1.</p>
+<p>The smoothness of the numbers to the left (m = -1) or right (m = 1) of a
+factor govern the results that are obtained from the p +/- 1 type factoring
+methods.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.factor_</span> <span class="kn">import</span> <span class="n">smoothness_p</span><span class="p">,</span> <span class="n">factorint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness_p</span><span class="p">(</span><span class="mi">10431</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(1, [(3, (2, 2, 4)), (19, (1, 5, 5)), (61, (1, 31, 31))])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness_p</span><span class="p">(</span><span class="mi">10431</span><span class="p">)</span>
+<span class="go">(-1, [(3, (2, 2, 2)), (19, (1, 3, 9)), (61, (1, 5, 5))])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness_p</span><span class="p">(</span><span class="mi">10431</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(-1, [(3, (2, 2, 2)), (61, (1, 5, 5)), (19, (1, 3, 9))])</span>
+</pre></div>
+</div>
+<p>If visual=True then an annotated string will be returned:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">smoothness_p</span><span class="p">(</span><span class="mi">21477639576571</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">p**i=4410317**1 has p-1 B=1787, B-pow=1787</span>
+<span class="go">p**i=4869863**1 has p-1 B=2434931, B-pow=2434931</span>
+</pre></div>
+</div>
+<p>This string can also be generated directly from a factorization dictionary
+and vice versa:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="mi">17</span><span class="o">*</span><span class="mi">9</span><span class="p">)</span>
+<span class="go">{3: 2, 17: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness_p</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">&#39;p**i=3**2 has p-1 B=2, B-pow=2\np**i=17**1 has p-1 B=2, B-pow=16&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness_p</span><span class="p">(</span><span class="n">_</span><span class="p">)</span>
+<span class="go">{3: 2, 17: 1}</span>
+</pre></div>
+</div>
+<p>The table of the output logic is:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="23%" />
+<col width="27%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head"><div class="first last line-block">
+<div class="line"><br /></div>
+</div>
+</th>
+<th class="head" colspan="3">Visual</th>
+</tr>
+<tr class="row-even"><th class="head">Input</th>
+<th class="head">True</th>
+<th class="head">False</th>
+<th class="head">other</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-odd"><td>dict</td>
+<td>str</td>
+<td>tuple</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>str</td>
+<td>str</td>
+<td>tuple</td>
+<td>dict</td>
+</tr>
+<tr class="row-odd"><td>tuple</td>
+<td>str</td>
+<td>tuple</td>
+<td>str</td>
+</tr>
+<tr class="row-even"><td>n</td>
+<td>str</td>
+<td>tuple</td>
+<td>tuple</td>
+</tr>
+<tr class="row-odd"><td>mul</td>
+<td>str</td>
+<td>tuple</td>
+<td>tuple</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.factor_.factorint" title="sympy.ntheory.factor_.factorint"><tt class="xref py py-obj docutils literal"><span class="pre">factorint</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.smoothness" title="sympy.ntheory.factor_.smoothness"><tt class="xref py py-obj docutils literal"><span class="pre">smoothness</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.trailing">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">trailing</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#trailing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.trailing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Count the number of trailing zero digits in the binary
+representation of n, i.e. determine the largest power of 2
+that divides n.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">trailing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trailing</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+<span class="go">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trailing</span><span class="p">(</span><span class="mi">63</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.multiplicity">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">multiplicity</tt><big>(</big><em>p</em>, <em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#multiplicity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.multiplicity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the greatest integer m such that p**m divides n.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">multiplicity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">Rational</span> <span class="k">as</span> <span class="n">R</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">multiplicity</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">125</span><span class="p">,</span> <span class="mi">250</span><span class="p">]]</span>
+<span class="go">[0, 1, 2, 3, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multiplicity</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">R</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+<span class="go">-2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.perfect_power">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">perfect_power</tt><big>(</big><em>n</em>, <em>candidates=None</em>, <em>big=True</em>, <em>factor=True</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#perfect_power"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.perfect_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">(b,</span> <span class="pre">e)</span></tt> such that <tt class="docutils literal"><span class="pre">n</span></tt> == <tt class="docutils literal"><span class="pre">b**e</span></tt> if <tt class="docutils literal"><span class="pre">n</span></tt> is a
+perfect power; otherwise return <tt class="docutils literal"><span class="pre">False</span></tt>.</p>
+<p>By default, the base is recursively decomposed and the exponents
+collected so the largest possible <tt class="docutils literal"><span class="pre">e</span></tt> is sought. If <tt class="docutils literal"><span class="pre">big=False</span></tt>
+then the smallest possible <tt class="docutils literal"><span class="pre">e</span></tt> (thus prime) will be chosen.</p>
+<p>If <tt class="docutils literal"><span class="pre">candidates</span></tt> for exponents are given, they are assumed to be sorted
+and the first one that is larger than the computed maximum will signal
+failure for the routine.</p>
+<p>If <tt class="docutils literal"><span class="pre">factor=True</span></tt> then simultaneous factorization of n is attempted
+since finding a factor indicates the only possible root for n. This
+is True by default since only a few small factors will be tested in
+the course of searching for the perfect power.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">perfect_power</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">perfect_power</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+<span class="go">(2, 4)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">perfect_power</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">big</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+<span class="go">(4, 2)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.pollard_rho">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">pollard_rho</tt><big>(</big><em>n</em>, <em>s=2</em>, <em>a=1</em>, <em>retries=5</em>, <em>seed=1234</em>, <em>max_steps=None</em>, <em>F=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#pollard_rho"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.pollard_rho" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use Pollard&#8217;s rho method to try to extract a nontrivial factor
+of <tt class="docutils literal"><span class="pre">n</span></tt>. The returned factor may be a composite number. If no
+factor is found, <tt class="docutils literal"><span class="pre">None</span></tt> is returned.</p>
+<p>The algorithm generates pseudo-random values of x with a generator
+function, replacing x with F(x). If F is not supplied then the
+function x**2 + <tt class="docutils literal"><span class="pre">a</span></tt> is used. The first value supplied to F(x) is <tt class="docutils literal"><span class="pre">s</span></tt>.
+Upon failure (if <tt class="docutils literal"><span class="pre">retries</span></tt> is &gt; 0) a new <tt class="docutils literal"><span class="pre">a</span></tt> and <tt class="docutils literal"><span class="pre">s</span></tt> will be
+supplied; the <tt class="docutils literal"><span class="pre">a</span></tt> will be ignored if F was supplied.</p>
+<p>The sequence of numbers generated by such functions generally have a
+a lead-up to some number and then loop around back to that number and
+begin to repeat the sequence, e.g. 1, 2, 3, 4, 5, 3, 4, 5 &#8211; this leader
+and loop look a bit like the Greek letter rho, and thus the name, &#8216;rho&#8217;.</p>
+<p>For a given function, very different leader-loop values can be obtained
+so it is a good idea to allow for retries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.generate</span> <span class="kn">import</span> <span class="n">cycle_length</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">16843009</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:(</span><span class="mi">2048</span><span class="o">*</span><span class="nb">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">32767</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;loop length = </span><span class="si">%4i</span><span class="s">; leader length = </span><span class="si">%3i</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">next</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">s</span><span class="p">)))</span>
+<span class="gp">...</span>
+<span class="go">loop length = 2489; leader length =  42</span>
+<span class="go">loop length =   78; leader length = 120</span>
+<span class="go">loop length = 1482; leader length =  99</span>
+<span class="go">loop length = 1482; leader length = 285</span>
+<span class="go">loop length = 1482; leader length = 100</span>
+</pre></div>
+</div>
+<p>Here is an explicit example where there is a two element leadup to
+a sequence of 3 numbers (11, 14, 4) that then repeat:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">=</span><span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">x</span><span class="o">=</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">12</span><span class="p">)</span><span class="o">%</span><span class="mi">17</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">16</span>
+<span class="go">13</span>
+<span class="go">11</span>
+<span class="go">14</span>
+<span class="go">4</span>
+<span class="go">11</span>
+<span class="go">14</span>
+<span class="go">4</span>
+<span class="go">11</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">next</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">12</span><span class="p">)</span><span class="o">%</span><span class="mi">17</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">(3, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">cycle_length</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="mi">12</span><span class="p">)</span><span class="o">%</span><span class="mi">17</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[16, 13, 11, 14, 4]</span>
+</pre></div>
+</div>
+<p>Instead of checking the differences of all generated values for a gcd
+with n, only the kth and 2*kth numbers are checked, e.g. 1st and 2nd,
+2nd and 4th, 3rd and 6th until it has been detected that the loop has been
+traversed. Loops may be many thousands of steps long before rho finds a
+factor or reports failure. If <tt class="docutils literal"><span class="pre">max_steps</span></tt> is specified, the iteration
+is cancelled with a failure after the specified number of steps.</p>
+<p class="rubric">References</p>
+<ul class="simple">
+<li>Richard Crandall &amp; Carl Pomerance (2005), &#8220;Prime Numbers:
+A Computational Perspective&#8221;, Springer, 2nd edition, 229-231</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pollard_rho</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="o">=</span><span class="mi">16843009</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:(</span><span class="mi">2048</span><span class="o">*</span><span class="nb">pow</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">32767</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_rho</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">F</span><span class="o">=</span><span class="n">F</span><span class="p">)</span>
+<span class="go">257</span>
+</pre></div>
+</div>
+<p>Use the default setting with a bad value of <tt class="docutils literal"><span class="pre">a</span></tt> and no retries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_rho</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If retries is &gt; 0 then perhaps the problem will correct itself when
+new values are generated for a:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_rho</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">257</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.pollard_pm1">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">pollard_pm1</tt><big>(</big><em>n</em>, <em>B=10</em>, <em>a=2</em>, <em>retries=0</em>, <em>seed=1234</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#pollard_pm1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.pollard_pm1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use Pollard&#8217;s p-1 method to try to extract a nontrivial factor
+of <tt class="docutils literal"><span class="pre">n</span></tt>. Either a divisor (perhaps composite) or <tt class="docutils literal"><span class="pre">None</span></tt> is returned.</p>
+<p>The value of <tt class="docutils literal"><span class="pre">a</span></tt> is the base that is used in the test gcd(a**M - 1, n).
+The default is 2.  If <tt class="docutils literal"><span class="pre">retries</span></tt> &gt; 0 then if no factor is found after the
+first attempt, a new <tt class="docutils literal"><span class="pre">a</span></tt> will be generated randomly (using the <tt class="docutils literal"><span class="pre">seed</span></tt>)
+and the process repeated.</p>
+<p>Note: the value of M is lcm(1..B) = reduce(ilcm, range(2, B + 1)).</p>
+<p>A search is made for factors next to even numbers having a power smoothness
+less than <tt class="docutils literal"><span class="pre">B</span></tt>. Choosing a larger B increases the likelihood of finding a
+larger factor but takes longer. Whether a factor of n is found or not
+depends on <tt class="docutils literal"><span class="pre">a</span></tt> and the power smoothness of the even mumber just less than
+the factor p (hence the name p - 1).</p>
+<p>Although some discussion of what constitutes a good <tt class="docutils literal"><span class="pre">a</span></tt> some
+descriptions are hard to interpret. At the modular.math site referenced
+below it is stated that if gcd(a**M - 1, n) = N then a**M % q**r is 1
+for every prime power divisor of N. But consider the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.factor_</span> <span class="kn">import</span> <span class="n">smoothness_p</span><span class="p">,</span> <span class="n">pollard_pm1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n</span><span class="o">=</span><span class="mi">257</span><span class="o">*</span><span class="mi">1009</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">smoothness_p</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+<span class="go">(-1, [(257, (1, 2, 256)), (1009, (1, 7, 16))])</span>
+</pre></div>
+</div>
+<p>So we should (and can) find a root with B=16:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_pm1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">1009</span>
+</pre></div>
+</div>
+<p>If we attempt to increase B to 256 we find that it doesn&#8217;t work:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_pm1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+</pre></div>
+</div>
+<p>But if the value of <tt class="docutils literal"><span class="pre">a</span></tt> is changed we find that only multiples of
+257 work, e.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_pm1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">257</span><span class="p">)</span>
+<span class="go">1009</span>
+</pre></div>
+</div>
+<p>Checking different <tt class="docutils literal"><span class="pre">a</span></tt> values shows that all the ones that didn&#8217;t
+work had a gcd value not equal to <tt class="docutils literal"><span class="pre">n</span></tt> but equal to one of the
+factors:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core.numbers</span> <span class="kn">import</span> <span class="n">ilcm</span><span class="p">,</span> <span class="n">igcd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorint</span><span class="p">,</span> <span class="n">Pow</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">256</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">M</span> <span class="o">=</span> <span class="n">ilcm</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">set</span><span class="p">([</span><span class="n">igcd</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span> <span class="k">if</span>
+<span class="gp">... </span>     <span class="n">igcd</span><span class="p">(</span><span class="nb">pow</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="p">])</span>
+<span class="go">set([1009])</span>
+</pre></div>
+</div>
+<p>But does aM % d for every divisor of n give 1?</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">aM</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">aM</span><span class="o">%</span><span class="n">Pow</span><span class="p">(</span><span class="o">*</span><span class="n">d</span><span class="o">.</span><span class="n">args</span><span class="p">))</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">factorint</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+<span class="go">[(257**1, 1), (1009**1, 1)]</span>
+</pre></div>
+</div>
+<p>No, only one of them. So perhaps the principle is that a root will
+be found for a given value of B provided that:</p>
+<ol class="arabic simple">
+<li>the power smoothness of the p - 1 value next to the root
+does not exceed B</li>
+<li>a**M % p != 1 for any of the divisors of n.</li>
+</ol>
+<p>By trying more than one <tt class="docutils literal"><span class="pre">a</span></tt> it is possible that one of them
+will yield a factor.</p>
+<p class="rubric">References</p>
+<ul class="simple">
+<li>Richard Crandall &amp; Carl Pomerance (2005), &#8220;Prime Numbers:
+A Computational Perspective&#8221;, Springer, 2nd edition, 236-238</li>
+<li><a class="reference external" href="http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html">http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/node81.html</a></li>
+<li><a class="reference external" href="http://www.cs.toronto.edu/~yuvalf/Factorization.pdf">http://www.cs.toronto.edu/~yuvalf/Factorization.pdf</a></li>
+</ul>
+<p class="rubric">Examples</p>
+<p>With the default smoothness bound, this number can&#8217;t be cracked:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">pollard_pm1</span><span class="p">,</span> <span class="n">primefactors</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_pm1</span><span class="p">(</span><span class="mi">21477639576571</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Increasing the smoothness bound helps:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_pm1</span><span class="p">(</span><span class="mi">21477639576571</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
+<span class="go">4410317</span>
+</pre></div>
+</div>
+<p>Looking at the smoothness of the factors of this number we find:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">flatten</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.factor_</span> <span class="kn">import</span> <span class="n">smoothness_p</span><span class="p">,</span> <span class="n">factorint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">smoothness_p</span><span class="p">(</span><span class="mi">21477639576571</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">p**i=4410317**1 has p-1 B=1787, B-pow=1787</span>
+<span class="go">p**i=4869863**1 has p-1 B=2434931, B-pow=2434931</span>
+</pre></div>
+</div>
+<p>The B and B-pow are the same for the p - 1 factorizations of the divisors
+because those factorizations had a very large prime factor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="mi">4410317</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">{2: 2, 617: 1, 1787: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="mi">4869863</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">{2: 1, 2434931: 1}</span>
+</pre></div>
+</div>
+<p>Note that until B reaches the B-pow value of 1787, the number is not cracked;</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_pm1</span><span class="p">(</span><span class="mi">21477639576571</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">1786</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pollard_pm1</span><span class="p">(</span><span class="mi">21477639576571</span><span class="p">,</span> <span class="n">B</span><span class="o">=</span><span class="mi">1787</span><span class="p">)</span>
+<span class="go">4410317</span>
+</pre></div>
+</div>
+<p>The B value has to do with the factors of the number next to the divisor,
+not the divisors themselves. A worst case scenario is that the number next
+to the factor p has a large prime divisisor or is a perfect power. If these
+conditions apply then the power-smoothness will be about p/2 or p. The more
+realistic is that there will be a large prime factor next to p requiring
+a B value on the order of p/2. Although primes may have been searched for
+up to this level, the p/2 is a factor of p - 1, something that we don&#8217;t
+know. The modular.math reference below states that 15% of numbers in the
+range of 10**15 to 15**15 + 10**4 are 10**6 power smooth so a B of 10**6
+will fail 85% of the time in that range. From 10**8 to 10**8 + 10**3 the
+percentages are nearly reversed...but in that range the simple trial
+division is quite fast.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.factorint">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">factorint</tt><big>(</big><em>n</em>, <em>limit=None</em>, <em>use_trial=True</em>, <em>use_rho=True</em>, <em>use_pm1=True</em>, <em>verbose=False</em>, <em>visual=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#factorint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.factorint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a positive integer <tt class="docutils literal"><span class="pre">n</span></tt>, <tt class="docutils literal"><span class="pre">factorint(n)</span></tt> returns a dict containing
+the prime factors of <tt class="docutils literal"><span class="pre">n</span></tt> as keys and their respective multiplicities
+as values. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">factorint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="mi">2000</span><span class="p">)</span>    <span class="c"># 2000 = (2**4) * (5**3)</span>
+<span class="go">{2: 4, 5: 3}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="mi">65537</span><span class="p">)</span>   <span class="c"># This number is prime</span>
+<span class="go">{65537: 1}</span>
+</pre></div>
+</div>
+<p>For input less than 2, factorint behaves as follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">factorint(1)</span></tt> returns the empty factorization, <tt class="docutils literal"><span class="pre">{}</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">factorint(0)</span></tt> returns <tt class="docutils literal"><span class="pre">{0:1}</span></tt></li>
+<li><tt class="docutils literal"><span class="pre">factorint(-n)</span></tt> adds <tt class="docutils literal"><span class="pre">-1:1</span></tt> to the factors and then factors <tt class="docutils literal"><span class="pre">n</span></tt></li>
+</ul>
+</div></blockquote>
+<p>Partial Factorization:</p>
+<p>If <tt class="docutils literal"><span class="pre">limit</span></tt> (&gt; 3) is specified, the search is stopped after performing
+trial division up to (and including) the limit (or taking a
+corresponding number of rho/p-1 steps). This is useful if one has
+a large number and only is interested in finding small factors (if
+any). Note that setting a limit does not prevent larger factors
+from being found early; it simply means that the largest factor may
+be composite. Since checking for perfect power is relatively cheap, it is
+done regardless of the limit setting.</p>
+<p>This number, for example, has two small factors and a huge
+semi-prime factor that cannot be reduced easily:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">isprime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">long</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="mi">1407633717262338957430697921446883</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">factorint</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10000</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">==</span> <span class="p">{</span><span class="mi">991</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">long</span><span class="p">(</span><span class="mi">202916782076162456022877024859</span><span class="p">):</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isprime</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>This number has a small factor and a residual perfect power whose
+base is greater than the limit:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="mi">101</span><span class="o">**</span><span class="mi">7</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">{3: 1, 101: 7}</span>
+</pre></div>
+</div>
+<p>Visual Factorization:</p>
+<p>If <tt class="docutils literal"><span class="pre">visual</span></tt> is set to <tt class="docutils literal"><span class="pre">True</span></tt>, then it will return a visual
+factorization of the integer.  For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">factorint</span><span class="p">(</span><span class="mi">4200</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go"> 3  1  2  1</span>
+<span class="go">2 *3 *5 *7</span>
+</pre></div>
+</div>
+<p>Note that this is achieved by using the evaluate=False flag in Mul
+and Pow. If you do other manipulations with an expression where
+evaluate=False, it may evaluate.  Therefore, you should use the
+visual option only for visualization, and use the normal dictionary
+returned by visual=False if you want to perform operations on the
+factors.</p>
+<p>You can easily switch between the two forms by sending them back to
+factorint:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">regular</span> <span class="o">=</span> <span class="n">factorint</span><span class="p">(</span><span class="mi">1764</span><span class="p">);</span> <span class="n">regular</span>
+<span class="go">{2: 2, 3: 2, 7: 2}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="p">(</span><span class="n">factorint</span><span class="p">(</span><span class="n">regular</span><span class="p">))</span>
+<span class="go"> 2  2  2</span>
+<span class="go">2 *3 *7</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">visual</span> <span class="o">=</span> <span class="n">factorint</span><span class="p">(</span><span class="mi">1764</span><span class="p">,</span> <span class="n">visual</span><span class="o">=</span><span class="bp">True</span><span class="p">);</span> <span class="n">pprint</span><span class="p">(</span><span class="n">visual</span><span class="p">)</span>
+<span class="go"> 2  2  2</span>
+<span class="go">2 *3 *7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">factorint</span><span class="p">(</span><span class="n">visual</span><span class="p">))</span>
+<span class="go">{2: 2, 3: 2, 7: 2}</span>
+</pre></div>
+</div>
+<p>If you want to send a number to be factored in a partially factored form
+you can do so with a dictionary or unevaluated expression:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="n">factorint</span><span class="p">({</span><span class="mi">4</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">12</span><span class="p">:</span> <span class="mi">3</span><span class="p">}))</span> <span class="c"># twice to toggle to dict form</span>
+<span class="go">{2: 10, 3: 3}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorint</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="go">{2: 4, 3: 1}</span>
+</pre></div>
+</div>
+<p>The table of the output logic is:</p>
+<blockquote>
+<div><table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="23%" />
+<col width="27%" />
+<col width="27%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">&nbsp;</th>
+<th class="head" colspan="3">&nbsp;</th>
+</tr>
+<tr class="row-even"><th class="head">Input</th>
+<th class="head">True</th>
+<th class="head">False</th>
+<th class="head">other</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-odd"><td>dict</td>
+<td>mul</td>
+<td>dict</td>
+<td>mul</td>
+</tr>
+<tr class="row-even"><td>n</td>
+<td>mul</td>
+<td>dict</td>
+<td>dict</td>
+</tr>
+<tr class="row-odd"><td>mul</td>
+<td>mul</td>
+<td>dict</td>
+<td>dict</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.factor_.smoothness" title="sympy.ntheory.factor_.smoothness"><tt class="xref py py-obj docutils literal"><span class="pre">smoothness</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.smoothness_p" title="sympy.ntheory.factor_.smoothness_p"><tt class="xref py py-obj docutils literal"><span class="pre">smoothness_p</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.divisors" title="sympy.ntheory.factor_.divisors"><tt class="xref py py-obj docutils literal"><span class="pre">divisors</span></tt></a></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Algorithm:</p>
+<p>The function switches between multiple algorithms. Trial division
+quickly finds small factors (of the order 1-5 digits), and finds
+all large factors if given enough time. The Pollard rho and p-1
+algorithms are used to find large factors ahead of time; they
+will often find factors of the order of 10 digits within a few
+seconds:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">factors</span> <span class="o">=</span> <span class="n">factorint</span><span class="p">(</span><span class="mi">12345678910111213141516</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">base</span><span class="p">,</span> <span class="n">exp</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">factors</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">exp</span><span class="p">))</span>
+<span class="gp">...</span>
+<span class="go">2 2</span>
+<span class="go">2507191691 1</span>
+<span class="go">1231026625769 1</span>
+</pre></div>
+</div>
+<p>Any of these methods can optionally be disabled with the following
+boolean parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">use_trial</span></tt>: Toggle use of trial division</li>
+<li><tt class="docutils literal"><span class="pre">use_rho</span></tt>: Toggle use of Pollard&#8217;s rho method</li>
+<li><tt class="docutils literal"><span class="pre">use_pm1</span></tt>: Toggle use of Pollard&#8217;s p-1 method</li>
+</ul>
+</div></blockquote>
+<p><tt class="docutils literal"><span class="pre">factorint</span></tt> also periodically checks if the remaining part is
+a prime number or a perfect power, and in those cases stops.</p>
+<p>If <tt class="docutils literal"><span class="pre">verbose</span></tt> is set to <tt class="docutils literal"><span class="pre">True</span></tt>, detailed progress is printed.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.primefactors">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">primefactors</tt><big>(</big><em>n</em>, <em>limit=None</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#primefactors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.primefactors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a sorted list of n&#8217;s prime factors, ignoring multiplicity
+and any composite factor that remains if the limit was set too low
+for complete factorization. Unlike factorint(), primefactors() does
+not return -1 or 0.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.factor_.divisors" title="sympy.ntheory.factor_.divisors"><tt class="xref py py-obj docutils literal"><span class="pre">divisors</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">primefactors</span><span class="p">,</span> <span class="n">factorint</span><span class="p">,</span> <span class="n">isprime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primefactors</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">[2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primefactors</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">[5]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">factorint</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<span class="go">[(2, 6), (3, 1), (643, 1)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primefactors</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span>
+<span class="go">[2, 3, 643]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">factorint</span><span class="p">(</span><span class="mi">10000000001</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<span class="go">[(101, 1), (99009901, 1)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isprime</span><span class="p">(</span><span class="mi">99009901</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">primefactors</span><span class="p">(</span><span class="mi">10000000001</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+<span class="go">[101]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.divisors">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">divisors</tt><big>(</big><em>n</em>, <em>generator=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#divisors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.divisors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all divisors of n sorted from 1..n by default.
+If generator is True an unordered generator is returned.</p>
+<p>The number of divisors of n can be quite large if there are many
+prime factors (counting repeated factors). If only the number of
+factors is desired use divisor_count(n).</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.factor_.primefactors" title="sympy.ntheory.factor_.primefactors"><tt class="xref py py-obj docutils literal"><span class="pre">primefactors</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.factorint" title="sympy.ntheory.factor_.factorint"><tt class="xref py py-obj docutils literal"><span class="pre">factorint</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.divisor_count" title="sympy.ntheory.factor_.divisor_count"><tt class="xref py py-obj docutils literal"><span class="pre">divisor_count</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">divisors</span><span class="p">,</span> <span class="n">divisor_count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">divisors</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+<span class="go">[1, 2, 3, 4, 6, 8, 12, 24]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">divisor_count</span><span class="p">(</span><span class="mi">24</span><span class="p">)</span>
+<span class="go">8</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">divisors</span><span class="p">(</span><span class="mi">120</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[1, 2, 4, 8, 3, 6, 12, 24, 5, 10, 20, 40, 15, 30, 60, 120]</span>
+</pre></div>
+</div>
+<p>This is a slightly modified version of Tim Peters referenced at:
+<a class="reference external" href="http://stackoverflow.com/questions/1010381/python-factorization">http://stackoverflow.com/questions/1010381/python-factorization</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.divisor_count">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">divisor_count</tt><big>(</big><em>n</em>, <em>modulus=1</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#divisor_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.divisor_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the number of divisors of <tt class="docutils literal"><span class="pre">n</span></tt>. If <tt class="docutils literal"><span class="pre">modulus</span></tt> is not 1 then only
+those that are divisible by <tt class="docutils literal"><span class="pre">modulus</span></tt> are counted.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.factor_.factorint" title="sympy.ntheory.factor_.factorint"><tt class="xref py py-obj docutils literal"><span class="pre">factorint</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.divisors" title="sympy.ntheory.factor_.divisors"><tt class="xref py py-obj docutils literal"><span class="pre">divisors</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.factor_.totient" title="sympy.ntheory.factor_.totient"><tt class="xref py py-obj docutils literal"><span class="pre">totient</span></tt></a></p>
+</div>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><a class="reference external" href="http://www.mayer.dial.pipex.com/maths/formulae.htm">http://www.mayer.dial.pipex.com/maths/formulae.htm</a></li>
+</ul>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">divisor_count</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">divisor_count</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.factor_.totient">
+<tt class="descclassname">sympy.ntheory.factor_.</tt><tt class="descname">totient</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/factor_.html#totient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.factor_.totient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the Euler totient function phi(n)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">totient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">totient</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">totient</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="go">20</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.factor_.divisor_count" title="sympy.ntheory.factor_.divisor_count"><tt class="xref py py-obj docutils literal"><span class="pre">divisor_count</span></tt></a></p>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<span class="target" id="module-sympy.ntheory.modular"></span><dl class="function">
+<dt id="sympy.ntheory.modular.symmetric_residue">
+<tt class="descclassname">sympy.ntheory.modular.</tt><tt class="descname">symmetric_residue</tt><big>(</big><em>a</em>, <em>m</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/modular.html#symmetric_residue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.modular.symmetric_residue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the residual mod m such that it is within half of the modulus.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.modular</span> <span class="kn">import</span> <span class="n">symmetric_residue</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">symmetric_residue</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">symmetric_residue</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">-2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.modular.crt">
+<tt class="descclassname">sympy.ntheory.modular.</tt><tt class="descname">crt</tt><big>(</big><em>m</em>, <em>v</em>, <em>symmetric=False</em>, <em>check=True</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/modular.html#crt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.modular.crt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Chinese Remainder Theorem.</p>
+<p>The moduli in m are assumed to be pairwise coprime.  The output
+is then an integer f, such that f = v_i mod m_i for each pair out
+of v and m. If <tt class="docutils literal"><span class="pre">symmetric</span></tt> is False a positive integer will be
+returned, else |f| will be less than or equal to the LCM of the
+moduli, and thus f may be negative.</p>
+<p>If the moduli are not co-prime the correct result will be returned
+if/when the test of the result is found to be incorrect. This result
+will be None if there is no solution.</p>
+<p>The keyword <tt class="docutils literal"><span class="pre">check</span></tt> can be set to False if it is known that the moduli
+are coprime.</p>
+<p>As an example consider a set of residues <tt class="docutils literal"><span class="pre">U</span> <span class="pre">=</span> <span class="pre">[49,</span> <span class="pre">76,</span> <span class="pre">65]</span></tt>
+and a set of moduli <tt class="docutils literal"><span class="pre">M</span> <span class="pre">=</span> <span class="pre">[99,</span> <span class="pre">97,</span> <span class="pre">95]</span></tt>. Then we have:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.modular</span> <span class="kn">import</span> <span class="n">crt</span><span class="p">,</span> <span class="n">solve_congruence</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">crt</span><span class="p">([</span><span class="mi">99</span><span class="p">,</span> <span class="mi">97</span><span class="p">,</span> <span class="mi">95</span><span class="p">],</span> <span class="p">[</span><span class="mi">49</span><span class="p">,</span> <span class="mi">76</span><span class="p">,</span> <span class="mi">65</span><span class="p">])</span>
+<span class="go">(639985, 912285)</span>
+</pre></div>
+</div>
+<p>This is the correct result because:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">639985</span> <span class="o">%</span> <span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">99</span><span class="p">,</span> <span class="mi">97</span><span class="p">,</span> <span class="mi">95</span><span class="p">]]</span>
+<span class="go">[49, 76, 65]</span>
+</pre></div>
+</div>
+<p>If the moduli are not co-prime, you may receive an incorrect result
+if you use <tt class="docutils literal"><span class="pre">check=False</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">crt</span><span class="p">([</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">17</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">check</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">(954, 1224)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">954</span> <span class="o">%</span> <span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">17</span><span class="p">]]</span>
+<span class="go">[6, 0, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">crt</span><span class="p">([</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">17</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="ow">is</span> <span class="bp">None</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">crt</span><span class="p">([</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">(5, 6)</span>
+</pre></div>
+</div>
+<p>Note: the order of gf_crt&#8217;s arguments is reversed relative to crt,
+and that solve_congruence takes residue, modulus pairs.</p>
+<p>Programmer&#8217;s note: rather than checking that all pairs of moduli share
+no GCD (an O(n**2) test) and rather than factoring all moduli and seeing
+that there is no factor in common, a check that the result gives the
+indicated residuals is performed &#8211; an O(n) operation.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p><a class="reference internal" href="#sympy.ntheory.modular.solve_congruence" title="sympy.ntheory.modular.solve_congruence"><tt class="xref py py-obj docutils literal"><span class="pre">solve_congruence</span></tt></a></p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="polys/internals.html#sympy.polys.galoistools.gf_crt" title="sympy.polys.galoistools.gf_crt"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.polys.galoistools.gf_crt</span></tt></a></dt>
+<dd>low level crt routine used by this routine</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.modular.crt1">
+<tt class="descclassname">sympy.ntheory.modular.</tt><tt class="descname">crt1</tt><big>(</big><em>m</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/modular.html#crt1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.modular.crt1" title="Permalink to this definition">¶</a></dt>
+<dd><p>First part of Chinese Remainder Theorem, for multiple application.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.modular</span> <span class="kn">import</span> <span class="n">crt1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">crt1</span><span class="p">([</span><span class="mi">18</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+<span class="go">(4536, [252, 108, 756], [0, 2, 0])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.modular.crt2">
+<tt class="descclassname">sympy.ntheory.modular.</tt><tt class="descname">crt2</tt><big>(</big><em>m</em>, <em>v</em>, <em>mm</em>, <em>e</em>, <em>s</em>, <em>symmetric=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/modular.html#crt2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.modular.crt2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Second part of Chinese Remainder Theorem, for multiple application.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.modular</span> <span class="kn">import</span> <span class="n">crt1</span><span class="p">,</span> <span class="n">crt2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mm</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">crt1</span><span class="p">([</span><span class="mi">18</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">6</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">crt2</span><span class="p">([</span><span class="mi">18</span><span class="p">,</span> <span class="mi">42</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">mm</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+<span class="go">(0, 4536)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.modular.solve_congruence">
+<tt class="descclassname">sympy.ntheory.modular.</tt><tt class="descname">solve_congruence</tt><big>(</big><em>*remainder_modulus_pairs</em>, <em>**hint</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/modular.html#solve_congruence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.modular.solve_congruence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the integer <tt class="docutils literal"><span class="pre">n</span></tt> that has the residual <tt class="docutils literal"><span class="pre">ai</span></tt> when it is
+divided by <tt class="docutils literal"><span class="pre">mi</span></tt> where the <tt class="docutils literal"><span class="pre">ai</span></tt> and <tt class="docutils literal"><span class="pre">mi</span></tt> are given as pairs to
+this function: ((a1, m1), (a2, m2), ...). If there is no solution,
+return None. Otherwise return <tt class="docutils literal"><span class="pre">n</span></tt> and its modulus.</p>
+<p>The <tt class="docutils literal"><span class="pre">mi</span></tt> values need not be co-prime. If it is known that the moduli are
+not co-prime then the hint <tt class="docutils literal"><span class="pre">check</span></tt> can be set to False (default=True) and
+the check for a quicker solution via crt() (valid when the moduli are
+co-prime) will be skipped.</p>
+<p>If the hint <tt class="docutils literal"><span class="pre">symmetric</span></tt> is True (default is False), the value of <tt class="docutils literal"><span class="pre">n</span></tt>
+will be within 1/2 of the modulus, possibly negative.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.modular.crt" title="sympy.ntheory.modular.crt"><tt class="xref py py-obj docutils literal"><span class="pre">crt</span></tt></a></dt>
+<dd>high level routine implementing the Chinese Remainder Theorem</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.modular</span> <span class="kn">import</span> <span class="n">solve_congruence</span>
+</pre></div>
+</div>
+<p>What number is 2 mod 3, 3 mod 5 and 2 mod 7?</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_congruence</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="go">(23, 105)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">23</span> <span class="o">%</span> <span class="n">m</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">]]</span>
+<span class="go">[2, 3, 2]</span>
+</pre></div>
+</div>
+<p>If you prefer to work with all remainder in one list and
+all moduli in another, send the arguments like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_congruence</span><span class="p">(</span><span class="o">*</span><span class="nb">zip</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">)))</span>
+<span class="go">(23, 105)</span>
+</pre></div>
+</div>
+<p>The moduli need not be co-prime; in this case there may or
+may not be a solution:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_congruence</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span> <span class="ow">is</span> <span class="bp">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_congruence</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="go">(5, 6)</span>
+</pre></div>
+</div>
+<p>The symmetric flag will make the result be within 1/2 of the modulus:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve_congruence</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">symmetric</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">(-1, 6)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<span class="target" id="module-sympy.ntheory.multinomial"></span><dl class="function">
+<dt id="sympy.ntheory.multinomial.binomial_coefficients">
+<tt class="descclassname">sympy.ntheory.multinomial.</tt><tt class="descname">binomial_coefficients</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/multinomial.html#binomial_coefficients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.multinomial.binomial_coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary containing pairs <span class="math">\({(k1,k2) : C_kn}\)</span> where
+<span class="math">\(C_kn\)</span> are binomial coefficients and <span class="math">\(n=k1+k2\)</span>.
+Examples
+========</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">binomial_coefficients</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binomial_coefficients</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+<span class="go">{(0, 9): 1, (1, 8): 9, (2, 7): 36, (3, 6): 84,</span>
+<span class="go"> (4, 5): 126, (5, 4): 126, (6, 3): 84, (7, 2): 36, (8, 1): 9, (9, 0): 1}</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.multinomial.binomial_coefficients_list" title="sympy.ntheory.multinomial.binomial_coefficients_list"><tt class="xref py py-obj docutils literal"><span class="pre">binomial_coefficients_list</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.multinomial.multinomial_coefficients" title="sympy.ntheory.multinomial.multinomial_coefficients"><tt class="xref py py-obj docutils literal"><span class="pre">multinomial_coefficients</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.multinomial.binomial_coefficients_list">
+<tt class="descclassname">sympy.ntheory.multinomial.</tt><tt class="descname">binomial_coefficients_list</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/multinomial.html#binomial_coefficients_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.multinomial.binomial_coefficients_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of binomial coefficients as rows of the Pascal&#8217;s
+triangle.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.multinomial.binomial_coefficients" title="sympy.ntheory.multinomial.binomial_coefficients"><tt class="xref py py-obj docutils literal"><span class="pre">binomial_coefficients</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.multinomial.multinomial_coefficients" title="sympy.ntheory.multinomial.multinomial_coefficients"><tt class="xref py py-obj docutils literal"><span class="pre">multinomial_coefficients</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">binomial_coefficients_list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">binomial_coefficients_list</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+<span class="go">[1, 9, 36, 84, 126, 126, 84, 36, 9, 1]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.multinomial.multinomial_coefficients">
+<tt class="descclassname">sympy.ntheory.multinomial.</tt><tt class="descname">multinomial_coefficients</tt><big>(</big><em>m</em>, <em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/multinomial.html#multinomial_coefficients"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.multinomial.multinomial_coefficients" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary containing pairs <tt class="docutils literal"><span class="pre">{(k1,k2,..,km)</span> <span class="pre">:</span> <span class="pre">C_kn}</span></tt>
+where <tt class="docutils literal"><span class="pre">C_kn</span></tt> are multinomial coefficients such that
+<tt class="docutils literal"><span class="pre">n=k1+k2+..+km</span></tt>.</p>
+<p>For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">multinomial_coefficients</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multinomial_coefficients</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="c"># indirect doctest</span>
+<span class="go">{(0, 5): 1, (1, 4): 5, (2, 3): 10, (3, 2): 10, (4, 1): 5, (5, 0): 1}</span>
+</pre></div>
+</div>
+<p>The algorithm is based on the following result:</p>
+<div class="math">
+\[\binom{n}{k_1, \ldots, k_m} =
+\frac{k_1 + 1}{n - k_1} \sum_{i=2}^m \binom{n}{k_1 + 1, \ldots, k_i - 1, \ldots}\]</div>
+<p>Code contributed to Sage by Yann Laigle-Chapuy, copied with permission
+of the author.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.multinomial.binomial_coefficients_list" title="sympy.ntheory.multinomial.binomial_coefficients_list"><tt class="xref py py-obj docutils literal"><span class="pre">binomial_coefficients_list</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.multinomial.binomial_coefficients" title="sympy.ntheory.multinomial.binomial_coefficients"><tt class="xref py py-obj docutils literal"><span class="pre">binomial_coefficients</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.multinomial.multinomial_coefficients_iterator">
+<tt class="descclassname">sympy.ntheory.multinomial.</tt><tt class="descname">multinomial_coefficients_iterator</tt><big>(</big><em>m</em>, <em>n</em>, <em>_tuple=&lt;type 'tuple'&gt;</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/multinomial.html#multinomial_coefficients_iterator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.multinomial.multinomial_coefficients_iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>multinomial coefficient iterator</p>
+<p>This routine has been optimized for <span class="math">\(m\)</span> large with respect to <span class="math">\(n\)</span> by taking
+advantage of the fact that when the monomial tuples <span class="math">\(t\)</span> are stripped of
+zeros, their coefficient is the same as that of the monomial tuples from
+<tt class="docutils literal"><span class="pre">multinomial_coefficients(n,</span> <span class="pre">n)</span></tt>. Therefore, the latter coefficients are
+precomputed to save memory and time.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.multinomial</span> <span class="kn">import</span> <span class="n">multinomial_coefficients</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m53</span><span class="p">,</span> <span class="n">m33</span> <span class="o">=</span> <span class="n">multinomial_coefficients</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">3</span><span class="p">),</span> <span class="n">multinomial_coefficients</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m53</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)]</span> <span class="o">==</span> <span class="n">m53</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)]</span> <span class="o">==</span> <span class="n">m53</span><span class="p">[(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)]</span> <span class="o">==</span> <span class="n">m33</span><span class="p">[(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)]</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.multinomial</span> <span class="kn">import</span> <span class="n">multinomial_coefficients_iterator</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">it</span> <span class="o">=</span> <span class="n">multinomial_coefficients_iterator</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">next</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
+<span class="go">((3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 1)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<span class="target" id="module-sympy.ntheory.partitions_"></span><dl class="function">
+<dt id="sympy.ntheory.partitions_.npartitions">
+<tt class="descclassname">sympy.ntheory.partitions_.</tt><tt class="descname">npartitions</tt><big>(</big><em>n</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/partitions_.html#npartitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.partitions_.npartitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the partition function P(n), i.e. the number of ways that
+n can be written as a sum of positive integers.</p>
+<p>P(n) is computed using the Hardy-Ramanujan-Rademacher formula,
+described e.g. at <a class="reference external" href="http://mathworld.wolfram.com/PartitionFunctionP.html">http://mathworld.wolfram.com/PartitionFunctionP.html</a></p>
+<p>The correctness of this implementation has been tested for 10**n
+up to n = 8.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">npartitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">npartitions</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span>
+<span class="go">1958</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<span class="target" id="module-sympy.ntheory.primetest"></span><dl class="function">
+<dt id="sympy.ntheory.primetest.mr">
+<tt class="descclassname">sympy.ntheory.primetest.</tt><tt class="descname">mr</tt><big>(</big><em>n</em>, <em>bases</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/primetest.html#mr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.primetest.mr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a Miller-Rabin strong pseudoprime test on n using a
+given list of bases/witnesses.</p>
+<p class="rubric">References</p>
+<ul class="simple">
+<li>Richard Crandall &amp; Carl Pomerance (2005), &#8220;Prime Numbers:
+A Computational Perspective&#8221;, Springer, 2nd edition, 135-138</li>
+</ul>
+<p>A list of thresholds and the bases they require are here:
+<a class="reference external" href="http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test">http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory.primetest</span> <span class="kn">import</span> <span class="n">mr</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mr</span><span class="p">(</span><span class="mi">1373651</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mr</span><span class="p">(</span><span class="mi">479001599</span><span class="p">,</span> <span class="p">[</span><span class="mi">31</span><span class="p">,</span> <span class="mi">73</span><span class="p">])</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.primetest.isprime">
+<tt class="descclassname">sympy.ntheory.primetest.</tt><tt class="descname">isprime</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/primetest.html#isprime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.primetest.isprime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test if n is a prime number (True) or not (False). For n &lt; 10**16 the
+answer is accurate; greater n values have a small probability of actually
+being pseudoprimes.</p>
+<p>Negative primes (e.g. -2) are not considered prime.</p>
+<p>The function first looks for trivial factors, and if none is found,
+performs a safe Miller-Rabin strong pseudoprime test with bases
+that are known to prove a number prime. Finally, a general Miller-Rabin
+test is done with the first k bases which will report a pseudoprime as a
+prime with an error of about 4**-k. The current value of k is 46 so the
+error is about 2 x 10**-28.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primerange" title="sympy.ntheory.generate.primerange"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.ntheory.generate.primerange</span></tt></a></dt>
+<dd>Generates all primes in a given range</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.primepi" title="sympy.ntheory.generate.primepi"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.ntheory.generate.primepi</span></tt></a></dt>
+<dd>Return the number of primes less than or equal to n</dd>
+<dt><a class="reference internal" href="#sympy.ntheory.generate.prime" title="sympy.ntheory.generate.prime"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.ntheory.generate.prime</span></tt></a></dt>
+<dd>Return the nth prime</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">isprime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isprime</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isprime</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<span class="target" id="module-sympy.ntheory.residue_ntheory"></span><dl class="function">
+<dt id="sympy.ntheory.residue_ntheory.n_order">
+<tt class="descclassname">sympy.ntheory.residue_ntheory.</tt><tt class="descname">n_order</tt><big>(</big><em>a</em>, <em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/residue_ntheory.html#n_order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.residue_ntheory.n_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the order of <tt class="docutils literal"><span class="pre">a</span></tt> modulo <tt class="docutils literal"><span class="pre">n</span></tt>.</p>
+<p>The order of <tt class="docutils literal"><span class="pre">a</span></tt> modulo <tt class="docutils literal"><span class="pre">n</span></tt> is the smallest integer
+<tt class="docutils literal"><span class="pre">k</span></tt> such that <tt class="docutils literal"><span class="pre">a**k</span></tt> leaves a remainder of 1 with <tt class="docutils literal"><span class="pre">n</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">n_order</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_order</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_order</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.residue_ntheory.is_primitive_root">
+<tt class="descclassname">sympy.ntheory.residue_ntheory.</tt><tt class="descname">is_primitive_root</tt><big>(</big><em>a</em>, <em>p</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/residue_ntheory.html#is_primitive_root"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.residue_ntheory.is_primitive_root" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">a</span></tt> is a primitive root of <tt class="docutils literal"><span class="pre">p</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">a</span></tt> is said to be the primitive root of <tt class="docutils literal"><span class="pre">p</span></tt> if gcd(a, p) == 1 and
+totient(p) is the smallest positive number s.t.</p>
+<blockquote>
+<div>a**totient(p) cong 1 mod(p)</div></blockquote>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">is_primitive_root</span><span class="p">,</span> <span class="n">n_order</span><span class="p">,</span> <span class="n">totient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_primitive_root</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">is_primitive_root</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_order</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">==</span> <span class="n">totient</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_order</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">==</span> <span class="n">totient</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.residue_ntheory.is_quad_residue">
+<tt class="descclassname">sympy.ntheory.residue_ntheory.</tt><tt class="descname">is_quad_residue</tt><big>(</big><em>a</em>, <em>p</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/residue_ntheory.html#is_quad_residue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.residue_ntheory.is_quad_residue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if <tt class="docutils literal"><span class="pre">a</span></tt> (mod <tt class="docutils literal"><span class="pre">p</span></tt>) is in the set of squares mod <tt class="docutils literal"><span class="pre">p</span></tt>,
+i.e a % p in set([i**2 % p for i in range(p)]). If <tt class="docutils literal"><span class="pre">p</span></tt> is an odd
+prime, an iterative method is used to make the determination:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">is_quad_residue</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span> <span class="o">%</span> <span class="mi">7</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)]))</span>
+<span class="go">[0, 1, 2, 4]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_quad_residue</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="mi">7</span><span class="p">)]</span>
+<span class="go">[0, 1, 2, 4]</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.residue_ntheory.legendre_symbol" title="sympy.ntheory.residue_ntheory.legendre_symbol"><tt class="xref py py-obj docutils literal"><span class="pre">legendre_symbol</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.residue_ntheory.jacobi_symbol" title="sympy.ntheory.residue_ntheory.jacobi_symbol"><tt class="xref py py-obj docutils literal"><span class="pre">jacobi_symbol</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.residue_ntheory.legendre_symbol">
+<tt class="descclassname">sympy.ntheory.residue_ntheory.</tt><tt class="descname">legendre_symbol</tt><big>(</big><em>a</em>, <em>p</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/residue_ntheory.html#legendre_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.residue_ntheory.legendre_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>1. 0 if a is multiple of p</strong> :</p>
+<p><strong>2. 1 if a is a quadratic residue of p</strong> :</p>
+<p><strong>3. -1 otherwise</strong> :</p>
+<p class="last"><strong>p should be an odd prime by definition</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.residue_ntheory.is_quad_residue" title="sympy.ntheory.residue_ntheory.is_quad_residue"><tt class="xref py py-obj docutils literal"><span class="pre">is_quad_residue</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.residue_ntheory.jacobi_symbol" title="sympy.ntheory.residue_ntheory.jacobi_symbol"><tt class="xref py py-obj docutils literal"><span class="pre">jacobi_symbol</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">legendre_symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">legendre_symbol</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)]</span>
+<span class="go">[0, 1, 1, -1, 1, -1, -1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span> <span class="o">%</span> <span class="mi">7</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)]))</span>
+<span class="go">[0, 1, 2, 4]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.ntheory.residue_ntheory.jacobi_symbol">
+<tt class="descclassname">sympy.ntheory.residue_ntheory.</tt><tt class="descname">jacobi_symbol</tt><big>(</big><em>m</em>, <em>n</em><big>)</big><a class="reference internal" href="../_modules/sympy/ntheory/residue_ntheory.html#jacobi_symbol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.ntheory.residue_ntheory.jacobi_symbol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the product of the legendre_symbol(m, p)
+for all the prime factors, p, of n.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>1. 0 if m cong 0 mod(n)</strong> :</p>
+<p><strong>2. 1 if x**2 cong m mod(n) has a solution</strong> :</p>
+<p class="last"><strong>3. -1 otherwise</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.ntheory.residue_ntheory.is_quad_residue" title="sympy.ntheory.residue_ntheory.is_quad_residue"><tt class="xref py py-obj docutils literal"><span class="pre">is_quad_residue</span></tt></a>, <a class="reference internal" href="#sympy.ntheory.residue_ntheory.legendre_symbol" title="sympy.ntheory.residue_ntheory.legendre_symbol"><tt class="xref py py-obj docutils literal"><span class="pre">legendre_symbol</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.ntheory</span> <span class="kn">import</span> <span class="n">jacobi_symbol</span><span class="p">,</span> <span class="n">legendre_symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jacobi_symbol</span><span class="p">(</span><span class="mi">45</span><span class="p">,</span> <span class="mi">77</span><span class="p">)</span>
+<span class="go">-1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jacobi_symbol</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">121</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>The relationship between the jacobi_symbol and legendre_symbol can
+be demonstrated as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">legendre_symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span><span class="o">.</span><span class="n">factors</span><span class="p">()</span>
+<span class="go">{3: 2, 5: 1}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">jacobi_symbol</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">45</span><span class="p">)</span> <span class="o">==</span> <span class="n">L</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">L</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="o">**</span><span class="mi">1</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Number Theory</a><ul>
+<li><a class="reference internal" href="#ntheory-class-reference">Ntheory Class Reference</a></li>
+<li><a class="reference internal" href="#ntheory-functions-reference">Ntheory Functions Reference</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="combinatorics/tensor_can.html"
+                        title="previous chapter">Tensor Canonicalization</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="concrete.html"
+                        title="next chapter">Concrete Mathematics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/ntheory.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="concrete.html" title="Concrete Mathematics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="combinatorics/tensor_can.html" title="Tensor Canonicalization"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

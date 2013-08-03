@@ -1,0 +1,2631 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.stats.crv_types &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.stats" href="../stats.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" accesskey="U">sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.stats.crv_types</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Continuous Random Variables - Prebuilt variables</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">Arcsin</span>
+<span class="sd">Benini</span>
+<span class="sd">Beta</span>
+<span class="sd">BetaPrime</span>
+<span class="sd">Cauchy</span>
+<span class="sd">Chi</span>
+<span class="sd">ChiNoncentral</span>
+<span class="sd">ChiSquared</span>
+<span class="sd">Dagum</span>
+<span class="sd">Erlang</span>
+<span class="sd">Exponential</span>
+<span class="sd">FDistribution</span>
+<span class="sd">FisherZ</span>
+<span class="sd">Frechet</span>
+<span class="sd">Gamma</span>
+<span class="sd">GammaInverse</span>
+<span class="sd">Kumaraswamy</span>
+<span class="sd">Laplace</span>
+<span class="sd">Logistic</span>
+<span class="sd">LogNormal</span>
+<span class="sd">Maxwell</span>
+<span class="sd">Nakagami</span>
+<span class="sd">Normal</span>
+<span class="sd">Pareto</span>
+<span class="sd">QuadraticU</span>
+<span class="sd">RaisedCosine</span>
+<span class="sd">Rayleigh</span>
+<span class="sd">StudentT</span>
+<span class="sd">Triangular</span>
+<span class="sd">Uniform</span>
+<span class="sd">UniformSum</span>
+<span class="sd">VonMises</span>
+<span class="sd">Weibull</span>
+<span class="sd">WignerSemicircle</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">Interval</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span>
+                   <span class="n">Piecewise</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Eq</span><span class="p">,</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">Abs</span><span class="p">,</span>
+                   <span class="n">Symbol</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span> <span class="n">besseli</span><span class="p">,</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">beta</span> <span class="k">as</span> <span class="n">beta_fn</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">cos</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">besseli</span>
+<span class="kn">from</span> <span class="nn">sympy.stats.crv</span> <span class="kn">import</span> <span class="p">(</span><span class="n">SingleContinuousPSpace</span><span class="p">,</span> <span class="n">SingleContinuousDistribution</span><span class="p">,</span>
+        <span class="n">ContinuousDistributionHandmade</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.stats.rv</span> <span class="kn">import</span> <span class="n">_value_check</span>
+<span class="kn">from</span> <span class="nn">sympy.core.decorators</span> <span class="kn">import</span> <span class="n">_sympifyit</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="n">oo</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;ContinuousRV&#39;</span><span class="p">,</span>
+<span class="s">&#39;Arcsin&#39;</span><span class="p">,</span>
+<span class="s">&#39;Benini&#39;</span><span class="p">,</span>
+<span class="s">&#39;Beta&#39;</span><span class="p">,</span>
+<span class="s">&#39;BetaPrime&#39;</span><span class="p">,</span>
+<span class="s">&#39;Cauchy&#39;</span><span class="p">,</span>
+<span class="s">&#39;Chi&#39;</span><span class="p">,</span>
+<span class="s">&#39;ChiNoncentral&#39;</span><span class="p">,</span>
+<span class="s">&#39;ChiSquared&#39;</span><span class="p">,</span>
+<span class="s">&#39;Dagum&#39;</span><span class="p">,</span>
+<span class="s">&#39;Erlang&#39;</span><span class="p">,</span>
+<span class="s">&#39;Exponential&#39;</span><span class="p">,</span>
+<span class="s">&#39;FDistribution&#39;</span><span class="p">,</span>
+<span class="s">&#39;FisherZ&#39;</span><span class="p">,</span>
+<span class="s">&#39;Frechet&#39;</span><span class="p">,</span>
+<span class="s">&#39;Gamma&#39;</span><span class="p">,</span>
+<span class="s">&#39;GammaInverse&#39;</span><span class="p">,</span>
+<span class="s">&#39;Kumaraswamy&#39;</span><span class="p">,</span>
+<span class="s">&#39;Laplace&#39;</span><span class="p">,</span>
+<span class="s">&#39;Logistic&#39;</span><span class="p">,</span>
+<span class="s">&#39;LogNormal&#39;</span><span class="p">,</span>
+<span class="s">&#39;Maxwell&#39;</span><span class="p">,</span>
+<span class="s">&#39;Nakagami&#39;</span><span class="p">,</span>
+<span class="s">&#39;Normal&#39;</span><span class="p">,</span>
+<span class="s">&#39;Pareto&#39;</span><span class="p">,</span>
+<span class="s">&#39;QuadraticU&#39;</span><span class="p">,</span>
+<span class="s">&#39;RaisedCosine&#39;</span><span class="p">,</span>
+<span class="s">&#39;Rayleigh&#39;</span><span class="p">,</span>
+<span class="s">&#39;StudentT&#39;</span><span class="p">,</span>
+<span class="s">&#39;Triangular&#39;</span><span class="p">,</span>
+<span class="s">&#39;Uniform&#39;</span><span class="p">,</span>
+<span class="s">&#39;UniformSum&#39;</span><span class="p">,</span>
+<span class="s">&#39;VonMises&#39;</span><span class="p">,</span>
+<span class="s">&#39;Weibull&#39;</span><span class="p">,</span>
+<span class="s">&#39;WignerSemicircle&#39;</span>
+<span class="p">]</span>
+
+
+
+<span class="k">def</span> <span class="nf">ContinuousRV</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">density</span><span class="p">,</span> <span class="nb">set</span><span class="o">=</span><span class="n">Interval</span><span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">)):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable given the following:</span>
+
+<span class="sd">    -- a symbol</span>
+<span class="sd">    -- a probability density function</span>
+<span class="sd">    -- set on which the pdf is valid (defaults to entire real line)</span>
+
+<span class="sd">    Returns a RandomSymbol.</span>
+
+<span class="sd">    Many common continuous random variable types are already implemented.</span>
+<span class="sd">    This function should be necessary only very rarely.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, sqrt, exp, pi</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import ContinuousRV, P, E</span>
+
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&quot;x&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)) # Normal distribution</span>
+<span class="sd">    &gt;&gt;&gt; X = ContinuousRV(x, pdf)</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; P(X&gt;0)</span>
+<span class="sd">    1/2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pdf</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">density</span><span class="p">)</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">ContinuousDistributionHandmade</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="nb">set</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SingleContinuousPSpace</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">dist</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+<span class="k">def</span> <span class="nf">rv</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">cls</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="n">args</span><span class="p">))</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">dist</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SingleContinuousPSpace</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">dist</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+<span class="c">########################################</span>
+<span class="c"># Continuous Probability Distributions #</span>
+<span class="c">########################################</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Arcsin distribution ----------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">ArcsinDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b</span> <span class="o">-</span> <span class="n">x</span><span class="p">)))</span>
+
+<span class="k">def</span> <span class="nf">Arcsin</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with an arcsin distribution.</span>
+
+<span class="sd">    The density of the arcsin distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{\pi\sqrt{(x-a)(b-x)}}</span>
+
+<span class="sd">    with :math:`x \in [a,b]`. It must hold that :math:`-\infty &lt; a &lt; b &lt; \infty`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number, the left interval boundary</span>
+<span class="sd">    b : Real number, the right interval boundary</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Arcsin, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Arcsin(&quot;x&quot;, a, b)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    1/(pi*sqrt((-a + z)*(b - z)))</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ArcsinDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Benini distribution ----------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">BeniniDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">,</span> <span class="s">&#39;sigma&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">sigma</span><span class="p">)</span> <span class="o">-</span> <span class="n">beta</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">sigma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+               <span class="o">*</span><span class="p">(</span><span class="n">alpha</span><span class="o">/</span><span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">beta</span><span class="o">*</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">sigma</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">Benini</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with a Benini distribution.</span>
+
+<span class="sd">    The density of the Benini distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := e^{-\alpha\log{\frac{x}{\sigma}}</span>
+<span class="sd">                -\beta\log^2\left[{\frac{x}{\sigma}}\right]}</span>
+<span class="sd">                \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)</span>
+
+<span class="sd">    This is a heavy-tailed distrubtion and is also known as the log-Rayleigh</span>
+<span class="sd">    distribution.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    alpha : Real number, `\alpha &gt; 0`, a shape</span>
+<span class="sd">    beta : Real number, `\beta &gt; 0`, a shape</span>
+<span class="sd">    sigma : Real number, `\sigma &gt; 0`, a scale</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Benini, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; alpha = Symbol(&quot;alpha&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; beta = Symbol(&quot;beta&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; sigma = Symbol(&quot;sigma&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Benini(&quot;x&quot;, alpha, beta, sigma)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">    /                  /  z  \\             /  z  \            2/  z  \</span>
+<span class="sd">    |        2*beta*log|-----||  - alpha*log|-----| - beta*log  |-----|</span>
+<span class="sd">    |alpha             \sigma/|             \sigma/             \sigma/</span>
+<span class="sd">    |----- + -----------------|*e</span>
+<span class="sd">    \  z             z        /</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Benini_distribution</span>
+<span class="sd">    .. [2] http://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">BeniniDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">sigma</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Beta distribution ------------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">BetaDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">alpha</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Alpha must be positive&quot;</span><span class="p">)</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">beta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Beta must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">beta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">beta_fn</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">betavariate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Beta</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with a Beta distribution.</span>
+
+<span class="sd">    The density of the Beta distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{x^{\alpha-1}(1-x)^{\beta-1}} {\mathrm{B}(\alpha,\beta)}</span>
+
+<span class="sd">    with :math:`x \in [0,1]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    alpha : Real number, `\alpha &gt; 0`, a shape</span>
+<span class="sd">    beta : Real number, `\beta &gt; 0`, a shape</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Beta, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; alpha = Symbol(&quot;alpha&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; beta = Symbol(&quot;beta&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Beta(&quot;x&quot;, alpha, beta)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">     alpha - 1         beta - 1</span>
+<span class="sd">    z         *(-z + 1)        *gamma(alpha + beta)</span>
+<span class="sd">    -----------------------------------------------</span>
+<span class="sd">                gamma(alpha)*gamma(beta)</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(E(X, meijerg=True))</span>
+<span class="sd">    alpha/(alpha + beta)</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(variance(X, meijerg=True))  #doctest: +SKIP</span>
+<span class="sd">    alpha*beta/((alpha + beta)**2*(alpha + beta + 1))</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Beta_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/BetaDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">BetaDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Beta prime distribution ------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">BetaPrimeDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">alpha</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span><span class="o">/</span><span class="n">beta_fn</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">BetaPrime</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Beta prime distribution.</span>
+
+<span class="sd">    The density of the Beta prime distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{x^{\alpha-1} (1+x)^{-\alpha -\beta}}{B(\alpha,\beta)}</span>
+
+<span class="sd">    with :math:`x &gt; 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    alpha : Real number, `\alpha &gt; 0`, a shape</span>
+<span class="sd">    beta : Real number, `\beta &gt; 0`, a shape</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import BetaPrime, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; alpha = Symbol(&quot;alpha&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; beta = Symbol(&quot;beta&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = BetaPrime(&quot;x&quot;, alpha, beta)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">     alpha - 1        -alpha - beta</span>
+<span class="sd">    z         *(z + 1)             *gamma(alpha + beta)</span>
+<span class="sd">    ---------------------------------------------------</span>
+<span class="sd">                  gamma(alpha)*gamma(beta)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">BetaPrimeDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Cauchy distribution ----------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">CauchyDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;x0&#39;</span><span class="p">,</span> <span class="s">&#39;gamma&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">Cauchy</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">gamma</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Cauchy distribution.</span>
+
+<span class="sd">    The density of the Cauchy distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{\pi} \arctan\left(\frac{x-x_0}{\gamma}\right)</span>
+<span class="sd">                +\frac{1}{2}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    x0 : Real number, the location</span>
+<span class="sd">    gamma : Real number, `\gamma &gt; 0`, the scale</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Cauchy, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; x0 = Symbol(&quot;x0&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; gamma = Symbol(&quot;gamma&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Cauchy(&quot;x&quot;, x0, gamma)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    1/(pi*gamma*(1 + (-x0 + z)**2/gamma**2))</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">CauchyDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">gamma</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Chi distribution -------------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">ChiDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">gamma</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Chi</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Chi distribution.</span>
+
+<span class="sd">    The density of the Chi distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{2^{1-k/2}x^{k-1}e^{-x^2/2}}{\Gamma(k/2)}</span>
+
+<span class="sd">    with :math:`x \geq 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    k : A positive Integer, `k &gt; 0`, the number of degrees of freedom</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Chi, density, E, std</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; k = Symbol(&quot;k&quot;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Chi(&quot;x&quot;, k)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    2**(-k/2 + 1)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Chi_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/ChiDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ChiDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Non-central Chi distribution -------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">ChiNoncentralDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="s">&#39;l&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span><span class="p">,</span> <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">l</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="n">l</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="n">k</span><span class="o">*</span><span class="n">l</span> <span class="o">/</span> <span class="p">(</span><span class="n">l</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">besseli</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">l</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">ChiNoncentral</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a non-central Chi distribution.</span>
+
+<span class="sd">    The density of the non-central Chi distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}</span>
+<span class="sd">                {(\lambda x)^{k/2}} I_{k/2-1}(\lambda x)</span>
+
+<span class="sd">    with `x \geq 0`. Here, `I_\nu (x)` is the</span>
+<span class="sd">    :ref:`modified Bessel function of the first kind &lt;besseli&gt;`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    k : A positive Integer, `k &gt; 0`, the number of degrees of freedom</span>
+<span class="sd">    l : Shift parameter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import ChiNoncentral, density, E, std</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; k = Symbol(&quot;k&quot;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; l = Symbol(&quot;l&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = ChiNoncentral(&quot;x&quot;, k, l)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    l*z**k*(l*z)**(-k/2)*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ChiNoncentralDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Chi squared distribution -----------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">ChiSquaredDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">gamma</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">ChiSquared</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Chi-squared distribution.</span>
+
+<span class="sd">    The density of the Chi-squared distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{2^{\frac{k}{2}}\Gamma\left(\frac{k}{2}\right)}</span>
+<span class="sd">                x^{\frac{k}{2}-1} e^{-\frac{x}{2}}</span>
+
+<span class="sd">    with :math:`x \geq 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    k : A positive Integer, `k &gt; 0`, the number of degrees of freedom</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import ChiSquared, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, combsimp, expand_func</span>
+
+<span class="sd">    &gt;&gt;&gt; k = Symbol(&quot;k&quot;, integer=True, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = ChiSquared(&quot;x&quot;, k)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)</span>
+
+<span class="sd">    &gt;&gt;&gt; combsimp(E(X))</span>
+<span class="sd">    k</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(expand_func(variance(X)))</span>
+<span class="sd">    2*k</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Chi_squared_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ChiSquaredDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Dagum distribution -----------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">DagumDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">*</span><span class="n">p</span><span class="o">/</span><span class="n">x</span><span class="o">*</span><span class="p">((</span><span class="n">x</span><span class="o">/</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="p">(((</span><span class="n">x</span><span class="o">/</span><span class="n">b</span><span class="p">)</span><span class="o">**</span><span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+
+
+<span class="k">def</span> <span class="nf">Dagum</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Dagum distribution.</span>
+
+<span class="sd">    The density of the Dagum distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{a p}{x} \left( \frac{\left(\tfrac{x}{b}\right)^{a p}}</span>
+<span class="sd">                {\left(\left(\tfrac{x}{b}\right)^a + 1 \right)^{p+1}} \right)</span>
+
+<span class="sd">    with :math:`x &gt; 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    p : Real number, `p &gt; 0`, a shape</span>
+<span class="sd">    a : Real number, `a &gt; 0`, a shape</span>
+<span class="sd">    b : Real number, `b &gt; 0`, a scale</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Dagum, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; p = Symbol(&quot;p&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Dagum(&quot;x&quot;, p, a, b)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">DagumDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Erlang distribution ----------------------------------------------------------</span>
+
+<span class="k">def</span> <span class="nf">Erlang</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">l</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with an Erlang distribution.</span>
+
+<span class="sd">    The density of the Erlang distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{\lambda^k x^{k-1} e^{-\lambda x}}{(k-1)!}</span>
+
+<span class="sd">    with :math:`x \in [0,\infty]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    k : Integer</span>
+<span class="sd">    l : Real number, `\lambda &gt; 0`, the rate</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Erlang, density, cdf, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; k = Symbol(&quot;k&quot;, integer=True, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; l = Symbol(&quot;l&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Erlang(&quot;x&quot;, k, l)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">     k  k - 1  -l*z</span>
+<span class="sd">    l *z     *e</span>
+<span class="sd">    ---------------</span>
+<span class="sd">        gamma(k)</span>
+
+<span class="sd">    &gt;&gt;&gt; C = cdf(X, meijerg=True)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(C, use_unicode=False)</span>
+<span class="sd">    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)</span>
+<span class="sd">    |- ------------------ + --------------------  for z &gt;= 0</span>
+<span class="sd">    &lt;     gamma(k + 1)          gamma(k + 1)</span>
+<span class="sd">    |</span>
+<span class="sd">    \                     0                       otherwise</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(E(X))</span>
+<span class="sd">    k/l</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(variance(X))</span>
+<span class="sd">    k/l**2</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Erlang_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/ErlangDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">GammaDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">l</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Exponential distribution -----------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">ExponentialDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;rate&#39;</span><span class="p">,)</span>
+
+    <span class="nb">set</span>  <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">rate</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">rate</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Rate must be positive.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rate</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">expovariate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rate</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Exponential</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">rate</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with an Exponential distribution.</span>
+
+<span class="sd">    The density of the exponential distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \lambda \exp(-\lambda x)</span>
+
+<span class="sd">    with `x &gt; 0`. Note that the expected value is `1/\lambda`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    rate : A positive Real number, `\lambda &gt; 0`, the rate (or inverse scale/inverse mean)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Exponential, density, cdf, E</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import variance, std, skewness</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; l = Symbol(&quot;lambda&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Exponential(&quot;x&quot;, l)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    lambda*exp(-lambda*z)</span>
+
+<span class="sd">    &gt;&gt;&gt; cdf(X)(z)</span>
+<span class="sd">    Piecewise((1 - exp(-lambda*z), z &gt;= 0), (0, True))</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    1/lambda</span>
+
+<span class="sd">    &gt;&gt;&gt; variance(X)</span>
+<span class="sd">    lambda**(-2)</span>
+
+<span class="sd">    &gt;&gt;&gt; skewness(X)</span>
+<span class="sd">    2</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Exponential(&#39;x&#39;, 10)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    10*exp(-10*z)</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    1/10</span>
+
+<span class="sd">    &gt;&gt;&gt; std(X)</span>
+<span class="sd">    1/10</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ExponentialDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">rate</span><span class="p">,</span> <span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># F distribution ---------------------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">FDistributionDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;d1&#39;</span><span class="p">,</span> <span class="s">&#39;d2&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">((</span><span class="n">d1</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="n">d1</span><span class="o">*</span><span class="n">d2</span><span class="o">**</span><span class="n">d2</span> <span class="o">/</span> <span class="p">(</span><span class="n">d1</span><span class="o">*</span><span class="n">x</span><span class="o">+</span><span class="n">d2</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">d1</span><span class="o">+</span><span class="n">d2</span><span class="p">))</span>
+               <span class="o">/</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">beta_fn</span><span class="p">(</span><span class="n">d1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">d2</span><span class="o">/</span><span class="mi">2</span><span class="p">)))</span>
+
+<span class="k">def</span> <span class="nf">FDistribution</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a F distribution.</span>
+
+<span class="sd">    The density of the F distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{\sqrt{\frac{(d_1 x)^{d_1} d_2^{d_2}}</span>
+<span class="sd">                {(d_1 x + d_2)^{d_1 + d_2}}}}</span>
+<span class="sd">                {x \mathrm{B} \left(\frac{d_1}{2}, \frac{d_2}{2}\right)}</span>
+
+<span class="sd">    with :math:`x &gt; 0`.</span>
+
+<span class="sd">    .. TODO - What do these parameters mean?</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    d1 : `d_1 &gt; 0` a parameter</span>
+<span class="sd">    d2 : `d_2 &gt; 0` a parameter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import FDistribution, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; d1 = Symbol(&quot;d1&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; d2 = Symbol(&quot;d2&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = FDistribution(&quot;x&quot;, d1, d2)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">      d2</span>
+<span class="sd">      --    ______________________________</span>
+<span class="sd">      2    /       d1            -d1 - d2       /d1   d2\</span>
+<span class="sd">    d2  *\/  (d1*z)  *(d1*z + d2)         *gamma|-- + --|</span>
+<span class="sd">                                                \2    2 /</span>
+<span class="sd">    -----------------------------------------------------</span>
+<span class="sd">                           /d1\      /d2\</span>
+<span class="sd">                    z*gamma|--|*gamma|--|</span>
+<span class="sd">                           \2 /      \2 /</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/F-distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/F-Distribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">FDistributionDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Fisher Z distribution --------------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">FisherZDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;d1&#39;</span><span class="p">,</span> <span class="s">&#39;d2&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">d1</span><span class="o">**</span><span class="p">(</span><span class="n">d1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">d2</span><span class="o">**</span><span class="p">(</span><span class="n">d2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">beta_fn</span><span class="p">(</span><span class="n">d1</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">d2</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span>
+               <span class="n">exp</span><span class="p">(</span><span class="n">d1</span><span class="o">*</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">d1</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="n">d2</span><span class="p">)</span><span class="o">**</span><span class="p">((</span><span class="n">d1</span><span class="o">+</span><span class="n">d2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">FisherZ</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with an Fisher&#39;s Z distribution.</span>
+
+<span class="sd">    The density of the Fisher&#39;s Z distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{2d_1^{d_1/2} d_2^{d_2/2}} {\mathrm{B}(d_1/2, d_2/2)}</span>
+<span class="sd">                \frac{e^{d_1z}}{\left(d_1e^{2z}+d_2\right)^{\left(d_1+d_2\right)/2}}</span>
+
+
+<span class="sd">    .. TODO - What is the difference between these degrees of freedom?</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    d1 : `d_1 &gt; 0`, degree of freedom</span>
+<span class="sd">    d2 : `d_2 &gt; 0`, degree of freedom</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import FisherZ, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; d1 = Symbol(&quot;d1&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; d2 = Symbol(&quot;d2&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = FisherZ(&quot;x&quot;, d1, d2)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">                                d1   d2</span>
+<span class="sd">        d1   d2               - -- - --</span>
+<span class="sd">        --   --                 2    2</span>
+<span class="sd">        2    2  /    2*z     \           d1*z      /d1   d2\</span>
+<span class="sd">    2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --|</span>
+<span class="sd">                                                   \2    2 /</span>
+<span class="sd">    --------------------------------------------------------</span>
+<span class="sd">                           /d1\      /d2\</span>
+<span class="sd">                      gamma|--|*gamma|--|</span>
+<span class="sd">                           \2 /      \2 /</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/Fishersz-Distribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">FisherZDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Frechet distribution ---------------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">FrechetDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">/</span><span class="n">s</span> <span class="o">*</span> <span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">s</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">((</span><span class="n">x</span><span class="o">-</span><span class="n">m</span><span class="p">)</span><span class="o">/</span><span class="n">s</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">Frechet</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Frechet distribution.</span>
+
+<span class="sd">    The density of the Frechet distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{\alpha}{s} \left(\frac{x-m}{s}\right)^{-1-\alpha}</span>
+<span class="sd">                 e^{-(\frac{x-m}{s})^{-\alpha}}</span>
+
+<span class="sd">    with :math:`x \geq m`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number, :math:`a \in \left(0, \infty\right)` the shape</span>
+<span class="sd">    s : Real number, :math:`s \in \left(0, \infty\right)` the scale</span>
+<span class="sd">    m : Real number, :math:`m \in \left(-\infty, \infty\right)` the minimum</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Frechet, density, E, std</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; s = Symbol(&quot;s&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; m = Symbol(&quot;m&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Frechet(&quot;x&quot;, a, s, m)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">FrechetDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Gamma distribution -----------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">GammaDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="s">&#39;theta&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;k must be positive&quot;</span><span class="p">)</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">theta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Theta must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">k</span><span class="p">,</span> <span class="n">theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="n">theta</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">theta</span><span class="o">**</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">gammavariate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Gamma</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Gamma distribution.</span>
+
+<span class="sd">    The density of the Gamma distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{\Gamma(k) \theta^k} x^{k - 1} e^{-\frac{x}{\theta}}</span>
+
+<span class="sd">    with :math:`x \in [0,1]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    k : Real number, `k &gt; 0`, a shape</span>
+<span class="sd">    theta : Real number, `\theta &gt; 0`, a scale</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Gamma, density, cdf, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, pprint, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; k = Symbol(&quot;k&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; theta = Symbol(&quot;theta&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Gamma(&quot;x&quot;, k, theta)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">                      -z</span>
+<span class="sd">                    -----</span>
+<span class="sd">         -k  k - 1  theta</span>
+<span class="sd">    theta  *z     *e</span>
+<span class="sd">    ---------------------</span>
+<span class="sd">           gamma(k)</span>
+
+<span class="sd">    &gt;&gt;&gt; C = cdf(X, meijerg=True)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(C, use_unicode=False)</span>
+<span class="sd">    /                                   /     z  \</span>
+<span class="sd">    |                       k*lowergamma|k, -----|</span>
+<span class="sd">    |  k*lowergamma(k, 0)               \   theta/</span>
+<span class="sd">    &lt;- ------------------ + ----------------------  for z &gt;= 0</span>
+<span class="sd">    |     gamma(k + 1)           gamma(k + 1)</span>
+<span class="sd">    |</span>
+<span class="sd">    \                      0                        otherwise</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    theta*gamma(k + 1)/gamma(k)</span>
+
+<span class="sd">    &gt;&gt;&gt; V = simplify(variance(X))</span>
+<span class="sd">    &gt;&gt;&gt; pprint(V, use_unicode=False)</span>
+<span class="sd">           2</span>
+<span class="sd">    k*theta</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/GammaDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">GammaDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">theta</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Inverse Gamma distribution ---------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">GammaInverseDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;alpha must be positive&quot;</span><span class="p">)</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">b</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;beta must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="k">return</span> <span class="n">b</span><span class="o">**</span><span class="n">a</span><span class="o">/</span><span class="n">gamma</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">b</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">GammaInverse</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with an inverse Gamma distribution.</span>
+
+<span class="sd">    The density of the inverse Gamma distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{\beta^\alpha}{\Gamma(\alpha)} x^{-\alpha - 1}</span>
+<span class="sd">                \exp\left(\frac{-\beta}{x}\right)</span>
+
+<span class="sd">    with :math:`x &gt; 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number, `a &gt; 0` a shape</span>
+<span class="sd">    b : Real number, `b &gt; 0` a scale</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import GammaInverse, density, cdf, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = GammaInverse(&quot;x&quot;, a, b)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">                -b</span>
+<span class="sd">                ---</span>
+<span class="sd">     a  -a - 1   z</span>
+<span class="sd">    b *z      *e</span>
+<span class="sd">    ---------------</span>
+<span class="sd">       gamma(a)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">GammaInverseDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Kumaraswamy distribution -----------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">KumaraswamyDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;a must be positive&quot;</span><span class="p">)</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">b</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;b must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Kumaraswamy</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with a Kumaraswamy distribution.</span>
+
+<span class="sd">    The density of the Kumaraswamy distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := a b x^{a-1} (1-x^a)^{b-1}</span>
+
+<span class="sd">    with :math:`x \in [0,1]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number, `a &gt; 0` a shape</span>
+<span class="sd">    b : Real number, `b &gt; 0` a shape</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Kumaraswamy, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Kumaraswamy(&quot;x&quot;, a, b)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">                         b - 1</span>
+<span class="sd">         a - 1 /   a    \</span>
+<span class="sd">    a*b*z     *\- z  + 1/</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">KumaraswamyDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Laplace distribution ---------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">LaplaceDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;mu&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">Abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">b</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Laplace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Laplace distribution.</span>
+
+<span class="sd">    The density of the Laplace distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{2 b} \exp \left(-\frac{|x-\mu|}b \right)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mu : Real number, the location (mean)</span>
+<span class="sd">    b : Real number, `b &gt; 0`, a scale</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Laplace, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; mu = Symbol(&quot;mu&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Laplace(&quot;x&quot;, mu, b)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    exp(-Abs(-mu + z)/b)/(2*b)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">LaplaceDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Logistic distribution --------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">LogisticDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;mu&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">s</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">s</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">s</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Logistic</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a logistic distribution.</span>
+
+<span class="sd">    The density of the logistic distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{e^{-(x-\mu)/s}} {s\left(1+e^{-(x-\mu)/s}\right)^2}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mu : Real number, the location (mean)</span>
+<span class="sd">    s : Real number, `s &gt; 0` a scale</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Logistic, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; mu = Symbol(&quot;mu&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; s = Symbol(&quot;s&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Logistic(&quot;x&quot;, mu, s)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">LogisticDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Log Normal distribution ------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">LogNormalDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;mean&#39;</span><span class="p">,</span> <span class="s">&#39;std&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">mean</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">std</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">std</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">lognormvariate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">LogNormal</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a log-normal distribution.</span>
+
+<span class="sd">    The density of the log-normal distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{x\sqrt{2\pi\sigma^2}}</span>
+<span class="sd">                e^{-\frac{\left(\ln x-\mu\right)^2}{2\sigma^2}}</span>
+
+<span class="sd">    with :math:`x \geq 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mu : Real number, the log-scale</span>
+<span class="sd">    sigma : Real number, :math:`\sigma^2 &gt; 0` a shape</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import LogNormal, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; mu = Symbol(&quot;mu&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; sigma = Symbol(&quot;sigma&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = LogNormal(&quot;x&quot;, mu, sigma)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">                          2</span>
+<span class="sd">           -(-mu + log(z))</span>
+<span class="sd">           -----------------</span>
+<span class="sd">                      2</span>
+<span class="sd">      ___      2*sigma</span>
+<span class="sd">    \/ 2 *e</span>
+<span class="sd">    ------------------------</span>
+<span class="sd">            ____</span>
+<span class="sd">        2*\/ pi *sigma*z</span>
+
+
+<span class="sd">    &gt;&gt;&gt; X = LogNormal(&#39;x&#39;, 0, 1) # Mean 0, standard deviation 1</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    sqrt(2)*exp(-log(z)**2/2)/(2*sqrt(pi)*z)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Lognormal</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">LogNormalDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Maxwell distribution ---------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">MaxwellDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="n">a</span><span class="o">**</span><span class="mi">3</span>
+
+
+<span class="k">def</span> <span class="nf">Maxwell</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Maxwell distribution.</span>
+
+<span class="sd">    The density of the Maxwell distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \sqrt{\frac{2}{\pi}} \frac{x^2 e^{-x^2/(2a^2)}}{a^3}</span>
+
+<span class="sd">    with :math:`x \geq 0`.</span>
+
+<span class="sd">    .. TODO - what does the parameter mean?</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number, `a &gt; 0`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Maxwell, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Maxwell(&quot;x&quot;, a)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    sqrt(2)*z**2*exp(-z**2/(2*a**2))/(sqrt(pi)*a**3)</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    2*sqrt(2)*a/sqrt(pi)</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(variance(X))</span>
+<span class="sd">    a**2*(-8 + 3*pi)/pi</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">MaxwellDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Nakagami distribution --------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">NakagamiDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;mu&#39;</span><span class="p">,</span> <span class="s">&#39;omega&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">omega</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">mu</span><span class="o">**</span><span class="n">mu</span><span class="o">/</span><span class="p">(</span><span class="n">gamma</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span><span class="o">*</span><span class="n">omega</span><span class="o">**</span><span class="n">mu</span><span class="p">)</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mu</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">mu</span><span class="o">/</span><span class="n">omega</span><span class="o">*</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Nakagami</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Nakagami distribution.</span>
+
+<span class="sd">    The density of the Nakagami distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{2\mu^\mu}{\Gamma(\mu)\omega^\mu} x^{2\mu-1}</span>
+<span class="sd">                \exp\left(-\frac{\mu}{\omega}x^2 \right)</span>
+
+<span class="sd">    with :math:`x &gt; 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mu : Real number, `\mu \geq \frac{1}{2}` a shape</span>
+<span class="sd">    omega : Real number, `\omega &gt; 0`, the spread</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Nakagami, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; mu = Symbol(&quot;mu&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; omega = Symbol(&quot;omega&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Nakagami(&quot;x&quot;, mu, omega)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">                                    2</span>
+<span class="sd">                               -mu*z</span>
+<span class="sd">                               -------</span>
+<span class="sd">        mu      -mu  2*mu - 1  omega</span>
+<span class="sd">    2*mu  *omega   *z        *e</span>
+<span class="sd">    ----------------------------------</span>
+<span class="sd">                gamma(mu)</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(E(X, meijerg=True))</span>
+<span class="sd">    sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)</span>
+
+<span class="sd">    &gt;&gt;&gt; V = simplify(variance(X, meijerg=True))</span>
+<span class="sd">    &gt;&gt;&gt; pprint(V, use_unicode=False)</span>
+<span class="sd">                        2</span>
+<span class="sd">             omega*gamma (mu + 1/2)</span>
+<span class="sd">    omega - -----------------------</span>
+<span class="sd">            gamma(mu)*gamma(mu + 1)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">NakagamiDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">omega</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Normal distribution ----------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">NormalDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;mean&#39;</span><span class="p">,</span> <span class="s">&#39;std&#39;</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">std</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Standard deviation must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Normal</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Normal distribution.</span>
+
+<span class="sd">    The density of the Normal distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{\sigma\sqrt{2\pi}} e^{ -\frac{(x-\mu)^2}{2\sigma^2} }</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mu : Real number, the mean</span>
+<span class="sd">    sigma : Real number, :math:`\sigma^2 &gt; 0` the variance</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Normal, density, E, std, cdf, skewness</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint, factor, together, factor_terms</span>
+
+<span class="sd">    &gt;&gt;&gt; mu = Symbol(&quot;mu&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; sigma = Symbol(&quot;sigma&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Normal(&quot;x&quot;, mu, sigma)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)</span>
+
+<span class="sd">    &gt;&gt;&gt; C = simplify(cdf(X))(z) # it needs a little more help...</span>
+<span class="sd">    &gt;&gt;&gt; pprint(C, use_unicode=False)</span>
+<span class="sd">       /  ___          \</span>
+<span class="sd">       |\/ 2 *(-mu + z)|</span>
+<span class="sd">    erf|---------------|</span>
+<span class="sd">       \    2*sigma    /   1</span>
+<span class="sd">    -------------------- + -</span>
+<span class="sd">             2             2</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(skewness(X))</span>
+<span class="sd">    0</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Normal(&quot;x&quot;, 0, 1) # Mean 0, standard deviation 1</span>
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    sqrt(2)*exp(-z**2/2)/(2*sqrt(pi))</span>
+
+<span class="sd">    &gt;&gt;&gt; E(2*X + 1)</span>
+<span class="sd">    1</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(std(2*X + 1))</span>
+<span class="sd">    2</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Normal_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">NormalDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Pareto distribution ----------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">ParetoDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;xm&#39;</span><span class="p">,</span> <span class="s">&#39;alpha&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xm</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">xm</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">xm</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Xm must be positive&quot;</span><span class="p">)</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">alpha</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Alpha must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">xm</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span>
+        <span class="k">return</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">xm</span><span class="o">**</span><span class="n">alpha</span> <span class="o">/</span> <span class="n">x</span><span class="o">**</span><span class="p">(</span><span class="n">alpha</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">paretovariate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Pareto</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">xm</span><span class="p">,</span> <span class="n">alpha</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with the Pareto distribution.</span>
+
+<span class="sd">    The density of the Pareto distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{\alpha\,x_m^\alpha}{x^{\alpha+1}}</span>
+
+<span class="sd">    with :math:`x \in [x_m,\infty]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    xm : Real number, `x_m &gt; 0`, a scale</span>
+<span class="sd">    alpha : Real number, `\alpha &gt; 0`, a shape</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Pareto, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+
+<span class="sd">    &gt;&gt;&gt; xm = Symbol(&quot;xm&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; beta = Symbol(&quot;beta&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Pareto(&quot;x&quot;, xm, beta)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    beta*xm**beta*z**(-beta - 1)</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ParetoDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">xm</span><span class="p">,</span> <span class="n">alpha</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># QuadraticU distribution ------------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">QuadraticUDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">/</span> <span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span>
+                  <span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">beta</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">And</span><span class="p">(</span><span class="n">a</span><span class="o">&lt;=</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">&lt;=</span><span class="n">b</span><span class="p">)),</span>
+                  <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">QuadraticU</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with a U-quadratic distribution.</span>
+
+<span class="sd">    The density of the U-quadratic distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \alpha (x-\beta)^2</span>
+
+<span class="sd">    with :math:`x \in [a,b]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number</span>
+<span class="sd">    b : Real number, :math:`a &lt; b`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import QuadraticU, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, factor, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = QuadraticU(&quot;x&quot;, a, b)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">    /                2</span>
+<span class="sd">    |   /  a   b    \</span>
+<span class="sd">    |12*|- - - - + z|</span>
+<span class="sd">    |   \  2   2    /</span>
+<span class="sd">    &lt;-----------------  for And(a &lt;= z, z &lt;= b)</span>
+<span class="sd">    |            3</span>
+<span class="sd">    |    (-a + b)</span>
+<span class="sd">    |</span>
+<span class="sd">    \        0                 otherwise</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/U-quadratic_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">QuadraticUDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># RaisedCosine distribution ----------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">RaisedCosineDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;mu&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;s must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span>
+                <span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">cos</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">/</span><span class="n">s</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">s</span><span class="p">),</span> <span class="n">And</span><span class="p">(</span><span class="n">mu</span><span class="o">-</span><span class="n">s</span><span class="o">&lt;=</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="o">&lt;=</span><span class="n">mu</span><span class="o">+</span><span class="n">s</span><span class="p">)),</span>
+                <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">RaisedCosine</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with a raised cosine distribution.</span>
+
+<span class="sd">    The density of the raised cosine distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{1}{2s}\left(1+\cos\left(\frac{x-\mu}{s}\pi\right)\right)</span>
+
+<span class="sd">    with :math:`x \in [\mu-s,\mu+s]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mu : Real number</span>
+<span class="sd">    s : Real number, `s &gt; 0`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import RaisedCosine, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; mu = Symbol(&quot;mu&quot;, real=True)</span>
+<span class="sd">    &gt;&gt;&gt; s = Symbol(&quot;s&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = RaisedCosine(&quot;x&quot;, mu, s)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">    /   /pi*(-mu + z)\</span>
+<span class="sd">    |cos|------------| + 1</span>
+<span class="sd">    |   \     s      /</span>
+<span class="sd">    &lt;---------------------  for And(z &lt;= mu + s, mu - s &lt;= z)</span>
+<span class="sd">    |         2*s</span>
+<span class="sd">    |</span>
+<span class="sd">    \          0                        otherwise</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">RaisedCosineDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Rayleigh distribution --------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">RayleighDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;sigma&#39;</span><span class="p">,)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">/</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">Rayleigh</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Rayleigh distribution.</span>
+
+<span class="sd">    The density of the Rayleigh distribution is given by</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        f(x) := \frac{x}{\sigma^2} e^{-x^2/2\sigma^2}</span>
+
+<span class="sd">    with :math:`x &gt; 0`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    sigma : Real number, `\sigma &gt; 0`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Rayleigh, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; sigma = Symbol(&quot;sigma&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Rayleigh(&quot;x&quot;, sigma)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    z*exp(-z**2/(2*sigma**2))/sigma**2</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    sqrt(2)*sqrt(pi)*sigma/2</span>
+
+<span class="sd">    &gt;&gt;&gt; variance(X)</span>
+<span class="sd">    -pi*sigma**2/2 + 2*sigma**2</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">RayleighDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># StudentT distribution --------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">StudentTDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;nu&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">nu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span><span class="o">*</span><span class="n">beta_fn</span><span class="p">(</span><span class="n">S</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">nu</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">nu</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">nu</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">StudentT</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">nu</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a student&#39;s t distribution.</span>
+
+<span class="sd">    The density of the student&#39;s t distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{\Gamma \left(\frac{\nu+1}{2} \right)}</span>
+<span class="sd">                {\sqrt{\nu\pi}\Gamma \left(\frac{\nu}{2} \right)}</span>
+<span class="sd">                \left(1+\frac{x^2}{\nu} \right)^{-\frac{\nu+1}{2}}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    nu : Real number, `\nu &gt; 0`, the degrees of freedom</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import StudentT, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; nu = Symbol(&quot;nu&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = StudentT(&quot;x&quot;, nu)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">              nu   1</span>
+<span class="sd">            - -- - -</span>
+<span class="sd">              2    2</span>
+<span class="sd">    /     2\</span>
+<span class="sd">    |    z |              /nu   1\</span>
+<span class="sd">    |1 + --|        *gamma|-- + -|</span>
+<span class="sd">    \    nu/              \2    2/</span>
+<span class="sd">    ------------------------------</span>
+<span class="sd">         ____   ____      /nu\</span>
+<span class="sd">       \/ pi *\/ nu *gamma|--|</span>
+<span class="sd">                          \2 /</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">StudentTDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Triangular distribution ------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">TriangularDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;b&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span>
+            <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">a</span><span class="p">)),</span> <span class="n">And</span><span class="p">(</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">c</span><span class="p">)),</span>
+            <span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">),</span> <span class="n">Eq</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">c</span><span class="p">)),</span>
+            <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">c</span><span class="p">)),</span> <span class="n">And</span><span class="p">(</span><span class="n">c</span> <span class="o">&lt;</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">b</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">Triangular</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a triangular distribution.</span>
+
+<span class="sd">    The density of the triangular distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \begin{cases}</span>
+<span class="sd">                  0 &amp; \mathrm{for\ } x &lt; a, \\</span>
+<span class="sd">                  \frac{2(x-a)}{(b-a)(c-a)} &amp; \mathrm{for\ } a \le x &lt; c, \\</span>
+<span class="sd">                  \frac{2}{b-a} &amp; \mathrm{for\ } x = c, \\</span>
+<span class="sd">                  \frac{2(b-x)}{(b-a)(b-c)} &amp; \mathrm{for\ } c &lt; x \le b, \\</span>
+<span class="sd">                  0 &amp; \mathrm{for\ } b &lt; x.</span>
+<span class="sd">                \end{cases}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number, :math:`a \in \left(-\infty, \infty\right)`</span>
+<span class="sd">    b : Real number, :math:`a &lt; b`</span>
+<span class="sd">    c : Real number, :math:`a \leq c \leq b`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Triangular, density, E</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; c = Symbol(&quot;c&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Triangular(&quot;x&quot;, a,b,c)</span>
+
+<span class="sd">    &gt;&gt;&gt; pprint(density(X)(z), use_unicode=False)</span>
+<span class="sd">    /    -2*a + 2*z</span>
+<span class="sd">    |-----------------  for And(a &lt;= z, z &lt; c)</span>
+<span class="sd">    |(-a + b)*(-a + c)</span>
+<span class="sd">    |</span>
+<span class="sd">    |       2</span>
+<span class="sd">    |     ------              for z = c</span>
+<span class="sd">    &lt;     -a + b</span>
+<span class="sd">    |</span>
+<span class="sd">    |   2*b - 2*z</span>
+<span class="sd">    |----------------   for And(z &lt;= b, c &lt; z)</span>
+<span class="sd">    |(-a + b)*(b - c)</span>
+<span class="sd">    |</span>
+<span class="sd">    \        0                otherwise</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">TriangularDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Uniform distribution ---------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">UniformDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="s">&#39;right&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="o">/</span><span class="p">(</span><span class="n">right</span> <span class="o">-</span> <span class="n">left</span><span class="p">),</span> <span class="n">And</span><span class="p">(</span><span class="n">left</span> <span class="o">&lt;=</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">right</span><span class="p">)),</span>
+            <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">compute_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Lambda</span><span class="p">,</span> <span class="n">Min</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">bounded</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">SingleContinuousDistribution</span><span class="o">.</span><span class="n">compute_cdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">(</span><span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">Min</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">):</span> <span class="n">z</span><span class="p">,</span>
+                                 <span class="n">Min</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">expectation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Max</span><span class="p">,</span> <span class="n">Min</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;evaluate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">SingleContinuousDistribution</span><span class="o">.</span><span class="n">expectation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">Max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">,</span>
+                              <span class="n">Min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Uniform</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a uniform distribution.</span>
+
+<span class="sd">    The density of the uniform distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \begin{cases}</span>
+<span class="sd">                  \frac{1}{b - a} &amp; \text{for } x \in [a,b]  \\</span>
+<span class="sd">                  0               &amp; \text{otherwise}</span>
+<span class="sd">                \end{cases}</span>
+
+<span class="sd">    with :math:`x \in [a,b]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    a : Real number, :math:`-\infty &lt; a` the left boundary</span>
+<span class="sd">    b : Real number, :math:`a &lt; b &lt; \infty` the right boundary</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Uniform, density, cdf, E, variance, skewness</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Symbol(&quot;a&quot;, negative=True)</span>
+<span class="sd">    &gt;&gt;&gt; b = Symbol(&quot;b&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Uniform(&quot;x&quot;, a, b)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    Piecewise((1/(-a + b), And(a &lt;= z, z &lt;= b)), (0, True))</span>
+
+<span class="sd">    &gt;&gt;&gt; cdf(X)(z)</span>
+<span class="sd">    -a/(-a + b) + z/(-a + b)</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(E(X))</span>
+<span class="sd">    a/2 + b/2</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(variance(X))</span>
+<span class="sd">    a**2/12 - a*b/6 + b**2/12</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/UniformDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">UniformDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># UniformSum distribution ------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">UniformSumDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span>
+            <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">Sum</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="n">k</span><span class="o">*</span><span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">floor</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+
+
+
+<span class="k">def</span> <span class="nf">UniformSum</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with an Irwin-Hall distribution.</span>
+
+<span class="sd">    The probability distribution function depends on a single parameter</span>
+<span class="sd">    `n` which is an integer.</span>
+
+<span class="sd">    The density of the Irwin-Hall distribution is given by</span>
+
+<span class="sd">    .. math ::</span>
+<span class="sd">        f(x) := \frac{1}{(n-1)!}\sum_{k=0}^{\lfloor x\rfloor}(-1)^k</span>
+<span class="sd">                \binom{n}{k}(x-k)^{n-1}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    n : A positive Integer, `n &gt; 0`</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import UniformSum, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; n = Symbol(&quot;n&quot;, integer=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = UniformSum(&quot;x&quot;, n)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">    floor(z)</span>
+<span class="sd">      ___</span>
+<span class="sd">      \  `</span>
+<span class="sd">       \         k         n - 1 /n\</span>
+<span class="sd">        )    (-1) *(-k + z)     *| |</span>
+<span class="sd">       /                         \k/</span>
+<span class="sd">      /__,</span>
+<span class="sd">     k = 0</span>
+<span class="sd">    --------------------------------</span>
+<span class="sd">                (n - 1)!</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">UniformSumDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># VonMises distribution --------------------------------------------------------</span>
+
+<span class="k">class</span> <span class="nc">VonMisesDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;mu&#39;</span><span class="p">,</span> <span class="s">&#39;k&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;k must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">mu</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">besseli</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">VonMises</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">mu</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a Continuous Random Variable with a von Mises distribution.</span>
+
+<span class="sd">    The density of the von Mises distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac{e^{\kappa\cos(x-\mu)}}{2\pi I_0(\kappa)}</span>
+
+<span class="sd">    with :math:`x \in [0,2\pi]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    mu : Real number, measure of location</span>
+<span class="sd">    k : Real number, measure of concentration</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import VonMises, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify, pprint</span>
+
+<span class="sd">    &gt;&gt;&gt; mu = Symbol(&quot;mu&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; k = Symbol(&quot;k&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = VonMises(&quot;x&quot;, mu, k)</span>
+
+<span class="sd">    &gt;&gt;&gt; D = density(X)(z)</span>
+<span class="sd">    &gt;&gt;&gt; pprint(D, use_unicode=False)</span>
+<span class="sd">         k*cos(mu - z)</span>
+<span class="sd">        e</span>
+<span class="sd">    ------------------</span>
+<span class="sd">    2*pi*besseli(0, k)</span>
+
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Von_Mises_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/vonMisesDistribution.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">VonMisesDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Weibull distribution ---------------------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">WeibullDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;alpha&#39;</span><span class="p">,</span> <span class="s">&#39;beta&#39;</span><span class="p">)</span>
+
+    <span class="nb">set</span> <span class="o">=</span> <span class="n">Interval</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">alpha</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Alpha must be positive&quot;</span><span class="p">)</span>
+        <span class="n">_value_check</span><span class="p">(</span><span class="n">beta</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&quot;Beta must be positive&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span>
+        <span class="k">return</span> <span class="n">beta</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">alpha</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">beta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span><span class="o">/</span><span class="n">alpha</span><span class="p">)</span><span class="o">**</span><span class="n">beta</span><span class="p">)</span> <span class="o">/</span> <span class="n">alpha</span>
+
+    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">weibullvariate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Weibull</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Weibull distribution.</span>
+
+<span class="sd">    The density of the Weibull distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \begin{cases}</span>
+<span class="sd">                  \frac{k}{\lambda}\left(\frac{x}{\lambda}\right)^{k-1}</span>
+<span class="sd">                  e^{-(x/\lambda)^{k}} &amp; x\geq0\\</span>
+<span class="sd">                  0 &amp; x&lt;0</span>
+<span class="sd">                \end{cases}</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    lambda : Real number, :math:`\lambda &gt; 0` a scale</span>
+<span class="sd">    k : Real number, `k &gt; 0` a shape</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Weibull, density, E, variance</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; l = Symbol(&quot;lambda&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; k = Symbol(&quot;k&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Weibull(&quot;x&quot;, l, k)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    k*(z/lambda)**(k - 1)*exp(-(z/lambda)**k)/lambda</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(E(X))</span>
+<span class="sd">    lambda*gamma(1 + 1/k)</span>
+
+<span class="sd">    &gt;&gt;&gt; simplify(variance(X))</span>
+<span class="sd">    lambda**2*(-gamma(1 + 1/k)**2 + gamma(1 + 2/k))</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">WeibullDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">))</span>
+
+<span class="c">#-------------------------------------------------------------------------------</span>
+<span class="c"># Wigner semicircle distribution -----------------------------------------------</span>
+
+
+<span class="k">class</span> <span class="nc">WignerSemicircleDistribution</span><span class="p">(</span><span class="n">SingleContinuousDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;R&#39;</span><span class="p">,)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R</span>
+        <span class="k">return</span> <span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">R</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">WignerSemicircle</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">R</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Create a continuous random variable with a Wigner semicircle distribution.</span>
+
+<span class="sd">    The density of the Wigner semicircle distribution is given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        f(x) := \frac2{\pi R^2}\,\sqrt{R^2-x^2}</span>
+
+<span class="sd">    with :math:`x \in [-R,R]`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    R : Real number, `R &gt; 0`, the radius</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    A `RandomSymbol`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import WignerSemicircle, density, E</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, simplify</span>
+
+<span class="sd">    &gt;&gt;&gt; R = Symbol(&quot;R&quot;, positive=True)</span>
+<span class="sd">    &gt;&gt;&gt; z = Symbol(&quot;z&quot;)</span>
+
+<span class="sd">    &gt;&gt;&gt; X = WignerSemicircle(&quot;x&quot;, R)</span>
+
+<span class="sd">    &gt;&gt;&gt; density(X)(z)</span>
+<span class="sd">    2*sqrt(R**2 - z**2)/(pi*R**2)</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    0</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution</span>
+<span class="sd">    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">WignerSemicircleDistribution</span><span class="p">,</span> <span class="p">(</span><span class="n">R</span><span class="p">,))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" >sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

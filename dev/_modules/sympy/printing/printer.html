@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.printing.printer &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.printing.printer</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Printing subsystem driver</span>
+
+<span class="sd">SymPy&#39;s printing system works the following way: Any expression can be</span>
+<span class="sd">passed to a designated Printer who then is responsible to return an</span>
+<span class="sd">adequate representation of that expression.</span>
+
+<span class="sd">The basic concept is the following:</span>
+<span class="sd">  1. Let the object print itself if it knows how.</span>
+<span class="sd">  2. Take the best fitting method defined in the printer.</span>
+<span class="sd">  3. As fall-back use the emptyPrinter method for the printer.</span>
+
+<span class="sd">Some more information how the single concepts work and who should use which:</span>
+
+<span class="sd">1. The object prints itself</span>
+
+<span class="sd">    This was the original way of doing printing in sympy. Every class had</span>
+<span class="sd">    its own latex, mathml, str and repr methods, but it turned out that it</span>
+<span class="sd">    is hard to produce a high quality printer, if all the methods are spread</span>
+<span class="sd">    out that far. Therefor all printing code was combined into the different</span>
+<span class="sd">    printers, which works great for built-in sympy objects, but not that</span>
+<span class="sd">    good for user defined classes where it is inconvenient to patch the</span>
+<span class="sd">    printers.</span>
+
+<span class="sd">    Nevertheless, to get a fitting representation, the printers look for a</span>
+<span class="sd">    specific method in every object, that will be called if it&#39;s available</span>
+<span class="sd">    and is then responsible for the representation. The name of that method</span>
+<span class="sd">    depends on the specific printer and is defined under</span>
+<span class="sd">    Printer.printmethod.</span>
+
+<span class="sd">2. Take the best fitting method defined in the printer.</span>
+
+<span class="sd">    The printer loops through expr classes (class + its bases), and tries</span>
+<span class="sd">    to dispatch the work to _print_&lt;EXPR_CLASS&gt;</span>
+
+<span class="sd">    e.g., suppose we have the following class hierarchy::</span>
+
+<span class="sd">            Basic</span>
+<span class="sd">            |</span>
+<span class="sd">            Atom</span>
+<span class="sd">            |</span>
+<span class="sd">            Number</span>
+<span class="sd">            |</span>
+<span class="sd">        Rational</span>
+
+<span class="sd">    then, for expr=Rational(...), in order to dispatch, we will try</span>
+<span class="sd">    calling printer methods as shown in the figure below::</span>
+
+<span class="sd">        p._print(expr)</span>
+<span class="sd">        |</span>
+<span class="sd">        |-- p._print_Rational(expr)</span>
+<span class="sd">        |</span>
+<span class="sd">        |-- p._print_Number(expr)</span>
+<span class="sd">        |</span>
+<span class="sd">        |-- p._print_Atom(expr)</span>
+<span class="sd">        |</span>
+<span class="sd">        `-- p._print_Basic(expr)</span>
+
+<span class="sd">    if ._print_Rational method exists in the printer, then it is called,</span>
+<span class="sd">    and the result is returned back.</span>
+
+<span class="sd">    otherwise, we proceed with trying Rational bases in the inheritance</span>
+<span class="sd">    order.</span>
+
+<span class="sd">3. As fall-back use the emptyPrinter method for the printer.</span>
+
+<span class="sd">    As fall-back self.emptyPrinter will be called with the expression. If</span>
+<span class="sd">    not defined in the Printer subclass this will be the same as str(expr).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Add</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.core</span> <span class="kn">import</span> <span class="n">BasicMeta</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">cmp_to_key</span>
+
+
+<div class="viewcode-block" id="Printer"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.printer.Printer">[docs]</a><span class="k">class</span> <span class="nc">Printer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generic printer</span>
+
+<span class="sd">    Its job is to provide infrastructure for implementing new printers easily.</span>
+
+<span class="sd">    Basically, if you want to implement a printer, all you have to do is:</span>
+
+<span class="sd">    1. Subclass Printer.</span>
+
+<span class="sd">    2. Define Printer.printmethod in your subclass.</span>
+<span class="sd">       If a object has a method with that name, this method will be used</span>
+<span class="sd">       for printing.</span>
+
+<span class="sd">    3. In your subclass, define ``_print_&lt;CLASS&gt;`` methods</span>
+
+<span class="sd">       For each class you want to provide printing to, define an appropriate</span>
+<span class="sd">       method how to do it. For example if you want a class FOO to be printed in</span>
+<span class="sd">       its own way, define _print_FOO::</span>
+
+<span class="sd">           def _print_FOO(self, e):</span>
+<span class="sd">               ...</span>
+
+<span class="sd">       this should return how FOO instance e is printed</span>
+
+<span class="sd">       Also, if ``BAR`` is a subclass of ``FOO``, ``_print_FOO(bar)`` will</span>
+<span class="sd">       be called for instance of ``BAR``, if no ``_print_BAR`` is provided.</span>
+<span class="sd">       Thus, usually, we don&#39;t need to provide printing routines for every</span>
+<span class="sd">       class we want to support -- only generic routine has to be provided</span>
+<span class="sd">       for a set of classes.</span>
+
+<span class="sd">       A good example for this are functions - for example ``PrettyPrinter``</span>
+<span class="sd">       only defines ``_print_Function``, and there is no ``_print_sin``,</span>
+<span class="sd">       ``_print_tan``, etc...</span>
+
+<span class="sd">       On the other hand, a good printer will probably have to define</span>
+<span class="sd">       separate routines for ``Symbol``, ``Atom``, ``Number``, ``Integral``,</span>
+<span class="sd">       ``Limit``, etc...</span>
+
+<span class="sd">    4. If convenient, override ``self.emptyPrinter``</span>
+
+<span class="sd">       This callable will be called to obtain printing result as a last resort,</span>
+<span class="sd">       that is when no appropriate print method was found for an expression.</span>
+
+<span class="sd">    Examples of overloading StrPrinter::</span>
+
+<span class="sd">        from sympy import Basic, Function, Symbol</span>
+<span class="sd">        from sympy.printing.str import StrPrinter</span>
+
+<span class="sd">        class CustomStrPrinter(StrPrinter):</span>
+<span class="sd">            \&quot;\&quot;\&quot;</span>
+<span class="sd">            Examples of how to customize the StrPrinter for both a SymPy class and a</span>
+<span class="sd">            user defined class subclassed from the SymPy Basic class.</span>
+<span class="sd">            \&quot;\&quot;\&quot;</span>
+
+<span class="sd">            def _print_Derivative(self, expr):</span>
+<span class="sd">                \&quot;\&quot;\&quot;</span>
+<span class="sd">                Custom printing of the SymPy Derivative class.</span>
+
+<span class="sd">                Instead of:</span>
+
+<span class="sd">                D(x(t), t) or D(x(t), t, t)</span>
+
+<span class="sd">                We will print:</span>
+
+<span class="sd">                x&#39;     or     x&#39;&#39;</span>
+
+<span class="sd">                In this example, expr.args == (x(t), t), and expr.args[0] == x(t), and</span>
+<span class="sd">                expr.args[0].func == x</span>
+<span class="sd">                \&quot;\&quot;\&quot;</span>
+<span class="sd">                return str(expr.args[0].func) + &quot;&#39;&quot;*len(expr.args[1:])</span>
+
+<span class="sd">            def _print_MyClass(self, expr):</span>
+<span class="sd">                \&quot;\&quot;\&quot;</span>
+<span class="sd">                Print the characters of MyClass.s alternatively lower case and upper</span>
+<span class="sd">                case</span>
+<span class="sd">                \&quot;\&quot;\&quot;</span>
+<span class="sd">                s = &quot;&quot;</span>
+<span class="sd">                i = 0</span>
+<span class="sd">                for char in expr.s:</span>
+<span class="sd">                    if i % 2 == 0:</span>
+<span class="sd">                        s += char.lower()</span>
+<span class="sd">                    else:</span>
+<span class="sd">                        s += char.upper()</span>
+<span class="sd">                    i += 1</span>
+<span class="sd">                return s</span>
+
+<span class="sd">        # Override the __str__ method of to use CustromStrPrinter</span>
+<span class="sd">        Basic.__str__ = lambda self: CustomStrPrinter().doprint(self)</span>
+<span class="sd">        # Demonstration of CustomStrPrinter:</span>
+<span class="sd">        t = Symbol(&#39;t&#39;)</span>
+<span class="sd">        x = Function(&#39;x&#39;)(t)</span>
+<span class="sd">        dxdt = x.diff(t)            # dxdt is a Derivative instance</span>
+<span class="sd">        d2xdt2 = dxdt.diff(t)       # dxdt2 is a Derivative instance</span>
+<span class="sd">        ex = MyClass(&#39;I like both lowercase and upper case&#39;)</span>
+
+<span class="sd">        print dxdt</span>
+<span class="sd">        print d2xdt2</span>
+<span class="sd">        print ex</span>
+
+<span class="sd">    The output of the above code is::</span>
+
+<span class="sd">        x&#39;</span>
+<span class="sd">        x&#39;&#39;</span>
+<span class="sd">        i lIkE BoTh lOwErCaSe aNd uPpEr cAsE</span>
+
+<span class="sd">    By overriding Basic.__str__, we can customize the printing of anything that</span>
+<span class="sd">    is subclassed from Basic.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_global_settings</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">_default_settings</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">emptyPrinter</span> <span class="o">=</span> <span class="nb">str</span>
+    <span class="n">printmethod</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="nb">str</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_settings</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_global_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_settings</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="k">if</span> <span class="n">settings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_settings</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_settings</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Unknown setting &#39;</span><span class="si">%s</span><span class="s">&#39;.&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
+        <span class="c"># _print_level is the number of times self._print() was recursively</span>
+        <span class="c"># called. See StrPrinter._print_Float() for an example of usage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_level</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Printer.set_global_settings"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.printer.Printer.set_global_settings">[docs]</a>    <span class="k">def</span> <span class="nf">set_global_settings</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set system-wide printing settings. &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">cls</span><span class="o">.</span><span class="n">_global_settings</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;order&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="s">&#39;order&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s">&quot;No order defined.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Printer.doprint"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.printer.Printer.doprint">[docs]</a>    <span class="k">def</span> <span class="nf">doprint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns printer&#39;s representation for expr (as a string)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_print</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Printer._print"><a class="viewcode-back" href="../../../modules/printing.html#sympy.printing.printer.Printer._print">[docs]</a>    <span class="k">def</span> <span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal dispatcher</span>
+
+<span class="sd">        Tries the following concepts to print an expression:</span>
+<span class="sd">            1. Let the object print itself if it knows how.</span>
+<span class="sd">            2. Take the best fitting method defined in the printer.</span>
+<span class="sd">            3. As fall-back use the emptyPrinter method for the printer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_print_level</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c"># If the printer defines a name for a printing method</span>
+            <span class="c"># (Printer.printmethod) and the object knows for itself how it</span>
+            <span class="c"># should be printed, use that method.</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">printmethod</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">printmethod</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">BasicMeta</span><span class="p">)):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">printmethod</span><span class="p">)(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="c"># See if the class of expr is known, or if one of its super</span>
+            <span class="c"># classes is known, and use that print function</span>
+            <span class="k">for</span> <span class="n">cls</span> <span class="ow">in</span> <span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">.</span><span class="n">__mro__</span><span class="p">:</span>
+                <span class="n">printmethod</span> <span class="o">=</span> <span class="s">&#39;_print_&#39;</span> <span class="o">+</span> <span class="n">cls</span><span class="o">.</span><span class="n">__name__</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printmethod</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">printmethod</span><span class="p">)(</span><span class="n">expr</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="c"># Unknown object, fall back to the emptyPrinter.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">emptyPrinter</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_print_level</span> <span class="o">-=</span> <span class="mi">1</span>
+</div>
+    <span class="k">def</span> <span class="nf">_as_ordered_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A compatibility function for ordering terms in Add. &quot;&quot;&quot;</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">order</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">order</span>
+
+        <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="s">&#39;old&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">Add</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">expr</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">cmp_to_key</span><span class="p">(</span><span class="n">Basic</span><span class="o">.</span><span class="n">_compare_pretty</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_ordered_terms</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

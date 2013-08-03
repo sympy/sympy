@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Ask &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Assumptions module" href="index.html" />
+    <link rel="next" title="Assume" href="assume.html" />
+    <link rel="prev" title="Assumptions module" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="assume.html" title="Assume"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Assumptions module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Assumptions module</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.assumptions.ask">
+<span id="ask"></span><h1>Ask<a class="headerlink" href="#module-sympy.assumptions.ask" title="Permalink to this headline">¶</a></h1>
+<p>Module for querying SymPy objects about assumptions.</p>
+<dl class="class">
+<dt id="sympy.assumptions.ask.Q">
+<em class="property">class </em><tt class="descclassname">sympy.assumptions.ask.</tt><tt class="descname">Q</tt><a class="reference internal" href="../../_modules/sympy/assumptions/ask.html#Q"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.assumptions.ask.Q" title="Permalink to this definition">¶</a></dt>
+<dd><p>Supported ask keys.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.assumptions.ask.ask">
+<tt class="descclassname">sympy.assumptions.ask.</tt><tt class="descname">ask</tt><big>(</big><em>proposition</em>, <em>assumptions=True</em>, <em>context=AssumptionsContext([])</em><big>)</big><a class="reference internal" href="../../_modules/sympy/assumptions/ask.html#ask"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.assumptions.ask.ask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for inferring properties about objects.</p>
+<p><strong>Syntax</strong></p>
+<blockquote>
+<div><ul>
+<li><p class="first">ask(proposition)</p>
+</li>
+<li><p class="first">ask(proposition, assumptions)</p>
+<blockquote>
+<div><p>where <tt class="docutils literal"><span class="pre">proposition</span></tt> is any boolean expression</p>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">ask</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">rational</span><span class="p">(</span><span class="n">pi</span><span class="p">))</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">),</span> <span class="n">Q</span><span class="o">.</span><span class="n">even</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">prime</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="p">),</span> <span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&amp;</span>  <span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt><strong>Remarks</strong></dt>
+<dd><p class="first">Relations in assumptions are not implemented (yet), so the following
+will not give a meaningful result.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">Q</span><span class="o">.</span><span class="n">is_true</span><span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span> 
+</pre></div>
+</div>
+<p class="last">It is however a work in progress.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.assumptions.ask.ask_full_inference">
+<tt class="descclassname">sympy.assumptions.ask.</tt><tt class="descname">ask_full_inference</tt><big>(</big><em>proposition</em>, <em>assumptions</em>, <em>known_facts_cnf</em><big>)</big><a class="reference internal" href="../../_modules/sympy/assumptions/ask.html#ask_full_inference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.assumptions.ask.ask_full_inference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for inferring properties about objects.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.assumptions.ask.compute_known_facts">
+<tt class="descclassname">sympy.assumptions.ask.</tt><tt class="descname">compute_known_facts</tt><big>(</big><em>known_facts</em>, <em>known_facts_keys</em><big>)</big><a class="reference internal" href="../../_modules/sympy/assumptions/ask.html#compute_known_facts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.assumptions.ask.compute_known_facts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the various forms of knowledge compilation used by the
+assumptions system.</p>
+<p>This function is typically applied to the variables
+<tt class="docutils literal"><span class="pre">known_facts</span></tt> and <tt class="docutils literal"><span class="pre">known_facts_keys</span></tt> defined at the bottom of
+this file.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.assumptions.ask.register_handler">
+<tt class="descclassname">sympy.assumptions.ask.</tt><tt class="descname">register_handler</tt><big>(</big><em>key</em>, <em>handler</em><big>)</big><a class="reference internal" href="../../_modules/sympy/assumptions/ask.html#register_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.assumptions.ask.register_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a handler in the ask system. key must be a string and handler a
+class inheriting from AskHandler:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.assumptions</span> <span class="kn">import</span> <span class="n">register_handler</span><span class="p">,</span> <span class="n">ask</span><span class="p">,</span> <span class="n">Q</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.assumptions.handlers</span> <span class="kn">import</span> <span class="n">AskHandler</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MersenneHandler</span><span class="p">(</span><span class="n">AskHandler</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="c"># Mersenne numbers are in the form 2**n + 1, n integer</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">Integer</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="kn">import</span> <span class="nn">math</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">expr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">register_handler</span><span class="p">(</span><span class="s">&#39;mersenne&#39;</span><span class="p">,</span> <span class="n">MersenneHandler</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">mersenne</span><span class="p">(</span><span class="mi">7</span><span class="p">))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.assumptions.ask.remove_handler">
+<tt class="descclassname">sympy.assumptions.ask.</tt><tt class="descname">remove_handler</tt><big>(</big><em>key</em>, <em>handler</em><big>)</big><a class="reference internal" href="../../_modules/sympy/assumptions/ask.html#remove_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.assumptions.ask.remove_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a handler from the ask system. Same syntax as register_handler</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Assumptions module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="assume.html"
+                        title="next chapter">Assume</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/assumptions/ask.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="assume.html" title="Assume"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Assumptions module"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Assumptions module</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

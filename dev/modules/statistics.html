@@ -1,0 +1,577 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Statistics &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Stats" href="stats.html" />
+    <link rel="prev" title="Details on the Hypergeometric Function Expansion Module" href="simplify/hyperexpand.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stats.html" title="Stats"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="simplify/hyperexpand.html" title="Details on the Hypergeometric Function Expansion Module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.statistics">
+<span id="statistics"></span><h1>Statistics<a class="headerlink" href="#module-sympy.statistics" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This module has been deprecated. See the <a class="reference internal" href="stats.html#module-sympy.stats" title="sympy.stats"><tt class="xref py py-mod docutils literal"><span class="pre">stats</span></tt></a> module.</p>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">statistics</span></tt> module in SymPy implements standard probability distributions
+and related tools. Its contents can be imported with the following statement:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">wrap_line</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">no_global</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="normal-distributions">
+<h2>Normal distributions<a class="headerlink" href="#normal-distributions" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">Normal(mu,</span> <span class="pre">sigma)</span></tt> creates a normal distribution with mean value <tt class="docutils literal"><span class="pre">mu</span></tt> and
+standard deviation <tt class="docutils literal"><span class="pre">sigma</span></tt>. The <tt class="docutils literal"><span class="pre">Normal</span></tt> class defines several
+useful methods and properties. Various properties can be accessed directly as
+follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">mean</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">median</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">variance</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">stddev</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>You can generate random numbers from the desired distribution with the
+<tt class="docutils literal"><span class="pre">random</span></tt> method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> 
+<span class="go">4.914375200829805834246144514</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> 
+<span class="go">11.84331557474637897087177407</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> 
+<span class="go">17.22474580071733640806996846</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> 
+<span class="go">9.864643097429464546621602494</span>
+</pre></div>
+</div>
+<p>The probability density function (pdf) and cumulative distribution function
+(cdf) of a distribution can be computed, either in symbolic form or for
+particular values:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">   ___</span>
+<span class="go"> \/ 2</span>
+<span class="go">--------</span>
+<span class="go">    ____</span>
+<span class="go">2*\/ pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.0539909665131880</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">   /  ___        \</span>
+<span class="go">   |\/ 2 *(x - 1)|</span>
+<span class="go">erf|-------------|</span>
+<span class="go">   \      2      /   1</span>
+<span class="go">------------------ + -</span>
+<span class="go">        2            2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">),</span> <span class="n">N</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">N</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">oo</span><span class="p">)</span>
+<span class="go">(0, 1/2, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.999968328758167</span>
+</pre></div>
+</div>
+<p>The method <tt class="docutils literal"><span class="pre">probability</span></tt> gives the total probability on a given interval (a
+convenient alternative syntax for cdf(b)-cdf(a)):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">   /  ___\</span>
+<span class="go">   |\/ 2 |</span>
+<span class="go">erf|-----|</span>
+<span class="go">   \  2  /</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.682689492137086</span>
+</pre></div>
+</div>
+<p>You can also generate a symmetric confidence interval from a given desired
+confidence level (given as a fraction 0-1). For the normal distribution, 68%,
+95% and 99.7% confidence levels respectively correspond to approximately 1, 2
+and 3 standard deviations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="mf">0.68</span><span class="p">)</span>
+<span class="go">(-0.994457883209753, 0.994457883209753)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="mf">0.95</span><span class="p">)</span>
+<span class="go">(-1.95996398454005, 1.95996398454005)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="mf">0.997</span><span class="p">)</span>
+<span class="go">(-2.96773792534178, 2.96773792534178)</span>
+</pre></div>
+</div>
+<p>Plug the interval back in to see that the value is correct:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">*</span><span class="n">N</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="mf">0.95</span><span class="p">))</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.950000000000000</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="other-distributions">
+<h2>Other distributions<a class="headerlink" href="#other-distributions" title="Permalink to this headline">¶</a></h2>
+<p>Besides the normal distribution, uniform continuous distributions are also
+supported. <tt class="docutils literal"><span class="pre">Uniform(a,</span> <span class="pre">b)</span></tt> represents the distribution with uniform
+probability on the interval [a, b] and zero probability everywhere else. The
+<tt class="docutils literal"><span class="pre">Uniform</span></tt> class supports the same methods as the <tt class="docutils literal"><span class="pre">Normal</span></tt> class.</p>
+<p>Additional distributions, including support for arbitrary user-defined distributions, are planned for the future.</p>
+</div>
+<div class="section" id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="sample">
+<h3>Sample<a class="headerlink" href="#sample" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sympy.statistics.distributions.Sample">
+<em class="property">class </em><tt class="descclassname">sympy.statistics.distributions.</tt><tt class="descname">Sample</tt><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample([x1, x2, x3, ...]) represents a collection of samples.
+Sample parameters like mean, variance and stddev can be accessed as
+properties.
+The sample will be sorted.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics.distributions</span> <span class="kn">import</span> <span class="n">Sample</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sample</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">Sample([0, 1, 2, 3])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Sample</span><span class="p">([</span><span class="mi">8</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">Sample([1, 2, 2, 3, 4, 6, 8, 9])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">Sample</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">mean</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">stddev</span>
+<span class="go">sqrt(2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">median</span>
+<span class="go">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">variance</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="continuous-probability-distributions">
+<h3>Continuous Probability Distributions<a class="headerlink" href="#continuous-probability-distributions" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sympy.statistics.distributions.ContinuousProbability">
+<em class="property">class </em><tt class="descclassname">sympy.statistics.distributions.</tt><tt class="descname">ContinuousProbability</tt><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#ContinuousProbability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.ContinuousProbability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for continuous probability distributions</p>
+<dl class="method">
+<dt id="sympy.statistics.distributions.ContinuousProbability.probability">
+<tt class="descname">probability</tt><big>(</big><em>s</em>, <em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#ContinuousProbability.probability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.ContinuousProbability.probability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the probability that a random number x generated
+from the distribution satisfies a &lt;= x &lt;= b</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">erf(sqrt(2)/2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">-erf(sqrt(2)/2)/2 + 1/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.statistics.distributions.ContinuousProbability.random">
+<tt class="descname">random</tt><big>(</big><em>s</em>, <em>n=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#ContinuousProbability.random"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.ContinuousProbability.random" title="Permalink to this definition">¶</a></dt>
+<dd><p>random() &#8211; generate a random number from the distribution.
+random(n) &#8211; generate a Sample of n random numbers.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">1</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">random</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">4</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.statistics.distributions.Normal">
+<em class="property">class </em><tt class="descclassname">sympy.statistics.distributions.</tt><tt class="descname">Normal</tt><big>(</big><em>mu</em>, <em>sigma</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Normal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normal(mu, sigma) represents the normal or Gaussian distribution
+with mean value mu and standard deviation sigma.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">mean</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">variance</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>   <span class="c"># probability on an interval</span>
+<span class="go">1/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">1/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">erf(sqrt(2)/2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.682689492137086</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.statistics.distributions.Normal.cdf">
+<tt class="descname">cdf</tt><big>(</big><em>s</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Normal.cdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Normal.cdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cumulative density function as an expression in x</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">-erf(sqrt(2)/4)/2 + 1/2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">erf(sqrt(2)*(x - 1)/4)/2 + 1/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.statistics.distributions.Normal.confidence">
+<tt class="descname">confidence</tt><big>(</big><em>s</em>, <em>p</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Normal.confidence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Normal.confidence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a symmetric (p*100)% confidence interval. For example,
+p=0.95 gives a 95% confidence interval. Currently this function
+only handles numerical values except in the trivial case p=1.</p>
+<p>For example, one standard deviation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="mf">0.68</span><span class="p">)</span>
+<span class="go">(-0.994457883209753, 0.994457883209753)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">*</span><span class="n">_</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.680000000000000</span>
+</pre></div>
+</div>
+<p>Two standard deviations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">Normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="mf">0.95</span><span class="p">)</span>
+<span class="go">(-1.95996398454005, 1.95996398454005)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="o">*</span><span class="n">_</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span>
+<span class="go">0.950000000000000</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.statistics.distributions.Normal.fit">
+<em class="property">static </em><tt class="descname">fit</tt><big>(</big><em>sample</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Normal.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Normal.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a normal distribution fit to the mean and standard
+deviation of the given distribution or sample.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">])</span>
+<span class="go">Normal(3, sqrt(2))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+<span class="go">Normal(x/2 + y/2, sqrt((-x/2 + y/2)**2/2 + (x/2 - y/2)**2/2))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.statistics.distributions.Normal.pdf">
+<tt class="descname">pdf</tt><big>(</big><em>s</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Normal.pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Normal.pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the probability density function as an expression in x</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Normal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">sqrt(2)*exp(-1/8)/(4*sqrt(pi))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Normal</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">sqrt(2)*exp(-(x - 1)**2/8)/(4*sqrt(pi))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.statistics.distributions.Uniform">
+<em class="property">class </em><tt class="descclassname">sympy.statistics.distributions.</tt><tt class="descname">Uniform</tt><big>(</big><em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Uniform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Uniform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uniform(a, b) represents a probability distribution with uniform
+probability density on the interval [a, b] and zero density
+everywhere else.</p>
+<dl class="method">
+<dt id="sympy.statistics.distributions.Uniform.cdf">
+<tt class="descname">cdf</tt><big>(</big><em>s</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Uniform.cdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Uniform.cdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cumulative density function as an expression in x</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">1/4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">3/4</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.statistics.distributions.Uniform.confidence">
+<tt class="descname">confidence</tt><big>(</big><em>s</em>, <em>p</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Uniform.confidence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Uniform.confidence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a symmetric (p*100)% confidence interval.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Rational</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U</span> <span class="o">=</span> <span class="n">Uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">(1, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">U</span><span class="o">.</span><span class="n">confidence</span><span class="p">(</span><span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">(5/4, 7/4)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="sympy.statistics.distributions.Uniform.fit">
+<em class="property">static </em><tt class="descname">fit</tt><big>(</big><em>sample</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Uniform.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Uniform.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a uniform distribution fit to the mean and standard
+deviation of the given distribution or sample.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Uniform</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">Uniform(-sqrt(6) + 3, sqrt(6) + 3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Uniform</span><span class="o">.</span><span class="n">fit</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">Uniform(-sqrt(3)/2 + 3/2, sqrt(3)/2 + 3/2)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.statistics.distributions.Uniform.pdf">
+<tt class="descname">pdf</tt><big>(</big><em>s</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#Uniform.pdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.Uniform.pdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the probability density function as an expression in x</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics</span> <span class="kn">import</span> <span class="n">Uniform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Uniform</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">1/4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Uniform</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">1/2</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.statistics.distributions.PDF">
+<em class="property">class </em><tt class="descclassname">sympy.statistics.distributions.</tt><tt class="descname">PDF</tt><big>(</big><em>func</em>, <em>(x</em>, <em>a</em>, <em>b)) represents continuous probability distribution with probability distribution function func(x) on interval (a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#PDF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.PDF" title="Permalink to this definition">¶</a></dt>
+<dd><p>If func is not normalized so that integrate(func, (x, a, b)) == 1,
+it can be normalized using PDF.normalize() method</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics.distributions</span> <span class="kn">import</span> <span class="n">PDF</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exponential</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">oo</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exponential</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">exp(-x/a)/a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exponential</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1 - exp(-x/a)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exponential</span><span class="o">.</span><span class="n">mean</span>
+<span class="go">a</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exponential</span><span class="o">.</span><span class="n">variance</span>
+<span class="go">a**2</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.statistics.distributions.PDF.cdf">
+<tt class="descname">cdf</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#PDF.cdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.PDF.cdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the cumulative density function as an expression in x</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics.distributions</span> <span class="kn">import</span> <span class="n">PDF</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PDF</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="n">y</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">y - y*exp(-4/y)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PDF</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">-10*y - 100</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.statistics.distributions.PDF.normalize">
+<tt class="descname">normalize</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#PDF.normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.PDF.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalize the probability distribution function so that
+integrate(self.pdf(x), (x, a, b)) == 1</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">exp</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics.distributions</span> <span class="kn">import</span> <span class="n">PDF</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exponential</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">/</span><span class="n">a</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">oo</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">exponential</span><span class="o">.</span><span class="n">normalize</span><span class="p">()</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">exp(-x/a)/a</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.statistics.distributions.PDF.transform">
+<tt class="descname">transform</tt><big>(</big><em>func</em>, <em>var</em><big>)</big><a class="reference internal" href="../_modules/sympy/statistics/distributions.html#PDF.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.statistics.distributions.PDF.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a probability distribution of random variable func(x)
+currently only some simple injective functions are supported</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.statistics.distributions</span> <span class="kn">import</span> <span class="n">PDF</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PDF</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<span class="go">PDF(0, ((_w,), x, x))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Statistics</a><ul>
+<li><a class="reference internal" href="#normal-distributions">Normal distributions</a></li>
+<li><a class="reference internal" href="#other-distributions">Other distributions</a></li>
+<li><a class="reference internal" href="#api-reference">API Reference</a><ul>
+<li><a class="reference internal" href="#sample">Sample</a></li>
+<li><a class="reference internal" href="#continuous-probability-distributions">Continuous Probability Distributions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="simplify/hyperexpand.html"
+                        title="previous chapter">Details on the Hypergeometric Function Expansion Module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="stats.html"
+                        title="next chapter">Stats</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/statistics.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stats.html" title="Stats"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="simplify/hyperexpand.html" title="Details on the Hypergeometric Function Expansion Module"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

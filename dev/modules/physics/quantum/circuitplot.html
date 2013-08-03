@@ -1,0 +1,272 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Circuit Plot &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Quantum Mechanics" href="index.html" />
+    <link rel="next" title="Gates" href="gate.html" />
+    <link rel="prev" title="State" href="state.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gate.html" title="Gates"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="state.html" title="State"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics.quantum.circuitplot">
+<span id="circuit-plot"></span><h1>Circuit Plot<a class="headerlink" href="#module-sympy.physics.quantum.circuitplot" title="Permalink to this headline">¶</a></h1>
+<p>Matplotlib based plotting of quantum circuits.</p>
+<p>Todo:</p>
+<ul class="simple">
+<li>Optimize printing of large circuits.</li>
+<li>Get this to work with single gates.</li>
+<li>Do a better job checking the form of circuits to make sure it is a Mul of
+Gates.</li>
+<li>Get multi-target gates plotting.</li>
+<li>Get initial and final states to plot.</li>
+<li>Get measurements to plot. Might need to rethink measurement as a gate
+issue.</li>
+<li>Get scale and figsize to be handled in a better way.</li>
+<li>Write some tests/examples!</li>
+</ul>
+<dl class="class">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.circuitplot.</tt><tt class="descname">CircuitPlot</tt><big>(</big><em>c</em>, <em>nqubits</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for managing a circuit plot.</p>
+<dl class="method">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot.control_line">
+<tt class="descname">control_line</tt><big>(</big><em>gate_idx</em>, <em>min_wire</em>, <em>max_wire</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot.control_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot.control_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a vertical control line.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot.control_point">
+<tt class="descname">control_point</tt><big>(</big><em>gate_idx</em>, <em>wire_idx</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot.control_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot.control_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a control point.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot.not_point">
+<tt class="descname">not_point</tt><big>(</big><em>gate_idx</em>, <em>wire_idx</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot.not_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot.not_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a NOT gates as the circle with plus in the middle.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot.one_qubit_box">
+<tt class="descname">one_qubit_box</tt><big>(</big><em>t</em>, <em>gate_idx</em>, <em>wire_idx</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot.one_qubit_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot.one_qubit_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a box for a single qubit gate.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot.swap_point">
+<tt class="descname">swap_point</tt><big>(</big><em>gate_idx</em>, <em>wire_idx</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot.swap_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot.swap_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a swap point as a cross.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot.two_qubit_box">
+<tt class="descname">two_qubit_box</tt><big>(</big><em>t</em>, <em>gate_idx</em>, <em>wire_idx</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot.two_qubit_box"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot.two_qubit_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a box for a two qubit gate. Doesn&#8217;t work yet.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.quantum.circuitplot.CircuitPlot.update">
+<tt class="descname">update</tt><big>(</big><em>kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#CircuitPlot.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.CircuitPlot.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load the kwargs into the instance dict.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.circuitplot.circuit_plot">
+<tt class="descclassname">sympy.physics.quantum.circuitplot.</tt><tt class="descname">circuit_plot</tt><big>(</big><em>c</em>, <em>nqubits</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#circuit_plot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.circuit_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw the circuit diagram for the circuit with nqubits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>c</strong> : circuit</p>
+<blockquote>
+<div><p>The circuit to plot. Should be a product of Gate instances.</p>
+</div></blockquote>
+<p><strong>nqubits</strong> : int</p>
+<blockquote class="last">
+<div><p>The number of qubits to include in the circuit. Must be at least
+as big as the largest <span class="math">\(min_qubits`\)</span> of the gates.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.physics.quantum.circuitplot.labeller">
+<tt class="descclassname">sympy.physics.quantum.circuitplot.</tt><tt class="descname">labeller</tt><big>(</big><em>n</em>, <em>symbol='q'</em><big>)</big><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#labeller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.labeller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Autogenerate labels for wires of quantum circuits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>n</strong> : int</p>
+<blockquote>
+<div><p>number of qubits in the circuit</p>
+</div></blockquote>
+<p><strong>symbol</strong> : string</p>
+<blockquote>
+<div><p>A character string to precede all gate labels. E.g. &#8216;q_0&#8217;, &#8216;q_1&#8217;, etc.</p>
+</div></blockquote>
+<p><strong>&gt;&gt;&gt; from sympy.physics.quantum.circuitplot import labeller</strong> :</p>
+<p><strong>&gt;&gt;&gt; labeller(2)</strong> :</p>
+<p><strong>[&#8216;q_1&#8217;, &#8216;q_0&#8217;]</strong> :</p>
+<p><strong>&gt;&gt;&gt; labeller(3,&#8217;j&#8217;)</strong> :</p>
+<p class="last"><strong>[&#8216;j_2&#8217;, &#8216;j_1&#8217;, &#8216;j_0&#8217;]</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.circuitplot.Mz">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.circuitplot.</tt><tt class="descname">Mz</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#Mz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.Mz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mock-up of a z measurement gate. This is in circuitplot rather than
+gate.py because it&#8217;s not a real gate, it just draws one.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.physics.quantum.circuitplot.Mx">
+<em class="property">class </em><tt class="descclassname">sympy.physics.quantum.circuitplot.</tt><tt class="descname">Mx</tt><a class="reference internal" href="../../../_modules/sympy/physics/quantum/circuitplot.html#Mx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.quantum.circuitplot.Mx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mock-up of an x measurement gate. This is in circuitplot rather than
+gate.py because it&#8217;s not a real gate, it just draws one.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="state.html"
+                        title="previous chapter">State</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gate.html"
+                        title="next chapter">Gates</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/quantum/circuitplot.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gate.html" title="Gates"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="state.html" title="State"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Quantum Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

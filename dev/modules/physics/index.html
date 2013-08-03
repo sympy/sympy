@@ -1,0 +1,247 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Physics Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Gaussian Optics" href="gaussopt.html" />
+    <link rel="prev" title="Parsing input" href="../parsing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gaussopt.html" title="Gaussian Optics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../parsing.html" title="Parsing input"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.physics">
+<span id="physics-module"></span><span id="physics-docs"></span><h1>Physics Module<a class="headerlink" href="#module-sympy.physics" title="Permalink to this headline">¶</a></h1>
+<p>A module that helps solving problems in physics</p>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gaussopt.html">Gaussian Optics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hydrogen.html">Hydrogen Wavefunctions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matrices.html">Matrices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="paulialgebra.html">Pauli Algebra</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="paulialgebra.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qho_1d.html">Quantum Harmonic Oscillator in 1-D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sho.html">Quantum Harmonic Oscillator in 3-D</a></li>
+<li class="toctree-l1"><a class="reference internal" href="secondquant.html">Second Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wigner.html">Wigner Symbols</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="wigner.html#references">References</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wigner.html#credits-and-copyright">Credits and Copyright</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="units.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="units.html#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="units.html#dimensionless-quantities">Dimensionless quantities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="units.html#base-units">Base units</a></li>
+<li class="toctree-l3"><a class="reference internal" href="units.html#derived-units">Derived units</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="units.html#module-sympy.physics.units">Docstring</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mechanics/index.html">Classical Mechanics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mechanics/index.html#mechanics">Mechanics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mechanics/index.html#guide-to-mechanics">Guide to Mechanics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/vectors.html">Mechanics: Vector &amp; ReferenceFrame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/kinematics.html">Mechanics: Kinematics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/masses.html">Mechanics: Masses, Inertias, Particles and Rigid Bodies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/kane.html">Kane&#8217;s Method in Physics/Mechanics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/kane.html#lagrange-s-method-in-physics-mechanics">Lagrange&#8217;s Method in Physics/Mechanics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/examples.html">Examples for Physics/Mechanics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/advanced.html">Potential Issues/Advanced Topics/Future Features in Physics/Mechanics Module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/reference.html">References for Physics/Mechanics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="mechanics/index.html#mechanics-api">Mechanics API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/api/essential.html">Essential Components (Docstrings)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/api/functions.html">Related Essential Functions (Docstrings)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/api/kinematics.html">Kinematics (Docstrings)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/api/part_bod.html">Masses, Inertias &amp; Particles, RigidBodys (Docstrings)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/api/kane.html">Kane&#8217;s Method, Lagrange&#8217;s Method &amp; Associated Functions (Docstrings)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mechanics/api/printing.html">Printing (Docstrings)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quantum/index.html">Quantum Mechanics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quantum/index.html#quantum-functions">Quantum Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quantum/anticommutator.html">Anticommutator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/cg.html">Clebsch-Gordan Coefficients</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/commutator.html">Commutator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/constants.html">Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/dagger.html">Dagger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/innerproduct.html">Inner Product</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/tensorproduct.html">Tensor Product</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quantum/index.html#states-and-operators">States and Operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quantum/cartesian.html">Cartesian Operators and States</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/hilbert.html">Hilbert Space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/operator.html">Operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/operatorset.html">Operator/State Helper Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/qapply.html">Qapply</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/represent.html">Represent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/spin.html">Spin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/state.html">State</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quantum/index.html#quantum-computation">Quantum Computation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quantum/circuitplot.html">Circuit Plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/gate.html">Gates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/grover.html">Grover&#8217;s Algorithm</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/qft.html">QFT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/qubit.html">Qubit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quantum/shor.html">Shor&#8217;s Algorithm</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="quantum/index.html#analytic-solutions">Analytic Solutions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="quantum/piab.html">Particle in a Box</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Physics Module</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../parsing.html"
+                        title="previous chapter">Parsing input</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="gaussopt.html"
+                        title="next chapter">Gaussian Optics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/physics/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="gaussopt.html" title="Gaussian Optics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../parsing.html" title="Parsing input"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

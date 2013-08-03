@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.polyerrors &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.polyerrors</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Definitions of common exceptions for `polys` module. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">public</span>
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="BasePolynomialError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.BasePolynomialError">[docs]</a><span class="k">class</span> <span class="nc">BasePolynomialError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for polynomial related exceptions. &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;abstract base class&quot;</span><span class="p">)</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="ExactQuotientFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.ExactQuotientFailed">[docs]</a><span class="k">class</span> <span class="nc">ExactQuotientFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">dom</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dom</span> <span class="o">=</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">dom</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+        <span class="kn">from</span> <span class="nn">sympy.printing.str</span> <span class="kn">import</span> <span class="n">sstr</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dom</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> does not divide </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">),</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s"> does not divide </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">),</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">),</span> <span class="n">sstr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dom</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dom</span><span class="p">)</span>
+</div>
+<span class="nd">@public</span>
+<span class="k">class</span> <span class="nc">PolynomialDivisionFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">domain</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">=</span> <span class="n">g</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_EX</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;You may want to use a different simplification algorithm. Note &quot;</span> \
+                  <span class="s">&quot;that in general it&#39;s not possible to guarantee to detect zero &quot;</span>  \
+                  <span class="s">&quot;in this domain.&quot;</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="o">.</span><span class="n">is_Exact</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Your working precision or tolerance of computations may be set &quot;</span> \
+                  <span class="s">&quot;improperly. Adjust those parameters of the coefficient domain &quot;</span>  \
+                  <span class="s">&quot;and try again.&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Zero detection is guaranteed in this coefficient domain. This &quot;</span>  \
+                  <span class="s">&quot;may indicate a bug in SymPy or the domain is user defined and &quot;</span>  \
+                  <span class="s">&quot;doesn&#39;t implement zero detection properly.&quot;</span>
+
+        <span class="k">return</span> <span class="s">&quot;couldn&#39;t reduce degree in a polynomial division algorithm when &quot;</span>    \
+               <span class="s">&quot;dividing </span><span class="si">%s</span><span class="s"> by </span><span class="si">%s</span><span class="s">. This can happen when it&#39;s not possible to &quot;</span>      \
+               <span class="s">&quot;detect zero in the coefficient domain. The domain of computation &quot;</span>  \
+               <span class="s">&quot;is </span><span class="si">%s</span><span class="s">. </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="OperationNotSupported"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.OperationNotSupported">[docs]</a><span class="k">class</span> <span class="nc">OperationNotSupported</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">poly</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">poly</span> <span class="o">=</span> <span class="n">poly</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+        <span class="k">return</span> <span class="s">&quot;`</span><span class="si">%s</span><span class="s">` operation not supported by </span><span class="si">%s</span><span class="s"> representation&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">poly</span><span class="o">.</span><span class="n">rep</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="HeuristicGCDFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.HeuristicGCDFailed">[docs]</a><span class="k">class</span> <span class="nc">HeuristicGCDFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="HomomorphismFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.HomomorphismFailed">[docs]</a><span class="k">class</span> <span class="nc">HomomorphismFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="IsomorphismFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.IsomorphismFailed">[docs]</a><span class="k">class</span> <span class="nc">IsomorphismFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="ExtraneousFactors"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.ExtraneousFactors">[docs]</a><span class="k">class</span> <span class="nc">ExtraneousFactors</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="EvaluationFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.EvaluationFailed">[docs]</a><span class="k">class</span> <span class="nc">EvaluationFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="RefinementFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.RefinementFailed">[docs]</a><span class="k">class</span> <span class="nc">RefinementFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="CoercionFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.CoercionFailed">[docs]</a><span class="k">class</span> <span class="nc">CoercionFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="NotInvertible"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.NotInvertible">[docs]</a><span class="k">class</span> <span class="nc">NotInvertible</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="NotReversible"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.NotReversible">[docs]</a><span class="k">class</span> <span class="nc">NotReversible</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="NotAlgebraic"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.NotAlgebraic">[docs]</a><span class="k">class</span> <span class="nc">NotAlgebraic</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="DomainError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.DomainError">[docs]</a><span class="k">class</span> <span class="nc">DomainError</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="PolynomialError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.PolynomialError">[docs]</a><span class="k">class</span> <span class="nc">PolynomialError</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="UnificationFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.UnificationFailed">[docs]</a><span class="k">class</span> <span class="nc">UnificationFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="GeneratorsError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.GeneratorsError">[docs]</a><span class="k">class</span> <span class="nc">GeneratorsError</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="GeneratorsNeeded"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.GeneratorsNeeded">[docs]</a><span class="k">class</span> <span class="nc">GeneratorsNeeded</span><span class="p">(</span><span class="n">GeneratorsError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="ComputationFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.ComputationFailed">[docs]</a><span class="k">class</span> <span class="nc">ComputationFailed</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">nargs</span><span class="p">,</span> <span class="n">exc</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nargs</span> <span class="o">=</span> <span class="n">nargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exc</span> <span class="o">=</span> <span class="n">exc</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">) failed without generators&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">,</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">exprs</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nargs</span><span class="p">])))</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="UnivariatePolynomialError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.UnivariatePolynomialError">[docs]</a><span class="k">class</span> <span class="nc">UnivariatePolynomialError</span><span class="p">(</span><span class="n">PolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="MultivariatePolynomialError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.MultivariatePolynomialError">[docs]</a><span class="k">class</span> <span class="nc">MultivariatePolynomialError</span><span class="p">(</span><span class="n">PolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="PolificationFailed"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.PolificationFailed">[docs]</a><span class="k">class</span> <span class="nc">PolificationFailed</span><span class="p">(</span><span class="n">PolynomialError</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">origs</span><span class="p">,</span> <span class="n">exprs</span><span class="p">,</span> <span class="n">seq</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">seq</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">orig</span> <span class="o">=</span> <span class="n">origs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">exprs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">origs</span> <span class="o">=</span> <span class="p">[</span><span class="n">origs</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exprs</span> <span class="o">=</span> <span class="p">[</span><span class="n">exprs</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">origs</span> <span class="o">=</span> <span class="n">origs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exprs</span> <span class="o">=</span> <span class="n">exprs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">opt</span> <span class="o">=</span> <span class="n">opt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">seq</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c"># pragma: no cover</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;can&#39;t construct a polynomial from </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&quot;can&#39;t construct polynomials from </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="s">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origs</span><span class="p">))</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="OptionError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.OptionError">[docs]</a><span class="k">class</span> <span class="nc">OptionError</span><span class="p">(</span><span class="n">BasePolynomialError</span><span class="p">):</span>
+    <span class="k">pass</span>
+</div>
+<span class="nd">@public</span>
+<div class="viewcode-block" id="FlagError"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.polyerrors.FlagError">[docs]</a><span class="k">class</span> <span class="nc">FlagError</span><span class="p">(</span><span class="n">OptionError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

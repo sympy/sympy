@@ -1,0 +1,1382 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Iterables &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Utilities" href="index.html" />
+    <link rel="next" title="Lambdify" href="lambdify.html" />
+    <link rel="prev" title="Decorator" href="decorator.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lambdify.html" title="Lambdify"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="decorator.html" title="Decorator"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Utilities</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="iterables">
+<h1>Iterables<a class="headerlink" href="#iterables" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="cartes">
+<h2>cartes<a class="headerlink" href="#cartes" title="Permalink to this headline">¶</a></h2>
+<p>Returns the cartesian product of sequences as a generator.</p>
+<dl class="docutils">
+<dt>Examples::</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">cartes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">cartes</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="s">&#39;ab&#39;</span><span class="p">))</span>
+<span class="go">[(1, &#39;a&#39;), (1, &#39;b&#39;), (2, &#39;a&#39;), (2, &#39;b&#39;), (3, &#39;a&#39;), (3, &#39;b&#39;)]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="variations">
+<h2>variations<a class="headerlink" href="#variations" title="Permalink to this headline">¶</a></h2>
+<p>variations(seq, n) Returns all the variations of the list of size n.</p>
+<p>Has an optional third argument. Must be a boolean value and makes the method
+return the variations with repetition if set to True, or the variations
+without repetition if set to False.</p>
+<dl class="docutils">
+<dt>Examples::</dt>
+<dd><div class="first last highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">variations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">variations</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(1, 2), (1, 3), (2, 1), (2, 3), (3, 1), (3, 2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">variations</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+<span class="go">[(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="partitions">
+<h2>partitions<a class="headerlink" href="#partitions" title="Permalink to this headline">¶</a></h2>
+<p>Although the combinatorics module contains Partition and IntegerPartition
+classes for investigation and manipulation of partitions, there are a few
+functions to generate partitions that can be used as low-level tools for
+routines:  <tt class="docutils literal"><span class="pre">partitions</span></tt> and <tt class="docutils literal"><span class="pre">multiset_partitions</span></tt>. The former gives
+integer partitions, and the latter gives enumerated partitions of elements.
+There is also a routine <tt class="docutils literal"><span class="pre">kbins</span></tt> that will give a variety of permutations
+of partions.</p>
+<p>partitions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">partitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">2</span><span class="p">]</span>
+<span class="go">[{1: 1, 6: 1}, {2: 1, 5: 1}, {3: 1, 4: 1}]</span>
+</pre></div>
+</div>
+<p>multiset_partitions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">multiset_partitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">multiset_partitions</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="go">[[[0, 1], [2]], [[0, 2], [1]], [[0], [1, 2]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">multiset_partitions</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="go">[[[1, 1, 1], [2]], [[1, 1, 2], [1]], [[1, 1], [1, 2]]]</span>
+</pre></div>
+</div>
+<p>kbins:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">kbins</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">rv</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">k</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">rv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]))</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">kbins</span><span class="p">(</span><span class="s">&quot;ABCD&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[&#39;A,BCD&#39;, &#39;AB,CD&#39;, &#39;ABC,D&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">kbins</span><span class="p">(</span><span class="s">&quot;ABC&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[&#39;A,BC&#39;, &#39;AB,C&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">kbins</span><span class="p">(</span><span class="s">&quot;ABC&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ordered</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>  <span class="c"># same as multiset_partitions</span>
+<span class="go">[&#39;A,BC&#39;, &#39;AB,C&#39;, &#39;AC,B&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">kbins</span><span class="p">(</span><span class="s">&quot;ABC&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ordered</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">[&#39;A,BC&#39;, &#39;A,CB&#39;,</span>
+<span class="go"> &#39;B,AC&#39;, &#39;B,CA&#39;,</span>
+<span class="go"> &#39;C,AB&#39;, &#39;C,BA&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">kbins</span><span class="p">(</span><span class="s">&quot;ABC&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ordered</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
+<span class="go">[&#39;A,BC&#39;, &#39;AB,C&#39;, &#39;AC,B&#39;,</span>
+<span class="go"> &#39;B,AC&#39;, &#39;BC,A&#39;,</span>
+<span class="go"> &#39;C,AB&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">show</span><span class="p">(</span><span class="n">kbins</span><span class="p">(</span><span class="s">&quot;ABC&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ordered</span><span class="o">=</span><span class="mi">11</span><span class="p">))</span>
+<span class="go">[&#39;A,BC&#39;, &#39;A,CB&#39;, &#39;AB,C&#39;, &#39;AC,B&#39;,</span>
+<span class="go"> &#39;B,AC&#39;, &#39;B,CA&#39;, &#39;BA,C&#39;, &#39;BC,A&#39;,</span>
+<span class="go"> &#39;C,AB&#39;, &#39;C,BA&#39;, &#39;CA,B&#39;, &#39;CB,A&#39;]</span>
+</pre></div>
+</div>
+<div class="section" id="module-sympy.utilities.iterables">
+<span id="docstring"></span><h3>Docstring<a class="headerlink" href="#module-sympy.utilities.iterables" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.utilities.iterables.binary_partitions">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">binary_partitions</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#binary_partitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.binary_partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the binary partition of n.</p>
+<p>A binary partition consists only of numbers that are
+powers of two. Each step reduces a 2**(k+1) to 2**k and
+2**k. Thus 16 is converted to 8 and 8.</p>
+<p>Reference: TAOCP 4, section 7.2.1.5, problem 64</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">binary_partitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">binary_partitions</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">[4, 1]</span>
+<span class="go">[2, 2, 1]</span>
+<span class="go">[2, 1, 1, 1]</span>
+<span class="go">[1, 1, 1, 1, 1]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.bracelets">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">bracelets</tt><big>(</big><em>n</em>, <em>k</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#bracelets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.bracelets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper to necklaces to return a free (unrestricted) necklace.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.capture">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">capture</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#capture"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.capture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the printed output of func().</p>
+<p><span class="math">\(func\)</span> should be a function without arguments that produces output with
+print statements.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">capture</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pprint</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">foo</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;hello world!&#39;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s">&#39;hello&#39;</span> <span class="ow">in</span> <span class="n">capture</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span> <span class="c"># foo, not foo()</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">capture</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">pprint</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">x</span><span class="p">))</span>
+<span class="go">&#39;2\n-\nx\n&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.common_prefix">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">common_prefix</tt><big>(</big><em>*seqs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#common_prefix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.common_prefix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the subsequence that is a common start of sequences in <tt class="docutils literal"><span class="pre">seqs</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">common_prefix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_prefix</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+<span class="go">[0, 1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_prefix</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+<span class="go">[0, 1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_prefix</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">[1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_prefix</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="go">[1]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.common_suffix">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">common_suffix</tt><big>(</big><em>*seqs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#common_suffix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.common_suffix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the subsequence that is a common ending of sequences in <tt class="docutils literal"><span class="pre">seqs</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">common_suffix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_suffix</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+<span class="go">[0, 1, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_suffix</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_suffix</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">[2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">common_suffix</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">[3]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.dict_merge">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">dict_merge</tt><big>(</big><em>*dicts</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#dict_merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.dict_merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge dictionaries into a single dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.flatten">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">flatten</tt><big>(</big><em>iterable</em>, <em>levels=None</em>, <em>cls=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively denest iterable containers.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">flatten</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">flatten</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">[1, 2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flatten</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
+<span class="go">[1, 2, 3]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flatten</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]])</span>
+<span class="go">[1, 2, 3, 4, 5]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flatten</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">None</span><span class="p">)])</span>
+<span class="go">[1.0, 2, 1, None]</span>
+</pre></div>
+</div>
+<p>If you want to denest only a specified number of levels of
+nested containers, then set <tt class="docutils literal"><span class="pre">levels</span></tt> flag to the desired
+number of levels:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span> <span class="o">=</span> <span class="p">[[(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">flatten</span><span class="p">(</span><span class="n">ls</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[(-2, -1), (1, 2), (0, 0)]</span>
+</pre></div>
+</div>
+<p>If cls argument is specified, it will only flatten instances of that
+class, for example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyOp</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flatten</span><span class="p">([</span><span class="n">MyOp</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">MyOp</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))],</span> <span class="n">cls</span><span class="o">=</span><span class="n">MyOp</span><span class="p">)</span>
+<span class="go">[1, 2, 3]</span>
+</pre></div>
+</div>
+<p>adapted from <a class="reference external" href="http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks">http://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.generate_bell">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">generate_bell</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#generate_bell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.generate_bell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the bell permutations of length <tt class="docutils literal"><span class="pre">n</span></tt>.</p>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Method_ringing">http://en.wikipedia.org/wiki/Method_ringing</a></li>
+<li><a class="reference external" href="http://stackoverflow.com/questions/4856615/recursive-permutation/4857018">http://stackoverflow.com/questions/4856615/recursive-permutation/4857018</a></li>
+<li><a class="reference external" href="http://programminggeeks.com/bell-algorithm-for-permutation/">http://programminggeeks.com/bell-algorithm-for-permutation/</a></li>
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/">http://en.wikipedia.org/wiki/</a>
+Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm</li>
+<li>Generating involutions, derangements, and relatives by ECO
+Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010</li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">permutations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">generate_bell</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">Matrix</span>
+</pre></div>
+</div>
+<p>This is the sort of permutation used in the ringing of physical bells,
+and does not produce permutations in lexicographical order. Rather, the
+permutations differ from each other by exactly one inversion, and the
+position at which the swapping occurs varies periodically in a simple
+fashion. Consider the first few permutations of 4 elements generated
+by <tt class="docutils literal"><span class="pre">permutations</span></tt> and <tt class="docutils literal"><span class="pre">generate_bell</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">permutations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)))[:</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">[(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 2, 3, 1), (0, 3, 1, 2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">generate_bell</span><span class="p">(</span><span class="mi">4</span><span class="p">))[:</span><span class="mi">5</span><span class="p">]</span>
+<span class="go">[(0, 1, 2, 3), (1, 0, 2, 3), (1, 2, 0, 3), (1, 2, 3, 0), (2, 1, 3, 0)]</span>
+</pre></div>
+</div>
+<p>Notice how the 2nd and 3rd lexicographical permutations have 3 elements
+out of place whereas each bell permutations always has only two
+elements out of place relative to the previous permutation.</p>
+<p>How the position of inversion varies across the elements can be seen
+by tracing out where the 0 appears in the permutations:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">generate_bell</span><span class="p">(</span><span class="mi">4</span><span class="p">)):</span>
+<span class="gp">... </span>    <span class="n">m</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">print_nonzero</span><span class="p">(</span><span class="s">&#39;X&#39;</span><span class="p">)</span>
+<span class="go">[ XXXXXX  XXXXXX  XXXXXX ]</span>
+<span class="go">[X XXXX XX XXXX XX XXXX X]</span>
+<span class="go">[XX XX XXXX XX XXXX XX XX]</span>
+<span class="go">[XXX  XXXXXX  XXXXXX  XXX]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.generate_derangements">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">generate_derangements</tt><big>(</big><em>perm</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#generate_derangements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.generate_derangements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routine to generate unique derangements.</p>
+<p>TODO: This will be rewritten to use the
+ECO operator approach once the permutations
+branch is in master.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.functions.combinatorial.factorials.subfactorial</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">generate_derangements</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">generate_derangements</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+<span class="go">[[1, 2, 0], [2, 0, 1]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">generate_derangements</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]))</span>
+<span class="go">[[1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1],     [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1],     [3, 2, 1, 0]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">generate_derangements</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]))</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.generate_involutions">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">generate_involutions</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#generate_involutions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.generate_involutions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates involutions.</p>
+<p>An involution is a permutation that when multiplied
+by itself equals the identity permutation. In this
+implementation the involutions are generated using
+Fixed Points.</p>
+<p>Alternatively, an involution can be considered as
+a permutation that does not contain any cycles with
+a length that is greater than two.</p>
+<p>Reference:
+<a class="reference external" href="http://mathworld.wolfram.com/PermutationInvolution.html">http://mathworld.wolfram.com/PermutationInvolution.html</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">generate_involutions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">generate_involutions</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">generate_involutions</span><span class="p">(</span><span class="mi">4</span><span class="p">)))</span>
+<span class="go">10</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.generate_oriented_forest">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">generate_oriented_forest</tt><big>(</big><em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#generate_oriented_forest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.generate_oriented_forest" title="Permalink to this definition">¶</a></dt>
+<dd><p>This algorithm generates oriented forests.</p>
+<p>An oriented graph is a directed graph having no symmetric pair of directed
+edges. A forest is an acyclic graph, i.e., it has no cycles. A forest can
+also be described as a disjoint union of trees, which are graphs in which
+any two vertices are connected by exactly one simple path.</p>
+<p>Reference:
+[1] T. Beyer and S.M. Hedetniemi: constant time generation of         rooted trees, SIAM J. Computing Vol. 9, No. 4, November 1980
+[2] <a class="reference external" href="http://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python">http://stackoverflow.com/questions/1633833/oriented-forest-taocp-algorithm-in-python</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">generate_oriented_forest</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">generate_oriented_forest</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="go">[[0, 1, 2, 3], [0, 1, 2, 2], [0, 1, 2, 1], [0, 1, 2, 0],     [0, 1, 1, 1], [0, 1, 1, 0], [0, 1, 0, 1], [0, 1, 0, 0], [0, 0, 0, 0]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.group">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">group</tt><big>(</big><em>seq</em>, <em>multiple=True</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits a sequence into a list of lists of equal, adjacent elements.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.utilities.iterables.multiset" title="sympy.utilities.iterables.multiset"><tt class="xref py py-obj docutils literal"><span class="pre">multiset</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">group</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">group</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">[[1, 1, 1], [2, 2], [3]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">group</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">multiple</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">[(1, 3), (2, 2), (3, 1)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">group</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">multiple</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">[(1, 2), (3, 1), (2, 2), (1, 1)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.has_dups">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">has_dups</tt><big>(</big><em>seq</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#has_dups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.has_dups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if there are any duplicate elements in <tt class="docutils literal"><span class="pre">seq</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">has_dups</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Set</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">has_dups</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">has_dups</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">all</span><span class="p">(</span><span class="n">has_dups</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">False</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">set</span><span class="p">(),</span> <span class="n">Set</span><span class="p">(),</span> <span class="nb">dict</span><span class="p">(),</span> <span class="n">Dict</span><span class="p">()))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.has_variety">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">has_variety</tt><big>(</big><em>seq</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#has_variety"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.has_variety" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if there are any different elements in <tt class="docutils literal"><span class="pre">seq</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">has_variety</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">has_variety</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">has_variety</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.ibin">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">ibin</tt><big>(</big><em>n</em>, <em>bits=0</em>, <em>str=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#ibin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.ibin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a list of length <tt class="docutils literal"><span class="pre">bits</span></tt> corresponding to the binary value
+of <tt class="docutils literal"><span class="pre">n</span></tt> with small bits to the right (last). If bits is omitted, the
+length will be the number required to represent <tt class="docutils literal"><span class="pre">n</span></tt>. If the bits are
+desired in reversed order, use the [::-1] slice of the returned list.</p>
+<p>If a sequence of all bits-length lists starting from [0, 0,..., 0]
+through [1, 1, ..., 1] are desired, pass a non-integer for bits, e.g.
+&#8216;all&#8217;.</p>
+<p>If the bit <em>string</em> is desired pass <tt class="docutils literal"><span class="pre">str=True</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">ibin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ibin</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[1, 0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ibin</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">[0, 0, 1, 0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ibin</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">[0, 1, 0, 0]</span>
+</pre></div>
+</div>
+<p>If all lists corresponding to 0 to 2**n - 1, pass a non-integer
+for bits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">bits</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ibin</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;all&#39;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="go">(0, 0)</span>
+<span class="go">(0, 1)</span>
+<span class="go">(1, 0)</span>
+<span class="go">(1, 1)</span>
+</pre></div>
+</div>
+<p>If a bit string is desired of a given length, use str=True:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">n</span> <span class="o">=</span> <span class="mi">123</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bits</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ibin</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">&#39;0001111011&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ibin</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c"># small bits left</span>
+<span class="go">&#39;1101111000&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">ibin</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&#39;all&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[&#39;000&#39;, &#39;001&#39;, &#39;010&#39;, &#39;011&#39;, &#39;100&#39;, &#39;101&#39;, &#39;110&#39;, &#39;111&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.interactive_traversal">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">interactive_traversal</tt><big>(</big><em>expr</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#interactive_traversal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.interactive_traversal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Traverse a tree asking a user which branch to choose.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.kbins">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">kbins</tt><big>(</big><em>l</em>, <em>k</em>, <em>ordered=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#kbins"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.kbins" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return sequence <tt class="docutils literal"><span class="pre">l</span></tt> partitioned into <tt class="docutils literal"><span class="pre">k</span></tt> bins.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.utilities.iterables.partitions" title="sympy.utilities.iterables.partitions"><tt class="xref py py-obj docutils literal"><span class="pre">partitions</span></tt></a>, <a class="reference internal" href="#sympy.utilities.iterables.multiset_partitions" title="sympy.utilities.iterables.multiset_partitions"><tt class="xref py py-obj docutils literal"><span class="pre">multiset_partitions</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">kbins</span>
+</pre></div>
+</div>
+<p>The default is to give the items in the same order, but grouped
+into k partitions without any reordering:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">kbins</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)),</span> <span class="mi">2</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">[[0], [1, 2, 3, 4]]</span>
+<span class="go">[[0, 1], [2, 3, 4]]</span>
+<span class="go">[[0, 1, 2], [3, 4]]</span>
+<span class="go">[[0, 1, 2, 3], [4]]</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">ordered</span></tt> flag which is either None (to give the simple partition
+of the the elements) or is a 2 digit integer indicating whether the order of
+the bins and the order of the items in the bins matters. Given:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">A</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]]</span>
+<span class="n">B</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="n">C</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="n">D</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+</pre></div>
+</div>
+<p>the following values for <tt class="docutils literal"><span class="pre">ordered</span></tt> have the shown meanings:</p>
+<div class="highlight-python"><pre>00 means A == B == C == D
+01 means A == B
+10 means A == D
+11 means A == A</pre>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">ordered</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">]:</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="s">&#39;ordered = </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">ordered</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">kbins</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ordered</span><span class="o">=</span><span class="n">ordered</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">print</span><span class="p">(</span><span class="s">&#39;     </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">p</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">ordered = None</span>
+<span class="go">     [[0], [1, 2]]</span>
+<span class="go">     [[0, 1], [2]]</span>
+<span class="go">ordered = 0</span>
+<span class="go">     [[0, 1], [2]]</span>
+<span class="go">     [[0, 2], [1]]</span>
+<span class="go">     [[0], [1, 2]]</span>
+<span class="go">ordered = 1</span>
+<span class="go">     [[0], [1, 2]]</span>
+<span class="go">     [[0], [2, 1]]</span>
+<span class="go">     [[1], [0, 2]]</span>
+<span class="go">     [[1], [2, 0]]</span>
+<span class="go">     [[2], [0, 1]]</span>
+<span class="go">     [[2], [1, 0]]</span>
+<span class="go">ordered = 10</span>
+<span class="go">     [[0, 1], [2]]</span>
+<span class="go">     [[2], [0, 1]]</span>
+<span class="go">     [[0, 2], [1]]</span>
+<span class="go">     [[1], [0, 2]]</span>
+<span class="go">     [[0], [1, 2]]</span>
+<span class="go">     [[1, 2], [0]]</span>
+<span class="go">ordered = 11</span>
+<span class="go">     [[0], [1, 2]]</span>
+<span class="go">     [[0, 1], [2]]</span>
+<span class="go">     [[0], [2, 1]]</span>
+<span class="go">     [[0, 2], [1]]</span>
+<span class="go">     [[1], [0, 2]]</span>
+<span class="go">     [[1, 0], [2]]</span>
+<span class="go">     [[1], [2, 0]]</span>
+<span class="go">     [[1, 2], [0]]</span>
+<span class="go">     [[2], [0, 1]]</span>
+<span class="go">     [[2, 0], [1]]</span>
+<span class="go">     [[2], [1, 0]]</span>
+<span class="go">     [[2, 1], [0]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.minlex">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">minlex</tt><big>(</big><em>seq</em>, <em>directed=True</em>, <em>is_set=False</em>, <em>small=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#minlex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.minlex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a tuple where the smallest element appears first; if
+<tt class="docutils literal"><span class="pre">directed</span></tt> is True (default) then the order is preserved, otherwise
+the sequence will be reversed if that gives a smaller ordering.</p>
+<p>If every element appears only once then is_set can be set to True
+for more efficient processing.</p>
+<p>If the smallest element is known at the time of calling, it can be
+passed and the calculation of the smallest element will be omitted.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.combinatorics.polyhedron</span> <span class="kn">import</span> <span class="n">minlex</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minlex</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">(0, 1, 2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minlex</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">(0, 2, 1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minlex</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">directed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">(0, 1, 2)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">minlex</span><span class="p">(</span><span class="s">&#39;11010011000&#39;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="go">&#39;00011010011&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">minlex</span><span class="p">(</span><span class="s">&#39;11010011000&#39;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="go">&#39;00011001011&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.multiset">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">multiset</tt><big>(</big><em>seq</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#multiset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.multiset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the hashable sequence in multiset form with values being the
+multiplicity of the item in the sequence.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.utilities.iterables.group" title="sympy.utilities.iterables.group"><tt class="xref py py-obj docutils literal"><span class="pre">group</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">multiset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">multiset</span><span class="p">(</span><span class="s">&#39;mississippi&#39;</span><span class="p">)</span>
+<span class="go">{&#39;i&#39;: 4, &#39;m&#39;: 1, &#39;p&#39;: 2, &#39;s&#39;: 4}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.multiset_combinations">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">multiset_combinations</tt><big>(</big><em>m</em>, <em>n</em>, <em>g=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#multiset_combinations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.multiset_combinations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the unique combinations of size <tt class="docutils literal"><span class="pre">n</span></tt> from multiset <tt class="docutils literal"><span class="pre">m</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">multiset_combinations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span>  <span class="n">multiset_combinations</span><span class="p">(</span><span class="s">&#39;baby&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="go">[&#39;abb&#39;, &#39;aby&#39;, &#39;bby&#39;]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">count</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>The number of combinations depends on the number of letters; the
+number of unique combinations depends on how the letters are
+repeated.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span> <span class="o">=</span> <span class="s">&#39;abracadabra&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s2</span> <span class="o">=</span> <span class="s">&#39;banana tree&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">count</span><span class="p">(</span><span class="n">combinations</span><span class="p">,</span> <span class="n">s1</span><span class="p">),</span> <span class="n">count</span><span class="p">(</span><span class="n">multiset_combinations</span><span class="p">,</span> <span class="n">s1</span><span class="p">)</span>
+<span class="go">(165, 23)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">count</span><span class="p">(</span><span class="n">combinations</span><span class="p">,</span> <span class="n">s2</span><span class="p">),</span> <span class="n">count</span><span class="p">(</span><span class="n">multiset_combinations</span><span class="p">,</span> <span class="n">s2</span><span class="p">)</span>
+<span class="go">(165, 54)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.multiset_partitions">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">multiset_partitions</tt><big>(</big><em>multiset</em>, <em>m=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#multiset_partitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.multiset_partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return unique partitions of the given multiset (in list form).
+If <tt class="docutils literal"><span class="pre">m</span></tt> is None, all multisets will be returned, otherwise only
+partitions with <tt class="docutils literal"><span class="pre">m</span></tt> parts will be returned.</p>
+<p>If <tt class="docutils literal"><span class="pre">multiset</span></tt> is an integer, a range [0, 1, ..., multiset - 1]
+will be supplied.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#sympy.utilities.iterables.partitions" title="sympy.utilities.iterables.partitions"><tt class="xref py py-obj docutils literal"><span class="pre">partitions</span></tt></a>, <a class="reference internal" href="../combinatorics/partitions.html#sympy.combinatorics.partitions.Partition" title="sympy.combinatorics.partitions.Partition"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.combinatorics.partitions.Partition</span></tt></a>, <a class="reference internal" href="../combinatorics/partitions.html#sympy.combinatorics.partitions.IntegerPartition" title="sympy.combinatorics.partitions.IntegerPartition"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.combinatorics.partitions.IntegerPartition</span></tt></a>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.functions.combinatorial.numbers.nT</span></tt></p>
+</div>
+<p class="rubric">Notes</p>
+<p>When all the elements are the same in the multiset, the order
+of the returned partitions is determined by the <tt class="docutils literal"><span class="pre">partitions</span></tt>
+routine. If one is counting partitions then it is better to use
+the <tt class="docutils literal"><span class="pre">nT</span></tt> function.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">multiset_partitions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[[[1, 2, 3], [4]], [[1, 2, 4], [3]], [[1, 2], [3, 4]],</span>
+<span class="go">[[1, 3, 4], [2]], [[1, 3], [2, 4]], [[1, 4], [2, 3]],</span>
+<span class="go">[[1], [2, 3, 4]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">[[[1, 2, 3, 4]]]</span>
+</pre></div>
+</div>
+<p>Only unique partitions are returned and these will be returned in a
+canonical order regardless of the order of the input:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ans</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">==</span> <span class="n">ans</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="o">==</span>
+<span class="gp">... </span> <span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">a</span><span class="p">))))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>If m is omitted then all partitions will be returned:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+<span class="go">[[[1, 1, 2]], [[1, 1], [2]], [[1, 2], [1]], [[1], [1], [2]]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span><span class="p">))</span>
+<span class="go">[[[1, 1, 1]], [[1], [1, 1]], [[1], [1], [1]]]</span>
+</pre></div>
+</div>
+<p class="rubric">Counting</p>
+<p>The number of partitions of a set is given by the bell number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">bell</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">(</span><span class="mi">5</span><span class="p">)))</span> <span class="o">==</span> <span class="n">bell</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="mi">52</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The number of partitions of length k from a set of size n is given by the
+Stirling Number of the 2nd kind:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">S2</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Dummy</span><span class="p">,</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">factorial</span><span class="p">,</span> <span class="n">Sum</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="mi">0</span>
+<span class="gp">... </span>    <span class="n">j</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">arg</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">*</span><span class="n">j</span><span class="o">**</span><span class="n">n</span><span class="o">*</span><span class="n">binomial</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="n">factorial</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">Sum</span><span class="p">(</span><span class="n">arg</span><span class="p">,(</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">k</span><span class="p">))</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">S2</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_partitions</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">15</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>These comments on counting apply to <em>sets</em>, not multisets.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.multiset_permutations">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">multiset_permutations</tt><big>(</big><em>m</em>, <em>size=None</em>, <em>g=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#multiset_permutations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.multiset_permutations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the unique permutations of multiset <tt class="docutils literal"><span class="pre">m</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">multiset_permutations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">factorial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">multiset_permutations</span><span class="p">(</span><span class="s">&#39;aab&#39;</span><span class="p">)]</span>
+<span class="go">[&#39;aab&#39;, &#39;aba&#39;, &#39;baa&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factorial</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="s">&#39;banana&#39;</span><span class="p">))</span>
+<span class="go">720</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">multiset_permutations</span><span class="p">(</span><span class="s">&#39;banana&#39;</span><span class="p">)))</span>
+<span class="go">60</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.necklaces">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">necklaces</tt><big>(</big><em>n</em>, <em>k</em>, <em>free=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#necklaces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.necklaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>A routine to generate necklaces that may (free=True) or may not
+(free=False) be turned over to be viewed. The &#8220;necklaces&#8221; returned
+are comprised of <tt class="docutils literal"><span class="pre">n</span></tt> integers (beads) with <tt class="docutils literal"><span class="pre">k</span></tt> different
+values (colors). Only unique necklaces are returned.</p>
+<p class="rubric">References</p>
+<p><a class="reference external" href="http://mathworld.wolfram.com/Necklace.html">http://mathworld.wolfram.com/Necklace.html</a></p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">necklaces</span><span class="p">,</span> <span class="n">bracelets</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">i</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The &#8220;unrestricted necklace&#8221; is sometimes also referred to as a
+&#8220;bracelet&#8221; (an object that can be turned over, a sequence that can
+be reversed) and the term &#8220;necklace&#8221; is used to imply a sequence
+that cannot be reversed. So ACB == ABC for a bracelet (rotate and
+reverse) while the two are different for a necklace since rotation
+alone cannot make the two sequences the same.</p>
+<p>(mnemonic: Bracelets can be viewed Backwards, but Not Necklaces.)</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="p">[</span><span class="n">show</span><span class="p">(</span><span class="s">&#39;ABC&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bracelets</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="p">[</span><span class="n">show</span><span class="p">(</span><span class="s">&#39;ABC&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">necklaces</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">set</span><span class="p">(</span><span class="n">N</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+<span class="go">set([&#39;ACB&#39;])</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">necklaces</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 1, 1),</span>
+<span class="go"> (0, 1, 0, 1), (0, 1, 1, 1), (1, 1, 1, 1)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">show</span><span class="p">(</span><span class="s">&#39;.o&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bracelets</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
+<span class="go">[&#39;....&#39;, &#39;...o&#39;, &#39;..oo&#39;, &#39;.o.o&#39;, &#39;.ooo&#39;, &#39;oooo&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.numbered_symbols">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">numbered_symbols</tt><big>(</big><em>prefix='x'</em>, <em>cls=None</em>, <em>start=0</em>, <em>*args</em>, <em>**assumptions</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#numbered_symbols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.numbered_symbols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate an infinite stream of Symbols consisting of a prefix and
+increasing subscripts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>prefix</strong> : str, optional</p>
+<blockquote>
+<div><p>The prefix to use. By default, this function will generate symbols of
+the form &#8220;x0&#8221;, &#8220;x1&#8221;, etc.</p>
+</div></blockquote>
+<p><strong>cls</strong> : class, optional</p>
+<blockquote>
+<div><p>The class to use. By default, it uses Symbol, but you can also use Wild or Dummy.</p>
+</div></blockquote>
+<p><strong>start</strong> : int, optional</p>
+<blockquote>
+<div><p>The start number.  By default, it is 0.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>sym</strong> : Symbol</p>
+<blockquote class="last">
+<div><p>The subscripted symbols.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.partitions">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">partitions</tt><big>(</big><em>n</em>, <em>m=None</em>, <em>k=None</em>, <em>size=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#partitions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.partitions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate all partitions of integer n (&gt;= 0).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>``m``</strong> : integer (default gives partitions of all sizes)</p>
+<blockquote>
+<div><p>limits number of parts in parition (mnemonic: m, maximum parts)</p>
+</div></blockquote>
+<p><strong>``k``</strong> : integer (default gives partitions number from 1 through n)</p>
+<blockquote>
+<div><p>limits the numbers that are kept in the partition (mnemonic: k, keys)</p>
+</div></blockquote>
+<p><strong>``size``</strong> : bool (default False, only partition is returned)</p>
+<blockquote>
+<div><p>when <tt class="docutils literal"><span class="pre">True</span></tt> then (M, P) is returned where M is the sum of the
+multiplicities and P is the generated partition.</p>
+</div></blockquote>
+<p><strong>Each partition is represented as a dictionary, mapping an integer</strong> :</p>
+<p><strong>to the number of copies of that integer in the partition.  For example,</strong> :</p>
+<p class="last"><strong>the first partition of 4 returned is {4: 1}, &#8220;4: one of them&#8221;.</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="../combinatorics/partitions.html#sympy.combinatorics.partitions.Partition" title="sympy.combinatorics.partitions.Partition"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.combinatorics.partitions.Partition</span></tt></a>, <a class="reference internal" href="../combinatorics/partitions.html#sympy.combinatorics.partitions.IntegerPartition" title="sympy.combinatorics.partitions.IntegerPartition"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.combinatorics.partitions.IntegerPartition</span></tt></a></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">partitions</span>
+</pre></div>
+</div>
+<p>The numbers appearing in the partition (the key of the returned dict)
+are limited with k:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="go">{2: 3}</span>
+<span class="go">{1: 2, 2: 2}</span>
+<span class="go">{1: 4, 2: 1}</span>
+<span class="go">{1: 6}</span>
+</pre></div>
+</div>
+<p>The maximum number of parts in the partion (the sum of the values in
+the returned dict) are limited with m:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">{6: 1}</span>
+<span class="go">{1: 1, 5: 1}</span>
+<span class="go">{2: 1, 4: 1}</span>
+<span class="go">{3: 2}</span>
+</pre></div>
+</div>
+<p>Note that the _same_ dictionary object is returned each time.
+This is for speed:  generating each partition goes quickly,
+taking constant time, independent of n.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)]</span>
+<span class="go">[{1: 6}, {1: 6}, {1: 6}, {1: 6}]</span>
+</pre></div>
+</div>
+<p>If you want to build a list of the returned dictionaries then
+make a copy of them:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">)]</span>
+<span class="go">[{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[(</span><span class="n">M</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span> <span class="k">for</span> <span class="n">M</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">partitions</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="bp">True</span><span class="p">)]</span>
+<span class="go">[(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Reference:</dt>
+<dd>modified from Tim Peter&#8217;s version to allow for k and m values:
+code.activestate.com/recipes/218332-generator-for-integer-partitions/</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.postfixes">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">postfixes</tt><big>(</big><em>seq</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#postfixes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.postfixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate all postfixes of a sequence.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">postfixes</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">postfixes</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]))</span>
+<span class="go">[[4], [3, 4], [2, 3, 4], [1, 2, 3, 4]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.postorder_traversal">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">postorder_traversal</tt><big>(</big><em>node</em>, <em>keys=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#postorder_traversal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.postorder_traversal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do a postorder traversal of a tree.</p>
+<p>This generator recursively yields nodes that it has visited in a postorder
+fashion. That is, it descends through the tree depth-first to yield all of
+a node&#8217;s children&#8217;s postorder traversal before yielding the node itself.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>node</strong> : sympy expression</p>
+<blockquote>
+<div><p>The expression to traverse.</p>
+</div></blockquote>
+<p><strong>keys</strong> : (default None) sort key(s)</p>
+<blockquote class="last">
+<div><p>The key(s) used to sort args of Basic objects. When None, args of Basic
+objects are processed in arbitrary order. If key is defined, it will
+be passed along to ordered() as the only key(s) to use to sort the
+arguments; if <tt class="docutils literal"><span class="pre">key</span></tt> is simply True then the default keys of
+<tt class="docutils literal"><span class="pre">ordered</span></tt> will be used (node count and default_sort_key).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">postorder_traversal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">w</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span>
+</pre></div>
+</div>
+<p>The nodes are returned in the order that they are encountered unless key
+is given; simply passing key=True will guarantee that the traversal is
+unique.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">postorder_traversal</span><span class="p">(</span><span class="n">w</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="n">z</span><span class="p">))</span> 
+<span class="go">[z, y, x, x + y, z*(x + y), w, w + z*(x + y)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">postorder_traversal</span><span class="p">(</span><span class="n">w</span> <span class="o">+</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[w, z, x, y, x + y, z*(x + y), w + z*(x + y)]</span>
+</pre></div>
+</div>
+<p class="rubric">Yields</p>
+<dl class="docutils">
+<dt>subtree <span class="classifier-delimiter">:</span> <span class="classifier">sympy expression</span></dt>
+<dd>All of the subtrees in the tree.</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.prefixes">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">prefixes</tt><big>(</big><em>seq</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#prefixes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.prefixes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate all prefixes of a sequence.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">prefixes</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">prefixes</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]))</span>
+<span class="go">[[1], [1, 2], [1, 2, 3], [1, 2, 3, 4]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.reshape">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">reshape</tt><big>(</big><em>seq</em>, <em>how</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#reshape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.reshape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reshape the sequence according to the template in <tt class="docutils literal"><span class="pre">how</span></tt>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">reshape</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">seq</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">9</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="c"># lists of 4</span>
+<span class="go">[[1, 2, 3, 4], [5, 6, 7, 8]]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,))</span> <span class="c"># tuples of 4</span>
+<span class="go">[(1, 2, 3, 4), (5, 6, 7, 8)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="c"># tuples of 4</span>
+<span class="go">[(1, 2, 3, 4), (5, 6, 7, 8)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">]))</span> <span class="c"># (i, i, [i, i])</span>
+<span class="go">[(1, 2, [3, 4]), (5, 6, [7, 8])]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="p">((</span><span class="mi">2</span><span class="p">,),</span> <span class="p">[</span><span class="mi">2</span><span class="p">]))</span> <span class="c"># etc....</span>
+<span class="go">[((1, 2), [3, 4]), ((5, 6), [7, 8])]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span>
+<span class="go">[(1, [2, 3], 4), (5, [6, 7], 8)]</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,)],))</span>
+<span class="go">(([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,)))</span>
+<span class="go">(([1], 2, (3, 4)), ([5], 6, (7, 8)))</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">reshape</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">12</span><span class="p">)),</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="nb">set</span><span class="p">([</span><span class="mi">2</span><span class="p">]),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,),</span> <span class="mi">1</span><span class="p">)])</span>
+<span class="go">[[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.rotate_left">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">rotate_left</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#rotate_left"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.rotate_left" title="Permalink to this definition">¶</a></dt>
+<dd><p>Left rotates a list x by the number of steps specified
+in y.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">rotate_left</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rotate_left</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">[1, 2, 0]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.rotate_right">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">rotate_right</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#rotate_right"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.rotate_right" title="Permalink to this definition">¶</a></dt>
+<dd><p>Left rotates a list x by the number of steps specified
+in y.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">rotate_right</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rotate_right</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">[2, 0, 1]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.runs">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">runs</tt><big>(</big><em>seq</em>, <em>op=&lt;built-in function gt&gt;</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#runs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.runs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group the sequence into lists in which successive elements
+all compare the same with the comparison operator, <tt class="docutils literal"><span class="pre">op</span></tt>:
+op(seq[i + 1], seq[i]) is True from all elements in a run.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">runs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">ge</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">runs</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="go">[[0, 1, 2], [2], [1, 4], [3], [2], [2]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">runs</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">op</span><span class="o">=</span><span class="n">ge</span><span class="p">)</span>
+<span class="go">[[0, 1, 2, 2], [1, 4], [3], [2, 2]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.sift">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">sift</tt><big>(</big><em>seq</em>, <em>keyfunc</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#sift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.sift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sift the sequence, <tt class="docutils literal"><span class="pre">seq</span></tt> into a dictionary according to keyfunc.</p>
+<p>OUTPUT: each element in expr is stored in a list keyed to the value
+of keyfunc for the element.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">ordered</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">sift</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">exp</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sift</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">{0: [0, 2, 4], 1: [1, 3]}</span>
+</pre></div>
+</div>
+<p>sift() returns a defaultdict() object, so any key that has no matches will
+give [].</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sift</span><span class="p">([</span><span class="n">x</span><span class="p">],</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">)</span>
+<span class="go">{True: [x]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">[</span><span class="bp">False</span><span class="p">]</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<p>Sometimes you won&#8217;t know how many keys you will get:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sift</span><span class="p">([</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">],</span>
+<span class="gp">... </span>     <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">as_base_exp</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">{E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}</span>
+</pre></div>
+</div>
+<p>If you need to sort the sifted items it might be better to use
+<tt class="docutils literal"><span class="pre">ordered</span></tt> which can economically apply multiple sort keys
+to a squence while sorting.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.subsets">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">subsets</tt><big>(</big><em>seq</em>, <em>k=None</em>, <em>repetition=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#subsets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.subsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates all k-subsets (combinations) from an n-element set, seq.</p>
+<p>A k-subset of an n-element set is any subset of length exactly k. The
+number of k-subsets of an n-element set is given by binomial(n, k),
+whereas there are 2**n subsets all together. If k is None then all
+2**n subsets will be returned from shortest to longest.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">subsets</span>
+</pre></div>
+</div>
+<p>subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
+without repetition, i.e. once an item has been removed, it can no
+longer be &#8220;taken&#8221;:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">subsets</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(1, 2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">subsets</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]))</span>
+<span class="go">[(), (1,), (2,), (1, 2)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">subsets</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(1, 2), (1, 3), (2, 3)]</span>
+</pre></div>
+</div>
+<p>subsets(seq, k, repetition=True) will return the (n - 1 + k)!/k!/(n - 1)!
+combinations <em>with</em> repetition:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">subsets</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[(1, 1), (1, 2), (2, 2)]</span>
+</pre></div>
+</div>
+<p>If you ask for more items than are in the set you get the empty set unless
+you allow repetitions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">subsets</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">subsets</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[(0, 0, 0), (0, 0, 1), (0, 1, 1), (1, 1, 1)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.take">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">take</tt><big>(</big><em>iter</em>, <em>n</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#take"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.take" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <tt class="docutils literal"><span class="pre">n</span></tt> items from <tt class="docutils literal"><span class="pre">iter</span></tt> iterator.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.topological_sort">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">topological_sort</tt><big>(</big><em>graph</em>, <em>key=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#topological_sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.topological_sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Topological sort of graph&#8217;s vertices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>``graph``</strong> : <tt class="docutils literal"><span class="pre">tuple[list,</span> <span class="pre">list[tuple[T,</span> <span class="pre">T]]</span></tt></p>
+<blockquote>
+<div><p>A tuple consisting of a list of vertices and a list of edges of
+a graph to be sorted topologically.</p>
+</div></blockquote>
+<p><strong>``key``</strong> : <tt class="docutils literal"><span class="pre">callable[T]</span></tt> (optional)</p>
+<blockquote class="last">
+<div><p>Ordering key for vertices on the same level. By default the natural
+(e.g. lexicographic) ordering is used (in this case the base type
+must implement ordering relations).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Consider a graph:</p>
+<div class="highlight-python"><pre>+---+     +---+     +---+
+| 7 |\    | 5 |     | 3 |
++---+ \   +---+     +---+
+  |   _\___/ ____   _/ |
+  |  /  \___/    \ /   |
+  V  V           V V   |
+ +----+         +---+  |
+ | 11 |         | 8 |  |
+ +----+         +---+  |
+  | | \____   ___/ _   |
+  | \      \ /    / \  |
+  V  \     V V   /  V  V
++---+ \   +---+ |  +----+
+| 2 |  |  | 9 | |  | 10 |
++---+  |  +---+ |  +----+
+       \________/</pre>
+</div>
+<p>where vertices are integers. This graph can be encoded using
+elementary Python&#8217;s data structures as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">V</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">E</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+<span class="gp">... </span>     <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span> <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>To compute a topological sort for graph <tt class="docutils literal"><span class="pre">(V,</span> <span class="pre">E)</span></tt> issue:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">topological_sort</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">topological_sort</span><span class="p">((</span><span class="n">V</span><span class="p">,</span> <span class="n">E</span><span class="p">))</span>
+<span class="go">[3, 5, 7, 8, 11, 2, 9, 10]</span>
+</pre></div>
+</div>
+<p>If specific tie breaking approach is needed, use <tt class="docutils literal"><span class="pre">key</span></tt> parameter:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">topological_sort</span><span class="p">((</span><span class="n">V</span><span class="p">,</span> <span class="n">E</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">v</span><span class="p">:</span> <span class="o">-</span><span class="n">v</span><span class="p">)</span>
+<span class="go">[7, 5, 11, 3, 10, 8, 9, 2]</span>
+</pre></div>
+</div>
+<p>Only acyclic graphs can be sorted. If the input graph has a cycle,
+then <tt class="xref py py-exc docutils literal"><span class="pre">ValueError</span></tt> will be raised:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">topological_sort</span><span class="p">((</span><span class="n">V</span><span class="p">,</span> <span class="n">E</span> <span class="o">+</span> <span class="p">[(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">)]))</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">cycle detected</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference external" href="http://en.wikipedia.org/wiki/Topological_sorting">http://en.wikipedia.org/wiki/Topological_sorting</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.unflatten">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">unflatten</tt><big>(</big><em>iter</em>, <em>n=2</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#unflatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.unflatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Group <tt class="docutils literal"><span class="pre">iter</span></tt> into tuples of length <tt class="docutils literal"><span class="pre">n</span></tt>. Raise an error if
+the length of <tt class="docutils literal"><span class="pre">iter</span></tt> is not a multiple of <tt class="docutils literal"><span class="pre">n</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.uniq">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">uniq</tt><big>(</big><em>seq</em>, <em>result=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#uniq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.uniq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield unique elements from <tt class="docutils literal"><span class="pre">seq</span></tt> as an iterator. The second
+parameter <tt class="docutils literal"><span class="pre">result</span></tt>  is used internally; it is not necessary to pass
+anything for this.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">uniq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dat</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">uniq</span><span class="p">(</span><span class="n">dat</span><span class="p">))</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">uniq</span><span class="p">(</span><span class="n">dat</span><span class="p">))</span>
+<span class="go">[1, 4, 5, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">uniq</span><span class="p">(</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dat</span><span class="p">))</span>
+<span class="go">[1, 4, 5, 2]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">uniq</span><span class="p">([[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">]]))</span>
+<span class="go">[[1], [2, 1]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.unrestricted_necklace">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">unrestricted_necklace</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#unrestricted_necklace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.unrestricted_necklace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper to necklaces to return a free (unrestricted) necklace.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.iterables.variations">
+<tt class="descclassname">sympy.utilities.iterables.</tt><tt class="descname">variations</tt><big>(</big><em>seq</em>, <em>n</em>, <em>repetition=False</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/iterables.html#variations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.iterables.variations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a generator of the n-sized variations of <tt class="docutils literal"><span class="pre">seq</span></tt> (size N).
+<tt class="docutils literal"><span class="pre">repetition</span></tt> controls whether items in <tt class="docutils literal"><span class="pre">seq</span></tt> can appear more than once;</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><tt class="xref py py-obj docutils literal"><span class="pre">sympy.core.compatibility.permutations</span></tt>, <tt class="xref py py-obj docutils literal"><span class="pre">sympy.core.compatibility.product</span></tt></p>
+</div>
+<p class="rubric">Examples</p>
+<p>variations(seq, n) will return N! / (N - n)! permutations without
+repetition of seq&#8217;s elements:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">variations</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">variations</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">))</span>
+<span class="go">[(1, 2), (2, 1)]</span>
+</pre></div>
+</div>
+<p>variations(seq, n, True) will return the N**n permutations obtained
+by allowing repetition of elements:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">variations</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">2</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="bp">True</span><span class="p">))</span>
+<span class="go">[(1, 1), (1, 2), (2, 1), (2, 2)]</span>
+</pre></div>
+</div>
+<p>If you ask for more items than are in the set you get the empty set unless
+you allow repetitions:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">variations</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">variations</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="n">repetition</span><span class="o">=</span><span class="bp">True</span><span class="p">))[:</span><span class="mi">4</span><span class="p">]</span>
+<span class="go">[(0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Iterables</a><ul>
+<li><a class="reference internal" href="#cartes">cartes</a></li>
+<li><a class="reference internal" href="#variations">variations</a></li>
+<li><a class="reference internal" href="#partitions">partitions</a><ul>
+<li><a class="reference internal" href="#module-sympy.utilities.iterables">Docstring</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="decorator.html"
+                        title="previous chapter">Decorator</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="lambdify.html"
+                        title="next chapter">Lambdify</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/utilities/iterables.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="lambdify.html" title="Lambdify"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="decorator.html" title="Decorator"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Utilities</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.stats.frv_types &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy.stats" href="../stats.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" accesskey="U">sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.stats.frv_types</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Finite Discrete Random Variables - Prebuilt variable types</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">FiniteRV</span>
+<span class="sd">DiscreteUniform</span>
+<span class="sd">Die</span>
+<span class="sd">Bernoulli</span>
+<span class="sd">Coin</span>
+<span class="sd">Binomial</span>
+<span class="sd">Hypergeometric</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.stats.frv</span> <span class="kn">import</span> <span class="p">(</span><span class="n">SingleFinitePSpace</span><span class="p">,</span> <span class="n">SingleFiniteDistribution</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Rational</span><span class="p">,</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">cacheit</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span>
+        <span class="n">Dict</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;FiniteRV&#39;</span><span class="p">,</span> <span class="s">&#39;DiscreteUniform&#39;</span><span class="p">,</span> <span class="s">&#39;Die&#39;</span><span class="p">,</span> <span class="s">&#39;Bernoulli&#39;</span><span class="p">,</span> <span class="s">&#39;Coin&#39;</span><span class="p">,</span>
+        <span class="s">&#39;Binomial&#39;</span><span class="p">,</span> <span class="s">&#39;Hypergeometric&#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">density</span> <span class="o">=</span> <span class="n">cls</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">SingleFinitePSpace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">density</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+
+<span class="k">class</span> <span class="nc">FiniteDistributionHandmade</span><span class="p">(</span><span class="n">SingleFiniteDistribution</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">density</span><span class="p">):</span>
+        <span class="n">density</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">(</span><span class="n">density</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Basic</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">density</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">FiniteRV</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">density</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Finite Random Variable given a dict representing the density.</span>
+
+<span class="sd">    Returns a RandomSymbol.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import FiniteRV, P, E</span>
+
+<span class="sd">    &gt;&gt;&gt; density = {0: .1, 1: .2, 2: .3, 3: .4}</span>
+<span class="sd">    &gt;&gt;&gt; X = FiniteRV(&#39;X&#39;, density)</span>
+
+<span class="sd">    &gt;&gt;&gt; E(X)</span>
+<span class="sd">    2.00000000000000</span>
+<span class="sd">    &gt;&gt;&gt; P(X&gt;=2)</span>
+<span class="sd">    0.700000000000000</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">FiniteDistributionHandmade</span><span class="p">,</span> <span class="n">density</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">DiscreteUniformDistribution</span><span class="p">(</span><span class="n">SingleFiniteDistribution</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">p</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">set</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+
+<span class="k">def</span> <span class="nf">DiscreteUniform</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">items</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Finite Random Variable representing a uniform distribution over</span>
+<span class="sd">    the input set.</span>
+
+<span class="sd">    Returns a RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import DiscreteUniform, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import symbols</span>
+
+<span class="sd">    &gt;&gt;&gt; X = DiscreteUniform(&#39;X&#39;, symbols(&#39;a b c&#39;)) # equally likely over a, b, c</span>
+<span class="sd">    &gt;&gt;&gt; density(X).dict</span>
+<span class="sd">    {a: 1/3, b: 1/3, c: 1/3}</span>
+
+<span class="sd">    &gt;&gt;&gt; Y = DiscreteUniform(&#39;Y&#39;, list(range(5))) # distribution over a range</span>
+<span class="sd">    &gt;&gt;&gt; density(Y).dict</span>
+<span class="sd">    {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">DiscreteUniformDistribution</span><span class="p">,</span> <span class="o">*</span><span class="n">items</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">DieDistribution</span><span class="p">(</span><span class="n">SingleFiniteDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;sides&#39;</span><span class="p">,)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sides</span><span class="o">+</span><span class="mi">1</span><span class="p">))))</span>
+
+    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sympify</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sides</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Rational</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sides</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">Die</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">sides</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Finite Random Variable representing a fair die.</span>
+
+<span class="sd">    Returns a RandomSymbol.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Die, density</span>
+
+<span class="sd">    &gt;&gt;&gt; D6 = Die(&#39;D6&#39;, 6) # Six sided Die</span>
+<span class="sd">    &gt;&gt;&gt; density(D6).dict</span>
+<span class="sd">    {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}</span>
+
+<span class="sd">    &gt;&gt;&gt; D4 = Die(&#39;D4&#39;, 4) # Four sided Die</span>
+<span class="sd">    &gt;&gt;&gt; density(D4).dict</span>
+<span class="sd">    {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">DieDistribution</span><span class="p">,</span> <span class="n">sides</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">BernoulliDistribution</span><span class="p">(</span><span class="n">SingleFiniteDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="s">&#39;succ&#39;</span><span class="p">,</span> <span class="s">&#39;fail&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">succ</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">:</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">}</span>
+
+
+<span class="k">def</span> <span class="nf">Bernoulli</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">succ</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fail</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Finite Random Variable representing a Bernoulli process.</span>
+
+<span class="sd">    Returns a RandomSymbol</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Bernoulli, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Bernoulli(&#39;X&#39;, S(3)/4) # 1-0 Bernoulli variable, probability = 3/4</span>
+<span class="sd">    &gt;&gt;&gt; density(X).dict</span>
+<span class="sd">    {0: 1/4, 1: 3/4}</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Bernoulli(&#39;X&#39;, S.Half, &#39;Heads&#39;, &#39;Tails&#39;) # A fair coin toss</span>
+<span class="sd">    &gt;&gt;&gt; density(X).dict</span>
+<span class="sd">    {Heads: 1/2, Tails: 1/2}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">BernoulliDistribution</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">succ</span><span class="p">,</span> <span class="n">fail</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">Coin</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="n">S</span><span class="o">.</span><span class="n">Half</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Finite Random Variable representing a Coin toss.</span>
+
+<span class="sd">    Probability p is the chance of gettings &quot;Heads.&quot; Half by default</span>
+
+<span class="sd">    Returns a RandomSymbol.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Coin, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Rational</span>
+
+<span class="sd">    &gt;&gt;&gt; C = Coin(&#39;C&#39;) # A fair coin toss</span>
+<span class="sd">    &gt;&gt;&gt; density(C).dict</span>
+<span class="sd">    {H: 1/2, T: 1/2}</span>
+
+<span class="sd">    &gt;&gt;&gt; C2 = Coin(&#39;C2&#39;, Rational(3, 5)) # An unfair coin</span>
+<span class="sd">    &gt;&gt;&gt; density(C2).dict</span>
+<span class="sd">    {H: 3/5, T: 2/5}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">BernoulliDistribution</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="s">&#39;T&#39;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">BinomialDistribution</span><span class="p">(</span><span class="n">SingleFiniteDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">,</span> <span class="s">&#39;p&#39;</span><span class="p">,</span> <span class="s">&#39;succ&#39;</span><span class="p">,</span> <span class="s">&#39;fail&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">succ</span><span class="p">,</span> <span class="n">fail</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">succ</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="o">*</span><span class="n">succ</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="n">fail</span><span class="p">,</span>
+                <span class="n">binomial</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span><span class="o">**</span><span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">p</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">Binomial</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">succ</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fail</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Finite Random Variable representing a binomial distribution.</span>
+
+<span class="sd">    Returns a RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Binomial, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Binomial(&#39;X&#39;, 4, S.Half) # Four &quot;coin flips&quot;</span>
+<span class="sd">    &gt;&gt;&gt; density(X).dict</span>
+<span class="sd">    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">BinomialDistribution</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">succ</span><span class="p">,</span> <span class="n">fail</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HypergeometricDistribution</span><span class="p">(</span><span class="n">SingleFiniteDistribution</span><span class="p">):</span>
+    <span class="n">_argnames</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">,</span> <span class="s">&#39;n&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@cacheit</span>
+    <span class="k">def</span> <span class="nf">dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
+        <span class="n">density</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">sympify</span><span class="p">(</span><span class="n">k</span><span class="p">),</span>
+                        <span class="n">Rational</span><span class="p">(</span><span class="n">binomial</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">binomial</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="n">k</span><span class="p">),</span>
+                                 <span class="n">binomial</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">n</span><span class="p">)))</span>
+                        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="n">m</span> <span class="o">-</span> <span class="n">N</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">density</span>
+
+
+<span class="k">def</span> <span class="nf">Hypergeometric</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a Finite Random Variable representing a hypergeometric distribution.</span>
+
+<span class="sd">    Returns a RandomSymbol.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.stats import Hypergeometric, density</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import S</span>
+
+<span class="sd">    &gt;&gt;&gt; X = Hypergeometric(&#39;X&#39;, 10, 5, 3) # 10 marbles, 5 white (success), 3 draws</span>
+<span class="sd">    &gt;&gt;&gt; density(X).dict</span>
+<span class="sd">    {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">rv</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">HypergeometricDistribution</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li>
+          <li><a href="../stats.html" >sympy.stats</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

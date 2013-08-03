@@ -1,0 +1,512 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.geometry.util &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.geometry.util</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Utility functions for geometrical entities.</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">intersection</span>
+<span class="sd">convex_hull</span>
+<span class="sd">are_similar</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Function</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="n">string_types</span>
+
+
+<span class="k">def</span> <span class="nf">idiff</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">dep</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return dy/dx assuming that y and any other variables given in dep</span>
+<span class="sd">    depend on x.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, a</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry.util import idiff</span>
+
+<span class="sd">    &gt;&gt;&gt; idiff(x**2 + y**2 - 4, y, x)</span>
+<span class="sd">    -x/y</span>
+<span class="sd">    &gt;&gt;&gt; idiff(x + a + y, y, x)</span>
+<span class="sd">    -1</span>
+<span class="sd">    &gt;&gt;&gt; idiff(x + a + y, y, x, [a])</span>
+<span class="sd">    -Derivative(a, x) - 1</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.core.function.Derivative</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dep</span><span class="p">:</span>
+        <span class="n">dep</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">dep</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dep</span><span class="p">)</span>
+    <span class="n">dep</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">s</span><span class="p">,</span> <span class="n">Function</span><span class="p">(</span>
+        <span class="n">s</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">eq</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Symbol</span><span class="p">)</span> <span class="k">if</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">x</span> <span class="ow">and</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">dep</span><span class="p">])</span>
+    <span class="n">dydx</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">name</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">solve</span><span class="p">(</span><span class="n">eq</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">dydx</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span>
+        <span class="p">[(</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
+
+
+<span class="k">def</span> <span class="nf">_symbol</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">matching_symbol</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return s if s is a Symbol, else return either a new Symbol (real=True)</span>
+<span class="sd">    with the same name s or the matching_symbol if s is a string and it matches</span>
+<span class="sd">    the name of the matching_symbol.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry.util import _symbol</span>
+<span class="sd">    &gt;&gt;&gt; x = Symbol(&#39;x&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; _symbol(&#39;y&#39;)</span>
+<span class="sd">    y</span>
+<span class="sd">    &gt;&gt;&gt; _.is_real</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; _symbol(x)</span>
+<span class="sd">    x</span>
+<span class="sd">    &gt;&gt;&gt; _.is_real is None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; arb = Symbol(&#39;foo&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; _symbol(&#39;arb&#39;, arb) # arb&#39;s name is foo so foo will not be returned</span>
+<span class="sd">    arb</span>
+<span class="sd">    &gt;&gt;&gt; _symbol(&#39;foo&#39;, arb) # now it will</span>
+<span class="sd">    foo</span>
+
+<span class="sd">    NB: the symbol here may not be the same as a symbol with the same</span>
+<span class="sd">    name defined elsewhere as a result of different assumptions.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.core.symbol.Symbol</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">matching_symbol</span> <span class="ow">and</span> <span class="n">matching_symbol</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">s</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">matching_symbol</span>
+        <span class="k">return</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">real</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">s</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;symbol must be string for symbol name or Symbol&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="intersection"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.util.intersection">[docs]</a><span class="k">def</span> <span class="nf">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">entities</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The intersection of a collection of GeometryEntity instances.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    entities : sequence of GeometryEntity</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    intersection : list of GeometryEntity</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ======</span>
+
+<span class="sd">    NotImplementedError</span>
+<span class="sd">        When unable to calculate intersection.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    The intersection of any geometrical entity with itself should return</span>
+<span class="sd">    a list with one item: the entity in question.</span>
+<span class="sd">    An intersection requires two or more entities. If only a single</span>
+<span class="sd">    entity is given then the function will return an empty list.</span>
+<span class="sd">    It is possible for `intersection` to miss intersections that one</span>
+<span class="sd">    knows exists because the required quantities were not fully</span>
+<span class="sd">    simplified internally.</span>
+<span class="sd">    Reals should be converted to Rationals, e.g. Rational(str(real_num))</span>
+<span class="sd">    or else failures due to floating point issues may result.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.entity.GeometryEntity.intersection</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Point, Line, Circle, intersection</span>
+<span class="sd">    &gt;&gt;&gt; p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 5)</span>
+<span class="sd">    &gt;&gt;&gt; l1, l2 = Line(p1, p2), Line(p3, p2)</span>
+<span class="sd">    &gt;&gt;&gt; c = Circle(p2, 1)</span>
+<span class="sd">    &gt;&gt;&gt; intersection(l1, p2)</span>
+<span class="sd">    [Point(1, 1)]</span>
+<span class="sd">    &gt;&gt;&gt; intersection(l1, l2)</span>
+<span class="sd">    [Point(1, 1)]</span>
+<span class="sd">    &gt;&gt;&gt; intersection(c, p2)</span>
+<span class="sd">    []</span>
+<span class="sd">    &gt;&gt;&gt; intersection(c, Point(1, 0))</span>
+<span class="sd">    [Point(1, 0)]</span>
+<span class="sd">    &gt;&gt;&gt; intersection(c, l2)</span>
+<span class="sd">    [Point(-sqrt(5)/5 + 1, 2*sqrt(5)/5 + 1),</span>
+<span class="sd">     Point(sqrt(5)/5 + 1, -2*sqrt(5)/5 + 1)]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.entity</span> <span class="kn">import</span> <span class="n">GeometryEntity</span>
+    <span class="kn">from</span> <span class="nn">.point</span> <span class="kn">import</span> <span class="n">Point</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">entities</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">GeometryEntity</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">entities</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a GeometryEntity and cannot be made into Point&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">entities</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">newres</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+            <span class="n">newres</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">entity</span><span class="p">))</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">newres</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<div class="viewcode-block" id="convex_hull"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.util.convex_hull">[docs]</a><span class="k">def</span> <span class="nf">convex_hull</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The convex hull surrounding the Points contained in the list of entities.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    args : a collection of Points, Segments and/or Polygons</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    convex_hull : Polygon</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    This can only be performed on a set of non-symbolic points.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    [1] http://en.wikipedia.org/wiki/Graham_scan</span>
+
+<span class="sd">    [2] Andrew&#39;s Monotone Chain Algorithm</span>
+<span class="sd">    (A.M. Andrew,</span>
+<span class="sd">    &quot;Another Efficient Algorithm for Convex Hulls in Two Dimensions&quot;, 1979)</span>
+<span class="sd">    http://softsurfer.com/Archive/algorithm_0109/algorithm_0109.htm</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.point.Point, sympy.geometry.polygon.Polygon</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry import Point, convex_hull</span>
+<span class="sd">    &gt;&gt;&gt; points = [(1,1), (1,2), (3,1), (-5,2), (15,4)]</span>
+<span class="sd">    &gt;&gt;&gt; convex_hull(*points)</span>
+<span class="sd">    Polygon(Point(-5, 2), Point(1, 1), Point(3, 1), Point(15, 4))</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.entity</span> <span class="kn">import</span> <span class="n">GeometryEntity</span>
+    <span class="kn">from</span> <span class="nn">.point</span> <span class="kn">import</span> <span class="n">Point</span>
+    <span class="kn">from</span> <span class="nn">.line</span> <span class="kn">import</span> <span class="n">Segment</span>
+    <span class="kn">from</span> <span class="nn">.polygon</span> <span class="kn">import</span> <span class="n">Polygon</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">GeometryEntity</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not a GeometryEntity and cannot be made into Point&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Point</span><span class="p">):</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Segment</span><span class="p">):</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">):</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">vertices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s">&#39;Convex hull for </span><span class="si">%s</span><span class="s"> not implemented.&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Segment</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_orientation</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return positive if p-q-r are clockwise, neg if ccw, zero if</span>
+<span class="sd">        collinear.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">p</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="c"># scan to find upper and lower convex hulls of a set of 2d points.</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">p_i</span> <span class="ow">in</span> <span class="n">p</span><span class="p">:</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">U</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">_orientation</span><span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">U</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">p_i</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">U</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">_orientation</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">L</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">p_i</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">L</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">U</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_i</span><span class="p">)</span>
+        <span class="n">L</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_i</span><span class="p">)</span>
+    <span class="n">U</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="n">convexHull</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">L</span> <span class="o">+</span> <span class="n">U</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">convexHull</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Segment</span><span class="p">(</span><span class="n">convexHull</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">convexHull</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">Polygon</span><span class="p">(</span><span class="o">*</span><span class="n">convexHull</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="are_similar"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.util.are_similar">[docs]</a><span class="k">def</span> <span class="nf">are_similar</span><span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Are two geometrical entities similar.</span>
+
+<span class="sd">    Can one geometrical entity be uniformly scaled to the other?</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    e1 : GeometryEntity</span>
+<span class="sd">    e2 : GeometryEntity</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    =======</span>
+
+<span class="sd">    are_similar : boolean</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ======</span>
+
+<span class="sd">    GeometryError</span>
+<span class="sd">        When `e1` and `e2` cannot be compared.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    =====</span>
+
+<span class="sd">    If the two objects are equal then they are similar.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.entity.GeometryEntity.is_similar</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Point, Circle, Triangle, are_similar</span>
+<span class="sd">    &gt;&gt;&gt; c1, c2 = Circle(Point(0, 0), 4), Circle(Point(1, 4), 3)</span>
+<span class="sd">    &gt;&gt;&gt; t1 = Triangle(Point(0, 0), Point(1, 0), Point(0, 1))</span>
+<span class="sd">    &gt;&gt;&gt; t2 = Triangle(Point(0, 0), Point(2, 0), Point(0, 2))</span>
+<span class="sd">    &gt;&gt;&gt; t3 = Triangle(Point(0, 0), Point(3, 0), Point(0, 1))</span>
+<span class="sd">    &gt;&gt;&gt; are_similar(t1, t2)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; are_similar(t1, t3)</span>
+<span class="sd">    False</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.exceptions</span> <span class="kn">import</span> <span class="n">GeometryError</span>
+
+    <span class="k">if</span> <span class="n">e1</span> <span class="o">==</span> <span class="n">e2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">e1</span><span class="o">.</span><span class="n">is_similar</span><span class="p">(</span><span class="n">e2</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">e2</span><span class="o">.</span><span class="n">is_similar</span><span class="p">(</span><span class="n">e1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">n1</span> <span class="o">=</span> <span class="n">e1</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="n">n2</span> <span class="o">=</span> <span class="n">e2</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="k">raise</span> <span class="n">GeometryError</span><span class="p">(</span>
+                <span class="s">&quot;Cannot test similarity between </span><span class="si">%s</span><span class="s"> and </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="centroid"><a class="viewcode-back" href="../../../modules/geometry.html#sympy.geometry.util.centroid">[docs]</a><span class="k">def</span> <span class="nf">centroid</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find the centroid (center of mass) of the collection containing only Points,</span>
+<span class="sd">    Segments or Polygons. The centroid is the weighted average of the individual centroid</span>
+<span class="sd">    where the weights are the lengths (of segments) or areas (of polygons).</span>
+<span class="sd">    Overlapping regions will add to the weight of that region.</span>
+
+<span class="sd">    If there are no objects (or a mixture of objects) then None is returned.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    sympy.geometry.point.Point, sympy.geometry.line.Segment,</span>
+<span class="sd">    sympy.geometry.polygon.Polygon</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Point, Segment, Polygon</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.geometry.util import centroid</span>
+<span class="sd">    &gt;&gt;&gt; p = Polygon((0, 0), (10, 0), (10, 10))</span>
+<span class="sd">    &gt;&gt;&gt; q = p.translate(0, 20)</span>
+<span class="sd">    &gt;&gt;&gt; p.centroid, q.centroid</span>
+<span class="sd">    (Point(20/3, 10/3), Point(20/3, 70/3))</span>
+<span class="sd">    &gt;&gt;&gt; centroid(p, q)</span>
+<span class="sd">    Point(20/3, 40/3)</span>
+<span class="sd">    &gt;&gt;&gt; p, q = Segment((0, 0), (2, 0)), Segment((0, 0), (2, 2))</span>
+<span class="sd">    &gt;&gt;&gt; centroid(p, q)</span>
+<span class="sd">    Point(1, -sqrt(2) + 2)</span>
+<span class="sd">    &gt;&gt;&gt; centroid(Point(0, 0), Point(2, 0))</span>
+<span class="sd">    Point(1, 0)</span>
+
+<span class="sd">    Stacking 3 polygons on top of each other effectively triples the</span>
+<span class="sd">    weight of that polygon:</span>
+
+<span class="sd">        &gt;&gt;&gt; p = Polygon((0, 0), (1, 0), (1, 1), (0, 1))</span>
+<span class="sd">        &gt;&gt;&gt; q = Polygon((1, 0), (3, 0), (3, 1), (1, 1))</span>
+<span class="sd">        &gt;&gt;&gt; centroid(p, q)</span>
+<span class="sd">        Point(3/2, 1/2)</span>
+<span class="sd">        &gt;&gt;&gt; centroid(p, p, p, q) # centroid x-coord shifts left</span>
+<span class="sd">        Point(11/10, 1/2)</span>
+
+<span class="sd">    Stacking the squares vertically above and below p has the same</span>
+<span class="sd">    effect:</span>
+
+<span class="sd">        &gt;&gt;&gt; centroid(p, p.translate(0, 1), p.translate(0, -1), q)</span>
+<span class="sd">        Point(11/10, 1/2)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">sympy.geometry</span> <span class="kn">import</span> <span class="n">Polygon</span><span class="p">,</span> <span class="n">Segment</span><span class="p">,</span> <span class="n">Point</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Point</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">c</span> <span class="o">+=</span> <span class="n">g</span>
+            <span class="k">return</span> <span class="n">c</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Segment</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">L</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">length</span>
+                <span class="n">c</span> <span class="o">+=</span> <span class="n">g</span><span class="o">.</span><span class="n">midpoint</span><span class="o">*</span><span class="n">l</span>
+                <span class="n">L</span> <span class="o">+=</span> <span class="n">l</span>
+            <span class="k">return</span> <span class="n">c</span><span class="o">/</span><span class="n">L</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">Polygon</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">area</span>
+                <span class="n">c</span> <span class="o">+=</span> <span class="n">g</span><span class="o">.</span><span class="n">centroid</span><span class="o">*</span><span class="n">a</span>
+                <span class="n">A</span> <span class="o">+=</span> <span class="n">a</span>
+            <span class="k">return</span> <span class="n">c</span><span class="o">/</span><span class="n">A</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

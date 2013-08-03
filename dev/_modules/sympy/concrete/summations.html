@@ -1,0 +1,860 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.concrete.summations &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.concrete.summations</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.add</span> <span class="kn">import</span> <span class="n">Add</span>
+<span class="kn">from</span> <span class="nn">sympy.core.basic</span> <span class="kn">import</span> <span class="n">C</span>
+<span class="kn">from</span> <span class="nn">sympy.core.containers</span> <span class="kn">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">sympy.core.expr</span> <span class="kn">import</span> <span class="n">Expr</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Derivative</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Eq</span>
+<span class="kn">from</span> <span class="nn">sympy.core.singleton</span> <span class="kn">import</span> <span class="n">S</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="p">(</span><span class="n">Dummy</span><span class="p">,</span> <span class="n">Wild</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">sympy.core.sympify</span> <span class="kn">import</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.concrete.gosper</span> <span class="kn">import</span> <span class="n">gosper_sum</span>
+<span class="kn">from</span> <span class="nn">sympy.functions.elementary.piecewise</span> <span class="kn">import</span> <span class="n">piecewise_fold</span><span class="p">,</span> <span class="n">Piecewise</span>
+<span class="kn">from</span> <span class="nn">sympy.polys</span> <span class="kn">import</span> <span class="n">apart</span><span class="p">,</span> <span class="n">PolynomialError</span>
+<span class="kn">from</span> <span class="nn">sympy.solvers</span> <span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+
+<div class="viewcode-block" id="Sum"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.summations.Sum">[docs]</a><span class="k">class</span> <span class="nc">Sum</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents unevaluated summation.</span>
+
+<span class="sd">    ``Sum`` represents a finite or infinite series, with the first argument</span>
+<span class="sd">    being the general form of terms in the series, and the second argument</span>
+<span class="sd">    being ``(dummy_variable, start, end)``, with ``dummy_variable`` taking</span>
+<span class="sd">    all integer values from ``start`` through ``end``. In accordance with</span>
+<span class="sd">    long-standing mathematical convention, the end term is included in the</span>
+<span class="sd">    summation.</span>
+
+<span class="sd">    Finite sums</span>
+<span class="sd">    ===========</span>
+
+<span class="sd">    For finite sums (and sums with symbolic limits assumed to be finite) we</span>
+<span class="sd">    follow the summation convention described by Karr [1], especially</span>
+<span class="sd">    definition 3 of section 1.4. The sum:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \sum_{m \leq i &lt; n} f(i)</span>
+
+<span class="sd">    has *the obvious meaning* for `m &lt; n`, namely:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \sum_{m \leq i &lt; n} f(i) = f(m) + f(m+1) + \ldots + f(n-2) + f(n-1)</span>
+
+<span class="sd">    with the upper limit value `f(n)` excluded. The sum over an empty set is</span>
+<span class="sd">    zero if and only if `m = n`:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \sum_{m \leq i &lt; n} f(i) = 0  \quad \mathrm{for} \quad  m = n</span>
+
+<span class="sd">    Finally, for all other sums over empty sets we assume the following</span>
+<span class="sd">    definition:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \sum_{m \leq i &lt; n} f(i) = - \sum_{n \leq i &lt; m} f(i)  \quad \mathrm{for} \quad  m &gt; n</span>
+
+<span class="sd">    It is important to note that Karr defines all sums with the upper</span>
+<span class="sd">    limit being exclusive. This is in contrast to the usual mathematical notation,</span>
+<span class="sd">    but does not affect the summation convention. Indeed we have:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \sum_{m \leq i &lt; n} f(i) = \sum_{i = m}^{n - 1} f(i)</span>
+
+<span class="sd">    where the difference in notation is intentional to emphasize the meaning,</span>
+<span class="sd">    with limits typeset on the top being inclusive.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import i, k, m, n, x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Sum, factorial, oo</span>
+<span class="sd">    &gt;&gt;&gt; Sum(k,(k,1,m))</span>
+<span class="sd">    Sum(k, (k, 1, m))</span>
+<span class="sd">    &gt;&gt;&gt; Sum(k,(k,1,m)).doit()</span>
+<span class="sd">    m**2/2 + m/2</span>
+<span class="sd">    &gt;&gt;&gt; Sum(k**2,(k,1,m))</span>
+<span class="sd">    Sum(k**2, (k, 1, m))</span>
+<span class="sd">    &gt;&gt;&gt; Sum(k**2,(k,1,m)).doit()</span>
+<span class="sd">    m**3/3 + m**2/2 + m/6</span>
+<span class="sd">    &gt;&gt;&gt; Sum(x**k,(k,0,oo))</span>
+<span class="sd">    Sum(x**k, (k, 0, oo))</span>
+<span class="sd">    &gt;&gt;&gt; Sum(x**k,(k,0,oo)).doit()</span>
+<span class="sd">    Piecewise((1/(-x + 1), Abs(x) &lt; 1), (Sum(x**k, (k, 0, oo)), True))</span>
+<span class="sd">    &gt;&gt;&gt; Sum(x**k/factorial(k),(k,0,oo)).doit()</span>
+<span class="sd">    exp(x)</span>
+
+<span class="sd">    An example showing that the symbolic result of a summation is still</span>
+<span class="sd">    valid for seemingly nonsensical values of the limits. Then the Karr</span>
+<span class="sd">    convention allows us to give a perfectly valid interpretation to</span>
+<span class="sd">    those sums by interchanging the limits according to the above rules:</span>
+
+<span class="sd">    &gt;&gt;&gt; S = Sum(i, (i,1,n)).doit()</span>
+<span class="sd">    &gt;&gt;&gt; S</span>
+<span class="sd">    n**2/2 + n/2</span>
+<span class="sd">    &gt;&gt;&gt; S.subs(n, -4)</span>
+<span class="sd">    6</span>
+<span class="sd">    &gt;&gt;&gt; Sum(i, (i, 1, -4)).doit()</span>
+<span class="sd">    6</span>
+<span class="sd">    &gt;&gt;&gt; Sum(-i, (i, -3, 0)).doit()</span>
+<span class="sd">    6</span>
+
+<span class="sd">    An explicit example of the Karr summation convention:</span>
+
+<span class="sd">    &gt;&gt;&gt; S1 = Sum(i**2, (i, m, m+n-1)).doit()</span>
+<span class="sd">    &gt;&gt;&gt; S1</span>
+<span class="sd">    m**2*n + m*n**2 - m*n + n**3/3 - n**2/2 + n/6</span>
+<span class="sd">    &gt;&gt;&gt; S2 = Sum(i**2, (i, m+n, m-1)).doit()</span>
+<span class="sd">    &gt;&gt;&gt; S2</span>
+<span class="sd">    -m**2*n - m*n**2 + m*n - n**3/3 + n**2/2 - n/6</span>
+<span class="sd">    &gt;&gt;&gt; S1 + S2</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; S3 = Sum(i, (i, m, m-1)).doit()</span>
+<span class="sd">    &gt;&gt;&gt; S3</span>
+<span class="sd">    0</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    summation</span>
+<span class="sd">    Product, product</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    .. [1] Michael Karr, &quot;Summation in Finite Terms&quot;, Journal of the ACM,</span>
+<span class="sd">           Volume 28 Issue 2, April 1981, Pages 305-350</span>
+<span class="sd">           http://dl.acm.org/citation.cfm?doid=322248.322255</span>
+<span class="sd">    .. [2] http://en.wikipedia.org/wiki/Summation#Capital-sigma_notation</span>
+<span class="sd">    .. [3] http://en.wikipedia.org/wiki/Empty_sum</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;is_commutative&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.integrals.integrals</span> <span class="kn">import</span> <span class="n">_process_limits</span>
+
+        <span class="c"># Any embedded piecewise functions need to be brought out to the</span>
+        <span class="c"># top level so that integration can go into piecewise mode at the</span>
+        <span class="c"># earliest possible moment.</span>
+        <span class="n">function</span> <span class="o">=</span> <span class="n">piecewise_fold</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">function</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">function</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">symbols</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Summation variables must be given&quot;</span><span class="p">)</span>
+
+        <span class="n">limits</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="n">_process_limits</span><span class="p">(</span><span class="o">*</span><span class="n">symbols</span><span class="p">)</span>
+
+        <span class="c"># Only limits with lower and upper bounds are supported; the indefinite Sum</span>
+        <span class="c"># is not supported</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="bp">None</span> <span class="ow">in</span> <span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">limits</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Sum requires values for lower and upper bounds.&#39;</span><span class="p">)</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">Expr</span><span class="o">.</span><span class="n">__new__</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">arglist</span> <span class="o">=</span> <span class="p">[</span><span class="n">sign</span><span class="o">*</span><span class="n">function</span><span class="p">]</span>
+        <span class="n">arglist</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">limits</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">arglist</span><span class="p">)</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">is_commutative</span> <span class="o">=</span> <span class="n">function</span><span class="o">.</span><span class="n">is_commutative</span>  <span class="c"># limits already checked</span>
+
+        <span class="k">return</span> <span class="n">obj</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">limits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Sum.variables"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.summations.Sum.variables">[docs]</a>    <span class="k">def</span> <span class="nf">variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a list of the summation variables</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Sum</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, i</span>
+<span class="sd">        &gt;&gt;&gt; Sum(x**i, (i, 1, 3)).variables</span>
+<span class="sd">        [i]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">]</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.integrals.integrals</span> <span class="kn">import</span> <span class="n">_free_symbols</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">_free_symbols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Sum.is_zero"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.summations.Sum.is_zero">[docs]</a>    <span class="k">def</span> <span class="nf">is_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A Sum is only zero if its function is zero or if all terms</span>
+<span class="sd">        cancel out. This only answers whether the summand zero.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">is_zero</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="Sum.is_number"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.summations.Sum.is_number">[docs]</a>    <span class="k">def</span> <span class="nf">is_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if the Sum will result in a number, else False.</span>
+
+<span class="sd">        Sums are a special case since they contain symbols that can</span>
+<span class="sd">        be replaced with numbers. Whether the integral can be done or not is</span>
+<span class="sd">        another issue. But answering whether the final result is a number is</span>
+<span class="sd">        not difficult.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        ========</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Sum</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x, y</span>
+<span class="sd">        &gt;&gt;&gt; Sum(x, (y, 1, x)).is_number</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Sum(1, (y, 1, x)).is_number</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Sum(0, (y, 1, x)).is_number</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Sum(x, (y, 1, 2)).is_number</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Sum(x, (y, 1, 1)).is_number</span>
+<span class="sd">        False</span>
+<span class="sd">        &gt;&gt;&gt; Sum(x, (x, 1, 2)).is_number</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; Sum(x*y, (x, 1, 2), (y, 1, 3)).is_number</span>
+<span class="sd">        True</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">is_zero</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_symbols</span>
+</div>
+    <span class="k">def</span> <span class="nf">as_dummy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.integrals.integrals</span> <span class="kn">import</span> <span class="n">_as_dummy</span>
+        <span class="k">return</span> <span class="n">_as_dummy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">doit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">hints</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;deep&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span>
+
+        <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">limit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">):</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">limit</span>
+            <span class="n">dif</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+            <span class="k">if</span> <span class="n">dif</span><span class="o">.</span><span class="n">is_integer</span> <span class="ow">and</span> <span class="n">dif</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+
+            <span class="n">newf</span> <span class="o">=</span> <span class="n">eval_sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">newf</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="n">n</span><span class="p">:])</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">newf</span>
+
+        <span class="k">if</span> <span class="n">hints</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;deep&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+            <span class="c"># eval_sum could return partially unevaluated</span>
+            <span class="c"># result with Piecewise.  In this case we won&#39;t</span>
+            <span class="c"># doit() recursively.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="o">**</span><span class="n">hints</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">def</span> <span class="nf">_eval_adjoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">adjoint</span><span class="p">(),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_conjugate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_derivative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Differentiate wrt x as long as x is not in the free symbols of any of</span>
+<span class="sd">        the upper or lower limits.</span>
+
+<span class="sd">        Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`</span>
+<span class="sd">        since the value of the sum is discontinuous in `a`. In a case</span>
+<span class="sd">        involving a limit variable, the unevaluated derivative is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># diff already confirmed that x is in the free symbols of self, but we</span>
+        <span class="c"># don&#39;t want to differentiate wrt any free symbol in the upper or lower</span>
+        <span class="c"># limits</span>
+        <span class="c"># XXX remove this test for free_symbols when the default _eval_derivative is in</span>
+        <span class="k">if</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+
+        <span class="c"># get limits and the function</span>
+        <span class="n">f</span><span class="p">,</span> <span class="n">limits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+
+        <span class="n">limit</span> <span class="o">=</span> <span class="n">limits</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">limits</span><span class="p">:</span>  <span class="c"># f is the argument to a Sum</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">limits</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">limit</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">limit</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">free_symbols</span> <span class="ow">or</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">evaluate</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">rv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">limit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="n">rv</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">rv</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&#39;Lower and upper bound expected.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_eval_summation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">_eval_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">transpose</span><span class="p">(),</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Sum.euler_maclaurin"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.summations.Sum.euler_maclaurin">[docs]</a>    <span class="k">def</span> <span class="nf">euler_maclaurin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">m</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">eval_integral</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return an Euler-Maclaurin approximation of self, where m is the</span>
+<span class="sd">        number of leading terms to sum directly and n is the number of</span>
+<span class="sd">        terms in the tail.</span>
+
+<span class="sd">        With m = n = 0, this is simply the corresponding integral</span>
+<span class="sd">        plus a first-order endpoint correction.</span>
+
+<span class="sd">        Returns (s, e) where s is the Euler-Maclaurin approximation</span>
+<span class="sd">        and e is the estimated error (taken to be the magnitude of</span>
+<span class="sd">        the first omitted term in the tail):</span>
+
+<span class="sd">            &gt;&gt;&gt; from sympy.abc import k, a, b</span>
+<span class="sd">            &gt;&gt;&gt; from sympy import Sum</span>
+<span class="sd">            &gt;&gt;&gt; Sum(1/k, (k, 2, 5)).doit().evalf()</span>
+<span class="sd">            1.28333333333333</span>
+<span class="sd">            &gt;&gt;&gt; s, e = Sum(1/k, (k, 2, 5)).euler_maclaurin()</span>
+<span class="sd">            &gt;&gt;&gt; s</span>
+<span class="sd">            -log(2) + 7/20 + log(5)</span>
+<span class="sd">            &gt;&gt;&gt; from sympy import sstr</span>
+<span class="sd">            &gt;&gt;&gt; print(sstr((s.evalf(), e.evalf()), full_prec=True))</span>
+<span class="sd">            (1.26629073187415, 0.0175000000000000)</span>
+
+<span class="sd">        The endpoints may be symbolic:</span>
+
+<span class="sd">            &gt;&gt;&gt; s, e = Sum(1/k, (k, a, b)).euler_maclaurin()</span>
+<span class="sd">            &gt;&gt;&gt; s</span>
+<span class="sd">            -log(a) + log(b) + 1/(2*b) + 1/(2*a)</span>
+<span class="sd">            &gt;&gt;&gt; e</span>
+<span class="sd">            Abs(-1/(12*b**2) + 1/(12*a**2))</span>
+
+<span class="sd">        If the function is a polynomial of degree at most 2n+1, the</span>
+<span class="sd">        Euler-Maclaurin formula becomes exact (and e = 0 is returned):</span>
+
+<span class="sd">            &gt;&gt;&gt; Sum(k, (k, 2, b)).euler_maclaurin()</span>
+<span class="sd">            (b**2/2 + b/2 - 1, 0)</span>
+<span class="sd">            &gt;&gt;&gt; Sum(k, (k, 2, b)).doit()</span>
+<span class="sd">            b**2/2 + b/2 - 1</span>
+
+<span class="sd">        With a nonzero eps specified, the summation is ended</span>
+<span class="sd">        as soon as the remainder term is less than the epsilon.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">function</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">:</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="o">-</span><span class="n">f</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">term</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">eps</span> <span class="ow">and</span> <span class="n">term</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">s</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+                <span class="n">s</span> <span class="o">+=</span> <span class="n">term</span>
+            <span class="n">a</span> <span class="o">+=</span> <span class="n">m</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Integral</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">eval_integral</span><span class="p">:</span>
+            <span class="n">I</span> <span class="o">=</span> <span class="n">I</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="n">I</span>
+
+        <span class="k">def</span> <span class="nf">fpoint</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">),</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="n">fa</span><span class="p">,</span> <span class="n">fb</span> <span class="o">=</span> <span class="n">fpoint</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">iterm</span> <span class="o">=</span> <span class="p">(</span><span class="n">fa</span> <span class="o">+</span> <span class="n">fb</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">ga</span><span class="p">,</span> <span class="n">gb</span> <span class="o">=</span> <span class="n">fpoint</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span><span class="o">/</span><span class="n">C</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">gb</span> <span class="o">-</span> <span class="n">ga</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">eps</span> <span class="ow">and</span> <span class="n">term</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">term</span><span class="o">.</span><span class="n">evalf</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span> <span class="o">&lt;</span> <span class="n">eps</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">k</span> <span class="o">&gt;</span> <span class="n">n</span><span class="p">):</span>
+                <span class="k">break</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="n">term</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span> <span class="o">+</span> <span class="n">iterm</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">term</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_eval_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.integrals.integrals</span> <span class="kn">import</span> <span class="n">_eval_subs</span>
+        <span class="k">return</span> <span class="n">_eval_subs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="summation"><a class="viewcode-back" href="../../../modules/concrete.html#sympy.concrete.summations.summation">[docs]</a><span class="k">def</span> <span class="nf">summation</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Compute the summation of f with respect to symbols.</span>
+
+<span class="sd">    The notation for symbols is similar to the notation used in Integral.</span>
+<span class="sd">    summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,</span>
+<span class="sd">    i.e.,</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">                                    b</span>
+<span class="sd">                                  ____</span>
+<span class="sd">                                  \   `</span>
+<span class="sd">        summation(f, (i, a, b)) =  )    f</span>
+<span class="sd">                                  /___,</span>
+<span class="sd">                                  i = a</span>
+
+<span class="sd">    If it cannot compute the sum, it returns an unevaluated Sum object.</span>
+<span class="sd">    Repeated sums can be computed by introducing additional symbols tuples::</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import summation, oo, symbols, log</span>
+<span class="sd">    &gt;&gt;&gt; i, n, m = symbols(&#39;i n m&#39;, integer=True)</span>
+
+<span class="sd">    &gt;&gt;&gt; summation(2*i - 1, (i, 1, n))</span>
+<span class="sd">    n**2</span>
+<span class="sd">    &gt;&gt;&gt; summation(1/2**i, (i, 0, oo))</span>
+<span class="sd">    2</span>
+<span class="sd">    &gt;&gt;&gt; summation(1/log(n)**n, (n, 2, oo))</span>
+<span class="sd">    Sum(log(n)**(-n), (n, 2, oo))</span>
+<span class="sd">    &gt;&gt;&gt; summation(i, (i, 0, n), (n, 0, m))</span>
+<span class="sd">    m**3/6 + m**2/2 + m/3</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import factorial</span>
+<span class="sd">    &gt;&gt;&gt; summation(x**n/factorial(n), (n, 0, oo))</span>
+<span class="sd">    exp(x)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    Sum</span>
+<span class="sd">    Product, product</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="o">*</span><span class="n">symbols</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">telescopic_direct</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the direct summation of the terms of a telescopic sum</span>
+
+<span class="sd">    L is the term with lower index</span>
+<span class="sd">    R is the term with higher index</span>
+<span class="sd">    n difference between the indexes of L and R</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.concrete.summations import telescopic_direct</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import k, a, b</span>
+<span class="sd">    &gt;&gt;&gt; telescopic_direct(1/k, -1/(k+2), 2, (k, a, b))</span>
+<span class="sd">    -1/(b + 2) - 1/(b + 1) + 1/(a + 1) + 1/a</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">limits</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="n">L</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="n">R</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+
+<span class="k">def</span> <span class="nf">telescopic</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Tries to perform the summation using the telescopic property</span>
+
+<span class="sd">    return None if not possible</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">limits</span>
+    <span class="k">if</span> <span class="n">L</span><span class="o">.</span><span class="n">is_Add</span> <span class="ow">or</span> <span class="n">R</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="c"># We want to solve(L.subs(i, i + m) + R, m)</span>
+    <span class="c"># First we try a simple match since this does things that</span>
+    <span class="c"># solve doesn&#39;t do, e.g. solve(f(k+m)-f(k), m) fails</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">)</span>
+    <span class="n">sol</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">k</span><span class="p">))</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">sol</span> <span class="ow">and</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">sol</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">sol</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">L</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="n">R</span><span class="p">):</span>
+            <span class="c">#sometimes match fail(f(x+2).match(-f(x+k))-&gt;{k: -2 - 2x}))</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c"># But there are things that match doesn&#39;t do that solve</span>
+    <span class="c"># can do, e.g. determine that 1/(x + m) = 1/(1 - x) when m = 1</span>
+
+    <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;m&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">m</span><span class="p">)</span> <span class="o">+</span> <span class="n">R</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">sol</span> <span class="o">=</span> <span class="p">[</span><span class="n">si</span> <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">sol</span> <span class="k">if</span> <span class="n">si</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span>
+               <span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">si</span><span class="p">)</span> <span class="o">+</span> <span class="n">R</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">is_zero</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sol</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">sol</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">telescopic_direct</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">s</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">telescopic_direct</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">eval_sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">sympy.concrete.delta</span> <span class="kn">import</span> <span class="n">deltasummation</span><span class="p">,</span> <span class="n">_has_simple_delta</span>
+    <span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">KroneckerDelta</span>
+
+    <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">limits</span>
+    <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">free_symbols</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">*</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">Piecewise</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">sympy.utilities.iterables</span> <span class="kn">import</span> <span class="n">flatten</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">flatten</span><span class="p">([</span><span class="n">arg</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">free_symbols</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">]):</span>
+            <span class="c"># Piecewise conditions do not depend on the dummy summation variable,</span>
+            <span class="c"># therefore we can fold:     Sum(Piecewise((e, c), ...), limits)</span>
+            <span class="c">#                        --&gt; Piecewise((Sum(e, limits), c), ...)</span>
+            <span class="n">newargs</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">newexpr</span> <span class="o">=</span> <span class="n">eval_sum</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">limits</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">newexpr</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+                <span class="n">newargs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">newexpr</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">cond</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">newargs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">KroneckerDelta</span><span class="p">)</span> <span class="ow">and</span> <span class="n">_has_simple_delta</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">limits</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="n">deltasummation</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">limits</span><span class="p">)</span>
+
+    <span class="n">dif</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+    <span class="n">definite</span> <span class="o">=</span> <span class="n">dif</span><span class="o">.</span><span class="n">is_Integer</span>
+    <span class="c"># Doing it directly may be faster if there are very few terms.</span>
+    <span class="k">if</span> <span class="n">definite</span> <span class="ow">and</span> <span class="p">(</span><span class="n">dif</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">eval_sum_direct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+    <span class="c"># Try to do it symbolically. Even when the number of terms is known,</span>
+    <span class="c"># this can save time when b-a is big.</span>
+    <span class="c"># We should try to transform to partial fractions</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">eval_sum_symbolic</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">expand</span><span class="p">(),</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="c"># Do it directly</span>
+    <span class="k">if</span> <span class="n">definite</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">eval_sum_direct</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">eval_sum_direct</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+    <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">limits</span>
+
+    <span class="n">dif</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">a</span>
+    <span class="k">return</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">dif</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)])</span>
+
+
+<span class="k">def</span> <span class="nf">eval_sum_symbolic</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">limits</span><span class="p">):</span>
+    <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="o">=</span> <span class="n">limits</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span><span class="o">*</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c"># Linearity</span>
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+        <span class="n">L</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">as_two_terms</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">L</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">sR</span> <span class="o">=</span> <span class="n">eval_sum_symbolic</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">sR</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">L</span><span class="o">*</span><span class="n">sR</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">R</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">sL</span> <span class="o">=</span> <span class="n">eval_sum_symbolic</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">sL</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">R</span><span class="o">*</span><span class="n">sL</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">apart</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>  <span class="c"># see if it becomes an Add</span>
+        <span class="k">except</span> <span class="n">PolynomialError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+        <span class="n">L</span><span class="p">,</span> <span class="n">R</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">as_two_terms</span><span class="p">()</span>
+        <span class="n">lrsum</span> <span class="o">=</span> <span class="n">telescopic</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">lrsum</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">lrsum</span>
+
+        <span class="n">lsum</span> <span class="o">=</span> <span class="n">eval_sum_symbolic</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+        <span class="n">rsum</span> <span class="o">=</span> <span class="n">eval_sum_symbolic</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">lsum</span><span class="p">,</span> <span class="n">rsum</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">lsum</span> <span class="o">+</span> <span class="n">rsum</span>
+
+    <span class="c"># Polynomial terms with Faulhaber&#39;s formula</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;n&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">i</span><span class="o">**</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">b</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">a</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">)</span> <span class="ow">or</span> \
+                   <span class="p">(</span><span class="n">a</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">b</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                <span class="k">return</span> <span class="p">((</span><span class="n">C</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">a</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">and</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">harmonic</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">harmonic</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">C</span><span class="o">.</span><span class="n">harmonic</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="o">-</span> <span class="n">C</span><span class="o">.</span><span class="n">harmonic</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">b</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">)):</span>
+        <span class="c"># Geometric terms</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Wild</span><span class="p">(</span><span class="s">&#39;c1&#39;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">c2</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Wild</span><span class="p">(</span><span class="s">&#39;c2&#39;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">c3</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">Wild</span><span class="p">(</span><span class="s">&#39;c3&#39;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="n">e</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">c1</span><span class="o">**</span><span class="p">(</span><span class="n">c2</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="n">c3</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">e</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">c1</span><span class="o">**</span><span class="n">c3</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="n">c1</span><span class="o">**</span><span class="n">c2</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+            <span class="n">r</span> <span class="o">=</span> <span class="n">p</span><span class="o">*</span><span class="p">(</span><span class="n">q</span><span class="o">**</span><span class="n">a</span> <span class="o">-</span> <span class="n">q</span><span class="o">**</span><span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">q</span><span class="p">)</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">p</span><span class="o">*</span><span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">l</span><span class="p">,</span> <span class="n">Eq</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">)),</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+        <span class="n">r</span> <span class="o">=</span> <span class="n">gosper_sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">NaN</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">r</span>
+
+    <span class="k">return</span> <span class="n">eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns (res, cond). Sums from a to oo. &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">hyper</span>
+    <span class="kn">from</span> <span class="nn">sympy.simplify</span> <span class="kn">import</span> <span class="n">hyperexpand</span><span class="p">,</span> <span class="n">hypersimp</span><span class="p">,</span> <span class="n">fraction</span><span class="p">,</span> <span class="n">simplify</span>
+    <span class="kn">from</span> <span class="nn">sympy.polys.polytools</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">factor</span>
+
+    <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">a</span><span class="p">),</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">simplify</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)))</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">hs</span> <span class="o">=</span> <span class="n">hypersimp</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hs</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+
+    <span class="n">numer</span><span class="p">,</span> <span class="n">denom</span> <span class="o">=</span> <span class="n">fraction</span><span class="p">(</span><span class="n">factor</span><span class="p">(</span><span class="n">hs</span><span class="p">))</span>
+    <span class="n">top</span><span class="p">,</span> <span class="n">topl</span> <span class="o">=</span> <span class="n">numer</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">bot</span><span class="p">,</span> <span class="n">botl</span> <span class="o">=</span> <span class="n">denom</span><span class="o">.</span><span class="n">as_coeff_mul</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">ab</span> <span class="o">=</span> <span class="p">[</span><span class="n">top</span><span class="p">,</span> <span class="n">bot</span><span class="p">]</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="p">[</span><span class="n">topl</span><span class="p">,</span> <span class="n">botl</span><span class="p">]</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">[[],</span> <span class="p">[]]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">fac</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">[</span><span class="n">k</span><span class="p">]:</span>
+            <span class="n">mul</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">fac</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+                <span class="n">mul</span> <span class="o">=</span> <span class="n">fac</span><span class="o">.</span><span class="n">exp</span>
+                <span class="n">fac</span> <span class="o">=</span> <span class="n">fac</span><span class="o">.</span><span class="n">base</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">mul</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">fac</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">all_coeffs</span><span class="p">()</span>
+            <span class="n">ab</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">*=</span> <span class="n">m</span><span class="o">**</span><span class="n">mul</span>
+            <span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">n</span><span class="o">/</span><span class="n">m</span><span class="p">]</span><span class="o">*</span><span class="n">mul</span>
+
+    <span class="c"># Add &quot;1&quot; to numerator parameters, to account for implicit n! in</span>
+    <span class="c"># hypergeometric series.</span>
+    <span class="n">ap</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">bq</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">hyper</span><span class="p">(</span><span class="n">ap</span><span class="p">,</span> <span class="n">bq</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">hyperexpand</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">h</span><span class="o">.</span><span class="n">convergence_statement</span>
+
+
+<span class="k">def</span> <span class="nf">eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i_a_b</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">And</span>
+
+    <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">i_a_b</span>
+
+    <span class="n">old_sum</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">b</span> <span class="o">!=</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">i</span><span class="p">),</span> <span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="p">(</span><span class="n">old_sum</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res1</span> <span class="o">=</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+            <span class="n">res2</span> <span class="o">=</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">res1</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">res2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="p">(</span><span class="n">res1</span><span class="p">,</span> <span class="n">cond1</span><span class="p">),</span> <span class="p">(</span><span class="n">res2</span><span class="p">,</span> <span class="n">cond2</span><span class="p">)</span> <span class="o">=</span> <span class="n">res1</span><span class="p">,</span> <span class="n">res2</span>
+            <span class="n">cond</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">cond1</span><span class="p">,</span> <span class="n">cond2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">res1</span> <span class="o">-</span> <span class="n">res2</span><span class="p">,</span> <span class="n">cond</span><span class="p">),</span> <span class="p">(</span><span class="n">old_sum</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span><span class="p">:</span>
+        <span class="n">res1</span> <span class="o">=</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="o">-</span><span class="n">i</span><span class="p">),</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">res2</span> <span class="o">=</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res1</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">res2</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">res1</span><span class="p">,</span> <span class="n">cond1</span> <span class="o">=</span> <span class="n">res1</span>
+        <span class="n">res2</span><span class="p">,</span> <span class="n">cond2</span> <span class="o">=</span> <span class="n">res2</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="n">And</span><span class="p">(</span><span class="n">cond1</span><span class="p">,</span> <span class="n">cond2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cond</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">((</span><span class="n">res1</span> <span class="o">+</span> <span class="n">res2</span><span class="p">,</span> <span class="n">cond</span><span class="p">),</span> <span class="p">(</span><span class="n">old_sum</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+
+    <span class="c"># Now b == oo, a != -oo</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">_eval_sum_hyper</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;i&#39;</span><span class="p">,</span> <span class="n">integer</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">is_positive</span> <span class="ow">or</span> <span class="n">f</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span>
+                <span class="k">elif</span> <span class="n">f</span><span class="o">.</span><span class="n">is_negative</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">NegativeInfinity</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="n">Piecewise</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="p">(</span><span class="n">old_sum</span><span class="p">,</span> <span class="bp">True</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

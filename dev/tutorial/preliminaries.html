@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Preliminaries &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Introduction" href="intro.html" />
+    <link rel="prev" title="SymPy Tutorial" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SymPy Tutorial"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="preliminaries">
+<h1>Preliminaries<a class="headerlink" href="#preliminaries" title="Permalink to this headline">¶</a></h1>
+<p>This tutorial assumes that the reader already knows the basics of the Python programming
+language.  If you do not, the <a class="reference external" href="http://docs.python.org/3/tutorial/index.html">official Python
+tutorial</a> is excellent.</p>
+<p>This tutorial assumes a decent mathematical background.  Most examples require
+knowledge up to calculus level, and some require knowledge at a calculus
+level.  Some of the advanced features require more than this. If you come
+across a section that uses some mathematical function you are not familiar
+with, you can probably skip over it, or replace it with a similar one that you
+are more familiar with.  Or look up the function on Wikipedia and learn
+something new.  Some important mathematical concepts that are not common
+knowledge will be introduced as necessary.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p class="last">You do not need to install SymPy to try it.  You can use the online shell
+at <a class="reference external" href="http://live.sympy.org">http://live.sympy.org</a>, or the shell at the bottom right of this
+documentation page.</p>
+</div>
+<p>You will need to install SymPy first.  See the <a class="reference internal" href="../install.html#installation"><em>installation guide</em></a>.</p>
+<p>Alternately, you can just use the SymPy Live Sphinx extension to run the code
+blocks in the browser.  For example, click on the green &#8220;Run code block in
+SymPy Live&#8221; button below</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Eq</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span>
+<span class="go">Integral(exp(x)*cos(x), x) == exp(x)*sin(x)/2 + exp(x)*cos(x)/2</span>
+</pre></div>
+</div>
+<p>The SymPy Live shell in the bottom corner will pop up and evaluate the code
+block. You can also click any individual line to evaluate it one at a time.</p>
+<p>The SymPy Live shell is a fully interactive Python shell. You can type any
+expression in the input box to evaluate it.  Feel free to use it throughout
+the tutorial to experiment.</p>
+<p>To show or hide the SymPy Live shell at any time, just click the green button
+on the bottom right of the screen.</p>
+<p>By default, the SymPy Live shell uses <span class="math">\(\LaTeX\)</span> for output.  If you want the
+output to look more like the output in the documentation, change the
+output format to <tt class="docutils literal"><span class="pre">Str</span></tt> or <tt class="docutils literal"><span class="pre">Unicode</span></tt>.</p>
+<p>If you wish to modify an example before evaluating it, change the evaluation
+mode to &#8220;copy&#8221; in the SymPy Live settings.  This will cause clicking on an
+example to copy the example to the SymPy Live shell, but not evaluate it,
+allowing you to change it before execution.  You can also use the up/down
+arrow keys on your keyboard in the input box to move through the shell
+history.</p>
+<p>The SymPy Live shell is also available at <a class="reference external" href="http://live.sympy.org">http://live.sympy.org</a>, with extra
+features, like a mobile phone enhanced version and saved history.</p>
+</div>
+<div class="section" id="exercises">
+<h2>Exercises<a class="headerlink" href="#exercises" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial was the basis for a tutorial given at the 2013 SciPy conference
+in Austin, TX.  The website for that tutorial is <a class="reference external" href="http://certik.github.io/scipy-2013-tutorial/html/index.html">here</a>. It has links
+to videos, materials, and IPython notebook exercises.  The IPython notebook
+exercises in particular are recommended to anyone going through this tutorial.</p>
+</div>
+<div class="section" id="about-this-tutorial">
+<h2>About This Tutorial<a class="headerlink" href="#about-this-tutorial" title="Permalink to this headline">¶</a></h2>
+<p>This tutorial aims to give an introduction to SymPy for someone who has not
+used the library before.  Many features of SymPy will be introduced in this
+tutorial, but they will not be exhaustive. In fact, virtually every
+functionality shown in this tutorial will have more options or capabilities
+than what will be shown.  The rest of the SymPy documentation serves as API
+documentation, which extensively lists every feature and option of each
+function.</p>
+<p>These are the goals of this tutorial:</p>
+<ul class="simple">
+<li>To give a guide, suitable for someone who has never used SymPy (but who has
+used Python and knows the necessary mathematics).</li>
+<li>To be written in a narrative format, which is both easy and fun to follow.
+It should read like a book.</li>
+<li>To give insightful examples and exercises, to help the reader learn and to
+make it entertaining to work through.</li>
+<li>To introduce concepts in a logical order.</li>
+</ul>
+<ul class="simple">
+<li>To use good practices and idioms, and avoid antipatterns.  Functions or
+methodologies that tend to lead to antipatterns are avoided. Features that
+are only useful to advanced users are not shown.</li>
+<li>To be consistent.  If there are multiple ways to do it, only the best way is
+shown.</li>
+</ul>
+<ul class="simple">
+<li>To avoid unnecessary duplication, it is assumed that previous sections of
+the tutorial have already been read.</li>
+</ul>
+<p>Feedback on this tutorial, or on SymPy in general is always welcome. Just
+write to our <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/sympy">mailing list</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Preliminaries</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#exercises">Exercises</a></li>
+<li><a class="reference internal" href="#about-this-tutorial">About This Tutorial</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">SymPy Tutorial</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="next chapter">Introduction</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/preliminaries.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="SymPy Tutorial"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

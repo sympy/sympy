@@ -1,0 +1,226 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Miscellaneous &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Utilities" href="index.html" />
+    <link rel="next" title="PKGDATA" href="pkgdata.html" />
+    <link rel="prev" title="Memoization" href="memoization.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pkgdata.html" title="PKGDATA"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="memoization.html" title="Memoization"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Utilities</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.utilities.misc">
+<span id="miscellaneous"></span><h1>Miscellaneous<a class="headerlink" href="#module-sympy.utilities.misc" title="Permalink to this headline">¶</a></h1>
+<p>Miscellaneous stuff that doesn&#8217;t really fit anywhere else.</p>
+<dl class="function">
+<dt id="sympy.utilities.misc.debug">
+<tt class="descclassname">sympy.utilities.misc.</tt><tt class="descname">debug</tt><big>(</big><em>*args</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/misc.html#debug"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.misc.debug" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print <tt class="docutils literal"><span class="pre">*args</span></tt> if SYMPY_DEBUG is True, else do nothing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.misc.debug_decorator">
+<tt class="descclassname">sympy.utilities.misc.</tt><tt class="descname">debug_decorator</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/misc.html#debug_decorator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.misc.debug_decorator" title="Permalink to this definition">¶</a></dt>
+<dd><p>If SYMPY_DEBUG is True, it will print a nice execution tree with
+arguments and results of all decorated functions, else do nothing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.misc.find_executable">
+<tt class="descclassname">sympy.utilities.misc.</tt><tt class="descname">find_executable</tt><big>(</big><em>executable</em>, <em>path=None</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/misc.html#find_executable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.misc.find_executable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Try to find &#8216;executable&#8217; in the directories listed in &#8216;path&#8217; (a
+string listing directories separated by &#8216;os.pathsep&#8217;; defaults to
+os.environ[&#8216;PATH&#8217;]).  Returns the complete filename or None if not
+found</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.utilities.misc.rawlines">
+<tt class="descclassname">sympy.utilities.misc.</tt><tt class="descname">rawlines</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../../_modules/sympy/utilities/misc.html#rawlines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.utilities.misc.rawlines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a cut-and-pastable string that, when printed, is equivalent
+to the input. The string returned is formatted so it can be indented
+nicely within tests; in some cases it is wrapped in the dedent
+function which has to be imported from textwrap.</p>
+<p class="rubric">Examples</p>
+<p>Note: because there are characters in the examples below that need
+to be escaped because they are themselves within a triple quoted
+docstring, expressions below look more complicated than they would
+be if they were printed in an interpreter window.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.utilities.misc</span> <span class="kn">import</span> <span class="n">rawlines</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">TableForm</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">TableForm</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">]],</span> <span class="n">headings</span><span class="o">=</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="s">&#39;bee&#39;</span><span class="p">])))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rawlines</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="c"># the \ appears as \ when printed</span>
+<span class="go">(</span>
+<span class="go">    &#39;a bee\n&#39;</span>
+<span class="go">    &#39;-----\n&#39;</span>
+<span class="go">    &#39;1 10 &#39;</span>
+<span class="go">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rawlines</span><span class="p">(</span><span class="s">&#39;&#39;&#39;this</span>
+<span class="gp">... </span><span class="s">that&#39;&#39;&#39;</span><span class="p">))</span>
+<span class="go">dedent(&#39;&#39;&#39;\</span>
+<span class="go">    this</span>
+<span class="go">    that&#39;&#39;&#39;)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rawlines</span><span class="p">(</span><span class="s">&#39;&#39;&#39;this</span>
+<span class="gp">... </span><span class="s">that</span>
+<span class="gp">... </span><span class="s">&#39;&#39;&#39;</span><span class="p">))</span>
+<span class="go">dedent(&#39;&#39;&#39;\</span>
+<span class="go">    this</span>
+<span class="go">    that</span>
+<span class="go">    &#39;&#39;&#39;)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;this</span>
+<span class="gp">... </span><span class="s">is a triple &#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s">&quot;&quot;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rawlines</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+<span class="go">dedent(&quot;&quot;&quot;\</span>
+<span class="go">    this</span>
+<span class="go">    is a triple &#39;&#39;&#39;</span>
+<span class="go">    &quot;&quot;&quot;)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">rawlines</span><span class="p">(</span><span class="s">&#39;&#39;&#39;this</span>
+<span class="gp">... </span><span class="s">that</span>
+<span class="gp">... </span><span class="s">    &#39;&#39;&#39;</span><span class="p">))</span>
+<span class="go">(</span>
+<span class="go">    &#39;this\n&#39;</span>
+<span class="go">    &#39;that\n&#39;</span>
+<span class="go">    &#39;    &#39;</span>
+<span class="go">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="memoization.html"
+                        title="previous chapter">Memoization</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pkgdata.html"
+                        title="next chapter">PKGDATA</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/utilities/misc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="pkgdata.html" title="PKGDATA"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="memoization.html" title="Memoization"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Utilities</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,560 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>mpmath &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for mpmath</h1><div class="highlight"><pre>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s">&#39;0.17&#39;</span>
+
+<span class="kn">from</span> <span class="nn">.usertools</span> <span class="kn">import</span> <span class="n">monitor</span><span class="p">,</span> <span class="n">timing</span>
+
+<span class="kn">from</span> <span class="nn">.ctx_fp</span> <span class="kn">import</span> <span class="n">FPContext</span>
+<span class="kn">from</span> <span class="nn">.ctx_mp</span> <span class="kn">import</span> <span class="n">MPContext</span>
+<span class="kn">from</span> <span class="nn">.ctx_iv</span> <span class="kn">import</span> <span class="n">MPIntervalContext</span>
+
+<span class="n">fp</span> <span class="o">=</span> <span class="n">FPContext</span><span class="p">()</span>
+<span class="n">mp</span> <span class="o">=</span> <span class="n">MPContext</span><span class="p">()</span>
+<span class="n">iv</span> <span class="o">=</span> <span class="n">MPIntervalContext</span><span class="p">()</span>
+
+<span class="n">fp</span><span class="o">.</span><span class="n">_mp</span> <span class="o">=</span> <span class="n">mp</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">_mp</span> <span class="o">=</span> <span class="n">mp</span>
+<span class="n">iv</span><span class="o">.</span><span class="n">_mp</span> <span class="o">=</span> <span class="n">mp</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">_fp</span> <span class="o">=</span> <span class="n">fp</span>
+<span class="n">fp</span><span class="o">.</span><span class="n">_fp</span> <span class="o">=</span> <span class="n">fp</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">_iv</span> <span class="o">=</span> <span class="n">iv</span>
+<span class="n">fp</span><span class="o">.</span><span class="n">_iv</span> <span class="o">=</span> <span class="n">iv</span>
+<span class="n">iv</span><span class="o">.</span><span class="n">_iv</span> <span class="o">=</span> <span class="n">iv</span>
+
+<span class="c"># XXX: extremely bad pickle hack</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">ctx_mp</span> <span class="k">as</span> <span class="n">_ctx_mp</span>
+<span class="n">_ctx_mp</span><span class="o">.</span><span class="n">_mpf_module</span><span class="o">.</span><span class="n">mpf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mpf</span>
+<span class="n">_ctx_mp</span><span class="o">.</span><span class="n">_mpf_module</span><span class="o">.</span><span class="n">mpc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mpc</span>
+
+<span class="n">make_mpf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">make_mpf</span>
+<span class="n">make_mpc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">make_mpc</span>
+
+<span class="n">extraprec</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">extraprec</span>
+<span class="n">extradps</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">extradps</span>
+<span class="n">workprec</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">workprec</span>
+<span class="n">workdps</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">workdps</span>
+<span class="n">autoprec</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">autoprec</span>
+<span class="n">maxcalls</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">maxcalls</span>
+<span class="n">memoize</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">memoize</span>
+
+<span class="n">mag</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mag</span>
+
+<span class="n">bernfrac</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bernfrac</span>
+
+<span class="n">qfrom</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">qfrom</span>
+<span class="n">mfrom</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mfrom</span>
+<span class="n">kfrom</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">kfrom</span>
+<span class="n">taufrom</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">taufrom</span>
+<span class="n">qbarfrom</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">qbarfrom</span>
+<span class="n">ellipfun</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ellipfun</span>
+<span class="n">jtheta</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">jtheta</span>
+<span class="n">kleinj</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">kleinj</span>
+
+<span class="n">qp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">qp</span>
+<span class="n">qhyper</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">qhyper</span>
+<span class="n">qgamma</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">qgamma</span>
+<span class="n">qfac</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">qfac</span>
+
+<span class="n">nint_distance</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nint_distance</span>
+
+<span class="n">plot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">plot</span>
+<span class="n">cplot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cplot</span>
+<span class="n">splot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">splot</span>
+
+<span class="n">odefun</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">odefun</span>
+
+<span class="n">jacobian</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">jacobian</span>
+<span class="n">findroot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">findroot</span>
+<span class="n">multiplicity</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">multiplicity</span>
+
+<span class="n">isinf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">isinf</span>
+<span class="n">isnan</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">isnan</span>
+<span class="n">isnormal</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">isnormal</span>
+<span class="n">isint</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">isint</span>
+<span class="n">almosteq</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">almosteq</span>
+<span class="n">nan</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nan</span>
+<span class="n">rand</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">rand</span>
+
+<span class="n">absmin</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">absmin</span>
+<span class="n">absmax</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">absmax</span>
+
+<span class="n">fraction</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fraction</span>
+
+<span class="n">linspace</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">linspace</span>
+<span class="n">arange</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">arange</span>
+
+<span class="n">mpmathify</span> <span class="o">=</span> <span class="n">convert</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">convert</span>
+<span class="n">mpc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mpc</span>
+
+<span class="n">mpi</span> <span class="o">=</span> <span class="n">iv</span><span class="o">.</span><span class="n">_mpi</span>
+
+<span class="n">nstr</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nstr</span>
+<span class="n">nprint</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nprint</span>
+<span class="n">chop</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">chop</span>
+
+<span class="n">fneg</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fneg</span>
+<span class="n">fadd</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fadd</span>
+<span class="n">fsub</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fsub</span>
+<span class="n">fmul</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fmul</span>
+<span class="n">fdiv</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fdiv</span>
+<span class="n">fprod</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fprod</span>
+
+<span class="n">quad</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quad</span>
+<span class="n">quadgl</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quadgl</span>
+<span class="n">quadts</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quadts</span>
+<span class="n">quadosc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">quadosc</span>
+
+<span class="n">pslq</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">pslq</span>
+<span class="n">identify</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">identify</span>
+<span class="n">findpoly</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">findpoly</span>
+
+<span class="n">richardson</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">richardson</span>
+<span class="n">shanks</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">shanks</span>
+<span class="n">nsum</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nsum</span>
+<span class="n">nprod</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nprod</span>
+<span class="n">difference</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">difference</span>
+<span class="n">diff</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">diff</span>
+<span class="n">diffs</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">diffs</span>
+<span class="n">diffs_prod</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">diffs_prod</span>
+<span class="n">diffs_exp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">diffs_exp</span>
+<span class="n">diffun</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">diffun</span>
+<span class="n">differint</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">differint</span>
+<span class="n">taylor</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">taylor</span>
+<span class="n">pade</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">pade</span>
+<span class="n">polyval</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">polyval</span>
+<span class="n">polyroots</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">polyroots</span>
+<span class="n">fourier</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fourier</span>
+<span class="n">fourierval</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fourierval</span>
+<span class="n">sumem</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sumem</span>
+<span class="n">sumap</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sumap</span>
+<span class="n">chebyfit</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">chebyfit</span>
+<span class="n">limit</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">limit</span>
+
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">matrix</span>
+<span class="n">eye</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">eye</span>
+<span class="n">diag</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">diag</span>
+<span class="n">zeros</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">zeros</span>
+<span class="n">ones</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ones</span>
+<span class="n">hilbert</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hilbert</span>
+<span class="n">randmatrix</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">randmatrix</span>
+<span class="n">swap_row</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">swap_row</span>
+<span class="n">extend</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">extend</span>
+<span class="n">norm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">norm</span>
+<span class="n">mnorm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mnorm</span>
+
+<span class="n">lu_solve</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">lu_solve</span>
+<span class="n">lu</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">lu</span>
+<span class="n">unitvector</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">unitvector</span>
+<span class="n">inverse</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">inverse</span>
+<span class="n">residual</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">residual</span>
+<span class="n">qr_solve</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">qr_solve</span>
+<span class="n">cholesky</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cholesky</span>
+<span class="n">cholesky_solve</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cholesky_solve</span>
+<span class="n">det</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">det</span>
+<span class="n">cond</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cond</span>
+
+<span class="n">expm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">expm</span>
+<span class="n">sqrtm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sqrtm</span>
+<span class="n">powm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">powm</span>
+<span class="n">logm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">logm</span>
+<span class="n">sinm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sinm</span>
+<span class="n">cosm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cosm</span>
+
+<span class="n">mpf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mpf</span>
+<span class="n">j</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">j</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">exp</span>
+<span class="n">expj</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">expj</span>
+<span class="n">expjpi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">expjpi</span>
+<span class="n">ln</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ln</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">im</span>
+<span class="n">re</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">re</span>
+<span class="n">inf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">inf</span>
+<span class="n">ninf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ninf</span>
+<span class="n">sign</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sign</span>
+
+<span class="n">eps</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">eps</span>
+<span class="n">pi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">pi</span>
+<span class="n">ln2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ln2</span>
+<span class="n">ln10</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ln10</span>
+<span class="n">phi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">phi</span>
+<span class="n">e</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">e</span>
+<span class="n">euler</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">euler</span>
+<span class="n">catalan</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">catalan</span>
+<span class="n">khinchin</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">khinchin</span>
+<span class="n">glaisher</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">glaisher</span>
+<span class="n">apery</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">apery</span>
+<span class="n">degree</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">degree</span>
+<span class="n">twinprime</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">twinprime</span>
+<span class="n">mertens</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mertens</span>
+
+<span class="n">ldexp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ldexp</span>
+<span class="n">frexp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">frexp</span>
+
+<span class="n">fsum</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fsum</span>
+<span class="n">fdot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fdot</span>
+
+<span class="n">sqrt</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sqrt</span>
+<span class="n">cbrt</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cbrt</span>
+<span class="n">exp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">exp</span>
+<span class="n">ln</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ln</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">log</span>
+<span class="n">log10</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">log10</span>
+<span class="n">power</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">power</span>
+<span class="n">cos</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cos</span>
+<span class="n">sin</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sin</span>
+<span class="n">tan</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">tan</span>
+<span class="n">cosh</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cosh</span>
+<span class="n">sinh</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sinh</span>
+<span class="n">tanh</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">tanh</span>
+<span class="n">acos</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">acos</span>
+<span class="n">asin</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">asin</span>
+<span class="n">atan</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">atan</span>
+<span class="n">asinh</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">asinh</span>
+<span class="n">acosh</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">acosh</span>
+<span class="n">atanh</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">atanh</span>
+<span class="n">sec</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sec</span>
+<span class="n">csc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">csc</span>
+<span class="n">cot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cot</span>
+<span class="n">sech</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sech</span>
+<span class="n">csch</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">csch</span>
+<span class="n">coth</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">coth</span>
+<span class="n">asec</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">asec</span>
+<span class="n">acsc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">acsc</span>
+<span class="n">acot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">acot</span>
+<span class="n">asech</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">asech</span>
+<span class="n">acsch</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">acsch</span>
+<span class="n">acoth</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">acoth</span>
+<span class="n">cospi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cospi</span>
+<span class="n">sinpi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sinpi</span>
+<span class="n">sinc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sinc</span>
+<span class="n">sincpi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sincpi</span>
+<span class="n">cos_sin</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cos_sin</span>
+<span class="n">cospi_sinpi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cospi_sinpi</span>
+<span class="n">fabs</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fabs</span>
+<span class="n">re</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">re</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">im</span>
+<span class="n">conj</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">conj</span>
+<span class="n">floor</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">floor</span>
+<span class="n">ceil</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ceil</span>
+<span class="n">nint</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nint</span>
+<span class="n">frac</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">frac</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">root</span>
+<span class="n">nthroot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nthroot</span>
+<span class="n">hypot</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hypot</span>
+<span class="n">fmod</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fmod</span>
+<span class="n">ldexp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ldexp</span>
+<span class="n">frexp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">frexp</span>
+<span class="n">sign</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">sign</span>
+<span class="n">arg</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">arg</span>
+<span class="n">phase</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">phase</span>
+<span class="n">polar</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">polar</span>
+<span class="n">rect</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">rect</span>
+<span class="n">degrees</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">degrees</span>
+<span class="n">radians</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">radians</span>
+<span class="n">atan2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">atan2</span>
+<span class="n">fib</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fib</span>
+<span class="n">fibonacci</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fibonacci</span>
+<span class="n">lambertw</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">lambertw</span>
+<span class="n">zeta</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">zeta</span>
+<span class="n">altzeta</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">altzeta</span>
+<span class="n">gamma</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">gamma</span>
+<span class="n">rgamma</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">rgamma</span>
+<span class="n">factorial</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">factorial</span>
+<span class="n">fac</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fac</span>
+<span class="n">fac2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fac2</span>
+<span class="n">beta</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">beta</span>
+<span class="n">betainc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">betainc</span>
+<span class="n">psi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">psi</span>
+<span class="c">#psi0 = mp.psi0</span>
+<span class="c">#psi1 = mp.psi1</span>
+<span class="c">#psi2 = mp.psi2</span>
+<span class="c">#psi3 = mp.psi3</span>
+<span class="n">polygamma</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">polygamma</span>
+<span class="n">digamma</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">digamma</span>
+<span class="c">#trigamma = mp.trigamma</span>
+<span class="c">#tetragamma = mp.tetragamma</span>
+<span class="c">#pentagamma = mp.pentagamma</span>
+<span class="n">harmonic</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">harmonic</span>
+<span class="n">bernoulli</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bernoulli</span>
+<span class="n">bernfrac</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bernfrac</span>
+<span class="n">stieltjes</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">stieltjes</span>
+<span class="n">hurwitz</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hurwitz</span>
+<span class="n">dirichlet</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">dirichlet</span>
+<span class="n">bernpoly</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bernpoly</span>
+<span class="n">eulerpoly</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">eulerpoly</span>
+<span class="n">eulernum</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">eulernum</span>
+<span class="n">polylog</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">polylog</span>
+<span class="n">clsin</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">clsin</span>
+<span class="n">clcos</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">clcos</span>
+<span class="n">gammainc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">gammainc</span>
+<span class="n">gammaprod</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">gammaprod</span>
+<span class="n">binomial</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">binomial</span>
+<span class="n">rf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">rf</span>
+<span class="n">ff</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ff</span>
+<span class="n">hyper</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyper</span>
+<span class="n">hyp0f1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp0f1</span>
+<span class="n">hyp1f1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp1f1</span>
+<span class="n">hyp1f2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp1f2</span>
+<span class="n">hyp2f1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp2f1</span>
+<span class="n">hyp2f2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp2f2</span>
+<span class="n">hyp2f0</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp2f0</span>
+<span class="n">hyp2f3</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp2f3</span>
+<span class="n">hyp3f2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyp3f2</span>
+<span class="n">hyperu</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyperu</span>
+<span class="n">hypercomb</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hypercomb</span>
+<span class="n">meijerg</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">meijerg</span>
+<span class="n">appellf1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">appellf1</span>
+<span class="n">appellf2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">appellf2</span>
+<span class="n">appellf3</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">appellf3</span>
+<span class="n">appellf4</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">appellf4</span>
+<span class="n">hyper2d</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyper2d</span>
+<span class="n">bihyper</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bihyper</span>
+<span class="n">erf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">erf</span>
+<span class="n">erfc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">erfc</span>
+<span class="n">erfi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">erfi</span>
+<span class="n">erfinv</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">erfinv</span>
+<span class="n">npdf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">npdf</span>
+<span class="n">ncdf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ncdf</span>
+<span class="n">expint</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">expint</span>
+<span class="n">e1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">e1</span>
+<span class="n">ei</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ei</span>
+<span class="n">li</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">li</span>
+<span class="n">ci</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ci</span>
+<span class="n">si</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">si</span>
+<span class="n">chi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">chi</span>
+<span class="n">shi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">shi</span>
+<span class="n">fresnels</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fresnels</span>
+<span class="n">fresnelc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">fresnelc</span>
+<span class="n">airyai</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">airyai</span>
+<span class="n">airybi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">airybi</span>
+<span class="n">airyaizero</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">airyaizero</span>
+<span class="n">airybizero</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">airybizero</span>
+<span class="n">scorergi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">scorergi</span>
+<span class="n">scorerhi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">scorerhi</span>
+<span class="n">ellipk</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ellipk</span>
+<span class="n">ellipe</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ellipe</span>
+<span class="n">ellipf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ellipf</span>
+<span class="n">ellippi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ellippi</span>
+<span class="n">elliprc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">elliprc</span>
+<span class="n">elliprj</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">elliprj</span>
+<span class="n">elliprf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">elliprf</span>
+<span class="n">elliprd</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">elliprd</span>
+<span class="n">elliprg</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">elliprg</span>
+<span class="n">agm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">agm</span>
+<span class="n">jacobi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">jacobi</span>
+<span class="n">chebyt</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">chebyt</span>
+<span class="n">chebyu</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">chebyu</span>
+<span class="n">legendre</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">legendre</span>
+<span class="n">legenp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">legenp</span>
+<span class="n">legenq</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">legenq</span>
+<span class="n">hermite</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hermite</span>
+<span class="n">pcfd</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">pcfd</span>
+<span class="n">pcfu</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">pcfu</span>
+<span class="n">pcfv</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">pcfv</span>
+<span class="n">pcfw</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">pcfw</span>
+<span class="n">gegenbauer</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">gegenbauer</span>
+<span class="n">laguerre</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">laguerre</span>
+<span class="n">spherharm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">spherharm</span>
+<span class="n">besselj</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">besselj</span>
+<span class="n">j0</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">j0</span>
+<span class="n">j1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">j1</span>
+<span class="n">besseli</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">besseli</span>
+<span class="n">bessely</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bessely</span>
+<span class="n">besselk</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">besselk</span>
+<span class="n">besseljzero</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">besseljzero</span>
+<span class="n">besselyzero</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">besselyzero</span>
+<span class="n">hankel1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hankel1</span>
+<span class="n">hankel2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hankel2</span>
+<span class="n">struveh</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">struveh</span>
+<span class="n">struvel</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">struvel</span>
+<span class="n">angerj</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">angerj</span>
+<span class="n">webere</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">webere</span>
+<span class="n">lommels1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">lommels1</span>
+<span class="n">lommels2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">lommels2</span>
+<span class="n">whitm</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">whitm</span>
+<span class="n">whitw</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">whitw</span>
+<span class="n">ber</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ber</span>
+<span class="n">bei</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bei</span>
+<span class="n">ker</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">ker</span>
+<span class="n">kei</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">kei</span>
+<span class="n">coulombc</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">coulombc</span>
+<span class="n">coulombf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">coulombf</span>
+<span class="n">coulombg</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">coulombg</span>
+<span class="n">lambertw</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">lambertw</span>
+<span class="n">barnesg</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">barnesg</span>
+<span class="n">superfac</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">superfac</span>
+<span class="n">hyperfac</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">hyperfac</span>
+<span class="n">loggamma</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">loggamma</span>
+<span class="n">siegeltheta</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">siegeltheta</span>
+<span class="n">siegelz</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">siegelz</span>
+<span class="n">grampoint</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">grampoint</span>
+<span class="n">zetazero</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">zetazero</span>
+<span class="n">riemannr</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">riemannr</span>
+<span class="n">primepi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">primepi</span>
+<span class="n">primepi2</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">primepi2</span>
+<span class="n">primezeta</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">primezeta</span>
+<span class="n">bell</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">bell</span>
+<span class="n">polyexp</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">polyexp</span>
+<span class="n">expm1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">expm1</span>
+<span class="n">powm1</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">powm1</span>
+<span class="n">unitroots</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">unitroots</span>
+<span class="n">cyclotomic</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">cyclotomic</span>
+<span class="n">mangoldt</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mangoldt</span>
+<span class="n">secondzeta</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">secondzeta</span>
+<span class="n">nzeros</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">nzeros</span>
+<span class="n">backlunds</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">backlunds</span>
+<span class="n">lerchphi</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">lerchphi</span>
+
+<span class="c"># be careful when changing this name, don&#39;t use test*!</span>
+<span class="k">def</span> <span class="nf">runtests</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run all mpmath tests and print output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">os.path</span>
+    <span class="kn">from</span> <span class="nn">inspect</span> <span class="kn">import</span> <span class="n">getsourcefile</span>
+    <span class="kn">from</span> <span class="nn">.tests</span> <span class="kn">import</span> <span class="n">runtests</span> <span class="k">as</span> <span class="n">tests</span>
+    <span class="n">testdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">getsourcefile</span><span class="p">(</span><span class="n">tests</span><span class="p">)))</span>
+    <span class="n">importdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">testdir</span> <span class="o">+</span> <span class="s">&#39;/../..&#39;</span><span class="p">)</span>
+    <span class="n">tests</span><span class="o">.</span><span class="n">testit</span><span class="p">(</span><span class="n">importdir</span><span class="p">,</span> <span class="n">testdir</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">doctests</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">import</span> <span class="nn">psyco</span>
+        <span class="n">psyco</span><span class="o">.</span><span class="n">full</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">from</span> <span class="nn">timeit</span> <span class="kn">import</span> <span class="n">default_timer</span> <span class="k">as</span> <span class="n">clock</span>
+    <span class="nb">filter</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">arg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s">&#39;__init__.py&#39;</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">:</span>
+            <span class="nb">filter</span> <span class="o">=</span> <span class="p">[</span><span class="n">sn</span> <span class="k">for</span> <span class="n">sn</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">sn</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;-&quot;</span><span class="p">)]</span>
+            <span class="k">break</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+    <span class="n">globs</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">globs</span><span class="p">:</span> <span class="c">#sorted(globs.keys()):</span>
+        <span class="k">if</span> <span class="nb">filter</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">sum</span><span class="p">([</span><span class="n">pat</span> <span class="ow">in</span> <span class="n">obj</span> <span class="k">for</span> <span class="n">pat</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">]):</span>
+                <span class="k">continue</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; &quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">t1</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+        <span class="n">doctest</span><span class="o">.</span><span class="n">run_docstring_examples</span><span class="p">(</span><span class="n">globs</span><span class="p">[</span><span class="n">obj</span><span class="p">],</span> <span class="p">{},</span> <span class="n">verbose</span><span class="o">=</span><span class="p">(</span><span class="s">&quot;-v&quot;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">))</span>
+        <span class="n">t2</span> <span class="o">=</span> <span class="n">clock</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">t2</span><span class="o">-</span><span class="n">t1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">doctests</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

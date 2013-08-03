@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Printing (Docstrings) &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="../index.html" />
+    <link rel="next" title="Quantum Mechanics" href="../../quantum/index.html" />
+    <link rel="prev" title="Kane’s Method, Lagrange’s Method &amp; Associated Functions (Docstrings)" href="kane.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../quantum/index.html" title="Quantum Mechanics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="kane.html" title="Kane’s Method, Lagrange’s Method &amp; Associated Functions (Docstrings)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="printing-docstrings">
+<h1>Printing (Docstrings)<a class="headerlink" href="#printing-docstrings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="mechanics-printing">
+<h2>mechanics_printing<a class="headerlink" href="#mechanics-printing" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.mechanics_printing">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">mechanics_printing</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#mechanics_printing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.mechanics_printing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up interactive printing for mechanics&#8217; derivatives.</p>
+<p>The main benefit of this is for printing of time derivatives;
+instead of displaying as Derivative(f(t),t), it will display f&#8217;
+This is only actually needed for when derivatives are present and are not
+in a physics.mechanics object.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># 2 lines below are for tests to function properly</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">displayhook</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">__displayhook__</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">diff</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">mechanics_printing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">t</span><span class="p">)</span>
+<span class="go">Derivative(f(t), t)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mechanics_printing</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">t</span><span class="p">)</span>
+<span class="go">f&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">Derivative(f(x), x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># 2 lines below are for tests to function properly</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sys</span><span class="o">.</span><span class="n">displayhook</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">__displayhook__</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="mprint">
+<h2>mprint<a class="headerlink" href="#mprint" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.mprint">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">mprint</tt><big>(</big><em>expr</em>, <em>**settings</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#mprint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.mprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for printing of expressions generated in mechanics.</p>
+<p>Extends SymPy&#8217;s StrPrinter; mprint is equivalent to:
+print sstr()
+mprint takes the same options as sstr.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : valid sympy object</p>
+<blockquote>
+<div><p>SymPy expression to print</p>
+</div></blockquote>
+<p><strong>settings</strong> : args</p>
+<blockquote class="last">
+<div><p>Same as print for SymPy</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">mprint</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span>
+<span class="go">u1(t)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mprint</span><span class="p">(</span><span class="n">u1</span><span class="p">)</span>
+<span class="go">u1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="mpprint">
+<h2>mpprint<a class="headerlink" href="#mpprint" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.mpprint">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">mpprint</tt><big>(</big><em>expr</em>, <em>**settings</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#mpprint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.mpprint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for pretty printing of expressions generated in mechanics.</p>
+<p>Mainly used for expressions not inside a vector; the output of running
+scripts and generating equations of motion. Takes the same options as
+SymPy&#8217;s pretty_print(); see that function for more information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : valid sympy object</p>
+<blockquote>
+<div><p>SymPy expression to pretty print</p>
+</div></blockquote>
+<p><strong>settings</strong> : args</p>
+<blockquote class="last">
+<div><p>Same as pretty print</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Use in the same way as pprint</p>
+</dd></dl>
+
+</div>
+<div class="section" id="mlatex">
+<h2>mlatex<a class="headerlink" href="#mlatex" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.mlatex">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">mlatex</tt><big>(</big><em>expr</em>, <em>**settings</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#mlatex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.mlatex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function for printing latex representation of mechanics objects.</p>
+<p>For latex representation of Vectors, Dyadics, and dynamicsymbols. Takes the
+same options as SymPy&#8217;s latex(); see that function for more information;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>expr</strong> : valid sympy object</p>
+<blockquote>
+<div><p>SymPy expression to represent in LaTeX form</p>
+</div></blockquote>
+<p><strong>settings</strong> : args</p>
+<blockquote class="last">
+<div><p>Same as latex()</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">mlatex</span><span class="p">,</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span><span class="p">,</span> <span class="n">q2d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1dd</span><span class="p">,</span> <span class="n">q2dd</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">N</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+<span class="go">&#39;\\mathbf{\\hat{n}_x} + \\mathbf{\\hat{n}_y}&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">q1</span> <span class="o">+</span> <span class="n">q2</span><span class="p">)</span>
+<span class="go">&#39;q_{1} + q_{2}&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">q1d</span><span class="p">)</span>
+<span class="go">&#39;\\dot{q}_{1}&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">q1</span> <span class="o">*</span> <span class="n">q2d</span><span class="p">)</span>
+<span class="go">&#39;q_{1} \\dot{q}_{2}&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlatex</span><span class="p">(</span><span class="n">q1dd</span> <span class="o">*</span> <span class="n">q1</span> <span class="o">/</span> <span class="n">q1d</span><span class="p">)</span>
+<span class="go">&#39;\\frac{q_{1} \\ddot{q}_{1}}{\\dot{q}_{1}}&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Printing (Docstrings)</a><ul>
+<li><a class="reference internal" href="#mechanics-printing">mechanics_printing</a></li>
+<li><a class="reference internal" href="#mprint">mprint</a></li>
+<li><a class="reference internal" href="#mpprint">mpprint</a></li>
+<li><a class="reference internal" href="#mlatex">mlatex</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kane.html"
+                        title="previous chapter">Kane&#8217;s Method, Lagrange&#8217;s Method &amp; Associated Functions (Docstrings)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../../quantum/index.html"
+                        title="next chapter">Quantum Mechanics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../../_sources/modules/physics/mechanics/api/printing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../quantum/index.html" title="Quantum Mechanics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="kane.html" title="Kane’s Method, Lagrange’s Method &amp; Associated Functions (Docstrings)"
+             >previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

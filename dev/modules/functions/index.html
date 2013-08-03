@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Functions Module &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="../index.html" />
+    <link rel="next" title="Elementary" href="elementary.html" />
+    <link rel="prev" title="Numerical evaluation" href="../evalf.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="elementary.html" title="Elementary"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../evalf.html" title="Numerical evaluation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.functions">
+<span id="functions-module"></span><span id="functions"></span><h1>Functions Module<a class="headerlink" href="#module-sympy.functions" title="Permalink to this headline">¶</a></h1>
+<p>All functions support the methods documented below, inherited from
+<a class="reference internal" href="../core.html#sympy.core.function.Function" title="sympy.core.function.Function"><tt class="xref py py-class docutils literal"><span class="pre">sympy.core.function.Function</span></tt></a>.</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><tt class="descclassname">sympy.core.function.</tt><tt class="descname">Function</tt><a class="reference internal" href="../../_modules/sympy/core/function.html#Function"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Base class for applied mathematical functions.</p>
+<p>It also serves as a constructor for undefined function classes.</p>
+<p class="rubric">Examples</p>
+<p>First example shows how to use Function as a constructor for undefined
+function classes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;f&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;g&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span>
+<span class="go">f</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">f(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span>
+<span class="go">g(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Derivative(f(x), x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">Derivative(g(x), x)</span>
+</pre></div>
+</div>
+<p>In the following example Function is used as a base class for
+<tt class="docutils literal"><span class="pre">my_func</span></tt> that represents a mathematical function <em>my_func</em>. Suppose
+that it is well known, that <em>my_func(0)</em> is <em>1</em> and <em>my_func</em> at infinity
+goes to <em>0</em>, so we want those two simplifications to occur automatically.
+Suppose also that <em>my_func(x)</em> is real exactly when <em>x</em> is real. Here is
+an implementation that honours those requirements:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">oo</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">my_func</span><span class="p">(</span><span class="n">Function</span><span class="p">):</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="n">nargs</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="nd">@classmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">eval</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+<span class="gp">... </span>            <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">:</span>
+<span class="gp">... </span>                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+<span class="gp">... </span>            <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Infinity</span><span class="p">:</span>
+<span class="gp">... </span>                <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+<span class="gp">...</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">_eval_is_real</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">is_real</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">S</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_func</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">sin</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_func</span><span class="p">(</span><span class="n">oo</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_func</span><span class="p">(</span><span class="mf">3.54</span><span class="p">)</span><span class="o">.</span><span class="n">n</span><span class="p">()</span> <span class="c"># Not yet implemented for my_func.</span>
+<span class="go">my_func(3.54)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_func</span><span class="p">(</span><span class="n">I</span><span class="p">)</span><span class="o">.</span><span class="n">is_real</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>In order for <tt class="docutils literal"><span class="pre">my_func</span></tt> to become useful, several other methods would
+need to be implemented. See source code of some of the already
+implemented functions for more complete examples.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>nargs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt>
+<tt class="descclassname">Function.</tt><tt class="descname">as_base_exp</tt><big>(</big><big>)</big><a class="reference internal" href="../../_modules/sympy/core/function.html#Function.as_base_exp"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Returns the method as the 2-tuple (base, exponent).</p>
+</dd></dl>
+
+<dl class="method">
+<dt>
+<tt class="descclassname">Function.</tt><tt class="descname">fdiff</tt><big>(</big><em>argindex=1</em><big>)</big><a class="reference internal" href="../../_modules/sympy/core/function.html#Function.fdiff"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Returns the first derivative of the function.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<tt class="descclassname">Function.</tt><tt class="descname">is_commutative</tt><a class="reference internal" href="../../_modules/sympy/core/function.html#Function.is_commutative"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Returns whether the functon is commutative.</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="section" id="contents">
+<span id="functions-contents"></span><h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="elementary.html">Elementary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#abs">Abs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#acos">acos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#acosh">acosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#acot">acot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#acoth">acoth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#arg">arg</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#asin">asin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#asinh">asinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#atan">atan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#atan2">atan2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#atanh">atanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#ceiling">ceiling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#conjugate">conjugate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#cos">cos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#cosh">cosh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#cot">cot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#coth">coth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#exp">exp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#exprcondpair">ExprCondPair</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#floor">floor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#hyperbolicfunction">HyperbolicFunction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#identityfunction">IdentityFunction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#im">im</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#lambertw">LambertW</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#log">log</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#min">Min</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#max">Max</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#piecewise">Piecewise</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#re">re</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#root">root</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#roundfunction">RoundFunction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#sin">sin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#sinh">sinh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#sqrt">sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#sign">sign</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#tan">tan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="elementary.html#tanh">tanh</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="combinatorial.html">Combinatorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#bell">bell</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#bernoulli">bernoulli</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#binomial">binomial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#catalan">catalan</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#euler">euler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#factorial">factorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#factorial2-double-factorial">factorial2 / double factorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#fallingfactorial">FallingFactorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#fibonacci">fibonacci</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#harmonic">harmonic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#lucas">lucas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#multifactorial">MultiFactorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#risingfactorial">RisingFactorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#stirling">stirling</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="combinatorial.html#enumeration">Enumeration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#nc">nC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#np">nP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="combinatorial.html#nt">nT</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">Special</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="special.html#diracdelta">DiracDelta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#heaviside">Heaviside</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#beta">beta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#gamma-and-related-functions">Gamma and Related Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#module-sympy.functions.special.error_functions">Special Cases of the Incomplete Gamma Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#error-functions">Error Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#bessel-type-functions">Bessel Type Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#b-splines">B-Splines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#module-sympy.functions.special.zeta_functions">Riemann Zeta and Related Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#hypergeometric-functions">Hypergeometric Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#module-sympy.functions.special.elliptic_integrals">Elliptic integrals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#module-sympy.functions.special.polynomials">Orthogonal Polynomials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#spherical-harmonics">Spherical Harmonics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#tensor-functions">Tensor Functions</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Functions Module</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../evalf.html"
+                        title="previous chapter">Numerical evaluation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="elementary.html"
+                        title="next chapter">Elementary</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/functions/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="elementary.html" title="Elementary"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../evalf.html" title="Numerical evaluation"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

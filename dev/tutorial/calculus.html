@@ -1,0 +1,454 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Calculus &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Solvers" href="solvers.html" />
+    <link rel="prev" title="Simplification" href="simplification.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="Solvers"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="simplification.html" title="Simplification"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="calculus">
+<h1>Calculus<a class="headerlink" href="#calculus" title="Permalink to this headline">¶</a></h1>
+<p>This section covers how to do basic calculus tasks such as derivatives,
+integrals, limits, and series expansions in SymPy.  If you are not familiar
+with the math of any part of this section, you may safely skip it.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y z&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="derivatives">
+<span id="tutorial-derivatives"></span><h2>Derivatives<a class="headerlink" href="#derivatives" title="Permalink to this headline">¶</a></h2>
+<p>To take derivatives, use the <tt class="docutils literal"><span class="pre">diff</span></tt> function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">-sin(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">     ⎛ 2⎞</span>
+<span class="go">     ⎝x ⎠</span>
+<span class="go">2⋅x⋅ℯ</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">diff</span></tt> can take multiple derivatives at once.  To take multiple derivatives,
+pass the variable as many times as you wish to differentiate, or pass a number
+after the variable.  For example, both of the following find the third
+derivative of <span class="math">\(x^4\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">24⋅x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">24⋅x</span>
+</pre></div>
+</div>
+<p>You can also take derivatives with respect to many variables at once.  Just
+pass each derivative in order, using the same syntax as for single variable
+derivatives.  For example, each of the following will compute
+<span class="math">\(\frac{\partial^7}{\partial x\partial y^2\partial z^4} e^{x y z}\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="go"> 3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z</span>
+<span class="go">x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go"> 3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z</span>
+<span class="go">x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go"> 3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z</span>
+<span class="go">x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">diff</span></tt> can also be called as a method.  The two ways of calling <tt class="docutils literal"><span class="pre">diff</span></tt> are
+exactly the same, and are provided only for convenience.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go"> 3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z</span>
+<span class="go">x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ</span>
+</pre></div>
+</div>
+<p>To create an unevaluated derivative, use the <tt class="docutils literal"><span class="pre">Derivative</span></tt> class.  It has the
+same syntax as <tt class="docutils literal"><span class="pre">diff</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">deriv</span> <span class="o">=</span> <span class="n">Derivative</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">deriv</span>
+<span class="go">     7</span>
+<span class="go">    ∂     ⎛ x⋅y⋅z⎞</span>
+<span class="go">──────────⎝ℯ     ⎠</span>
+<span class="go">  4   2</span>
+<span class="go">∂z  ∂y  ∂x</span>
+</pre></div>
+</div>
+<p>To evaluate an unevaluated derivative, use the <tt class="docutils literal"><span class="pre">doit</span></tt> method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">deriv</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go"> 3  2 ⎛ 3  3  3       2  2  2                ⎞  x⋅y⋅z</span>
+<span class="go">x ⋅y ⋅⎝x ⋅y ⋅z  + 14⋅x ⋅y ⋅z  + 52⋅x⋅y⋅z + 48⎠⋅ℯ</span>
+</pre></div>
+</div>
+<p>These unevaluated objects are useful for delaying the evaluation of the
+derivative, or for printing purposes.  They are also used when SymPy does not
+know how to compute the derivative of an expression (for example, if it
+contains an undefined function, which are described in the <a class="reference internal" href="solvers.html#tutorial-dsolve"><em>Solving
+Differential Equations</em></a> section).</p>
+</div>
+<div class="section" id="integrals">
+<h2>Integrals<a class="headerlink" href="#integrals" title="Permalink to this headline">¶</a></h2>
+<p>To compute an integral, use the <tt class="docutils literal"><span class="pre">integrate</span></tt> function.  There are two kinds
+of integrals, definite and indefinite.  To compute an indefinite integral,
+that is, an antiderivative, or primitive, just pass the variable after the
+expression.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">sin(x)</span>
+</pre></div>
+</div>
+<p>Note that SymPy does not include the constant of integration.  If you want it,
+you can add one yourself, or rephrase your problem as a differential equation
+and use <tt class="docutils literal"><span class="pre">dsolve</span></tt> to solve it, which does add the constant (see <a class="reference internal" href="solvers.html#tutorial-dsolve"><em>Solving Differential Equations</em></a>).</p>
+<div class="sidebar">
+<p class="first sidebar-title">Quick Tip</p>
+<p class="last"><span class="math">\(\infty\)</span> in SymPy is <tt class="docutils literal"><span class="pre">oo</span></tt> (that&#8217;s the lowercase letter &#8220;oh&#8221; twice).  This
+is because <tt class="docutils literal"><span class="pre">oo</span></tt> looks like <span class="math">\(\infty\)</span>, and is easy to type.</p>
+</div>
+<p>To compute a definite integral, pass the argument <tt class="docutils literal"><span class="pre">(integration_variable,</span>
+<span class="pre">lower_limit,</span> <span class="pre">upper_limit)</span></tt>.  For example, to compute</p>
+<div class="math">
+\[\int_0^\infty e^{-x}\,dx,\]</div>
+<p>we would do</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>As with indefinite integrals, you can pass multiple limit tuples to perform a
+multiple integral.  For example, to compute</p>
+<div class="math">
+\[\int_{-\infty}^{\infty}\int_{-\infty}^{\infty} e^{- x^{2} - y^{2}}\, dx\, dy,\]</div>
+<p>do</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">π</span>
+</pre></div>
+</div>
+<p>If <tt class="docutils literal"><span class="pre">integrate</span></tt> is unable to compute an integral, it returns an unevaluated
+<tt class="docutils literal"><span class="pre">Integral</span></tt> object.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">integrate</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+<span class="go">Integral(x**x, x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">⌠</span>
+<span class="go">⎮  x</span>
+<span class="go">⎮ x  dx</span>
+<span class="go">⌡</span>
+</pre></div>
+</div>
+<p>As with <tt class="docutils literal"><span class="pre">Derivative</span></tt>, you can create an unevaluated integral using
+<tt class="docutils literal"><span class="pre">Integral</span></tt>.  To later evaluate this integral, call <tt class="docutils literal"><span class="pre">doit</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">⌠</span>
+<span class="go">⎮    2</span>
+<span class="go">⎮ log (x) dx</span>
+<span class="go">⌡</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">         2</span>
+<span class="go">x⋅log (x) - 2⋅x⋅log(x) + 2⋅x</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">integrate</span></tt> uses powerful algorithms that are always improving to compute
+both definite and indefinite integrals, including heuristic pattern matching
+type algorithms, a partial implementation of the <a class="reference external" href="http://en.wikipedia.org/wiki/Risch_algorithm">Risch algorithm</a>, and an algorithm using
+<a class="reference external" href="http://en.wikipedia.org/wiki/Meijer_g-function">Meijer G-functions</a> that is
+useful for computing integrals in terms of special functions, especially
+definite integrals.  Here is a sampling of some of the power of <tt class="docutils literal"><span class="pre">integrate</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">x</span> <span class="o">-</span>
+<span class="gp">... </span>    <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span>
+<span class="go">⌠</span>
+<span class="go">⎮ ⎛ 4    2  x    2        x          x⎞  x</span>
+<span class="go">⎮ ⎝x  + x ⋅ℯ  - x  - 2⋅x⋅ℯ  - 2⋅x - ℯ ⎠⋅ℯ</span>
+<span class="go">⎮ ──────────────────────────────────────── dx</span>
+<span class="go">⎮               2        2 ⎛ x    ⎞</span>
+<span class="go">⎮        (x - 1) ⋅(x + 1) ⋅⎝ℯ  + 1⎠</span>
+<span class="go">⌡</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">                 x</span>
+<span class="go">   ⎛ x    ⎞     ℯ</span>
+<span class="go">log⎝ℯ  + 1⎠ + ──────</span>
+<span class="go">               2</span>
+<span class="go">              x  - 1</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span>
+<span class="go">⌠</span>
+<span class="go">⎮    ⎛ 2⎞</span>
+<span class="go">⎮ sin⎝x ⎠ dx</span>
+<span class="go">⌡</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">                      ⎛  ___  ⎞</span>
+<span class="go">    ___   ___         ⎜╲╱ 2 ⋅x⎟</span>
+<span class="go">3⋅╲╱ 2 ⋅╲╱ π ⋅fresnels⎜───────⎟⋅Γ(3/4)</span>
+<span class="go">                      ⎜   ___ ⎟</span>
+<span class="go">                      ⎝ ╲╱ π  ⎠</span>
+<span class="go">──────────────────────────────────────</span>
+<span class="go">               8⋅Γ(7/4)</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span> <span class="o">=</span> <span class="n">Integral</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="n">y</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span>
+<span class="go">∞</span>
+<span class="go">⌠</span>
+<span class="go">⎮  y  -x</span>
+<span class="go">⎮ x ⋅ℯ   dx</span>
+<span class="go">⌡</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">integ</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">⎧ Γ(y + 1)    for -re(y) &lt; 1</span>
+<span class="go">⎪</span>
+<span class="go">⎪∞</span>
+<span class="go">⎪⌠</span>
+<span class="go">⎨⎮  y  -x</span>
+<span class="go">⎪⎮ x ⋅ℯ   dx    otherwise</span>
+<span class="go">⎪⌡</span>
+<span class="go">⎪0</span>
+<span class="go">⎩</span>
+</pre></div>
+</div>
+<p>This last example returned a <tt class="docutils literal"><span class="pre">Piecewise</span></tt> expression because the integral
+does not converge unless <span class="math">\(\Re(y) &gt; 1.\)</span></p>
+</div>
+<div class="section" id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Permalink to this headline">¶</a></h2>
+<p>SymPy can compute symbolic limits with the <tt class="docutils literal"><span class="pre">limit</span></tt> function.  The syntax to compute</p>
+<div class="math">
+\[\lim_{x\to x_0} f(x)\]</div>
+<p>is <tt class="docutils literal"><span class="pre">limit(f(x),</span> <span class="pre">x,</span> <span class="pre">x0)</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">limit</span></tt> should be used instead of <tt class="docutils literal"><span class="pre">subs</span></tt> whenever the point of evaluation
+is a singularity.  Even though SymPy has objects to represent <span class="math">\(\infty\)</span>, using
+them for evaluation is not reliable because they do not keep track of things
+like rate of growth.  Also, things like <span class="math">\(\infty - \infty\)</span> and
+<span class="math">\(\frac{\infty}{\infty}\)</span> return <span class="math">\(\mathrm{nan}\)</span> (not-a-number).  For example</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">nan</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>Like <tt class="docutils literal"><span class="pre">Derivative</span></tt> and <tt class="docutils literal"><span class="pre">Integral</span></tt>, <tt class="docutils literal"><span class="pre">limit</span></tt> has an unevaluated
+counterpart, <tt class="docutils literal"><span class="pre">Limit</span></tt>.  To evaluate it, use <tt class="docutils literal"><span class="pre">doit</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">Limit</span><span class="p">((</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">    cos(x) - 1</span>
+<span class="go">lim ──────────</span>
+<span class="go">x-&gt;0    x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>To evaluate a limit at one side only, pass <tt class="docutils literal"><span class="pre">'+'</span></tt> or <tt class="docutils literal"><span class="pre">'-'</span></tt> as a third
+argument to <tt class="docutils literal"><span class="pre">limit</span></tt>.  For example, to compute</p>
+<div class="math">
+\[\lim_{x\to 0^+}\frac{1}{x},\]</div>
+<p>do</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;+&#39;</span><span class="p">)</span>
+<span class="go">∞</span>
+</pre></div>
+</div>
+<p>As opposed to</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;-&#39;</span><span class="p">)</span>
+<span class="go">-∞</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="series-expansion">
+<h2>Series Expansion<a class="headerlink" href="#series-expansion" title="Permalink to this headline">¶</a></h2>
+<p>SymPy can compute asymptotic series expansions of functions around a point. To
+compute the expansion of <span class="math">\(f(x)\)</span> around the point <span class="math">\(x = x_0\)</span> terms of order
+<span class="math">\(x^n\)</span>, use <tt class="docutils literal"><span class="pre">f(x).series(x,</span> <span class="pre">x0,</span> <span class="pre">n)</span></tt>.  <tt class="docutils literal"><span class="pre">x0</span></tt> and <tt class="docutils literal"><span class="pre">n</span></tt> can be omitted, in
+which case the defaults <tt class="docutils literal"><span class="pre">x0=0</span></tt> and <tt class="docutils literal"><span class="pre">n=6</span></tt> will be used.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">exp</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">         2</span>
+<span class="go">        x     ⎛ 4⎞</span>
+<span class="go">1 + x + ── + O⎝x ⎠</span>
+<span class="go">        2</span>
+</pre></div>
+</div>
+<p>The <span class="math">\(O\left (x^4\right )\)</span> term at the end represents the Landau order term at
+<span class="math">\(x=0\)</span> (not to be confused with big O notation used in computer science, which
+generally represents the Landau order term at <span class="math">\(x=\infty\)</span>).  It means that all
+x terms with power greater than or equal to <span class="math">\(x^4\)</span> are omitted.  Order terms
+can be created and manipulated outside of <tt class="docutils literal"><span class="pre">series</span></tt>.  They automatically
+absorb higher order terms.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">6</span> <span class="o">+</span> <span class="n">O</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">4</span><span class="p">)</span>
+<span class="go">     3    ⎛ 4⎞</span>
+<span class="go">x + x  + O⎝x ⎠</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">*</span><span class="n">O</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">O(x)</span>
+</pre></div>
+</div>
+<p>If you do not want the order term, use the <tt class="docutils literal"><span class="pre">removeO</span></tt> method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">removeO</span><span class="p">()</span>
+<span class="go"> 2</span>
+<span class="go">x</span>
+<span class="go">── + x + 1</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>Currently, <tt class="docutils literal"><span class="pre">O</span></tt> only supports orders at 0, so series expansions at points
+other than 0 are computed by first shifting to 0 and then shifting back.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">         2    3    4     5</span>
+<span class="go">        x    x    x     x     ⎛ 6⎞</span>
+<span class="go">1 + x + ── + ── + ── + ─── + O⎝x ⎠</span>
+<span class="go">        2    6    24   120</span>
+</pre></div>
+</div>
+<p>This means that if you compute the series expansion at a point other than 0,
+the result will be shifted to 0. You can easily shift it back with <tt class="docutils literal"><span class="pre">subs</span></tt>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">exp</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">series</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">removeO</span><span class="p">()</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">           5          4          3          2</span>
+<span class="go">    (x - 6)    (x - 6)    (x - 6)    (x - 6)</span>
+<span class="go">x + ──────── + ──────── + ──────── + ──────── - 5</span>
+<span class="go">      120         24         6          2</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Calculus</a><ul>
+<li><a class="reference internal" href="#derivatives">Derivatives</a></li>
+<li><a class="reference internal" href="#integrals">Integrals</a></li>
+<li><a class="reference internal" href="#limits">Limits</a></li>
+<li><a class="reference internal" href="#series-expansion">Series Expansion</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="simplification.html"
+                        title="previous chapter">Simplification</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="solvers.html"
+                        title="next chapter">Solvers</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/calculus.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="solvers.html" title="Solvers"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="simplification.html" title="Simplification"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

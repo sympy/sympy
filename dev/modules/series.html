@@ -1,0 +1,688 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Series Expansions &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Modules Reference" href="index.html" />
+    <link rel="next" title="Sets" href="sets.html" />
+    <link rel="prev" title="Term rewriting" href="rewriting.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sets.html" title="Sets"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="rewriting.html" title="Term rewriting"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-sympy.series">
+<span id="series-expansions"></span><h1>Series Expansions<a class="headerlink" href="#module-sympy.series" title="Permalink to this headline">¶</a></h1>
+<p>The series module implements series expansions as a function and many related
+functions.</p>
+<div class="section" id="limits">
+<h2>Limits<a class="headerlink" href="#limits" title="Permalink to this headline">¶</a></h2>
+<p>The main purpose of this module is the computation of limits.</p>
+<dl class="function">
+<dt id="sympy.series.limits.limit">
+<tt class="descclassname">sympy.series.limits.</tt><tt class="descname">limit</tt><big>(</big><em>e</em>, <em>z</em>, <em>z0</em>, <em>dir='+'</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/limits.html#limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.limits.limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the limit of e(z) at the point z0.</p>
+<p>z0 can be any expression, including oo and -oo.</p>
+<p>For dir=&#8221;+&#8221; (default) it calculates the limit from the right
+(z-&gt;z0+) and for dir=&#8221;-&#8221; the limit from the left (z-&gt;z0-). For infinite z0
+(oo or -oo), the dir argument doesn&#8217;t matter.</p>
+<p class="rubric">Notes</p>
+<p>First we try some heuristics for easy and frequent cases like &#8220;x&#8221;, &#8220;1/x&#8221;,
+&#8220;x**2&#8221; and similar, so that it&#8217;s fast. For all other cases, we use the
+Gruntz algorithm (see the gruntz() function).</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">limit</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">&quot;+&quot;</span><span class="p">)</span>
+<span class="go">oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">&quot;-&quot;</span><span class="p">)</span>
+<span class="go">-oo</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">oo</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.series.limits.Limit">
+<em class="property">class </em><tt class="descclassname">sympy.series.limits.</tt><tt class="descname">Limit</tt><a class="reference internal" href="../_modules/sympy/series/limits.html#Limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.limits.Limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an unevaluated limit.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Limit</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">Symbol</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Limit</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">Limit(sin(x)/x, x, 0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Limit</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="s">&quot;-&quot;</span><span class="p">)</span>
+<span class="go">Limit(1/x, x, 0, dir=&#39;-&#39;)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.series.limits.Limit.doit">
+<tt class="descname">doit</tt><big>(</big><em>**hints</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/limits.html#Limit.doit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.limits.Limit.doit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates limit</p>
+</dd></dl>
+
+</dd></dl>
+
+<p>As is explained above, the workhorse for limit computations is the
+function gruntz() which implements Gruntz&#8217; algorithm for computing limits.</p>
+<div class="section" id="the-gruntz-algorithm">
+<h3>The Gruntz Algorithm<a class="headerlink" href="#the-gruntz-algorithm" title="Permalink to this headline">¶</a></h3>
+<p>This section explains the basics of the algorithm used for computing limits.
+Most of the time the limit() function should just work. However it is still
+useful to keep in mind how it is implemented in case something does not work
+as expected.</p>
+<p>First we define an ordering on functions. Suppose <span class="math">\(f(x)\)</span> and <span class="math">\(g(x)\)</span> are two
+real-valued functions such that <span class="math">\(\lim_{x \to \infty} f(x) = \infty\)</span> and
+similarly <span class="math">\(\lim_{x \to \infty} g(x) = \infty\)</span>. We shall say that <span class="math">\(f(x)\)</span>
+<em>dominates</em>
+<span class="math">\(g(x)\)</span>, written <span class="math">\(f(x) \succ g(x)\)</span>, if for all <span class="math">\(a, b \in \mathbb{R}_{&gt;0}\)</span> we have
+<span class="math">\(\lim_{x \to \infty} \frac{f(x)^a}{g(x)^b} = \infty\)</span>.
+We also say that <span class="math">\(f(x)\)</span> and
+<span class="math">\(g(x)\)</span> are <em>of the same comparability class</em> if neither <span class="math">\(f(x) \succ g(x)\)</span> nor
+<span class="math">\(g(x) \succ f(x)\)</span> and shall denote it as <span class="math">\(f(x) \asymp g(x)\)</span>.</p>
+<p>Note that whenever <span class="math">\(a, b \in \mathbb{R}_{&gt;0}\)</span> then
+<span class="math">\(a f(x)^b \asymp f(x)\)</span>, and we shall use this to extend the definition of
+<span class="math">\(\succ\)</span> to all functions which tend to <span class="math">\(0\)</span> or <span class="math">\(\pm \infty\)</span> as <span class="math">\(x \to \infty\)</span>.
+Thus we declare that <span class="math">\(f(x) \asymp 1/f(x)\)</span> and <span class="math">\(f(x) \asymp -f(x)\)</span>.</p>
+<p>It is easy to show the following examples:</p>
+<ul class="simple">
+<li><span class="math">\(e^x \succ x^m\)</span></li>
+<li><span class="math">\(e^{x^2} \succ e^{mx}\)</span></li>
+<li><span class="math">\(e^{e^x} \succ e^{x^m}\)</span></li>
+<li><span class="math">\(x^m \asymp x^n\)</span></li>
+<li><span class="math">\(e^{x + \frac{1}{x}} \asymp e^{x + \log{x}} \asymp e^x\)</span>.</li>
+</ul>
+<p>From the above definition, it is possible to prove the following property:</p>
+<blockquote>
+<div><p>Suppose <span class="math">\(\omega\)</span>, <span class="math">\(g_1, g_2, \dots\)</span> are functions of <span class="math">\(x\)</span>,
+<span class="math">\(\lim_{x \to \infty} \omega = 0\)</span> and <span class="math">\(\omega \succ g_i\)</span> for
+all <span class="math">\(i\)</span>. Let <span class="math">\(c_1, c_2, \dots \in \mathbb{R}\)</span> with <span class="math">\(c_1 &lt; c_2 &lt; \dots\)</span>.</p>
+<p>Then <span class="math">\(\lim_{x \to \infty} \sum_i g_i \omega^{c_i} = \lim_{x \to \infty} g_1 \omega^{c_1}\)</span>.</p>
+</div></blockquote>
+<p>For <span class="math">\(g_1 = g\)</span> and <span class="math">\(\omega\)</span> as above we also have the following easy result:</p>
+<blockquote>
+<div><ul class="simple">
+<li><span class="math">\(\lim_{x \to \infty} g \omega^c = 0\)</span> for <span class="math">\(c &gt; 0\)</span></li>
+<li><span class="math">\(\lim_{x \to \infty} g \omega^c = \pm \infty\)</span> for <span class="math">\(c &lt; 0\)</span>,
+where the sign is determined by the (eventual) sign of <span class="math">\(g\)</span></li>
+<li><span class="math">\(\lim_{x \to \infty} g \omega^0 = \lim_{x \to \infty} g\)</span>.</li>
+</ul>
+</div></blockquote>
+<p>Using these results yields the following strategy for computing
+<span class="math">\(\lim_{x \to \infty} f(x)\)</span>:</p>
+<ol class="arabic simple">
+<li>Find the set of <em>most rapidly varying subexpressions</em> (MRV set) of <span class="math">\(f(x)\)</span>.
+That is, from the set of all subexpressions of <span class="math">\(f(x)\)</span>, find the elements that
+are maximal under the relation <span class="math">\(\succ\)</span>.</li>
+<li>Choose a function <span class="math">\(\omega\)</span> that is in the same comparability class as
+the elements in the MRV set, such that <span class="math">\(\lim_{x \to \infty} \omega = 0\)</span>.</li>
+<li>Expand <span class="math">\(f(x)\)</span> as a series in <span class="math">\(\omega\)</span> in such a way that the antecedents of
+the above theorem are satisfied.</li>
+<li>Apply the theorem and conclude the computation of
+<span class="math">\(\lim_{x \to \infty} f(x)\)</span>, possibly by recursively working on <span class="math">\(g_1(x)\)</span>.</li>
+</ol>
+<div class="section" id="notes">
+<h4>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h4>
+<p>This exposition glossed over several details. Many are described in the file
+gruntz.py, and all can be found in Gruntz&#8217; very readable thesis. The most
+important points that have not been explained are:</p>
+<ol class="arabic simple">
+<li>Given f(x) and g(x), how do we determine if <span class="math">\(f(x) \succ g(x)\)</span>,
+<span class="math">\(g(x) \succ f(x)\)</span> or <span class="math">\(g(x) \asymp f(x)\)</span>?</li>
+<li>How do we find the MRV set of an expression?</li>
+<li>How do we compute series expansions?</li>
+<li>Why does the algorithm terminate?</li>
+</ol>
+<p>If you are interested, be sure to take a look at
+<a class="reference external" href="http://www.cybertester.com/data/gruntz.pdf">Gruntz Thesis</a>.</p>
+</div>
+<div class="section" id="reference">
+<h4>Reference<a class="headerlink" href="#reference" title="Permalink to this headline">¶</a></h4>
+<dl class="function">
+<dt id="sympy.series.gruntz.gruntz">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">gruntz</tt><big>(</big><em>e</em>, <em>z</em>, <em>z0</em>, <em>dir='+'</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#gruntz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.gruntz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the limit of e(z) at the point z0 using the Gruntz algorithm.</p>
+<p>z0 can be any expression, including oo and -oo.</p>
+<p>For dir=&#8221;+&#8221; (default) it calculates the limit from the right
+(z-&gt;z0+) and for dir=&#8221;-&#8221; the limit from the left (z-&gt;z0-). For infinite z0
+(oo or -oo), the dir argument doesn&#8217;t matter.</p>
+<p>This algorithm is fully described in the module docstring in the gruntz.py
+file. It relies heavily on the series expansion. Most frequently, gruntz()
+is only used if the faster limit() function (which uses heuristics) fails.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.compare">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">compare</tt><big>(</big><em>a</em>, <em>b</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#compare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.compare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns &#8220;&lt;&#8221; if a&lt;b, &#8220;=&#8221; for a == b, &#8220;&gt;&#8221; for a&gt;b</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.rewrite">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">rewrite</tt><big>(</big><em>e</em>, <em>Omega</em>, <em>x</em>, <em>wsym</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#rewrite"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.rewrite" title="Permalink to this definition">¶</a></dt>
+<dd><p>e(x) ... the function
+Omega ... the mrv set
+wsym ... the symbol which is going to be used for w</p>
+<p>Returns the rewritten e in terms of w and log(w). See test_rewrite1()
+for examples and correct results.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.build_expression_tree">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">build_expression_tree</tt><big>(</big><em>Omega</em>, <em>rewrites</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#build_expression_tree"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.build_expression_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for rewrite.</p>
+<p>We need to sort Omega (mrv set) so that we replace an expression before
+we replace any expression in terms of which it has to be rewritten:</p>
+<div class="highlight-python"><pre>e1 ---&gt; e2 ---&gt; e3
+         \
+          -&gt; e4</pre>
+</div>
+<p>Here we can do e1, e2, e3, e4 or e1, e2, e4, e3.
+To do this we assemble the nodes into a tree, and sort them by height.</p>
+<p>This function builds the tree, rewrites then sorts the nodes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.mrv_leadterm">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">mrv_leadterm</tt><big>(</big><em>*args</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#mrv_leadterm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.mrv_leadterm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns (c0, e0) for e.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.calculate_series">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">calculate_series</tt><big>(</big><em>e</em>, <em>x</em>, <em>skip_abs=False</em>, <em>logx=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#calculate_series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.calculate_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates at least one term of the series of &#8220;e&#8221; in &#8220;x&#8221;.</p>
+<p>This is a place that fails most often, so it is in its own function.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.limitinf">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">limitinf</tt><big>(</big><em>*args</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#limitinf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.limitinf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Limit e(x) for x-&gt; oo</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.sign">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">sign</tt><big>(</big><em>*args</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#sign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.sign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a sign of an expression e(x) for x-&gt;oo.</p>
+<div class="highlight-python"><pre>e &gt;  0 for x sufficiently large ...  1
+e == 0 for x sufficiently large ...  0
+e &lt;  0 for x sufficiently large ... -1</pre>
+</div>
+<p>The result of this function is currently undefined if e changes sign
+arbitarily often for arbitrarily large x (e.g. sin(x)).</p>
+<p>Note that this returns zero only if e is <em>constantly</em> zero
+for x sufficiently large. [If e is constant, of course, this is just
+the same thing as the sign of e.]</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.mrv">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">mrv</tt><big>(</big><em>e</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#mrv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.mrv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a SubsSet of most rapidly varying (mrv) subexpressions of &#8216;e&#8217;,
+and e rewritten in terms of these</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.mrv_max1">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">mrv_max1</tt><big>(</big><em>f</em>, <em>g</em>, <em>exps</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#mrv_max1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.mrv_max1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the maximum of two sets of expressions f and g, which
+are in the same comparability class, i.e. mrv_max1() compares (two elements of)
+f and g and returns the set, which is in the higher comparability class
+of the union of both, if they have the same order of variation.
+Also returns exps, with the appropriate substitutions made.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.gruntz.mrv_max3">
+<tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">mrv_max3</tt><big>(</big><em>f</em>, <em>expsf</em>, <em>g</em>, <em>expsg</em>, <em>union</em>, <em>expsboth</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#mrv_max3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.mrv_max3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the maximum of two sets of expressions f and g, which
+are in the same comparability class, i.e. max() compares (two elements of)
+f and g and returns either (f, expsf) [if f is larger], (g, expsg)
+[if g is larger] or (union, expsboth) [if f, g are of the same class].</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="sympy.series.gruntz.SubsSet">
+<em class="property">class </em><tt class="descclassname">sympy.series.gruntz.</tt><tt class="descname">SubsSet</tt><a class="reference internal" href="../_modules/sympy/series/gruntz.html#SubsSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.SubsSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores (expr, dummy) pairs, and how to rewrite expr-s.</p>
+<p>The gruntz algorithm needs to rewrite certain expressions in term of a new
+variable w. We cannot use subs, because it is just too smart for us. For
+example:</p>
+<div class="highlight-python"><pre>&gt; Omega=[exp(exp(_p - exp(-_p))/(1 - 1/_p)), exp(exp(_p))]
+&gt; O2=[exp(-exp(_p) + exp(-exp(-_p))*exp(_p)/(1 - 1/_p))/_w, 1/_w]
+&gt; e = exp(exp(_p - exp(-_p))/(1 - 1/_p)) - exp(exp(_p))
+&gt; e.subs(Omega[0],O2[0]).subs(Omega[1],O2[1])
+-1/w + exp(exp(p)*exp(-exp(-p))/(1 - 1/p))</pre>
+</div>
+<p>is really not what we want!</p>
+<p>So we do it the hard way and keep track of all the things we potentially
+want to substitute by dummy variables. Consider the expression:</p>
+<div class="highlight-python"><pre>exp(x - exp(-x)) + exp(x) + x.</pre>
+</div>
+<p>The mrv set is {exp(x), exp(-x), exp(x - exp(-x))}.
+We introduce corresponding dummy variables d1, d2, d3 and rewrite:</p>
+<div class="highlight-python"><pre>d3 + d1 + x.</pre>
+</div>
+<p>This class first of all keeps track of the mapping expr-&gt;variable, i.e.
+will at this stage be a dictionary:</p>
+<div class="highlight-python"><pre>{exp(x): d1, exp(-x): d2, exp(x - exp(-x)): d3}.</pre>
+</div>
+<p>[It turns out to be more convenient this way round.]
+But sometimes expressions in the mrv set have other expressions from the
+mrv set as subexpressions, and we need to keep track of that as well. In
+this case, d3 is really exp(x - d2), so rewrites at this stage is:</p>
+<div class="highlight-python"><pre>{d3: exp(x-d2)}.</pre>
+</div>
+<p>The function rewrite uses all this information to correctly rewrite our
+expression in terms of w. In this case w can be choosen to be exp(-x),
+i.e. d2. The correct rewriting then is:</p>
+<div class="highlight-python"><pre>exp(-w)/w + 1/w + x.</pre>
+</div>
+<dl class="method">
+<dt id="sympy.series.gruntz.SubsSet.meets">
+<tt class="descname">meets</tt><big>(</big><em>s2</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#SubsSet.meets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.SubsSet.meets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell whether or not self and s2 have non-empty intersection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.series.gruntz.SubsSet.union">
+<tt class="descname">union</tt><big>(</big><em>s2</em>, <em>exps=None</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/gruntz.html#SubsSet.union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.gruntz.SubsSet.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the union of self and s2, adjusting exps</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+<div class="section" id="more-intuitive-series-expansion">
+<h2>More Intuitive Series Expansion<a class="headerlink" href="#more-intuitive-series-expansion" title="Permalink to this headline">¶</a></h2>
+<p>This is achieved
+by creating a wrapper around Basic.series(). This allows for the use of
+series(x*cos(x),x), which is possibly more intuative than (x*cos(x)).series(x).</p>
+<div class="section" id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">series</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">series</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="n">x</span><span class="p">)</span>
+<span class="go">1 - x**2/2 + x**4/24 + O(x**6)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id1">
+<h3>Reference<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.series.series.series">
+<tt class="descclassname">sympy.series.series.</tt><tt class="descname">series</tt><big>(</big><em>expr</em>, <em>x=None</em>, <em>x0=0</em>, <em>n=6</em>, <em>dir='+'</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/series.html#series"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.series.series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Series expansion of expr around point <span class="math">\(x = x0\)</span>.</p>
+<p>See the doctring of Expr.series() for complete details of this wrapper.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="order-terms">
+<h2>Order Terms<a class="headerlink" href="#order-terms" title="Permalink to this headline">¶</a></h2>
+<p>This module also implements automatic keeping track of the order of your
+expansion.</p>
+<div class="section" id="id2">
+<h3>Examples<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">Order</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;x&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Order</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+<span class="go">O(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Order</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="go">1 + O(x)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h3>Reference<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="sympy.series.order.Order">
+<em class="property">class </em><tt class="descclassname">sympy.series.order.</tt><tt class="descname">Order</tt><a class="reference internal" href="../_modules/sympy/series/order.html#Order"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.order.Order" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the limiting behavior of some function</p>
+<p>The order of a function characterizes the function based on the limiting
+behavior of the function as it goes to some limit. Only taking the limit
+point to be 0 or positive infinity is currently supported. This is
+expressed in big O notation <a class="reference internal" href="#r233">[R233]</a>.</p>
+<p>The formal definition for the order of a function <span class="math">\(g(x)\)</span> about a point <span class="math">\(a\)</span>
+is such that <span class="math">\(g(x) = O(f(x))\)</span> as <span class="math">\(x \rightarrow a\)</span> if and only if for any
+<span class="math">\(\delta &gt; 0\)</span> there exists a <span class="math">\(M &gt; 0\)</span> such that <span class="math">\(|g(x)| \leq M|f(x)|\)</span> for
+<span class="math">\(|x-a| &lt; \delta\)</span>. This is equivalent to <span class="math">\(\lim_{x \rightarrow a}
+|g(x)/f(x)| &lt; \infty\)</span>.</p>
+<p>Let&#8217;s illustrate it on the following example by taking the expansion of
+<span class="math">\(\sin(x)\)</span> about 0:</p>
+<div class="math">
+\[\sin(x) = x - x^3/3! + O(x^5)\]</div>
+<p>where in this case <span class="math">\(O(x^5) = x^5/5! - x^7/7! + \cdots\)</span>. By the definition
+of <span class="math">\(O\)</span>, for any <span class="math">\(\delta &gt; 0\)</span> there is an <span class="math">\(M\)</span> such that:</p>
+<div class="math">
+\[\begin{split}|x^5/5! - x^7/7! + ....| &lt;= M|x^5| \text{ for } |x| &lt; \delta\end{split}\]</div>
+<p>or by the alternate definition:</p>
+<div class="math">
+\[\begin{split}\lim_{x \rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| &lt; \infty\end{split}\]</div>
+<p>which surely is true, because</p>
+<div class="math">
+\[\lim_{x \rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| = 1/5!\]</div>
+<p>As it is usually used, the order of a function can be intuitively thought
+of representing all terms of powers greater than the one specified. For
+example, <span class="math">\(O(x^3)\)</span> corresponds to any terms proportional to <span class="math">\(x^3,
+x^4,\ldots\)</span> and any higher power. For a polynomial, this leaves terms
+proportional to <span class="math">\(x^2\)</span>, <span class="math">\(x\)</span> and constants.</p>
+<p class="rubric">Notes</p>
+<p>In <tt class="docutils literal"><span class="pre">O(f(x),</span> <span class="pre">x)</span></tt> the expression <tt class="docutils literal"><span class="pre">f(x)</span></tt> is assumed to have a leading
+term.  <tt class="docutils literal"><span class="pre">O(f(x),</span> <span class="pre">x)</span></tt> is automatically transformed to
+<tt class="docutils literal"><span class="pre">O(f(x).as_leading_term(x),x)</span></tt>.</p>
+<blockquote>
+<div><p><tt class="docutils literal"><span class="pre">O(expr*f(x),</span> <span class="pre">x)</span></tt> is <tt class="docutils literal"><span class="pre">O(f(x),</span> <span class="pre">x)</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">O(expr,</span> <span class="pre">x)</span></tt> is <tt class="docutils literal"><span class="pre">O(1)</span></tt></p>
+<p><tt class="docutils literal"><span class="pre">O(0,</span> <span class="pre">x)</span></tt> is 0.</p>
+</div></blockquote>
+<p>Multivariate O is also supported:</p>
+<blockquote>
+<div><tt class="docutils literal"><span class="pre">O(f(x,</span> <span class="pre">y),</span> <span class="pre">x,</span> <span class="pre">y)</span></tt> is transformed to
+<tt class="docutils literal"><span class="pre">O(f(x,</span> <span class="pre">y).as_leading_term(x,y).as_leading_term(y),</span> <span class="pre">x,</span> <span class="pre">y)</span></tt></div></blockquote>
+<p>In the multivariate case, it is assumed the limits w.r.t. the various
+symbols commute.</p>
+<p>If no symbols are passed then all symbols in the expression are used.</p>
+<p class="rubric">References</p>
+<table class="docutils citation" frame="void" id="r233" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[R233]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> <a class="reference external" href="http://en.wikipedia.org/wiki/Big_O_notation">Big O notation</a></td></tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">O</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">O(x)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">x</span>
+<span class="go">O(x**2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">O</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">-</span><span class="n">O</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">O(x)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="sympy.series.order.Order.contains">
+<tt class="descname">contains</tt><big>(</big><em>*args</em>, <em>**kw_args</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/order.html#Order.contains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.order.Order.contains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if expr belongs to Order(self.expr, *self.variables).
+Return False if self belongs to expr.
+Return None if the inclusion relation cannot be determined
+(e.g. when self and expr have different symbols).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="series-acceleration">
+<h2>Series Acceleration<a class="headerlink" href="#series-acceleration" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+<div class="section" id="id6">
+<h3>Reference<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.series.acceleration.richardson">
+<tt class="descclassname">sympy.series.acceleration.</tt><tt class="descname">richardson</tt><big>(</big><em>A</em>, <em>k</em>, <em>n</em>, <em>N</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/acceleration.html#richardson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.acceleration.richardson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate an approximation for lim k-&gt;oo A(k) using Richardson
+extrapolation with the terms A(n), A(n+1), ..., A(n+N+1).
+Choosing N ~= 2*n often gives good results.</p>
+<p>A simple example is to calculate exp(1) using the limit definition.
+This limit converges slowly; n = 100 only produces two accurate
+digits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">1</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">**</span><span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">2.7048138294</span>
+</pre></div>
+</div>
+<p>Richardson extrapolation with 11 appropriately chosen terms gives
+a value that is accurate to the indicated precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">E</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.series.acceleration</span> <span class="kn">import</span> <span class="n">richardson</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">richardson</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">2.7182818285</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">2.7182818285</span>
+</pre></div>
+</div>
+<p>Another useful application is to speed up convergence of series.
+Computing 100 terms of the zeta(2) series 1/k**2 yields only
+two accurate digits:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">k</span><span class="o">**-</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">1.6349839002</span>
+</pre></div>
+</div>
+<p>Richardson extrapolation performs much better:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">richardson</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">1.6449340668</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(((</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>     <span class="c"># Exact value</span>
+<span class="go">1.6449340668</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="sympy.series.acceleration.shanks">
+<tt class="descclassname">sympy.series.acceleration.</tt><tt class="descname">shanks</tt><big>(</big><em>A</em>, <em>k</em>, <em>n</em>, <em>m=1</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/acceleration.html#shanks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.acceleration.shanks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate an approximation for lim k-&gt;oo A(k) using the n-term Shanks
+transformation S(A)(n). With m &gt; 1, calculate the m-fold recursive
+Shanks transformation S(S(...S(A)...))(n).</p>
+<p>The Shanks transformation is useful for summing Taylor series that
+converge slowly near a pole or singularity, e.g. for log(2):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.abc</span> <span class="kn">import</span> <span class="n">k</span><span class="p">,</span> <span class="n">n</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Sum</span><span class="p">,</span> <span class="n">Integer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.series.acceleration</span> <span class="kn">import</span> <span class="n">shanks</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">Sum</span><span class="p">(</span><span class="n">Integer</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">doit</span><span class="p">()</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">0.6881721793</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">shanks</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">0.6931396564</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">shanks</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">evalf</span><span class="p">(),</span> <span class="mi">10</span><span class="p">))</span>
+<span class="go">0.6931471806</span>
+</pre></div>
+</div>
+<p>The correct value is 0.6931471805599453094172321215.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="residues">
+<h2>Residues<a class="headerlink" href="#residues" title="Permalink to this headline">¶</a></h2>
+<p>TODO</p>
+<div class="section" id="id7">
+<h3>Reference<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="sympy.series.residues.residue">
+<tt class="descclassname">sympy.series.residues.</tt><tt class="descname">residue</tt><big>(</big><em>expr</em>, <em>x</em>, <em>x0</em><big>)</big><a class="reference internal" href="../_modules/sympy/series/residues.html#residue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.series.residues.residue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the residue of <tt class="docutils literal"><span class="pre">expr</span></tt> at the point x=x0.</p>
+<p>The residue is defined as the coefficient of 1/(x-x0) in the power series
+expansion about x=x0.</p>
+<p class="rubric">References</p>
+<ol class="arabic simple">
+<li><a class="reference external" href="http://en.wikipedia.org/wiki/Residue_theorem">http://en.wikipedia.org/wiki/Residue_theorem</a></li>
+</ol>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">residue</span><span class="p">,</span> <span class="n">sin</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residue</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residue</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">residue</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>This function is essential for the Residue Theorem [1].</p>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Series Expansions</a><ul>
+<li><a class="reference internal" href="#limits">Limits</a><ul>
+<li><a class="reference internal" href="#the-gruntz-algorithm">The Gruntz Algorithm</a><ul>
+<li><a class="reference internal" href="#notes">Notes</a></li>
+<li><a class="reference internal" href="#reference">Reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#more-intuitive-series-expansion">More Intuitive Series Expansion</a><ul>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+<li><a class="reference internal" href="#id1">Reference</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#order-terms">Order Terms</a><ul>
+<li><a class="reference internal" href="#id2">Examples</a></li>
+<li><a class="reference internal" href="#id3">Reference</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#series-acceleration">Series Acceleration</a><ul>
+<li><a class="reference internal" href="#id6">Reference</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#residues">Residues</a><ul>
+<li><a class="reference internal" href="#id7">Reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="rewriting.html"
+                        title="previous chapter">Term rewriting</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sets.html"
+                        title="next chapter">Sets</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/series.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sets.html" title="Sets"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="rewriting.html" title="Term rewriting"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Modules Reference</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

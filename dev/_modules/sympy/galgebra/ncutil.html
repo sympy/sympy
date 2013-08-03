@@ -1,0 +1,578 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.galgebra.ncutil &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.galgebra.ncutil</h1><div class="highlight"><pre>
+<span class="c"># sympy/galgebra/ncutil.py</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ncutil.py contains all the needed utility functions that only depend on</span>
+<span class="sd">SymPy and that are required for the expansion and manipulation of linear</span>
+<span class="sd">combinations of noncommutative SymPy symbols.</span>
+
+<span class="sd">also contains &quot;half_angle_reduce&quot; which is probably not needed any more</span>
+<span class="sd">due to the improvements in trigsimp.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">expand</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">diff</span><span class="p">,</span> <span class="n">trigsimp</span><span class="p">,</span> \
+    <span class="n">simplify</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">symbols</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">matrix</span>
+    <span class="n">numpy_loaded</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">numpy_loaded</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="n">ONE_NC</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="s">&#39;ONE&#39;</span><span class="p">,</span> <span class="n">commutative</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_commutative_coef</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+
+
+<span class="k">def</span> <span class="nf">half_angle_reduce</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+    <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;s c&#39;</span><span class="p">)</span>
+    <span class="n">sub_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span> <span class="n">s</span><span class="p">,</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="mi">2</span><span class="p">):</span> <span class="n">c</span><span class="p">}</span>
+    <span class="n">new_expr</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dict</span><span class="p">)</span>
+    <span class="n">sub_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span> <span class="o">*</span> <span class="n">c</span><span class="p">:</span> <span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">s</span><span class="o">**</span><span class="mi">2</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">))</span> <span class="o">/</span> <span class="mi">2</span><span class="p">}</span>
+    <span class="c"># print new_expr</span>
+    <span class="n">new_expr</span> <span class="o">=</span> <span class="n">trigsimp</span><span class="p">(</span><span class="n">simplify</span><span class="p">(</span><span class="n">new_expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sub_dict</span><span class="p">)),</span> <span class="n">recursive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># print expand(new_expr)</span>
+    <span class="k">return</span> <span class="n">new_expr</span>
+
+
+<div class="viewcode-block" id="linear_expand"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.linear_expand">[docs]</a><span class="k">def</span> <span class="nf">linear_expand</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    (expr_0, ..., expr_n) and (1, a_1, ..., a_n) are returned.  Note that</span>
+<span class="sd">    expr_j*a_j does not have to be of that form, but rather can be any</span>
+<span class="sd">    Mul with a_j as a factor (it doen not have to be a postmultiplier).</span>
+<span class="sd">    expr_0 is the scalar part of the expression.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>  <span class="c"># commutative expr only contains expr_0</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">),</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">,</span> <span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>  <span class="c"># expr only contains one term</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="n">coefs</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">)</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>  <span class="c"># term is Symbol</span>
+        <span class="n">coefs</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="n">expr</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>  <span class="c"># expr has multiple terms</span>
+        <span class="n">coefs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="n">coef</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>  <span class="c"># increment coefficient of base</span>
+                <span class="n">ibase</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>  <span class="c"># Python 2.5</span>
+                <span class="n">coefs</span><span class="p">[</span><span class="n">ibase</span><span class="p">]</span> <span class="o">+=</span> <span class="n">coef</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># add base to list</span>
+                <span class="n">coefs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coef</span><span class="p">)</span>
+                <span class="n">bases</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;linear_expand for type </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>  <span class="c"># convert single coef to list</span>
+        <span class="n">coefs</span> <span class="o">=</span> <span class="p">[</span><span class="n">coefs</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bases</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>  <span class="c"># convert single base to list</span>
+        <span class="n">bases</span> <span class="o">=</span> <span class="p">[</span><span class="n">bases</span><span class="p">]</span>
+    <span class="n">coefs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">coefs</span><span class="p">)</span>
+    <span class="n">bases</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span>
+
+</div>
+<div class="viewcode-block" id="linear_projection"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.linear_projection">[docs]</a><span class="k">def</span> <span class="nf">linear_projection</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">plist</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    proj(expr) returns the sum of those terms where a_j is in plist</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span> <span class="ow">and</span> <span class="n">plist</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># return scalar projection</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>  <span class="c"># expr has single term</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">plist</span><span class="p">:</span>  <span class="c"># vector term to be projected</span>
+            <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">)</span> <span class="o">*</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>  <span class="c"># base vector to be projected</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">plist</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>  <span class="c"># expr has multiple terms</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]</span> <span class="ow">and</span> <span class="n">plist</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># scalar term to be projected</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="p">[]</span> <span class="ow">and</span> <span class="n">plist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">plist</span><span class="p">:</span>  <span class="c"># vector term to be projected</span>
+                    <span class="n">result</span> <span class="o">+=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="non_scalar_projection"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.non_scalar_projection">[docs]</a><span class="k">def</span> <span class="nf">non_scalar_projection</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0*S.One + expr_1*a_1 + ... + expr_n*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    proj(expr) returns the sum of those terms where a_j is in plist</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>  <span class="c"># return scalar projection</span>
+        <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>  <span class="c"># expr has single term</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ONE_NC</span><span class="p">:</span>  <span class="c"># vector term to be projected</span>
+            <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">)</span> <span class="o">*</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>  <span class="c"># base vector to be projected</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="o">!=</span> <span class="n">ONE_NC</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>  <span class="c"># expr has multiple terms</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ONE_NC</span><span class="p">:</span>  <span class="c"># vector term to be projected</span>
+                    <span class="n">result</span> <span class="o">+=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<span class="k">def</span> <span class="nf">nc_substitue</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">sub_dict</span><span class="p">):</span>
+    <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">linear_expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">base</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">sub_dict</span><span class="p">[</span><span class="n">base</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<div class="viewcode-block" id="linear_function"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.linear_function">[docs]</a><span class="k">def</span> <span class="nf">linear_function</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    f(expr) = expr_0 + expr_1*f(a_1) + ... + expr_n*f(a_n)</span>
+
+<span class="sd">    is returned</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">)</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fct</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="coef_function"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.coef_function">[docs]</a><span class="k">def</span> <span class="nf">coef_function</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    f(expr) = fct(expr_0) + fct(expr_1)*a_1 + ... + fct(expr_n)*a_n</span>
+
+<span class="sd">    is returned</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fct</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">))</span> <span class="o">*</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fct</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">fct</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">fct</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="bilinear_product"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.bilinear_product">[docs]</a><span class="k">def</span> <span class="nf">bilinear_product</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_ij*a_i*a_j or expr_0 or expr_i*a_i</span>
+
+<span class="sd">    where all the a_i are noncommuting symbols in basis and the expr&#39;s</span>
+
+<span class="sd">    are commuting expressions then</span>
+
+<span class="sd">    bilinear_product(expr) = expr_ij*fct(a_i, a_j)</span>
+
+<span class="sd">    bilinear_product(expr_0) = expr_0</span>
+
+<span class="sd">    bilinear_product(expr_i*a_i) = expr_i*a_i</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">bilinear_term</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>  <span class="c"># bases in expr</span>
+            <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="n">coef</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">coefs</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Pow</span><span class="p">):</span>  <span class="c"># base is a_i**2</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span>
+                <span class="k">return</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c"># base is a_i</span>
+                <span class="k">return</span> <span class="n">expr</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># base is a_i*a_j</span>
+                <span class="k">return</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bases</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>  <span class="c"># expr is a_i*a_i</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span>
+            <span class="k">return</span> <span class="n">fct</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;!!!!Cannot compute bilinear_product for &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;!!!!</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">bilinear_term</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">tmp</span> <span class="o">=</span> <span class="n">bilinear_term</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">fct</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">tmp</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="multilinear_product"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.multilinear_product">[docs]</a><span class="k">def</span> <span class="nf">multilinear_product</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_i1i2...irj*a_i1*a_i2*...*a_ir or expr_0</span>
+
+<span class="sd">    where all the a_i are noncommuting symbols in basis and the expr&#39;s</span>
+
+<span class="sd">    are commuting expressions then</span>
+
+<span class="sd">    multilinear_product(expr) = expr_i1i2...ir*fct(a_i1, a_i2, ..., a_ir)</span>
+
+<span class="sd">    bilinear_product(expr_0) = expr_0</span>
+
+<span class="sd">    where fct() is defined for r &lt;= n the total number of bases</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>  <span class="c"># no bases in expr</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>  <span class="c"># bases in expr</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c"># expr_ij = 1</span>
+            <span class="n">coefs</span> <span class="o">=</span> <span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">]</span>
+        <span class="n">coef</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">coefs</span><span class="p">))</span>
+        <span class="n">new_bases</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="n">bases</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">Pow</span><span class="p">):</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">args</span>
+                <span class="n">new_bases</span> <span class="o">+=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_bases</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">new_bases</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="bilinear_function"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.bilinear_function">[docs]</a><span class="k">def</span> <span class="nf">bilinear_function</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n + expr_11*a_1*a_1</span>
+<span class="sd">           + ... + expr_ij*a_i*a_j + ... + expr_nn*a_n*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    bilinear_function(expr) = bilinear_product(expr_0) + bilinear_product(expr_1*a_1) + ... + bilinear_product(expr_n*a_n)</span>
+<span class="sd">                              + bilinear + product(expr_11*a_1*a_1) + ... + bilinear_product(expr_nn*a_n*a_n)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)):</span>  <span class="c"># only one additive term</span>
+        <span class="k">return</span> <span class="n">bilinear_product</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>  <span class="c"># multiple additive terms</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">bilinear_product</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">fct</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="multilinear_function"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.multilinear_function">[docs]</a><span class="k">def</span> <span class="nf">multilinear_function</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form summation convention):</span>
+
+<span class="sd">    expr = expr_0 + Sum{0 &lt; r &lt;= n}{expr_i1i2...ir*a_i1*a_i2*...*a_ir}</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then and the</span>
+<span class="sd">    dimension of the basis in n then</span>
+
+<span class="sd">    bilinear_function(expr) = multilinear_product(expr_0)</span>
+<span class="sd">        + Sum{0&lt;r&lt;=n}multilinear_product(expr_i1i2...ir*a_i1*a_i2*...*a_ir)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="p">(</span><span class="n">Mul</span><span class="p">,</span> <span class="n">Pow</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">)):</span>  <span class="c"># only one additive term</span>
+        <span class="k">return</span> <span class="n">bilinear_product</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>  <span class="c"># multiple additive terms</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">bilinear_product</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">fct</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="linear_derivation"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.linear_derivation">[docs]</a><span class="k">def</span> <span class="nf">linear_derivation</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">fct</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0 + expr_1*a_1 + ... + expr_n*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    linear_drivation(expr) = diff(expr_0, x) + diff(expr_1, x)*a_1 + ...</span>
+<span class="sd">                             + diff(expr_n, x)*a_n + expr_1*fct(a_1, x) + ...</span>
+<span class="sd">                             + expr_n*fct(a_n, x)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">diff</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="n">coef</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">diff</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fct</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+            <span class="n">coef</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="p">[]:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">diff</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">diff</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">term</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<div class="viewcode-block" id="product_derivation"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.product_derivation">[docs]</a><span class="k">def</span> <span class="nf">product_derivation</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">fct</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form:</span>
+
+<span class="sd">    expr = expr_0*a_1*...*a_n</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    product_derivation(expr) = diff(expr_0, x)*a_1*...*a_n</span>
+<span class="sd">                               + expr_0*(fct(a_1, x)*a_2*...*a_n + ...</span>
+<span class="sd">                               + a_1*...*a_(i-1)*fct(a_i, x)*a_(i + 1)*...*a_n + ...</span>
+<span class="sd">                               + a_1*...*a_(n-1)*fct(a_n, x))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">F</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">diff</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Mul</span><span class="p">):</span>
+        <span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">bases</span><span class="p">)</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">args_cnc</span><span class="p">()</span>
+        <span class="n">coef</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">coefs</span><span class="p">)</span>
+        <span class="n">dcoef</span> <span class="o">=</span> <span class="n">diff</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dcoef</span> <span class="o">*</span> <span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">dcoef</span> <span class="o">*</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">bases</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ib</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)):</span>
+                <span class="n">result</span> <span class="o">+=</span> <span class="n">coef</span> <span class="o">*</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">bases</span><span class="p">[:</span><span class="n">ib</span><span class="p">])</span> <span class="o">*</span> <span class="n">fct</span><span class="p">(</span><span class="n">bases</span><span class="p">[</span><span class="n">ib</span><span class="p">],</span> <span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">bases</span><span class="p">[</span><span class="n">ib</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+            <span class="k">return</span> <span class="n">result</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fct</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="multilinear_derivation"><a class="viewcode-back" href="../../../modules/galgebra/ncutil.html#sympy.galgebra.ncutil.multilinear_derivation">[docs]</a><span class="k">def</span> <span class="nf">multilinear_derivation</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">fct</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If a sympy &#39;Expr&#39; is of the form (summation convention):</span>
+
+<span class="sd">    expr = expr_0 + expr_i1i2...ir*a_i1*...*a_ir</span>
+
+<span class="sd">    where all the a_j are noncommuting symbols in basis then</span>
+
+<span class="sd">    dexpr = diff(expr_0, x) + d(expr_i1i2...ir*a_i1*...*a_ir)</span>
+
+<span class="sd">    is returned where d() is the product derivation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">F</span><span class="o">.</span><span class="n">is_commutative</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">diff</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Mul</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Symbol</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">product_derivation</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">fct</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">Add</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span>
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">F</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">product_derivation</span><span class="p">(</span><span class="n">term</span><span class="p">,</span> <span class="n">fct</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+</div>
+<span class="k">def</span> <span class="nf">numpy_matrix</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy_loaded</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s">&#39;Cannot use &quot;numpy_matrix&quot; since &quot;numpy&quot; is not loaded&#39;</span><span class="p">)</span>
+    <span class="n">Mlst</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+    <span class="n">nrows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Mlst</span><span class="p">)</span>
+    <span class="n">ncols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Mlst</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">irow</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nrows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">icol</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">Mlst</span><span class="p">[</span><span class="n">irow</span><span class="p">][</span><span class="n">icol</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">Mlst</span><span class="p">[</span><span class="n">irow</span><span class="p">][</span><span class="n">icol</span><span class="p">])</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;In Matrix:</span><span class="se">\n</span><span class="si">%s</span><span class="se">\n</span><span class="s">Cannot convert </span><span class="si">%s</span><span class="s"> to python float.&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">Mlst</span><span class="p">[</span><span class="n">irow</span><span class="p">][</span><span class="n">icol</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">matrix</span><span class="p">(</span><span class="n">Mlst</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

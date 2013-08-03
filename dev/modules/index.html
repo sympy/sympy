@@ -1,0 +1,459 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SymPy Modules Reference &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="next" title="SymPy Core" href="core.html" />
+    <link rel="prev" title="SymPy User’s Guide" href="../guide.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="core.html" title="SymPy Core"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../guide.html" title="SymPy User’s Guide"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="sympy-modules-reference">
+<span id="module-docs"></span><h1>SymPy Modules Reference<a class="headerlink" href="#sympy-modules-reference" title="Permalink to this headline">¶</a></h1>
+<p>Because every feature of SymPy must have a test case, when you are not sure how
+to use something, just look into the <tt class="docutils literal"><span class="pre">tests/</span></tt> directories, find that feature
+and read the tests for it, that will tell you everything you need to know.</p>
+<p>Most of the things are already documented though in this document, that is
+automatically generated using SymPy&#8217;s docstrings.</p>
+<p>Click the  &#8220;modules&#8221; (<a class="reference internal" href="../py-modindex.html"><em>Module Index</em></a>) link in the top right corner to easily
+access any SymPy module, or use this contens:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="core.html">SymPy Core</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.sympify">sympify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.cache">cache</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.basic">basic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.singleton">singleton</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.expr">expr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#id3">Expr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#atomicexpr">AtomicExpr</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.symbol">symbol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.numbers">numbers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.power">power</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.mul">mul</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.add">add</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.mod">mod</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.relational">relational</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.multidimensional">multidimensional</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.function">function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.evalf">evalf</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.containers">containers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.compatibility">compatibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="core.html#module-sympy.core.exprtools">exprtools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="combinatorics/index.html">Combinatorics Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="combinatorics/index.html#contents">Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ntheory.html">Number Theory</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ntheory.html#ntheory-class-reference">Ntheory Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ntheory.html#ntheory-functions-reference">Ntheory Functions Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concrete.html">Concrete Mathematics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concrete.html#hypergeometric-terms">Hypergeometric terms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concrete.html#sum-and-product-manipulation">Sum and Product manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concrete.html#concrete-class-reference">Concrete Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concrete.html#concrete-functions-reference">Concrete Functions Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="evalf.html">Numerical evaluation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="evalf.html#basics">Basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evalf.html#floating-point-numbers">Floating-point numbers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evalf.html#accuracy-and-error-handling">Accuracy and error handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evalf.html#sums-and-integrals">Sums and integrals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="evalf.html#numerical-simplification">Numerical simplification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functions/index.html">Functions Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functions/index.html#contents">Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="galgebra/index.html">Geometric Algebra Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/ga.html">Geometric Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/manifold.html">Manifold for Geometric Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/vector.html">Vector for Geometric Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/precedence.html">Precedence for Geometric Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/printing.html">Printing for Geometric Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/ncutil.html">Noncommutative utilities for Geometric Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/stringarrays.html">String manipulation for Geometric Algebra</a></li>
+<li class="toctree-l2"><a class="reference internal" href="galgebra/debug.html">Debug code for Geometric Algebra</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="geometry.html">Geometry Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#available-entities">Available Entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#example-usage">Example Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#intersection-of-medians">Intersection of medians</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#an-in-depth-example-pappus-hexagon-theorem">An in-depth example: Pappus&#8217; Hexagon Theorem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#miscellaneous-notes">Miscellaneous Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#future-work">Future Work</a></li>
+<li class="toctree-l2"><a class="reference internal" href="geometry.html#api-reference">API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integrals/integrals.html">Symbolic Integrals</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="integrals/integrals.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrals/integrals.html#module-sympy.integrals.transforms">Integral Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrals/integrals.html#internals">Internals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrals/integrals.html#api-reference">API reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrals/integrals.html#todo-and-bugs">TODO and Bugs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="integrals/integrals.html#numeric-integrals">Numeric Integrals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic.html">Logic Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="logic.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logic.html#forming-logical-expressions">Forming logical expressions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logic.html#boolean-functions">Boolean functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logic.html#simplification-and-equivalence-testing">Simplification and equivalence-testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="logic.html#inference">Inference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matrices/index.html">Matrices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="matrices/matrices.html">Matrices (linear algebra)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices/dense.html">Dense Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices/sparse.html">Sparse Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices/immutablematrices.html">Immutable Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices/expressions.html">Matrix Expressions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mpmath/index.html">Mpmath</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mpmath/index.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpmath/index.html#basic-features">Basic features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpmath/index.html#advanced-mathematics">Advanced mathematics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mpmath/index.html#end-matter">End matter</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="polys/index.html">Polynomials Manipulation Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="polys/index.html#contents">Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="printing.html">Printing System</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.printer">Printer Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#prettyprinter-class">PrettyPrinter Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.ccode">CCodePrinter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#fortran-printing">Fortran Printing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.gtk">Gtk</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.lambdarepr">LambdaPrinter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.latex">LatexPrinter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.mathml">MathMLPrinter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.python">PythonPrinter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.repr">ReprPrinter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.str">StrPrinter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.tree">Tree Printing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#preview">Preview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.conventions">Implementation - Helper Classes/Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#module-sympy.printing.pretty.pretty_symbology">Pretty-Printing Implementation Helpers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="printing.html#dotprint">dotprint</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">Plotting Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#plot-class">Plot Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#plotting-function-reference">Plotting Function Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#series-classes">Series Classes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html#module-sympy.plotting.pygletplot">Pyglet Plotting Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#plot-window-controls">Plot Window Controls</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#coordinate-modes">Coordinate Modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#specifying-intervals-for-variables">Specifying Intervals for Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#using-the-interactive-interface">Using the Interactive Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#using-custom-color-functions">Using Custom Color Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html#plotting-geometric-entities">Plotting Geometric Entities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="assumptions/index.html">Assumptions module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="assumptions/index.html#contents">Contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assumptions/index.html#querying">Querying</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assumptions/index.html#supported-predicates">Supported predicates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assumptions/index.html#design">Design</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assumptions/index.html#extensibility">Extensibility</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assumptions/index.html#performance-improvements">Performance improvements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assumptions/index.html#misc">Misc</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rewriting.html">Term rewriting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rewriting.html#expanding">Expanding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rewriting.html#module-sympy.simplify.cse_main">Common Subexpression Detection and Collection</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="series.html">Series Expansions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="series.html#limits">Limits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="series.html#more-intuitive-series-expansion">More Intuitive Series Expansion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="series.html#order-terms">Order Terms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="series.html#series-acceleration">Series Acceleration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="series.html#residues">Residues</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sets.html">Sets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#set">Set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#interval">Interval</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#finiteset">FiniteSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#union">Union</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#intersection">Intersection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#productset">ProductSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#emptyset">EmptySet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#universalset">UniversalSet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#naturals">Naturals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#integers">Integers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sets.html#transformationset">TransformationSet</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simplify/simplify.html">Simplify</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#id1">simplify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#collect">collect</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#separate">separate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#separatevars">separatevars</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#nthroot">nthroot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#rad-rationalize">rad_rationalize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#radsimp">radsimp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#ratsimp">ratsimp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#fraction">fraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#trigsimp">trigsimp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#besselsimp">besselsimp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#powsimp">powsimp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#combsimp">combsimp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#hypersimp">hypersimp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#hypersimilar">hypersimilar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#nsimplify">nsimplify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#collect-sqrt">collect_sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#collect-const">collect_const</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#posify">posify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#powdenest">powdenest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#logcombine">logcombine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#module-sympy.simplify.sqrtdenest">Square Root Denest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#module-sympy.simplify.cse_main">Common Subexpresion Elimination</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#module-sympy.simplify.hyperexpand">Hypergeometric Function Expansion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#module-sympy.simplify.traversaltools">Traversal Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/simplify.html#module-sympy.simplify.epathtools">EPath Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="simplify/hyperexpand.html">Details on the Hypergeometric Function Expansion Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simplify/hyperexpand.html#hypergeometric-function-expansion-algorithm">Hypergeometric Function Expansion Algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/hyperexpand.html#meijer-g-functions-of-finite-confluence">Meijer G-Functions of Finite Confluence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/hyperexpand.html#extending-the-hypergeometric-tables">Extending The Hypergeometric Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/hyperexpand.html#implemented-hypergeometric-formulae">Implemented Hypergeometric Formulae</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simplify/hyperexpand.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="statistics.html">Statistics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="statistics.html#normal-distributions">Normal distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics.html#other-distributions">Other distributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="statistics.html#api-reference">API Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="stats.html">Stats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="stats.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stats.html#random-variable-types">Random Variable Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stats.html#interface">Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stats.html#module-sympy.stats.rv">Mechanics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/ode.html">ODE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="solvers/ode.html#user-functions">User Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/ode.html#hint-functions">Hint Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/ode.html#lie-heuristics">Lie heuristics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/ode.html#module-sympy.solvers.ode">Information on the ode module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/pde.html">PDE</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="solvers/pde.html#user-functions">User Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/pde.html#hint-methods">Hint Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/pde.html#module-sympy.solvers.pde">Information on the pde module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="solvers/solvers.html">Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html#algebraic-equations">Algebraic equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html#ordinary-differential-equations-odes">Ordinary Differential equations (ODEs)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html#partial-differential-equations-pdes">Partial Differential Equations (PDEs)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html#deutils-utilities-for-solving-ode-s-and-pde-s">Deutils (Utilities for solving ODE&#8217;s and PDE&#8217;s)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html#module-sympy.solvers.recurr">Recurrence Equations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solvers/solvers.html#systems-of-polynomial-equations">Systems of Polynomial Equations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tensor/index.html">Tensor Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensor/index.html#contents">Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utilities/index.html">Utilities</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="utilities/autowrap.html">Autowrap Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/codegen.html">Codegen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/decorator.html">Decorator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/iterables.html">Iterables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/lambdify.html">Lambdify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/memoization.html">Memoization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/misc.html">Miscellaneous</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/pkgdata.html">PKGDATA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/pytest.html">pytest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/randtest.html">Randomised Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/runtests.html">Run Tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/source.html">Source Code Inspection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utilities/timeutils.html">Timing Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parsing.html">Parsing input</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="parsing.html#parsing-functions-reference">Parsing Functions Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parsing.html#parsing-exceptions-reference">Parsing Exceptions Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parsing.html#parsing-transformations-reference">Parsing Transformations Reference</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="physics/index.html">Physics Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="physics/index.html#contents">Contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="categories.html">Category Theory Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="categories.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="categories.html#module-sympy.categories">Base Class Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="categories.html#module-sympy.categories.diagram_drawing">Diagram Drawing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="diffgeom.html">Differential Geometry Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="diffgeom.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="diffgeom.html#base-class-reference">Base Class Reference</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="contributions-to-docs">
+<h2>Contributions to docs<a class="headerlink" href="#contributions-to-docs" title="Permalink to this headline">¶</a></h2>
+<p>All contributions are welcome. If you&#8217;d like to improve something, look into
+the sources if they contain the information you need (if not, please fix them),
+otherwise the documentation generation needs to be improved (look in the
+<tt class="docutils literal"><span class="pre">doc/</span></tt> directory).</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SymPy Modules Reference</a><ul>
+<li><a class="reference internal" href="#contributions-to-docs">Contributions to docs</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../guide.html"
+                        title="previous chapter">SymPy User&#8217;s Guide</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="core.html"
+                        title="next chapter">SymPy Core</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/modules/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="core.html" title="SymPy Core"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../guide.html" title="SymPy User’s Guide"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

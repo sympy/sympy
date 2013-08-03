@@ -1,0 +1,553 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Kane’s Method, Lagrange’s Method &amp; Associated Functions (Docstrings) &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="../index.html" />
+    <link rel="next" title="Printing (Docstrings)" href="printing.html" />
+    <link rel="prev" title="Masses, Inertias &amp; Particles, RigidBodys (Docstrings)" href="part_bod.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing (Docstrings)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="part_bod.html" title="Masses, Inertias &amp; Particles, RigidBodys (Docstrings)"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="kane-s-method-lagrange-s-method-associated-functions-docstrings">
+<h1>Kane&#8217;s Method, Lagrange&#8217;s Method &amp; Associated Functions (Docstrings)<a class="headerlink" href="#kane-s-method-lagrange-s-method-associated-functions-docstrings" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-sympy.physics.mechanics.kane">
+<span id="kane"></span><h2>Kane<a class="headerlink" href="#module-sympy.physics.mechanics.kane" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.kane.KanesMethod">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.kane.</tt><tt class="descname">KanesMethod</tt><big>(</big><em>frame</em>, <em>q_ind</em>, <em>u_ind</em>, <em>kd_eqs=None</em>, <em>q_dependent=</em><span class="optional">[</span><span class="optional">]</span>, <em>configuration_constraints=</em><span class="optional">[</span><span class="optional">]</span>, <em>u_dependent=</em><span class="optional">[</span><span class="optional">]</span>, <em>velocity_constraints=</em><span class="optional">[</span><span class="optional">]</span>, <em>acceleration_constraints=None</em>, <em>u_auxiliary=</em><span class="optional">[</span><span class="optional">]</span><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/kane.html#KanesMethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.kane.KanesMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Kane&#8217;s method object.</p>
+<p>This object is used to do the &#8220;book-keeping&#8221; as you go through and form
+equations of motion in the way Kane presents in:
+Kane, T., Levinson, D. Dynamics Theory and Applications. 1985 McGraw-Hill</p>
+<p>The attributes are for equations in the form [M] udot = forcing.</p>
+<p class="rubric">Examples</p>
+<p>This is a simple example for a one degree of freedom translational
+spring-mass-damper.</p>
+<p>In this example, we first need to do the kinematics.
+This involves creating generalized speeds and coordinates and their
+derivatives.
+Then we create a point and set its velocity in a frame:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">dynamicsymbols</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">KanesMethod</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q u&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qd</span><span class="p">,</span> <span class="n">ud</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q u&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;m c k&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next we need to arrange/store information in the way that KanesMethod
+requires.  The kinematic differential equations need to be stored in a
+dict.  A list of forces/torques must be constructed, where each entry in
+the list is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where the
+Vectors represent the Force or Torque.
+Next a particle needs to be created, and it needs to have a point and mass
+assigned to it.
+Finally, a list of all bodies and particles needs to be created:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">kd</span> <span class="o">=</span> <span class="p">[</span><span class="n">qd</span> <span class="o">-</span> <span class="n">u</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FL</span> <span class="o">=</span> <span class="p">[(</span><span class="n">P</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="n">k</span> <span class="o">*</span> <span class="n">q</span> <span class="o">-</span> <span class="n">c</span> <span class="o">*</span> <span class="n">u</span><span class="p">)</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BL</span> <span class="o">=</span> <span class="p">[</span><span class="n">pa</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Finally we can generate the equations of motion.
+First we create the KanesMethod object and supply an inertial frame,
+coordinates, generalized speeds, and the kinematic differential equations.
+Additional quantities such as configuration and motion constraints,
+dependent coordinates and speeds, and auxiliary speeds are also supplied
+here (see the online documentation).
+Next we form FR* and FR to complete: Fr + Fr* = 0.
+We have the equations of motion at this point.
+It makes sense to rearrnge them though, so we calculate the mass matrix and
+the forcing terms, for E.o.M. in the form: [MM] udot = forcing, where MM is
+the mass matrix, udot is a vector of the time derivatives of the
+generalized speeds, and forcing is a vector representing &#8220;forcing&#8221; terms:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">q_ind</span><span class="o">=</span><span class="p">[</span><span class="n">q</span><span class="p">],</span> <span class="n">u_ind</span><span class="o">=</span><span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="n">kd_eqs</span><span class="o">=</span><span class="n">kd</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">frstar</span><span class="p">)</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">kanes_equations</span><span class="p">(</span><span class="n">FL</span><span class="p">,</span> <span class="n">BL</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MM</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">mass_matrix</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">forcing</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">forcing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhs</span> <span class="o">=</span> <span class="n">MM</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span> <span class="o">*</span> <span class="n">forcing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rhs</span>
+<span class="go">Matrix([[(-c*u(t) - k*q(t))/m]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span><span class="o">.</span><span class="n">linearize</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">Matrix([</span>
+<span class="go">[ 0,  1],</span>
+<span class="go">[-k, -c]])</span>
+</pre></div>
+</div>
+<p>Please look at the documentation pages for more information on how to
+perform linearization and how to deal with dependent coordinates &amp; speeds,
+and how do deal with bringing non-contributing forces into evidence.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="9%" />
+<col width="67%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>auxiliary</td>
+<td>Matrix</td>
+<td>If applicable, the set of auxiliary Kane&#8217;s
+equations used to solve for non-contributing
+forces.</td>
+</tr>
+<tr class="row-even"><td>mass_matrix</td>
+<td>Matrix</td>
+<td>The system&#8217;s mass matrix</td>
+</tr>
+<tr class="row-odd"><td>forcing</td>
+<td>Matrix</td>
+<td>The system&#8217;s forcing vector</td>
+</tr>
+<tr class="row-even"><td>mass_matrix_full</td>
+<td>Matrix</td>
+<td>The &#8220;mass matrix&#8221; for the u&#8217;s and q&#8217;s</td>
+</tr>
+<tr class="row-odd"><td>forcing_full</td>
+<td>Matrix</td>
+<td>The &#8220;forcing vector&#8221; for the u&#8217;s and q&#8217;s</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="sympy.physics.mechanics.kane.KanesMethod.kanes_equations">
+<tt class="descname">kanes_equations</tt><big>(</big><em>FL</em>, <em>BL</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/kane.html#KanesMethod.kanes_equations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.kane.KanesMethod.kanes_equations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to form Kane&#8217;s equations, Fr + Fr* = 0.</p>
+<p>Returns (Fr, Fr*). In the case where auxiliary generalized speeds are
+present (say, s auxiliary speeds, o generalized speeds, and m motion
+constraints) the length of the returned vectors will be o - m + s in
+length. The first o - m equations will be the constrained Kane&#8217;s
+equations, then the s auxiliary Kane&#8217;s equations. These auxiliary
+equations can be accessed with the auxiliary_eqs().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>FL</strong> : list</p>
+<blockquote>
+<div><p>Takes in a list of (Point, Vector) or (ReferenceFrame, Vector)
+tuples which represent the force at a point or torque on a frame.</p>
+</div></blockquote>
+<p><strong>BL</strong> : list</p>
+<blockquote class="last">
+<div><p>A list of all RigidBody&#8217;s and Particle&#8217;s in the system.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.kane.KanesMethod.kindiffdict">
+<tt class="descname">kindiffdict</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/kane.html#KanesMethod.kindiffdict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.kane.KanesMethod.kindiffdict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the qdot&#8217;s in a dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.kane.KanesMethod.linearize">
+<tt class="descname">linearize</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/kane.html#KanesMethod.linearize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.kane.KanesMethod.linearize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method used to generate linearized equations.</p>
+<p>Note that for linearization, it is assumed that time is not perturbed,
+but only coordinates and positions. The &#8220;forcing&#8221; vector&#8217;s jacobian is
+computed with respect to the state vector in the form [Qi, Qd, Ui, Ud].
+This is the &#8220;f_lin_A&#8221; matrix.</p>
+<p>It also finds any non-state dynamicsymbols and computes the jacobian of
+the &#8220;forcing&#8221; vector with respect to them. This is the &#8220;f_lin_B&#8221;
+matrix; if this is empty, an empty matrix is created.</p>
+<p>Consider the following:
+If our equations are: [M]qudot = f, where [M] is the full mass matrix,
+qudot is a vector of the deriatives of the coordinates and speeds, and
+f in the full forcing vector, the linearization process is as follows:
+[M]qudot = [f_lin_A]qu + [f_lin_B]y, where qu is the state vector,
+f_lin_A is the jacobian of the full forcing vector with respect to the
+state vector, f_lin_B is the jacobian of the full forcing vector with
+respect to any non-speed/coordinate dynamicsymbols which show up in the
+full forcing vector, and y is a vector of those dynamic symbols (each
+column in f_lin_B corresponds to a row of the y vector, each of which
+is a non-speed/coordinate dynamicsymbol).</p>
+<p>To get the traditional state-space A and B matrix, you need to multiply
+the f_lin_A and f_lin_B matrices by the inverse of the mass matrix.
+Caution needs to be taken when inverting large symbolic matrices;
+substituting in numerical values before inverting will work better.</p>
+<p>A tuple of (f_lin_A, f_lin_B, other_dynamicsymbols) is returned.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.kane.KanesMethod.rhs">
+<tt class="descname">rhs</tt><big>(</big><em>inv_method=None</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/kane.html#KanesMethod.rhs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.kane.KanesMethod.rhs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the system&#8217;s equations of motion in first order form.</p>
+<p>The output of this will be the right hand side of:</p>
+<p>[qdot, udot].T = f(q, u, t)</p>
+<p>Or, the equations of motion in first order form.  The right hand side
+is what is needed by most numerical ODE integrators.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>inv_method</strong> : str</p>
+<blockquote class="last">
+<div><p>The specific sympy inverse matrix calculation method to use.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-sympy.physics.mechanics.functions">
+<span id="partial-velocity"></span><h2>partial_velocity<a class="headerlink" href="#module-sympy.physics.mechanics.functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="sympy.physics.mechanics.functions.partial_velocity">
+<tt class="descclassname">sympy.physics.mechanics.functions.</tt><tt class="descname">partial_velocity</tt><big>(</big><em>vel_list</em>, <em>u_list</em>, <em>frame</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/functions.html#partial_velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.functions.partial_velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of partial velocities.</p>
+<p>For a list of velocity or angular velocity vectors the partial derivatives
+with respect to the supplied generalized speeds are computed, in the
+specified ReferenceFrame.</p>
+<p>The output is a list of lists. The outer list has a number of elements
+equal to the number of supplied velocity vectors. The inner lists are, for
+each velocity vector, the partial derivatives of that velocity vector with
+respect to the generalized speeds supplied.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>vel_list</strong> : list</p>
+<blockquote>
+<div><p>List of velocities of Point&#8217;s and angular velocities of ReferenceFrame&#8217;s</p>
+</div></blockquote>
+<p><strong>u_list</strong> : list</p>
+<blockquote>
+<div><p>List of independent generalized speeds.</p>
+</div></blockquote>
+<p><strong>frame</strong> : ReferenceFrame</p>
+<blockquote class="last">
+<div><p>The ReferenceFrame the partial derivatives are going to be taken in.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">Point</span><span class="p">,</span> <span class="n">ReferenceFrame</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">dynamicsymbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">partial_velocity</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vel_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">P</span><span class="o">.</span><span class="n">vel</span><span class="p">(</span><span class="n">N</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">partial_velocity</span><span class="p">(</span><span class="n">vel_list</span><span class="p">,</span> <span class="n">u_list</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+<span class="go">[[N.x]]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-sympy.physics.mechanics.lagrange">
+<span id="lagrangesmethod"></span><h2>LagrangesMethod<a class="headerlink" href="#module-sympy.physics.mechanics.lagrange" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="sympy.physics.mechanics.lagrange.LagrangesMethod">
+<em class="property">class </em><tt class="descclassname">sympy.physics.mechanics.lagrange.</tt><tt class="descname">LagrangesMethod</tt><big>(</big><em>Lagrangian</em>, <em>q_list</em>, <em>coneqs=None</em>, <em>forcelist=None</em>, <em>frame=None</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/lagrange.html#LagrangesMethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.lagrange.LagrangesMethod" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lagrange&#8217;s method object.</p>
+<p>This object generates the equations of motion in a two step procedure. The
+first step involves the initialization of LagrangesMethod by supplying the
+Lagrangian and a list of the generalized coordinates, at the bare minimum.
+If there are any constraint equations, they can be supplied as keyword
+arguments. The Lagrangian multipliers are automatically generated and are
+equal in number to the constraint equations.Similarly any non-conservative
+forces can be supplied in a list (as described below and also shown in the
+example) along with a ReferenceFrame. This is also discussed further in the
+__init__ method.</p>
+<p class="rubric">Examples</p>
+<p>This is a simple example for a one degree of freedom translational
+spring-mass-damper.</p>
+<p>In this example, we first need to do the kinematics.$
+This involves creating generalized coordinates and its derivative.
+Then we create a point and set its velocity in a frame:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">LagrangesMethod</span><span class="p">,</span> <span class="n">Lagrangian</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">ReferenceFrame</span><span class="p">,</span> <span class="n">Particle</span><span class="p">,</span> <span class="n">Point</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="n">dynamicsymbols</span><span class="p">,</span> <span class="n">kinetic_energy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qd</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;m k b&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">qd</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We need to then prepare the information as required by LagrangesMethod to
+generate equations of motion.
+First we create the Particle, which has a point attached to it.
+Following this the lagrangian is created from the kinetic and potential
+energies.
+Then, a list of nonconservative forces/torques must be constructed, where
+each entry in is a (Point, Vector) or (ReferenceFrame, Vector) tuple, where
+the Vectors represent the nonconservative force or torque.</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;Pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span><span class="o">.</span><span class="n">set_potential_energy</span><span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="n">q</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">Lagrangian</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">Pa</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fl</span> <span class="o">=</span> <span class="p">[(</span><span class="n">P</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span> <span class="o">*</span> <span class="n">qd</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Finally we can generate the equations of motion.
+First we create the LagrangesMethod object.To do this one must supply an
+the Lagrangian, the list of generalized coordinates. Also supplied are the
+constraint equations, the forcelist and the inertial frame, if relevant.
+Next we generate Lagrange&#8217;s equations of motion, such that:
+Lagrange&#8217;s equations of motion = 0.
+We have the equations of motion at this point.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">l</span> <span class="o">=</span> <span class="n">LagrangesMethod</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="p">[</span><span class="n">q</span><span class="p">],</span> <span class="n">forcelist</span> <span class="o">=</span> <span class="n">fl</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">N</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">form_lagranges_equations</span><span class="p">())</span>
+<span class="go">Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), t, t)]])</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>We can also solve for the states using the &#8216;rhs&#8217; method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">rhs</span><span class="p">())</span>
+<span class="go">Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])</span>
+</pre></div>
+</div>
+<p>Please refer to the docstrings on each method for more details.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="8%" />
+<col width="71%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>mass_matrix</td>
+<td>Matrix</td>
+<td>The system&#8217;s mass matrix</td>
+</tr>
+<tr class="row-even"><td>forcing</td>
+<td>Matrix</td>
+<td>The system&#8217;s forcing vector</td>
+</tr>
+<tr class="row-odd"><td>mass_matrix_full</td>
+<td>Matrix</td>
+<td>The &#8220;mass matrix&#8221; for the qdot&#8217;s, qdoubledot&#8217;s, and the
+lagrange multipliers (lam)</td>
+</tr>
+<tr class="row-even"><td>forcing_full</td>
+<td>Matrix</td>
+<td>The forcing vector for the qdot&#8217;s, qdoubledot&#8217;s and
+lagrange multipliers (lam)</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.lagrange.LagrangesMethod.forcing">
+<tt class="descname">forcing</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/lagrange.html#LagrangesMethod.forcing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.lagrange.LagrangesMethod.forcing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the forcing vector from &#8216;lagranges_equations&#8217; method.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.lagrange.LagrangesMethod.forcing_full">
+<tt class="descname">forcing_full</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/lagrange.html#LagrangesMethod.forcing_full"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.lagrange.LagrangesMethod.forcing_full" title="Permalink to this definition">¶</a></dt>
+<dd><p>Augments qdots to the forcing vector above.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.lagrange.LagrangesMethod.form_lagranges_equations">
+<tt class="descname">form_lagranges_equations</tt><big>(</big><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/lagrange.html#LagrangesMethod.form_lagranges_equations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.lagrange.LagrangesMethod.form_lagranges_equations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to form Lagrange&#8217;s equations of motion.</p>
+<p>Returns a vector of equations of motion using Lagrange&#8217;s equations of
+the second kind.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.lagrange.LagrangesMethod.mass_matrix">
+<tt class="descname">mass_matrix</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/lagrange.html#LagrangesMethod.mass_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.lagrange.LagrangesMethod.mass_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the mass matrix, which is augmented by the Lagrange
+multipliers, if necessary.</p>
+<p>If the system is described by &#8216;n&#8217; generalized coordinates and there are
+no constraint equations then an n X n matrix is returned.</p>
+<p>If there are &#8216;n&#8217; generalized coordinates and &#8216;m&#8217; constraint equations
+have been supplied during initialization then an n X (n+m) matrix is
+returned. The (n + m - 1)th and (n + m)th columns contain the
+coefficients of the Lagrange multipliers.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="sympy.physics.mechanics.lagrange.LagrangesMethod.mass_matrix_full">
+<tt class="descname">mass_matrix_full</tt><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/lagrange.html#LagrangesMethod.mass_matrix_full"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.lagrange.LagrangesMethod.mass_matrix_full" title="Permalink to this definition">¶</a></dt>
+<dd><p>Augments the coefficients of qdots to the mass_matrix.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="sympy.physics.mechanics.lagrange.LagrangesMethod.rhs">
+<tt class="descname">rhs</tt><big>(</big><em>method='GE'</em><big>)</big><a class="reference internal" href="../../../../_modules/sympy/physics/mechanics/lagrange.html#LagrangesMethod.rhs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#sympy.physics.mechanics.lagrange.LagrangesMethod.rhs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns equations that can be solved numerically</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>method</strong> : string</p>
+<blockquote class="last">
+<div><p>The method by which matrix inversion of mass_matrix_full must be
+performed such as Gauss Elimination or LU decomposition.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Kane&#8217;s Method, Lagrange&#8217;s Method &amp; Associated Functions (Docstrings)</a><ul>
+<li><a class="reference internal" href="#module-sympy.physics.mechanics.kane">Kane</a></li>
+<li><a class="reference internal" href="#module-sympy.physics.mechanics.functions">partial_velocity</a></li>
+<li><a class="reference internal" href="#module-sympy.physics.mechanics.lagrange">LagrangesMethod</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="part_bod.html"
+                        title="previous chapter">Masses, Inertias &amp; Particles, RigidBodys (Docstrings)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="printing.html"
+                        title="next chapter">Printing (Docstrings)</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../../_sources/modules/physics/mechanics/api/kane.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing (Docstrings)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="part_bod.html" title="Masses, Inertias &amp; Particles, RigidBodys (Docstrings)"
+             >previous</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="../index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

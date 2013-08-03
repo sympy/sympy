@@ -1,0 +1,453 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Contexts &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../index.html" />
+    <link rel="up" title="Welcome to mpmath’s documentation!" href="index.html" />
+    <link rel="next" title="Utility functions" href="general.html" />
+    <link rel="prev" title="Basic usage" href="basics.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="general.html" title="Utility functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="basics.html" title="Basic usage"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="contexts">
+<h1>Contexts<a class="headerlink" href="#contexts" title="Permalink to this headline">¶</a></h1>
+<p>High-level code in mpmath is implemented as methods on a &#8220;context object&#8221;. The context implements arithmetic, type conversions and other fundamental operations. The context also holds settings such as precision, and stores cache data. A few different contexts (with a mostly compatible interface) are provided so that the high-level algorithms can be used with different implementations of the underlying arithmetic, allowing different features and speed-accuracy tradeoffs. Currently, mpmath provides the following contexts:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Arbitrary-precision arithmetic (<tt class="docutils literal"><span class="pre">mp</span></tt>)</li>
+<li>A faster Cython-based version of <tt class="docutils literal"><span class="pre">mp</span></tt> (used by default in Sage, and currently only available there)</li>
+<li>Arbitrary-precision interval arithmetic (<tt class="docutils literal"><span class="pre">iv</span></tt>)</li>
+<li>Double-precision arithmetic using Python&#8217;s builtin <tt class="docutils literal"><span class="pre">float</span></tt> and <tt class="docutils literal"><span class="pre">complex</span></tt> types (<tt class="docutils literal"><span class="pre">fp</span></tt>)</li>
+</ul>
+</div></blockquote>
+<p>Most global functions in the global mpmath namespace are actually methods of the <tt class="docutils literal"><span class="pre">mp</span></tt>
+context. This fact is usually transparent to the user, but sometimes shows up in the
+form of an initial parameter called &#8220;ctx&#8221; visible in the help for the function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">mpmath</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">help</span><span class="p">(</span><span class="n">mpmath</span><span class="o">.</span><span class="n">fsum</span><span class="p">)</span>   
+<span class="go">Help on method fsum in module mpmath.ctx_mp_python:</span>
+
+<span class="go">fsum(ctx, terms, absolute=False, squared=False) method of mpmath.ctx_mp.MPContext instance</span>
+<span class="go">    Calculates a sum containing a finite number of terms (for infinite</span>
+<span class="go">    series, see :func:`~mpmath.nsum`). The terms will be converted to</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p>The following operations are equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpmath</span><span class="o">.</span><span class="n">fsum</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">mpf(&#39;6.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpmath</span><span class="o">.</span><span class="n">mp</span><span class="o">.</span><span class="n">fsum</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">mpf(&#39;6.0&#39;)</span>
+</pre></div>
+</div>
+<p>The corresponding operation using the <tt class="docutils literal"><span class="pre">fp</span></tt> context:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mpmath</span><span class="o">.</span><span class="n">fp</span><span class="o">.</span><span class="n">fsum</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">6.0</span>
+</pre></div>
+</div>
+<div class="section" id="common-interface">
+<h2>Common interface<a class="headerlink" href="#common-interface" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">ctx.mpf</span></tt> creates a real number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="n">mp</span><span class="p">,</span> <span class="n">fp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">ctx.mpc</span></tt> creates a complex number:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">mpc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpc(real=&#39;2.0&#39;, imag=&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">mpc</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">(2+3j)</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">ctx.matrix</span></tt> creates a matrix:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="go">matrix(</span>
+<span class="go">[[&#39;1.0&#39;, &#39;0.0&#39;],</span>
+<span class="go"> [&#39;0.0&#39;, &#39;1.0&#39;]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">mpf(&#39;1.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="go">matrix(</span>
+<span class="go">[[&#39;1.0&#39;, &#39;0.0&#39;],</span>
+<span class="go"> [&#39;0.0&#39;, &#39;1.0&#39;]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">ctx.prec</span></tt> holds the current precision (in bits):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">prec</span>
+<span class="go">53</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">prec</span>
+<span class="go">53</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">ctx.dps</span></tt> holds the current precision (in digits):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span>
+<span class="go">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">dps</span>
+<span class="go">15</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">ctx.pretty</span></tt> controls whether objects should be pretty-printed automatically by <tt class="xref py py-func docutils literal"><span class="pre">repr()</span></tt>. Pretty-printing for <tt class="docutils literal"><span class="pre">mp</span></tt> numbers is disabled by default so that they can clearly be distinguished from Python numbers and so that <tt class="docutils literal"><span class="pre">eval(repr(x))</span> <span class="pre">==</span> <span class="pre">x</span></tt> works:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mpf</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mpf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">eval</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+<span class="go">mpf(&#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">3.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="go">matrix(</span>
+<span class="go">[[&#39;1.0&#39;, &#39;0.0&#39;],</span>
+<span class="go"> [&#39;0.0&#39;, &#39;1.0&#39;]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+<span class="go">[1.0  0.0]</span>
+<span class="go">[0.0  1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arbitrary-precision-floating-point-mp">
+<h2>Arbitrary-precision floating-point (<tt class="docutils literal"><span class="pre">mp</span></tt>)<a class="headerlink" href="#arbitrary-precision-floating-point-mp" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">mp</span></tt> context is what most users probably want to use most of the time, as it supports the most functions, is most well-tested, and is implemented with a high level of optimization. Nearly all examples in this documentation use <tt class="docutils literal"><span class="pre">mp</span></tt> functions.</p>
+<p>See <a class="reference internal" href="basics.html"><em>Basic usage</em></a> for a description of basic usage.</p>
+</div>
+<div class="section" id="arbitrary-precision-interval-arithmetic-iv">
+<h2>Arbitrary-precision interval arithmetic (<tt class="docutils literal"><span class="pre">iv</span></tt>)<a class="headerlink" href="#arbitrary-precision-interval-arithmetic-iv" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">iv.mpf</span></tt> type represents a closed interval <span class="math">\([a,b]\)</span>; that is, the set <span class="math">\(\{x : a \le x \le b\}\)</span>, where <span class="math">\(a\)</span> and <span class="math">\(b\)</span> are arbitrary-precision floating-point values, possibly <span class="math">\(\pm \infty\)</span>. The <tt class="docutils literal"><span class="pre">iv.mpc</span></tt> type represents a rectangular complex interval <span class="math">\([a,b] + [c,d]i\)</span>; that is, the set <span class="math">\(\{z = x+iy : a \le x \le b \land c \le y \le d\}\)</span>.</p>
+<p>Interval arithmetic provides rigorous error tracking. If <span class="math">\(f\)</span> is a mathematical function and <span class="math">\(\hat f\)</span> is its interval arithmetic version, then the basic guarantee of interval arithmetic is that <span class="math">\(f(v) \subseteq \hat f(v)\)</span> for any input interval <span class="math">\(v\)</span>. Put differently, if an interval represents the known uncertainty for a fixed number, any sequence of interval operations will produce an interval that contains what would be the result of applying the same sequence of operations to the exact number. The principal drawbacks of interval arithmetic are speed (<tt class="docutils literal"><span class="pre">iv</span></tt> arithmetic is typically at least two times slower than <tt class="docutils literal"><span class="pre">mp</span></tt> arithmetic) and that it sometimes provides far too pessimistic bounds.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The support for interval arithmetic in mpmath is still experimental, and many functions
+do not yet properly support intervals. Please use this feature with caution.</p>
+</div>
+<p>Intervals can be created from single numbers (treated as zero-width intervals) or pairs of endpoint numbers. Strings are treated as exact decimal numbers. Note that a Python float like <tt class="docutils literal"><span class="pre">0.1</span></tt> generally does not represent the same number as its literal; use <tt class="docutils literal"><span class="pre">'0.1'</span></tt> instead:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">mpmath</span> <span class="kn">import</span> <span class="n">iv</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span> <span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">mpi(&#39;3.0&#39;, &#39;3.0&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">[3.0, 3.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">pretty</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">[2.0, 3.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>   <span class="c"># probably not intended</span>
+<span class="go">[0.10000000000000000555, 0.10000000000000000555]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="s">&#39;0.1&#39;</span><span class="p">)</span>   <span class="c"># good, gives a containing interval</span>
+<span class="go">[0.099999999999999991673, 0.10000000000000000555]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="s">&#39;0.1&#39;</span><span class="p">,</span> <span class="s">&#39;0.2&#39;</span><span class="p">])</span>
+<span class="go">[0.099999999999999991673, 0.2000000000000000111]</span>
+</pre></div>
+</div>
+<p>The fact that <tt class="docutils literal"><span class="pre">'0.1'</span></tt> results in an interval of nonzero width indicates that 1/10 cannot be represented using binary floating-point numbers at this precision level (in fact, it cannot be represented exactly at any precision).</p>
+<p>Intervals may be infinite or half-infinite:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="s">&#39;inf&#39;</span><span class="p">])</span>
+<span class="go">[0.0, 0.5]</span>
+</pre></div>
+</div>
+<p>The equality testing operators <tt class="docutils literal"><span class="pre">==</span></tt> and <tt class="docutils literal"><span class="pre">!=</span></tt> check whether their operands are identical as intervals; that is, have the same endpoints. The ordering operators <tt class="docutils literal"><span class="pre">&lt;</span> <span class="pre">&lt;=</span> <span class="pre">&gt;</span> <span class="pre">&gt;=</span></tt> permit inequality testing using triple-valued logic: a guaranteed inequality returns <tt class="docutils literal"><span class="pre">True</span></tt> or <tt class="docutils literal"><span class="pre">False</span></tt> while an indeterminate inequality returns <tt class="docutils literal"><span class="pre">None</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">!=</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">2</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">1</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">2</span>    <span class="c"># returns None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">2</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>  <span class="c"># returns None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">in</span></tt> operator tests whether a number or interval is contained in another interval:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">])</span> <span class="ow">in</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">3</span> <span class="ow">in</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="s">&#39;-inf&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+<p>Intervals have the properties <tt class="docutils literal"><span class="pre">.a</span></tt>, <tt class="docutils literal"><span class="pre">.b</span></tt> (endpoints), <tt class="docutils literal"><span class="pre">.mid</span></tt>, and <tt class="docutils literal"><span class="pre">.delta</span></tt> (width):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">a</span>
+<span class="go">[2.0, 2.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">b</span>
+<span class="go">[5.0, 5.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">mid</span>
+<span class="go">[3.5, 3.5]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">.</span><span class="n">delta</span>
+<span class="go">[3.0, 3.0]</span>
+</pre></div>
+</div>
+<p>Some transcendental functions are supported:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.5</span><span class="p">])</span> <span class="o">**</span> <span class="n">iv</span><span class="o">.</span><span class="n">mpf</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">])</span>
+<span class="go">[0.35355339059327373086, 1.837117307087383633]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">[1.0, 1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">([</span><span class="s">&#39;-inf&#39;</span><span class="p">,</span><span class="s">&#39;inf&#39;</span><span class="p">])</span>
+<span class="go">[0.0, +inf]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">([</span><span class="s">&#39;-inf&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">[0.0, 1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="s">&#39;inf&#39;</span><span class="p">])</span>
+<span class="go">[1.0, +inf]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[1.0, 2.7182818284590455349]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[0.0, 0.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">log</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">[-inf, 0.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">log</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="s">&#39;inf&#39;</span><span class="p">])</span>
+<span class="go">[-inf, +inf]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="go">[0.69314718055994528623, 0.69314718055994539725]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">sin</span><span class="p">([</span><span class="mi">100</span><span class="p">,</span><span class="s">&#39;inf&#39;</span><span class="p">])</span>
+<span class="go">[-1.0, 1.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">cos</span><span class="p">([</span><span class="s">&#39;-0.1&#39;</span><span class="p">,</span><span class="s">&#39;0.1&#39;</span><span class="p">])</span>
+<span class="go">[0.99500416527802570954, 1.0]</span>
+</pre></div>
+</div>
+<p>Interval arithmetic is useful for proving inequalities involving irrational numbers.
+Naive use of <tt class="docutils literal"><span class="pre">mp</span></tt> arithmetic may result in wrong conclusions, such as the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">mp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">163</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">mpf</span><span class="p">(</span><span class="mi">640320</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="mi">744</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">x</span>
+<span class="go">262537412640768744.0000001</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">y</span>
+<span class="go">262537412640768744.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>But the correct result is <span class="math">\(e^{\pi \sqrt{163}} &lt; 262537412640768744\)</span>, as can be
+seen by increasing the precision:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mp</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">mp</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">mp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">163</span><span class="p">))</span>
+<span class="go">262537412640768743.99999999999925007259719818568888</span>
+</pre></div>
+</div>
+<p>With interval arithmetic, the comparison returns <tt class="docutils literal"><span class="pre">None</span></tt> until the precision
+is large enough for <span class="math">\(x-y\)</span> to have a definite sign:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">iv</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">iv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">163</span><span class="p">))</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">640320</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="mi">744</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">iv</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">iv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">163</span><span class="p">))</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">640320</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="mi">744</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">60</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">iv</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">iv</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">163</span><span class="p">))</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">640320</span><span class="o">**</span><span class="mi">3</span><span class="o">+</span><span class="mi">744</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">iv</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="fast-low-precision-arithmetic-fp">
+<h2>Fast low-precision arithmetic (<tt class="docutils literal"><span class="pre">fp</span></tt>)<a class="headerlink" href="#fast-low-precision-arithmetic-fp" title="Permalink to this headline">¶</a></h2>
+<p>Although mpmath is generally designed for arbitrary-precision arithmetic, many of the high-level algorithms work perfectly well with ordinary Python <tt class="docutils literal"><span class="pre">float</span></tt> and <tt class="docutils literal"><span class="pre">complex</span></tt> numbers, which use hardware double precision (on most systems, this corresponds to 53 bits of precision). Whereas the global functions (which are methods of the <tt class="docutils literal"><span class="pre">mp</span></tt> object) always convert inputs to mpmath numbers, the <tt class="docutils literal"><span class="pre">fp</span></tt> object instead converts them to <tt class="docutils literal"><span class="pre">float</span></tt> or <tt class="docutils literal"><span class="pre">complex</span></tt>, and in some cases employs basic functions optimized for double precision. When large amounts of function evaluations (numerical integration, plotting, etc) are required, and when <tt class="docutils literal"><span class="pre">fp</span></tt> arithmetic provides sufficient accuracy, this can give a significant speedup over <tt class="docutils literal"><span class="pre">mp</span></tt> arithmetic.</p>
+<p>To take advantage of this feature, simply use the <tt class="docutils literal"><span class="pre">fp</span></tt> prefix, i.e. write <tt class="docutils literal"><span class="pre">fp.func</span></tt> instead of <tt class="docutils literal"><span class="pre">func</span></tt> or <tt class="docutils literal"><span class="pre">mp.func</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">fp</span><span class="o">.</span><span class="n">erfc</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">u</span>
+<span class="go">0.000406952017445</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+<span class="go">&lt;type &#39;float&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mp</span><span class="o">.</span><span class="n">dps</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">mp</span><span class="o">.</span><span class="n">erfc</span><span class="p">(</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="go">0.000406952017444959</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]])</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="go">matrix(</span>
+<span class="go">[[&#39;7.0&#39;, &#39;10.0&#39;],</span>
+<span class="go"> [&#39;15.0&#39;, &#39;22.0&#39;]])</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">_</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+<span class="go">&lt;type &#39;float&#39;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">fp</span><span class="o">.</span><span class="n">quad</span><span class="p">(</span><span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">fp</span><span class="o">.</span><span class="n">pi</span><span class="p">])</span>    <span class="c"># numerical integration</span>
+<span class="go">2.0</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">fp</span></tt> context wraps Python&#8217;s <tt class="docutils literal"><span class="pre">math</span></tt> and <tt class="docutils literal"><span class="pre">cmath</span></tt> modules for elementary functions. It supports both real and complex numbers and automatically generates complex results for real inputs (<tt class="docutils literal"><span class="pre">math</span></tt> raises an exception):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">2.2360679774997898</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span>
+<span class="go">2.2360679774997898j</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="go">-0.54402111088936977</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="go">(0.70710678118654757+0.70710678118654746j)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.25</span>
+<span class="gt">Traceback (most recent call last):</span>
+  <span class="c">...</span>
+<span class="gr">ValueError</span>: <span class="n">negative number cannot be raised to a fractional power</span>
+</pre></div>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">prec</span></tt> and <tt class="docutils literal"><span class="pre">dps</span></tt> attributes can be changed (for interface compatibility with the <tt class="docutils literal"><span class="pre">mp</span></tt> context) but this has no effect:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">prec</span>
+<span class="go">53</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">dps</span>
+<span class="go">15</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">prec</span>
+<span class="go">53</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fp</span><span class="o">.</span><span class="n">dps</span>
+<span class="go">15</span>
+</pre></div>
+</div>
+<p>Due to intermediate rounding and cancellation errors, results computed with <tt class="docutils literal"><span class="pre">fp</span></tt> arithmetic may be much less accurate than those computed with <tt class="docutils literal"><span class="pre">mp</span></tt> using an equivalent precision (<tt class="docutils literal"><span class="pre">mp.prec</span> <span class="pre">=</span> <span class="pre">53</span></tt>), since the latter often uses increased internal precision. The accuracy is highly problem-dependent: for some functions, <tt class="docutils literal"><span class="pre">fp</span></tt> almost always gives 14-15 correct digits; for others, results can be accurate to only 2-3 digits or even completely wrong. The recommended use for <tt class="docutils literal"><span class="pre">fp</span></tt> is therefore to speed up large-scale computations where accuracy can be verified in advance on a subset of the input set, or where results can be verified afterwards.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Contexts</a><ul>
+<li><a class="reference internal" href="#common-interface">Common interface</a></li>
+<li><a class="reference internal" href="#arbitrary-precision-floating-point-mp">Arbitrary-precision floating-point (<tt class="docutils literal"><span class="pre">mp</span></tt>)</a></li>
+<li><a class="reference internal" href="#arbitrary-precision-interval-arithmetic-iv">Arbitrary-precision interval arithmetic (<tt class="docutils literal"><span class="pre">iv</span></tt>)</a></li>
+<li><a class="reference internal" href="#fast-low-precision-arithmetic-fp">Fast low-precision arithmetic (<tt class="docutils literal"><span class="pre">fp</span></tt>)</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="basics.html"
+                        title="previous chapter">Basic usage</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="general.html"
+                        title="next chapter">Utility functions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../_sources/modules/mpmath/contexts.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="general.html" title="Utility functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="basics.html" title="Basic usage"
+             >previous</a> |</li>
+        <li><a href="../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="index.html" >Welcome to mpmath&#8217;s documentation!</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,727 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.simplify.sqrtdenest &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.simplify.sqrtdenest</h1><div class="highlight"><pre>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.functions</span> <span class="kn">import</span> <span class="n">sqrt</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">root</span>
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">S</span><span class="p">,</span> <span class="n">Wild</span><span class="p">,</span> <span class="n">sympify</span><span class="p">,</span> <span class="n">Mul</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">Expr</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">expand_multinomial</span><span class="p">,</span> <span class="n">expand_mul</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.polys</span> <span class="kn">import</span> <span class="n">Poly</span><span class="p">,</span> <span class="n">PolynomialError</span>
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">count_ops</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">default_sort_key</span>
+
+
+<span class="k">def</span> <span class="nf">_mexpand</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">expand_mul</span><span class="p">(</span><span class="n">expand_multinomial</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">is_sqrt</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if expr is a sqrt, otherwise False.&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Rational</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">Half</span>
+
+
+<span class="k">def</span> <span class="nf">sqrt_depth</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the maximum depth of any square root argument of p.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.elementary.miscellaneous import sqrt</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import sqrt_depth</span>
+
+<span class="sd">    Neither of these square roots contains any other square roots</span>
+<span class="sd">    so the depth is 1:</span>
+
+<span class="sd">    &gt;&gt;&gt; sqrt_depth(1 + sqrt(2)*(1 + sqrt(3)))</span>
+<span class="sd">    1</span>
+
+<span class="sd">    The sqrt(3) is contained within a square root so the depth is</span>
+<span class="sd">    2:</span>
+
+<span class="sd">    &gt;&gt;&gt; sqrt_depth(1 + sqrt(2)*sqrt(1 + sqrt(3)))</span>
+<span class="sd">    2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Add</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">([</span><span class="n">sqrt_depth</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">is_sqrt</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="k">def</span> <span class="nf">is_algebraic</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return True if p is comprised of only Rationals or square roots</span>
+<span class="sd">    of Rationals and algebraic operations.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.elementary.miscellaneous import sqrt</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import is_algebraic</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import cos</span>
+<span class="sd">    &gt;&gt;&gt; is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*sqrt(2))))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*cos(2))))</span>
+<span class="sd">    False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">elif</span> <span class="n">is_sqrt</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Pow</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">exp</span><span class="o">.</span><span class="n">is_Integer</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">is_algebraic</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Add</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">is_algebraic</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="k">def</span> <span class="nf">_subsets</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns all possible subsets of the set (0, 1, ..., n-1) except the</span>
+<span class="sd">    empty set, listed in reversed lexicographical order according to binary</span>
+<span class="sd">    representation, so that the case of the fourth root is treated last.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import _subsets</span>
+<span class="sd">    &gt;&gt;&gt; _subsets(2)</span>
+<span class="sd">    [[1, 0], [0, 1], [1, 1]]</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]]</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+    <span class="k">elif</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+             <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">_subsets</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">a0</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+        <span class="n">a1</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">a0</span> <span class="o">+</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+</span> <span class="n">a1</span>
+    <span class="k">return</span> <span class="n">a</span>
+
+
+<div class="viewcode-block" id="sqrtdenest"><a class="viewcode-back" href="../../../modules/simplify/simplify.html#sympy.simplify.sqrtdenest.sqrtdenest">[docs]</a><span class="k">def</span> <span class="nf">sqrtdenest</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Denests sqrts in an expression that contain other square roots</span>
+<span class="sd">    if possible, otherwise returns the expr unchanged. This is based on the</span>
+<span class="sd">    algorithms of [1].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import sqrtdenest</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import sqrt</span>
+<span class="sd">    &gt;&gt;&gt; sqrtdenest(sqrt(5 + 2 * sqrt(6)))</span>
+<span class="sd">    sqrt(2) + sqrt(3)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    sympy.solvers.solvers.unrad</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+<span class="sd">    [1] http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf</span>
+
+<span class="sd">    [2] D. J. Jeffrey and A. D. Rich, &#39;Symplifying Square Roots of Square Roots</span>
+<span class="sd">    by Denesting&#39; (available at http://www.cybertester.com/data/denest.pdf)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">expand_mul</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_iter</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">_sqrtdenest0</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">expr</span> <span class="o">==</span> <span class="n">z</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">z</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_sqrt_match</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return [a, b, r] for p.match(a + b*sqrt(r)) where, in addition to</span>
+<span class="sd">    matching, sqrt(r) also has then maximal sqrt_depth among addends of p.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.functions.elementary.miscellaneous import sqrt</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import _sqrt_match</span>
+<span class="sd">    &gt;&gt;&gt; _sqrt_match(1 + sqrt(2) + sqrt(2)*sqrt(3) +  2*sqrt(1+sqrt(5)))</span>
+<span class="sd">    [1 + sqrt(2) + sqrt(6), 2, 1 + sqrt(5)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">split_surds</span>
+
+    <span class="n">p</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Number</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">p</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+        <span class="n">pargs</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">is_Rational</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">pargs</span><span class="p">):</span>
+            <span class="n">r</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">split_surds</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+        <span class="c"># to make the process canonical, the argument is included in the tuple</span>
+        <span class="c"># so when the max is selected, it will be the largest arg having a</span>
+        <span class="c"># given depth</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="p">[(</span><span class="n">sqrt_depth</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pargs</span><span class="p">)]</span>
+        <span class="n">nmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nmax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># select r</span>
+            <span class="n">depth</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">i</span> <span class="o">=</span> <span class="n">nmax</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">pargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span>
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+                <span class="n">bv</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">rv</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">r</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">depth</span><span class="p">:</span>
+                        <span class="n">bv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">rv</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">Mul</span><span class="o">.</span><span class="n">_from_args</span><span class="p">(</span><span class="n">bv</span><span class="p">)</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">Mul</span><span class="o">.</span><span class="n">_from_args</span><span class="p">(</span><span class="n">rv</span><span class="p">)</span>
+            <span class="c"># collect terms comtaining r</span>
+            <span class="n">a1</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">b1</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">depth</span><span class="p">:</span>
+                    <span class="n">a1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">x1</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">x1</span> <span class="o">==</span> <span class="n">r</span><span class="p">:</span>
+                        <span class="n">b1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">x1</span><span class="o">.</span><span class="n">is_Mul</span><span class="p">:</span>
+                            <span class="n">x1args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">x1args</span><span class="p">:</span>
+                                <span class="n">x1args</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                                <span class="n">b1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="n">x1args</span><span class="p">))</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">a1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">a1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">a1</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">b1</span><span class="p">)</span>
+            <span class="c">#a = Add._from_args(pargs)</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">as_coeff_Mul</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">is_sqrt</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">Zero</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">SqrtdenestStopIteration</span><span class="p">(</span><span class="ne">StopIteration</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">_sqrtdenest0</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns expr after denesting its arguments.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">is_sqrt</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+        <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">as_numer_denom</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="n">S</span><span class="o">.</span><span class="n">One</span><span class="p">:</span>  <span class="c"># n is a square root</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="n">args</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">default_sort_key</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">((</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">is_Integer</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">_sqrtdenest_rec</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">SqrtdenestStopIteration</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">_mexpand</span><span class="p">(</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">_sqrtdenest0</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">args</span><span class="p">])))</span>
+            <span class="k">return</span> <span class="n">_sqrtdenest1</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="p">[</span><span class="n">_sqrtdenest0</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">d</span><span class="p">)]</span>
+            <span class="k">return</span> <span class="n">n</span><span class="o">/</span><span class="n">d</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">_sqrtdenest0</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+
+<span class="k">def</span> <span class="nf">_sqrtdenest_rec</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper that denests the square root of three or more surds.</span>
+
+<span class="sd">    It returns the denested expression; if it cannot be denested it</span>
+<span class="sd">    throws SqrtdenestStopIteration</span>
+
+<span class="sd">    Algorithm: expr.base is in the extension Q_m = Q(sqrt(r_1),..,sqrt(r_k));</span>
+<span class="sd">    split expr.base = a + b*sqrt(r_k), where `a` and `b` are on</span>
+<span class="sd">    Q_(m-1) = Q(sqrt(r_1),..,sqrt(r_(k-1))); then a**2 - b**2*r_k is</span>
+<span class="sd">    on Q_(m-1); denest sqrt(a**2 - b**2*r_k) and so on.</span>
+<span class="sd">    See [1], section 6.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import sqrt</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import _sqrtdenest_rec</span>
+<span class="sd">    &gt;&gt;&gt; _sqrtdenest_rec(sqrt(-72*sqrt(2) + 158*sqrt(5) + 498))</span>
+<span class="sd">    -sqrt(10) + sqrt(2) + 9 + 9*sqrt(5)</span>
+<span class="sd">    &gt;&gt;&gt; w=-6*sqrt(55)-6*sqrt(35)-2*sqrt(22)-2*sqrt(14)+2*sqrt(77)+6*sqrt(10)+65</span>
+<span class="sd">    &gt;&gt;&gt; _sqrtdenest_rec(sqrt(w))</span>
+<span class="sd">    -sqrt(11) - sqrt(7) + sqrt(2) + 3*sqrt(5)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">radsimp</span><span class="p">,</span> <span class="n">split_surds</span><span class="p">,</span> <span class="n">rad_rationalize</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sqrtdenest</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">_sqrtdenest_rec</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">))</span>
+    <span class="n">g</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">split_surds</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="o">&lt;</span> <span class="n">b</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c2</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">g</span><span class="p">,</span> <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span> <span class="o">=</span> <span class="n">split_surds</span><span class="p">(</span><span class="n">c2</span><span class="p">)</span>
+        <span class="n">a1</span> <span class="o">=</span> <span class="n">a1</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">a1</span> <span class="o">&lt;</span> <span class="n">b1</span><span class="p">:</span>
+            <span class="n">a1</span><span class="p">,</span> <span class="n">b1</span> <span class="o">=</span> <span class="n">b1</span><span class="p">,</span> <span class="n">a1</span>
+        <span class="n">c2_1</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">a1</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">b1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">c_1</span> <span class="o">=</span> <span class="n">_sqrtdenest_rec</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c2_1</span><span class="p">))</span>
+        <span class="n">d_1</span> <span class="o">=</span> <span class="n">_sqrtdenest_rec</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a1</span> <span class="o">+</span> <span class="n">c_1</span><span class="p">))</span>
+        <span class="n">num</span><span class="p">,</span> <span class="n">den</span> <span class="o">=</span> <span class="n">rad_rationalize</span><span class="p">(</span><span class="n">b1</span><span class="p">,</span> <span class="n">d_1</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">d_1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">num</span><span class="o">/</span><span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">_sqrtdenest1</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">c2</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SqrtdenestStopIteration</span>
+    <span class="n">ac</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">c</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ac</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">count_ops</span><span class="p">(</span><span class="n">ac</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">count_ops</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">SqrtdenestStopIteration</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">sqrtdenest</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ac</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SqrtdenestStopIteration</span>
+    <span class="n">num</span><span class="p">,</span> <span class="n">den</span> <span class="o">=</span> <span class="n">rad_rationalize</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">d</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">num</span><span class="o">/</span><span class="p">(</span><span class="n">den</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">radsimp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_sqrtdenest1</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">denester</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return denested expr after denesting with simpler methods or, that</span>
+<span class="sd">    failing, using the denester.&quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">radsimp</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_sqrt</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="n">a</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">base</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">is_Atom</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="n">_sqrt_match</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">val</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="c"># try a quick numeric denesting</span>
+    <span class="n">d2</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">a</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">d2</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">d2</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">_sqrt_numeric_denest</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">d2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">z</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c"># fourth root case</span>
+            <span class="c"># sqrtdenest(sqrt(3 + 2*sqrt(3))) =</span>
+            <span class="c"># sqrt(2)*3**(1/4)/2 + sqrt(2)*3**(3/4)/2</span>
+            <span class="n">dr2</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="o">-</span><span class="n">d2</span><span class="o">*</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">dr</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">dr2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">dr</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">_sqrt_numeric_denest</span><span class="p">(</span><span class="n">_mexpand</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">r</span><span class="p">),</span> <span class="n">a</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">z</span><span class="o">/</span><span class="n">root</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">_sqrt_symbolic_denest</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">z</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">denester</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">is_algebraic</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">sqrt_biquadratic_denest</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">d2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="c"># now call to the denester</span>
+    <span class="n">av0</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">d2</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">_denester</span><span class="p">([</span><span class="n">radsimp</span><span class="p">(</span><span class="n">expr</span><span class="o">**</span><span class="mi">2</span><span class="p">)],</span> <span class="n">av0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">expr</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">av0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span>
+    <span class="k">if</span> <span class="n">z</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">==</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="ow">and</span> <span class="n">count_ops</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">count_ops</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">expr</span>
+        <span class="k">return</span> <span class="n">z</span>
+    <span class="k">return</span> <span class="n">expr</span>
+
+
+<span class="k">def</span> <span class="nf">_sqrt_symbolic_denest</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given an expression, sqrt(a + b*sqrt(b)), return the denested</span>
+<span class="sd">    expression or None.</span>
+
+<span class="sd">    Algorithm:</span>
+<span class="sd">    If r = ra + rb*sqrt(rr), try replacing sqrt(rr) in ``a`` with</span>
+<span class="sd">    (y**2 - ra)/rb, and if the result is a quadratic, ca*y**2 + cb*y + cc, and</span>
+<span class="sd">    (cb + b)**2 - 4*ca*cc is 0, then sqrt(a + b*sqrt(r)) can be rewritten as</span>
+<span class="sd">    sqrt(ca*(sqrt(r) + (cb + b)/(2*ca))**2).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import _sqrt_symbolic_denest, sqrtdenest</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import sqrt, Symbol</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+
+<span class="sd">    &gt;&gt;&gt; a, b, r = 16 - 2*sqrt(29), 2, -10*sqrt(29) + 55</span>
+<span class="sd">    &gt;&gt;&gt; _sqrt_symbolic_denest(a, b, r)</span>
+<span class="sd">    sqrt(-2*sqrt(29) + 11) + sqrt(5)</span>
+
+<span class="sd">    If the expression is numeric, it will be simplified:</span>
+
+<span class="sd">    &gt;&gt;&gt; w = sqrt(sqrt(sqrt(3) + 1) + 1) + 1 + sqrt(2)</span>
+<span class="sd">    &gt;&gt;&gt; sqrtdenest(sqrt((w**2).expand()))</span>
+<span class="sd">    1 + sqrt(2) + sqrt(1 + sqrt(1 + sqrt(3)))</span>
+
+<span class="sd">    Otherwise, it will only be simplified if assumptions allow:</span>
+
+<span class="sd">    &gt;&gt;&gt; w = w.subs(sqrt(3), sqrt(x + 3))</span>
+<span class="sd">    &gt;&gt;&gt; sqrtdenest(sqrt((w**2).expand()))</span>
+<span class="sd">    sqrt((sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2))**2)</span>
+
+<span class="sd">    Notice that the argument of the sqrt is a square. If x is made positive</span>
+<span class="sd">    then the sqrt of the square is resolved:</span>
+
+<span class="sd">    &gt;&gt;&gt; _.subs(x, Symbol(&#39;x&#39;, positive=True))</span>
+<span class="sd">    sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">sympify</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span>
+    <span class="n">rval</span> <span class="o">=</span> <span class="n">_sqrt_match</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rval</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="n">ra</span><span class="p">,</span> <span class="n">rb</span><span class="p">,</span> <span class="n">rr</span> <span class="o">=</span> <span class="n">rval</span>
+    <span class="k">if</span> <span class="n">rb</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">,</span> <span class="n">positive</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">newa</span> <span class="o">=</span> <span class="n">Poly</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rr</span><span class="p">),</span> <span class="p">(</span><span class="n">y</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">ra</span><span class="p">)</span><span class="o">/</span><span class="n">rb</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">PolynomialError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">newa</span><span class="o">.</span><span class="n">degree</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">ca</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">newa</span><span class="o">.</span><span class="n">all_coeffs</span><span class="p">()</span>
+            <span class="n">cb</span> <span class="o">+=</span> <span class="n">b</span>
+            <span class="k">if</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">cb</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">ca</span><span class="o">*</span><span class="n">cc</span><span class="p">)</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+                <span class="n">z</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">ca</span><span class="o">*</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">+</span> <span class="n">cb</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">ca</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">z</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+                    <span class="n">z</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">Mul</span><span class="o">.</span><span class="n">_from_args</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">as_content_primitive</span><span class="p">()))</span>
+                <span class="k">return</span> <span class="n">z</span>
+
+
+<span class="k">def</span> <span class="nf">_sqrt_numeric_denest</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper that denest expr = a + b*sqrt(r), with d2 = a**2 - b**2*r &gt; 0</span>
+<span class="sd">    or returns None if not denested.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">radsimp</span>
+    <span class="n">depthr</span> <span class="o">=</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span>
+    <span class="n">vad</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">d</span>
+    <span class="c"># sqrt_depth(res) &lt;= sqrt_depth(vad) + 1</span>
+    <span class="c"># sqrt_depth(expr) = depthr + 2</span>
+    <span class="c"># there is denesting if sqrt_depth(vad)+1 &lt; depthr + 2</span>
+    <span class="c"># if vad**2 is Number there is a fourth root</span>
+    <span class="k">if</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">vad</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">depthr</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">or</span> <span class="p">(</span><span class="n">vad</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+        <span class="n">vad1</span> <span class="o">=</span> <span class="n">radsimp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">vad</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vad</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">sign</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">*</span><span class="n">sqrt</span><span class="p">((</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">r</span><span class="o">*</span><span class="n">vad1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()))</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">sqrt_biquadratic_denest</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">d2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;denest expr = sqrt(a + b*sqrt(r))</span>
+<span class="sd">    where a, b, r are linear combinations of square roots of</span>
+<span class="sd">    positive rationals on the rationals (SQRR) and r &gt; 0, b != 0,</span>
+<span class="sd">    d2 = a**2 - b**2*r &gt; 0</span>
+
+<span class="sd">    If it cannot denest it returns None.</span>
+
+<span class="sd">    ALGORITHM</span>
+<span class="sd">    Search for a solution A of type SQRR of the biquadratic equation</span>
+<span class="sd">    4*A**4 - 4*a*A**2 + b**2*r = 0                               (1)</span>
+<span class="sd">    sqd = sqrt(a**2 - b**2*r)</span>
+<span class="sd">    Choosing the sqrt to be positive, the possible solutions are</span>
+<span class="sd">    A = sqrt(a/2 +/- sqd/2)</span>
+<span class="sd">    Since a, b, r are SQRR, then a**2 - b**2*r is a SQRR,</span>
+<span class="sd">    so if sqd can be denested, it is done by</span>
+<span class="sd">    _sqrtdenest_rec, and the result is a SQRR.</span>
+<span class="sd">    Similarly for A.</span>
+<span class="sd">    Examples of solutions (in both cases a and sqd are positive):</span>
+
+<span class="sd">      Example of expr with solution sqrt(a/2 + sqd/2) but not</span>
+<span class="sd">      solution sqrt(a/2 - sqd/2):</span>
+<span class="sd">      expr = sqrt(-sqrt(15) - sqrt(2)*sqrt(-sqrt(5) + 5) - sqrt(3) + 8)</span>
+<span class="sd">      a = -sqrt(15) - sqrt(3) + 8; sqd = -2*sqrt(5) - 2 + 4*sqrt(3)</span>
+
+<span class="sd">      Example of expr with solution sqrt(a/2 - sqd/2) but not</span>
+<span class="sd">      solution sqrt(a/2 + sqd/2):</span>
+<span class="sd">      w = 2 + r2 + r3 + (1 + r3)*sqrt(2 + r2 + 5*r3)</span>
+<span class="sd">      expr = sqrt((w**2).expand())</span>
+<span class="sd">      a = 4*sqrt(6) + 8*sqrt(2) + 47 + 28*sqrt(3)</span>
+<span class="sd">      sqd = 29 + 20*sqrt(3)</span>
+
+<span class="sd">    Define B = b/2*A; eq.(1) implies a = A**2 + B**2*r; then</span>
+<span class="sd">    expr**2 = a + b*sqrt(r) = (A + B*sqrt(r))**2</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import sqrt</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.simplify.sqrtdenest import _sqrt_match, sqrt_biquadratic_denest</span>
+<span class="sd">    &gt;&gt;&gt; z = sqrt((2*sqrt(2) + 4)*sqrt(2 + sqrt(2)) + 5*sqrt(2) + 8)</span>
+<span class="sd">    &gt;&gt;&gt; a, b, r = _sqrt_match(z**2)</span>
+<span class="sd">    &gt;&gt;&gt; d2 = a**2 - b**2*r</span>
+<span class="sd">    &gt;&gt;&gt; sqrt_biquadratic_denest(z, a, b, r, d2)</span>
+<span class="sd">    sqrt(2) + sqrt(sqrt(2) + 2) + 2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">radsimp</span><span class="p">,</span> <span class="n">rad_rationalize</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">d2</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">b</span> <span class="ow">or</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">y2</span> <span class="o">=</span> <span class="n">y</span><span class="o">**</span><span class="mi">2</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">y2</span><span class="o">.</span><span class="n">is_Integer</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">y2</span><span class="o">.</span><span class="n">is_positive</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+    <span class="n">sqd</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">sqrtdenest</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">radsimp</span><span class="p">(</span><span class="n">d2</span><span class="p">))))</span>
+    <span class="k">if</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">sqd</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">sqd</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">a</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">sqd</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span>
+    <span class="c"># look for a solution A with depth 1</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">sqrtdenest</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">Bn</span><span class="p">,</span> <span class="n">Bd</span> <span class="o">=</span> <span class="n">rad_rationalize</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">_mexpand</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">A</span><span class="p">))</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">Bn</span><span class="o">/</span><span class="n">Bd</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="n">z</span>
+        <span class="k">return</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">None</span>
+
+
+<span class="k">def</span> <span class="nf">_denester</span><span class="p">(</span><span class="n">nested</span><span class="p">,</span> <span class="n">av0</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">max_depth_level</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Denests a list of expressions that contain nested square roots.</span>
+
+<span class="sd">    Algorithm based on &lt;http://www.almaden.ibm.com/cs/people/fagin/symb85.pdf&gt;.</span>
+
+<span class="sd">    It is assumed that all of the elements of &#39;nested&#39; share the same</span>
+<span class="sd">    bottom-level radicand. (This is stated in the paper, on page 177, in</span>
+<span class="sd">    the paragraph immediately preceding the algorithm.)</span>
+
+<span class="sd">    When evaluating all of the arguments in parallel, the bottom-level</span>
+<span class="sd">    radicand only needs to be denested once. This means that calling</span>
+<span class="sd">    _denester with x arguments results in a recursive invocation with x+1</span>
+<span class="sd">    arguments; hence _denester has polynomial complexity.</span>
+
+<span class="sd">    However, if the arguments were evaluated separately, each call would</span>
+<span class="sd">    result in two recursive invocations, and the algorithm would have</span>
+<span class="sd">    exponential complexity.</span>
+
+<span class="sd">    This is discussed in the paper in the middle paragraph of page 179.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">sympy.simplify.simplify</span> <span class="kn">import</span> <span class="n">radsimp</span>
+    <span class="k">if</span> <span class="n">h</span> <span class="o">&gt;</span> <span class="n">max_depth_level</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">av0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">av0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span>
+            <span class="nb">all</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">is_Number</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nested</span><span class="p">)):</span>  <span class="c"># no arguments are nested</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">_subsets</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)):</span>  <span class="c"># test subset &#39;f&#39; of nested</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">nested</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">))</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]]))</span>
+            <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="o">-</span><span class="n">p</span>
+            <span class="n">sqp</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sqp</span><span class="o">.</span><span class="n">is_Rational</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">sqp</span><span class="p">,</span> <span class="n">f</span>  <span class="c"># got a perfect square so return its square root.</span>
+        <span class="c"># Otherwise, return the radicand from the previous invocation.</span>
+        <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">nested</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">av0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">av0</span><span class="p">[:</span><span class="mi">2</span><span class="p">]]</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">av0</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">nested2</span> <span class="o">=</span> <span class="p">[</span><span class="n">av0</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">R</span><span class="p">]</span>
+            <span class="n">av0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="p">[</span><span class="n">_sqrt_match</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="k">for</span> <span class="n">expr</span> <span class="ow">in</span> <span class="n">nested</span><span class="p">]))</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>  <span class="c"># Since if b=0, r is not defined</span>
+                    <span class="k">if</span> <span class="n">R</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">R</span> <span class="o">!=</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+                            <span class="n">av0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">R</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">R</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="c"># return the radicand from the previous invocation</span>
+                <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">nested</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span>
+            <span class="n">nested2</span> <span class="o">=</span> <span class="p">[</span><span class="n">_mexpand</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">-</span>
+                       <span class="n">_mexpand</span><span class="p">(</span><span class="n">R</span><span class="o">*</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">R</span><span class="p">]</span>
+        <span class="n">d</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">_denester</span><span class="p">(</span><span class="n">nested2</span><span class="p">,</span> <span class="n">av0</span><span class="p">,</span> <span class="n">h</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">max_depth_level</span><span class="p">)</span>
+        <span class="c">#d = sqrtdenest(d)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">))):</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">d</span><span class="p">)),</span> <span class="n">f</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">Mul</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">nested</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">))</span> <span class="k">if</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">_sqrt_match</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">if</span> <span class="mi">1</span> <span class="ow">in</span> <span class="n">f</span> <span class="ow">and</span> <span class="n">f</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">f</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)]:</span>  <span class="c"># Solution denests with square roots</span>
+                <span class="n">vad</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">vad</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c"># return the radicand from the previous invocation.</span>
+                    <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">nested</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">sqrt_depth</span><span class="p">(</span><span class="n">vad</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="ow">or</span>
+                       <span class="p">(</span><span class="n">vad</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">is_Number</span><span class="p">):</span>
+                    <span class="n">av0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+                <span class="n">sqvad</span> <span class="o">=</span> <span class="n">_sqrtdenest1</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vad</span><span class="p">),</span> <span class="n">denester</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">sqrt_depth</span><span class="p">(</span><span class="n">sqvad</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">sqrt_depth</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">av0</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+                <span class="n">sqvad1</span> <span class="o">=</span> <span class="n">radsimp</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">sqvad</span><span class="p">)</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">sqvad</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">sqrt</span><span class="p">(</span><span class="n">R</span><span class="p">)</span><span class="o">*</span><span class="n">sqvad1</span><span class="o">/</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
+                <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">f</span>
+
+                      <span class="c">#          sign(v[1])*sqrt(_mexpand(v[1]**2*R*vad1/2))), f</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># Solution requires a fourth root</span>
+                <span class="n">s2</span> <span class="o">=</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">R</span><span class="p">)</span> <span class="o">+</span> <span class="n">d</span>
+                <span class="k">if</span> <span class="n">s2</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">nested</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">nested</span><span class="p">)</span>
+                <span class="n">FR</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">root</span><span class="p">(</span><span class="n">_mexpand</span><span class="p">(</span><span class="n">R</span><span class="p">),</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">s2</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">_mexpand</span><span class="p">(</span><span class="n">s</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">FR</span><span class="p">)</span> <span class="o">+</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">FR</span><span class="o">/</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">s</span><span class="p">)),</span> <span class="n">f</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

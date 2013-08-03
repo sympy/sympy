@@ -1,0 +1,449 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Kane’s Method in Physics/Mechanics &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="Classical Mechanics" href="index.html" />
+    <link rel="next" title="Examples for Physics/Mechanics" href="examples.html" />
+    <link rel="prev" title="Mechanics: Masses, Inertias, Particles and Rigid Bodies" href="masses.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples for Physics/Mechanics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="masses.html" title="Mechanics: Masses, Inertias, Particles and Rigid Bodies"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="kane-s-method-in-physics-mechanics">
+<h1>Kane&#8217;s Method in Physics/Mechanics<a class="headerlink" href="#kane-s-method-in-physics-mechanics" title="Permalink to this headline">¶</a></h1>
+<p><tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> has been written for use with Kane&#8217;s method of forming
+equations of motion <a class="reference internal" href="reference.html#kane1985">[Kane1985]</a>. This document will describe Kane&#8217;s Method
+as used in this module, but not how the equations are actually derived.</p>
+<div class="section" id="structure-of-equations">
+<h2>Structure of Equations<a class="headerlink" href="#structure-of-equations" title="Permalink to this headline">¶</a></h2>
+<p>In <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> we are assuming there are 5 basic sets of equations needed
+to describe a system. They are: holonomic constraints, non-holonomic
+constraints, kinematic differential equations, dynamic equations, and
+differentiated non-holonomic equations.</p>
+<div class="math">
+\[\begin{split}\mathbf{f_h}(q, t) &amp;= 0\\
+\mathbf{k_{nh}}(q, t) u + \mathbf{f_{nh}}(q, t) &amp;= 0\\
+\mathbf{k_{k\dot{q}}}(q, t) \dot{q} + \mathbf{k_{ku}}(q, t) u +
+\mathbf{f_k}(q, t) &amp;= 0\\
+\mathbf{k_d}(q, t) \dot{u} + \mathbf{f_d}(q, \dot{q}, u, t) &amp;= 0\\
+\mathbf{k_{dnh}}(q, t) \dot{u} + \mathbf{f_{dnh}}(q, \dot{q}, u, t) &amp;= 0\\\end{split}\]</div>
+<p>In <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> holonomic constraints are only used for the linearization
+process; it is assumed that they will be too complicated to solve for the
+dependent coordinate(s).  If you are able to easily solve a holonomic
+constraint, you should consider redefining your problem in terms of a smaller
+set of coordinates. Alternatively, the time-differentiated holonomic
+constraints can be supplied.</p>
+<p>Kane&#8217;s method forms two expressions, <span class="math">\(F_r\)</span> and <span class="math">\(F_r^*\)</span>, whose sum
+is zero. In this module, these expressions are rearranged into the following
+form:</p>
+<blockquote>
+<div><span class="math">\(\mathbf{M}(q, t) \dot{u} = \mathbf{f}(q, \dot{q}, u, t)\)</span></div></blockquote>
+<p>For a non-holonomic system with <span class="math">\(o\)</span> total speeds and <span class="math">\(m\)</span> motion constraints, we
+will get o - m equations. The mass-matrix/forcing equations are then augmented
+in the following fashion:</p>
+<div class="math">
+\[\begin{split}\mathbf{M}(q, t) &amp;= \begin{bmatrix} \mathbf{k_d}(q, t) \\
+\mathbf{k_{dnh}}(q, t) \end{bmatrix}\\
+\mathbf{_{(forcing)}}(q, \dot{q}, u, t) &amp;= \begin{bmatrix}
+- \mathbf{f_d}(q, \dot{q}, u, t) \\ - \mathbf{f_{dnh}}(q, \dot{q}, u, t)
+\end{bmatrix}\\\end{split}\]</div>
+</div>
+<div class="section" id="id2">
+<h2>Kane&#8217;s Method in Physics/Mechanics<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>The formulation of the equations of motion in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> starts with
+creation of a <tt class="docutils literal"><span class="pre">KanesMethod</span></tt> object. Upon initialization of the
+<tt class="docutils literal"><span class="pre">KanesMethod</span></tt> object, an inertial reference frame needs to be supplied. along
+with some basic system information, suchs as coordinates and speeds</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">u1</span><span class="p">,</span> <span class="n">u2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 u1 u2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span><span class="p">,</span> <span class="n">q2d</span><span class="p">,</span> <span class="n">u1d</span><span class="p">,</span> <span class="n">u2d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 u1 u2&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">],</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>It is also important to supply the order of coordinates and speeds properly if
+there are dependent coordinates and speeds. They must be supplied after
+independent coordinates and speeds or as a keyword argument; this is shown
+later.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3 q4&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">u4</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2 u3 u4&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># Here we will assume q2 is dependent, and u2 and u3 are dependent</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c"># We need the constraint equations to enter them though</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span><span class="p">],</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span> <span class="n">u4</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Additionally, if there are auxiliary speeds, they need to be identified here.
+See the examples for more information on this. In this example u4 is the
+auxiliary speed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span><span class="p">],</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">],</span> <span class="n">u_auxiliary</span><span class="o">=</span><span class="p">[</span><span class="n">u4</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Kinematic differential equations must also be supplied; there are to be
+provided as a list of expressions which are each equal to zero. A trivial
+example follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">kd</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1d</span> <span class="o">-</span> <span class="n">u1</span><span class="p">,</span> <span class="n">q2d</span> <span class="o">-</span> <span class="n">u2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Turning on <tt class="docutils literal"><span class="pre">mechanics_printing()</span></tt> makes the expressions significantly
+shorter and is recommended. Alternatively, the <tt class="docutils literal"><span class="pre">mprint</span></tt> and <tt class="docutils literal"><span class="pre">mpprint</span></tt>
+commands can be used.</p>
+<p>If there are non-holonomic constraints, dependent speeds need to be specified
+(and so do dependent coordinates, but they only come into play when linearizing
+the system). The constraints need to be supplied in a list of expressions which
+are equal to zero, trivial motion and configuration constraints are shown
+below:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3 q4&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span><span class="p">,</span> <span class="n">q2d</span><span class="p">,</span> <span class="n">q3d</span><span class="p">,</span> <span class="n">q4d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2 q3 q4&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u1</span><span class="p">,</span> <span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">,</span> <span class="n">u4</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;u1 u2 u3 u4&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c">#Here we will assume q2 is dependent, and u2 and u3 are dependent</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">speed_cons</span> <span class="o">=</span> <span class="p">[</span><span class="n">u2</span> <span class="o">-</span> <span class="n">u1</span><span class="p">,</span> <span class="n">u3</span> <span class="o">-</span> <span class="n">u1</span> <span class="o">-</span> <span class="n">u4</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coord_cons</span> <span class="o">=</span> <span class="p">[</span><span class="n">q2</span> <span class="o">-</span> <span class="n">q1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q_ind</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">q4</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q_dep</span> <span class="o">=</span> <span class="p">[</span><span class="n">q2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u_ind</span> <span class="o">=</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span> <span class="n">u4</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u_dep</span> <span class="o">=</span> <span class="p">[</span><span class="n">u2</span><span class="p">,</span> <span class="n">u3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kd</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1d</span> <span class="o">-</span> <span class="n">u1</span><span class="p">,</span> <span class="n">q2d</span> <span class="o">-</span> <span class="n">u2</span><span class="p">,</span> <span class="n">q3d</span> <span class="o">-</span> <span class="n">u3</span><span class="p">,</span> <span class="n">q4d</span> <span class="o">-</span> <span class="n">u4</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">q_ind</span><span class="p">,</span> <span class="n">u_ind</span><span class="p">,</span> <span class="n">kd</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">q_dependent</span><span class="o">=</span><span class="n">q_dep</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">configuration_constraints</span><span class="o">=</span><span class="n">coord_cons</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">u_dependent</span><span class="o">=</span><span class="n">u_dep</span><span class="p">,</span>
+<span class="gp">... </span>          <span class="n">velocity_constraints</span><span class="o">=</span><span class="n">speed_cons</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A dictionary returning the solved <span class="math">\(\dot{q}\)</span>&#8216;s can also be solved for:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mechanics_printing</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span><span class="o">.</span><span class="n">kindiffdict</span><span class="p">()</span>
+<span class="go">{q1&#39;: u1, q2&#39;: u2, q3&#39;: u3, q4&#39;: u4}</span>
+</pre></div>
+</div>
+<p>The final step in forming the equations of motion is supplying a list of
+bodies and particles, and a list of 2-tuples of the form <tt class="docutils literal"><span class="pre">(Point,</span> <span class="pre">Vector)</span></tt>
+or <tt class="docutils literal"><span class="pre">(ReferenceFrame,</span> <span class="pre">Vector)</span></tt> to represent applied forces and torques.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q</span><span class="p">,</span> <span class="n">u</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q u&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">qd</span><span class="p">,</span> <span class="n">ud</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q u&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">u</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Pa</span> <span class="o">=</span> <span class="n">Particle</span><span class="p">(</span><span class="s">&#39;Pa&#39;</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">BL</span> <span class="o">=</span> <span class="p">[</span><span class="n">Pa</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FL</span> <span class="o">=</span> <span class="p">[(</span><span class="n">P</span><span class="p">,</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span> <span class="o">=</span> <span class="n">KanesMethod</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="p">[</span><span class="n">q</span><span class="p">],</span> <span class="p">[</span><span class="n">u</span><span class="p">],</span> <span class="p">[</span><span class="n">qd</span> <span class="o">-</span> <span class="n">u</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">frstar</span><span class="p">)</span> <span class="o">=</span> <span class="n">KM</span><span class="o">.</span><span class="n">kanes_equations</span><span class="p">(</span><span class="n">FL</span><span class="p">,</span> <span class="n">BL</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span><span class="o">.</span><span class="n">mass_matrix</span>
+<span class="go">Matrix([[5]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span><span class="o">.</span><span class="n">forcing</span>
+<span class="go">Matrix([[7]])</span>
+</pre></div>
+</div>
+<p>When there are motion constraints, the mass matrix is augmented by the
+<span class="math">\(k_{dnh}(q, t)\)</span> matrix, and the forcing vector by the <span class="math">\(f_{dnh}(q,
+\dot{q}, u, t)\)</span> vector.</p>
+<p>There are also the &#8220;full&#8221; mass matrix and &#8220;full&#8221; forcing vector terms, these
+include the kinematic differential equations; the mass matrix is of size (n +
+o) x (n + o), or square and the size of all coordinates and speeds.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span><span class="o">.</span><span class="n">mass_matrix_full</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0],</span>
+<span class="go">[0, 5]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span><span class="o">.</span><span class="n">forcing_full</span>
+<span class="go">Matrix([</span>
+<span class="go">[u],</span>
+<span class="go">[7]])</span>
+</pre></div>
+</div>
+<p>The forcing vector can be linearized as well; its Jacobian is taken only with
+respect to the independent coordinates and speeds. The linearized forcing
+vector is of size (n + o) x (n - l + o - m), where l is the number of
+configuration constraints and m is the number of motion constraints. Two
+matrices are returned; the first is an &#8220;A&#8221; matrix, or the Jacobian with respect
+to the independent states, the second is a &#8220;B&#8221; matrix, or the Jacobian with
+respect to &#8216;forces&#8217;; this can be an empty matrix if there are no &#8216;forces&#8217;.
+Forces here are undefined functions of time (dynamic symbols); they are only
+allowed to be in the forcing vector and their derivatives are not allowed to be
+present. If dynamic symbols appear in the mass matrix or kinematic differential
+equations, an error with be raised.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">KM</span><span class="o">.</span><span class="n">linearize</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">Matrix([</span>
+<span class="go">[0, 1],</span>
+<span class="go">[0, 0]])</span>
+</pre></div>
+</div>
+<p>Exploration of the provided examples is encouraged in order to gain more
+understanding of the <tt class="docutils literal"><span class="pre">KanesMethod</span></tt> object.</p>
+</div>
+</div>
+<div class="section" id="lagrange-s-method-in-physics-mechanics">
+<h1>Lagrange&#8217;s Method in Physics/Mechanics<a class="headerlink" href="#lagrange-s-method-in-physics-mechanics" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id3">
+<h2>Structure of Equations<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>In <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> we are assuming there are 3 basic sets of equations needed
+to describe a system; the constraint equations, the time differentiated
+constraint equations and the dynamic equations.</p>
+<div class="math">
+\[\begin{split}\mathbf{m_{c}}(q, t) \dot{q} + \mathbf{f_{c}}(q, t) &amp;= 0\\
+\mathbf{m_{dc}}(\dot{q}, q, t) \ddot{q} + \mathbf{f_{dc}}(\dot{q}, q, t) &amp;= 0\\
+\mathbf{m_d}(\dot{q}, q, t) \ddot{q} + \mathbf{\Lambda_c}(q, t)
+\lambda + \mathbf{f_d}(\dot{q}, q, t) &amp;= 0\\\end{split}\]</div>
+<p>In this module, the expressions formed by using Lagrange&#8217;s equations of the
+second kind are rearranged into the following form:</p>
+<blockquote>
+<div><span class="math">\(\mathbf{M}(q, t) x = \mathbf{f}(q, \dot{q}, t)\)</span></div></blockquote>
+<p>where in the case of a system without constraints:</p>
+<blockquote>
+<div><span class="math">\(x = \ddot{q}\)</span></div></blockquote>
+<p>For a constrained system with <span class="math">\(n\)</span> generalized speeds and <span class="math">\(m\)</span> constraints, we
+will get n - m equations. The mass-matrix/forcing equations are then augmented
+in the following fashion:</p>
+<div class="math">
+\[\begin{split}x = \begin{bmatrix} \ddot{q} \\ \lambda \end{bmatrix} \\
+\mathbf{M}(q, t) &amp;= \begin{bmatrix} \mathbf{m_d}(q, t) &amp;
+\mathbf{\Lambda_c}(q, t) \end{bmatrix}\\
+\mathbf{F}(\dot{q}, q, t) &amp;= \begin{bmatrix} \mathbf{f_d}(q, \dot{q}, t)
+\end{bmatrix}\\\end{split}\]</div>
+</div>
+<div class="section" id="id4">
+<h2>Lagrange&#8217;s Method in Physics/Mechanics<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>The formulation of the equations of motion in <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> using
+Lagrange&#8217;s Method starts with the creation of generalized coordinates and a
+Lagrangian. The Lagrangian can either be created with the <tt class="docutils literal"><span class="pre">Lagrangian</span></tt>
+function or can be a user supplied function. In this case we will supply the
+Lagrangian.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy.physics.mechanics</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">q1d</span><span class="p">,</span> <span class="n">q2d</span> <span class="o">=</span> <span class="n">dynamicsymbols</span><span class="p">(</span><span class="s">&#39;q1 q2&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">q1d</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">q2d</span><span class="o">**</span><span class="mi">2</span>
+</pre></div>
+</div>
+<p>To formulate the equations of motion we create a <tt class="docutils literal"><span class="pre">LagrangesMethod</span></tt>
+object. The Lagrangian and generalized coordinates need to be supplied upon
+initialization.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span> <span class="o">=</span> <span class="n">LagrangesMethod</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>With that the equations of motion can be formed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">mechanics_printing</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span><span class="o">.</span><span class="n">form_lagranges_equations</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[2*q1&#39;&#39;],</span>
+<span class="go">[2*q2&#39;&#39;]])</span>
+</pre></div>
+</div>
+<p>It is possible to obtain the mass matrix and the forcing vector.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span><span class="o">.</span><span class="n">mass_matrix</span>
+<span class="go">Matrix([</span>
+<span class="go">[2, 0],</span>
+<span class="go">[0, 2]])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span><span class="o">.</span><span class="n">forcing</span>
+<span class="go">Matrix([</span>
+<span class="go">[0],</span>
+<span class="go">[0]])</span>
+</pre></div>
+</div>
+<p>If there are any holonomic or non-holonomic constraints, they must be supplied
+as keyword arguments in a list of expressions which are equal to zero. It
+should be noted that <tt class="xref py py-mod docutils literal"><span class="pre">mechanics</span></tt> requires that the holonomic constraint
+equations must be supplied as velocity level constraint equations i.e. the
+holonomic constraint equations must be supplied after they have been
+differentiated with respect to time. Modifying the example above, the equations
+of motion can then be generated:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span> <span class="o">=</span> <span class="n">LagrangesMethod</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">],</span> <span class="n">coneqs</span> <span class="o">=</span> <span class="p">[</span><span class="n">q1d</span> <span class="o">-</span> <span class="n">q2d</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>When the equations of motion are generated in this case, the Lagrange
+multipliers are introduced; they are represented by <tt class="docutils literal"><span class="pre">lam1</span></tt> in this case. In
+general, there will be as many multipliers as there are constraint equations.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span><span class="o">.</span><span class="n">form_lagranges_equations</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[ lam1 + 2*q1&#39;&#39;],</span>
+<span class="go">[-lam1 + 2*q2&#39;&#39;]])</span>
+</pre></div>
+</div>
+<p>Also in the case of systems with constraints, the &#8216;full&#8217; mass matrix is
+augmented by the <span class="math">\(k_{dc}(q, t)\)</span> matrix, and the forcing vector by the
+<span class="math">\(f_{dc}(q, \dot{q}, t)\)</span> vector. The &#8216;full&#8217; mass matrix is of size
+(2n + o) x (2n + o), i.e. it&#8217;s a square matrix.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span><span class="o">.</span><span class="n">mass_matrix_full</span>
+<span class="go">Matrix([</span>
+<span class="go">[1, 0, 0,  0,  0],</span>
+<span class="go">[0, 1, 0,  0,  0],</span>
+<span class="go">[0, 0, 2,  0, -1],</span>
+<span class="go">[0, 0, 0,  2,  1],</span>
+<span class="go">[0, 0, 1, -1,  0]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span><span class="o">.</span><span class="n">forcing_full</span>
+<span class="go">Matrix([</span>
+<span class="go">[q1&#39;],</span>
+<span class="go">[q2&#39;],</span>
+<span class="go">[  0],</span>
+<span class="go">[  0],</span>
+<span class="go">[  0]])</span>
+</pre></div>
+</div>
+<p>If there are any non-conservative forces or moments acting on the system,
+they must also be supplied as keyword arguments in a list of 2-tuples of the
+form <tt class="docutils literal"><span class="pre">(Point,</span> <span class="pre">Vector)</span></tt> or <tt class="docutils literal"><span class="pre">(ReferenceFrame,</span> <span class="pre">Vector)</span></tt> where the <tt class="docutils literal"><span class="pre">Vector</span></tt>
+represents the non-conservative forces and torques. Along with this 2-tuple,
+the inertial frame must also be specified as a keyword argument. This is shown
+below by modifying the example above:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="n">ReferenceFrame</span><span class="p">(</span><span class="s">&#39;N&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span> <span class="o">=</span> <span class="n">Point</span><span class="p">(</span><span class="s">&#39;P&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">P</span><span class="o">.</span><span class="n">set_vel</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">q1d</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">FL</span> <span class="o">=</span> <span class="p">[(</span><span class="n">P</span><span class="p">,</span> <span class="mi">7</span> <span class="o">*</span> <span class="n">N</span><span class="o">.</span><span class="n">x</span><span class="p">)]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span> <span class="o">=</span> <span class="n">LagrangesMethod</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="p">[</span><span class="n">q1</span><span class="p">,</span> <span class="n">q2</span><span class="p">],</span> <span class="n">forcelist</span> <span class="o">=</span> <span class="n">FL</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="n">N</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">LM</span><span class="o">.</span><span class="n">form_lagranges_equations</span><span class="p">()</span>
+<span class="go">Matrix([</span>
+<span class="go">[2*q1&#39;&#39; - 7],</span>
+<span class="go">[    2*q2&#39;&#39;]])</span>
+</pre></div>
+</div>
+<p>Exploration of the provided examples is encouraged in order to gain more
+understanding of the <tt class="docutils literal"><span class="pre">LagrangesMethod</span></tt> object.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Kane&#8217;s Method in Physics/Mechanics</a><ul>
+<li><a class="reference internal" href="#structure-of-equations">Structure of Equations</a></li>
+<li><a class="reference internal" href="#id2">Kane&#8217;s Method in Physics/Mechanics</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#lagrange-s-method-in-physics-mechanics">Lagrange&#8217;s Method in Physics/Mechanics</a><ul>
+<li><a class="reference internal" href="#id3">Structure of Equations</a></li>
+<li><a class="reference internal" href="#id4">Lagrange&#8217;s Method in Physics/Mechanics</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="masses.html"
+                        title="previous chapter">Mechanics: Masses, Inertias, Particles and Rigid Bodies</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="next chapter">Examples for Physics/Mechanics</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../../../_sources/modules/physics/mechanics/kane.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples for Physics/Mechanics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="masses.html" title="Mechanics: Masses, Inertias, Particles and Rigid Bodies"
+             >previous</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >SymPy Modules Reference</a> &raquo;</li>
+          <li><a href="../index.html" >Physics Module</a> &raquo;</li>
+          <li><a href="index.html" >Classical Mechanics</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

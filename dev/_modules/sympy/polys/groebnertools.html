@@ -1,0 +1,975 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.groebnertools &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.groebnertools</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Groebner bases algorithms. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.polys.monomials</span> <span class="kn">import</span> <span class="n">monomial_mul</span><span class="p">,</span> <span class="n">monomial_div</span><span class="p">,</span> <span class="n">monomial_lcm</span><span class="p">,</span> <span class="n">monomial_divides</span><span class="p">,</span> <span class="n">term_div</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.orderings</span> <span class="kn">import</span> <span class="n">lex</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyerrors</span> <span class="kn">import</span> <span class="n">DomainError</span>
+<span class="kn">from</span> <span class="nn">sympy.polys.polyconfig</span> <span class="kn">import</span> <span class="n">query</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Dummy</span>
+<span class="kn">from</span> <span class="nn">sympy.core.compatibility</span> <span class="kn">import</span> <span class="nb">xrange</span>
+
+<div class="viewcode-block" id="groebner"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.groebnertools.groebner">[docs]</a><span class="k">def</span> <span class="nf">groebner</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">ring</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes Groebner basis for a set of polynomials in `K[X]`.</span>
+
+<span class="sd">    Wrapper around the (default) improved Buchberger and the other algorithms</span>
+<span class="sd">    for computing Groebner bases. The choice of algorithm can be changed via</span>
+<span class="sd">    ``method`` argument or :func:`setup` from :mod:`sympy.polys.polyconfig`,</span>
+<span class="sd">    where ``method`` can be either ``buchberger`` or ``f5b``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">query</span><span class="p">(</span><span class="s">&#39;groebner&#39;</span><span class="p">)</span>
+
+    <span class="n">_groebner_methods</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;buchberger&#39;</span><span class="p">:</span> <span class="n">_buchberger</span><span class="p">,</span>
+        <span class="s">&#39;f5b&#39;</span><span class="p">:</span> <span class="n">_f5b</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_groebner</span> <span class="o">=</span> <span class="n">_groebner_methods</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; is not a valid Groebner bases algorithm (valid are &#39;buchberger&#39; and &#39;f5b&#39;)&quot;</span> <span class="o">%</span> <span class="n">method</span><span class="p">)</span>
+
+    <span class="n">domain</span><span class="p">,</span> <span class="n">orig</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">domain</span><span class="o">.</span><span class="n">has_Field</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">domain</span><span class="o">.</span><span class="n">has_assoc_Field</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">orig</span><span class="p">,</span> <span class="n">ring</span> <span class="o">=</span> <span class="n">ring</span><span class="p">,</span> <span class="n">ring</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">domain</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">get_field</span><span class="p">())</span>
+        <span class="k">except</span> <span class="n">DomainError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DomainError</span><span class="p">(</span><span class="s">&quot;can&#39;t compute a Groebner basis over </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">domain</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="p">[</span> <span class="n">s</span><span class="o">.</span><span class="n">set_ring</span><span class="p">(</span><span class="n">ring</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seq</span> <span class="p">]</span>
+
+    <span class="n">G</span> <span class="o">=</span> <span class="n">_groebner</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">orig</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="p">[</span> <span class="n">g</span><span class="o">.</span><span class="n">clear_denoms</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ring</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">G</span> <span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">G</span>
+</div>
+<span class="k">def</span> <span class="nf">_buchberger</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes Groebner basis for a set of polynomials in `K[X]`.</span>
+
+<span class="sd">    Given a set of multivariate polynomials `F`, finds another</span>
+<span class="sd">    set `G`, such that Ideal `F = Ideal G` and `G` is a reduced</span>
+<span class="sd">    Groebner basis.</span>
+
+<span class="sd">    The resulting basis is unique and has monic generators if the</span>
+<span class="sd">    ground domains is a field. Otherwise the result is non-unique</span>
+<span class="sd">    but Groebner bases over e.g. integers can be computed (if the</span>
+<span class="sd">    input polynomials are monic).</span>
+
+<span class="sd">    Groebner bases can be used to choose specific generators for a</span>
+<span class="sd">    polynomial ideal. Because these bases are unique you can check</span>
+<span class="sd">    for ideal equality by comparing the Groebner bases.  To see if</span>
+<span class="sd">    one polynomial lies in an ideal, divide by the elements in the</span>
+<span class="sd">    base and see if the remainder vanishes.</span>
+
+<span class="sd">    They can also be used to solve systems of polynomial equations</span>
+<span class="sd">    as,  by choosing lexicographic ordering,  you can eliminate one</span>
+<span class="sd">    variable at a time, provided that the ideal is zero-dimensional</span>
+<span class="sd">    (finite number of solutions).</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    1. [Bose03]_</span>
+<span class="sd">    2. [Giovini91]_</span>
+<span class="sd">    3. [Ajwa95]_</span>
+<span class="sd">    4. [Cox97]_</span>
+
+<span class="sd">    Algorithm used: an improved version of Buchberger&#39;s algorithm</span>
+<span class="sd">    as presented in T. Becker, V. Weispfenning, Groebner Bases: A</span>
+<span class="sd">    Computational Approach to Commutative Algebra, Springer, 1993,</span>
+<span class="sd">    page 232.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">order</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="n">monomial_mul</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">monomial_mul</span>
+    <span class="n">monomial_div</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">monomial_div</span>
+    <span class="n">monomial_lcm</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">monomial_lcm</span>
+
+    <span class="k">def</span> <span class="nf">select</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+        <span class="c"># normal selection strategy</span>
+        <span class="c"># select the pair with minimum LCM(LM(f), LM(g))</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">pair</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">monomial_lcm</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">f</span><span class="p">[</span><span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">LM</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">pr</span>
+
+    <span class="k">def</span> <span class="nf">normal</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">J</span><span class="p">):</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">rem</span><span class="p">([</span> <span class="n">f</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">J</span> <span class="p">])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">h</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">monic</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">I</span><span class="p">:</span>
+                <span class="n">I</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">I</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">ih</span><span class="p">):</span>
+        <span class="c"># update G using the set of critical pairs B and h</span>
+        <span class="c"># [BW] page 230</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">ih</span><span class="p">]</span>
+        <span class="n">mh</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">LM</span>
+
+        <span class="c"># filter new pairs (h, g), g in G</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="n">C</span><span class="p">:</span>
+            <span class="c"># select a pair (h, g) by popping an element from C</span>
+            <span class="n">ig</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">ig</span><span class="p">]</span>
+            <span class="n">mg</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">LM</span>
+            <span class="n">LCMhg</span> <span class="o">=</span> <span class="n">monomial_lcm</span><span class="p">(</span><span class="n">mh</span><span class="p">,</span> <span class="n">mg</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">lcm_divides</span><span class="p">(</span><span class="n">ip</span><span class="p">):</span>
+                <span class="c"># LCM(LM(h), LM(p)) divides LCM(LM(h), LM(g))</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">monomial_lcm</span><span class="p">(</span><span class="n">mh</span><span class="p">,</span> <span class="n">f</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">.</span><span class="n">LM</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">monomial_div</span><span class="p">(</span><span class="n">LCMhg</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+
+            <span class="c"># HT(h) and HT(g) disjoint: mh*mg == LCMhg</span>
+            <span class="k">if</span> <span class="n">monomial_mul</span><span class="p">(</span><span class="n">mh</span><span class="p">,</span> <span class="n">mg</span><span class="p">)</span> <span class="o">==</span> <span class="n">LCMhg</span> <span class="ow">or</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">lcm_divides</span><span class="p">(</span><span class="n">ipx</span><span class="p">)</span> <span class="k">for</span> <span class="n">ipx</span> <span class="ow">in</span> <span class="n">C</span><span class="p">)</span> <span class="ow">and</span>
+                    <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">lcm_divides</span><span class="p">(</span><span class="n">pr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">pr</span> <span class="ow">in</span> <span class="n">D</span><span class="p">)):</span>
+                <span class="n">D</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">ih</span><span class="p">,</span> <span class="n">ig</span><span class="p">))</span>
+
+        <span class="n">E</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="n">D</span><span class="p">:</span>
+            <span class="c"># select h, g from D (h the same as above)</span>
+            <span class="n">ih</span><span class="p">,</span> <span class="n">ig</span> <span class="o">=</span> <span class="n">D</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">mg</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">ig</span><span class="p">]</span><span class="o">.</span><span class="n">LM</span>
+            <span class="n">LCMhg</span> <span class="o">=</span> <span class="n">monomial_lcm</span><span class="p">(</span><span class="n">mh</span><span class="p">,</span> <span class="n">mg</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">monomial_mul</span><span class="p">(</span><span class="n">mh</span><span class="p">,</span> <span class="n">mg</span><span class="p">)</span> <span class="o">==</span> <span class="n">LCMhg</span><span class="p">:</span>
+                <span class="n">E</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">ih</span><span class="p">,</span> <span class="n">ig</span><span class="p">))</span>
+
+        <span class="c"># filter old pairs</span>
+        <span class="n">B_new</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="n">B</span><span class="p">:</span>
+            <span class="c"># select g1, g2 from B (-&gt; CP)</span>
+            <span class="n">ig1</span><span class="p">,</span> <span class="n">ig2</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">mg1</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">ig1</span><span class="p">]</span><span class="o">.</span><span class="n">LM</span>
+            <span class="n">mg2</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">ig2</span><span class="p">]</span><span class="o">.</span><span class="n">LM</span>
+            <span class="n">LCM12</span> <span class="o">=</span> <span class="n">monomial_lcm</span><span class="p">(</span><span class="n">mg1</span><span class="p">,</span> <span class="n">mg2</span><span class="p">)</span>
+
+            <span class="c"># if HT(h) does not divide lcm(HT(g1), HT(g2))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">monomial_div</span><span class="p">(</span><span class="n">LCM12</span><span class="p">,</span> <span class="n">mh</span><span class="p">)</span> <span class="ow">or</span> \
+                <span class="n">monomial_lcm</span><span class="p">(</span><span class="n">mg1</span><span class="p">,</span> <span class="n">mh</span><span class="p">)</span> <span class="o">==</span> <span class="n">LCM12</span> <span class="ow">or</span> \
+                    <span class="n">monomial_lcm</span><span class="p">(</span><span class="n">mg2</span><span class="p">,</span> <span class="n">mh</span><span class="p">)</span> <span class="o">==</span> <span class="n">LCM12</span><span class="p">:</span>
+                <span class="n">B_new</span><span class="o">.</span><span class="n">add</span><span class="p">((</span><span class="n">ig1</span><span class="p">,</span> <span class="n">ig2</span><span class="p">))</span>
+
+        <span class="n">B_new</span> <span class="o">|=</span> <span class="n">E</span>
+
+        <span class="c"># filter polynomials</span>
+        <span class="n">G_new</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="k">while</span> <span class="n">G</span><span class="p">:</span>
+            <span class="n">ig</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">mg</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">ig</span><span class="p">]</span><span class="o">.</span><span class="n">LM</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">monomial_div</span><span class="p">(</span><span class="n">mg</span><span class="p">,</span> <span class="n">mh</span><span class="p">):</span>
+                <span class="n">G_new</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ig</span><span class="p">)</span>
+
+        <span class="n">G_new</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ih</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">G_new</span><span class="p">,</span> <span class="n">B_new</span>
+        <span class="c"># end of update ################################</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c"># replace f with a reduced list of initial polynomials; see [BW] page 203</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:]</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">f1</span><span class="p">[:]</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">rem</span><span class="p">(</span><span class="n">f</span><span class="p">[:</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">r</span><span class="p">:</span>
+                <span class="n">f1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">monic</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="n">f1</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="n">I</span> <span class="o">=</span> <span class="p">{}</span>            <span class="c"># ip = I[p]; p = f[ip]</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>         <span class="c"># set of indices of polynomials</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>         <span class="c"># set of indices of intermediate would-be Groebner basis</span>
+    <span class="n">CP</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>        <span class="c"># set of pairs of indices of critical pairs</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="n">I</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+    <span class="c">#####################################</span>
+    <span class="c"># algorithm GROEBNERNEWS2 in [BW] page 232</span>
+
+    <span class="k">while</span> <span class="n">F</span><span class="p">:</span>
+        <span class="c"># select p with minimum monomial according to the monomial ordering</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="nb">min</span><span class="p">([</span><span class="n">f</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">F</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">LM</span><span class="p">))</span>
+        <span class="n">ih</span> <span class="o">=</span> <span class="n">I</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
+        <span class="n">F</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">ih</span><span class="p">)</span>
+        <span class="n">G</span><span class="p">,</span> <span class="n">CP</span> <span class="o">=</span> <span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">CP</span><span class="p">,</span> <span class="n">ih</span><span class="p">)</span>
+
+    <span class="c"># count the number of critical pairs which reduce to zero</span>
+    <span class="n">reductions_to_zero</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">while</span> <span class="n">CP</span><span class="p">:</span>
+        <span class="n">ig1</span><span class="p">,</span> <span class="n">ig2</span> <span class="o">=</span> <span class="n">select</span><span class="p">(</span><span class="n">CP</span><span class="p">)</span>
+        <span class="n">CP</span><span class="o">.</span><span class="n">remove</span><span class="p">((</span><span class="n">ig1</span><span class="p">,</span> <span class="n">ig2</span><span class="p">))</span>
+
+        <span class="n">h</span> <span class="o">=</span> <span class="n">spoly</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">ig1</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">ig2</span><span class="p">],</span> <span class="n">ring</span><span class="p">)</span>
+        <span class="c"># ordering divisors is on average more efficient [Cox] page 111</span>
+        <span class="n">G1</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">g</span><span class="p">]</span><span class="o">.</span><span class="n">LM</span><span class="p">))</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">normal</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">G1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ht</span><span class="p">:</span>
+            <span class="n">G</span><span class="p">,</span> <span class="n">CP</span> <span class="o">=</span> <span class="n">update</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">CP</span><span class="p">,</span> <span class="n">ht</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reductions_to_zero</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c">######################################</span>
+    <span class="c"># now G is a Groebner basis; reduce it</span>
+    <span class="n">Gr</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">ig</span> <span class="ow">in</span> <span class="n">G</span><span class="p">:</span>
+        <span class="n">ht</span> <span class="o">=</span> <span class="n">normal</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">ig</span><span class="p">],</span> <span class="n">G</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="n">ig</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">ht</span><span class="p">:</span>
+            <span class="n">Gr</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ht</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">Gr</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[</span><span class="n">ig</span><span class="p">]</span> <span class="k">for</span> <span class="n">ig</span> <span class="ow">in</span> <span class="n">Gr</span><span class="p">]</span>
+
+    <span class="c"># order according to the monomial ordering</span>
+    <span class="n">Gr</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">Gr</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">LM</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Gr</span>
+
+<div class="viewcode-block" id="spoly"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.groebnertools.spoly">[docs]</a><span class="k">def</span> <span class="nf">spoly</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute LCM(LM(p1), LM(p2))/LM(p1)*p1 - LCM(LM(p1), LM(p2))/LM(p2)*p2</span>
+<span class="sd">    This is the S-poly provided p1 and p2 are monic</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">LM1</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">LM</span>
+    <span class="n">LM2</span> <span class="o">=</span> <span class="n">p2</span><span class="o">.</span><span class="n">LM</span>
+    <span class="n">LCM12</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">monomial_lcm</span><span class="p">(</span><span class="n">LM1</span><span class="p">,</span> <span class="n">LM2</span><span class="p">)</span>
+    <span class="n">m1</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">monomial_div</span><span class="p">(</span><span class="n">LCM12</span><span class="p">,</span> <span class="n">LM1</span><span class="p">)</span>
+    <span class="n">m2</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">monomial_div</span><span class="p">(</span><span class="n">LCM12</span><span class="p">,</span> <span class="n">LM2</span><span class="p">)</span>
+    <span class="n">s1</span> <span class="o">=</span> <span class="n">p1</span><span class="o">.</span><span class="n">mul_monom</span><span class="p">(</span><span class="n">m1</span><span class="p">)</span>
+    <span class="n">s2</span> <span class="o">=</span> <span class="n">p2</span><span class="o">.</span><span class="n">mul_monom</span><span class="p">(</span><span class="n">m2</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">s1</span> <span class="o">-</span> <span class="n">s2</span>
+    <span class="k">return</span> <span class="n">s</span>
+
+<span class="c"># F5B</span>
+
+<span class="c"># convenience functions</span>
+
+</div>
+<span class="k">def</span> <span class="nf">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">Num</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">sig</span><span class="p">(</span><span class="n">monomial</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">monomial</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">lbp</span><span class="p">(</span><span class="n">signature</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">number</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">signature</span><span class="p">,</span> <span class="n">polynomial</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span>
+
+<span class="c"># signature functions</span>
+
+
+<span class="k">def</span> <span class="nf">sig_cmp</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two signatures by extending the term order to K[X]^n.</span>
+
+<span class="sd">    u &lt; v iff</span>
+<span class="sd">        - the index of v is greater than the index of u</span>
+<span class="sd">    or</span>
+<span class="sd">        - the index of v is equal to the index of u and u[0] &lt; v[0] w.r.t. order</span>
+
+<span class="sd">    u &gt; v otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">u</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="c">#if u[0] == v[0]:</span>
+        <span class="c">#    return 0</span>
+        <span class="k">if</span> <span class="n">order</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">order</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">sig_key</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Key for comparing two signatures.</span>
+
+<span class="sd">    s = (m, k), t = (n, l)</span>
+
+<span class="sd">    s &lt; t iff [k &gt; l] or [k == l and m &lt; n]</span>
+<span class="sd">    s &gt; t otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">order</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+
+<span class="k">def</span> <span class="nf">sig_mult</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply a signature by a monomial.</span>
+
+<span class="sd">    The product of a signature (m, i) and a monomial n is defined as</span>
+<span class="sd">    (m * t, i).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">sig</span><span class="p">(</span><span class="n">monomial_mul</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">m</span><span class="p">),</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="c"># labeled polynomial functions</span>
+
+
+<span class="k">def</span> <span class="nf">lbp_sub</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Subtract labeled polynomial g from f.</span>
+
+<span class="sd">    The signature and number of the difference of f and g are signature</span>
+<span class="sd">    and number of the maximum of f and g, w.r.t. lbp_cmp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sig_cmp</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">Sign</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">order</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">max_poly</span> <span class="o">=</span> <span class="n">g</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">max_poly</span> <span class="o">=</span> <span class="n">f</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">-</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lbp</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">max_poly</span><span class="p">),</span> <span class="n">ret</span><span class="p">,</span> <span class="n">Num</span><span class="p">(</span><span class="n">max_poly</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">lbp_mul_term</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">cx</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multiply a labeled polynomial with a term.</span>
+
+<span class="sd">    The product of a labeled polynomial (s, p, k) by a monomial is</span>
+<span class="sd">    defined as (m * s, m * p, k).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">lbp</span><span class="p">(</span><span class="n">sig_mult</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">cx</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">mul_term</span><span class="p">(</span><span class="n">cx</span><span class="p">),</span> <span class="n">Num</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">lbp_cmp</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two labeled polynomials.</span>
+
+<span class="sd">    f &lt; g iff</span>
+<span class="sd">        - Sign(f) &lt; Sign(g)</span>
+<span class="sd">    or</span>
+<span class="sd">        - Sign(f) == Sign(g) and Num(f) &gt; Num(g)</span>
+
+<span class="sd">    f &gt; g otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">sig_cmp</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">Sign</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">order</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="n">Sign</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">Num</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">Num</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c">#if Num(f) == Num(g):</span>
+        <span class="c">#    return 0</span>
+    <span class="k">return</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">lbp_key</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Key for comparing two labeled polynomials.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">sig_key</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">order</span><span class="p">),</span> <span class="o">-</span><span class="n">Num</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+
+<span class="c"># algorithm and helper functions</span>
+
+
+<span class="k">def</span> <span class="nf">critical_pair</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the critical pair corresponding to two labeled polynomials.</span>
+
+<span class="sd">    A critical pair is a tuple (um, f, vm, g), where um and vm are</span>
+<span class="sd">    terms such that um * f - vm * g is the S-polynomial of f and g (so,</span>
+<span class="sd">    wlog assume um * f &gt; vm * g).</span>
+<span class="sd">    For performance sake, a critical pair is represented as a tuple</span>
+<span class="sd">    (Sign(um * f), um, f, Sign(vm * g), vm, g), since um * f creates</span>
+<span class="sd">    a new, relatively expensive object in memory, whereas Sign(um *</span>
+<span class="sd">    f) and um are lightweight and f (in the tuple) is a reference to</span>
+<span class="sd">    an already existing object in memory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="n">ltf</span> <span class="o">=</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">LT</span>
+    <span class="n">ltg</span> <span class="o">=</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">LT</span>
+    <span class="n">lt</span> <span class="o">=</span> <span class="p">(</span><span class="n">monomial_lcm</span><span class="p">(</span><span class="n">ltf</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ltg</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">domain</span><span class="o">.</span><span class="n">one</span><span class="p">)</span>
+
+    <span class="n">um</span> <span class="o">=</span> <span class="n">term_div</span><span class="p">(</span><span class="n">lt</span><span class="p">,</span> <span class="n">ltf</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+    <span class="n">vm</span> <span class="o">=</span> <span class="n">term_div</span><span class="p">(</span><span class="n">lt</span><span class="p">,</span> <span class="n">ltg</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+
+    <span class="c"># The full information is not needed (now), so only the product</span>
+    <span class="c"># with the leading term is considered:</span>
+    <span class="n">fr</span> <span class="o">=</span> <span class="n">lbp_mul_term</span><span class="p">(</span><span class="n">lbp</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">leading_term</span><span class="p">(),</span> <span class="n">Num</span><span class="p">(</span><span class="n">f</span><span class="p">)),</span> <span class="n">um</span><span class="p">)</span>
+    <span class="n">gr</span> <span class="o">=</span> <span class="n">lbp_mul_term</span><span class="p">(</span><span class="n">lbp</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">g</span><span class="p">),</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">leading_term</span><span class="p">(),</span> <span class="n">Num</span><span class="p">(</span><span class="n">g</span><span class="p">)),</span> <span class="n">vm</span><span class="p">)</span>
+
+    <span class="c"># return in proper order, such that the S-polynomial is just</span>
+    <span class="c"># u_first * f_first - u_second * f_second:</span>
+    <span class="k">if</span> <span class="n">lbp_cmp</span><span class="p">(</span><span class="n">fr</span><span class="p">,</span> <span class="n">gr</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">gr</span><span class="p">),</span> <span class="n">vm</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">Sign</span><span class="p">(</span><span class="n">fr</span><span class="p">),</span> <span class="n">um</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">fr</span><span class="p">),</span> <span class="n">um</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">Sign</span><span class="p">(</span><span class="n">gr</span><span class="p">),</span> <span class="n">vm</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">cp_cmp</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two critical pairs c and d.</span>
+
+<span class="sd">    c &lt; d iff</span>
+<span class="sd">        - lbp(c[0], _, Num(c[2]) &lt; lbp(d[0], _, Num(d[2])) (this</span>
+<span class="sd">        corresponds to um_c * f_c and um_d * f_d)</span>
+<span class="sd">    or</span>
+<span class="sd">        - lbp(c[0], _, Num(c[2]) &gt;&lt; lbp(d[0], _, Num(d[2])) and</span>
+<span class="sd">        lbp(c[3], _, Num(c[5])) &lt; lbp(d[3], _, Num(d[5])) (this</span>
+<span class="sd">        corresponds to vm_c * g_c and vm_d * g_d)</span>
+
+<span class="sd">    c &gt; d otherwise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zero</span> <span class="o">=</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">zero</span>
+
+    <span class="n">c0</span> <span class="o">=</span> <span class="n">lbp</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zero</span><span class="p">,</span> <span class="n">Num</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="n">d0</span> <span class="o">=</span> <span class="n">lbp</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">zero</span><span class="p">,</span> <span class="n">Num</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">lbp_cmp</span><span class="p">(</span><span class="n">c0</span><span class="p">,</span> <span class="n">d0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">c1</span> <span class="o">=</span> <span class="n">lbp</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">zero</span><span class="p">,</span> <span class="n">Num</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
+        <span class="n">d1</span> <span class="o">=</span> <span class="n">lbp</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">zero</span><span class="p">,</span> <span class="n">Num</span><span class="p">(</span><span class="n">d</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
+
+        <span class="n">r</span> <span class="o">=</span> <span class="n">lbp_cmp</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">d1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="c">#if r == 0:</span>
+        <span class="c">#    return 0</span>
+    <span class="k">return</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">cp_key</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Key for comparing critical pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">lbp_key</span><span class="p">(</span><span class="n">lbp</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ring</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="n">Num</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">]))),</span> <span class="n">lbp_key</span><span class="p">(</span><span class="n">lbp</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">ring</span><span class="o">.</span><span class="n">zero</span><span class="p">,</span> <span class="n">Num</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">]))))</span>
+
+
+<span class="k">def</span> <span class="nf">s_poly</span><span class="p">(</span><span class="n">cp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the S-polynomial of a critical pair.</span>
+
+<span class="sd">    The S-polynomial of a critical pair cp is cp[1] * cp[2] - cp[4] * cp[5].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">lbp_sub</span><span class="p">(</span><span class="n">lbp_mul_term</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">cp</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">lbp_mul_term</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">cp</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+
+
+<span class="k">def</span> <span class="nf">is_rewritable_or_comparable</span><span class="p">(</span><span class="n">sign</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if a labeled polynomial is redundant by checking if its</span>
+<span class="sd">    signature and number imply rewritability or comparability.</span>
+
+<span class="sd">    (sign, num) is comparable if there exists a labeled polynomial</span>
+<span class="sd">    h in B, such that sign[1] (the index) is less than Sign(h)[1]</span>
+<span class="sd">    and sign[0] is divisible by the leading monomial of h.</span>
+
+<span class="sd">    (sign, num) is rewritable if there exists a labeled polynomial</span>
+<span class="sd">    h in B, such thatsign[1] is equal to Sign(h)[1], num &lt; Num(h)</span>
+<span class="sd">    and sign[0] is divisible by Sign(h)[0].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">B</span><span class="p">:</span>
+        <span class="c"># comparable</span>
+        <span class="k">if</span> <span class="n">sign</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">Sign</span><span class="p">(</span><span class="n">h</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">monomial_divides</span><span class="p">(</span><span class="n">Polyn</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">sign</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="k">return</span> <span class="bp">True</span>
+
+        <span class="c"># rewritable</span>
+        <span class="k">if</span> <span class="n">sign</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">Sign</span><span class="p">(</span><span class="n">h</span><span class="p">)[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">num</span> <span class="o">&lt;</span> <span class="n">Num</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">monomial_divides</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">h</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sign</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span>
+
+
+<span class="k">def</span> <span class="nf">f5_reduce</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    F5-reduce a labeled polynomial f by B.</span>
+
+<span class="sd">    Continously searches for non-zero labeled polynomial h in B, such</span>
+<span class="sd">    that the leading term lt_h of h divides the leading term lt_f of</span>
+<span class="sd">    f and Sign(lt_h * h) &lt; Sign(f). If such a labeled polynomial h is</span>
+<span class="sd">    found, f gets replaced by f - lt_f / lt_h * h. If no such h can be</span>
+<span class="sd">    found or f is 0, f is no further F5-reducible and f gets returned.</span>
+
+<span class="sd">    A polynomial that is reducible in the usual sense need not be</span>
+<span class="sd">    F5-reducible, e.g.:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.polys.groebnertools import lbp, sig, f5_reduce, Polyn</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.polys import ring, QQ, lex</span>
+
+<span class="sd">    &gt;&gt;&gt; R, x,y,z = ring(&quot;x,y,z&quot;, QQ, lex)</span>
+
+<span class="sd">    &gt;&gt;&gt; f = lbp(sig((1, 1, 1), 4), x, 3)</span>
+<span class="sd">    &gt;&gt;&gt; g = lbp(sig((0, 0, 0), 2), x, 2)</span>
+
+<span class="sd">    &gt;&gt;&gt; Polyn(f).rem([Polyn(g)])</span>
+<span class="sd">    0</span>
+<span class="sd">    &gt;&gt;&gt; f5_reduce(f, [g])</span>
+<span class="sd">    (((1, 1, 1), 4), x, 3)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">order</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span>
+
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">f</span>
+
+        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">B</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">h</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">monomial_divides</span><span class="p">(</span><span class="n">Polyn</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">LM</span><span class="p">):</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="n">term_div</span><span class="p">(</span><span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">LT</span><span class="p">,</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">LT</span><span class="p">,</span> <span class="n">domain</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">sig_cmp</span><span class="p">(</span><span class="n">sig_mult</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">Sign</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">order</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c"># The following check need not be done and is in general slower than without.</span>
+                        <span class="c">#if not is_rewritable_or_comparable(Sign(gp), Num(gp), B):</span>
+                        <span class="n">hp</span> <span class="o">=</span> <span class="n">lbp_mul_term</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                        <span class="n">f</span> <span class="o">=</span> <span class="n">lbp_sub</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">hp</span><span class="p">)</span>
+                        <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">g</span> <span class="o">==</span> <span class="n">f</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">f</span>
+
+
+<span class="k">def</span> <span class="nf">_f5b</span><span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes a reduced Groebner basis for the ideal generated by F.</span>
+
+<span class="sd">    f5b is an implementation of the F5B algorithm by Yao Sun and</span>
+<span class="sd">    Dingkang Wang. Similarly to Buchberger&#39;s algorithm, the algorithm</span>
+<span class="sd">    proceeds by computing critical pairs, computing the S-polynomial,</span>
+<span class="sd">    reducing it and adjoining the reduced S-polynomial if it is not 0.</span>
+
+<span class="sd">    Unlike Buchberger&#39;s algorithm, each polynomial contains additional</span>
+<span class="sd">    information, namely a signature and a number. The signature</span>
+<span class="sd">    specifies the path of computation (i.e. from which polynomial in</span>
+<span class="sd">    the original basis was it derived and how), the number says when</span>
+<span class="sd">    the polynomial was added to the basis.  With this information it</span>
+<span class="sd">    is (often) possible to decide if an S-polynomial will reduce to</span>
+<span class="sd">    0 and can be discarded.</span>
+
+<span class="sd">    Optimizations include: Reducing the generators before computing</span>
+<span class="sd">    a Groebner basis, removing redundant critical pairs when a new</span>
+<span class="sd">    polynomial enters the basis and sorting the critical pairs and</span>
+<span class="sd">    the current basis.</span>
+
+<span class="sd">    Once a Groebner basis has been found, it gets reduced.</span>
+
+<span class="sd">    ** References **</span>
+<span class="sd">    Yao Sun, Dingkang Wang: &quot;A New Proof for the Correctness of F5</span>
+<span class="sd">    (F5-Like) Algorithm&quot;, http://arxiv.org/abs/1004.0084 (specifically</span>
+<span class="sd">    v4)</span>
+
+<span class="sd">    Thomas Becker, Volker Weispfenning, Groebner bases: A computational</span>
+<span class="sd">    approach to commutative algebra, 1993, p. 203, 216</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">order</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="c"># reduce polynomials (like in Mario Pernici&#39;s implementation) (Becker, Weispfenning, p. 203)</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">F</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">B</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">F</span><span class="p">)):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">rem</span><span class="p">(</span><span class="n">F</span><span class="p">[:</span><span class="n">i</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">r</span><span class="p">:</span>
+                <span class="n">B</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">F</span> <span class="o">==</span> <span class="n">B</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="c"># basis</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="p">[</span><span class="n">lbp</span><span class="p">(</span><span class="n">sig</span><span class="p">(</span><span class="n">ring</span><span class="o">.</span><span class="n">zero_monom</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">F</span><span class="p">))]</span>
+    <span class="n">B</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">Polyn</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">LM</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="c"># critical pairs</span>
+    <span class="n">CP</span> <span class="o">=</span> <span class="p">[</span><span class="n">critical_pair</span><span class="p">(</span><span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">B</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ring</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">))]</span>
+    <span class="n">CP</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">cp</span><span class="p">:</span> <span class="n">cp_key</span><span class="p">(</span><span class="n">cp</span><span class="p">,</span> <span class="n">ring</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+
+    <span class="n">reductions_to_zero</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">CP</span><span class="p">):</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">CP</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="c"># discard redundant critical pairs:</span>
+        <span class="k">if</span> <span class="n">is_rewritable_or_comparable</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Num</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">B</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">is_rewritable_or_comparable</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">Num</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="n">B</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="n">s_poly</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">f5_reduce</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">lbp</span><span class="p">(</span><span class="n">Sign</span><span class="p">(</span><span class="n">p</span><span class="p">),</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">monic</span><span class="p">(),</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="c"># remove old critical pairs, that become redundant when adding p:</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cp</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">CP</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">is_rewritable_or_comparable</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Num</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="p">[</span><span class="n">p</span><span class="p">]):</span>
+                    <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">is_rewritable_or_comparable</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">Num</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="p">[</span><span class="n">p</span><span class="p">]):</span>
+                    <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">indices</span><span class="p">):</span>
+                <span class="k">del</span> <span class="n">CP</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+            <span class="c"># only add new critical pairs that are not made redundant by p:</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">B</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+                    <span class="n">cp</span> <span class="o">=</span> <span class="n">critical_pair</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">is_rewritable_or_comparable</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Num</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="p">[</span><span class="n">p</span><span class="p">]):</span>
+                        <span class="k">continue</span>
+                    <span class="k">elif</span> <span class="n">is_rewritable_or_comparable</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">Num</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span> <span class="p">[</span><span class="n">p</span><span class="p">]):</span>
+                        <span class="k">continue</span>
+
+                    <span class="n">CP</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span>
+
+            <span class="c"># sort (other sorting methods/selection strategies were not as successful)</span>
+            <span class="n">CP</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">cp</span><span class="p">:</span> <span class="n">cp_key</span><span class="p">(</span><span class="n">cp</span><span class="p">,</span> <span class="n">ring</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+            <span class="c"># insert p into B:</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">Polyn</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">LM</span>
+            <span class="k">if</span> <span class="n">order</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">order</span><span class="p">(</span><span class="n">Polyn</span><span class="p">(</span><span class="n">B</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">LM</span><span class="p">):</span>
+                <span class="n">B</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">q</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">order</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">order</span><span class="p">(</span><span class="n">Polyn</span><span class="p">(</span><span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">LM</span><span class="p">):</span>
+                        <span class="n">B</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+                        <span class="k">break</span>
+
+            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c">#print(len(B), len(CP), &quot;%d critical pairs removed&quot; % len(indices))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">reductions_to_zero</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c"># reduce Groebner basis:</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="p">[</span><span class="n">Polyn</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">monic</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">B</span><span class="p">]</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">red_groebner</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">ring</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">LM</span><span class="p">),</span> <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="red_groebner"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.groebnertools.red_groebner">[docs]</a><span class="k">def</span> <span class="nf">red_groebner</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute reduced Groebner basis, from BeckerWeispfenning93, p. 216</span>
+
+<span class="sd">    Selects a subset of generators, that already generate the ideal</span>
+<span class="sd">    and computes a reduced Groebner basis for them.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">reduction</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The actual reduction algorithm.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Q</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+            <span class="n">h</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">rem</span><span class="p">(</span><span class="n">P</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">P</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:])</span>
+            <span class="k">if</span> <span class="n">h</span><span class="p">:</span>
+                <span class="n">Q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">monic</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Q</span><span class="p">]</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="n">G</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">while</span> <span class="n">F</span><span class="p">:</span>
+        <span class="n">f0</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">monomial_divides</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">f0</span><span class="o">.</span><span class="n">LM</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">F</span> <span class="o">+</span> <span class="n">H</span><span class="p">):</span>
+            <span class="n">H</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f0</span><span class="p">)</span>
+
+    <span class="c"># Becker, Weispfenning, p. 217: H is Groebner basis of the ideal generated by G.</span>
+    <span class="k">return</span> <span class="n">reduction</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="is_groebner"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.groebnertools.is_groebner">[docs]</a><span class="k">def</span> <span class="nf">is_groebner</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if G is a Groebner basis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">G</span><span class="p">)):</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">spoly</span><span class="p">(</span><span class="n">G</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">G</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">rem</span><span class="p">(</span><span class="n">G</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">s</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="is_minimal"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.groebnertools.is_minimal">[docs]</a><span class="k">def</span> <span class="nf">is_minimal</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if G is a minimal Groebner basis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">order</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="n">G</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">LM</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">LC</span> <span class="o">!=</span> <span class="n">domain</span><span class="o">.</span><span class="n">one</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">G</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">monomial_divides</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">LM</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="is_reduced"><a class="viewcode-back" href="../../../modules/polys/internals.html#sympy.polys.groebnertools.is_reduced">[docs]</a><span class="k">def</span> <span class="nf">is_reduced</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">ring</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if G is a reduced Groebner basis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">order</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="n">G</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="n">order</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">LM</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">LC</span> <span class="o">!=</span> <span class="n">domain</span><span class="o">.</span><span class="n">one</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+
+        <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[:</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">G</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="n">monomial_divides</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">term</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                    <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+</div>
+<span class="k">def</span> <span class="nf">groebner_lcm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes LCM of two polynomials using Groebner bases.</span>
+
+<span class="sd">    The LCM is computed as the unique generater of the intersection</span>
+<span class="sd">    of the two ideals generated by `f` and `g`. The approach is to</span>
+<span class="sd">    compute a Groebner basis with respect to lexicographic ordering</span>
+<span class="sd">    of `t*f` and `(1 - t)*g`, where `t` is an unrelated variable and</span>
+<span class="sd">    then filtering out the solution that doesn&#39;t contain `t`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ==========</span>
+
+<span class="sd">    1. [Cox97]_</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">f</span><span class="o">.</span><span class="n">ring</span> <span class="o">==</span> <span class="n">g</span><span class="o">.</span><span class="n">ring</span>
+
+    <span class="n">ring</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">ring</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">f</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ring</span><span class="o">.</span><span class="n">zero</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">monom</span> <span class="o">=</span> <span class="n">monomial_lcm</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">LM</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">LM</span><span class="p">)</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">lcm</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">LC</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">LC</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ring</span><span class="o">.</span><span class="n">term_new</span><span class="p">(</span><span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span>
+
+    <span class="n">fc</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">primitive</span><span class="p">()</span>
+    <span class="n">gc</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">primitive</span><span class="p">()</span>
+
+    <span class="n">lcm</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">lcm</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="n">gc</span><span class="p">)</span>
+
+    <span class="n">f_terms</span> <span class="o">=</span> <span class="p">[</span> <span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span> <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">terms</span><span class="p">()</span> <span class="p">]</span>
+    <span class="n">g_terms</span> <span class="o">=</span> <span class="p">[</span> <span class="p">((</span><span class="mi">0</span><span class="p">,)</span> <span class="o">+</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span> <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">terms</span><span class="p">()</span> <span class="p">]</span> \
+            <span class="o">+</span> <span class="p">[</span> <span class="p">((</span><span class="mi">1</span><span class="p">,)</span> <span class="o">+</span> <span class="n">monom</span><span class="p">,</span><span class="o">-</span><span class="n">coeff</span><span class="p">)</span> <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">terms</span><span class="p">()</span> <span class="p">]</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">Dummy</span><span class="p">(</span><span class="s">&quot;t&quot;</span><span class="p">)</span>
+    <span class="n">t_ring</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="p">(</span><span class="n">t</span><span class="p">,)</span> <span class="o">+</span> <span class="n">ring</span><span class="o">.</span><span class="n">symbols</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">lex</span><span class="p">)</span>
+
+    <span class="n">F</span> <span class="o">=</span> <span class="n">t_ring</span><span class="o">.</span><span class="n">from_terms</span><span class="p">(</span><span class="n">f_terms</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">t_ring</span><span class="o">.</span><span class="n">from_terms</span><span class="p">(</span><span class="n">g_terms</span><span class="p">)</span>
+
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">groebner</span><span class="p">([</span><span class="n">F</span><span class="p">,</span> <span class="n">G</span><span class="p">],</span> <span class="n">t_ring</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">is_independent</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="ow">not</span> <span class="n">monom</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">monom</span> <span class="ow">in</span> <span class="n">h</span><span class="o">.</span><span class="n">monoms</span><span class="p">())</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="p">[</span> <span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">basis</span> <span class="k">if</span> <span class="n">is_independent</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">]</span>
+
+    <span class="n">h_terms</span> <span class="o">=</span> <span class="p">[</span> <span class="p">(</span><span class="n">monom</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">coeff</span><span class="o">*</span><span class="n">lcm</span><span class="p">)</span> <span class="k">for</span> <span class="n">monom</span><span class="p">,</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">H</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">terms</span><span class="p">()</span> <span class="p">]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">ring</span><span class="o">.</span><span class="n">from_terms</span><span class="p">(</span><span class="n">h_terms</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">h</span>
+
+<span class="k">def</span> <span class="nf">groebner_gcd</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Computes GCD of two polynomials using Groebner bases. &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">f</span><span class="o">.</span><span class="n">ring</span> <span class="o">==</span> <span class="n">g</span><span class="o">.</span><span class="n">ring</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">ring</span><span class="o">.</span><span class="n">domain</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">domain</span><span class="o">.</span><span class="n">has_Field</span><span class="p">:</span>
+        <span class="n">fc</span><span class="p">,</span> <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">primitive</span><span class="p">()</span>
+        <span class="n">gc</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">primitive</span><span class="p">()</span>
+        <span class="n">gcd</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">gcd</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="n">gc</span><span class="p">)</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="o">*</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">quo</span><span class="p">([</span><span class="n">groebner_lcm</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">)])</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">H</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">domain</span><span class="o">.</span><span class="n">has_Field</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gcd</span><span class="o">*</span><span class="n">h</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">monic</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

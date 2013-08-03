@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.solvers.deutils &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.solvers.deutils</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Utility functions for classifying and solving</span>
+<span class="sd">ordinary and partial differential equations.</span>
+
+<span class="sd">Contains</span>
+<span class="sd">========</span>
+<span class="sd">_preprocess</span>
+<span class="sd">ode_order</span>
+<span class="sd">_desolve</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core.function</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Derivative</span><span class="p">,</span> <span class="n">AppliedUndef</span>
+<span class="kn">from</span> <span class="nn">sympy.core.relational</span> <span class="kn">import</span> <span class="n">Equality</span><span class="p">,</span> <span class="n">Eq</span>
+<span class="kn">from</span> <span class="nn">sympy.core.symbol</span> <span class="kn">import</span> <span class="n">Wild</span>
+
+<span class="k">def</span> <span class="nf">_preprocess</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="s">&#39;_Integral&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prepare expr for solving by making sure that differentiation</span>
+<span class="sd">    is done so that only func remains in unevaluated derivatives and</span>
+<span class="sd">    (if hint doesn&#39;t end with _Integral) that doit is applied to all</span>
+<span class="sd">    other derivatives. If hint is None, don&#39;t do any differentiation.</span>
+<span class="sd">    (Currently this may cause some simple differential equations to</span>
+<span class="sd">    fail.)</span>
+
+<span class="sd">    In case func is None, an attempt will be made to autodetect the</span>
+<span class="sd">    function to be solved for.</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.deutils import _preprocess</span>
+<span class="sd">    &gt;&gt;&gt; from sympy import Derivative, Function, Integral, sin</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+<span class="sd">    &gt;&gt;&gt; f, g = map(Function, &#39;fg&#39;)</span>
+
+<span class="sd">    Apply doit to derivatives that contain more than the function</span>
+<span class="sd">    of interest:</span>
+
+<span class="sd">    &gt;&gt;&gt; _preprocess(Derivative(f(x) + x, x))</span>
+<span class="sd">    (Derivative(f(x), x) + 1, f(x))</span>
+
+<span class="sd">    Do others if the differentiation variable(s) intersect with those</span>
+<span class="sd">    of the function of interest or contain the function of interest:</span>
+
+<span class="sd">    &gt;&gt;&gt; _preprocess(Derivative(g(x), y, z), f(y))</span>
+<span class="sd">    (0, f(y))</span>
+<span class="sd">    &gt;&gt;&gt; _preprocess(Derivative(f(y), z), f(y))</span>
+<span class="sd">    (0, f(y))</span>
+
+<span class="sd">    Do others if the hint doesn&#39;t end in &#39;_Integral&#39; (the default</span>
+<span class="sd">    assumes that it does):</span>
+
+<span class="sd">    &gt;&gt;&gt; _preprocess(Derivative(g(x), y), f(x))</span>
+<span class="sd">    (Derivative(g(x), y), f(x))</span>
+<span class="sd">    &gt;&gt;&gt; _preprocess(Derivative(f(x), y), f(x), hint=&#39;&#39;)</span>
+<span class="sd">    (0, f(x))</span>
+
+<span class="sd">    Don&#39;t do any derivatives if hint is None:</span>
+
+<span class="sd">    &gt;&gt;&gt; eq = Derivative(f(x) + 1, x) + Derivative(f(x), y)</span>
+<span class="sd">    &gt;&gt;&gt; _preprocess(eq, f(x), hint=None)</span>
+<span class="sd">    (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))</span>
+
+<span class="sd">    If it&#39;s not clear what the function of interest is, it must be given:</span>
+
+<span class="sd">    &gt;&gt;&gt; eq = Derivative(f(x) + g(x), x)</span>
+<span class="sd">    &gt;&gt;&gt; _preprocess(eq, g(x))</span>
+<span class="sd">    (Derivative(f(x), x) + Derivative(g(x), x), g(x))</span>
+<span class="sd">    &gt;&gt;&gt; try: _preprocess(eq)</span>
+<span class="sd">    ... except ValueError: print(&quot;A ValueError was raised.&quot;)</span>
+<span class="sd">    A ValueError was raised.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">derivs</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">Derivative</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">func</span><span class="p">:</span>
+        <span class="n">funcs</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">atoms</span><span class="p">(</span><span class="n">AppliedUndef</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">derivs</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">funcs</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;The function cannot be &#39;</span>
+                <span class="s">&#39;automatically detected for </span><span class="si">%s</span><span class="s">.&#39;</span> <span class="o">%</span> <span class="n">expr</span><span class="p">)</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="n">funcs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="n">fvars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">hint</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="p">,</span> <span class="n">func</span>
+    <span class="n">reps</span> <span class="o">=</span> <span class="p">[(</span><span class="n">d</span><span class="p">,</span> <span class="n">d</span><span class="o">.</span><span class="n">doit</span><span class="p">())</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">derivs</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">hint</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;_Integral&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">has</span><span class="p">(</span><span class="n">func</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">fvars</span><span class="p">]</span>
+    <span class="n">eq</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">reps</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">eq</span><span class="p">,</span> <span class="n">func</span>
+
+<div class="viewcode-block" id="ode_order"><a class="viewcode-back" href="../../../modules/solvers/solvers.html#sympy.solvers.deutils.ode_order">[docs]</a><span class="k">def</span> <span class="nf">ode_order</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the order of a given differential</span>
+<span class="sd">    equation with respect to func.</span>
+
+<span class="sd">    This function is implemented recursively.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Function</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.solvers.deutils import ode_order</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; f, g = map(Function, [&#39;f&#39;, &#39;g&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +</span>
+<span class="sd">    ... f(x).diff(x), f(x))</span>
+<span class="sd">    2</span>
+<span class="sd">    &gt;&gt;&gt; ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))</span>
+<span class="sd">    2</span>
+<span class="sd">    &gt;&gt;&gt; ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))</span>
+<span class="sd">    3</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">Wild</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="n">func</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Derivative</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">func</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                <span class="n">order</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">ode_order</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">variables</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">order</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">ode_order</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">func</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">order</span>
+</div>
+<span class="k">def</span> <span class="nf">_desolve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="s">&quot;default&quot;</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This is a helper function to dsolve and pdsolve in the ode</span>
+<span class="sd">    and pde modules.</span>
+
+<span class="sd">    If the hint provided to the function is &quot;default&quot;, then a dict with</span>
+<span class="sd">    the following keys are returned</span>
+
+<span class="sd">    &#39;func&#39;    - It provides the function for which the differential equation</span>
+<span class="sd">                has to be solved. This is useful when the function</span>
+
+<span class="sd">    &#39;default&#39; - The default key as returned by classifier functions in ode</span>
+<span class="sd">                and pde.py</span>
+
+<span class="sd">    &#39;hint&#39;    - The hint given by the user for which the differential equation</span>
+<span class="sd">                is to be solved. If the hint given by the user is &#39;default&#39;,</span>
+<span class="sd">                then the value of &#39;hint&#39; and &#39;default&#39; is the same.</span>
+
+<span class="sd">    &#39;order&#39;   - The order of the function as returned by ode_order</span>
+
+<span class="sd">    &#39;match&#39;   - It returns the match as given by the classifier functions, for</span>
+<span class="sd">                the default hint.</span>
+
+<span class="sd">    If the hint provided to the function is not &quot;default&quot; and is not in</span>
+<span class="sd">    (&#39;all&#39;, &#39;all_Integral&#39;, &#39;best&#39;), then a dict with the above mentioned keys</span>
+<span class="sd">    is returned along with the keys which are returned when dict in</span>
+<span class="sd">    classify_ode or classify_pde is set True</span>
+
+<span class="sd">    If the hint given is in (&#39;all&#39;, &#39;all_Integral&#39;, &#39;best&#39;), then this function</span>
+<span class="sd">    returns a nested dict, with the keys, being the set of classified hints</span>
+<span class="sd">    returned by classifier functions, and the values being the dict of form</span>
+<span class="sd">    as mentioned above.</span>
+
+<span class="sd">    Key &#39;eq&#39; is a common key to all the above mentioned hints which returns an</span>
+<span class="sd">    expression if eq given by user is an Equality.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ========</span>
+<span class="sd">    classify_ode(ode.py)</span>
+<span class="sd">    classify_pde(pde.py)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">prep</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;prep&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">Equality</span><span class="p">):</span>
+        <span class="n">eq</span> <span class="o">=</span> <span class="n">eq</span><span class="o">.</span><span class="n">lhs</span> <span class="o">-</span> <span class="n">eq</span><span class="o">.</span><span class="n">rhs</span>
+
+    <span class="c"># preprocess the equation and find func if not given</span>
+    <span class="k">if</span> <span class="n">prep</span> <span class="ow">or</span> <span class="n">func</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">eq</span><span class="p">,</span> <span class="n">func</span> <span class="o">=</span> <span class="n">_preprocess</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+        <span class="n">prep</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="c"># type is an argument passed by the solve functions in ode and pde.py</span>
+    <span class="c"># that identifies whether the function caller is an ordinary</span>
+    <span class="c"># or partial differential equation. Accordingly corresponding</span>
+    <span class="c"># changes are made in the function.</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&#39;ode&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sympy.solvers.ode</span> <span class="kn">import</span> <span class="n">classify_ode</span><span class="p">,</span> <span class="n">allhints</span>
+        <span class="n">classifier</span> <span class="o">=</span> <span class="n">classify_ode</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s">&#39;ODE &#39;</span>
+        <span class="n">dummy</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+    <span class="k">elif</span> <span class="nb">type</span> <span class="o">==</span> <span class="s">&#39;pde&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">sympy.solvers.pde</span> <span class="kn">import</span> <span class="n">classify_pde</span><span class="p">,</span> <span class="n">allhints</span>
+        <span class="n">classifier</span> <span class="o">=</span> <span class="n">classify_pde</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s">&#39;PDE &#39;</span>
+        <span class="n">dummy</span> <span class="o">=</span> <span class="s">&#39;p&#39;</span>
+
+    <span class="c"># Magic that should only be used internally.  Prevents classify_ode from</span>
+    <span class="c"># being called more than it needs to be by passing its results through</span>
+    <span class="c"># recursive calls.</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;classify&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">):</span>
+        <span class="n">hints</span> <span class="o">=</span> <span class="n">classifier</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">prep</span><span class="o">=</span><span class="n">prep</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># Here is what all this means:</span>
+        <span class="c">#</span>
+        <span class="c"># hint:    The hint method given to _desolve() by the user.</span>
+        <span class="c"># hints:   The dictionary of hints that match the DE, along with other</span>
+        <span class="c">#          information (including the internal pass-through magic).</span>
+        <span class="c"># default: The default hint to return, the first hint from allhints</span>
+        <span class="c">#          that matches the hint; obtained from classify_ode().</span>
+        <span class="c"># match:   Dictionary containing the match dictionary for each hint</span>
+        <span class="c">#          (the parts of the DE for solving).  When going through the</span>
+        <span class="c">#          hints in &quot;all&quot;, this holds the match string for the current</span>
+        <span class="c">#          hint.</span>
+        <span class="c"># order:   The order of the DE, as determined by ode_order().</span>
+        <span class="n">hints</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;hint&#39;</span><span class="p">,</span>
+                           <span class="p">{</span><span class="s">&#39;default&#39;</span><span class="p">:</span> <span class="n">hint</span><span class="p">,</span>
+                            <span class="n">hint</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;match&#39;</span><span class="p">],</span>
+                            <span class="s">&#39;order&#39;</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;order&#39;</span><span class="p">]})</span>
+    <span class="k">if</span> <span class="n">hints</span><span class="p">[</span><span class="s">&#39;order&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; is not a differential equation in &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">func</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">hints</span><span class="p">[</span><span class="s">&#39;default&#39;</span><span class="p">]:</span>
+        <span class="c"># classify_ode will set hints[&#39;default&#39;] to None if no hints match.</span>
+        <span class="k">if</span> <span class="n">hint</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allhints</span> <span class="ow">and</span> <span class="n">hint</span> <span class="o">!=</span> <span class="s">&#39;default&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Hint not recognized: &quot;</span> <span class="o">+</span> <span class="n">hint</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">hint</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hints</span><span class="p">[</span><span class="s">&#39;ordered_hints&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">hint</span> <span class="o">!=</span> <span class="s">&#39;default&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">string</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; does not match hint &quot;</span> <span class="o">+</span> <span class="n">hint</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">dummy</span> <span class="o">+</span> <span class="s">&quot;solve&quot;</span> <span class="o">+</span> <span class="s">&quot;: Cannot solve &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">hint</span> <span class="o">==</span> <span class="s">&#39;default&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_desolve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="n">hints</span><span class="p">[</span><span class="s">&#39;default&#39;</span><span class="p">],</span> <span class="n">simplify</span><span class="o">=</span><span class="n">simplify</span><span class="p">,</span>
+                      <span class="n">prep</span><span class="o">=</span><span class="n">prep</span><span class="p">,</span> <span class="n">classify</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">hints</span><span class="p">[</span><span class="s">&#39;order&#39;</span><span class="p">],</span>
+                      <span class="n">match</span><span class="o">=</span><span class="n">hints</span><span class="p">[</span><span class="n">hints</span><span class="p">[</span><span class="s">&#39;default&#39;</span><span class="p">]],</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">hint</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;all&#39;</span><span class="p">,</span> <span class="s">&#39;all_Integral&#39;</span><span class="p">,</span> <span class="s">&#39;best&#39;</span><span class="p">):</span>
+        <span class="n">retdict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">failedhints</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">gethints</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">hints</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;order&#39;</span><span class="p">,</span> <span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="s">&#39;ordered_hints&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">hint</span> <span class="o">==</span> <span class="s">&#39;all_Integral&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">hints</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;_Integral&#39;</span><span class="p">):</span>
+                    <span class="n">gethints</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">i</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s">&#39;_Integral&#39;</span><span class="p">)])</span>
+            <span class="c"># special case</span>
+            <span class="k">if</span> <span class="s">&quot;1st_homogeneous_coeff_best&quot;</span> <span class="ow">in</span> <span class="n">gethints</span><span class="p">:</span>
+                <span class="n">gethints</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s">&quot;1st_homogeneous_coeff_best&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gethints</span><span class="p">:</span>
+            <span class="n">sol</span> <span class="o">=</span> <span class="n">_desolve</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">hint</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="n">simplify</span><span class="p">,</span> <span class="n">prep</span><span class="o">=</span><span class="n">prep</span><span class="p">,</span>
+                <span class="n">classify</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">hints</span><span class="p">[</span><span class="s">&#39;order&#39;</span><span class="p">],</span> <span class="n">match</span><span class="o">=</span><span class="n">hints</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
+            <span class="n">retdict</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sol</span>
+        <span class="n">retdict</span><span class="p">[</span><span class="s">&#39;all&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="n">retdict</span><span class="p">[</span><span class="s">&#39;eq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eq</span>
+        <span class="k">return</span> <span class="n">retdict</span>
+    <span class="k">elif</span> <span class="n">hint</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allhints</span><span class="p">:</span>  <span class="c"># and hint not in (&#39;default&#39;, &#39;ordered_hints&#39;):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Hint not recognized: &quot;</span> <span class="o">+</span> <span class="n">hint</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">hint</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hints</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">string</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">eq</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot; does not match hint &quot;</span> <span class="o">+</span> <span class="n">hint</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c"># Key added to identify the hint needed to solve the equation</span>
+        <span class="n">hints</span><span class="p">[</span><span class="s">&#39;hint&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">hint</span>
+    <span class="n">hints</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s">&#39;func&#39;</span><span class="p">:</span> <span class="n">func</span><span class="p">,</span> <span class="s">&#39;eq&#39;</span><span class="p">:</span> <span class="n">eq</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">hints</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

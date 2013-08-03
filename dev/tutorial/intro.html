@@ -1,0 +1,380 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Introduction &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../index.html" />
+    <link rel="up" title="SymPy Tutorial" href="index.html" />
+    <link rel="next" title="Printing" href="printing.html" />
+    <link rel="prev" title="Preliminaries" href="preliminaries.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="preliminaries.html" title="Preliminaries"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-is-symbolic-computation">
+<h2>What is Symbolic Computation?<a class="headerlink" href="#what-is-symbolic-computation" title="Permalink to this headline">¶</a></h2>
+<p>Symbolic computation deals with the computation of mathematical objects
+symbolically.  This means that the mathematical objects are represented
+exactly, not approximately, and mathematical expressions with unevaluated
+variables are left in symbolic form.</p>
+<p>Let&#8217;s take an example. Say we wanted to use the built-in Python functions to
+compute square roots. We might do something like this</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">math</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">9</span><span class="p">)</span>
+<span class="go">3.0</span>
+</pre></div>
+</div>
+<p>9 is a perfect square, so we got the exact answer, 3. But suppose we computed
+the square root of a number that isn&#8217;t a perfect square</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="go">2.82842712475</span>
+</pre></div>
+</div>
+<p>Here we got an approximate result. 2.82842712475 is not the exact square root
+of 8 (indeed, the actual square root of 8 cannot be represented by a finite
+decimal, since it is an irrational number).  If all we cared about was the
+decimal form of the square root of 8, we would be done.</p>
+<p>But suppose we want to go further. Recall that <span class="math">\(\sqrt{8} = \sqrt{4\cdot 2} =
+2\sqrt{2}\)</span>.  We would have a hard time deducing this from the above result.
+This is where symbolic computation comes in.  With a symbolic computation
+system like SymPy, square roots of numbers that are not perfect squares are
+left unevaluated by default</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sympy</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sympy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">sqrt(3)</span>
+</pre></div>
+</div>
+<p>Furthermore&#8212;and this is where we start to see the real power of symbolic
+computation&#8212;symbolic results can be symbolically simplified.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sympy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+<span class="go">2*sqrt(2)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="a-more-interesting-example">
+<h2>A More Interesting Example<a class="headerlink" href="#a-more-interesting-example" title="Permalink to this headline">¶</a></h2>
+<p>The above example starts to show how we can manipulate irrational numbers
+exactly using SymPy.  But it is much more powerful than that.  Symbolic
+computation systems (which by the way, are also often called computer algebra
+systems, or just CASs) such as SymPy are capable of computing symbolic
+expressions with variables.</p>
+<p>As we will see later, in SymPy, variables are defined using <tt class="docutils literal"><span class="pre">symbols</span></tt>.
+Unlike many symbolic manipulation systems, variables in SymPy must be defined
+before they are used (the reason for this will be discussed in the <a class="reference internal" href="gotchas.html#tutorial-gotchas-symbols"><em>next
+section</em></a>).</p>
+<p>Let us define a symbolic expression, representing the mathematical expression
+<span class="math">\(x + 2y\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">symbols</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span>
+<span class="go">x + 2*y</span>
+</pre></div>
+</div>
+<p>Note that we wrote <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">2*y</span></tt> just as we would if <tt class="docutils literal"><span class="pre">x</span></tt> and <tt class="docutils literal"><span class="pre">y</span></tt> were
+ordinary Python variables. But in this case, instead of evaluating to
+something, the expression remains as just <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">2*y</span></tt>.  Now let us play around
+with it:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="go">x + 2*y + 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expr</span> <span class="o">-</span> <span class="n">x</span>
+<span class="go">2*y</span>
+</pre></div>
+</div>
+<p>Notice something in the above example.  When we typed <tt class="docutils literal"><span class="pre">expr</span> <span class="pre">-</span> <span class="pre">x</span></tt>, we did not
+get <tt class="docutils literal"><span class="pre">x</span> <span class="pre">+</span> <span class="pre">2*y</span> <span class="pre">-</span> <span class="pre">x</span></tt>, but rather just <tt class="docutils literal"><span class="pre">2*y</span></tt>.  The <tt class="docutils literal"><span class="pre">x</span></tt> and the <tt class="docutils literal"><span class="pre">-x</span></tt>
+automatically canceled one another.  This is similar to how <tt class="docutils literal"><span class="pre">sqrt(8)</span></tt>
+automatically turned into <tt class="docutils literal"><span class="pre">2*sqrt(2)</span></tt> above.  This isn&#8217;t always the case in
+SymPy, however:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="o">*</span><span class="n">expr</span>
+<span class="go">x*(x + 2*y)</span>
+</pre></div>
+</div>
+<p>Here, we might have expected <span class="math">\(x(x + 2y)\)</span> to transform into <span class="math">\(x^2 + 2xy\)</span>, but
+instead we see that the expression was left alone.  This is a common theme in
+SymPy.  Aside from obvious simplifications like <span class="math">\(x - x = 0\)</span> and <span class="math">\(\sqrt{8} =
+2\sqrt{2}\)</span>, most simplifications are not performed automatically.  This is
+because we might prefer the factored form <span class="math">\(x(x + 2y)\)</span>, or we might prefer the
+expanded form <span class="math">\(x^2 + 2xy\)</span>.  Both forms are useful in different circumstances.
+In SymPy, there are functions to go from one form to the other</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="n">expand</span><span class="p">,</span> <span class="n">factor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expanded_expr</span> <span class="o">=</span> <span class="n">expand</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">expr</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expanded_expr</span>
+<span class="go">x**2 + 2*x*y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">factor</span><span class="p">(</span><span class="n">expanded_expr</span><span class="p">)</span>
+<span class="go">x*(x + 2*y)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-power-of-symbolic-computation">
+<h2>The Power of Symbolic Computation<a class="headerlink" href="#the-power-of-symbolic-computation" title="Permalink to this headline">¶</a></h2>
+<p>The real power of a symbolic computation system such as SymPy is the ability
+to do all sorts of computations symbolically.  SymPy can compute derivatives,
+integrals, and limits, solve equations, work with matrices, and much, much
+more, and do it all symbolically.  It includes modules for plotting, printing
+(like 2D pretty printed output of math formulas, or <span class="math">\(\LaTeX\)</span>), code
+generation, physics, statistics, combinatorics, number theory, geometry,
+logic, and more. Here is a small sampling of the sort of symbolic power SymPy
+is capable of, to whet your appetite.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">nu</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;x t z nu&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul>
+<li><p class="first">This will make all further example pretty print with unicode characters.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">init_printing</span><span class="p">(</span><span class="n">use_unicode</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Take the derivative of <span class="math">\(\sin{(x)}e^x\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">diff</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go"> x           x</span>
+<span class="go">ℯ ⋅sin(x) + ℯ ⋅cos(x)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Compute <span class="math">\(\int(e^x\sin{(x)} + e^x\cos{(x)})\,dx\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+<span class="go"> x</span>
+<span class="go">ℯ ⋅sin(x)</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Compute <span class="math">\(\int_{-\infty}^\infty \sin{(x^2)}\,dx\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">integrate</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="n">oo</span><span class="p">,</span> <span class="n">oo</span><span class="p">))</span>
+<span class="go">  ___   ___</span>
+<span class="go">╲╱ 2 ⋅╲╱ π</span>
+<span class="go">───────────</span>
+<span class="go">     2</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Find <span class="math">\(\lim_{x\to 0}\frac{\sin{(x)}}{x}\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">limit</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Solve <span class="math">\(x^2 - 2 = 0\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">solve</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+<span class="go">⎡   ___    ___⎤</span>
+<span class="go">⎣-╲╱ 2 , ╲╱ 2 ⎦</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Solve the differential equation <span class="math">\(y'' - y = e^t\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">Function</span><span class="p">(</span><span class="s">&#39;y&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dsolve</span><span class="p">(</span><span class="n">Eq</span><span class="p">(</span><span class="n">y</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="n">y</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">exp</span><span class="p">(</span><span class="n">t</span><span class="p">)),</span> <span class="n">y</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+<span class="go">           -t   ⎛     t⎞  t</span>
+<span class="go">y(t) = C₂⋅ℯ   + ⎜C₁ + ─⎟⋅ℯ</span>
+<span class="go">                ⎝     2⎠</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Find the eigenvalues of <span class="math">\(\left[\begin{smallmatrix}1 &amp; 2\\2 &amp;
+2\end{smallmatrix}\right]\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">Matrix</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span><span class="o">.</span><span class="n">eigenvals</span><span class="p">()</span>
+<span class="go">⎧      ____         ____       ⎫</span>
+<span class="go">⎪3   ╲╱ 17        ╲╱ 17    3   ⎪</span>
+<span class="go">⎨─ + ──────: 1, - ────── + ─: 1⎬</span>
+<span class="go">⎪2     2            2      2   ⎪</span>
+<span class="go">⎩                              ⎭</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Rewrite the Bessel function <span class="math">\(J_{\nu}\left(z\right)\)</span> in terms of the
+spherical Bessel function <span class="math">\(j_\nu(z)\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">besselj</span><span class="p">(</span><span class="n">nu</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span><span class="o">.</span><span class="n">rewrite</span><span class="p">(</span><span class="n">jn</span><span class="p">)</span>
+<span class="go">  ___   ___</span>
+<span class="go">╲╱ 2 ⋅╲╱ z ⋅jn(ν - 1/2, z)</span>
+<span class="go">──────────────────────────</span>
+<span class="go">            ___</span>
+<span class="go">          ╲╱ π</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Print <span class="math">\(\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx\)</span> using <span class="math">\(\LaTeX\)</span>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">latex</span><span class="p">(</span><span class="n">Integral</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">pi</span><span class="p">)))</span>
+<span class="go">\int_{0}^{\pi} \cos^{2}{\left (x \right )}\, dx</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="why-sympy">
+<h2>Why SymPy?<a class="headerlink" href="#why-sympy" title="Permalink to this headline">¶</a></h2>
+<p>There are many computer algebra systems out there.  <a class="reference external" href="http://en.wikipedia.org/wiki/List_of_computer_algebra_systems">This</a> Wikipedia
+article lists many of them.  What makes SymPy a better choice than the
+alternatives?</p>
+<p>First off, SymPy is completely free. It is open source, and licensed under the
+liberal BSD license, so you can even modify the source code and sell if you
+want to.  This contrasts with popular commercial systems like Maple or
+Mathematica that cost hundreds of dollars in licenses.</p>
+<p>Second, SymPy uses Python.  Most computer algebra systems invent their own
+language. Not SymPy. SymPy is written entirely in Python, and is executed
+entirely in Python. This means that if you already know Python, it is much
+easier to get started with SymPy, because you already know the syntax (and if
+you don&#8217;t know Python, it is really easy to learn).  Plus, we already know
+that Python is a well-designed, battle-tested language.  The SymPy developers
+are confident in their abilities in writing mathematical software, but
+inventing a whole new programming language is a completely different thing.
+By reusing an existing language, we are able to focus on those things that
+matter, the mathematics.</p>
+<p>Another computer algebra system, Sage also uses Python as its language.  But
+Sage is large, with a download of over a gigabyte.  An advantage of SymPy is
+that it is lightweight.  In addition to being relatively small, it has no
+dependencies other than Python, so it can be used almost anywhere easily.
+Furthermore, the goals of Sage and the goals of SymPy are different.  Sage
+aims to be a full featured system for mathematics, and aims to do so by
+compiling all the major open source mathematical systems together into
+one. When you call some function in Sage, such as <tt class="docutils literal"><span class="pre">integrate</span></tt>, it calls out
+to one of the open source packages that it includes.  In fact, SymPy is
+included in Sage.  SymPy on the other hand aims to be an independent system,
+with all the features implemented in SymPy itself.</p>
+<p>A final important feature of SymPy is that it can be used as a library. Many
+computer algebra systems focus on being usable in interactive environments, but
+if you wish to automate or extend them, it is difficult to do.  With SymPy,
+you can just as easily use it in an interactive Python environment or import
+it in your own Python application.  SymPy also provides APIs to make it easy
+to extend it with your own custom functions.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#what-is-symbolic-computation">What is Symbolic Computation?</a></li>
+<li><a class="reference internal" href="#a-more-interesting-example">A More Interesting Example</a></li>
+<li><a class="reference internal" href="#the-power-of-symbolic-computation">The Power of Symbolic Computation</a></li>
+<li><a class="reference internal" href="#why-sympy">Why SymPy?</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="preliminaries.html"
+                        title="previous chapter">Preliminaries</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="printing.html"
+                        title="next chapter">Printing</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/tutorial/intro.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="printing.html" title="Printing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="preliminaries.html" title="Preliminaries"
+             >previous</a> |</li>
+        <li><a href="../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="index.html" >SymPy Tutorial</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

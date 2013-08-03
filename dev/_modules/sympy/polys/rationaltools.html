@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.polys.rationaltools &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../index.html" />
+    <link rel="up" title="sympy" href="../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.polys.rationaltools</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Tools for manipulation of rational expressions. &quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">Basic</span><span class="p">,</span> <span class="n">Add</span><span class="p">,</span> <span class="n">sympify</span>
+<span class="kn">from</span> <span class="nn">sympy.core.exprtools</span> <span class="kn">import</span> <span class="n">gcd_terms</span>
+<span class="kn">from</span> <span class="nn">sympy.utilities</span> <span class="kn">import</span> <span class="n">public</span>
+
+<span class="nd">@public</span>
+<div class="viewcode-block" id="together"><a class="viewcode-back" href="../../../modules/polys/reference.html#sympy.polys.rationaltools.together">[docs]</a><span class="k">def</span> <span class="nf">together</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Denest and combine rational expressions using symbolic methods.</span>
+
+<span class="sd">    This function takes an expression or a container of expressions</span>
+<span class="sd">    and puts it (them) together by denesting and combining rational</span>
+<span class="sd">    subexpressions. No heroic measures are taken to minimize degree</span>
+<span class="sd">    of the resulting numerator and denominator. To obtain completely</span>
+<span class="sd">    reduced expression use :func:`cancel`. However, :func:`together`</span>
+<span class="sd">    can preserve as much as possible of the structure of the input</span>
+<span class="sd">    expression in the output (no expansion is performed).</span>
+
+<span class="sd">    A wide variety of objects can be put together including lists,</span>
+<span class="sd">    tuples, sets, relational objects, integrals and others. It is</span>
+<span class="sd">    also possible to transform interior of function applications,</span>
+<span class="sd">    by setting ``deep`` flag to ``True``.</span>
+
+<span class="sd">    By definition, :func:`together` is a complement to :func:`apart`,</span>
+<span class="sd">    so ``apart(together(expr))`` should return expr unchanged. Note</span>
+<span class="sd">    however, that :func:`together` uses only symbolic methods, so</span>
+<span class="sd">    it might be necessary to use :func:`cancel` to perform algebraic</span>
+<span class="sd">    simplification and minimise degree of the numerator and denominator.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    ========</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import together, exp</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x, y, z</span>
+
+<span class="sd">    &gt;&gt;&gt; together(1/x + 1/y)</span>
+<span class="sd">    (x + y)/(x*y)</span>
+<span class="sd">    &gt;&gt;&gt; together(1/x + 1/y + 1/z)</span>
+<span class="sd">    (x*y + x*z + y*z)/(x*y*z)</span>
+
+<span class="sd">    &gt;&gt;&gt; together(1/(x*y) + 1/y**2)</span>
+<span class="sd">    (x + y)/(x*y**2)</span>
+
+<span class="sd">    &gt;&gt;&gt; together(1/(1 + 1/x) + 1/(1 + 1/y))</span>
+<span class="sd">    (x*(y + 1) + y*(x + 1))/((x + 1)*(y + 1))</span>
+
+<span class="sd">    &gt;&gt;&gt; together(exp(1/x + 1/y))</span>
+<span class="sd">    exp(1/y + 1/x)</span>
+<span class="sd">    &gt;&gt;&gt; together(exp(1/x + 1/y), deep=True)</span>
+<span class="sd">    exp((x + y)/(x*y))</span>
+
+<span class="sd">    &gt;&gt;&gt; together(1/exp(x) + 1/(x*exp(x)))</span>
+<span class="sd">    (x + 1)*exp(-x)/x</span>
+
+<span class="sd">    &gt;&gt;&gt; together(1/exp(2*x) + 1/(x*exp(3*x)))</span>
+<span class="sd">    (x*exp(x) + 1)*exp(-3*x)/x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_together</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">Basic</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Atom</span> <span class="ow">or</span> <span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">is_Function</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">deep</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">expr</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Add</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">gcd_terms</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">_together</span><span class="p">,</span> <span class="n">Add</span><span class="o">.</span><span class="n">make_args</span><span class="p">(</span><span class="n">expr</span><span class="p">))))</span>
+            <span class="k">elif</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_Pow</span><span class="p">:</span>
+                <span class="n">base</span> <span class="o">=</span> <span class="n">_together</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">deep</span><span class="p">:</span>
+                    <span class="n">exp</span> <span class="o">=</span> <span class="n">_together</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">exp</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">exp</span>
+
+                <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">exp</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">(</span><span class="o">*</span><span class="p">[</span> <span class="n">_together</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span> <span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="s">&#39;__iter__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__class__</span><span class="p">([</span> <span class="n">_together</span><span class="p">(</span><span class="n">ex</span><span class="p">)</span> <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">expr</span> <span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">expr</span>
+
+    <span class="k">return</span> <span class="n">_together</span><span class="p">(</span><span class="n">sympify</span><span class="p">(</span><span class="n">expr</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../index.html">
+              <img class="logo" src="../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

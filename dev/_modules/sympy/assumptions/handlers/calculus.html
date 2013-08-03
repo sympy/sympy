@@ -1,0 +1,391 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>sympy.assumptions.handlers.calculus &mdash; SymPy 0.7.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-core.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-autocomplete.css" type="text/css" />
+    <link rel="stylesheet" href="http://live.sympy.org/static/live-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.7.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/utilities.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/external/classy.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-core.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-autocomplete.js"></script>
+    <script type="text/javascript" src="http://live.sympy.org/static/live-sphinx.js"></script>
+    <script type="text/javascript" src="../../../../_static/sidebar.js"></script>
+    <link rel="shortcut icon" href="../../../../_static/SymPy-Favicon.ico"/>
+    <link rel="top" title="SymPy 0.7.3 documentation" href="../../../../index.html" />
+    <link rel="up" title="sympy" href="../../../sympy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" accesskey="U">sympy</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for sympy.assumptions.handlers.calculus</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contains query handlers responsible for calculus queries:</span>
+<span class="sd">infinitesimal, bounded, etc.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">division</span>
+
+<span class="kn">from</span> <span class="nn">sympy.logic.boolalg</span> <span class="kn">import</span> <span class="n">conjuncts</span>
+<span class="kn">from</span> <span class="nn">sympy.assumptions</span> <span class="kn">import</span> <span class="n">Q</span><span class="p">,</span> <span class="n">ask</span>
+<span class="kn">from</span> <span class="nn">sympy.assumptions.handlers</span> <span class="kn">import</span> <span class="n">CommonHandler</span>
+
+
+<div class="viewcode-block" id="AskInfinitesimalHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/calculus.html#sympy.assumptions.handlers.calculus.AskInfinitesimalHandler">[docs]</a><span class="k">class</span> <span class="nc">AskInfinitesimalHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for key &#39;infinitesimal&#39;</span>
+<span class="sd">    Test that a given expression is equivalent to an infinitesimal</span>
+<span class="sd">    number</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="c"># helper method</span>
+        <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">evalf</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Basic</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskInfinitesimalHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskInfinitesimalHandler.Mul"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/calculus.html#sympy.assumptions.handlers.calculus.AskInfinitesimalHandler.Mul">[docs]</a>    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Infinitesimal*Bounded -&gt; Infinitesimal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">expr</span><span class="o">.</span><span class="n">is_number</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AskInfinitesimalHandler</span><span class="o">.</span><span class="n">_number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">infinitesimal</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">elif</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">bounded</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="n">Add</span><span class="p">,</span> <span class="n">Pow</span> <span class="o">=</span> <span class="p">[</span><span class="n">Mul</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Number</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">expr</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="n">NumberSymbol</span> <span class="o">=</span> <span class="n">Number</span>
+
+    <span class="n">ImaginaryUnit</span> <span class="o">=</span> <span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysFalse</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="AskBoundedHandler"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/calculus.html#sympy.assumptions.handlers.calculus.AskBoundedHandler">[docs]</a><span class="k">class</span> <span class="nc">AskBoundedHandler</span><span class="p">(</span><span class="n">CommonHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handler for key &#39;bounded&#39;.</span>
+
+<span class="sd">    Test that an expression is bounded respect to all its variables.</span>
+
+<span class="sd">    Examples of usage:</span>
+
+<span class="sd">    &gt;&gt;&gt; from sympy import Symbol, Q</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.assumptions.handlers.calculus import AskBoundedHandler</span>
+<span class="sd">    &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">    &gt;&gt;&gt; a = AskBoundedHandler()</span>
+<span class="sd">    &gt;&gt;&gt; a.Symbol(x, Q.positive(x)) == None</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; a.Symbol(x, Q.bounded(x))</span>
+<span class="sd">    True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskBoundedHandler.Symbol"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/calculus.html#sympy.assumptions.handlers.calculus.AskBoundedHandler.Symbol">[docs]</a>    <span class="k">def</span> <span class="nf">Symbol</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles Symbol.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        &gt;&gt;&gt; from sympy import Symbol, Q</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.assumptions.handlers.calculus import AskBoundedHandler</span>
+<span class="sd">        &gt;&gt;&gt; from sympy.abc import x</span>
+<span class="sd">        &gt;&gt;&gt; a = AskBoundedHandler()</span>
+<span class="sd">        &gt;&gt;&gt; a.Symbol(x, Q.positive(x)) == None</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; a.Symbol(x, Q.bounded(x))</span>
+<span class="sd">        True</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">Q</span><span class="o">.</span><span class="n">bounded</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="ow">in</span> <span class="n">conjuncts</span><span class="p">(</span><span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskBoundedHandler.Add"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/calculus.html#sympy.assumptions.handlers.calculus.AskBoundedHandler.Add">[docs]</a>    <span class="k">def</span> <span class="nf">Add</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if expr is bounded, False if not and None if unknown.</span>
+
+<span class="sd">        Truth Table:</span>
+
+<span class="sd">        +-------+-----+-----------+-----------+</span>
+<span class="sd">        |       |     |           |           |</span>
+<span class="sd">        |       |  B  |     U     |     ?     |</span>
+<span class="sd">        |       |     |           |           |</span>
+<span class="sd">        +-------+-----+---+---+---+---+---+---+</span>
+<span class="sd">        |       |     |   |   |   |   |   |   |</span>
+<span class="sd">        |       |     |&#39;+&#39;|&#39;-&#39;|&#39;x&#39;|&#39;+&#39;|&#39;-&#39;|&#39;x&#39;|</span>
+<span class="sd">        |       |     |   |   |   |   |   |   |</span>
+<span class="sd">        +-------+-----+---+---+---+---+---+---+</span>
+<span class="sd">        |       |     |           |           |</span>
+<span class="sd">        |   B   |  B  |     U     |     ?     |</span>
+<span class="sd">        |       |     |           |           |</span>
+<span class="sd">        +---+---+-----+---+---+---+---+---+---+</span>
+<span class="sd">        |   |   |     |   |   |   |   |   |   |</span>
+<span class="sd">        |   |&#39;+&#39;|     | U | ? | ? | U | ? | ? |</span>
+<span class="sd">        |   |   |     |   |   |   |   |   |   |</span>
+<span class="sd">        |   +---+-----+---+---+---+---+---+---+</span>
+<span class="sd">        |   |   |     |   |   |   |   |   |   |</span>
+<span class="sd">        | U |&#39;-&#39;|     | ? | U | ? | ? | U | ? |</span>
+<span class="sd">        |   |   |     |   |   |   |   |   |   |</span>
+<span class="sd">        |   +---+-----+---+---+---+---+---+---+</span>
+<span class="sd">        |   |   |     |           |           |</span>
+<span class="sd">        |   |&#39;x&#39;|     |     ?     |     ?     |</span>
+<span class="sd">        |   |   |     |           |           |</span>
+<span class="sd">        +---+---+-----+---+---+---+---+---+---+</span>
+<span class="sd">        |       |     |           |           |</span>
+<span class="sd">        |   ?   |     |           |     ?     |</span>
+<span class="sd">        |       |     |           |           |</span>
+<span class="sd">        +-------+-----+-----------+---+---+---+</span>
+
+<span class="sd">            * &#39;B&#39; = Bounded</span>
+
+<span class="sd">            * &#39;U&#39; = Unbounded</span>
+
+<span class="sd">            * &#39;?&#39; = unknown boundedness</span>
+
+<span class="sd">            * &#39;+&#39; = positive sign</span>
+
+<span class="sd">            * &#39;-&#39; = negative sign</span>
+
+<span class="sd">            * &#39;x&#39; = sign unknown</span>
+
+<span class="sd">|</span>
+
+<span class="sd">            * All Bounded -&gt; True</span>
+
+<span class="sd">            * 1 Unbounded and the rest Bounded -&gt; False</span>
+
+<span class="sd">            * &gt;1 Unbounded, all with same known sign -&gt; False</span>
+
+<span class="sd">            * Any Unknown and unknown sign -&gt; None</span>
+
+<span class="sd">            * Else -&gt; None</span>
+
+<span class="sd">        When the signs are not the same you can have an undefined</span>
+<span class="sd">        result as in oo - oo, hence &#39;bounded&#39; is also undefined.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>  <span class="c"># sign of unknown or unbounded</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">_bounded</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">bounded</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_bounded</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+            <span class="c"># if there has been more than one sign or if the sign of this arg</span>
+            <span class="c"># is None and Bounded is None or there was already</span>
+            <span class="c"># an unknown sign, return None</span>
+            <span class="k">if</span> <span class="n">sign</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">sign</span> <span class="ow">or</span> \
+                    <span class="n">s</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="n">_bounded</span> <span class="ow">or</span> <span class="n">s</span> <span class="o">==</span> <span class="n">sign</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sign</span> <span class="o">=</span> <span class="n">s</span>
+            <span class="c"># once False, do not change</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">_bounded</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskBoundedHandler.Mul"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/calculus.html#sympy.assumptions.handlers.calculus.AskBoundedHandler.Mul">[docs]</a>    <span class="k">def</span> <span class="nf">Mul</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return True if expr is bounded, False if not and None if unknown.</span>
+
+<span class="sd">        Truth Table:</span>
+
+<span class="sd">        +---+---+---+--------+</span>
+<span class="sd">        |   |   |   |        |</span>
+<span class="sd">        |   | B | U |   ?    |</span>
+<span class="sd">        |   |   |   |        |</span>
+<span class="sd">        +---+---+---+---+----+</span>
+<span class="sd">        |   |   |   |   |    |</span>
+<span class="sd">        |   |   |   | s | /s |</span>
+<span class="sd">        |   |   |   |   |    |</span>
+<span class="sd">        +---+---+---+---+----+</span>
+<span class="sd">        |   |   |   |        |</span>
+<span class="sd">        | B | B | U |   ?    |</span>
+<span class="sd">        |   |   |   |        |</span>
+<span class="sd">        +---+---+---+---+----+</span>
+<span class="sd">        |   |   |   |   |    |</span>
+<span class="sd">        | U |   | U | U | ?  |</span>
+<span class="sd">        |   |   |   |   |    |</span>
+<span class="sd">        +---+---+---+---+----+</span>
+<span class="sd">        |   |   |   |        |</span>
+<span class="sd">        | ? |   |   |   ?    |</span>
+<span class="sd">        |   |   |   |        |</span>
+<span class="sd">        +---+---+---+---+----+</span>
+
+<span class="sd">            * B = Bounded</span>
+
+<span class="sd">            * U = Unbounded</span>
+
+<span class="sd">            * ? = unknown boundedness</span>
+
+<span class="sd">            * s = signed (hence nonzero)</span>
+
+<span class="sd">            * /s = not signed</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">_bounded</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">bounded</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_bounded</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">_bounded</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+                <span class="k">if</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">arg</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">None</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">False</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="n">result</span>
+</div>
+    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="AskBoundedHandler.Pow"><a class="viewcode-back" href="../../../../modules/assumptions/handlers/calculus.html#sympy.assumptions.handlers.calculus.AskBoundedHandler.Pow">[docs]</a>    <span class="k">def</span> <span class="nf">Pow</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unbounded ** NonZero -&gt; Unbounded</span>
+<span class="sd">        Bounded ** Bounded -&gt; Bounded</span>
+<span class="sd">        Abs()&lt;=1 ** Positive -&gt; Bounded</span>
+<span class="sd">        Abs()&gt;=1 ** Negative -&gt; Bounded</span>
+<span class="sd">        Otherwise unknown</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_bounded</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">bounded</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="n">exp_bounded</span> <span class="o">=</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">bounded</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">base_bounded</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">exp_bounded</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>  <span class="c"># Common Case</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">base_bounded</span> <span class="ow">is</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">base_bounded</span> <span class="ow">and</span> <span class="n">exp_bounded</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">positive</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">negative</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">exp</span><span class="p">),</span> <span class="n">assumptions</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">exp_bounded</span> <span class="ow">is</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">assumptions</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ask</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">bounded</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">assumptions</span><span class="p">)</span>
+
+    <span class="n">exp</span> <span class="o">=</span> <span class="n">log</span>
+
+    <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">Number</span><span class="p">,</span> <span class="n">Pi</span><span class="p">,</span> <span class="n">Exp1</span><span class="p">,</span> <span class="n">GoldenRatio</span><span class="p">,</span> <span class="n">ImaginaryUnit</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> \
+        <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysTrue</span><span class="p">)]</span><span class="o">*</span><span class="mi">8</span>
+
+    <span class="n">Infinity</span><span class="p">,</span> <span class="n">NegativeInfinity</span> <span class="o">=</span> <span class="p">[</span><span class="nb">staticmethod</span><span class="p">(</span><span class="n">CommonHandler</span><span class="o">.</span><span class="n">AlwaysFalse</span><span class="p">)]</span><span class="o">*</span><span class="mi">2</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../../../index.html">
+              <img class="logo" src="../../../../_static/sympylogo.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">SymPy 0.7.3 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../sympy.html" >sympy</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2013 SymPy Development Team.
+      Last updated on Aug 04, 2013.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
