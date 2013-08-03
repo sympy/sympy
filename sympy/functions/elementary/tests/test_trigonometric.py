@@ -211,6 +211,9 @@ def test_cos():
     assert cos((-3*10**73 + 1)*pi/2) == 0
     assert cos((7*10**103 + 1)*pi/2) == 0
 
+    n = symbols('n', integer=True)
+    assert cos(pi*n/2) == 0
+
     assert cos(pi) == -1
     assert cos(-pi) == -1
     assert cos(2*pi) == 1

@@ -437,6 +437,10 @@ class cos(TrigonometricFunction):
         if pi_coeff is not None:
             if pi_coeff.is_integer:
                 return (S.NegativeOne)**pi_coeff
+
+            if (2*pi_coeff).is_integer:
+                return S.Zero
+
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
                 if narg != arg:
