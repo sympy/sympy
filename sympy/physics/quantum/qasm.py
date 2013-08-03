@@ -24,8 +24,10 @@ from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS,SWAP,S,T
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
-    def mul(a,b): return a*b # Can't import operator.mul b/c operator module in directory
-    return reduce(mul,c,1)
+    p = 1
+    for ci in c:
+        p *= ci
+    return p
 
 def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
