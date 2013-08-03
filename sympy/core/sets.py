@@ -1350,7 +1350,7 @@ def imageset(*args):
     Examples
     ========
 
-    >>> from sympy import Interval, Symbol
+    >>> from sympy import Interval, Symbol, imageset
     >>> x = Symbol('x')
 
     >>> imageset(x, 2*x, Interval(0, 2))
