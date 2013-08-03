@@ -1,5 +1,5 @@
 from sympy.sets.fancysets import ImageSet, Range
-from sympy.core.sets import FiniteSet, Interval
+from sympy.core.sets import FiniteSet, Interval, imageset
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
         Rational, sqrt)
 from sympy.utilities.pytest import XFAIL
@@ -66,7 +66,7 @@ def test_ImageSet():
     assert harmonics.is_iterable
 
 def test_image_is_ImageSet():
-    assert isinstance(image(x, sqrt(sin(x)), Range(5)), ImageSet)
+    assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
 
 
 @XFAIL
