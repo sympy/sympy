@@ -600,17 +600,6 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
-    @classmethod
-    def taylor_term(cls, n, x, *previous_terms):
-        """General method for the taylor term.
-
-        This method is slow, because it differentiates n-times. Subclasses can
-        redefine it to make it faster by using the "previous_terms".
-        """
-        x = sympify(x)
-        _x = Dummy('x')
-        return cls(_x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
-
 
 class AppliedUndef(Function):
     """
