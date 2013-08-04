@@ -486,7 +486,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
 
     The general form of this partial differential equation is
 
-    .. math:: a*\frac{df(x,y)}{dx} + b*\frac{df(x,y)}{y) + c*f(x,y) = 0
+    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{y) + c f(x,y) = 0
 
     where `a`, `b` and `c` are constants.
 
@@ -555,7 +555,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
 
     The general form of this partial differential equation is
 
-    .. math:: a*\frac{df(x,y)}{dx} + b*\frac{df(x,y)}{y) + c*f(x,y) = G(x,y)
+    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{y) + c f(x,y) = G(x,y)
 
     where `a`, `b` and `c` are constants and `G` can be an arbitrary
     function in `x` and `y`.
@@ -657,8 +657,8 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     Solves a first order linear partial differential equation
     with variable coefficients. The general form of this partial differential equation is
 
-    .. math:: a(x, y)*\frac{df(x, y)}{dx} + a(x, y)*\frac{df(x, y)}{dy}
-                + c(x, y)*f(x, y) - G(x, y)
+    .. math:: a(x, y) \frac{df(x, y)}{dx} + a(x, y) \frac{df(x, y)}{dy}
+                + c(x, y) f(x, y) - G(x, y)
 
     where `a(x, y)`, `b(x, y)`, `c(x, y)` and `G(x, y)` are arbitrary functions
     in `x` and `y`. This PDE is converted into an ODE by making the following transformation.

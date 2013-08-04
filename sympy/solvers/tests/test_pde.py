@@ -187,7 +187,6 @@ def test_pdsolve_variable_coeff():
 
     eq = x**2*f(x,y) + x*f(x,y).diff(x) + x*y*f(x,y).diff(y)
     sol = pdsolve(eq, hint='1st_linear_variable_coeff')
-    print(sol)
     assert sol == Eq(u, F(y*exp(-x))*exp(-x**2/2))
     assert checkpdesol(eq, sol)[0]
 
