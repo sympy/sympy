@@ -3,9 +3,6 @@
 from __future__ import print_function, division
 import sys
 import os
-import webbrowser
-import urlparse
-import threading
 import time
 import signal
 
@@ -293,8 +290,14 @@ def init_ipython_session(argv=(), auto_symbols=False, auto_int_to_Integer=False,
                 child_pid['pid'] = pid
                 from IPython.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
         elif notebook:
-            from IPython.html.notebook.notebookapp import NotebookApp
-            App = NotebookApp.instance
+            pid = os.fork()
+            if pid == 0: # child
+                signal.signal(signal.SIGUSR1, send_sympy_init)
+                time.sleep(1e6) # will be woken up when parent sends a signal
+            else: # parent
+                child_pid['pid'] = pid
+                from IPython.html.notebookapp import NotebookApp
+                App = NotebookApp.instance
         elif IPython.__version__ >= '1.0':
             from IPython.terminal.ipapp import TerminalIPythonApp as App
         else: ## old...
@@ -491,16 +494,13 @@ def init_session(ipython=None, pretty_print=True, order=None,
     if notebook:
         notebook_id = ip_app.notebook_manager.new_notebook()
         kernel_id = ip_app.kernel_manager.start_kernel(notebook_id)
-        kernel = ip_app.kernel_manager.get_kernel(kernel_id)
-        client = kernel.client()
-        client.shell_channel.execute('%pylab inline')
-        client.shell_channel.execute(preexec_source)
         ip = ip_app.ip or LOCALHOST
         proto = 'https' if ip_app.certfile else 'http'
         base_url = r"%s://%s:%i" % (proto, ip, ip_app.port, )
         from IPython.html.utils import url_path_join
         url = url_path_join(base_url, ip_app.base_project_url, notebook_id)
-        g = webbrowser.get()
+        import webbrowser
+        g = webbrowser.get('chromium-browser')
         g.open(url)
     elif not qtconsole:
         try:

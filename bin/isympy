@@ -366,6 +366,8 @@ def main():
         args['qtconsole'] = True
     elif options.notebook:
         args['notebook'] = True
+        #prefer chrome (pre-import webbrowser)
+        os.environ['BROWSER'] = os.pathsep.join(("google-chrome", "chrome", "chromium", "chromium-browser"))
 
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive
