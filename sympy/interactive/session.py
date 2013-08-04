@@ -7,8 +7,11 @@ import webbrowser
 import urlparse
 import threading
 import time
+import signal
 
 from sympy.interactive.printing import init_printing
+
+child_pid = {}
 
 preexec_source = """\
 from __future__ import division
@@ -16,8 +19,7 @@ from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
 f, g, h = symbols('f g h', cls=Function)
-init_printing()
-"""
+init_printing()"""
 
 verbose_message = """\
 These commands were executed:
@@ -285,8 +287,10 @@ def init_ipython_session(argv=(), auto_symbols=False, auto_int_to_Integer=False,
         if qtconsole:
             pid = os.fork()
             if pid == 0: # child
-                send_sympy_init()
+                signal.signal(signal.SIGUSR1, send_sympy_init)
+                time.sleep(1e6) # will be woken up when parent sends a signal
             else: # parent
+                child_pid['pid'] = pid
                 from IPython.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
         elif notebook:
             from IPython.html.notebook.notebookapp import NotebookApp
@@ -510,25 +514,26 @@ def init_session(ipython=None, pretty_print=True, order=None,
         mainloop(message)
         sys.exit('Exiting ...')
     elif hasattr(ip_app, 'start'):
+        pid = child_pid['pid']
+        os.kill(pid, signal.SIGUSR1)
         ip_app.start()
     else:
         ip.write(message)
         ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
 
 def send_sympy_init(*args, **kwargs):
-    time.sleep(2)
     import json
     import IPython.kernel.connect, IPython.kernel.blocking
     f = IPython.kernel.connect.find_connection_file('')
     j = json.load(open(f))
-    print(f)
-    print(j)
     client = IPython.kernel.blocking.BlockingKernelClient()
     client.connection_file = f
     client.load_connection_file()
     client.start_channels()
-    print(client.shell_channel.execute('%pylab inline'))
-    print(client.shell_channel.execute(preexec_source))
-    time.sleep(10)
-    print('child exiting')
+    client.shell_channel.execute('%pylab inline')
+    client.shell_channel.execute(preexec_source)
+    print('executed:')
+    print('%pylab inline')
+    print(preexec_source)
+    time.sleep(5) # for some reason, it does not work w/o this
     sys.exit(0)
