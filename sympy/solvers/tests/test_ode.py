@@ -1708,3 +1708,10 @@ def test_heuristic_linear():
     eq = x**(n*(m + 1) - m)*(f(x).diff(x)) - a*f(x)**n -b*x**(n*(m + 1))
     i = infinitesimals(eq, hint='linear')
     assert checkinfsol(eq, i)[0]
+
+@XFAIL
+def test_kamke():
+    a, b, alpha, c = symbols("a b alpha c")
+    eq = x**2*(a*f(x)**2+(f(x).diff(x))) + b*x**alpha + c
+    i = infinitesimals(eq, hint='sum_function')
+    assert checkinfsol(eq, i)[0]
