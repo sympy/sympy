@@ -197,7 +197,7 @@ def test_pow_invpow():
     assert cse(1/x**2 + x**2) == \
         ([(x0, x**2)], [x0 + 1/x0])
     assert cse(x**2 + (1 + 1/x**2)/x**2) == \
-        ([(x0, x**2), (x1, 1/x0)], [x0 + x1*(x1 + 1)])   
+        ([(x0, x**2), (x1, 1/x0)], [x0 + x1*(x1 + 1)])
     assert cse(1/x**2 + (1 + 1/x**2)*x**2) == \
         ([(x0, x**2), (x1, 1/x0)], [x0*(x1 + 1) + x1])
     assert cse(cos(1/x**2) + sin(1/x**2)) == \

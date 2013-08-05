@@ -4,7 +4,8 @@ from __future__ import print_function, division
 
 import difflib
 
-from sympy.core import Basic, Mul, Add, sympify
+from sympy.core import Basic, Mul, Add, Pow, sympify
+from sympy.core.singleton import S
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
 from sympy.core.compatibility import iterable, xrange
@@ -414,15 +415,215 @@ def prev_cse(exprs, symbols=None, optimizations=None, postprocess=None):
 
 
 
+def opt_cse(exprs):
+    '''Find optimization opportunities'''
+
+    from sympy.matrices import Matrix
+
+    opt_subs = dict()
+
+    adds = set()
+    muls = set()
 
 
-from sympy.simplify.fast_cse import fast_cse
+    seen_subexp = set()
+    def _find_opts(expr):
+
+        if isinstance(expr, Basic) and expr.is_Atom:
+           return
+        if isinstance(expr, bool):
+           return
+
+        if iterable(expr):
+            list(map(_find_opts, expr))
+            return
+
+        if expr in seen_subexp:
+            return expr
+        seen_subexp.add(expr)
+
+        list(map(_find_opts, expr.args))
+
+        if _coeff_isneg(expr):
+            neg_expr = -expr
+            opt_subs[expr] = Mul(S.NegativeOne, neg_expr, evaluate=False)
+            seen_subexp.add(neg_expr)
+            expr = neg_expr
+
+        if expr.is_Mul:
+            muls.add(expr)
+
+        elif expr.is_Add:
+            adds.add(expr)
+
+        elif expr.is_Pow:
+            if _coeff_isneg(expr.exp):
+                opt_subs[expr] = Pow(Pow(expr.base, -expr.exp), S.NegativeOne, evaluate=False)
+
+
+    _find_opts(exprs)
+
+
+    ### Process adds and muls #####################
+
+    def _match_common_args(Op, ops):
+        ops = list(ordered(ops))
+
+        op_args = [set(e.args) for e in ops]
+        for i in xrange(len(op_args)):
+            for j in xrange(i + 1, len(op_args)):
+                com_args = op_args[i].intersection(op_args[j])
+                if len(com_args) > 1:
+                    com_op = Op(*com_args)
+
+                    diff_i = op_args[i].difference(com_args)
+                    op_args[i] = diff_i | set([com_op])
+                    if diff_i:
+                        opt_subs[ops[i]] = Op(Op(*diff_i), com_op, evaluate=False)
+
+                    diff_j = op_args[j].difference(com_args)
+                    op_args[j] = diff_j | set([com_op])
+                    opt_subs[ops[j]] = Op(Op(*diff_j), com_op, evaluate=False)
+
+                    for k in xrange(j + 1, len(op_args)):
+                        if not com_args.difference(op_args[k]):
+                            diff_k = op_args[k].difference(com_args)
+                            op_args[k] = diff_k | set([com_op])
+                            opt_subs[ops[k]] = Op(Op(*diff_k), com_op, evaluate=False)
+
+
+    # split muls into commutative
+    comutative_muls = set()
+    for m in muls:
+        c, nc = m.args_cnc(cset=True)
+        if c:
+            c_mul = Mul(*c)
+            if nc:
+                opt_subs[m] = Mul(c_mul, Mul(*nc), evaluate=False)
+            if len(c) > 1:
+                comutative_muls.add(c_mul)
+
+
+    _match_common_args(Add, adds)
+    _match_common_args(Mul, comutative_muls)
+
+    return opt_subs
+
+
+
+def tree_cse(exprs, symbols=None, opt_subs=None):
+    from sympy.matrices import Matrix
+
+    if symbols is None:
+        symbols = numbered_symbols()
+    else:
+        # In case we get passed an iterable with an __iter__ method instead of
+        # an actual iterator.
+        symbols = iter(symbols)
+
+    if opt_subs is None:
+        opt_subs = dict()
+
+
+    ### Find repeated sub-expressions #####################
+
+    to_eliminate = set()
+
+    seen_subexp = set()
+    def _find_repeated(expr):
+        if isinstance(expr, Basic) and expr.is_Atom:
+           return
+        if isinstance(expr, bool):
+           return
+
+        if iterable(expr):
+            # do not cse iterables
+            args = expr
+
+        else:
+            if expr in seen_subexp:
+                to_eliminate.add(expr)
+                return
+
+            seen_subexp.add(expr)
+
+            if expr in opt_subs:
+                expr = opt_subs[expr]
+
+            args = expr.args
+
+        list(map(_find_repeated, args))
+
+    _find_repeated(exprs)
+
+
+    ### Recreate #####################
+
+    replacements = []
+
+    subs = dict()
+    def _recreate(expr):
+
+        if isinstance(expr, Basic) and expr.is_Atom:
+            return expr
+        if isinstance(expr, bool):
+            return expr
+
+        if iterable(expr):
+            new_args = [_recreate(arg) for arg in expr]
+            return type(expr)(*new_args)
+
+
+        if expr in subs:
+            return subs[expr]
+
+        orig_expr = expr
+        if expr in opt_subs:
+            expr = opt_subs[expr]
+
+        Op, args = type(expr), expr.args
+        if Op is Mul:
+            c, nc = expr.args_cnc()
+            args = list(ordered(c)) + nc
+        elif Op is Add:
+            args = list(ordered(args))
+
+        new_expr = Op(*map(_recreate, args))
+
+        if orig_expr in to_eliminate:
+            sym = next(symbols)
+            subs[orig_expr] = sym
+            replacements.append((sym, new_expr))
+            return sym
+
+        else:
+            return new_expr
+
+
+    single = False
+    if isinstance(exprs, Basic) or isinstance(exprs, Matrix): # if only one expression or one matrix is passed
+        exprs = [exprs]
+        single = True
+
+
+    reduced_exprs = []
+
+    for expr in exprs:
+        if isinstance(expr, Matrix):
+            reduced_exprs.append(expr.applyfunc(_recreate))
+        else:
+            reduced_exprs.append(_recreate(expr))
+
+    if single:
+        reduced_exprs = reduced_exprs[0]
+
+    return replacements, reduced_exprs
 
 
 
 def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     from sympy.matrices import Matrix
-    
+
     if optimizations is None:
         # Pull out the default here just in case there are some weird
         # manipulations of the module-level list in some other thread.
@@ -434,17 +635,19 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
 
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
-    
-    
-    replacements, reduced_exprs = fast_cse(reduced_exprs, symbols)
-    
-    
+
+    # Find other optimization opportunities.
+    opt_subs = opt_cse(reduced_exprs)
+
+    # Main CSE algorithm.
+    replacements, reduced_exprs = tree_cse(reduced_exprs, symbols, opt_subs)
+
     # Postprocess the expressions to return the expressions to canonical form.
     for i, (sym, subtree) in enumerate(replacements):
         subtree = postprocess_for_cse(subtree, optimizations)
         replacements[i] = (sym, subtree)
 
-    reduced_exprs = [postprocess_for_cse(e, optimizations) 
+    reduced_exprs = [postprocess_for_cse(e, optimizations)
                      for e in reduced_exprs]
 
     if isinstance(exprs, Matrix):
@@ -452,41 +655,3 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     if postprocess is None:
         return replacements, reduced_exprs
     return postprocess(replacements, reduced_exprs)
-
-
-
-def undo_cse( cse_output ):
-    from sympy.matrices import Matrix
-    
-    subs = dict((s, e) for (s, e) in cse_output[0])
-    exprs = cse_output[1]
-    
-    def _recreate(expr):
-        if iterable(expr):
-            out = type(expr)(*map(_recreate, expr))
-        elif expr in subs:
-            out = _recreate(subs[expr])
-        elif isinstance(expr, Basic) and expr.is_Atom:
-            out = expr
-        else:
-            out = type(expr)(*map(_recreate, expr.args))
-        return out
-    
-    single = False
-    if isinstance(exprs, Basic) or isinstance(exprs, Matrix): # if only one expression or one matrix is passed
-        exprs = [exprs]
-        single = True
-    
-    expanded_exprs = []
-    for expr in exprs:
-        if isinstance(expr, Matrix):
-            expanded_exprs.append(expr.applyfunc(_recreate))
-        else:
-            expanded_exprs.append(_recreate(expr))
-            
-    if single:
-        expanded_exprs = expanded_exprs[0]
-            
-    return expanded_exprs
-
-
