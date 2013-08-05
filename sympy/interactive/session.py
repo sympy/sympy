@@ -505,12 +505,10 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip = ip_app.ip or LOCALHOST
         proto = 'https' if ip_app.certfile else 'http'
         base_url = r"%s://%s:%i" % (proto, ip, ip_app.port, )
-        import webbrowser
-        g = webbrowser.get()
-
         from IPython.html.utils import url_path_join
         url = url_path_join(base_url, ip_app.base_project_url, notebook_id)
-        g.open(url)
+        import webbrowser
+        webbrowser.open(url)
     elif not qtconsole:
         try:
             ip.run_cell(preexec_source, False)

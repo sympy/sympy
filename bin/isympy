@@ -188,6 +188,42 @@ if os.path.isdir(sympy_dir):
 
 # DO NOT IMPORT SYMPY HERE!
 
+## below copied from Python Lib/webbrowser.py
+## (c) PSF
+## for details, see: http://docs.python.org/license.html
+def _iscommand(cmd):
+    """Return True if cmd is executable or can be found on the executable
+    search path."""
+
+    if sys.platform[:3] == "win":
+        def _isexecutable(cmd):
+            cmd = cmd.lower()
+            if os.path.isfile(cmd) and cmd.endswith((".exe", ".bat")):
+                return True
+            for ext in ".exe", ".bat":
+                if os.path.isfile(cmd + ext):
+                    return True
+            return False
+    else:
+        def _isexecutable(cmd):
+            import stat
+            if os.path.isfile(cmd):
+                mode = os.stat(cmd)[stat.ST_MODE]
+                if mode & stat.S_IXUSR or mode & stat.S_IXGRP or mode & stat.S_IXOTH:
+                    return True
+            return False
+
+    if _isexecutable(cmd):
+        return True
+    path = os.environ.get("PATH")
+    if not path:
+        return False
+    for d in path.split(os.pathsep):
+        exe = os.path.join(d, cmd)
+        if _isexecutable(exe):
+            return True
+    return False
+
 def main():
     from optparse import OptionParser
 
@@ -340,7 +376,6 @@ def main():
             if not os.environ.get('BROWSER'):
                 chromes = ["google-chrome", "chrome", "chromium", "chromium-browser"]
                 chromes = [c for c in chromes if _iscommand(c)]
-                print(chromes)
                 os.environ['BROWSER'] = os.pathsep.join(chromes)
     else:
         try:
@@ -374,37 +409,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-## below copied from Python Lib/webbrowser.py
-## (c) PSF
-## for details, see: http://docs.python.org/license.html
-def _iscommand(cmd):
-    """Return True if cmd is executable or can be found on the executable
-    search path."""
-    if _isexecutable(cmd):
-        return True
-    path = os.environ.get("PATH")
-    if not path:
-        return False
-    for d in path.split(os.pathsep):
-        exe = os.path.join(d, cmd)
-        if _isexecutable(exe):
-            return True
-    return False
-
-if sys.platform[:3] == "win":
-    def _isexecutable(cmd):
-        cmd = cmd.lower()
-        if os.path.isfile(cmd) and cmd.endswith((".exe", ".bat")):
-            return True
-        for ext in ".exe", ".bat":
-            if os.path.isfile(cmd + ext):
-                return True
-        return False
-else:
-    def _isexecutable(cmd):
-        if os.path.isfile(cmd):
-            mode = os.stat(cmd)[stat.ST_MODE]
-            if mode & stat.S_IXUSR or mode & stat.S_IXGRP or mode & stat.S_IXOTH:
-                return True
-        return False
