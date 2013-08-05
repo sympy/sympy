@@ -417,14 +417,12 @@ def prev_cse(exprs, symbols=None, optimizations=None, postprocess=None):
 
 def opt_cse(expr):
     '''Find optimization opportunities'''
-
     from sympy.matrices import Matrix
 
     opt_subs = dict()
 
     adds = set()
     muls = set()
-
 
     seen_subexp = set()
     def _find_opts(expr):
@@ -461,9 +459,7 @@ def opt_cse(expr):
             if _coeff_isneg(expr.exp):
                 opt_subs[expr] = Pow(Pow(expr.base, -expr.exp), S.NegativeOne, evaluate=False)
 
-
     _find_opts(expr)
-
 
     ### Process adds and muls #####################
 
@@ -504,15 +500,14 @@ def opt_cse(expr):
             if len(c) > 1:
                 comutative_muls.add(c_mul)
 
-
     _match_common_args(Add, adds)
     _match_common_args(Mul, comutative_muls)
 
     return opt_subs
 
 
-
 def tree_cse(exprs, symbols=None, opt_subs=None):
+    '''Perform blind CSE on expression tree, taking opt_subs into account'''
     from sympy.matrices import Matrix
 
     if opt_subs is None:
@@ -530,7 +525,6 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
            return
 
         if iterable(expr):
-            # do not cse iterables
             args = expr
 
         else:
@@ -548,7 +542,6 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
         list(map(_find_repeated, args))
 
     _find_repeated(exprs)
-
 
     ### Recreate #####################
 
@@ -575,6 +568,8 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
             expr = opt_subs[expr]
 
         Op, args = type(expr), expr.args
+
+        # Parse Muls and Adds arguments by order
         if Op is Mul:
             c, nc = expr.args_cnc()
             args = list(ordered(c)) + nc
@@ -597,8 +592,36 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
     return replacements, reduced_exprs
 
 
-
 def cse(exprs, symbols=None, optimizations=None, postprocess=None):
+    """ Perform common subexpression elimination on an expression.
+
+    Parameters
+    ==========
+
+    exprs : list of sympy expressions, or a single sympy expression
+        The expressions to reduce.
+    symbols : infinite iterator yielding unique Symbols
+        The symbols used to label the common subexpressions which are pulled
+        out. The ``numbered_symbols`` generator is useful. The default is a
+        stream of symbols of the form "x0", "x1", etc. This must be an infinite
+        iterator.
+    optimizations : list of (callable, callable) pairs, optional
+        The (preprocessor, postprocessor) pairs. If not provided,
+        ``sympy.simplify.cse.cse_optimizations`` is used.
+    postprocess : a function which accepts the two return values of cse and
+        returns the desired form of output from cse, e.g. if you want the
+        replacements reversed the function might be the following lambda:
+        lambda r, e: return reversed(r), e
+
+    Returns
+    =======
+
+    replacements : list of (Symbol, expression) pairs
+        All of the common subexpressions that were replaced. Subexpressions
+        earlier in this list might show up in subexpressions later in this list.
+    reduced_exprs : list of sympy expressions
+        The reduced expressions with all of the replacements above.
+    """
     from sympy.matrices import Matrix
 
     if symbols is None:
