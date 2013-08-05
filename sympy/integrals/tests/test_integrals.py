@@ -988,3 +988,9 @@ def test_integrate_Piecewise_rational_over_reals():
         (13.2075145209219*pi/(0.000871222*t + 0.995)**2, t - 478.515625*pi >= 0))
 
     assert integrate(f, (t, 0, oo)) == 15235.9375*pi
+
+
+def test_issue_1704():
+    x_max = Symbol("x_max")
+    assert integrate(y/pi*exp(-(x_max - x)/cos(a)), x) == \
+        y*exp((x - x_max)/cos(a))*cos(a)/pi
