@@ -23,7 +23,8 @@ from sympy.integrals.risch import (NonElementaryIntegralException,
     residue_reduce_derivation, DecrementLevel)
 from sympy.integrals.rde import (weak_normalizer,
     bound_degree, spde, solve_poly_rde, normal_denom, special_denom)
-from sympy.integrals.prde import (real_imag, is_log_deriv_k_t_radical_in_field)
+from sympy.integrals.prde import (real_imag, is_log_deriv_k_t_radical,
+    is_log_deriv_k_t_radical_in_field)
 def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     """
     Cancellation - primitive case
@@ -45,14 +46,17 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     q1, q2 in k[t] X k[t] of this system with deg(q1) <= n and deg(q2)
     <= n
     """
+    print b1, b2, c1, c2
     t = DE.t
+    if(b1 == c1.as_poly(t) and b2 == c2.as_poly(t)):
+	return (Poly(1, t), Poly(0, t))
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     A1 = is_log_deriv_k_t_radical_in_field(b1a, b1d, DE)
     A2 = is_log_deriv_k_t_radical_in_field(b2a, b2d, DE)
     if A1 and A2:
-        n1, m1, u1 = A1
-        n2, m2, u2 = A2
+        n1, u1 = A1
+        n2, u2 = A2
         u = u1 + u2*sqrt(a)
         P1 = is_deriv(u1*c1 + a*u2*c2)
         P2 = is_deriv(u2*c1 + u1*c2)
@@ -66,21 +70,21 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
             else:
                 raise NonElementaryIntegralException
     if c1 == 0 and c2 == 0:
-        return (0, 0)
-    if n < max(c1.degree(), c2.degree()):
+        return (Poly(0, t), Poly(0, t))
+    if n < max(c1.as_poly(t).degree(), c2.as_poly(t).degree()):
         raise NonElementaryIntegralException
-    q1, q2 = (0, 0)
+    q1, q2 = (Poly(0, t), Poly(0, t))
     while c1 or c2:
-        m = max(c1.degree(), c2.degree())
+        m = max(c1.as_poly(t).degree(), c2.as_poly(t).degree())
         if n < m:
             raise NonElementaryIntegralException
-        A = coupled_DE_system(b1, b2, Poly(c1.nth(m),DE.t), Poly(c2.nth(m),DE.t), DE)
+        A = coupled_DE_system(b1, b2, c1.as_poly(t).nth(m), c2.as_poly(t).nth(m), DE)
         (s1, s2) = A
         q1 = q1 + s1*t**m
         q2 = q2 + s2*t**m
         n = m - 1
-        Ds1tm = derivation(s1*t**m, DE.t)
-        Ds2tm = derivation(s2*t**m, DE.t)
+        Ds1tm = derivation(s1*t**m, DE)
+        Ds2tm = derivation(s2*t**m, DE)
         c1 = c1 - Ds1tm - (b1*s1 + a*b2*s2)*t**m
         c2 = c2 - Ds2tm - (b2*s1 + b1*s2)*t**m
     return (q1, q2)
