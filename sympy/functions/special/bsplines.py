@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, sympify, expand
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.functions.elementary.piecewise import ExprCondPair

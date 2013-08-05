@@ -129,7 +129,7 @@ If ``integrate`` is unable to compute an integral, it returns an unevaluated
 ``Integral`` object.
 
     >>> expr = integrate(x**x, x)
-    >>> print expr
+    >>> print(expr)
     Integral(x**x, x)
     >>> expr
     ⌠

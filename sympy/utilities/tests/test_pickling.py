@@ -22,7 +22,7 @@ from sympy.core.multidimensional import vectorize
 from sympy.functions import exp
 #from sympy.core.ast_parser import SymPyParser, SymPyTransformer
 
-from sympy.core.compatibility import callable, HAS_GMPY
+from sympy.core.compatibility import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols, S

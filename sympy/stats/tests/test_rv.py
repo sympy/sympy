@@ -185,3 +185,7 @@ def test_NamedArgsMixin():
 def test_density_constant():
     assert density(3)(2) == 0
     assert density(3)(3) == DiracDelta(0)
+
+def test_real():
+    x = Normal('x', 0, 1)
+    assert x.is_real

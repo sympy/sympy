@@ -501,3 +501,33 @@ def test_universalset():
 def test_Interval_free_symbols():
     x = Symbol('x', real=True)
     assert set(Interval(0, x).free_symbols) == set((x,))
+
+def test_transform_interval():
+    x = Symbol('x', real=True)
+    assert Interval(-2, 1).transform(x, 2*x) == Interval(-4, 2)
+    assert Interval(-2, 1, True, False).transform(x, 2*x) == \
+            Interval(-4, 2, True, False)
+    assert Interval(-2, 1, True, False).transform(x, x**2) == \
+            Interval(1, 4, False, True)
+    assert Interval(-2, 1).transform(x, x**2) == Interval(1, 4)
+    assert Interval(-2, 1, True, False).transform(x, x**2) == \
+            Interval(1, 4, False, True)
+
+def test_transform_FiniteSet():
+    x = Symbol('x', real=True)
+    assert FiniteSet(1, 2, 3).transform(x, 2*x) == FiniteSet(2, 4, 6)
+
+def test_transform_Union():
+    x = Symbol('x', real=True)
+    assert (Interval(-2, 0) + FiniteSet(1, 2, 3)).transform(x, x**2) == \
+            (Interval(0, 4) + FiniteSet(9))
+
+def test_transform_Intersection():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert Interval(-2, 0).intersect(Interval(x, y)).transform(x, x**2) == \
+           Interval(0, 4).intersect(Interval(Min(x**2, y**2), Max(x**2, y**2)))
+
+def test_transform_EmptySet():
+    x = Symbol('x', real=True)
+    assert S.EmptySet.transform(x, 2*x) == S.EmptySet

@@ -7,6 +7,8 @@ A tool to help keep .mailmap and AUTHORS up-to-date.
 # - Check doc/src/aboutus.rst
 # - Make it easier to update .mailmap or AUTHORS with the correct entries.
 
+from __future__ import print_function
+
 import os
 import sys
 
@@ -49,16 +51,16 @@ predate_git = 0
 
 exit1 = False
 
-print blue(filldedent("""Read the text at the top of AUTHORS and the text at
+print(blue(filldedent("""Read the text at the top of AUTHORS and the text at
 the top of .mailmap for information on how to fix the below errors.  If
 someone is missing from AUTHORS, add them where they would have been if they
 were added after their first pull request was merged ( checkout the merge
 commit from the first pull request and see who is at the end of the AUTHORS
-file at that commit."""))
+file at that commit.""")))
 
-print
-print yellow("People who are in AUTHORS but not in git:")
-print
+print()
+print(yellow("People who are in AUTHORS but not in git:"))
+print()
 
 for name in sorted(set(authors) - set(git_people)):
     if name.startswith("*"):
@@ -66,15 +68,15 @@ for name in sorted(set(authors) - set(git_people)):
         predate_git += 1
         continue
     exit1 = True
-    print name
+    print(name)
 
-print
-print yellow("People who are in git but not in AUTHORS:")
-print
+print()
+print(yellow("People who are in git but not in AUTHORS:"))
+print()
 
 for name in sorted(set(git_people) - set(authors) - set(authors_skip)):
     exit1 = True
-    print name
+    print(name)
 
 # + 1 because the last newline is stripped by strip()
 authors_count = AUTHORS[AUTHORS.find(firstauthor):].strip().count("\n") + 1
@@ -85,18 +87,18 @@ adjusted_authors_count = (
     )
 git_count = len(git_people)
 
-print
-print yellow("There are {git_count} people in git, and {adjusted_authors_count} "
+print()
+print(yellow("There are {git_count} people in git, and {adjusted_authors_count} "
     "(adjusted) people from AUTHORS".format(git_count=git_count,
-    adjusted_authors_count=adjusted_authors_count))
+    adjusted_authors_count=adjusted_authors_count)))
 
 if git_count != adjusted_authors_count:
     error("These two numbers are not the same!")
 else:
-    print
-    print green(filldedent("""Congratulations. The AUTHORS and .mailmap files
+    print()
+    print(green(filldedent("""Congratulations. The AUTHORS and .mailmap files
 appear to be up to date. You should now verify that doc/src/aboutus has %s
-people.""" % authors_count))
+people.""" % authors_count)))
 
 if exit1:
     sys.exit(1)

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import ask, Q
 from sympy.core import Tuple, Basic, Add
 from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
@@ -29,16 +31,16 @@ class BlockMatrix(MatrixExpr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
-    >>> print B
+    >>> print(B)
     Matrix([
     [X, Z],
     [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
+    >>> print(C)
     Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
+    >>> print(block_collapse(C*B))
     Matrix([[X, Z*Y + Z]])
 
     """
@@ -260,16 +262,16 @@ def block_collapse(expr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
-    >>> print B
+    >>> print(B)
     Matrix([
     [X, Z],
     [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
+    >>> print(C)
     Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
+    >>> print(block_collapse(C*B))
     Matrix([[X, Z*Y + Z]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)

@@ -28,6 +28,8 @@ more information on each (run help(pde)):
     with constant coefficients.
 
 """
+from __future__ import print_function, division
+
 from copy import deepcopy
 
 from sympy.simplify import simplify

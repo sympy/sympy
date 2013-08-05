@@ -1,7 +1,9 @@
+from __future__ import print_function, division
+
 from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
-from zeta_functions import zeta
-from error_functions import erf
+from .zeta_functions import zeta
+from .error_functions import erf
 from sympy.core import Dummy, Rational
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
@@ -9,6 +11,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -477,7 +480,7 @@ class polygamma(Function):
 
     @classmethod
     def eval(cls, n, z):
-        n, z = map(sympify, (n, z))
+        n, z = list(map(sympify, (n, z)))
         from sympy import unpolarify
 
         if n.is_integer:

@@ -1,5 +1,7 @@
 """Efficient functions for generating orthogonal polynomials. """
 
+from __future__ import print_function, division
+
 from sympy import Dummy
 
 from sympy.utilities import public
@@ -13,6 +15,8 @@ from sympy.polys.densearith import (
 )
 
 from sympy.polys.domains import ZZ, QQ
+
+from sympy.core.compatibility import xrange
 
 
 def dup_jacobi(n, a, b, K):

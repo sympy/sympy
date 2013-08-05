@@ -1,5 +1,7 @@
 """Implementation of :class:`QuotientRing` class."""
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, CoercionFailed
 from sympy.polys.agca.modules import FreeModuleQuotientRing

@@ -1,7 +1,6 @@
 from sympy.unify.rewrite import rewriterule
 from sympy import sin, cos, Basic, Symbol, S
 from sympy.abc import x, y, z
-from sympy.core.compatibility import next
 from sympy.strategies.rl import rebuild
 from sympy.assumptions import Q
 

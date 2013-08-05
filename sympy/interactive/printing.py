@@ -1,15 +1,16 @@
 """Tools for setting up printing in interactive sessions. """
 
-from cStringIO import StringIO
+from __future__ import print_function, division
 
 from sympy import latex
 from sympy import preview
+from sympy.core.compatibility import cStringIO, integer_types, string_types
 
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
-    import __builtin__
     import sys
+    from sympy.core.compatibility import builtins
 
     def _displayhook(arg):
         """Python's pretty-printer display hook.
@@ -20,9 +21,9 @@ def _init_python_printing(stringify_func):
 
         """
         if arg is not None:
-            __builtin__._ = None
-            print stringify_func(arg)
-            __builtin__._ = arg
+            builtins._ = None
+            print(stringify_func(arg))
+            builtins._ = arg
 
     sys.displayhook = _displayhook
 
@@ -61,7 +62,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             p.text(IPython.lib.pretty.pretty(arg))
 
     def _preview_wrapper(o):
-        exprbuffer = StringIO()
+        exprbuffer = cStringIO()
         preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
                 preamble=preamble, dvioptions=dvioptions)
         return exprbuffer.getvalue()
@@ -76,10 +77,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
-            return all((isinstance(i, basestring) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
+            return all((isinstance(i, string_types) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o, bool):
             return False
-        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
+        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, float, integer_types)):
             return True
         return False
 
@@ -127,16 +128,16 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             if '\n' in out:
                 print
 
-            print out
+            print(out)
         else:
-            print repr(arg)
+            print(repr(arg))
 
     import IPython
     if IPython.__version__ >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
-        printable_types = [Basic, MatrixBase, int, long, float,
-                          tuple, list, set, frozenset, dict]
+        printable_types = [Basic, MatrixBase,  float, tuple, list, set,
+                frozenset, dict] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 

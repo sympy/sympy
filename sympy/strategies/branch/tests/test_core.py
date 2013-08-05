@@ -1,6 +1,7 @@
 from sympy.strategies.branch.core import (exhaust, debug, multiplex,
         condition, notempty, chain, onaction, sfilter, yieldify, do_one,
         identity)
+from sympy.core.compatibility import get_function_name
 
 def posdec(x):
     if x > 0:
@@ -35,14 +36,14 @@ def test_exhaust():
     assert set(brl(5)) == set([0, 10])
 
 def test_debug():
-    import StringIO
-    file = StringIO.StringIO()
+    from sympy.core.compatibility import StringIO
+    file = StringIO()
     rl = debug(posdec, file)
     list(rl(5))
     log = file.getvalue()
     file.close()
 
-    assert posdec.func_name in log
+    assert get_function_name(posdec) in log
     assert '5' in log
     assert '4' in log
 

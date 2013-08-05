@@ -1,5 +1,8 @@
 """Heuristic polynomial GCD algorithm (HEUGCD). """
 
+from __future__ import print_function, division
+from sympy.core.compatibility import xrange
+
 HEU_GCD_MAX = 6
 
 def heugcd(f, g):
