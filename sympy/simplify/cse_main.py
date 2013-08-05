@@ -458,7 +458,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
 def undo_cse( cse_output ):
     from sympy.matrices import Matrix
     
-    subs = {s: e for s, e in cse_output[0]}
+    subs = dict((s, e) for (s, e) in cse_output[0])
     exprs = cse_output[1]
     
     def _recreate(expr):
