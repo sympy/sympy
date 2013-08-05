@@ -15,8 +15,8 @@ def base_scalars(names, coord_sys, ind=1):
     """
     Creates BaseScalars (coordinates) in a tuple for convenience.
 
-    Takes the names of the BaseScalars, the coordinate system the are defined
-    in, and an initial index.
+    Takes the names of the BaseScalars, the coordinate system the are
+    defined in, and an initial index.
     """
     base_scalar_list = []
     try:
@@ -42,7 +42,9 @@ def vectors(names, coord_sys, ind=1):
         pass
 
     for i, name in enumerate(names):
-        vector_list.append(BaseVector(name, coord_sys=coord_sys, position=i+ind))
+        vector_list.append(
+            BaseVector(name, coord_sys=coord_sys, position=i+ind)
+        )
     return tuple(vector_list)
 
 def _dot_same(vect_a, vect_b):
@@ -91,22 +93,20 @@ def _all_coordinate_systems(vector):
     vector = vector.expand()
     coord_list = []
     # all_args is a separate method that return only the vector args
-    # arg is either Vector or VectMul - becuase we have expanded the vector
+    # arg is either BaseVector or VectMul - becuase we have expanded the vector
     for arg in vector._all_args:
-        #Hacky method of converting Mul to VectMul
-        arg = VectMul(*(arg.args))
-        if isinstance(arg, Vector):
+        if isinstance(arg, BaseVector):
             coord_list.append(arg.coord_sys)
         elif isinstance(arg, VectMul):
-            coord_list = coord_list + _coord_sys_scalar(arg.scalar)
+            coord_list = coord_list + _coord_sys_scalar_list(arg.scalar)
             coord_list.append(arg.vector.coord_sys)
         else:
             # Shouldn't happen
             raise ValueError("Couldn't expand vector")
 
-    return coord_list
+    return list(set(coord_list))
 
-def _coord_sys_scalar(scalar):
+def _coord_sys_scalar_list(scalar):
     # scalar can be any sympy basic type
     # return a list of coordinate systems contained within scalar
     coord_list = []
@@ -132,7 +132,7 @@ class BaseScalar(Expr):
         return True
 
     def __init__(self, name, coord_sys, position, **assumptions):
-        if (position not in ['1', '2', '3']
+        if (position not in [1, 2, 3]
             and not isinstance(coord_sys, CoordSysRect)):
             raise ValueError("Position of scalar not specified. \
                             See `position` in docstring of `BaseScalar`")
@@ -145,8 +145,43 @@ class BaseScalar(Expr):
         super(BaseScalar, self).__init__()
         self.coord_sys = coord_sys
         self.name = name
+        self.position = position
         self._assumptions = StdFactKB(assumptions)
 
+    def __str__(self):
+        return self.coord_sys.name + "." + self.name
+
+    __repr__ = __str__
+
+    @staticmethod
+    def coord_rel_rect(base_scalar, coord_sys):
+        """
+        base_scalar: A BaseScalar object in CoordSysRect
+        coord_sys: A CoordSys object
+        Returns a relation between the given base_scalar and the
+        given coord_sys
+        """
+        if base_scalar.coord_sys == coord_sys:
+            return base_scalar
+
+        if isinstance(base_scalar, CoordSysSph):
+            x, y, z = coord_sys.base_scalars
+            r, theta, phi = base_scalar.coord_sys.base_scalars
+
+            subs_dict = { r: sqrt(x**2 + y**2 + z**2),
+                          theta: atan(sqrt(x**2 + y**2)/z),
+                          phi: atan(y/x) }
+            return subs_dict[base_scalar]
+
+        if isinstance(base_scalar, CoordSysCyl):
+            x, y, z = coord_sys.base_scalars
+            rho, phi, _z = base_scalar.coord_sys.base_scalars
+
+            subs_dict = { rho: sqrt(x**2 + y**2),
+                          phi: atan(y/x),
+                          z: _z }
+
+            return subs_dict[base_scalar]
 
 
 class CoordSys(Basic):
@@ -169,6 +204,7 @@ class CoordSys(Basic):
 
         if name is None:
             name = 'CoordSys_' + str(Dummy._count)
+            Dummy._count += 1
 
         self.name = name
         self.dim = int(dim)
@@ -206,10 +242,12 @@ class CoordSys(Basic):
         if orient_type:
             self._check_orient_raise(orient_type, orient_amount, rot_order)
             if parent:
-                self._dcm_parent = self._dcm_parent_func(orient_type,
-                                                         orient_amount, rot_order)
+                self._dcm_parent = self._dcm_parent_func(
+                    orient_type, orient_amount, rot_order
+                )
 
-            self._dcm_global = self._dcm_global_method(orient_type, orient_amount)
+            self._dcm_global = self._dcm_global_method(orient_type,
+                                                       orient_amount)
 
     #def __getattr__(self, i):
     #    return None
@@ -261,8 +299,10 @@ class CoordSys(Basic):
             # Using sympy.physics.mechanics logic here.
             if orient_type == 'AXIS':
                 if not rot_order == '':
-                    raise ValueError('Axis orientation takes no rotation order')
-                if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 2)):
+                    raise ValueError('Axis orientation \
+                                      takes no rotation order')
+                if not (isinstance(amounts, (list, tuple))
+                        & (len(amounts) == 2)):
                     raise TypeError('Amounts are a list or tuple of length 2')
                 theta = amounts[0]
                 axis = amounts[1]
@@ -270,12 +310,15 @@ class CoordSys(Basic):
                 axis = axis.normalize().as_mat()
                 axis = axis.args[0][0]
                 global_orient = ((eye(3) - axis * axis.T) * cos(theta) +
-                        Matrix([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]],
-                            [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
+                        Matrix([[0, -axis[2], axis[1]],
+                                [axis[2], 0, -axis[0]],
+                                [-axis[1], axis[0], 0]]) * \
+                                 sin(theta) + axis * axis.T)
                 return global_orient
             if orient_type == 'BODY':
                 if not (len(amounts) == 3 & len(rot_order) == 3):
-                    raise TypeError('Body orientation takes 3 values & 3 orders')
+                    raise TypeError('Body orientation takes \
+                                     3 values & 3 orders')
                 a1 = int(rot_order[0])
                 a2 = int(rot_order[1])
                 a3 = int(rot_order[2])
@@ -398,6 +441,20 @@ class CoordSys(Basic):
         newframe.position = newframe_pos.factor()
         return newframe
 
+    def _convert_coord_sys(self, coord_sys, name=None):
+        if not name:
+            name = "coord_sys_" + str(Dummy._count)
+            Dummy._count += 1
+        CoordSysClass = coord_sys
+        ret_coord_sys = CoordSysClass(name=name, position=self.positon,
+                                    orient_type=self.orient_type,
+                                    orient_amount=self.orient_amount,
+                                    rot_order=self.rot_order,
+                                    parent=self.parent,
+                                    basis_vectors=self.basis_vectors,
+                                    coordinates=self.coordinates)
+        return ret_coord_sys
+
     @staticmethod
     def _pos_to_rect(coord, conv_from):
         if conv_from == 'cyl':
@@ -450,8 +507,10 @@ class CoordSys(Basic):
             pos_old = (0, 0, 0)
         if pos_new == S.Zero:
             pos_new = (0, 0, 0)
-        pos_old = CoordSys._pos_to_rect(pos_old, coord_conv[type(old_coord_sys)])
-        pos_new = CoordSys._pos_to_rect(pos_new, coord_conv[type(new_coord_sys)])
+        pos_old = CoordSys._pos_to_rect(pos_old,
+                                        coord_conv[type(old_coord_sys)])
+        pos_new = CoordSys._pos_to_rect(pos_new,
+                                        coord_conv[type(new_coord_sys)])
         # 2. Determine shifting relations
         # pos1 ->x, y, z and pos2 ->X, Y, Z
         # We need to go from pos1 to pos2
@@ -512,7 +571,6 @@ class CoordSysRect(CoordSys):
     """
     The rectangular coordinate system.
     """
-
     def __init__(self, *args, **kwargs):
         if 'coordinates' not in kwargs.keys():
             try:
@@ -541,9 +599,9 @@ class CoordSysRect(CoordSys):
         Ax, Ay, Az = vector.components
         x, y, z = vector.coord_sys.base_scalars
         r, theta, phi = coord_sys.base_scalars
-        subs_dict = { x : r * sin(theta) * cos(phi),
-                      y : r * sin(theta) * sin(phi),
-                      z : r * cos(theta) }
+        subs_dict = { x: r * sin(theta) * cos(phi),
+                      y: r * sin(theta) * sin(phi),
+                      z: r * cos(theta) }
         Ax = Ax.subs(subs_dict)
         Ay = Ay.subs(subs_dict)
         Az = Az.subs(subs_dict)
@@ -565,9 +623,9 @@ class CoordSysRect(CoordSys):
         Ax, Ay, Az = vector.components
         x, y, z = vector.coord_sys.base_scalars
         rho, phi, _z = coord_sys.base_scalars
-        subs_dict = { x : rho * cos(phi),
-                      y : rho * sin(phi),
-                      z : _z }
+        subs_dict = { x: rho * cos(phi),
+                      y: rho * sin(phi),
+                      z: _z }
         Ax = Ax.subs(subs_dict)
         Ay = Ay.subs(subs_dict)
         Az = Az.subs(subs_dict)
@@ -615,19 +673,18 @@ class CoordSysSph(CoordSys):
         Ar, At, Ap = vector.components
         r, theta, phi = vector.coord_sys.base_scalars
         x, y, z = coord_sys.base_scalars
-        subs_dict = {
-                        r : sqrt(x**2 + y**2 + z**2),
-                        theta : atan(sqrt(x**2 + y**2)/z),
-                        phi : atan(y/x)
-                    }
+        subs_dict = { r: sqrt(x**2 + y**2 + z**2),
+                      theta: atan(sqrt(x**2 + y**2)/z),
+                      phi: atan(y/x) }
+
         Ar = Ar.subs(subs_dict)
         At = At.subs(subs_dict)
         Ap = Ap.subs(subs_dict)
         # Rect to Sph conv matrix. So we need to take tranpose.
         mat =  Matrix([
-                        [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
-                        [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
-                        [          -sin(phi),            cos(phi),           0]
+                      [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
+                      [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
+                      [          -sin(phi),            cos(phi),           0]
                      ])
         mat = mat.T
         mat = mat.subs(subs_dict)
@@ -639,17 +696,15 @@ class CoordSysSph(CoordSys):
         return VectAdd(*res)
 
     @staticmethod
-    def _convert_to_cyl(vector, base_scalrs, base_vectors):
+    def _convert_to_cyl(vector, coord_sys):
         __doc__ = CoordSysRect._convert_to_sph.__doc__
         Ar, At, Ap = vector.components
         r, theta, phi = vector.coord_sys.base_scalars
         rho, _phi, z = base_scalars
-        subs_dict = {
-                        r : sqrt(rho**2 + z**2),
-                        theta : atan(rho/z),
-                        phi : _phi
+        subs_dict = { r: sqrt(rho**2 + z**2),
+                      theta: atan(rho/z),
+                      phi: _phi }
 
-                    }
         Ar = Ar.subs(subs_dict)
         At = At.subs(subs_dict)
         Ap = Ap.subs(subs_dict)
@@ -698,21 +753,19 @@ class CoordSysCyl(CoordSys):
 
 
     @staticmethod
-    def _convert_to_rect(vector, base_scalrs, base_vectors):
+    def _convert_to_rect(vector, coord_sys):
         """
         vector : a VectAdd
-        base_scalrs : list or tuple of base scalars
-        base_vectors : list or tuple of base vectos
+        coord_sys : an instance of subclass of CoordSys class
         returns an object with is_Vector == True
         """
         Ar, Ap, Az = vector.components
         rho, phi, z = vector.base_scalars
         x, y, _z = base_scalars
-        subs_dict = {
-                        rho : sqrt(x**2 + y**2),
-                        phi : atan(y/x),
-                        z   : _z
-                    }
+        subs_dict = { rho: sqrt(x**2 + y**2),
+                      phi: atan(y/x),
+                      z: _z }
+
         Ar = Ar.subs(subs_dict)
         Ap = Ap.subs(subs_dict)
         Az = Az.subs(subs_dict)
@@ -734,11 +787,10 @@ class CoordSysCyl(CoordSys):
         Ar, Ap, Az = vector.components
         rho, phi, z = vector.coord_sys.base_scalars
         r, theta, _phi = coord_sys.base_scalars
-        subs_dict = {
-                        rho : r*sin(theta),
-                        phi : _phi,
-                        z   : r*cos(theta)
-                    }
+        subs_dict = { rho: r*sin(theta),
+                      phi: _phi,
+                      z: r*cos(theta) }
+
         Ar = Ar.subs(subs_dict)
         Ap = Ap.subs(subs_dict)
         Az = Az.subs(subs_dict)
@@ -759,6 +811,7 @@ class CoordSysCyl(CoordSys):
 
     __repr__ = __str__
 
+
 class Vector(Expr):
     """
     Class instances will represent base vectors
@@ -774,7 +827,8 @@ class Vector(Expr):
     #    self.coord_sys = coord_sys
     #     self.position = position
     #     if position > coord_sys.dim:
-    #         raise ValueError("Vector outside coordinate system dimensionality")
+    #         raise ValueError("Vector outside coordinate system\
+    #                           dimensionality")
 
     #def __str__(self, printer=None):
     #    return self.name
@@ -788,19 +842,19 @@ class Vector(Expr):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return VectAdd(self, other)
+        return _vect_add(self, other)
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return VectAdd(other, self)
+        return _vect_add(other, self)
 
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return VectAdd(self, -other)
+        return _vect_add(self, -other)
 
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return VectAdd(other, -self)
+        return _vect_add(other, -self)
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
@@ -821,11 +875,6 @@ class Vector(Expr):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
-    def __str__(self):
-        return self.coord_sys.name + "." + self.name
-
-    __repr__ = __str__
-
     def __getitem__(self, i):
         if self.coord_sys.dim > 3:
             raise NotImplementedError
@@ -835,12 +884,33 @@ class Vector(Expr):
         else:
             raise IndexError
 
+
+class BaseVector(Vector, Symbol):
+    def __init__(self, name, coord_sys, position):
+        self.name = name
+        if not isinstance(coord_sys, CoordSys):
+            raise TypeError("coord_sys must be isinstance(CoordSys)")
+        self.coord_sys = coord_sys
+        self.position = position
+        if position > coord_sys.dim:
+            raise ValueError("Vector outside coordinate system dimensionality")
+
+        is_commutative = True
+        assumptions = {}
+        assumptions['commutative'] = is_commutative
+        self._assumptions = StdFactKB(assumptions)
+
+    def __str__(self):
+        return self.coord_sys.name + "." + self.name
+
+    __repr__ = __str__
+
     def dot(self, other, coord_sys=None):
         return dot(self, other, coord_sys)
 
     def separate(self):
         # We just have a Vector - just return it
-        coord_sys_dict = {self.coord_sys: [[S.Zero], [self]]}
+        coord_sys_dict = {self.coord_sys: [[], [self]]}
         return coord_sys_dict
 
     def express(self, coord_sys):
@@ -863,7 +933,7 @@ class Vector(Expr):
         Returns a list of the components of a Vector.
 
         In this case, it is a basis vector, so the list is all zeros except for
-        1 entry of unity; e.g. for the first basis vector in a coordinate
+        1 entry of unity; e.g. for the first basis vector in a rect coordinate
         system, the returned list is [1, 0, 0]
         """
         # Since it is a base vector, so return a list
@@ -873,28 +943,32 @@ class Vector(Expr):
         r[int(self.position) - 1] = S.One
         return r
 
-class BaseVector(Vector, Symbol):
-    def __init__(self, name, coord_sys, position):
-        self.name = name
-        if not isinstance(coord_sys, CoordSys):
-            raise TypeError("coord_sys must be isinstance(CoordSys)")
-        self.coord_sys = coord_sys
-        self.position = position
-        if position > coord_sys.dim:
-            raise ValueError("Vector outside coordinate system dimensionality")
+    def _convert_to_rect(self, coord_sys, ind=1):
+        """
+        coord_sys: An instance of subclass of CoordSys class
+        Takes a BaseScalar and converts it to combination of BaseScalars
+        in coord_sys.
+        """
+        # First check that both coordinate systems have same position and
+        # orientation
+        flag = False
+        if self.coord_sys.position != coord_sys.position:
+            flag = True
+        if self.coord_sys._dcm_global != coord_sys._dcm_global:
+            flag = True
 
-        is_commutative = True
-        assumptions = {}
-        assumptions['commutative'] = is_commutative
-        self._assumptions = StdFactKB(assumptions)
+        if flag:
+            raise ValueError("coord_sys doesn't have same position and \
+                              orientaion as coordinate system of self")
 
-    def __str__(self, printer=None):
-        return self.name
+        rv = CoordSys._pos_to_rect(self.coord_sys.base_scalars,
+                                   coord_conv[coord_sys.__class__])
+        return rv[self.position - ind]
 
 
 class VectAdd(Add, Vector):
     """
-    Container to hold added Vectors/VectMuls
+    Container to hold added BaseVectors/VectMuls
     """
 
     def __new__(cls, *args, **options):
@@ -912,44 +986,47 @@ class VectAdd(Add, Vector):
         obj._assumptions = StdFactKB(assumptions)
         return obj
 
-
     __init__ = Add.__init__
-
 
     def separate(self):
         # Flatten the VectMul so that there are no nested VectAdds
+        import ipdb;ipdb.set_trace()
         vect = self.expand()
 
-        # vect.args are either Vector or VectMul
+        # vect.args are either BaseVector or VectMul
         coord_sys_dict = {}
         coord_list = _all_coordinate_systems(vect)
         for c in coord_list:
             coord_sys_dict[c] = [[],[]]
 
         for arg in vect.args:
-            # arg is either Vector or VectMul
-            if isinstance(arg, Vector):
-                coord_sys_dict[arg.coord_sys] = [[S.Zero], [arg]]
+            # arg is either BaseVector or VectMul
+            if isinstance(arg, BaseVector):
+                coord_sys_dict[arg.coord_sys] = [[], [arg]]
             elif isinstance(arg, VectMul):
                 arg_coord_dict = arg.separate()
                 # Now, merge these dicts
                 for c, v in arg_coord_dict.iteritems():
-                    coord_sys_dict[c] = v
+                    coord_sys_dict[c][0] += v[0]
+                    coord_sys_dict[c][1] += v[1]
             else:
                 # Shouldn't happen
                 raise ValueError
+
+        for c, v in coord_sys_dict.iteritems():
+            coord_sys_dict[c][0] = list(set(v[0]))
+            coord_sys_dict[c][1] = list(set(v[1]))
 
         return coord_sys_dict
 
     def expand(self):
         res = ZeroVector
-        import pdb;pdb.set_trace()
         for arg in self.args:
             res = res + arg.expand()
         return res
 
     def factor(self):
-        # self can contain Vector or VectMul
+        # self can contain BaseVector or VectMul
         factor_dict = {}
         for arg in self.args:
             scalar = arg.scalar
@@ -957,7 +1034,7 @@ class VectAdd(Add, Vector):
 
             if not factor_dict.has_key(vector):
                 factor_dict[arg.vector] = []
-            if isinstance(arg, Vector) or isinstance(arg, VectMul):
+            if isinstance(arg, BaseVector) or isinstance(arg, VectMul):
                 factor_dict[vector].append(scalar)
             else:
                 # Should never get here
@@ -982,7 +1059,7 @@ class VectAdd(Add, Vector):
         vect = self.expand()
         # Now we factor the base vectors
         vect = vect.factor()
-        # Now, we have either a Vector, VectMul or VectAdd
+        # Now, we have either a BaseVector, VectMul or VectAdd
         if not isinstance(vect, VectAdd):
             return vect.scalar
         else:
@@ -1003,7 +1080,7 @@ class VectAdd(Add, Vector):
 
         r = [S.Zero]*self.max_dim
         for arg in vect.args:
-            if isinstance(arg, Vector):
+            if isinstance(arg, BaseVector):
                # Component corresponding to it will be unity
                r[int(arg.position) + 1] = S.One
             elif isinstance(arg, VectMul):
@@ -1032,11 +1109,8 @@ class VectMul(Mul, Vector):
     def __new__(cls, *args, **options):
         counter = 0
         for arg in args:
-            try:
-                if arg.is_Vector:
-                    counter += 1
-            except:
-                pass
+            if arg.is_Vector:
+                counter += 1
         if counter > 1:
             raise TypeError("Cannot multiply two or more vectors.")
         obj = super(VectMul, cls).__new__(cls, *args, **options)
@@ -1052,7 +1126,7 @@ class VectMul(Mul, Vector):
     def separate(self):
         # First we flatten things out - so that there are no nested VectAdd
         vect = self.expand()
-        if isinstance(vect, VectAdd) or isinstance(vect, Vector):
+        if isinstance(vect, VectAdd) or isinstance(vect, BaseVector):
             #This causes max recursion depth
             return vect.separate()
 
@@ -1074,9 +1148,9 @@ class VectMul(Mul, Vector):
                     coord_sys_dict[scalar.coord_sys][0].append(scalar)
 
         # Now process the vector part
-        # The vector part is necessarily Vector becauase we have
+        # The vector part is necessarily BaseVector becauase we have
         # used expand before
-        assert isinstance(vector, Vector)
+        assert isinstance(vector, BaseVector)
         coord_sys_dict[vector.coord_sys][1].append(vector)
 
         return coord_sys_dict
@@ -1087,11 +1161,11 @@ class VectMul(Mul, Vector):
         If the object is only defined in one coordinate system
         then return that cooordinate system.
         Cases:
-        1. scalar*Vector
+        1. scalar*BaseVector
         2. scalar*VectAdd
         """
         vect = self.vector
-        if isinstance(vect, Vector):
+        if isinstance(vect, BaseVector):
             return vect.coord_sys
 
         elif isinstance(vect, VectAdd):
@@ -1103,7 +1177,8 @@ class VectMul(Mul, Vector):
                 raise ValueError("Cannot recognize " + str(vect))
 
     def expand(self):
-        # VectMul can be either Vector*scalar or VectAdd*scalar or Vector
+        # VectMul can be either BaseVector*scalar
+        # or VectAdd*scalar or BaseVector
         # We process all cases
         scalar = S.One
         for arg in self.args:
@@ -1117,7 +1192,7 @@ class VectMul(Mul, Vector):
             scalar_args = scalar.args
         vect = self.vector
 
-        if isinstance(vect, Vector):
+        if isinstance(vect, BaseVector):
             ret = ZeroVector
             for arg in scalar_args:
                 ret = ret + VectMul(arg, vect)
@@ -1126,16 +1201,16 @@ class VectMul(Mul, Vector):
         if isinstance(vect, VectAdd):
             ret = ZeroVector
             exp_vect = vect.expand()
-            # Now, exp_vect.args should be either Vector or VectMul
+            # Now, exp_vect.args should be either BaseVector or VectMul
             for arg in exp_vect.args:
                 ret = ret +  (arg * scalar).expand()
             return ret
 
     def factor(self):
-        # This is of type scalar * Vector and scalar * VectAdd
+        # This is of type scalar * BaseVector and scalar * VectAdd
         scalar = self.scalar
         vector = self.vector
-        if isinstance(vector, Vector):
+        if isinstance(vector, BaseVector):
             # Just factor out the scalar and return
             return VectMul(scalar.factor(), vector)
         elif isinstance(vector, VectAdd):
@@ -1148,13 +1223,13 @@ class VectMul(Mul, Vector):
     def vector(self):
         """
         Return the vector contained in VectMul.
-        Returns a Vector or a VectAdd
+        Returns a BaseVector or a VectAdd
         """
         for arg in self.args:
-            if isinstance(arg, Vector) or isinstance(arg, VectAdd):
+            if isinstance(arg, BaseVector) or isinstance(arg, VectAdd):
                 return arg
         # If we haven't found a vector, raise error
-        raise TypeError(str(self) + " doesn't have a Vector/VectAdd \
+        raise TypeError(str(self) + " doesn't have a BaseVector/VectAdd \
                         its args")
 
     @property
@@ -1166,7 +1241,7 @@ class VectMul(Mul, Vector):
         """
         Returns the scalar contained in a VectMul object
         """
-        # It can be either scalar*Vector or scalar*VectAdd
+        # It can be either scalar*BaseVector or scalar*VectAdd
         # We treat both cases
         vector = self.vector
         scalar = S.One
@@ -1180,15 +1255,16 @@ class VectMul(Mul, Vector):
         if isinstance(v, VectAdd):
             # vector is a VectAdd.
             v = v.factor()
-            # We get either scalar1 * Vector or scalar1 * VectAdd as result
+            # We get either scalar1 * BaseVector or scalar1 * VectAdd as result
             # In second case, we just raise an error
             # In the first case, we get the scalar part from it and multiply
             # that to already find scalat from above
-            # The vector part of it is a Vector or a VectAdd
+            # The vector part of it is a BaseVector or a VectAdd
 
             if isinstance(v.vector, VectAdd):
                 raise TypeError("More than one component present in vector")
-            # Now, v is just a VectMul and its vector component must be Vector
+            # Now, v is just a VectMul and its vector component
+            # must be BaseVector
             else:
                 scalar = scalar * v.scalar
 
@@ -1265,6 +1341,13 @@ class ZeroVectorClass(Zero):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+def _vect_add(one, other):
+    # We are adding this method to check for cases involving S.Zero
+    if ((one.is_Vector or one == S.Zero) and
+        (other.is_Vector or other == S.Zero)):
+        return VectAdd(one, other)
+    else:
+        raise TypeError("Cannot add a scalar with a vector")
 
 def _vect_mul(one, other):
     #if one.is_Vector and other.is_Vector:
@@ -1291,39 +1374,120 @@ def _vect_div(one, other):
 
 def express(vect, coord_sys):
     """
-    Express a vector in a given coord_sys to another system.
+    coord_sys: Instance of subclasses of CoordSys
+    Express a vector in a given coordinate system.
     """
-    all_vectors_dict = vect.separate()
-    coord_list = [c for c in all_vectors_dict.values()]
+    coord_list = _all_coordinate_systems(vect)
+    subs_dict = {}
+
+    # We proceed to build a dictionary that, upon substituting in the
+    # original vector, will give us a vector in desired coord_sys
 
     if len(coord_list) == 1 and vect.coord_sys == coord_sys:
         return vect
 
-    ret_vector = ZeroVector
+    coord_sys_t = coord_sys._change_coord_sys(CoordSysRect, 'coord_sys_t')
+    vect = vect.expand()
+    # First express everything in rect coordinates
+    for arg in vect.args:
+        # arg is necessarily a VectMul or a BaseVector
+        assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
+        scalar = arg.scalar
+        vector = arg.vector
 
-    for c, v in all_vectors_dict.items():
-        if c == coord_sys:
-            ret_vector  = ret_vector + v
-            continue
+        # First process the scalar
+        if isinstance(scalar, BaseScalar):
+            # Because BaseScalar.args returns coord_sys as well
+            c_rect = scalar.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+            # TODO
+            subs_dict[scalar] = scalar.convert_to_rect(c_rect)
+        else:
+            for arg_scalar in scalar.args:
+                if (isinstance(arg_scalar) and not
+                    subs_dict.has_key(arg_scalar)):
+                    c_rect = arg_scalar.coord_sys._change_coord_sys(
+                                                        CoordSysRect, 'c_rect')
+                    subs_dict[v] = BaseScalar.convert_to_rect(vect, c_rect)
+        # Now process the vector
+        # vector is necessarily BaseVector
+        assert isinstance(vector, BaseVector)
+        c_rect = vector.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+        subs_dict[vector] = vector.convert_to_rect(c_rect)
+        # Now performig the substitution, we have changed all involved
+        # variables into rectangular coordinates
+        vect = vect.subs(subs_dict)
+        subs_dict = {}
 
-        exec("func = self._convert_to_" +  coord_conv[type(coord_sys)])
+    vect = vect.expand()
+    # First phase complete
+    # Now, we find subs for base vectors and substitute it in
+    for arg in vect.args:
+        assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
+        vector = arg.vector
+        subs_dict[vector] = CoordSys._convert_base_vect_rect(vector,
+                                                             coord_sys_t)
+    # Now subs in the vectors
+    vect = vect.subs(subs_dict)
 
-        # Tranforms we have to apply here:
-        # 1. Coordinate system - rect, cyl or sph
-        # 2. Orientation
-        # 3. Positiong
-        vect_i = CoordSys._pos_at(v, coord_sys)
-        # vect_i is in rectangular coordinates -expressed with changed position
-        vect_i = CoordSys._orient_along(v, coord_sys)
-        # Construct a vector, pass it to func
-        vect_i = CoordSys._change_sys(v, coord_sys, func)
-        ret_vector = ret_vector + vect_i
-    return ret_vector.factor()
+    subs_dict = {}
+    vect = vect.expand()
+    # Now we need to find the subs_dict for each BaseScalar
+    for arg in vect.args:
+        assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
+        scalar = arg.scalar
 
+        # Process the scalar
+        if isinstance(scalar, BaseVector):
+            # Because BaseScalar.args returns coord_sys as well
+            subs_dict[v] = CoordSys._convert_base_sclr_rect(scalar,
+                                                            coord_sys_t)
+        else:
+            for arg_scalar in scalar.args:
+                if (isinstance(arg_scalar, BaseScalar) and not
+                    subs_dict.has_key(arg_scalar)):
+                    subs_dict[arg_scalar] = \
+                        CoordSys._convert_base_sclr_rect(vect, coord_sys_t)
+    # Now performig the substitution, we have changed all involved
+    # variables into rectangular coordinates
+    vect = vect.subs(subs_dict)
+
+    # Now we need to convert back from coord_sys_t to coord_sys
+    subs_dict = {}
+    vect = vect.expand()
+
+    for arg in vect.args:
+        # arg is necessarily a VectMul or a BaseVector
+        assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
+        scalar = arg.scalar
+        vector = arg.vector
+
+        # First process the scalar
+        if isinstance(scalar, BaseScalar):
+            # Because BaseScalar.args returns coord_sys as well
+            # TODO
+            subs_dict[scalar] = scalar.convert_to_rect(coord_sys)
+        else:
+            for arg_scalar in scalar.args:
+                if (isinstance(arg_scalar) and not
+                    subs_dict.has_key(arg_scalar)):
+                    subs_dict[v] = BaseScalar.convert_to_rect(vect, coord_sys)
+        # Now process the vector
+        # vector is necessarily BaseVector
+        assert isinstance(vector, BaseVector)
+        subs_dict[vector] = vector.convert_to_rect(coord_sys)
+        # Now performig the substitution, we have changed all involved
+        # variables into rectangular coordinates
+        vect = vect.subs(subs_dict)
+        subs_dict = {}
+
+        return vect.factor()
+
+"""
 def express_in_global(vect, coord_sys=None):
-    """
-    Express a vector in global coodinates.
-    """
+"""
+    #coord_sys: Instance of subclasses of CoordSys.
+    #Express a vector in global coodinates.
+"""
     if not coord_sys:
         coord_sys = CoordSysRect('rect_coord_sys')
     all_vectors_dict = vect.separate()
@@ -1355,12 +1519,14 @@ def express_in_global(vect, coord_sys=None):
             # 2. Orientation
             # 3. Position
             vect_i = CoordSys._pos_at(v, coord_sys)
-            # vect_i is in rectangular coordinates -expressed with changed position
+            # vect_i is in rectangular coordinates -expressed with
+            # changed position
             vect_i = CoordSys._orient_along(v, coord_sys)
             # Construct a vector, pass it to func
             vect_i = CoordSys._change_sys(v, coord_sys, func)
             ret_vector = ret_vector + vect_i
         return ret_vector.factor()
+"""
 
 ZeroVector = ZeroVectorClass()
 
