@@ -50,7 +50,7 @@ def opt_cse(exprs):
         
         if _coeff_isneg(expr):
             neg_expr = -expr
-            opt_subs[expr] = Mul, (S.NegativeOne, neg_expr)
+            opt_subs[expr] = Mul(S.NegativeOne, neg_expr, evaluate=False)
             seen_subexp.add(neg_expr)
             expr = neg_expr
             
@@ -62,7 +62,7 @@ def opt_cse(exprs):
             
         elif expr.is_Pow:
             if _coeff_isneg(expr.exp):
-                opt_subs[expr] = Pow, (Pow(expr.base, -expr.exp), S.NegativeOne)
+                opt_subs[expr] = Pow(Pow(expr.base, -expr.exp), S.NegativeOne, evaluate=False)
         
         
     _find_opts(exprs)
@@ -83,17 +83,17 @@ def opt_cse(exprs):
                     diff_i = op_args[i].difference(com_args) 
                     op_args[i] = diff_i | set([com_op])
                     if diff_i:
-                        opt_subs[ops[i]] = Op, (Op(*diff_i), com_op)
+                        opt_subs[ops[i]] = Op(Op(*diff_i), com_op, evaluate=False)
                     
                     diff_j = op_args[j].difference(com_args)
                     op_args[j] = diff_j | set([com_op])
-                    opt_subs[ops[j]] = Op, (Op(*diff_j), com_op)
+                    opt_subs[ops[j]] = Op(Op(*diff_j), com_op, evaluate=False)
                     
                     for k in xrange(j + 1, len(op_args)):
                         if not com_args.difference(op_args[k]):
                             diff_k = op_args[k].difference(com_args)
                             op_args[k] = diff_k | set([com_op])
-                            opt_subs[ops[k]] = Op, (Op(*diff_k), com_op)
+                            opt_subs[ops[k]] = Op(Op(*diff_k), com_op, evaluate=False)
                         
 
     # split muls into commutative                         
@@ -103,7 +103,7 @@ def opt_cse(exprs):
         if c:
             c_mul = Mul(*c)
             if nc:
-                opt_subs[m] = Mul, (c_mul, Mul(*nc))
+                opt_subs[m] = Mul(c_mul, Mul(*nc), evaluate=False)
             if len(c) > 1:
                 comutative_muls.add(c_mul)
         
@@ -152,9 +152,9 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
             seen_subexp.add(expr)
             
             if expr in opt_subs:
-                args = opt_subs[expr][1]
-            else:
-                args = expr.args
+                expr = opt_subs[expr]
+                
+            args = expr.args
             
         list(map(_find_repeated, args))
    
@@ -182,22 +182,23 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
         if expr in subs:
             return subs[expr]
         
+        orig_expr = expr
         if expr in opt_subs:
-            Op, args = opt_subs[expr]
-        else:
-            Op, args = type(expr), expr.args
-            if _option_order_args:
-                if Op is Mul:
-                    c, nc = expr.args_cnc()
-                    args = list(ordered(c)) + nc
-                elif Op is Add:
-                    args = list(ordered(args))
+            expr = opt_subs[expr]
+            
+        Op, args = type(expr), expr.args
+        if _option_order_args:
+            if Op is Mul:
+                c, nc = expr.args_cnc()
+                args = list(ordered(c)) + nc
+            elif Op is Add:
+                args = list(ordered(args))
         
         new_expr = Op(*map(_recreate, args))
 
-        if expr in to_eliminate:
+        if orig_expr in to_eliminate:
             sym = next(symbols)
-            subs[expr] = sym
+            subs[orig_expr] = sym
             replacements.append((sym, new_expr))
             return sym
         
