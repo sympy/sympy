@@ -203,6 +203,8 @@ class Pow(Expr):
         if not c1 and e.is_nonnegative:  # rat**nonneg
             return False
         if c1 and c2:  # int**int
+            if b is S.NegativeOne:
+                return True
             if e.is_nonnegative or e.is_positive:
                 return True
             if self.exp.is_negative:
@@ -260,6 +262,8 @@ class Pow(Expr):
             if self.exp.is_positive:
                 return self.base.is_odd
             elif self.exp.is_nonnegative and self.base.is_odd:
+                return True
+            elif self.base is S.NegativeOne:
                 return True
 
     def _eval_is_bounded(self):

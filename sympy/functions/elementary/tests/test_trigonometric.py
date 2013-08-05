@@ -44,6 +44,9 @@ def test_sin():
     assert sin(5*pi/2) == 1
     assert sin(7*pi/2) == -1
 
+    n = symbols('n', integer=True)
+    assert sin(pi*n/2) == (-1)**(n/2 - S.Half)
+
     assert sin(pi/3) == S.Half*sqrt(3)
     assert sin(-2*pi/3) == -S.Half*sqrt(3)
 
@@ -207,6 +210,9 @@ def test_cos():
     assert cos(-pi/2) == 0
     assert cos((-3*10**73 + 1)*pi/2) == 0
     assert cos((7*10**103 + 1)*pi/2) == 0
+
+    n = symbols('n', integer=True)
+    assert cos(pi*n/2) == 0
 
     assert cos(pi) == -1
     assert cos(-pi) == -1
