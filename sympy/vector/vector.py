@@ -86,7 +86,7 @@ def dot(vect_a, vect_b, coord_sys=None):
 
 def _separate_to_vectors(vect):
     coord_dict = vect.separate()
-    r = [vect for vect in coord_dict.values()]
+    r = [v for v in coord_dict.values()]
     return r
 
 def _all_coordinate_systems(vector):
@@ -1388,6 +1388,7 @@ def express(vect, coord_sys):
 
     coord_sys_t = coord_sys._change_coord_sys(CoordSysRect, 'coord_sys_t')
     vect = vect.expand()
+
     # First express everything in rect coordinates
     for arg in vect.args:
         # arg is necessarily a VectMul or a BaseVector
@@ -1399,26 +1400,30 @@ def express(vect, coord_sys):
         if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
             c_rect = scalar.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
-            # TODO
             subs_dict[scalar] = scalar.convert_to_rect(c_rect)
+
         else:
             for arg_scalar in scalar.args:
-                if (isinstance(arg_scalar) and not
+                if (isinstance(arg_scalar, BaseScalar) and not
                     subs_dict.has_key(arg_scalar)):
                     c_rect = arg_scalar.coord_sys._change_coord_sys(
                                                         CoordSysRect, 'c_rect')
-                    subs_dict[v] = BaseScalar.convert_to_rect(vect, c_rect)
+                    subs_dict[arg_scalar] = BaseScalar.convert_to_rect(vect,
+                                                                        c_rect)
         # Now process the vector
         # vector is necessarily BaseVector
         assert isinstance(vector, BaseVector)
+
         c_rect = vector.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
         subs_dict[vector] = vector.convert_to_rect(c_rect)
-        # Now performig the substitution, we have changed all involved
-        # variables into rectangular coordinates
-        vect = vect.subs(subs_dict)
-        subs_dict = {}
+
+    # Now performig the substitution, we have changed all involved
+    # variables into rectangular coordinates
+    vect = vect.subs(subs_dict)
+    subs_dict = {}
 
     vect = vect.expand()
+
     # First phase complete
     # Now, we find subs for base vectors and substitute it in
     for arg in vect.args:
@@ -1431,6 +1436,7 @@ def express(vect, coord_sys):
 
     subs_dict = {}
     vect = vect.expand()
+
     # Now we need to find the subs_dict for each BaseScalar
     for arg in vect.args:
         assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
@@ -1447,6 +1453,7 @@ def express(vect, coord_sys):
                     subs_dict.has_key(arg_scalar)):
                     subs_dict[arg_scalar] = \
                         CoordSys._convert_base_sclr_rect(vect, coord_sys_t)
+
     # Now performig the substitution, we have changed all involved
     # variables into rectangular coordinates
     vect = vect.subs(subs_dict)
@@ -1464,17 +1471,19 @@ def express(vect, coord_sys):
         # First process the scalar
         if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
-            # TODO
             subs_dict[scalar] = scalar.convert_to_rect(coord_sys)
+
         else:
             for arg_scalar in scalar.args:
                 if (isinstance(arg_scalar) and not
                     subs_dict.has_key(arg_scalar)):
-                    subs_dict[v] = BaseScalar.convert_to_rect(vect, coord_sys)
+                    subs_dict[v] = arg_scalar.convert_to_rect(coord_sys)
+
         # Now process the vector
         # vector is necessarily BaseVector
         assert isinstance(vector, BaseVector)
         subs_dict[vector] = vector.convert_to_rect(coord_sys)
+
         # Now performig the substitution, we have changed all involved
         # variables into rectangular coordinates
         vect = vect.subs(subs_dict)

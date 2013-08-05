@@ -2,7 +2,7 @@ from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sqrt, Sum, summation, Symbol, symbols, sympify, zeta
+    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
@@ -408,18 +408,16 @@ def test_simple_products():
     assert isinstance(Product(n**n, (n, 1, b)), Product)
 
 
-@XFAIL
 def test_rational_products():
-    assert Product(1 + 1/n, (n, a, b)) == (1 + b)/a
-    assert Product(n + 1, (n, a, b)) == factorial(1 + b)/factorial(a)
-    assert Product((n + 1)/(n - 1), (n, a, b)) == b*(1 + b)/(a*(a - 1))
-    assert Product(n/(n + 1)/(n + 2), (n, a, b)) \
-        == a*factorial(a + 1)/(b + 1)/factorial(b + 2)
-    assert Product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b)) \
-        == b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
+    assert simplify(product(1 + 1/n, (n, a, b))) == (1 + b)/a
+    assert simplify(product(n + 1, (n, a, b))) == gamma(2 + b)/gamma(1 + a)
+    assert simplify(product((n + 1)/(n - 1), (n, a, b))) == b*(1 + b)/(a*(a - 1))
+    assert simplify(product(n/(n + 1)/(n + 2), (n, a, b))) == \
+        a*gamma(a + 2)/(b + 1)/gamma(b + 3)
+    assert simplify(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b))) == \
+        b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
 
 
-@XFAIL
 def test_wallis_product():
     # Wallis product, given in two different forms to ensure that Product
     # can factor simple rational expressions
@@ -427,8 +425,8 @@ def test_wallis_product():
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
     half = Rational(1, 2)
     R = pi/2 * factorial(b)**2 / factorial(b - half) / factorial(b + half)
-    assert A == R
-    assert B == R
+    assert simplify(A.doit()) == R
+    assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
     # assert Product(1+x/n**2, (n, 1, b)) == ...
 

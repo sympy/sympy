@@ -37,9 +37,9 @@ def theq(a, b):
     bstr = theano.printing.debugprint(b, file='str')
 
     if not astr == bstr:
-        print
-        print astr
-        print bstr
+        print()
+        print(astr)
+        print(bstr)
 
     return astr == bstr
 

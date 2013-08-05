@@ -1,5 +1,7 @@
 """ Elliptic integrals. """
 
+from __future__ import print_function, division
+
 from sympy.core import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.hyperbolic import atanh

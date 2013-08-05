@@ -1,6 +1,9 @@
+from __future__ import print_function, division
+
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation
 from sympy.utilities.iterables import uniq
+from sympy.core.compatibility import xrange
 
 _af_new = Permutation._af_new
 
@@ -43,7 +46,7 @@ def DirectProduct(*groups):
         total_gens += current_num_gens
     array_gens = []
     for i in range(total_gens):
-        array_gens.append(range(total_degree))
+        array_gens.append(list(range(total_degree)))
     current_gen = 0
     current_deg = 0
     for i in xrange(len(gens_count)):

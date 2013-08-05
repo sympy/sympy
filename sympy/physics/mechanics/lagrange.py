@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 __all__ = ['LagrangesMethod']
 
 from sympy import diff, zeros, Matrix, eye, sympify
@@ -78,12 +80,12 @@ class LagrangesMethod(object):
      We have the equations of motion at this point.
 
         >>> l = LagrangesMethod(L, [q], forcelist = fl, frame = N)
-        >>> print l.form_lagranges_equations()
+        >>> print(l.form_lagranges_equations())
         Matrix([[b*Derivative(q(t), t) + 1.0*k*q(t) + m*Derivative(q(t), t, t)]])
 
     We can also solve for the states using the 'rhs' method.
 
-        >>> print l.rhs()
+        >>> print(l.rhs())
         Matrix([[Derivative(q(t), t)], [(-b*Derivative(q(t), t) - 1.0*k*q(t))/m]])
 
     Please refer to the docstrings on each method for more details.

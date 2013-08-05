@@ -46,7 +46,7 @@ from module sympy.assumptions. ::
      >>> y = Symbol('y')
      >>> facts = Q.positive(x), Q.positive(y)
      >>> with assuming(*facts):
-     ...     print ask(Q.positive(2*x + y))
+     ...     print(ask(Q.positive(2*x + y)))
      True
 
 Supported predicates

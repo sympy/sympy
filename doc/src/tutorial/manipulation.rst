@@ -432,7 +432,7 @@ The base case will be empty ``args``.  Let's write a simple function that goes
 through an expression and prints all the ``args`` at each level.
 
     >>> def pre(expr):
-    ...     print expr
+    ...     print(expr)
     ...     for arg in expr.args:
     ...         pre(arg)
 
@@ -459,7 +459,7 @@ Such traversals are so common in SymPy that the generator functions
 traversals easy.  We could have also written our algorithm as
 
     >>> for arg in preorder_traversal(expr):
-    ...     print arg
+    ...     print(arg)
     x*y + 1
     1
     x*y

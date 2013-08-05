@@ -4,6 +4,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg, conjugate)
 
 from sympy.utilities.pytest import XFAIL, slow, raises
+from sympy.core.compatibility import xrange
 
 x, y, z = symbols('x y z')
 r = Symbol('r', real=True)
@@ -42,6 +43,9 @@ def test_sin():
     assert sin(-pi/2) == -1
     assert sin(5*pi/2) == 1
     assert sin(7*pi/2) == -1
+
+    n = symbols('n', integer=True)
+    assert sin(pi*n/2) == (-1)**(n/2 - S.Half)
 
     assert sin(pi/3) == S.Half*sqrt(3)
     assert sin(-2*pi/3) == -S.Half*sqrt(3)
@@ -85,7 +89,7 @@ def test_sin():
     assert isinstance(sin( re(x) - im(y)), sin) is True
     assert isinstance(sin(-re(x) + im(y)), sin) is False
 
-    for d in range(1, 22) + [60, 85]:
+    for d in list(range(1, 22)) + [60, 85]:
         for n in xrange(0, d*2 + 1):
             x = n*pi/d
             e = abs( float(sin(x)) - sin(float(x)) )
@@ -207,6 +211,9 @@ def test_cos():
     assert cos((-3*10**73 + 1)*pi/2) == 0
     assert cos((7*10**103 + 1)*pi/2) == 0
 
+    n = symbols('n', integer=True)
+    assert cos(pi*n/2) == 0
+
     assert cos(pi) == -1
     assert cos(-pi) == -1
     assert cos(2*pi) == 1
@@ -251,7 +258,7 @@ def test_cos():
     assert cos(k*pi) == (-1)**k
     assert cos(2*k*pi) == 1
 
-    for d in range(1, 22) + [60, 85]:
+    for d in list(range(1, 22)) + [60, 85]:
         for n in xrange(0, 2*d + 1):
             x = n*pi/d
             e = abs( float(cos(x)) - cos(float(x)) )
@@ -463,6 +470,11 @@ def test_cot():
 def test_cot_series():
     assert cot(x).series(x, 0, 9) == \
         1/x - x/3 - x**3/45 - 2*x**5/945 - x**7/4725 + O(x**9)
+    # issue 3111:
+    assert cot(x**20 + x**21 + x**22).series(x, 0, 4) == \
+        x**(-20) - 1/x**19 + x**(-17) - 1/x**16 + x**(-14) - 1/x**13 + \
+        x**(-11) - 1/x**10 + x**(-8) - 1/x**7 + x**(-5) - 1/x**4 + \
+        x**(-2) - 1/x + x - x**2 + O(x**4)
 
 
 def test_cot_rewrite():

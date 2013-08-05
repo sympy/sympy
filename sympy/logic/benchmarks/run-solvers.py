@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.logic.utilities import load_file
 from sympy.logic import satisfiable
 import time
@@ -21,13 +23,13 @@ for test in INPUT:
         assert satisfiable(theory, algorithm=alg)
         end = time.time()
         results[test][alg] = end - start
-        print "Test %d in time %.2f seconds for algorithm %s." % (
+        print("Test %d in time %.2f seconds for algorithm %s." % ()
             test, end - start, alg)
 
-print "problem," + ','.join(ALGORITHMS)
+print("problem," + ','.join(ALGORITHMS))
 
 for test in INPUT:
     line = "%d" % test
     for alg in ALGORITHMS:
         line += ",%f" % results[test][alg]
-    print line
+    print(line)

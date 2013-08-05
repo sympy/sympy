@@ -1,5 +1,7 @@
 """Real and complex root isolation and refinement algorithms. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
@@ -27,6 +29,8 @@ from sympy.polys.factortools import (
 from sympy.polys.polyerrors import (
     RefinementFailed,
     DomainError)
+
+from sympy.core.compatibility import xrange
 
 def dup_sturm(f, K):
     """

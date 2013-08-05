@@ -10,6 +10,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
+from sympy.core.compatibility import xrange
 
 from sympy.utilities.pytest import raises, XFAIL
 
