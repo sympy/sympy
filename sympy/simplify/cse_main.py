@@ -416,7 +416,7 @@ def prev_cse(exprs, symbols=None, optimizations=None, postprocess=None):
 
 
 
-from fast_cse import fast_cse
+from sympy.simplify.fast_cse import fast_cse
 
 
 

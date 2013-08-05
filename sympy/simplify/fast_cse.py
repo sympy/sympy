@@ -11,7 +11,7 @@ TODO:
 '''
 
 from sympy.utilities.iterables import numbered_symbols, ordered
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, xrange
 from sympy.core import Basic, Mul, Add, Pow
 from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
@@ -39,14 +39,14 @@ def opt_cse(exprs):
            return
         
         if iterable(expr):
-            map(_find_opts, expr)
+            list(map(_find_opts, expr))
             return
             
         if expr in seen_subexp:
             return expr
         seen_subexp.add(expr)
             
-        map(_find_opts, expr.args)
+        list(map(_find_opts, expr.args))
         
         if _coeff_isneg(expr):
             neg_expr = -expr
@@ -156,7 +156,7 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
             else:
                 args = expr.args
             
-        map(_find_repeated, args)
+        list(map(_find_repeated, args))
    
     _find_repeated(exprs)
     
