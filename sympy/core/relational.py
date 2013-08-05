@@ -225,6 +225,8 @@ class Relational(Boolean, Expr, EvalfMixin):
     def __nonzero__(self):
         raise TypeError("symbolic boolean expression has no truth value.")
 
+    __bool__ = __nonzero__
+
 
 class Equality(Relational):
 

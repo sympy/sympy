@@ -86,7 +86,7 @@ class Partition(C.FiniteSet):
         else:
             members = tuple(sorted(self.members,
                              key=lambda w: default_sort_key(w, order)))
-        return map(default_sort_key, (self.size, members, self.rank))
+        return list(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
     def partition(self):
