@@ -227,6 +227,7 @@ of those tests will surely fail.
 from __future__ import print_function, division
 
 from collections import defaultdict
+from itertools import islice
 
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
@@ -300,8 +301,13 @@ allhints = (
 lie_heuristics = (
     "abaco1_simple",
     "abaco1_product",
+    "abaco2_similar",
+    "abaco2_unique_unknown",
+    "abaco2_unique_general",
+    "linear",
     "bivariate",
-    "chi",
+    "function_sum",
+    "chi"
     )
 
 
@@ -3742,9 +3748,20 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
         else:
             df = func.diff(x)
             a = Wild('a', exclude = [df])
-            b = Wild('b')
+            b = Wild('b', exclude = [df])
             match = collect(expand(eq), df).match(a*df + b)
-            h = -match[b]/match[a]
+
+            if match:
+                h = -simplify(match[b]/match[a])
+            else:
+                try:
+                    sol = solve(eq, df)
+                except NotImplementedError:
+                    raise NotImplementedError("Infinitesimals for the "
+                        "first order ODE could not be found")
+                else:
+                    h = sol[0]  # Find infinitesimals for one solution
+
             y = Dummy('y')
             h = h.subs(func, y)
             xi = Function('xi')(x, y)
@@ -3759,7 +3776,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     eta: S(sol[deta]).subs(func, y)}
                 sol = simplify(pde.subs(tsol).doit())
                 if sol:
-                    soltup.append((False, sol))
+                    soltup.append((False, sol.subs(y, func)))
                 else:
                     soltup.append((True, 0))
             return soltup
@@ -3843,20 +3860,33 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
             order = ode_order(eq, func)
         if order != 1:
             raise NotImplementedError("Infinitesimals for only "
-            "first order ODE's have been implemented")
+                "first order ODE's have been implemented")
         else:
             df = func.diff(x)
             # Matching differential equation of the form a*df + b
             a = Wild('a', exclude = [df])
-            b = Wild('b')
+            b = Wild('b', exclude = [df])
             match = kwargs.get('match',
                 collect(expand(eq), df).match(a*df + b))
-            h = -simplify(match[b]/match[a])
+
+            if match:
+                h = -simplify(match[b]/match[a])
+            else:
+                try:
+                    sol = solve(eq, df)
+                except NotImplementedError:
+                    raise NotImplementedError("Infinitesimals for the "
+                        "first order ODE could not be found")
+                else:
+                    h = sol[0]  # Find infinitesimals for one solution
+
             y = Dummy("y")
+            u = Dummy("u")
             h = h.subs(func, y)
             hx = h.diff(x)
             hy = h.diff(y)
-            match = {'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y}
+            hinv = ((1/h).subs([(x, u), (y, x)])).subs(u, y)  # Inverse ODE
+            match = {'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y, 'hinv': hinv}
             if hint == 'all':
                 xieta = []
                 for heuristic in lie_heuristics:
@@ -3876,9 +3906,9 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
                     xieta = function(match, comp=False)
                     if xieta:
                         return xieta
-                    else:
-                        raise NotImplementedError("Infinitesimals could not be found for"
-                            "the given ODE")
+
+                raise NotImplementedError("Infinitesimals could not be found for"
+                    " the given ODE")
 
             elif hint not in lie_heuristics:
                  raise ValueError("Heuristic not recognized: " + hint)
@@ -3890,7 +3920,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
                      return xieta
                  else:
                      raise ValueError("Infinitesimals could not be found using the"
-                         "given heuristic")
+                         " given heuristic")
 
 
 def lie_heuristic_abaco1_simple(match, comp=False):
@@ -4033,6 +4063,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
     xieta = []
     y = match['y']
     h = match['h']
+    hinv = match['hinv']
     func = match['func']
     x = func.args[0]
     xi = Function('xi')(x, func)
@@ -4052,17 +4083,16 @@ def lie_heuristic_abaco1_product(match, comp=False):
             if comp and inf not in xieta:
                 xieta.append(inf)
 
-    u = Dummy('u')
-    h = ((1/h).subs([(x, u), (y, x)])).subs(u, y)
-    inf = separatevars(((log(h).diff(y)).diff(x))/h**2, dict=True, symbols=[x, y])
+    u1 = Dummy("u1")
+    inf = separatevars(((log(hinv).diff(y)).diff(x))/hinv**2, dict=True, symbols=[x, y])
     if inf and inf['coeff']:
         fx = inf[x]
-        gy = simplify(fx*((1/(fx*h)).diff(x)))
+        gy = simplify(fx*((1/(fx*hinv)).diff(x)))
         gysyms = gy.free_symbols
         if x not in gysyms:
             gy = exp(integrate(gy, y))
             etaval = fx*gy
-            etaval = (etaval.subs([(x, u), (y, x)])).subs(u, y)
+            etaval = (etaval.subs([(x, u1), (y, x)])).subs(u1, y)
             inf = {eta: etaval.subs(y, func), xi: 0}
             if not comp:
                 return [inf]
@@ -4215,3 +4245,436 @@ def lie_heuristic_chi(match, comp=False):
                         xic, etac = div(chieq, h)
                         inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
                         return [inf]
+
+def lie_heuristic_function_sum(match, comp=False):
+    r"""
+    This heuristic uses the following two assumptions on `\xi` and `\eta`
+
+    .. math:: \eta = 0, \xi = f(x) + g(y)
+
+    .. math:: \eta = f(x) + g(y), \xi = 0
+
+    The first assumption of this heuristic holds good if
+
+    .. math:: \frac{\partial}{\partial y}[(h\frac{\partial^{2}}{
+                \partial x^{2}}(h^{-1}))^{-1}]
+
+    is separable in `x` and `y`,
+
+    1. The separated factors containing `y` is `\frac{\partial g}{\partial y}`.
+       From this `g(y)` can be determined.
+    2. The separated factors containing `x` is `f''(x)`.
+    3. `h\frac{\partial^{2}}{\partial x^{2}}(h^{-1})` equals
+       `\frac{f''(x)}{f(x) + g(y)}`. From this `f(x)` can be determined.
+
+    The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
+    `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first
+    assumption satisifes. After obtaining `f(x)` and `g(y)`, the coordinates
+    are again interchanged, to get `\eta` as `f(x) + g(y)`.
+
+    For both assumptions, the constant factors are separated among `g(y)`
+    and `f''(x)`, such that `f''(x)` obtained from 3] is the same as that
+    obtained from 2]. If not possible, then this heuristic fails.
+
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 7 - pp. 8
+
+    """
+    from sympy.integrals.integrals import integrate
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    for odefac in [h, hinv]:
+        factor = odefac*((1/odefac).diff(x, 2))
+        sep = separatevars((1/factor).diff(y), dict=True, symbols=[x, y])
+        if sep and sep['coeff']:
+            k = Dummy("k")
+            try:
+                gy = k*integrate(sep[y], y)
+            except NotImplementedError:
+                pass
+            else:
+                fdd = 1/(k*sep[x]*sep['coeff'])
+                fx = simplify(fdd/factor - gy)
+                check = simplify(fx.diff(x, 2) - fdd)
+                if fx:
+                    if not check:
+                        fx = fx.subs(k, 1)
+                        gy = (gy/k)
+                    else:
+                        sol = solve(check, k)
+                        if sol:
+                            sol = sol[0]
+                            fx = fx.subs(k, sol)
+                            gy = (gy/k)*sol
+                        else:
+                            continue
+                    if odefac == hinv:  # Inverse ODE
+                        fx = fx.subs(x, y)
+                        gy = gy.subs(y, x)
+                    etaval = factor_terms(fx + gy)
+                    if etaval.is_Mul:
+                        etaval = Mul(*[arg for arg in etaval.args if arg.has(x, y)])
+                    if odefac == hinv:  # Inverse ODE
+                        inf = {eta: etaval.subs(y, func), xi : 0}
+                    else:
+                        inf = {xi: etaval.subs(y, func), eta : 0}
+                    if not comp:
+                        return [inf]
+                    else:
+                        xieta.append(inf)
+
+        if xieta:
+            return xieta
+
+def lie_heuristic_abaco2_similar(match, comp=False):
+    r"""
+    This heuristic uses the following two assumptions on `\xi` and `\eta`
+
+    .. math:: \eta = g(x), \xi = f(x)
+
+    .. math:: \eta = f(y), \xi = g(y)
+
+    For the first assumption,
+
+    1. First `\frac{\frac{\partial h}{\partial y}}{\frac{\partial^{2} h}{
+       \partial yy}}` is calculated. Let us say this value is A
+
+    2. If this is constant, then `h` is matched to the form `A(x) + B(x)e^{
+       \frac{y}{C}}` then, `\frac{e^{\int \frac{A(x)}{C} \,dx}}{B(x)}` gives `f(x)`
+       and `A(x)*f(x)` gives `g(x)`
+
+    3. Otherwise `\frac{\frac{\partial A}{\partial X}}{\frac{\partial A}{
+       \partial Y}} = \gamma` is calculated. If
+
+       a] `\gamma` is a function of `x` alone
+
+       b] `\frac{\gamma\frac{\partial h}{\partial y} - \gamma'(x) - \frac{
+       \partial h}{\partial x}}{h + \gamma} = G` is a function of `x` alone.
+       then, `e^{\int G \,dx}` gives `f(x)` and `-\gamma*f(x)` gives `g(x)`
+
+    The second assumption holds good if `\frac{dy}{dx} = h(x, y)` is rewritten as
+    `\frac{dy}{dx} = \frac{1}{h(y, x)}` and the same properties of the first assumption
+    satisifes. After obtaining `f(x)` and `g(x)`, the coordinates are again
+    interchanged, to get `\xi` as `f(x^*)` and `\eta` as `g(y^*)`
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 10 - pp. 12
+
+    """
+
+    from sympy.integrals.integrals import integrate
+
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    factor = cancel(h.diff(y)/h.diff(y, 2))
+    factorx = factor.diff(x)
+    factory = factor.diff(y)
+    if not factor.has(x) and not factor.has(y):
+        A = Wild('A', exclude=[y])
+        B = Wild('B', exclude=[y])
+        C = Wild('C', exclude=[x, y])
+        match = h.match(A + B*exp(y/C))
+        try:
+            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
+        except NotImplementedError:
+            pass
+        else:
+            gx = match[A]*tau
+            return [{xi: tau, eta: gx}]
+
+    else:
+        gamma = cancel(factorx/factory)
+        if not gamma.has(y):
+            tauint = cancel((gamma*hy - gamma.diff(x) - hx)/(h + gamma))
+            if not tauint.has(y):
+                try:
+                    tau = exp(integrate(tauint, x))
+                except NotImplementedError:
+                    pass
+                else:
+                    gx = -tau*gamma
+                    return [{xi: tau, eta: gx}]
+
+    factor = cancel(hinv.diff(y)/hinv.diff(y, 2))
+    factorx = factor.diff(x)
+    factory = factor.diff(y)
+    if not factor.has(x) and not factor.has(y):
+        A = Wild('A', exclude=[y])
+        B = Wild('B', exclude=[y])
+        C = Wild('C', exclude=[x, y])
+        match = h.match(A + B*exp(y/C))
+        try:
+            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
+        except NotImplementedError:
+            pass
+        else:
+            gx = match[A]*tau
+            return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
+
+    else:
+        gamma = cancel(factorx/factory)
+        if not gamma.has(y):
+            tauint = cancel((gamma*hinv.diff(y) - gamma.diff(x) - hinv.diff(x))/(
+                hinv + gamma))
+            if not tauint.has(y):
+                try:
+                    tau = exp(integrate(tauint, x))
+                except NotImplementedError:
+                    pass
+                else:
+                    gx = -tau*gamma
+                    return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
+
+
+def lie_heuristic_abaco2_unique_unknown(match, comp=False):
+    r"""
+    This heuristic assumes the presence of unknown functions or known functions
+    with non-integer powers.
+
+    1. A list of all functions and non-integer powers containing x and y
+    2. Loop over each element `f` in the list, find `\frac{\frac{\partial f}{\partial x}}{
+       \frac{\partial f}{\partial x}} = R`
+
+       If it is separable in `x` and `y`, let `X` be the factors containing `x`. Then
+
+       a] Check if `\xi = X` and `\eta = -\frac{X}{R}` satisfy the PDE. If yes, then return
+          `\xi` and `\eta`
+       b] Check if `\xi = \frac{-R}{X}` and `\eta = -\frac{1}{X}` satisfy the PDE.
+           If yes, then return `\xi` and `\eta`
+
+       If not, check if the following satisfy the ODE
+
+       a] `\xi = -R`, `\eta = 1`
+       b] `\xi = 1`, `\eta = -\frac{1}{R}`
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 10 - pp. 12
+
+    """
+
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    funclist = []
+    for atom in h.atoms(Pow):
+        base, exp = atom.as_base_exp()
+        if base.has(x) and base.has(y):
+            if not exp.is_Integer:
+                funclist.append(atom)
+
+    for function in h.atoms(AppliedUndef):
+        syms = function.free_symbols
+        if x in syms and y in syms:
+            funclist.append(function)
+
+    for f in funclist:
+        frac = cancel(f.diff(y)/f.diff(x))
+        sep = separatevars(frac, dict=True, symbols=[x, y])
+        if sep and sep['coeff']:
+            xitry1 = sep[x]
+            etatry1 = -1/(sep[y]*sep['coeff'])
+            pde1 = etatry1.diff(y)*h - xitry1.diff(x)*h - xitry1*hx - etatry1*hy
+            if not simplify(pde1):
+                return [{xi: xitry1, eta: etatry1.subs(y, func)}]
+            xitry2 = 1/etatry1
+            etatry2 = 1/xitry1
+            pde2 = etatry2.diff(x) - (xitry2.diff(y))*h**2 - xitry2*hx - etatry2*hy
+            if not simplify(expand(pde2)):
+                return [{xi: xitry2.subs(y, func), eta: etatry2}]
+
+        else:
+            etatry = -1/frac
+            pde = etatry.diff(x) + etatry.diff(y)*h - hx - etatry*hy
+            if not simplify(pde):
+                return [{xi: 1, eta: etatry.subs(y, func)}]
+            xitry = -frac
+            pde = -xitry.diff(x)*h -xitry.diff(y)*h**2 - xitry*hx -hy
+            if not simplify(expand(pde)):
+                return [{xi: xitry.subs(y, func), eta: 1}]
+
+
+def lie_heuristic_abaco2_unique_general(match, comp=False):
+    r"""
+    This heuristic finds if infinitesimals of the form `\eta = f(x)`, `\xi = g(y)`
+    without making any assumptions on `h`.
+
+    The complete sequence of steps is given in the paper mentioned below.
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 10 - pp. 12
+
+    """
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    C = S(0)
+    A = hx.diff(y)
+    B = hy.diff(y) + hy**2
+    C = hx.diff(x) - hx**2
+
+    if not (A and B and C):
+        return
+
+    Ax = A.diff(x)
+    Ay = A.diff(y)
+    Axy = Ax.diff(y)
+    Axx = Ax.diff(x)
+    Ayy = Ay.diff(y)
+    D = simplify(2*Axy + hx*Ay - Ax*hy + (hx*hy + 2*A)*A)*A - 3*Ax*Ay
+    if not D:
+        E1 = simplify(3*Ax**2 + ((hx**2 + 2*C)*A - 2*Axx)*A)
+        if E1:
+            E2 = simplify((2*Ayy + (2*B - hy**2)*A)*A - 3*Ay**2)
+            if not E2:
+                E3 = simplify(
+                    E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
+                if not E3:
+                    etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
+                    if x not in etaval:
+                        try:
+                            etaval = exp(integrate(etaval, y))
+                        except NotImplementedError:
+                            pass
+                        else:
+                            xival = -4*A**3*etaval/E1
+                            if y not in xival:
+                                return [{xi: xival, eta: etaval.subs(y, func)}]
+
+    else:
+        E1 = simplify((2*Ayy + (2*B - hy**2)*A)*A - 3*Ay**2)
+        if E1:
+            E2 = simplify(
+                4*A**3*D - D**2 + E1*((2*Axx - (hx**2 + 2*C)*A)*A - 3*Ax**2))
+            if not E2:
+                E3 = simplify(
+                   -(A*D)*E1.diff(y) + ((E1.diff(x) - hy*D)*A + 3*Ay*D +
+                    (A*hx - 3*Ax)*E1)*E1)
+                if not E3:
+                    etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
+                    if x not in etaval:
+                        try:
+                            etaval = exp(integrate(etaval, y))
+                        except NotImplementedError:
+                            pass
+                        else:
+                            xival = -E1*etaval/D
+                            if y not in xival:
+                                return [{xi: xival, eta: etaval.subs(y, func)}]
+
+
+def lie_heuristic_linear(match, comp=False):
+    r"""
+    This heuristic assumes
+
+    1. `\xi = ax + by + c` and
+    2. `\eta = fx + gy + h`
+
+    After substituting the following assumptions in the determining PDE, it
+    reduces to
+
+    .. math:: f + (g - a)h - bh^{2} - (ax + by + c)\frac{\partial h}{\partial x}
+                 - (fx + gy + c)\frac{\partial h}{\partial y}
+
+    Solving the reduced PDE obtained, using the method of characteristics, becomes
+    impractical. The method followed is grouping similar terms and solving the system
+    of linear equations obtained. The difference between the bivariate heuristic is that
+    `h` need not be a rational function in this case.
+
+    References
+    ==========
+    - E.S. Cheb-Terrab, A.D. Roche, Symmetries and First Order
+      ODE Patterns, pp. 10 - pp. 12
+
+    """
+    xieta = []
+    h = match['h']
+    hx = match['hx']
+    hy = match['hy']
+    func = match['func']
+    hinv = match['hinv']
+    x = func.args[0]
+    y = match['y']
+    xi = Function('xi')(x, func)
+    eta = Function('eta')(x, func)
+
+    coeffdict = {}
+    symbols = numbered_symbols("c", cls=Dummy)
+    symlist = [next(symbols) for i in islice(symbols, 6)]
+    C0, C1, C2, C3, C4, C5 = symlist
+    pde = C3 + (C4 - C0)*h -(C0*x + C1*y + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
+    pde, denom = pde.as_numer_denom()
+    pde = powsimp(expand(pde))
+    if pde.is_Add:
+        terms = pde.args
+        for term in terms:
+            if term.is_Mul:
+                rem = Mul(*[m for m in term.args if not m.has(x, y)])
+                xypart = term/rem
+                if xypart not in coeffdict:
+                    coeffdict[xypart] = rem
+                else:
+                    coeffdict[xypart] += rem
+            else:
+                if term not in coeffdict:
+                    coeffdict[term] = S(1)
+                else:
+                    coeffdict[term] += S(1)
+
+    sollist = coeffdict.values()
+    soldict = solve(sollist, symlist)
+    if isinstance(soldict, list):
+        soldict = soldict[0]
+    subval = soldict.values()
+
+    if any(t for t in subval):
+        onedict = dict(zip(symlist, [1]*6))
+        xival = C0*x + C1*func + C2
+        etaval = C3*x + C4*func + C5
+        xival = xival.subs(soldict)
+        etaval = etaval.subs(soldict)
+        xival = xival.subs(onedict)
+        etaval = etaval.subs(onedict)
+        return [{xi: xival, eta: etaval}]
