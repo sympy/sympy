@@ -146,6 +146,26 @@ implemented for the various heuristics.
 ^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.lie_heuristic_chi
 
+:obj:`abaco2_similar`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_similar
+
+:obj:`function_sum`
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_function_sum
+
+:obj:`abaco2_unique_unknown`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_unique_unknown
+
+:obj:`abaco2_unique_general`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_unique_general
+
+:obj:`linear`
+^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_linear
+
 Information on the ode module
 -----------------------------
 
