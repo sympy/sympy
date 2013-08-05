@@ -408,4 +408,3 @@ else:
             if mode & stat.S_IXUSR or mode & stat.S_IXGRP or mode & stat.S_IXOTH:
                 return True
         return False
-
