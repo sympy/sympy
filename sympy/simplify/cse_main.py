@@ -446,9 +446,10 @@ def opt_cse(exprs):
 
         if _coeff_isneg(expr):
             neg_expr = -expr
-            opt_subs[expr] = Mul(S.NegativeOne, neg_expr, evaluate=False)
-            seen_subexp.add(neg_expr)
-            expr = neg_expr
+            if not neg_expr.is_Atom:
+                opt_subs[expr] = Mul(S.NegativeOne, neg_expr, evaluate=False)
+                seen_subexp.add(neg_expr)
+                expr = neg_expr
 
         if expr.is_Mul:
             muls.add(expr)
