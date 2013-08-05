@@ -5,6 +5,7 @@ import sys
 import os
 import time
 import signal
+import Queue
 
 from sympy.interactive.printing import init_printing
 
@@ -502,14 +503,14 @@ def init_session(ipython=None, pretty_print=True, order=None,
         ip_app.open_browser = False
         notebook_id = ip_app.notebook_manager.new_notebook()
         kernel_id = ip_app.kernel_manager.start_kernel(notebook_id)
-        ip = ip_app.ip or LOCALHOST
         proto = 'https' if ip_app.certfile else 'http'
-        base_url = r"%s://%s:%i" % (proto, ip, ip_app.port, )
+        base_url = r"%s://%s:%i" % (proto, ip_app.ip, ip_app.port)
         from IPython.html.utils import url_path_join
         url = url_path_join(base_url, ip_app.base_project_url, notebook_id)
         import webbrowser
         webbrowser.open(url)
-    elif not qtconsole:
+    elif not qtconsole: # qtconsole (like notebook) will have the code sent
+                        # to its kernel via zmq IPC
         try:
             ip.run_cell(preexec_source, False)
         except AttributeError: ## older version of IPython
@@ -533,20 +534,26 @@ def init_session(ipython=None, pretty_print=True, order=None,
 def send_sympy_init(*args, **kwargs):
     '''send the sympy initialization code to an existing ipython kernel
     '''
-    import IPython.kernel.connect, IPython.kernel.blocking
+    from IPython.kernel import BlockingKernelClient, find_connection_file
     # get the most recently opened ipython session; race condition is possible
-    f = IPython.kernel.connect.find_connection_file('')
-    client = IPython.kernel.blocking.BlockingKernelClient()
+    f = find_connection_file('')
+    client = BlockingKernelClient()
     # configure ipython kernel client to use the connection file we just found
     client.connection_file = f
     client.load_connection_file()
     client.start_channels()
     # send the actual code
-    client.shell_channel.execute('%pylab inline')
-    client.shell_channel.execute(preexec_source)
+    client.execute('%pylab inline')
+    client.execute(preexec_source)
     # tell the user what we did
     print('executed:')
     print('%pylab inline')
     print(preexec_source)
-    time.sleep(5) # for some reason, it does not work w/o this
+    for i in range(2):
+        try:
+            reply = client.get_shell_msg(timeout=5)
+        except Queue.Empty:
+            # timeout, indicates that the kernel isn't actually running (or responsive).
+            # you may want to handle this somehow
+            break
     sys.exit(0)
