@@ -416,7 +416,7 @@ class DMP(PicklableWithSlots, CantSympify):
         return f.per(dmp_abs(f.rep, f.lev, f.dom))
 
     def neg(f):
-        """Negate all cefficients in ``f``. """
+        """Negate all coefficients in ``f``. """
         return f.per(dmp_neg(f.rep, f.lev, f.dom))
 
     def add(f, g):
@@ -1211,7 +1211,7 @@ class DMF(PicklableWithSlots, CantSympify):
         return f.per(f.num, f.den)
 
     def neg(f):
-        """Negate all cefficients in ``f``. """
+        """Negate all coefficients in ``f``. """
         return f.per(dmp_neg(f.num, f.lev, f.dom), f.den, cancel=False)
 
     def add(f, g):
