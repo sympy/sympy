@@ -6,6 +6,7 @@ from __future__ import print_function, division
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
+from sympy.core import S
 
 
 class AskPrimeHandler(CommonHandler):
@@ -164,6 +165,18 @@ class AskEvenHandler(CommonHandler):
                 break
         else:
             return _result
+
+    @staticmethod
+    def Pow(expr, assumptions):
+        if expr.is_number:
+            return AskEvenHandler._number(expr, assumptions)
+        if ask(Q.integer(expr.exp), assumptions):
+            if ask(Q.positive(expr.exp), assumptions):
+                return ask(Q.even(expr.base), assumptions)
+            elif ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
+                return False
+            elif expr.base is S.NegativeOne:
+                return False
 
     @staticmethod
     def Integer(expr, assumptions):
