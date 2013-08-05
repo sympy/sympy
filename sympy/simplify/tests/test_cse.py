@@ -134,12 +134,18 @@ def test_multiple_expressions():
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
 @XFAIL
-def test_non_commutative():
+def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
     assert cse(l) == ([], l)
     l = [A*B*C, A*B]
     assert cse(l) == ([(x0, A*B)], [x0*C, x0])
+
+@XFAIL
+def test_non_commutative_order():
+    A, B, x0 = symbols('A B, x0', commutative=False)
+    l = [A*A, B*A*A]
+    assert cse(l) == ([(x0, A**2)], [x0, b*x0])
 
 
 @XFAIL
