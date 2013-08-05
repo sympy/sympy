@@ -4,7 +4,7 @@ from __future__ import print_function, division
 
 import difflib
 
-from sympy.core import Basic, Mul, Add, Pow, sympify
+from sympy.core import Basic, Mul, Add, Pow, sympify, Tuple
 from sympy.core.singleton import S
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
@@ -415,7 +415,7 @@ def prev_cse(exprs, symbols=None, optimizations=None, postprocess=None):
 
 
 
-def opt_cse(exprs):
+def opt_cse(expr):
     '''Find optimization opportunities'''
 
     from sympy.matrices import Matrix
@@ -462,7 +462,7 @@ def opt_cse(exprs):
                 opt_subs[expr] = Pow(Pow(expr.base, -expr.exp), S.NegativeOne, evaluate=False)
 
 
-    _find_opts(exprs)
+    _find_opts(expr)
 
 
     ### Process adds and muls #####################
@@ -515,16 +515,8 @@ def opt_cse(exprs):
 def tree_cse(exprs, symbols=None, opt_subs=None):
     from sympy.matrices import Matrix
 
-    if symbols is None:
-        symbols = numbered_symbols()
-    else:
-        # In case we get passed an iterable with an __iter__ method instead of
-        # an actual iterator.
-        symbols = iter(symbols)
-
     if opt_subs is None:
         opt_subs = dict()
-
 
     ### Find repeated sub-expressions #####################
 
@@ -600,23 +592,7 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
         else:
             return new_expr
 
-
-    single = False
-    if isinstance(exprs, Basic) or isinstance(exprs, Matrix): # if only one expression or one matrix is passed
-        exprs = [exprs]
-        single = True
-
-
-    reduced_exprs = []
-
-    for expr in exprs:
-        if isinstance(expr, Matrix):
-            reduced_exprs.append(expr.applyfunc(_recreate))
-        else:
-            reduced_exprs.append(_recreate(expr))
-
-    if single:
-        reduced_exprs = reduced_exprs[0]
+    reduced_exprs = [_recreate(expr) for expr in exprs]
 
     return replacements, reduced_exprs
 
@@ -625,17 +601,32 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
 def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     from sympy.matrices import Matrix
 
+    if symbols is None:
+        symbols = numbered_symbols()
+    else:
+        # In case we get passed an iterable with an __iter__ method instead of
+        # an actual iterator.
+        symbols = iter(symbols)
+
     if optimizations is None:
         # Pull out the default here just in case there are some weird
         # manipulations of the module-level list in some other thread.
         optimizations = list(cse_optimizations)
 
     # Handle the case if just one expression was passed.
-    if isinstance(exprs, Basic):
+    if isinstance(exprs, Basic) or isinstance(exprs, Matrix):
         exprs = [exprs]
+    else:
+        exprs = list(exprs)
 
     # Preprocess the expressions to give us better optimization opportunities.
-    reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
+    preopt = lambda x: preprocess_for_cse(x, optimizations)
+    reduced_exprs = []
+    for i, e in enumerate(exprs):
+        if isinstance(e, Matrix):
+            reduced_exprs.append(Tuple(*map(preopt, e)))
+        else:
+            reduced_exprs.append(preopt(e))
 
     # Find other optimization opportunities.
     opt_subs = opt_cse(reduced_exprs)
@@ -644,15 +635,16 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     replacements, reduced_exprs = tree_cse(reduced_exprs, symbols, opt_subs)
 
     # Postprocess the expressions to return the expressions to canonical form.
+    postopt = lambda x: postprocess_for_cse(x, optimizations)
     for i, (sym, subtree) in enumerate(replacements):
-        subtree = postprocess_for_cse(subtree, optimizations)
+        subtree = postopt(subtree)
         replacements[i] = (sym, subtree)
+    for i, e in enumerate(reduced_exprs):
+        if isinstance(exprs[i], Matrix):
+            reduced_exprs[i] = Matrix(exprs[i].rows, exprs[i].cols, list(map(postopt, e)))
+        else:
+            reduced_exprs[i] = postopt(e)
 
-    reduced_exprs = [postprocess_for_cse(e, optimizations)
-                     for e in reduced_exprs]
-
-    if isinstance(exprs, Matrix):
-        reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
     if postprocess is None:
         return replacements, reduced_exprs
     return postprocess(replacements, reduced_exprs)
