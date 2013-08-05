@@ -17,7 +17,7 @@ from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 
 
-_option_order_mul_args = True
+_option_order_args = True
     
 def opt_cse(exprs):
     '''Find optimization opportunities'''
@@ -186,9 +186,12 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
             Op, args = opt_subs[expr]
         else:
             Op, args = type(expr), expr.args
-            if _option_order_mul_args and Op is Mul:
-                c, nc = expr.args_cnc()
-                args = list(ordered(c)) + nc
+            if _option_order_args:
+                if Op is Mul:
+                    c, nc = expr.args_cnc()
+                    args = list(ordered(c)) + nc
+                elif Op is Add:
+                    args = list(ordered(args))
         
         new_expr = Op(*map(_recreate, args))
 
