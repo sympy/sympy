@@ -281,6 +281,10 @@ def init_ipython_session(argv=(), auto_symbols=False, auto_int_to_Integer=False,
         # IPython 1.0 deprecates the frontend module, so we import directly
         # from the terminal module to prevent a deprecation message from being
         # shown.
+
+        # some ipython classes are written as singletons, so communication with
+        # the kernel is more easily done from a separate process.
+        # os.fork: unix-only
         if qtconsole:
             pid = os.fork()
             if pid == 0: # child
@@ -492,15 +496,20 @@ def init_session(ipython=None, pretty_print=True, order=None,
         raise RuntimeError("automatic int to Integer transformation is possible only in IPython 0.11 or above")
 
     if notebook:
+        # we open the web browser manually; IPython opens to the index listing
+        # all notebooks by default. we want the specific notebook we just
+        # created with the sympy imports
+        ip_app.open_browser = False
         notebook_id = ip_app.notebook_manager.new_notebook()
         kernel_id = ip_app.kernel_manager.start_kernel(notebook_id)
         ip = ip_app.ip or LOCALHOST
         proto = 'https' if ip_app.certfile else 'http'
         base_url = r"%s://%s:%i" % (proto, ip, ip_app.port, )
+        import webbrowser
+        g = webbrowser.get()
+
         from IPython.html.utils import url_path_join
         url = url_path_join(base_url, ip_app.base_project_url, notebook_id)
-        import webbrowser
-        g = webbrowser.get('chromium-browser')
         g.open(url)
     elif not qtconsole:
         try:
@@ -514,24 +523,30 @@ def init_session(ipython=None, pretty_print=True, order=None,
         mainloop(message)
         sys.exit('Exiting ...')
     elif hasattr(ip_app, 'start'):
-        pid = child_pid['pid']
-        os.kill(pid, signal.SIGUSR1)
+        pid = child_pid.get('pid')
+        # os.kill: unix-only before python 2.7 (windows+unix for python >=2.7)
+        if pid:
+            os.kill(pid, signal.SIGUSR1)
         ip_app.start()
     else:
         ip.write(message)
         ip.set_hook('shutdown_hook', lambda ip: ip.write("Exiting ...\n"))
 
 def send_sympy_init(*args, **kwargs):
-    import json
+    '''send the sympy initialization code to an existing ipython kernel
+    '''
     import IPython.kernel.connect, IPython.kernel.blocking
+    # get the most recently opened ipython session; race condition is possible
     f = IPython.kernel.connect.find_connection_file('')
-    j = json.load(open(f))
     client = IPython.kernel.blocking.BlockingKernelClient()
+    # configure ipython kernel client to use the connection file we just found
     client.connection_file = f
     client.load_connection_file()
     client.start_channels()
+    # send the actual code
     client.shell_channel.execute('%pylab inline')
     client.shell_channel.execute(preexec_source)
+    # tell the user what we did
     print('executed:')
     print('%pylab inline')
     print(preexec_source)

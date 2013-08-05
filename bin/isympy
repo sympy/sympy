@@ -220,8 +220,9 @@ def main():
         dest='console',
         action='store',
         default=None,
-        choices=['ipython', 'python'],
-        help='select type of interactive session: ipython | python; defaults '
+        choices=['ipython', 'python', 'qtconsole', 'notebook'],
+        help='select type of interactive session: ipython | python | '
+        'qtconsole | notebook ; defaults '
         'to ipython if IPython is installed, otherwise python')
 
     parser.add_option(
@@ -299,22 +300,15 @@ def main():
         default=False,
         help='enable debugging output')
 
-    parser.add_option(
-        '--qt',
-        dest='qt',
-        action='store_true',
-        default=False,
-        help="enable IPython's qtconsole")
-
-    parser.add_option(
-        '--notebook',
-        dest='notebook',
-        action='store_true',
-        default=False,
-        help="enable IPython's notebook mode")
-
-
     (options, ipy_args) = parser.parse_args()
+
+    args = {
+        'pretty_print': True,
+        'use_unicode':  None,
+        'use_latex':    None,
+        'order':        None,
+        'argv':         ipy_args,
+    }
 
     if not options.cache:
         os.environ['SYMPY_USE_CACHE'] = 'no'
@@ -332,7 +326,22 @@ def main():
     session = options.console
 
     if session is not None:
-        ipython = session == 'ipython'
+        ipython = session in ('ipython', 'qtconsole', 'notebook')
+
+        if session == 'qtconsole':
+            args['qtconsole'] = True
+        elif session == 'notebook':
+            args['notebook'] = True
+            # unless user has already specified otherwise, prefer chrome
+            # it should happen before the first import of the 'webbrowser'
+            # module which happens in IPython.html.notebookapp as of the time
+            # this was written, but let's do it before any external imports
+            # just to be safe
+            if not os.environ.get('BROWSER'):
+                chromes = ["google-chrome", "chrome", "chromium", "chromium-browser"]
+                chromes = [c for c in chromes if _iscommand(c)]
+                print(chromes)
+                os.environ['BROWSER'] = os.pathsep.join(chromes)
     else:
         try:
             import IPython
@@ -343,14 +352,6 @@ def main():
                 print(no_ipython)
             ipython = False
 
-    args = {
-        'pretty_print': True,
-        'use_unicode':  None,
-        'use_latex':    None,
-        'order':        None,
-        'argv':         ipy_args,
-    }
-
     if options.pretty == 'unicode':
         args['use_unicode'] = True
     elif options.pretty == 'ascii':
@@ -360,14 +361,6 @@ def main():
 
     if options.order is not None:
         args['order'] = options.order
-
-    # these are mutually exclusive
-    if options.qt:
-        args['qtconsole'] = True
-    elif options.notebook:
-        args['notebook'] = True
-        #prefer chrome (pre-import webbrowser)
-        os.environ['BROWSER'] = os.pathsep.join(("google-chrome", "chrome", "chromium", "chromium-browser"))
 
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive
@@ -381,3 +374,38 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+## below copied from Python Lib/webbrowser.py
+## (c) PSF
+## for details, see: http://docs.python.org/license.html
+def _iscommand(cmd):
+    """Return True if cmd is executable or can be found on the executable
+    search path."""
+    if _isexecutable(cmd):
+        return True
+    path = os.environ.get("PATH")
+    if not path:
+        return False
+    for d in path.split(os.pathsep):
+        exe = os.path.join(d, cmd)
+        if _isexecutable(exe):
+            return True
+    return False
+
+if sys.platform[:3] == "win":
+    def _isexecutable(cmd):
+        cmd = cmd.lower()
+        if os.path.isfile(cmd) and cmd.endswith((".exe", ".bat")):
+            return True
+        for ext in ".exe", ".bat":
+            if os.path.isfile(cmd + ext):
+                return True
+        return False
+else:
+    def _isexecutable(cmd):
+        if os.path.isfile(cmd):
+            mode = os.stat(cmd)[stat.ST_MODE]
+            if mode & stat.S_IXUSR or mode & stat.S_IXGRP or mode & stat.S_IXOTH:
+                return True
+        return False
+
