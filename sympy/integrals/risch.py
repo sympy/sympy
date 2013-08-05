@@ -38,6 +38,8 @@ from sympy.integrals.heurisch import _symbols
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
     Piecewise, sin, tan)
 
+from sympy import collect, factor, sqrt
+
 from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
 from sympy.integrals import Integral, integrate
 
@@ -1024,6 +1026,36 @@ def polynomial_reduce(p, DE):
     return (q, p)
 
 
+def polynomial_reduce_kt(pa, pd, DE):
+    """
+    Polynomial Reduction.
+
+    Given a derivation D on k(t) and p in k(t) where t is a nonlinear
+    monomial over k, return q, r in k[t] such that p = Dq  + r, and
+    deg(r) < deg_t(Dt).
+    """
+    qa = Poly(0, DE.t)
+    qd = Poly(1, DE.t)
+    while pa.degree(DE.t) - pd.degree(DE.t) >= DE.d.degree(DE.t):
+        m = pa.degree(DE.t) - pd.degree(DE.t) - DE.d.degree(DE.t) + 1
+        if m < 0:
+            q0_a = Poly(pa.LC()/(m*DE.d.LC()), DE.t), DE.t
+            q0_d = Poly(DE.t**-m, DE.t)
+        else:
+            q0_a = Poly(DE.t**m, DE.t).mul(Poly(pa.LC()/(m*DE.d.LC()), DE.t))
+            q0_d = Poly(1, DE.t)
+        qa = qa*q0_d + qd*q0_a
+        qd = qd*q0_d
+        Dq0_a = derivation(q0_a, DE)*q0_d + derivation(q0_d, DE)*q0_a
+        Dq0_d = q0_d**2
+
+        pa = pa*Dq0_d - Dq0_a*pd
+        pd = pd*Dq0_d
+
+    q = (qa.as_expr()/qd.as_expr()).as_poly(DE.t)
+    return (q, pa, pd)
+
+
 def laurent_series(a, d, F, n, DE):
     """
     Contribution of F to the full partial fraction decomposition of A/D
@@ -1138,6 +1170,7 @@ def recognize_log_derivative(a, d, DE, z=None):
         if any(not j.is_Integer for j in a):
             return False
     return True
+
 
 def residue_reduce(a, d, DE, z=None, invert=True):
     """
@@ -1441,7 +1474,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     return (ret, i, b)
 
 
-def integrate_hypertangent_polynomial(p, DE):
+def integrate_hypertangent_polynomial(pa, pd, DE):
     """
     Integration of hypertangent polynomials.
 
@@ -1451,10 +1484,93 @@ def integrate_hypertangent_polynomial(p, DE):
     Dq does not have an elementary integral over k(t) if Dc != 0.
     """
     # XXX: Make sure that sqrt(-1) is not in k.
-    q, r = polynomial_reduce(p, DE)
+    q, ra, rd = polynomial_reduce_kt(pa, pd, DE)
     a = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
-    c = Poly(r.nth(1)/(2*a.as_expr()), DE.t)
+    c = Poly(ra.nth(1)/(2*a.as_expr()), DE.t)
     return (q, c)
+
+
+def integrate_hypertangent_reduced(pa, pd, DE):
+    """
+    Integration of hypertangent reducded elements
+
+    Given a differential field k such that sqrt(-1) is not in k, a
+    hypertangent monomial t over k, and p in k[t], return q in k[t] and
+    a boolean b in {0, 1} such that p - Dq in k[t] if b=1 or p - Dq does
+    not have an elemenatry integral over k(t) if b=0
+    """
+
+    from sympy.integrals.cds import coupled_DE_System
+    Z = Poly(0, DE.t)
+    O = Poly(1, DE.t)
+    t = DE.t
+    z = Symbol('z')
+    pa_z = Poly(pa.subs(t**2, z - 1), z, t)
+    pd_z = Poly(pd.subs(t**2, z - 1), z, t)
+    p_q, p_r = pa_z.div(pd_z)
+    if p_q.degree(z) > 0:
+        return (Z, O, True)
+    if p_r == 0 and p_q.degree() == 0:
+        return (Z, O, True)
+    m = -(Poly(p_r, z).degree(z) - Poly(pd_z, z).degree(z))
+    h = cancel(((t**2 + 1)**m)*pa.as_expr()/pd.as_expr())
+    h = h.as_poly(t)
+    (q, r) = h.div(Poly(DE.t**2 + 1, DE.t))
+    Dt = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
+    a = Poly(r.nth(1), DE.t)
+    b =  r - a*Poly(t, t)
+    b1 = Poly(0, DE.t)
+    b2 = Poly(2*m*Dt, DE.t)
+    (c, d) = coupled_DE_System(b1, b2, a, b, DE)
+    q0_a = c*t + d
+    q0_d = ((t**2 + 1)**m).as_poly(DE.t)
+    Dq0_d = q0_d**2
+    Dq0_a = derivation(q0_a, DE)*q0_d + derivation(q0_d, DE)*q0_a
+    (qa, qd, b) = integrate_hypertangent_reduced(pa*Dq0_d - Dq0_a*pd, pd*Dq0_d, DE)
+
+    return (qa*q0_d + q0_a*qd, qd*q0_d, b)
+
+
+def integrate_hypertangent(fa, fd, DE, z=None):
+    """
+    Integration of hypertangent functions
+
+    Given a differntial field k such that sqrt(-1) is not in k,
+    a hypertangent monomial t over k and f in k(t), return g
+    elementary over k(t) and a boolean b in {0,1} such that f - Dg
+    in k if b = 1 or f - Dg does not have an elementary integral
+    over k(t) if b = 0
+    """
+    z = z or Dummy(z)
+    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+
+    g1, h, r = hermite_reduce(fa, fd, DE)
+    g2, b = residue_reduce(h[0], h[1], DE, z=z)
+    if not b:
+        return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
+            residue_reduce_to_basic(g2, DE, z), b)
+    rrd_g2_a, rrd_g2_d = frac_in(residue_reduce_derivation(g2, DE, z), DE.t)
+    pa = h[0]*rrd_g2_d*r[1] - rrd_g2_a*r[1]*h[1] + r[0]*h[1]*rrd_g2_d
+    pd = h[1]*r[1]*rrd_g2_d
+    q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
+    Dq1_a = q1a*derivation(q1d, DE) + q1d*derivation(q1a, DE)
+    Dq1_d = q1d**2
+    ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+          ).subs(s) + residue_reduce_to_basic(g2, DE, z))
+    if not b:
+        return (ret, b)
+    q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
+    Dc = derivation(c, DE)
+    if Dc !=0:
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + c*log(DE.t**2 + 1) + q2.as_expr())
+        return (ret, True)
+    else:
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + q2.as_expr())
+        return (ret, False)
 
 
 def integrate_nonlinear_no_specials(a, d, DE, z=None):
@@ -1499,6 +1615,72 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
     ret = (cancel(g1[0].as_expr()/g1[1].as_expr() + q1.as_expr()).subs(s) +
         residue_reduce_to_basic(g2, DE, z))
     return (ret, b)
+
+
+def is_deriv(a, d, DE, z=None):
+    """
+    Checks for derivative in k(t)
+
+    Determines if a given function f in k(t) there exists u in k(t)
+    such that Du = f. Returns q such that i = f - Dq; v, c such that
+    i = Dv + cDt where v, c are in k; Output -> tuple (q, v, c) if there
+    exists a derivative for given function in k(t) else returns None
+    """
+
+    from sympy.integrals.prde import limited_integrate
+    z = z or Dummy("z")
+    case = DE.case
+    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+    g1, h, r = hermite_reduce(a, d, DE)
+    g2, b = residue_reduce(h[0], h[1], DE, z=z)
+    if not b:
+        return None
+    p = cancel(h[0].as_expr()/h[1].as_expr() - residue_reduce_derivation(g2,
+        DE, z) + r[0].as_expr()/r[1].as_expr()).as_poly(DE.t)
+    if case == 'primitive':
+        pp = as_poly_1t(p, DE.t, z)
+        q, i, b = integrate_primitive_polynomial(p, DE)
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
+            residue_reduce_to_basic(g2, DE, z))
+        if not b:
+            return None
+        else:
+            i = cancel(i.as_expr())
+    elif case == 'exp':
+        # p should be a polynomial in t and 1/t, because Sirr == k[t, 1/t]
+        # h - Dg2 + r
+        pp = as_poly_1t(p, DE.t, z)
+        qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
+        i = pp.nth(0, 0)
+
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
+            qd.as_expr()).subs(s) + residue_reduce_to_basic(g2, DE, z))
+
+        if not b:
+            return None
+    elif case == 'tan':
+        rrd_g2_a, rrd_g2_d = frac_in(residue_reduce_derivation(g2, DE, z), DE.t)
+        pa = h[0]*rrd_g2_d*r[1] - rrd_g2_a*r[1]*h[1] + r[0]*h[1]*rrd_g2_d
+        pd = h[1]*r[1]*rrd_g2_d
+        i = Poly(pa.nth(0)/pd.nth(0), DE.t)
+        q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
+        Dq1_a = q1a*derivation(q1d, DE) + q1d*derivation(q1a, DE)
+        Dq1_d = q1d**2
+        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+            ).subs(s) + residue_reduce_to_basic(g2, DE, z))
+        if not b:
+            return (ret, b)
+        q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
+        Dc = derivation(c, DE)
+        if Dc !=0:
+             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + c*log(DE.t**2 + 1) + q2.as_expr())
+        else:
+             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             + q2.as_expr())
+    return (ret, i)
 
 
 class NonElementaryIntegral(Integral):
