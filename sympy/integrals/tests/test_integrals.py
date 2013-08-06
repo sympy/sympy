@@ -898,12 +898,13 @@ def test_issue_5178():
 
 def test_integrate_series():
     f = sin(x).series(x, 0, 10)
-    g = x**2/2 - x**4/24 + x**6/720 - x**8/40320 + x**10/3628800 + O(x**11)
+    g = x**2/2 - x**4/24 + x**6/720 - x**8/40320 + \
+        x**10/3628800 + Integral(O(x**10), x)
 
     assert integrate(f, x) == g
     assert diff(integrate(f, x), x) == f
 
-    assert integrate(O(x**5), x) == O(x**6)
+    assert integrate(O(x**5), x) == Integral(O(x**5), x)
 
 
 def test_atom_bug():
