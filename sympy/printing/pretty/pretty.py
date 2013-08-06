@@ -1815,7 +1815,7 @@ def pretty_print(expr, **settings):
         the expression to print
     wrap_line : bool, optional
         line wrapping enabled/disabled, defaults to True
-    num_columns : bool, optional
+    num_columns : int or None, optional
         number of columns before line breaking (default to None which reads
         the terminal width), useful when using SymPy without terminal.
     use_unicode : bool or None, optional
