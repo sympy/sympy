@@ -46,6 +46,7 @@ from sympy.utilities.iterables import has_dups
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 from sympy.solvers.solvers import solve
+from sympy.simplify.simplify import collect
 import operator
 
 allhints = (
@@ -263,7 +264,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
 
     if func and len(func.args) != 2:
         raise NotImplementedError("Right now only partial "
-        "differential equations of two variables are supported")
+            "differential equations of two variables are supported")
 
     if prep or func is None:
         prep, func_ = _preprocess(eq, func)
@@ -331,10 +332,11 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         if power:
             den = f(x,y)**power
             reduced_eq = Add(*[arg/den for arg in eq.args])
-        if not reduced_eq:
-            reduced_eq = eq
+    if not reduced_eq:
+        reduced_eq = eq
 
     if order == 1:
+        reduced_eq = collect(reduced_eq, f(x, y))
         r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
         if r:
             if not r[e]:
@@ -696,7 +698,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq =  x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
     >>> pdsolve(eq)
-    f(x, y) == (F(x*y) + exp(-y**2/2))*exp(y**2/2)
+    f(x, y) == F(x*y)*exp(y**2/2) + 1
 
     References
     ==========
@@ -705,6 +707,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
       Math 124A - Fall 2010, pp.7
 
     """
+    from sympy.integrals.integrals import integrate
     from sympy.solvers.ode import dsolve
 
     xi, eta = symbols("xi eta")
@@ -716,12 +719,51 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     d = match[match['d']]
     e = -match[match['e']]
 
+
+    if not d:
+         # To deal with cases like b*ux = e or c*uy = e
+         if not (b and c):
+            if c:
+                try:
+                    tsol = integrate(e/c, y)
+                except NotImplementedError:
+                    raise NotImplementedError("Unable to find a solution"
+                        " due to inability of integrate")
+                else:
+                    return Eq(f(x,y), solvefun(x) + tsol)
+            if b:
+                try:
+                    tsol = integrate(e/b, x)
+                except NotImplementedError:
+                    raise NotImplementedError("Unable to find a solution"
+                        " due to inability of integrate")
+                else:
+                    return Eq(f(x,y), solvefun(y) + tsol)
+
+    if not c:
+        # To deal with cases when c is 0, a simpler method is used.
+        # The PDE reduces to b*(u.diff(x)) + d*u = e, which is a linear ODE in x
+        plode = f(x).diff(x)*b + d*f(x) - e
+        sol = dsolve(plode, f(x))
+        syms = sol.free_symbols - plode.free_symbols - set([x, y])
+        rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, y)
+        return Eq(f(x, y), rhs)
+
+    if not b:
+        # To deal with cases when b is 0, a simpler method is used.
+        # The PDE reduces to c*(u.diff(y)) + d*u = e, which is a linear ODE in y
+        plode = f(y).diff(y)*c + d*f(y) - e
+        sol = dsolve(plode, f(y))
+        syms = sol.free_symbols - plode.free_symbols - set([x, y])
+        rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, x)
+        return Eq(f(x, y), rhs)
+
     dummy = Function('d')
     h = (c/b).subs(y, dummy(x))
     sol = dsolve(dummy(x).diff(x) - h, dummy(x))
     if isinstance(sol, list):
         sol = sol[0]
-    solsym = sol.free_symbols - h.free_symbols
+    solsym = sol.free_symbols - h.free_symbols - set([x, y])
     if len(solsym) == 1:
         solsym = solsym.pop()
         etat = (solve(sol, solsym)[0]).subs(dummy(x), y)
@@ -730,23 +772,30 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         final = (dsolve(deq, f(x), hint='1st_linear')).rhs
         if isinstance(final, list):
             final = final[0]
-        finsyms = final.free_symbols - deq.free_symbols
-        # Hack to deal when multiple constants are returned by
-        # constantsimp
-        if len(finsyms) == 1:
-            sym = finsyms.pop()
-            final = final.subs(sym, solvefun(etat))
-
-        else:
-            fname = solvefun.__name__
-            for key, sym in enumerate(finsyms):
-                tempfun = Function(fname + str(key))
-                final = final.subs(sym, tempfun(etat))
-        return Eq(f(x, y), final.subs(eta, etat))
+        finsyms = final.free_symbols - deq.free_symbols - set([x, y])
+        rhs = _simplify_variable_coeff(final, finsyms, solvefun, etat)
+        return Eq(f(x, y), rhs)
 
     else:
         raise NotImplementedError("Cannot solve the partial differential equation due"
-            "to inability of constantsimp")
+            " to inability of constantsimp")
+
+def _simplify_variable_coeff(sol, syms, func, funcarg):
+    r"""
+    Helper function to replace constants by functions in 1st_linear_variable_coeff
+    """
+    eta = Symbol("eta")
+    if len(syms) == 1:
+        sym = syms.pop()
+        final = sol.subs(sym, func(funcarg))
+
+    else:
+        fname = func.__name__
+        for key, sym in enumerate(syms):
+            tempfun = Function(fname + str(key))
+            final = sol.subs(sym, func(funcarg))
+
+    return simplify(final.subs(eta, funcarg))
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive
