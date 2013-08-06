@@ -1,8 +1,14 @@
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
-from sympy.polys.galoistools import gf_gcd, gf_from_dict
+
+from sympy.polys.galoistools import (
+    gf_gcd, gf_from_dict, gf_gcdex, gf_div, gf_lcm, gf_rem)
 from sympy.polys.polyerrors import ModularGCDFailed
+from sympy.polys.domains import PolynomialRing
+
 from sympy.core.compatibility import xrange
+from sympy.mpmath import sqrt
+from sympy import Dummy
 import random
 
 
@@ -16,12 +22,12 @@ def _trivial_gcd(f, g):
     if not (f or g):
         return ring.zero, ring.zero, ring.zero
     elif not f:
-        if g.LC < 0:
+        if g.LC < ring.domain.zero:
             return -g, ring.zero, -ring.one
         else:
             return g, ring.zero, ring.one
     elif not g:
-        if f.LC < 0:
+        if f.LC < ring.domain.zero:
             return -f, -ring.one, ring.zero
         else:
             return f, ring.one, ring.zero
@@ -612,17 +618,23 @@ def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):
 
     hpq = hp.ring.zero
 
+    if isinstance(hp.ring.domain, PolynomialRing):
+        crt_ = _chinese_remainder_reconstruction_multivariate
+    else:
+        def crt_(cp, cq, p, q):
+            return crt([p, q], [cp, cq], symmetric=True)[0]
+
     for monom in monoms:
-        hpq[monom] = crt([p, q], [hp[monom], hq[monom]], symmetric=True)[0]
+        hpq[monom] = crt_(hp[monom], hq[monom], p, q)
     for monom in hpmonoms:
-        hpq[monom] = crt([p, q], [hp[monom], zero], symmetric=True)[0]
+        hpq[monom] = crt_(hp[monom], zero, p, q)
     for monom in hqmonoms:
-        hpq[monom] = crt([p, q], [zero, hq[monom]], symmetric=True)[0]
+        hpq[monom] = crt_(zero, hq[monom], p, q)
 
     return hpq
 
 
-def _interpolate_multivariate(evalpoints, hpeval, ring, p):
+def _interpolate_multivariate(evalpoints, hpeval, ring, i, p, ground=False):
     r"""
     Reconstruct a polynomial `h_p` in `\mathbb{Z}_p[x_0, \ldots, x_{k-1}]`
     from a list of evaluation points in `\mathbb{Z}_p` and a list of
@@ -650,11 +662,17 @@ def _interpolate_multivariate(evalpoints, hpeval, ring, p):
 
     """
     hp = ring.zero
-    k = ring.ngens
-    y = ring.gens[k-1]
+
+    if ground:
+        domain = ring.domain.domain
+        y = ring.domain.gens[i]
+    else:
+        domain = ring.domain
+        y = ring.gens[i]
+
     for a, hpa in zip(evalpoints, hpeval):
         numer = ring.one
-        denom = ring.domain.one
+        denom = domain.one
         for b in evalpoints:
             if b == a:
                 continue
@@ -662,7 +680,7 @@ def _interpolate_multivariate(evalpoints, hpeval, ring, p):
             numer *= y - b
             denom *= a - b
 
-        denom = ring.domain.invert(denom, p)
+        denom = domain.invert(denom, p)
         coeff = numer.mul_ground(denom)
         hp += hpa.set_ring(ring) * coeff
 
@@ -843,7 +861,7 @@ def modgcd_bivariate(f, g):
         if n < N:
             continue
 
-        hp = _interpolate_multivariate(evalpoints, hpeval, ring, p)
+        hp = _interpolate_multivariate(evalpoints, hpeval, ring, 1, p)
 
         hp = _primitive(hp, p)[1]
         hp = hp * conthp.set_ring(ring)
@@ -1018,7 +1036,7 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
         n += 1
 
         if n == N:
-            h = _interpolate_multivariate(evalpoints, heval, ring, p)
+            h = _interpolate_multivariate(evalpoints, heval, ring, k-1, p)
 
             h = _primitive(h, p)[1] * conth.set_ring(ring)
             degyh = h.degree(k-1)
@@ -1179,3 +1197,560 @@ def modgcd_multivariate(f, g):
             cff = fquo.mul_ground(cf // ch)
             cfg = gquo.mul_ground(cg // ch)
             return h, cff, cfg
+
+
+def _gf_div(f, g, p):
+    ring = f.ring
+    densequo, denserem = gf_div(f.to_dense(), g.to_dense(), p, ring.domain)
+    return ring.from_dense(densequo), ring.from_dense(denserem)
+
+
+def _rational_function_reconstruction(c, p, m):
+    ring = c.ring
+    domain = ring.domain
+    M = m.degree()
+    N = M // 2
+    D = M - N - 1
+
+    r0, s0 = m, ring.zero
+    r1, s1 = c, ring.one
+
+    while r1.degree() > N:
+        quo = _gf_div(r0, r1, p)[0]
+        r0, r1 = r1, (r0 - quo*r1).trunc_ground(p)
+        s0, s1 = s1, (s0 - quo*s1).trunc_ground(p)
+
+    a, b = r1, s1
+    if b.degree() > D or _gf_gcd(b, m, p) != 1:
+        return None
+
+    lc = b.LC
+    if lc != 1:
+        lcinv = domain.invert(lc, p)
+        a = a.mul_ground(lcinv).trunc_ground(p)
+        b = b.mul_ground(lcinv).trunc_ground(p)
+
+    field = ring.to_field()
+
+    return field(a) / field(b)
+
+
+def _rational_reconstruction_func_coeffs(hm, p, m, ring, k):
+    h = ring.zero
+
+    for monom, coeff in hm.iterterms():
+        if k == 0:
+            coeffh = _rational_function_reconstruction(coeff, p, m)
+
+            if not coeffh:
+                return None
+
+        else:
+            coeffh = ring.domain.zero
+            for mon, c in coeff.drop_to_ground(k).iterterms():
+                ch = _rational_function_reconstruction(c, p, m)
+
+                if not ch:
+                    return None
+
+                coeffh[mon] = ch
+
+        h[monom] = coeffh
+
+    return h
+
+
+def _gf_gcdex(f, g, p):
+    ring = f.ring
+    s, t, h = gf_gcdex(f.to_dense(), g.to_dense(), p, ring.domain)
+    return ring.from_dense(s), ring.from_dense(t), ring.from_dense(h)
+
+
+def _trunc(f, minpoly, p):
+    ring = f.ring
+    dom = ring.domain
+
+    ftrunc = f.drop_to_ground(1)
+    zring = ftrunc.ring.domain
+
+    denseminpoly = minpoly.to_dense()
+
+    for monom, coeff in ftrunc.iterterms():
+        densecoeff = gf_rem(coeff.to_dense(), denseminpoly, p, dom)
+        ftrunc[monom] = zring.ring.from_dense(densecoeff)
+
+    return ring(ftrunc.as_expr()).trunc_ground(p)
+
+
+def _euclidean_algorithm(f, g, minpoly, p):
+    ring = f.ring
+
+    f = _trunc(f, minpoly, p)
+    g = _trunc(g, minpoly, p)
+
+    while g:
+        rem = f
+        deg = g.degree(0) # degree in x
+        lcinv, _, gcd = _gf_gcdex(ring.dmp_LC(g), minpoly, p)
+
+        if not gcd == 1:
+            return None
+
+        while True:
+            degrem = rem.degree(0) # degree in x
+            if degrem < deg:
+                break
+            quo = (lcinv * ring.dmp_LC(rem)).set_ring(ring)
+            rem = _trunc(rem - g.mul_monom((degrem - deg, 0))*quo, minpoly, p)
+
+        f = g
+        g = rem
+
+    lcfinv = _gf_gcdex(ring.dmp_LC(f), minpoly, p)[0].set_ring(ring)
+
+    return _trunc(f * lcfinv, minpoly, p)
+
+
+def _trial_division(f, h, minpoly, p=None):
+    ring = f.ring
+    domain = ring.domain
+
+    zxring = ring.clone(symbols=(ring.symbols[1], ring.symbols[0]))
+
+    minpoly = minpoly.set_ring(ring)
+
+    rem = f
+
+    degrem = rem.degree()
+    degh = h.degree()
+    degm = minpoly.degree(1)
+
+    lch = _LC(h).set_ring(ring)
+    lcm = minpoly.LC
+
+    while rem and degrem >= degh:
+        # polynomial in Z[t_1, ..., t_k][z]
+        lcrem = _LC(rem).set_ring(ring)
+        rem = rem*lch - h.mul_monom((degrem - degh, 0))*lcrem
+        if p:
+            rem = rem.trunc_ground(p)
+        degrem = rem.degree(1)
+
+        while rem and degrem >= degm:
+            # polynomial in Z[t_1, ..., t_k][x]
+            lcrem = _LC(rem.set_ring(zxring)).set_ring(ring)
+            rem = rem.mul_ground(lcm) - minpoly.mul_monom((0, degrem - degm))*lcrem
+            if p:
+                rem = rem.trunc_ground(p)
+            degrem = rem.degree(1)
+
+        degrem = rem.degree()
+
+    return rem
+
+
+def _evaluate_ground(f, i, a):
+    ring = f.ring.clone(domain=f.ring.domain.ring.drop(i))
+    fa = ring.zero
+
+    for monom, coeff in f.iterterms():
+        fa[monom] = coeff.evaluate(i, a)
+
+    return fa
+
+
+def _func_field_modgcd_p(f, g, minpoly, p):
+    ring = f.ring
+    domain = ring.domain # Z[t_1, ..., t_k]
+
+    if isinstance(domain, PolynomialRing):
+        k = domain.ngens
+    else:
+        return _euclidean_algorithm(f, g, minpoly, p)
+
+    if k == 1:
+        qdomain = domain.ring.to_field()
+    else:
+        qdomain = domain.ring.drop_to_ground(k - 1)
+        qdomain = qdomain.clone(domain=qdomain.domain.ring.to_field())
+
+    qring = ring.clone(domain=qdomain) # = Z(t_k)[t_1, ..., t_{k-1}][x, z]
+
+    n = 1
+    d = 1
+
+    # polynomial in Z_p[t_1, ..., t_k][z]
+    gamma = ring.dmp_LC(f) * ring.dmp_LC(g)
+    # polynomial in Z_p[t_1, ..., t_k]
+    delta = minpoly.LC
+
+    evalpoints = []
+    heval = []
+    LMlist = []
+    points = set(range(p))
+
+    while points:
+        a = random.sample(points, 1)[0]
+        points.remove(a)
+
+        if k == 1:
+            test = (delta.evaluate(k-1, a) % p == 0)
+        else:
+            test = (delta.evaluate(k-1, a).trunc_ground(p) == 0)
+
+        if test:
+            continue
+
+        gammaa = _evaluate_ground(gamma, k-1, a)
+        minpolya = _evaluate_ground(minpoly, k-1, a)
+
+        if gammaa.rem([minpolya, gammaa.ring(p)]) == 0:
+            continue
+
+        fa = _evaluate_ground(f, k-1, a)
+        ga = _evaluate_ground(g, k-1, a)
+
+        # polynomial in Z_p[x, t_1, ..., t_{k-1}, z]/(minpoly)
+        ha = _func_field_modgcd_p(fa, ga, minpolya, p)
+
+        if ha is None:
+            d += 1
+            if d > n:
+                return None
+            continue
+
+        if ha == 1:
+            return ha
+
+        LM = [ha.degree()] + [0]*(k-1)
+        if k > 1:
+            for monom, coeff in ha.iterterms():
+                if monom[0] == LM[0] and coeff.LM > tuple(LM[1:]):
+                    LM[1:] = coeff.LM
+
+        evalpoints_a = [a]
+        heval_a = [ha]
+        if k == 1:
+            m = qring.domain.get_ring().one
+        else:
+            m = qring.domain.domain.get_ring().one
+
+        t = m.ring.gens[0]
+
+        for b, hb, LMhb in zip(evalpoints, heval, LMlist):
+            if LMhb == LM:
+                evalpoints_a.append(b)
+                heval_a.append(hb)
+                m *= (t - b)
+
+        m = m.trunc_ground(p)
+        evalpoints.append(a)
+        heval.append(ha)
+        LMlist.append(LM)
+        n += 1
+
+        # polynomial in Z_p[t_1, ..., t_k][x, z]
+        h = _interpolate_multivariate(evalpoints_a, heval_a, ring, k-1, p, ground=True)
+
+        # polynomial in Z_p(t_k)[t_1, ..., t_{k-1}][x, z]
+        h = _rational_reconstruction_func_coeffs(h, p, m, qring, k-1)
+
+        if h is None:
+            continue
+
+        if k == 1:
+            dom = qring.domain.field
+            den = dom.ring.one
+
+            for coeff in h.itercoeffs():
+                den = dom.ring.from_dense(gf_lcm(den.to_dense(), coeff.denom.to_dense(),
+                        p, dom.domain))
+
+        else:
+            dom = qring.domain.domain.field
+            den = dom.ring.one
+
+            for coeff in h.itercoeffs():
+                for c in coeff.itercoeffs():
+                    den = dom.ring.from_dense(gf_lcm(den.to_dense(), c.denom.to_dense(),
+                            p, dom.domain))
+
+        den = qring.domain_new(den.trunc_ground(p))
+        h = ring(h.mul_ground(den).as_expr()).trunc_ground(p)
+
+        if not _trial_division(f, h, minpoly, p) and not _trial_division(g, h, minpoly, p):
+            return h
+
+    return None
+
+
+def _integer_rational_reconstruction(c, m, dom):
+    if c < 0:
+        c += m
+
+    r0, s0 = m, dom.zero
+    r1, s1 = c, dom.one
+
+    bound = sqrt(m / 2) # still correct if replaced by ZZ.sqrt(m // 2) ?
+
+    while r1 >= bound:
+        quo = r0 // r1
+        r0, r1 = r1, r0 - quo*r1
+        s0, s1 = s1, s0 - quo*s1
+
+    if abs(s1) >= bound:
+        return None
+
+    if s1 < 0:
+        a, b = -r1, -s1
+    elif s1 > 0:
+        a, b = r1, s1
+    else:
+        return None
+
+    field = dom.get_field()
+
+    return field(a) / field(b)
+
+
+def _rational_reconstruction_int_coeffs(hm, m, ring):
+    h = ring.zero
+
+    if isinstance(ring.domain, PolynomialRing):
+        reconstruction = _rational_reconstruction_int_coeffs
+        domain = ring.domain.ring
+    else:
+        reconstruction = _integer_rational_reconstruction
+        domain = hm.ring.domain
+
+    for monom, coeff in hm.iterterms():
+        coeffh = reconstruction(coeff, m, domain)
+
+        if not coeffh:
+            return None
+
+        h[monom] = coeffh
+
+    return h
+
+
+def _func_field_modgcd_m(f, g, minpoly):
+    ring = f.ring
+    domain = ring.domain
+
+    if isinstance(domain, PolynomialRing):
+        k = domain.ngens
+        QQdomain = domain.ring.clone(domain=domain.domain.get_field())
+        QQring = ring.clone(domain=QQdomain)
+    else:
+        k = 0
+        QQring = ring.clone(domain=ring.domain.get_field())
+
+    cf, f = f.primitive()
+    cg, g = g.primitive()
+
+    # polynomial in Z[t_1, ..., t_k][z]
+    gamma = ring.dmp_LC(f) * ring.dmp_LC(g)
+    # polynomial in Z[t_1, ..., t_k]
+    delta = minpoly.LC
+
+    p = 1
+    primes = []
+    hplist = []
+    LMlist = []
+
+    while True:
+        p = nextprime(p)
+
+        if gamma.trunc_ground(p) == 0:
+            continue
+
+        if k == 0:
+            test = (delta % p == 0)
+        else:
+            test = (delta.trunc_ground(p) == 0)
+
+        if test:
+            continue
+
+        fp = f.trunc_ground(p)
+        gp = g.trunc_ground(p)
+        minpolyp = minpoly.trunc_ground(p)
+
+        hp = _func_field_modgcd_p(fp, gp, minpolyp, p)
+
+        if hp is None:
+            continue
+
+        if hp == 1:
+            return ring.one
+
+        LM = [hp.degree()] + [0]*k
+        if k > 0:
+            for monom, coeff in hp.iterterms():
+                if monom[0] == LM[0] and coeff.LM > tuple(LM[1:]):
+                    LM[1:] = coeff.LM
+
+        hm = hp
+        m = p
+
+        for q, hq, LMhq in zip(primes, hplist, LMlist):
+            if LMhq == LM:
+                hm = _chinese_remainder_reconstruction_multivariate(hq, hm, q, m)
+                m *= q
+
+        primes.append(p)
+        hplist.append(hp)
+        LMlist.append(LM)
+
+        hm = _rational_reconstruction_int_coeffs(hm, m, QQring)
+
+        if hm is None:
+            continue
+
+        if k == 0:
+            h = hm.clear_denoms()[1]
+        else:
+            den = domain.domain.one
+            for coeff in hm.itercoeffs():
+                den = domain.domain.lcm(den, coeff.clear_denoms()[0])
+            h = hm.mul_ground(den)
+
+        # convert back to Z[t_1, ..., t_k][x, z] from Q[t_1, ..., t_k][x, z]
+        h = h.set_ring(ring)
+        h = h.primitive()[1]
+
+        if not (_trial_division(f.mul_ground(cf), h, minpoly) or
+            _trial_division(g.mul_ground(cg), h, minpoly)):
+            return h
+
+
+def _to_ZZ_poly(f, ring):
+    f_ = ring.zero
+
+    if isinstance(ring.domain, PolynomialRing):
+        domain = ring.domain.domain
+    else:
+        domain = ring.domain
+
+    den = domain.one
+
+    for coeff in f.itercoeffs():
+        for c in coeff.rep:
+            if c:
+                den = domain.lcm(den, c.denominator)
+
+    for monom, coeff in f.iterterms():
+        coeff = coeff.rep
+        m = ring.domain.one
+        if isinstance(ring.domain, PolynomialRing):
+            m = m.mul_monom(monom[1:])
+        n = len(coeff)
+
+        for i in xrange(n):
+            if coeff[i]:
+                if (monom[0], n-i-1) not in f_:
+                    f_[(monom[0], n-i-1)] = (coeff[i] * den).numerator * m
+                else:
+                    f_[(monom[0], n-i-1)] += (coeff[i] * den).numerator * m
+
+    return f_
+
+
+def _to_ANP_poly(f, ring):
+    domain = ring.domain
+    f_ = ring.zero
+
+    if isinstance(f.ring.domain, PolynomialRing):
+        for monom, coeff in f.iterterms():
+            for mon, c in coeff.iterterms():
+                m = (monom[0],) + mon
+                if not m in f_:
+                    f_[m] = domain([domain.domain(c)] + [0]*monom[1])
+                else:
+                    f_[m] += domain([domain.domain(c)] + [0]*monom[1])
+
+    else:
+        for monom, coeff in f.iterterms():
+            m = (monom[0],)
+            if not m in f_:
+                f_[m] = domain([domain.domain(coeff)] + [0]*monom[1])
+            else:
+                f_[m] += domain([domain.domain(coeff)] + [0]*monom[1])
+
+    return f_
+
+
+def _minpoly_from_dense(minpoly, ring):
+    n = len(minpoly)
+    minpoly_ = ring.zero
+
+    for i in xrange(n):
+        if minpoly[i]:
+            minpoly_[(n-i-1,)] = ring.domain(minpoly[i])
+
+    return minpoly_
+
+
+def _primitive_in_x0(f):
+    fring = f.ring
+    ring = fring.drop_to_ground(*xrange(1, fring.ngens))
+    dom = ring.domain.ring
+    f_ = ring(f.as_expr())
+    cont = dom.zero
+
+    for coeff in f_.itercoeffs():
+        cont = func_field_modgcd(cont, coeff)[0]
+        if cont == dom.one:
+            return cont, f
+
+    return cont, f.quo(cont.set_ring(fring))
+
+
+# TODO: add support for algebraic function fields
+def func_field_modgcd(f, g):
+    ring = f.ring
+    domain = ring.domain
+    n = ring.ngens
+
+    assert ring == g.ring and domain.is_Algebraic
+
+    result = _trivial_gcd(f, g)
+    if result is not None:
+        return result
+
+    z = Dummy('z')
+
+    ZZring = ring.clone(symbols=ring.symbols + (z,), domain=domain.domain.get_ring())
+
+    if n == 1:
+        f_ = _to_ZZ_poly(f, ZZring)
+        g_ = _to_ZZ_poly(g, ZZring)
+        minpoly = ZZring.drop(0).from_dense(domain.mod.rep)
+
+        h = _func_field_modgcd_m(f_, g_, minpoly)
+        h = _to_ANP_poly(h, ring)
+
+    else:
+        # contx0f in Q(a)[x_1, ..., x_{n-1}], f in Q(a)[x_0, ..., x_{n-1}]
+        contx0f, f = _primitive_in_x0(f)
+        contx0g, g = _primitive_in_x0(g)
+        contx0h = func_field_modgcd(contx0f, contx0g)[0]
+
+        ZZring_ = ZZring.drop_to_ground(*xrange(1, n))
+
+        f_ = _to_ZZ_poly(f, ZZring_)
+        g_ = _to_ZZ_poly(g, ZZring_)
+        minpoly = _minpoly_from_dense(domain.mod.rep, ZZring_.drop(0))
+
+        h = _func_field_modgcd_m(f_, g_, minpoly)
+        h = _to_ANP_poly(h, ring)
+
+        contx0h_, h = _primitive_in_x0(h)
+        h *= contx0h.set_ring(ring)
+        f *= contx0f.set_ring(ring)
+        g *= contx0g.set_ring(ring)
+
+    h = h.quo_ground(h.LC)
+
+    return h , f.quo(h), g.quo(h)
