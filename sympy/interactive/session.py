@@ -293,7 +293,11 @@ def init_ipython_session(argv=(), auto_symbols=False, auto_int_to_Integer=False,
                 time.sleep(1e6) # will be woken up when parent sends a signal
             else: # parent
                 child_pid['pid'] = pid
-                from IPython.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
+                try:
+                    from IPython.qt.console.qtconsoleapp import IPythonQtConsoleApp as App
+                except ImportError as e:
+                    os.kill(pid, signal.SIGTERM)
+                    raise RuntimeError("IPython >=1.0 required for this feature")
         elif notebook:
             pid = os.fork()
             if pid == 0: # child
@@ -301,7 +305,12 @@ def init_ipython_session(argv=(), auto_symbols=False, auto_int_to_Integer=False,
                 time.sleep(1e6) # will be woken up when parent sends a signal
             else: # parent
                 child_pid['pid'] = pid
-                from IPython.html.notebookapp import NotebookApp
+                try:
+                    from IPython.html.notebookapp import NotebookApp
+                except ImportError as e:
+                    os.kill(pid, signal.SIGTERM)
+                    raise RuntimeError("IPython >=1.0 required for this feature")
+
                 App = NotebookApp.instance
         elif IPython.__version__ >= '1.0':
             from IPython.terminal.ipapp import TerminalIPythonApp as App
