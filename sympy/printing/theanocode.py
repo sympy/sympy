@@ -194,14 +194,17 @@ def theano_function(inputs, outputs, dtypes={}, **kwargs):
     """ Create Theano function from SymPy expressions """
     function_arg_names = inspect.getargspec(theano.function)[0]
     if set(function_arg_names) & set(kwargs.keys()):
-        theano_function_kwargs = {k: v for k, v in kwargs.items() if k in
-                                  function_arg_names}
-        dim_handling_kwargs = {k: v for k, v in kwargs.items() if k not in
-                               function_arg_names}
-        broadcastables = dim_handling(inputs, **dim_handling_kwargs)
+        theano_function_kwargs = {}
+        dim_handling_kwargs = {}
+        for k, v in kwargs.items():
+            if k in function_arg_names:
+                theano_function_kwargs[k] = v
+            else:
+                dim_handling_kwargs[k] = v
     else:
         theano_function_kwargs = {}
-        broadcastables = dim_handling(inputs, **kwargs)
+        dim_handling_kwargs = kwargs
+    broadcastables = dim_handling(inputs, **dim_handling_kwargs)
     code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
     tinputs  = map(code, inputs)
     toutputs = map(code, outputs)
