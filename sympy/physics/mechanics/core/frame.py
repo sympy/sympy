@@ -27,17 +27,17 @@ class MovingRefFrame(CoordSysRect):
         Note
         ====
 
-        For a class whose parentframe == None, the 'timevar' keyword arg must be
+        For a class whose parentframe is None, the 'timevar' keyword arg must be
         given to initialize a Symbol forvtime. If not specified, it falls back to
-        default Symbol('t').
+        default dyanamicsymbols._t from functions.py.
 
         Translational motion can be specified either by specifying the position
         vector(pos_vector), velocity (trans_vel) or acceleration(trans_acc) as
         functions of time. Required boundary conditions can be specified as keyword
         arguments. The relevant keyword-args are -
         
-        For velocity- 'pos_vector_b', 't' - the position at the value of time t
-        For acceleration - 'trans_vel_b', 'pos_vector_b', 't1', 't2' - the velocity
+        For velocity- 'position_b', 't' - the position at the value of time t
+        For acceleration - 'trans_vel_b', 'position_b', 't1', 't2' - the velocity
         and position boundary conditions at times t1 and t2 respectively
 
         If more than one arguments are entered, preference is given in order-
@@ -64,8 +64,8 @@ class MovingRefFrame(CoordSysRect):
         Any of the time-dependent arguments(apart from pos_vector and orientation)
         can be specified as a vector, or as a tuple of the form - ([v1, v2, v3], V)
         where V is a vector defined wrt parent frame, and v1, v2, v3 are components of
-        a vector V' defined wrt this frame itself. The total vectorial value of the
-        param would be V + V'.
+        a vector V' defined wrt this frame's basis vectors themselves. The total
+        vectorial value of the param would be V + V'.
 
         Boundary conditions must be expressed entirely in the parentframe. If one
         or more of the boundary condition parameters are not entered, they are taken
@@ -112,7 +112,7 @@ class MovingRefFrame(CoordSysRect):
             The times at which boundary conditions are specified. Must be
             independent of time variable
         
-        'pos_vector_b' : vector
+        'position_b' : vector
             Boundary condition for position
 
         'trans_vel_b' : vector
@@ -180,9 +180,9 @@ class MovingRefFrame(CoordSysRect):
                 #Fix initial position from given args/ kwargs
                 if pos_vector is not None:
                     kwargs['pos_vector_b'] = pos_vector
-                elif 'pos_vector_b' not in kwargs:
-                    kwargs['pos_vector_b'] = 0
-                self._pos_vector = kwargs['pos_vector_b']
+                elif 'position_b' not in kwargs:
+                    kwargs['position_b'] = 0
+                self._pos_vector = kwargs['position_b']
                 #Fix initial orientation from given args/ kwargs
                 orient_type_temp = None
                 orient_amount_temp = None
@@ -215,22 +215,22 @@ class MovingRefFrame(CoordSysRect):
                 #User has provided trans_vel. Process rest of translational
                 #motion params from this
                 trans_vel = self._to_vector(trans_vel)
-                for x in ('pos_vector_b', 't'):
+                for x in ('position_b', 't'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
-                                 get_motion_vel(trans_vel, kwargs['pos_vector_b'],
+                                 get_motion_vel(trans_vel, kwargs['position_b'],
                                                 kwargs['t'], parentframe)
             elif trans_acc is not None:
                 #User has provided trans_acc. Process rest of translational motion params
                 #using this
                 trans_acc = self._to_vector(trans_acc)
-                for x in ('trans_vel_b', 'pos_vector_b', 't1', 't2'):
+                for x in ('trans_vel_b', 'position_b', 't1', 't2'):
                     if x not in kwargs:
                         kwargs[x] = 0
                 self._trans_acc, self._trans_vel, self._pos_vector = \
                                  get_motion_acc(trans_acc, kwargs['trans_vel_b'],
-                                                kwargs['pos_vector_b'],
+                                                kwargs['position_b'],
                                                 kwargs['t1'], kwargs['t2'], parentframe)
             else:
                 #None of the params are provided. This means this frame has no
@@ -296,6 +296,32 @@ class MovingRefFrame(CoordSysRect):
                                                      orient_type = 'Axis', 
                                                      orient_amount = [angle, axis],
                                                      wrt = parentframe)
+
+    @property
+    def x(self):
+        return self.base_vectors[0]
+
+    @property
+    def y(self):
+        return self.base_vectors[1]
+
+    @property
+    def z(self):
+        return self.base_vectors[2]
+
+    def __getitem__(self, name):
+        if name == '0':
+            return self.base_scalars[0]
+        elif name == '1':
+            return self.base_scalars[1]
+        elif name == '2':
+            return self.base_scalars[2]
+        else:
+            raise ValueError("Invalid key- " + name)
+
+    def __iter__(self):
+        for x in self.base_vectors:
+            yield x
 
     @property
     def parent(self):
