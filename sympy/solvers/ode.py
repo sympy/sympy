@@ -305,8 +305,8 @@ lie_heuristics = (
     "abaco2_unique_unknown",
     "abaco2_unique_general",
     "linear",
-    "bivariate",
     "function_sum",
+    "bivariate",
     "chi"
     )
 
@@ -4298,7 +4298,7 @@ def lie_heuristic_function_sum(match, comp=False):
     for odefac in [h, hinv]:
         factor = odefac*((1/odefac).diff(x, 2))
         sep = separatevars((1/factor).diff(y), dict=True, symbols=[x, y])
-        if sep and sep['coeff']:
+        if sep and sep['coeff'] and x in sep[x] and y in sep[y]:
             k = Dummy("k")
             try:
                 gy = k*integrate(sep[y], y)
