@@ -143,9 +143,10 @@ def test_non_commutative_cse():
 
 @XFAIL
 def test_non_commutative_order():
-    A, B, x0 = symbols('A B, x0', commutative=False)
-    l = [A*A, B*A*A]
-    assert cse(l) == ([(x0, A**2)], [x0, b*x0])
+    A, B, C = symbols('A B C', commutative=False)
+    x0 = symbols('x0', commutative=False)
+    l = [B*C, A*B*C]
+    assert cse(l) == ([(x0, B*C)], [x0, A*x0])
 
 
 @XFAIL
