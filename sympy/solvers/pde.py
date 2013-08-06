@@ -738,9 +738,9 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
             final = final.subs(sym, solvefun(etat))
 
         else:
-            fkey = solvefun.class_key()[-1]
+            fname = solvefun.__name__
             for key, sym in enumerate(finsyms):
-                tempfun = Function(fkey + str(key))
+                tempfun = Function(fname + str(key))
                 final = final.subs(sym, tempfun(etat))
         return Eq(f(x, y), final.subs(eta, etat))
 
