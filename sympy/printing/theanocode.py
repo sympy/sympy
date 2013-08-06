@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import inspect
 
 from sympy.utilities import default_sort_key
 from sympy.external import import_module
@@ -191,9 +192,18 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=()):
 
 def theano_function(inputs, outputs, dtypes={}, **kwargs):
     """ Create Theano function from SymPy expressions """
-    broadcastables = dim_handling(inputs, **kwargs)
+    function_arg_names = inspect.getargspec(theano.function)[0]
+    if set(function_arg_names) & set(kwargs.keys()):
+        theano_function_kwargs = {k: v for k, v in kwargs.items() if k in
+                                  function_arg_names}
+        dim_handling_kwargs = {k: v for k, v in kwargs.items() if k not in
+                               function_arg_names}
+        broadcastables = dim_handling(inputs, **dim_handling_kwargs)
+    else:
+        theano_function_kwargs = {}
+        broadcastables = dim_handling(inputs, **kwargs)
     code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
     tinputs  = map(code, inputs)
     toutputs = map(code, outputs)
     toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
-    return theano.function(tinputs, toutputs)
+    return theano.function(tinputs, toutputs, **theano_function_kwargs)

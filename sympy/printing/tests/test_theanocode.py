@@ -135,7 +135,6 @@ def test_theano_function_simple():
     f = theano_function([x, y], [x+y])
     assert f(2, 3) == 5
 
-
 def test_theano_function_numpy():
     import numpy as np
     f = theano_function([x, y], [x+y], dim=1)
@@ -146,6 +145,18 @@ def test_theano_function_numpy():
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
+
+def test_theano_function_kwargs():
+    import numpy as np
+    f = theano_function([x, y, z], [x+y], dim=1, on_unused_input='ignore')
+    assert np.linalg.norm(f([1, 2], [3, 4], [0, 0]) - np.asarray([4, 6])) < 1e-9
+
+    f = theano_function([x, y, z], [x+y], dtypes={x: 'float64', y: 'float64'},
+                                     dim=1, on_unused_input='ignore')
+    xx = np.arange(3).astype('float64')
+    yy = 2*np.arange(3).astype('float64')
+    zz = 2*np.arange(3).astype('float64')
+    assert np.linalg.norm(f(xx, yy, zz) - 3*np.arange(3)) < 1e-9
 
 def test_slice():
     assert theano_code(slice(1, 2, 3)) == slice(1, 2, 3)
