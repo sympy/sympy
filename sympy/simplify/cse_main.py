@@ -299,7 +299,11 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
         elif Func is Add:
             args = list(ordered(args))
 
-        new_expr = Func(*map(_rebuild, args))
+        new_args = list(map(_rebuild, args))
+        if new_args != args:
+            new_expr = Func(*new_args)
+        else:
+            new_expr = expr
 
         if orig_expr in to_eliminate:
             sym = next(symbols)
