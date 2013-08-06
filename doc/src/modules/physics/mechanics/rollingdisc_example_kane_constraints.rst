@@ -26,8 +26,8 @@ Most of the main code is the same as before. ::
   >>> Y = N.orientnew('Y', 'Axis', [q1, N.z])
   >>> L = Y.orientnew('L', 'Axis', [q2, Y.x])
   >>> R = L.orientnew('R', 'Axis', [q3, L.y])
+  >>> w_R_N_qd = R.ang_vel_in(N)
   >>> R.set_ang_vel(N, u1 * L.x + u2 * L.y + u3 * L.z)
-  >>> R.set_ang_acc(N, R.ang_vel_in(N).dt(R) + (R.ang_vel_in(N) ^ R.ang_vel_in(N)))
 
 The definition of rolling without slip necessitates that the velocity of the
 contact point is zero; as part of bringing the constraint forces into evidence,
@@ -39,9 +39,8 @@ and along the ground in an perpendicular direction. ::
   >>> C.set_vel(N, u4 * L.x + u5 * (Y.z ^ L.x) + u6 * Y.z)
   >>> Dmc = C.locatenew('Dmc', r * L.z)
   >>> vel = Dmc.v2pt_theory(C, N, R)
-  >>> acc = Dmc.a2pt_theory(C, N, R)
   >>> I = inertia(L, m / 4 * r**2, m / 2 * r**2, m / 4 * r**2)
-  >>> kd = [q1d - u3/cos(q2), q2d - u1, q3d - u2 + u3 * tan(q2)]
+  >>> kd = [dot(R.ang_vel_in(N) - w_R_N_qd, uv) for uv in L]
 
 Just as we previously introduced three speeds as part of this process, we also
 introduce three forces; they are in the same direction as the speeds, and
@@ -62,15 +61,14 @@ represent the constraint forces in those directions. ::
   >>> rhs.simplify()
   >>> mprint(rhs)
   Matrix([
-  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)],
-  [                                 -2*u1*u3/3],
-  [                    (-2*u2 + u3*tan(q2))*u1]])
+  [(4*g*sin(q2) + 6*r*u2*u3 - r*u3**2*tan(q2))/(5*r)],
+  [                                       -2*u1*u3/3],
+  [                          (-2*u2 + u3*tan(q2))*u1]])
   >>> from sympy import trigsimp, signsimp, collect, factor_terms
   >>> def simplify_auxiliary_eqs(w):
   ...     return signsimp(trigsimp(collect(collect(factor_terms(w), f2), m*r)))
   >>> mprint(KM.auxiliary_eqs.applyfunc(simplify_auxiliary_eqs))
   Matrix([
-  [                                                             -m*r*(u1*u3 + u2') + f1],
-  [      -m*r*((u1**2 + u2**2)*sin(q2) - (-2*u2*u3 + u3**2*tan(q2) + u1')*cos(q2)) + f2],
-  [-g*m + m*r*((u1**2 + u2**2)*cos(q2) + (-2*u2*u3 + u3**2*tan(q2) + u1')*sin(q2)) + f3]])
-
+  [                                      -m*r*(u1*u3 + u2') + f1],
+  [-m*r*u1**2*sin(q2) - m*r*u2*u3/cos(q2) + m*r*cos(q2)*u1' + f2],
+  [                -g*m + m*r*(u1**2*cos(q2) + sin(q2)*u1') + f3]])
