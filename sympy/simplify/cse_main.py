@@ -185,30 +185,30 @@ def opt_cse(expr):
 
     ## Process Adds and commutative Muls
 
-    def _match_common_args(Op, ops):
-        ops = list(ordered(ops))
+    def _match_common_args(Func, funcs):
+        funcs = list(ordered(funcs))
 
-        op_args = [set(e.args) for e in ops]
-        for i in xrange(len(op_args)):
-            for j in xrange(i + 1, len(op_args)):
-                com_args = op_args[i].intersection(op_args[j])
+        func_args = [set(e.args) for e in funcs]
+        for i in xrange(len(func_args)):
+            for j in xrange(i + 1, len(func_args)):
+                com_args = func_args[i].intersection(func_args[j])
                 if len(com_args) > 1:
-                    com_op = Op(*com_args)
+                    com_func = Func(*com_args)
 
-                    diff_i = op_args[i].difference(com_args)
-                    op_args[i] = diff_i | set([com_op])
+                    diff_i = func_args[i].difference(com_args)
+                    func_args[i] = diff_i | set([com_func])
                     if diff_i:
-                        opt_subs[ops[i]] = Op(Op(*diff_i), com_op, evaluate=False)
+                        opt_subs[funcs[i]] = Func(Func(*diff_i), com_func, evaluate=False)
 
-                    diff_j = op_args[j].difference(com_args)
-                    op_args[j] = diff_j | set([com_op])
-                    opt_subs[ops[j]] = Op(Op(*diff_j), com_op, evaluate=False)
+                    diff_j = func_args[j].difference(com_args)
+                    func_args[j] = diff_j | set([com_func])
+                    opt_subs[funcs[j]] = Func(Func(*diff_j), com_func, evaluate=False)
 
-                    for k in xrange(j + 1, len(op_args)):
-                        if not com_args.difference(op_args[k]):
-                            diff_k = op_args[k].difference(com_args)
-                            op_args[k] = diff_k | set([com_op])
-                            opt_subs[ops[k]] = Op(Op(*diff_k), com_op, evaluate=False)
+                    for k in xrange(j + 1, len(func_args)):
+                        if not com_args.difference(func_args[k]):
+                            diff_k = func_args[k].difference(com_args)
+                            func_args[k] = diff_k | set([com_func])
+                            opt_subs[funcs[k]] = Func(Func(*diff_k), com_func, evaluate=False)
 
 
     # split muls into commutative
@@ -266,12 +266,12 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
     for e in exprs:
         _find_repeated(e)
 
-    ## Recreate
+    ## Rebuild tree
 
     replacements = []
 
     subs = dict()
-    def _recreate(expr):
+    def _rebuild(expr):
 
         if isinstance(expr, Basic) and expr.is_Atom:
             return expr
@@ -279,7 +279,7 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
             return expr
 
         if iterable(expr):
-            new_args = [_recreate(arg) for arg in expr]
+            new_args = [_rebuild(arg) for arg in expr]
             return type(expr)(*new_args)
 
 
@@ -290,16 +290,16 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
         if expr in opt_subs:
             expr = opt_subs[expr]
 
-        Op, args = type(expr), expr.args
+        Func, args = type(expr), expr.args
 
         # Parse Muls and Adds arguments by order
-        if Op is Mul:
+        if Func is Mul:
             c, nc = expr.args_cnc()
             args = list(ordered(c)) + nc
-        elif Op is Add:
+        elif Func is Add:
             args = list(ordered(args))
 
-        new_expr = Op(*map(_recreate, args))
+        new_expr = Func(*map(_rebuild, args))
 
         if orig_expr in to_eliminate:
             sym = next(symbols)
@@ -310,7 +310,7 @@ def tree_cse(exprs, symbols=None, opt_subs=None):
         else:
             return new_expr
 
-    reduced_exprs = [_recreate(expr) for expr in exprs]
+    reduced_exprs = [_rebuild(expr) for expr in exprs]
 
     return replacements, reduced_exprs
 
