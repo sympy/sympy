@@ -1267,19 +1267,14 @@ def _gf_gcdex(f, g, p):
 
 
 def _trunc(f, minpoly, p):
+
+
+
     ring = f.ring
-    dom = ring.domain
+    minpoly = minpoly.set_ring(ring)
+    p_ = ring.ground_new(p)
 
-    ftrunc = f.drop_to_ground(1)
-    zring = ftrunc.ring.domain
-
-    denseminpoly = minpoly.to_dense()
-
-    for monom, coeff in ftrunc.iterterms():
-        densecoeff = gf_rem(coeff.to_dense(), denseminpoly, p, dom)
-        ftrunc[monom] = zring.ring.from_dense(densecoeff)
-
-    return ring(ftrunc.as_expr()).trunc_ground(p)
+    return f.trunc_ground(p).rem([minpoly, p_]).trunc_ground(p)
 
 
 def _euclidean_algorithm(f, g, minpoly, p):
@@ -1682,12 +1677,10 @@ def _to_ANP_poly(f, ring):
 
 
 def _minpoly_from_dense(minpoly, ring):
-    n = len(minpoly)
     minpoly_ = ring.zero
 
-    for i in xrange(n):
-        if minpoly[i]:
-            minpoly_[(n-i-1,)] = ring.domain(minpoly[i])
+    for monom, coeff in minpoly.terms():
+        minpoly_[monom] = ring.domain(coeff)
 
     return minpoly_
 
@@ -1741,7 +1734,7 @@ def func_field_modgcd(f, g):
 
         f_ = _to_ZZ_poly(f, ZZring_)
         g_ = _to_ZZ_poly(g, ZZring_)
-        minpoly = _minpoly_from_dense(domain.mod.rep, ZZring_.drop(0))
+        minpoly = _minpoly_from_dense(domain.mod, ZZring_.drop(0))
 
         h = _func_field_modgcd_m(f_, g_, minpoly)
         h = _to_ANP_poly(h, ring)
