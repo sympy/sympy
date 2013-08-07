@@ -143,7 +143,7 @@ class Order(Expr):
                 point = [S.Zero]*len(variables)
 
         if not all(isinstance(v, Symbol) for v in variables):
-           raise TypeError('Variables are not symbols, got %s' % variables)
+            raise TypeError('Variables are not symbols, got %s' % variables)
 
         if len(list(uniq(variables))) != len(variables):
             raise ValueError('Variables are supposed to be unique symbols, got %s' % variables)
@@ -168,12 +168,33 @@ class Order(Expr):
         if expr is S.NaN:
             return S.NaN
 
-        if not all(p is S.Zero for p in point) and \
-           not all(p is S.Infinity for p in point):
-            raise NotImplementedError('Order at points other than 0 '
-                'or oo not supported, got %s as a point.' % point)
+        if not all(p.is_number for p in point):
+            raise NotImplementedError(
+                'Order at symbolic points not supported, '
+                'got %s as a point.' % point)
 
         if variables:
+            if point[0] is S.Infinity:
+                s = dict([(k, 1/Dummy()) for k in variables])
+                rs = dict([(1/v, 1/k) for k, v in s.items()])
+            elif point[0] is not S.Zero:
+                s = dict((k, Dummy() + point[0]) for k in variables)
+                rs = dict((v - point[0], k - point[0]) for k, v in s.items())
+            else:
+                s = ()
+                rs = ()
+
+            expr = expr.subs(s)
+
+            if expr.is_Add:
+                from sympy import expand_multinomial
+                expr = expand_multinomial(expr)
+
+            if s:
+                args = tuple([r[0] for r in rs.items()])
+            else:
+                args = tuple(variables)
+
             if len(variables) > 1:
                 # XXX: better way?  We need this expand() to
                 # workaround e.g: expr = x*(x + y).
@@ -183,24 +204,23 @@ class Order(Expr):
                 expr = expr.expand()
 
             if expr.is_Add:
-                lst = expr.extract_leading_order(variables, point)
+                lst = expr.extract_leading_order(args)
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
-                if point[0] == S.Zero:
-                    expr = expr.as_leading_term(*variables)
-                expr = expr.as_independent(*variables, as_Add=False)[1]
+                expr = expr.as_leading_term(*args)
+                expr = expr.as_independent(*args, as_Add=False)[1]
 
                 expr = expand_power_base(expr)
                 expr = expand_log(expr)
 
-                if len(variables) == 1:
+                if len(args) == 1:
                     # The definition of O(f(x)) symbol explicitly stated that
                     # the argument of f(x) is irrelevant.  That's why we can
                     # combine some power exponents (only "on top" of the
                     # expression tree for f(x)), e.g.:
                     # x**p * (-x)**q -> x**(p+q) for real p, q.
-                    x = variables[0]
+                    x = args[0]
                     margs = list(Mul.make_args(
                         expr.as_independent(x, as_Add=False)[1]))
 
@@ -222,6 +242,8 @@ class Order(Expr):
 
                     expr = Mul(*margs)
 
+            expr = expr.subs(rs)
+
         if expr is S.Zero:
             return expr
 
@@ -232,7 +254,9 @@ class Order(Expr):
             expr = S.One
 
         # create Order instance:
+        vp = dict(zip(variables, point))
         variables.sort(key=default_sort_key)
+        point = [vp[v] for v in variables]
         args = (expr,) + Tuple(*zip(variables, point))
         obj = Expr.__new__(cls, *args)
         return obj
