@@ -2937,11 +2937,8 @@ class PermutationOperator(Expr):
     is_commutative = True
 
     def __new__(cls, i, j):
-        i, j = list(map(sympify, (i, j)))
-        if (i > j):
-            obj = Basic.__new__(cls, j, i)
-        else:
-            obj = Basic.__new__(cls, i, j)
+        i, j = sorted(map(sympify, (i, j)), key=default_sort_key)
+        obj = Basic.__new__(cls, i, j)
         return obj
 
     def get_permuted(self, expr):
@@ -3018,10 +3015,7 @@ def simplify_index_permutations(expr, permutation_operators):
 
     def _choose_one_to_keep(a, b, ind):
         # we keep the one where indices in ind are in order ind[0] < ind[1]
-        if _get_indices(a, ind) < _get_indices(b, ind):
-            return a
-        else:
-            return b
+        return min(a, b, key=lambda x: default_sort_key(_get_indices(x, ind)))
 
     expr = expr.expand()
     if isinstance(expr, Add):

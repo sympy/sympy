@@ -2,13 +2,15 @@ from __future__ import print_function, division
 
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
 from sympy.core.compatibility import as_int, xrange
-from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
-from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
+from sympy.logic import And
 from sympy.matrices import Matrix
+from sympy.simplify import simplify
 from sympy.solvers import solve
+from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety, has_dups
 
 from .entity import GeometryEntity
@@ -143,7 +145,8 @@ class Polygon(GeometryEntity):
                 got.add(p)
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            a, b, c = sorted(
+                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
             if b not in shared and Point.is_collinear(a, b, c):
                 nodup[i] = a
                 nodup[i + 1] = None
@@ -596,7 +599,7 @@ class Polygon(GeometryEntity):
             pt = s.arbitrary_point(parameter).subs(
                 t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append(
-                (pt, (perim_fraction_start <= t < perim_fraction_end)))
+                (pt, (And(perim_fraction_start <= t, t < perim_fraction_end))))
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
@@ -840,7 +843,7 @@ class Polygon(GeometryEntity):
             e2_angle = pi - support_line.angle_between(Line(
                 e2_current, e2_next))
 
-            if e1_angle < e2_angle:
+            if (e1_angle < e2_angle) is True:
                 support_line = Line(e1_current, e1_next)
                 e1_segment = Segment(e1_current, e1_next)
                 min_dist_current = e1_segment.distance(e2_current)
@@ -854,7 +857,7 @@ class Polygon(GeometryEntity):
                 else:
                     e1_current = e1_next
                     e1_next = e1_connections[e1_next][1]
-            elif e1_angle > e2_angle:
+            elif (e1_angle > e2_angle) is True:
                 support_line = Line(e2_next, e2_current)
                 e2_segment = Segment(e2_current, e2_next)
                 min_dist_current = e2_segment.distance(e1_current)
@@ -1659,7 +1662,8 @@ class Triangle(Polygon):
         # remove collinear points
         i = -3
         while i < len(nodup) - 3 and len(nodup) > 2:
-            a, b, c = sorted([nodup[i], nodup[i + 1], nodup[i + 2]])
+            a, b, c = sorted(
+                [nodup[i], nodup[i + 1], nodup[i + 2]], key=default_sort_key)
             if Point.is_collinear(a, b, c):
                 nodup[i] = a
                 nodup[i + 1] = None
@@ -2168,9 +2172,9 @@ class Triangle(Polygon):
         """
         s = self.sides
         v = self.vertices
-        return {v[0]: Segment(s[1].midpoint, v[0]),
-                v[1]: Segment(s[2].midpoint, v[1]),
-                v[2]: Segment(s[0].midpoint, v[2])}
+        return {v[0]: Segment(v[0], s[1].midpoint),
+                v[1]: Segment(v[1], s[2].midpoint),
+                v[2]: Segment(v[2], s[0].midpoint)}
 
     @property
     def medial(self):
