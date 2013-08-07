@@ -1640,7 +1640,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             # else return ``i``
             c = i.free_symbols & con_set
             if c:
-                return min(c)
+                return min(c, key=str)
             return i
 
         if not (expr.has(x) and x in expr.free_symbols):

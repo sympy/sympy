@@ -527,7 +527,7 @@ class Hyper_Function(Expr):
         def tr(bucket):
             bucket = list(bucket.items())
             if not any(isinstance(x[0], Mod) for x in bucket):
-                bucket.sort(key=lambda x: x[0])
+                bucket.sort(key=lambda x: default_sort_key(x[0]))
             bucket = tuple([(mod, len(values)) for mod, values in bucket if
                     values])
             return bucket
@@ -572,7 +572,7 @@ class Hyper_Function(Expr):
         """
         for a in self.ap:
             for b in self.bq:
-                if (a - b).is_integer and not a < b:
+                if (a - b).is_integer and (a < b) is False:
                     return False
         for a in self.ap:
             if a == 0:
@@ -1370,7 +1370,7 @@ class ReduceOrder(Operator):
         b = sympify(b)
         a = sympify(a)
         n = b - a
-        if n < 0 or not n.is_Integer:
+        if (n < 0) is True or not n.is_Integer:
             return None
 
         self = Operator.__new__(cls)
@@ -1448,7 +1448,7 @@ def reduce_order(func):
     (Hyper_Function((2,), (3,)), [<Reduce order by cancelling
     upper 4 with lower 3.>])
     """
-    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, lambda x: x)
+    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, default_sort_key)
 
     return Hyper_Function(Tuple(*nap), Tuple(*nbq)), operators
 
@@ -1476,9 +1476,9 @@ def reduce_order_meijer(func):
     """
 
     nan, nbq, ops1 = _reduce_order(func.an, func.bq, ReduceOrder.meijer_plus,
-                                   lambda x: -x)
+                                   lambda x: default_sort_key(-x))
     nbm, nap, ops2 = _reduce_order(func.bm, func.ap, ReduceOrder.meijer_minus,
-                                   lambda x: x)
+                                   default_sort_key)
 
     return G_Function(nan, nap, nbm, nbq), ops1 + ops2
 

@@ -11,7 +11,7 @@ from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainErro
 from sympy.polys.orderings import lex
 from sympy.polys.polyutils import _unify_gens
 
-from sympy.utilities import public
+from sympy.utilities import default_sort_key, public
 
 @public
 class Domain(object):
@@ -316,7 +316,7 @@ class Domain(object):
             return K1
 
         if K0.is_FiniteField and K1.is_FiniteField:
-            return K0.__class__(max(K0.mod, K1.mod))
+            return K0.__class__(max(K0.mod, K1.mod, key=default_sort_key))
 
         from sympy.polys.domains import EX
         return EX

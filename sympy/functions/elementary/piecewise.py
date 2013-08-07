@@ -357,7 +357,8 @@ class Piecewise(Function):
                     else:
                         int_expr[n][1] = Min(lower, int_expr[n][1])
                 elif len(int_expr[n][1].free_symbols) and \
-                        lower < int_expr[n][0] is not True:
+                        (lower >= int_expr[n][0]) is not True and \
+                        (int_expr[n][1] == Min(lower, upper)) is not True:
                     upper = Min(upper, int_expr[n][0])
                 elif self.__eval_cond(upper > int_expr[n][0]) and \
                         self.__eval_cond(upper <= int_expr[n][1]):
