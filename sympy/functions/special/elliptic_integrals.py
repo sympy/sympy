@@ -32,8 +32,8 @@ class elliptic_k(Function):
     pi/2
     >>> elliptic_k(1.0 + I)
     1.50923695405127 + 0.625146415202697*I
-    >>> elliptic_k(z).series(z)
-    pi/2 + pi*z/8 + 9*pi*z**2/128 + 25*pi*z**3/512 + 1225*pi*z**4/32768 + 3969*pi*z**5/131072 + O(z**6)
+    >>> elliptic_k(z).series(z, n=3)
+    pi/2 + pi*z/8 + 9*pi*z**2/128 + O(z**3)
 
     References
     ==========
@@ -170,8 +170,8 @@ class elliptic_e(Function):
     >>> from sympy.abc import z, m
     >>> elliptic_e(z, m).series(z)
     z + z**5*(-m**2/40 + m/30) - m*z**3/6 + O(z**6)
-    >>> elliptic_e(z).series(z)
-    pi/2 - pi*z/8 - 3*pi*z**2/128 - 5*pi*z**3/512 - 175*pi*z**4/32768 - 441*pi*z**5/131072 + O(z**6)
+    >>> elliptic_e(z).series(z, n=4)
+    pi/2 - pi*z/8 - 3*pi*z**2/128 - 5*pi*z**3/512 + O(z**4)
     >>> elliptic_e(1 + I, 2 - I/2).n()
     1.55203744279187 + 0.290764986058437*I
     >>> elliptic_e(0)
@@ -272,8 +272,8 @@ class elliptic_pi(Function):
 
     >>> from sympy import elliptic_pi, I, pi, O, S
     >>> from sympy.abc import z, n, m
-    >>> elliptic_pi(n, z, m).series(z)
-    z + z**3*(m/6 + n/3) + z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)
+    >>> elliptic_pi(n, z, m).series(z, n=4)
+    z + z**3*(m/6 + n/3) + O(z**4)
     >>> elliptic_pi(0.5 + I, 1.0 - I, 1.2)
     2.50232379629182 - 0.760939574180767*I
     >>> elliptic_pi(0, 0)
