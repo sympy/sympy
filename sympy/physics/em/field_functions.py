@@ -1,6 +1,6 @@
-##############################################################################
 from sympy import diff, integrate, S
 from sympy.physics.mechanics import MovingRefFrame
+from sympy.physics.mechanics.core import _check_vector, _check_frame
 
 
 def is_conservative(field):
@@ -25,6 +25,7 @@ def is_conservative(field):
 
     """
 
+    _check_vector(field)
     #Field is conservative irrespective of frame
     #Take the first frame in the result of the
     #separate() method
@@ -54,6 +55,7 @@ def is_solenoidal(field):
 
     """
 
+    _check_vector(field)
     #Field is solenoidal irrespective of frame
     #Take the first frame in the result of the
     #separate() method
@@ -81,6 +83,8 @@ def scalar_potential(field, frame):
 
     """
 
+    _check_frame(frame)
+    _check_vector(field)
     #Check whether field is conservative
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
@@ -90,8 +94,8 @@ def scalar_potential(field, frame):
     #Make a list of dimensions of the frame
     dims = frame.base_vectors
     #Calculate scalar potential function
-    temp_function = integrate(field.dot(dimensions[0]), frame[0])
-    for i, dim in enumerate(dimensions[1:]):
+    temp_function = integrate(field.dot(dims[0]), frame[0])
+    for i, dim in enumerate(dims[1:]):
         partial_diff = diff(temp_function, frame[i+1])
         partial_diff = field.dot(dim) - partial_diff
         temp_function += integrate(partial_diff, frame[i+1])
@@ -129,6 +133,7 @@ def scalar_potential_difference(field, frame, position1, position2):
     
     """
 
+    _check_frame(frame)
     if isinstance(field, Vector):
         #Get the scalar potential function
         scalar_fn = scalar_potential(field, frame)
@@ -145,3 +150,27 @@ def scalar_potential_difference(field, frame, position1, position2):
         subs_dict1[frame[i]] = position1.dot(x)
         subs_dict2[frame[i]] = position2.dot(x)
     return scalar_fn.subs(subs_dict2) - scalar_fn.subs(subs_dict1)
+
+def gradient(scalar, frame):
+    """
+    The vector gradient of a scalar field in the given frame
+
+    Parameters
+    ==========
+
+    scalar : sympyfiable
+        The scalar field to take the gradient of
+
+    frame : MovingRefFrame
+        The frame to calculate the gradient in
+
+    Examples
+    ========
+
+    """
+
+    _check_frame(frame)
+    outvec = 0
+    for i, x in enumerate(frame.base_vectors):
+        outvec += diff(scalar, frame[i]) * x
+    return outvec
