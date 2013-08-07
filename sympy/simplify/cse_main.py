@@ -195,6 +195,9 @@ def opt_cse(expr):
                 if len(com_args) > 1:
                     com_func = Func(*com_args)
 
+                    # for all sets, replace the common symbols by the function over them,
+                    # to allow recursive matches
+
                     diff_i = func_args[i].difference(com_args)
                     func_args[i] = diff_i | set([com_func])
                     if diff_i:
