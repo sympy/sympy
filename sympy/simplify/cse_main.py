@@ -280,7 +280,7 @@ def tree_cse(exprs, symbols, opt_subs=None):
 
         if iterable(expr):
             new_args = [_rebuild(arg) for arg in expr]
-            return type(expr)(*new_args)
+            return expr.func(*new_args)
 
 
         if expr in subs:
@@ -290,18 +290,18 @@ def tree_cse(exprs, symbols, opt_subs=None):
         if expr in opt_subs:
             expr = opt_subs[expr]
 
-        Func, args = type(expr), expr.args
-
         # Parse Muls and Adds arguments by order
-        if Func is Mul:
+        if expr.is_Mul:
             c, nc = expr.args_cnc()
             args = list(ordered(c)) + nc
-        elif Func is Add:
-            args = list(ordered(args))
+        elif expr.is_Add:
+            args = list(ordered(expr.args))
+        else:
+            args = expr.args
 
         new_args = list(map(_rebuild, args))
         if new_args != args:
-            new_expr = Func(*new_args)
+            new_expr = expr.func(*new_args)
         else:
             new_expr = expr
 
