@@ -136,7 +136,7 @@ def postprocess_for_cse(expr, optimizations):
     return expr
 
 
-def opt_cse(expr):
+def opt_cse(exprs):
     """Find optimization opportunities in Adds, Muls, Pows and negative
     coefficient Muls"""
     from sympy.matrices import Matrix
@@ -149,9 +149,7 @@ def opt_cse(expr):
     seen_subexp = set()
     def _find_opts(expr):
 
-        if isinstance(expr, Basic) and expr.is_Atom:
-           return
-        if isinstance(expr, bool):
+        if expr.is_Atom:
            return
 
         if iterable(expr):
@@ -181,7 +179,9 @@ def opt_cse(expr):
             if _coeff_isneg(expr.exp):
                 opt_subs[expr] = Pow(Pow(expr.base, -expr.exp), S.NegativeOne, evaluate=False)
 
-    _find_opts(expr)
+    for e in exprs:
+        if isinstance(e, Basic):
+            _find_opts(e)
 
     ## Process Adds and commutative Muls
 
@@ -244,9 +244,7 @@ def tree_cse(exprs, symbols, opt_subs=None):
 
     seen_subexp = set()
     def _find_repeated(expr):
-        if isinstance(expr, Basic) and expr.is_Atom:
-           return
-        if isinstance(expr, bool):
+        if expr.is_Atom:
            return
 
         if iterable(expr):
@@ -267,7 +265,8 @@ def tree_cse(exprs, symbols, opt_subs=None):
         list(map(_find_repeated, args))
 
     for e in exprs:
-        _find_repeated(e)
+        if isinstance(e, Basic):
+            _find_repeated(e)
 
     ## Rebuild tree
 
@@ -276,9 +275,7 @@ def tree_cse(exprs, symbols, opt_subs=None):
     subs = dict()
     def _rebuild(expr):
 
-        if isinstance(expr, Basic) and expr.is_Atom:
-            return expr
-        if isinstance(expr, bool):
+        if expr.is_Atom:
             return expr
 
         if iterable(expr):
@@ -317,7 +314,13 @@ def tree_cse(exprs, symbols, opt_subs=None):
         else:
             return new_expr
 
-    reduced_exprs = [_rebuild(expr) for expr in exprs]
+    reduced_exprs = []
+    for e in exprs:
+        if isinstance(e, Basic):
+            reduced_e =_rebuild(e)
+        else:
+            reduced_e = e
+        reduced_exprs.append(reduced_e)
 
     return replacements, reduced_exprs
 
