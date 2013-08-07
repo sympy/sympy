@@ -228,7 +228,7 @@ def opt_cse(expr):
     return opt_subs
 
 
-def tree_cse(exprs, symbols=None, opt_subs=None):
+def tree_cse(exprs, symbols, opt_subs=None):
     """Perform blind CSE on expression tree, taking opt_subs into account"""
     from sympy.matrices import Matrix
 

@@ -133,7 +133,7 @@ def test_multiple_expressions():
     assert cse([x*y, z + x*y, x*y*z + 3]) == \
         ([(x0, x*y)], [x0, z + x0, 3 + x0*z])
 
-@XFAIL
+@XFAIL # CSE of non-commutative Mul terms is disabled
 def test_non_commutative_cse():
     A, B, C = symbols('A B C', commutative=False)
     l = [A*B*C, A*C]
@@ -141,13 +141,22 @@ def test_non_commutative_cse():
     l = [A*B*C, A*B]
     assert cse(l) == ([(x0, A*B)], [x0*C, x0])
 
-@XFAIL
+# Test if CSE of non-commutative Mul terms is disabled
+def test_bypass_non_commutatives():
+    A, B, C = symbols('A B C', commutative=False)
+    l = [A*B*C, A*C]
+    assert cse(l) == ([], l)
+    l = [A*B*C, A*B]
+    assert cse(l) == ([], l)
+    l = [B*C, A*B*C]
+    assert cse(l) == ([], l)
+
+@XFAIL # CSE fails when replacing non-commutative sub-expressions
 def test_non_commutative_order():
     A, B, C = symbols('A B C', commutative=False)
     x0 = symbols('x0', commutative=False)
-    l = [B*C, A*B*C]
-    assert cse(l) == ([(x0, B*C)], [x0, A*x0])
-
+    l = [B+C, A*(B+C)]
+    assert cse(l) == ([(x0, B+C)], [x0, A*x0])
 
 @XFAIL
 def test_powers():
