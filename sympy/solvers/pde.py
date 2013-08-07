@@ -488,7 +488,7 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
 
     The general form of this partial differential equation is
 
-    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{y) + c f(x,y) = 0
+    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{dy} + c f(x,y) = 0
 
     where `a`, `b` and `c` are constants.
 
@@ -557,9 +557,9 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
 
     The general form of this partial differential equation is
 
-    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{y) + c f(x,y) = G(x,y)
+    .. math:: a \frac{df(x,y)}{dx} + b \frac{df(x,y)}{dy} + c f(x,y) = G(x,y)
 
-    where `a`, `b` and `c` are constants and `G` can be an arbitrary
+    where `a`, `b` and `c` are constants and `G(x, y)` can be an arbitrary
     function in `x` and `y`.
 
     The general solution of the PDE is::
@@ -613,7 +613,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
                 /|eta=-b*y + c*x, xi=b*x + c*y
 
 
-     Examples
+    Examples
     ========
 
     >>> from sympy.solvers.pde import pdsolve
@@ -671,8 +671,10 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     `\frac{dy}{dx} = -\frac{b}{a}`
 
     Making the following substitutions reduces it to the linear ODE
-    `a(\xi, \eta)*\frac{du}{d\xi} + c(\xi, \eta)*u - d(\xi, \eta) = 0` which can
-    be solved using dsolve.
+
+    .. math:: a(\xi, \eta)\frac{du}{d\xi} + c(\xi, \eta)u - d(\xi, \eta) = 0
+
+    which can be solved using dsolve.
 
     The general form of this PDE is::
 
