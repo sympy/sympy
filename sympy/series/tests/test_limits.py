@@ -363,7 +363,7 @@ def test_issue_2641():
 def test_issue_3267():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
-    assert limit(r, x, 1) == n/2
+    assert limit(r, x, 1).simplify() == n/2
 
 
 def test_factorial():
