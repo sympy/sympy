@@ -332,7 +332,7 @@ def _primitive(f, p):
 
     coeffs = {}
     for monom, coeff in f.iterterms():
-        if not monom[:-1] in coeffs:
+        if monom[:-1] not in coeffs:
             coeffs[monom[:-1]] = {}
         coeffs[monom[:-1]][monom[-1]] = coeff
 
@@ -1389,9 +1389,9 @@ def _func_field_modgcd_p(f, g, minpoly, p):
         points.remove(a)
 
         if k == 1:
-            test = (delta.evaluate(k-1, a) % p == 0)
+            test = delta.evaluate(k-1, a) % p == 0
         else:
-            test = (delta.evaluate(k-1, a).trunc_ground(p) == 0)
+            test = delta.evaluate(k-1, a).trunc_ground(p) == 0
 
         if test:
             continue
@@ -1479,12 +1479,12 @@ def _func_field_modgcd_p(f, g, minpoly, p):
     return None
 
 
-def _integer_rational_reconstruction(c, m, dom):
+def _integer_rational_reconstruction(c, m, domain):
     if c < 0:
         c += m
 
-    r0, s0 = m, dom.zero
-    r1, s1 = c, dom.one
+    r0, s0 = m, domain.zero
+    r1, s1 = c, domain.one
 
     bound = sqrt(m / 2) # still correct if replaced by ZZ.sqrt(m // 2) ?
 
@@ -1503,7 +1503,7 @@ def _integer_rational_reconstruction(c, m, dom):
     else:
         return None
 
-    field = dom.get_field()
+    field = domain.get_field()
 
     return field(a) / field(b)
 
@@ -1644,10 +1644,12 @@ def _to_ZZ_poly(f, ring):
 
         for i in xrange(n):
             if coeff[i]:
+                c = domain(coeff[i] * den) * m
+
                 if (monom[0], n-i-1) not in f_:
-                    f_[(monom[0], n-i-1)] = (coeff[i] * den).numerator * m
+                    f_[(monom[0], n-i-1)] = c
                 else:
-                    f_[(monom[0], n-i-1)] += (coeff[i] * den).numerator * m
+                    f_[(monom[0], n-i-1)] += c
 
     return f_
 
@@ -1658,20 +1660,24 @@ def _to_ANP_poly(f, ring):
 
     if isinstance(f.ring.domain, PolynomialRing):
         for monom, coeff in f.iterterms():
-            for mon, c in coeff.iterterms():
+            for mon, coef in coeff.iterterms():
                 m = (monom[0],) + mon
-                if not m in f_:
-                    f_[m] = domain([domain.domain(c)] + [0]*monom[1])
+                c = domain([domain.domain(coef)] + [0]*monom[1])
+
+                if m not in f_:
+                    f_[m] = c
                 else:
-                    f_[m] += domain([domain.domain(c)] + [0]*monom[1])
+                    f_[m] += c
 
     else:
         for monom, coeff in f.iterterms():
             m = (monom[0],)
-            if not m in f_:
-                f_[m] = domain([domain.domain(coeff)] + [0]*monom[1])
+            c = domain([domain.domain(coeff)] + [0]*monom[1])
+
+            if m not in f_:
+                f_[m] = c
             else:
-                f_[m] += domain([domain.domain(coeff)] + [0]*monom[1])
+                f_[m] += c
 
     return f_
 
@@ -1746,4 +1752,4 @@ def func_field_modgcd(f, g):
 
     h = h.quo_ground(h.LC)
 
-    return h , f.quo(h), g.quo(h)
+    return h, f.quo(h), g.quo(h)
