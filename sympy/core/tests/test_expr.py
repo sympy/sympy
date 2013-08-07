@@ -281,6 +281,15 @@ def test_as_leading_term3():
     assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
 
 
+def test_as_leading_term4():
+    # see issue 3744
+    n = Symbol('n', integer=True, positive=True)
+    r = -n**3/(2*n**2 + 4*n + 2) - n**2/(n**2 + 2*n + 1) + \
+        n**2/(n + 1) - n/(2*n**2 + 4*n + 2) + n/(n*x + x) + 2*n/(n + 1) - \
+        1 + 1/(n*x + x) + 1/(n + 1) - 1/x
+    assert r.as_leading_term(x).cancel() == n/2
+
+
 def test_as_leading_term_stub():
     class foo(Function):
         pass

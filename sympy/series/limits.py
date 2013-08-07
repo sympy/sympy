@@ -173,8 +173,6 @@ def limit(e, z, z0, dir="+"):
             rval = Add(*[limit(term, z, z0, dir) for term in e.args])
             if rval != S.NaN:
                 return rval
-        if not any([a.is_unbounded for a in e.args]):
-            e = e.normal() # workaround for issue 3744
 
     if e.is_Order:
         args = e.args
