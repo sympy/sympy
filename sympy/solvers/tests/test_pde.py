@@ -70,11 +70,12 @@ def test_pde_classify():
     eq1 = a*f(x,y) + b*f(x,y).diff(x) + c*f(x,y).diff(y)
     eq2 = 3*f(x,y) + 2*f(x,y).diff(x) + f(x,y).diff(y)
     eq3 = a*f(x,y) + b*f(x,y).diff(x) + 2*f(x,y).diff(y)
+    eq4 = x*f(x,y) + f(x,y).diff(x) + 3*f(x,y).diff(y)
     eq5 = x**2*f(x,y) + x*f(x,y).diff(x) + x*y*f(x,y).diff(y)
     eq6 = y*x**2*f(x,y) + y*f(x,y).diff(x) + f(x,y).diff(y)
     for eq in [eq1, eq2, eq3]:
         assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
-    for eq in [eq5, eq6]:
+    for eq in [eq4, eq5, eq6]:
         assert classify_pde(eq) == ('1st_linear_variable_coeff',)
 
 
@@ -91,7 +92,8 @@ def test_checkpdesol():
     assert checkpdesol(eq4, [pdsolve(eq5), pdsolve(eq6)]) == [
         (False, (x - 2)*F(3*x - y)*exp(-x/S(5) - 3*y/S(5))),
          (False, (x - 1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))]
-
+    for eq in [eq4, eq5, eq6]:
+        assert checkpdesol(eq, pdsolve(eq))[0]
 
 def test_solvefun():
     f, F, G, H = map(Function, ['f', 'F', 'G', 'H'])
