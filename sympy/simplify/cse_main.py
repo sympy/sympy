@@ -290,7 +290,8 @@ def tree_cse(exprs, symbols, opt_subs=None):
         if expr in opt_subs:
             expr = opt_subs[expr]
 
-        # Parse Muls and Adds arguments by order
+        # Parse Muls and Adds arguments by order to ensure
+        # replacement order independent from hashes order
         if expr.is_Mul:
             c, nc = expr.args_cnc()
             args = list(ordered(c)) + nc
