@@ -5,22 +5,15 @@ from __future__ import print_function, division
 import sys
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Rational
+    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
 )
 
 from sympy.core.mul import _keep_coeff
-
+from sympy.core.symbol import Symbol
 from sympy.core.basic import preorder_traversal
-
 from sympy.core.relational import Relational
-
-from sympy.core.sympify import (
-    sympify, SympifyError,
-)
-
-from sympy.core.decorators import (
-    _sympifyit,
-)
+from sympy.core.sympify import sympify
+from sympy.core.decorators import _sympifyit
 
 from sympy.polys.polyclasses import DMP
 
@@ -33,17 +26,10 @@ from sympy.polys.polyutils import (
     _parallel_dict_from_expr,
 )
 
-from sympy.polys.rationaltools import (
-    together,
-)
-
-from sympy.polys.rootisolation import (
-    dup_isolate_real_roots_list,
-)
-
+from sympy.polys.rationaltools import together
+from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.fglmtools import matrix_fglm
-
 from sympy.polys.monomials import Monomial
 from sympy.polys.orderings import monomial_key
 
@@ -335,7 +321,7 @@ class Poly(Expr):
         ========
 
         >>> from sympy import Poly
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> f, g = Poly(x/2 + 1), Poly(2*x + 1)
 
@@ -713,7 +699,7 @@ class Poly(Expr):
         ========
 
         >>> from sympy import Poly
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> f = Poly(x**2 + 1, x, domain='QQ[y]')
         >>> f
@@ -1567,7 +1553,7 @@ class Poly(Expr):
         Examples
         ========
 
-        >>> from sympy import Poly, ZZ, QQ
+        >>> from sympy import Poly
         >>> from sympy.abc import x
 
         >>> Poly(x**2 + 1, x).rem(Poly(2*x - 4, x))
@@ -1758,6 +1744,36 @@ class Poly(Expr):
             return f.rep.total_degree()
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'total_degree')
+
+    def homogenize(f, s):
+        """
+        Returns the homogeneous polynomial of ``f``.
+
+        A homogeneous polynomial is a polynomial whose all monomials with
+        non-zero coefficients have the same total degree. If you only
+        want to check if a polynomial is homogeneous, then use
+        :func:`Poly.is_homogeneous`. If you want not only to check if a
+        polynomial is homogeneous but also compute its homogeneous order,
+        then use :func:`Poly.homogeneous_order`.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x, y, z
+
+        >>> f = Poly(x**5 + 2*x**2*y**2 + 9*x*y**3)
+        >>> f.homogenize(z)
+        Poly(x**5 + 2*x**2*y**2*z + 9*x*y**3*z, x, y, z, domain='ZZ')
+
+        """
+        if not isinstance(s, Symbol):
+            raise TypeError("``Symbol`` expected, got %s" % type(s))
+        if s in f.gens:
+            raise ValueError("This symbol is already in use.")
+        if hasattr(f.rep, 'homogenize'):
+            return f.per(f.rep.homogenize(), gens=f.gens + (s,))
+        raise OperationNotSupported(f, 'homogeneous_order')
 
     def homogeneous_order(f):
         """
@@ -4890,7 +4906,7 @@ def terms_gcd(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import terms_gcd, cos, pi
+    >>> from sympy import terms_gcd, cos
     >>> from sympy.abc import x, y
     >>> terms_gcd(x**6*y**2 + x**3*y, x, y)
     x**3*y*(x**3*y + 1)
@@ -5074,7 +5090,7 @@ def primitive(f, *gens, **args):
     ========
 
     >>> from sympy.polys.polytools import primitive
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
 
     >>> primitive(6*x**2 + 8*x + 12)
     (2, 3*x**2 + 4*x + 6)
@@ -5467,7 +5483,7 @@ def to_rational_coeffs(f):
     Examples
     ========
 
-    >>> from sympy import sqrt, Poly, simplify, expand
+    >>> from sympy import sqrt, Poly, simplify
     >>> from sympy.polys.polytools import to_rational_coeffs
     >>> from sympy.abc import x
     >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
@@ -5566,8 +5582,6 @@ def to_rational_coeffs(f):
         return has_sq
 
     if f.get_domain().is_EX and _has_square_roots(f):
-        rescale_x = None
-        translate_x = None
         r = _try_rescale(f)
         if r:
             return r[0], r[1], None, r[2]
