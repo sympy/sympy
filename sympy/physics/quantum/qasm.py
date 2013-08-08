@@ -128,6 +128,7 @@ class Qasm(object):
         self.labels = []
         self.add(*args)
         self.kwargs = kwargs
+        self.defs = {}
 
     def add(self,*lines):
         for line in nonblank(lines):
