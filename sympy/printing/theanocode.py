@@ -46,10 +46,10 @@ if theano:
             sympy.loggamma: tt.gammaln,
             sympy.Pow: tt.pow,
             sympy.Eq: tt.eq,
-            sympy.Gt: tt.gt,
-            sympy.Lt: tt.lt,
-            sympy.Le: tt.le,
-            sympy.Ge: tt.ge,
+            sympy.StrictGreaterThan: tt.gt,
+            sympy.StrictLessThan: tt.lt,
+            sympy.LessThan: tt.le,
+            sympy.GreaterThan: tt.ge,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
 

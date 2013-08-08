@@ -246,3 +246,10 @@ def test_cache():
     tx = theano_code(sx, cache=cache)
     assert theano_code(sx, cache=cache) is tx
     assert theano_code(sx, cache={}) is not tx
+
+def test_Relationals():
+    xt, yt = theano_code(x), theano_code(y)
+    assert theq(theano_code(x > y), xt > yt)
+    assert theq(theano_code(x < y), xt < yt)
+    assert theq(theano_code(x >= y), xt >= yt)
+    assert theq(theano_code(x <= y), xt <= yt)
