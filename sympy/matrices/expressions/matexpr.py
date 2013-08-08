@@ -290,6 +290,8 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
 
+    def _eval_simplify(self, **kwargs):
+        return self
 
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
