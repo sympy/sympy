@@ -204,8 +204,8 @@ def test_BlockMatrix_Inverse_execution():
     inputs = A, B
     output = B.I*A
 
-    cutsizes = {A: [(n/2, n/2), (k/2, k/2)],
-                B: [(n/2, n/2), (n/2, n/2)]}
+    cutsizes = {A: [(n//2, n//2), (k//2, k//2)],
+                B: [(n//2, n//2), (n//2, n//2)]}
     cutinputs = [sympy.blockcut(i, *cutsizes[i]) for i in inputs]
     cutoutput = output.subs(dict(zip(inputs, cutinputs)))
 
