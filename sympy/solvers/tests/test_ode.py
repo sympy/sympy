@@ -77,7 +77,7 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
         '1st_linear_Integral', 'almost_linear', 'almost_linear_Integral',
-        'best', 'best_hint', 'default',
+        'best', 'best_hint', 'default', 'lie_group',
         'nth_linear_euler_eq_homogeneous', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
@@ -145,12 +145,13 @@ def test_classify_ode():
         '1st_linear', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
+        'lie_group',
         'nth_linear_constant_coeff_homogeneous',
         'separable_Integral',
         '1st_linear_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-    assert classify_ode(f(x).diff(x)**2, f(x)) == ()
+    assert classify_ode(f(x).diff(x)**2, f(x)) == ('lie_group',)
     # 1650: f(x) should be cleared from highest derivative before classifying
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
@@ -158,6 +159,7 @@ def test_classify_ode():
     assert a == ('1st_linear',
         'Bernoulli',
         'almost_linear',
+        'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral',
@@ -167,7 +169,8 @@ def test_classify_ode():
     assert b == c != ()
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-    ) == ('Bernoulli', 'almost_linear', 'Bernoulli_Integral', 'almost_linear_Integral')
+    ) == ('Bernoulli', 'almost_linear', 'lie_group',
+        'Bernoulli_Integral', 'almost_linear_Integral')
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
@@ -176,13 +179,13 @@ def test_classify_ode():
     k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) + 2*f(x)/(k*f(x) +
         k*x*f(x)) + x*f(x).diff(x)/(k*f(x) + k*x*f(x)) + z, f(x)) == \
-        ('separable', '1st_exact', 'separable_Integral', '1st_exact_Integral')
+        ('separable', '1st_exact', 'lie_group', 'separable_Integral', '1st_exact_Integral')
     # preprocessing
     ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced',
+        'separable_reduced', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
@@ -1270,7 +1273,7 @@ def test_unexpanded_Liouville_ODE():
 def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
+    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral', 'almost_linear_Integral',
@@ -1281,7 +1284,7 @@ def test_1686():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', '1st_exact_Integral',
+        'separable_reduced', 'lie_group', '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         'separable_reduced_Integral')
@@ -1450,11 +1453,11 @@ def test_separable_reduced():
     f = Function('f')
     df = f(x).diff(x)
     eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced', 'lie_group',
         '1st_linear_Integral', 'separable_reduced_Integral')
 
     eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
-    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced', 'lie_group',
         '1st_linear_Integral', 'separable_reduced_Integral')
     sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
     assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
@@ -1462,7 +1465,7 @@ def test_separable_reduced():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = df + (f(x) / (x**4*f(x) - x))
-    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced', 'lie_group',
         '1st_linear_Integral', 'separable_reduced_Integral')
     # generates PolynomialError in solve attempt
     sol = dsolve(eq, hint = 'separable_reduced')
@@ -1715,3 +1718,8 @@ def test_kamke():
     eq = x**2*(a*f(x)**2+(f(x).diff(x))) + b*x**alpha + c
     i = infinitesimals(eq, hint='sum_function')
     assert checkinfsol(eq, i)[0]
+
+def test_lie_group():
+    eq = f(x).diff(x)**2
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert checkodesol(eq, sol)[0]

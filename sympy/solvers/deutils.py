@@ -241,6 +241,8 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
             # special case
             if "1st_homogeneous_coeff_best" in gethints:
                 gethints.remove("1st_homogeneous_coeff_best")
+            if "lie_group" in gethints:
+                gethints.remove("lie_group")
         for i in gethints:
             sol = _desolve(eq, func, hint=i, simplify=simplify, prep=prep,
                 classify=False, order=hints['order'], match=hints[i], type=type)
