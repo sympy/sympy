@@ -20,6 +20,9 @@ from sympy import Mul
 from sympy.core.compatibility import u
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
+from sympy.core.core import BasicMeta
+from sympy.core.assumptions import ManagedProperties
+
 
 __all__ = [
     'CircuitPlot',
@@ -348,10 +351,6 @@ class Mx(OneQubitGate):
     measurement = True
     gate_name='Mx'
     gate_name_latex=u('M_x')
-
-# Testing defined gates
-from sympy.core.core import BasicMeta
-from sympy.core.assumptions import ManagedProperties
 
 class CreateOneQubitGate(ManagedProperties):
     def __new__(mcl, name, latexname=None):
