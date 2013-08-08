@@ -27,11 +27,11 @@ from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c): return reduce(operator.mul, c, 1)
 
-def flip(i,n):
+def flip_index(i,n):
     """Reorder qubit indices from largest to smallest.
-    >>> flip(0,2)
+    >>> flip_index(0,2)
     1
-    >>> flip(1,2)
+    >>> flip_index(1,2)
     0
     """
     return n-i-1
@@ -40,7 +40,7 @@ def isblank(line):
     """Returns True if the line is empty/blank/all whitespace.
     >>> isblank('   ')
     True
-    >>> isblank(' _ ')
+    >>> isblank('_')
     False
     """
     return len(line.split()) == 0
