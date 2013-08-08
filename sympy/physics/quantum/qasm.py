@@ -127,6 +127,7 @@ class Qasm(object):
         self.defs = {}
         self.circuit = []
         self.labels = []
+        self.inits = {}
         self.add(*args)
         self.kwargs = kwargs
 
@@ -152,9 +153,12 @@ class Qasm(object):
     def plot(self):
         from sympy.physics.quantum.circuitplot import CircuitPlot
         circuit,labels = self.get_circuit(), self.get_labels()
-        CircuitPlot(circuit,len(labels),labels=labels)
+        CircuitPlot(circuit,len(labels),labels=labels,inits=self.inits)
 
-    def qubit(self,arg,*rest): self.labels.append(arg)
+    def qubit(self,arg,init=None):
+        self.labels.append(arg)
+        if init: self.inits[arg] = init
+
     def indices(self,args): return get_indices(args,self.labels)
     def index(self,arg): return get_index(arg,self.labels)
     def nop(self,*args): pass

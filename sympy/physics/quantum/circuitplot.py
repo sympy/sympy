@@ -60,6 +60,7 @@ else:
         not_radius = 0.15
         swap_delta = 0.05
         labels = []
+        inits = {}
         label_buffer = 0.5
 
         def __init__(self, c, nqubits, **kwargs):
@@ -117,9 +118,11 @@ else:
                 )
                 self._axes.add_line(line)
                 if self.labels:
+                    init_label_buffer = 0
+                    if self.inits.get(self.labels[i]): init_label_buffer = 0.25
                     self._axes.text(
-                        xdata[0]-self.label_buffer,ydata[0],
-                        render_label(self.labels[i]),
+                        xdata[0]-self.label_buffer-init_label_buffer,ydata[0],
+                        render_label(self.labels[i],self.inits),
                         size=self.fontsize,
                         color='k',ha='center',va='center')
             self._plot_measured_wires()
@@ -299,13 +302,17 @@ else:
         """
         return CircuitPlot(c, nqubits, **kwargs)
 
-def render_label(label):
+def render_label(label,inits={}):
     """Slightly more flexible way to render labels.
     >>> from sympy.physics.quantum.circuitplot import render_label
     >>> render_label('q0')
     '$|q0\\\\rangle$'
-    My attempt to include the initialization strings failed, e.g. qubit q0,0
+    >>> render_label('q0',{'q0':'0'})
+    '$|q0\\\\rangle=|0\\\\rangle$'
     """
+    init = inits.get(label)
+    if init:
+        return r'$|%s\rangle=|%s\rangle$' % (label,init)
     return r'$|%s\rangle$' % label
 
 def labeller(n,symbol='q'):
