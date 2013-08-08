@@ -18,10 +18,6 @@ CNOT(1,0)*H(1)
 >>> q.get_circuit()
 CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
 """
-<<<<<<< HEAD
-import re
-=======
->>>>>>> a937251e90d88cf8a3fb97f865db637e15685a4e
 
 from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS,SWAP,S,T
 from sympy.physics.quantum.circuitplot import Mz
