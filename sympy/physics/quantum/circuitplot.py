@@ -119,7 +119,7 @@ else:
                 if self.labels:
                     self._axes.text(
                         xdata[0]-self.label_buffer,ydata[0],
-                        r'$|%s\rangle$' % self.labels[i],
+                        render_label(self.labels[i]),
                         size=self.fontsize,
                         color='k',ha='center',va='center')
             self._plot_measured_wires()
@@ -298,6 +298,15 @@ else:
             as big as the largest `min_qubits`` of the gates.
         """
         return CircuitPlot(c, nqubits, **kwargs)
+
+def render_label(label):
+    """Slightly more flexible way to render labels.
+    >>> from sympy.physics.quantum.circuitplot import render_label
+    >>> render_label('q0')
+    '$|q0\\\\rangle$'
+    My attempt to include the initialization strings failed, e.g. qubit q0,0
+    """
+    return r'$|%s\rangle$' % label
 
 def labeller(n,symbol='q'):
     """Autogenerate labels for wires of quantum circuits.
