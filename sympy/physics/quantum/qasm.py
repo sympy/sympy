@@ -4,10 +4,6 @@ qasm.py - Functions to parse a set of qasm commands into a Sympy Circuit.
 
 Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
 
-Todo:
-* Put in subscripts??
-* Figure out the def boxes
-
 The code returns a circuit and an associated list of labels.
 >>> from sympy.physics.quantum.qasm import Qasm
 >>> q = Qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
@@ -18,6 +14,10 @@ CNOT(1,0)*H(1)
 >>> q.get_circuit()
 CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
 """
+
+__all__ = [
+    'Qasm',
+    ]
 
 from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS,SWAP,S,T
 from sympy.physics.quantum.circuitplot import Mz
