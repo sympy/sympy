@@ -228,35 +228,7 @@ class Set(Basic):
         """
         return self._measure
 
-    def image(self, *args):
-        """ Image of set under transformation ``f``
-
-        .. math::
-            { f(x) | x \in self }
-
-        Examples
-        ========
-
-        >>> from sympy import Interval, Symbol
-        >>> x = Symbol('x')
-
-        >>> Interval(0, 2).image(x, 2*x)
-        [0, 4]
-
-        >>> Interval(0, 2).image(lambda x: 2*x)
-        [0, 4]
-
-        See Also:
-            ImageSet
-        """
-        if len(args) == 2:
-            from sympy import Lambda
-            f = Lambda(*args)
-        else:
-            f, = args
-        return self._image(f)
-
-    def _image(self, f):
+    def _eval_imageset(self, f):
         from sympy.sets.fancysets import ImageSet
         return ImageSet(f, self)
 
@@ -663,10 +635,10 @@ class Interval(Set, EvalfMixin):
 
         return expr
 
-    def _image(self, f):
+    def _eval_imageset(self, f):
         # Cut out 0, perform image, add back in image of 0
         if self.contains(0) == True:
-            return (self - FiniteSet(0))._image(f) + FiniteSet(0)._image(f)
+            return imageset(f, self - FiniteSet(0)) + imageset(f, FiniteSet(0))
 
         from sympy.functions.elementary.miscellaneous import Min, Max
         # TODO: manage left_open and right_open better in case of
@@ -901,7 +873,7 @@ class Union(Set, EvalfMixin):
             parity *= -1
         return measure
 
-    def _image(self, f):
+    def _eval_imageset(self, f):
         return Union(imageset(f, arg) for arg in self.args)
 
     def as_relational(self, symbol):
@@ -1002,7 +974,7 @@ class Intersection(Set):
     def _complement(self):
         raise NotImplementedError()
 
-    def _image(self, f):
+    def _eval_imageset(self, f):
         return Intersection(imageset(f, arg) for arg in self.args)
 
     def _contains(self, other):
@@ -1132,7 +1104,7 @@ class EmptySet(with_metaclass(Singleton, Set)):
     def __iter__(self):
         return iter([])
 
-    def _image(self, f):
+    def _eval_imageset(self, f):
         return self
 
 class UniversalSet(with_metaclass(Singleton, Set)):
@@ -1268,7 +1240,7 @@ class FiniteSet(Set, EvalfMixin):
         """
         return other in self._elements
 
-    def _image(self, f):
+    def _eval_imageset(self, f):
         return FiniteSet(*map(f, self))
 
     @property
@@ -1369,4 +1341,4 @@ def imageset(*args):
         f = args[0]
     set = args[-1]
 
-    return set._image(f)
+    return set._eval_imageset(f)
