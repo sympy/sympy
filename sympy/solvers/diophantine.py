@@ -14,7 +14,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     this is treated as $(x + y)(x - y) = 0$ and $x+y = 0$ and $x-y = 0$ are solved independently
     and combined.
     """
-    var = list(eq.free_symbols)
+    var = list(eq.expand(force=True).free_symbols)
     var.sort()
 
     terms = factor(eq).as_ordered_factors()
