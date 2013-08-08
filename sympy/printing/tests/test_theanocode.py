@@ -210,9 +210,9 @@ def test_BlockMatrix_Inverse_execution():
     cutoutput = output.subs(dict(zip(inputs, cutinputs)))
 
     dtypes = dict(zip(inputs, [dtype]*len(inputs)))
-    f = theano_function(inputs, [output], dtypes=dtypes)
+    f = theano_function(inputs, [output], dtypes=dtypes, cache={})
     fblocked = theano_function(inputs, [sympy.block_collapse(cutoutput)],
-                               dtypes=dtypes)
+                               dtypes=dtypes, cache={})
 
     import numpy
     ninputs = [numpy.random.rand(*x.shape).astype(dtype) for x in inputs]
@@ -239,3 +239,10 @@ def test_AppliedUndef():
 
 def test_bad_keyword_args_raise_error():
     raises(Exception, lambda : theano_function([x], [x+1], foobar=3))
+
+def test_cache():
+    sx = sy.Symbol('x')
+    cache = {}
+    tx = theano_code(sx, cache=cache)
+    assert theano_code(sx, cache=cache) is tx
+    assert theano_code(sx, cache={}) is not tx

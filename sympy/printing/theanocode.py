@@ -66,7 +66,9 @@ class TheanoPrinter(Printer):
     """ Code printer for Theano computations """
     printmethod = "_theano"
 
-    cache = dict()
+    def __init__(self, *args, **kwargs):
+        self.cache = kwargs.pop('cache', dict())
+        super(TheanoPrinter, self).__init__(*args, **kwargs)
 
     def _print_Symbol(self, s, dtypes={}, broadcastables={}):
         dtype = dtypes.get(s, 'floatX')
@@ -169,9 +171,10 @@ class TheanoPrinter(Printer):
         """Returns printer's representation for expr (as a string)"""
         return self._print(expr, **kwargs)
 
+global_cache = {}
 
-def theano_code(expr, **kwargs):
-    return TheanoPrinter({}).doprint(expr, **kwargs)
+def theano_code(expr, cache=global_cache, **kwargs):
+    return TheanoPrinter(cache=cache, settings={}).doprint(expr, **kwargs)
 
 
 def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
@@ -191,7 +194,7 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
     return broadcastables
 
 
-def theano_function(inputs, outputs, dtypes={}, **kwargs):
+def theano_function(inputs, outputs, dtypes={}, cache=global_cache, **kwargs):
     """ Create Theano function from SymPy expressions """
     broadcastables = dim_handling(inputs, **kwargs)
 
@@ -200,7 +203,8 @@ def theano_function(inputs, outputs, dtypes={}, **kwargs):
     theano_kwargs = dict((k, v) for k, v in kwargs.items()
                                 if k not in dim_names)
 
-    code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
+    code = partial(theano_code, cache=cache, dtypes=dtypes,
+                   broadcastables=broadcastables)
     tinputs  = map(code, inputs)
     toutputs = map(code, outputs)
     toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
