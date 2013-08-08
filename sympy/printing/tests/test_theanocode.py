@@ -1,4 +1,5 @@
 from sympy.external import import_module
+from sympy.utilities.pytest import raises
 
 theano = import_module('theano')
 if theano:
@@ -235,3 +236,6 @@ def test_AppliedUndef():
     ft = theano_code(f(t))
     assert isinstance(ft, tt.TensorVariable)
     assert ft.name == 'f_t'
+
+def test_bad_keyword_args_raise_error():
+    raises(Exception, lambda : theano_function([x], [x+1], foobar=3))
