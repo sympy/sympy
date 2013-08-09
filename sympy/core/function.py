@@ -876,6 +876,7 @@ class Derivative(Expr):
         else:
             return False
 
+    #@cacheit
     def __new__(cls, expr, *variables, **assumptions):
 
         expr = sympify(expr)

@@ -2,7 +2,7 @@
 from __future__ import print_function, division
 
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.cache import cacheit
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
@@ -753,6 +753,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return S.One, self
 
+    @cacheit
     def subs(self, *args, **kwargs):
         """
         Substitutes old for new in an expression after sympifying args.

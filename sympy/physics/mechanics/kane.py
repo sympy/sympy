@@ -3,6 +3,7 @@ from __future__ import print_function, division
 __all__ = ['KanesMethod']
 
 from sympy import Symbol, zeros, Matrix, diff, solve_linear_system_LU, eye
+from sympy.core.cache import user_cacheit, cacheit
 from sympy.core.compatibility import reduce
 from sympy.utilities import default_sort_key
 from sympy.physics.mechanics.essential import ReferenceFrame, dynamicsymbols
@@ -108,6 +109,7 @@ class KanesMethod(object):
                                   'kinematic differential equations to use' +
                                   'this method.')
 
+    @user_cacheit
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=[],
             configuration_constraints=[], u_dependent=[],
             velocity_constraints=[], acceleration_constraints=None,
@@ -232,6 +234,7 @@ class KanesMethod(object):
         self._qdep = qdep
         self._f_h = coneqs
 
+    @user_cacheit
     def _speeds(self, uind, udep=[], coneqs=[], diffconeqs=None, u_auxiliary=[]):
         """Supply all the generalized speeds in a list.
 
@@ -324,6 +327,7 @@ class KanesMethod(object):
             raise ___KDEqError
         return self._qdot_u_map
 
+    @user_cacheit
     def _kindiffeq(self, kdeqs):
         """Supply all the kinematic differential equations in a list.
 
@@ -366,6 +370,7 @@ class KanesMethod(object):
         self._k_ku = self._mat_inv_mul(k_kqdot, k_ku).subs(uaz)
         self._f_k = self._mat_inv_mul(k_kqdot, f_k).subs(uaz)
 
+    @user_cacheit
     def _form_fr(self, fl):
         """Form the generalized active force.
 
@@ -422,6 +427,7 @@ class KanesMethod(object):
         self._fr = FR
         return FR
 
+    @user_cacheit
     def _form_frstar(self, bl):
         """Form the generalized inertia force.
 
@@ -552,6 +558,7 @@ class KanesMethod(object):
         self._f_d = zeroeq
         return FRSTAR
 
+    @user_cacheit
     def kanes_equations(self, FL, BL):
         """ Method to form Kane's equations, Fr + Fr* = 0.
 
@@ -600,6 +607,7 @@ class KanesMethod(object):
         else:
             return (fr, frstar)
 
+    @user_cacheit
     def linearize(self):
         """ Method used to generate linearized equations.
 

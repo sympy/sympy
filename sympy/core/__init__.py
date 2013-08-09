@@ -2,7 +2,7 @@
 """
 
 from .sympify import sympify, SympifyError
-from .cache import cacheit
+from .cache import cacheit, user_cacheit
 from .basic import Basic, Atom, C, preorder_traversal
 from .singleton import S
 from .expr import Expr, AtomicExpr

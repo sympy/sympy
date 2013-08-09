@@ -6,7 +6,7 @@ from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex
 from .decorators import _sympifyit, call_highest_priority
-from .cache import cacheit
+from .cache import cacheit, user_cacheit
 from .compatibility import reduce, as_int, default_sort_key, xrange
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
