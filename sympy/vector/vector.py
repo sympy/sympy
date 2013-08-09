@@ -161,6 +161,7 @@ class BaseScalar(Expr):
         Returns a relation between the given base_scalar and the
         given coord_sys
         """
+        # TODO : Where was this method used?
         if base_scalar.coord_sys == coord_sys:
             return base_scalar
 
@@ -182,6 +183,28 @@ class BaseScalar(Expr):
                           z: _z }
 
             return subs_dict[base_scalar]
+
+    def _convert_to_rect(self, coord_sys, ind=1):
+        """
+        coord_sys: An instance of subclass of CoordSys class
+        Takes a BaseScalar and converts it to combination of BaseScalars
+        in coord_sys.
+        """
+        # First check that both coordinate systems have same position and
+        # orientation
+        flag = False
+        if self.coord_sys.position != coord_sys.position:
+            flag = True
+        if self.coord_sys._dcm_global != coord_sys._dcm_global:
+            flag = True
+
+        if flag:
+            raise ValueError("coord_sys doesn't have same position and \
+                              orientaion as coordinate system of self")
+
+        rv = CoordSys._pos_to_rect(self.coord_sys.base_scalars,
+                                   coord_conv[coord_sys.__class__])
+        return rv[self.position - ind]
 
 
 class CoordSys(Basic):
@@ -566,6 +589,43 @@ class CoordSys(Basic):
         """
         return func(vect, coord_sys)
 
+    @staticmethod
+    def _convert_base_vect_rect(vect, coord_sys):
+        """
+        vector: A is_Vector == True object
+        coord_sys: A CoordSys object
+        converts base vectors in rectangular coordinates to another set
+        of rectangular coordinates while chaning the orientation
+        """
+        if vect.coord_sys == coord_sys:
+            return vect
+
+        Ax0, Ay0, Az0 = vect.components
+
+        # coord_sys  <- vect.coord_sys
+        mat = coord_sys.dcm(vect.coord_sys)
+        mat_components = mat * Matrix([[Ax0], [Ay0], [Az0]])
+
+        # construct the vector to return
+        ret = []
+        base_vectors = coord_sys.base_vectors
+
+        for i, comp in enumerate(mat_components._mat):
+            ret.append(VectMul(comp, base_vectors[i]))
+        vect = VectAdd(*ret)
+
+        # Now subs out for base scalars
+        subs_dict = {}
+        x0, y0, z0 = vect.coord_sys.base_scalars
+        mat_base_scalars = mat * Matrix([[x0], [y0], [z0]])
+
+        for i, element in enumerate(mat_base_scalars._mat):
+            subs_dict[vect.coord_sys.base_scalars[i]] = element
+
+        # Now subs for the dict
+        vect = vect.subs(subs_dict)
+        return vect
+
 
 class CoordSysRect(CoordSys):
     """
@@ -596,6 +656,8 @@ class CoordSysRect(CoordSys):
         coord_sys : a CoordSys object - the coordinate system to convert to
         returns an object with is_Vector == True
         """
+        # TODO : Implement a coord_sys check method to check same orientation
+        # and position of vector.coord_sys and coord_sys
         Ax, Ay, Az = vector.components
         x, y, z = vector.coord_sys.base_scalars
         r, theta, phi = coord_sys.base_scalars
@@ -642,6 +704,7 @@ class CoordSysRect(CoordSys):
         return self.name
 
     __repr__ = __str__
+
 
 class CoordSysSph(CoordSys):
     """
@@ -750,7 +813,6 @@ class CoordSysCyl(CoordSys):
         self.h_list = (S.One,
                        self.one,
                        S.One)
-
 
     @staticmethod
     def _convert_to_rect(vector, coord_sys):
@@ -943,11 +1005,11 @@ class BaseVector(Vector, Symbol):
         r[int(self.position) - 1] = S.One
         return r
 
-    def _convert_to_rect(self, coord_sys, ind=1):
+    def _convert_to_rect(self, coord_sys):
         """
-        coord_sys: An instance of subclass of CoordSys class
-        Takes a BaseScalar and converts it to combination of BaseScalars
-        in coord_sys.
+        coord_sys: an instance of subclass of CoordSys class
+        converts a BaseVector in a given coordinate system into rectangular
+        coordinates.
         """
         # First check that both coordinate systems have same position and
         # orientation
@@ -961,9 +1023,8 @@ class BaseVector(Vector, Symbol):
             raise ValueError("coord_sys doesn't have same position and \
                               orientaion as coordinate system of self")
 
-        rv = CoordSys._pos_to_rect(self.coord_sys.base_scalars,
-                                   coord_conv[coord_sys.__class__])
-        return rv[self.position - ind]
+        rv = self.coord_sys._convert_to_rect(self, coord_sys)
+        return rv
 
 
 class VectAdd(Add, Vector):
@@ -1400,7 +1461,7 @@ def express(vect, coord_sys):
         if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
             c_rect = scalar.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
-            subs_dict[scalar] = scalar.convert_to_rect(c_rect)
+            subs_dict[scalar] = scalar._convert_to_rect(c_rect)
 
         else:
             for arg_scalar in scalar.args:
@@ -1408,7 +1469,7 @@ def express(vect, coord_sys):
                     subs_dict.has_key(arg_scalar)):
                     c_rect = arg_scalar.coord_sys._change_coord_sys(
                                                         CoordSysRect, 'c_rect')
-                    subs_dict[arg_scalar] = BaseScalar.convert_to_rect(vect,
+                    subs_dict[arg_scalar] = BaseScalar._convert_to_rect(vect,
                                                                         c_rect)
         # Now process the vector
         # vector is necessarily BaseVector
