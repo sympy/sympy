@@ -56,7 +56,8 @@ def trim(line):
     >>> trim('something #happens here')
     'something '
     """
-    if not '#' in line: return line
+    if not '#' in line:
+        return line
     return line.split('#')[0]
 
 def get_index(target, labels):
@@ -77,7 +78,8 @@ def get_indices(targets, labels):
 def nonblank(args):
     for line in args:
         line = trim(line)
-        if isblank(line): continue
+        if isblank(line):
+            continue
         yield line
     return
 
@@ -147,8 +149,11 @@ class Qasm(object):
             else:
                 print("Function %s not defined. Skipping" % command)
 
-    def get_circuit(self): return prod(reversed(self.circuit))
-    def get_labels(self): return list(reversed(self.labels))
+    def get_circuit(self):
+        return prod(reversed(self.circuit))
+    
+    def get_labels(self):
+        return list(reversed(self.labels))
 
     def plot(self):
         from sympy.physics.quantum.circuitplot import CircuitPlot
@@ -159,19 +164,41 @@ class Qasm(object):
         self.labels.append(arg)
         if init: self.inits[arg] = init
 
-    def indices(self, args): return get_indices(args, self.labels)
-    def index(self, arg): return get_index(arg, self.labels)
-    def nop(self, *args): pass
-    def x(self, arg): self.circuit.append(X(self.index(arg)))
-    def z(self, arg): self.circuit.append(Z(self.index(arg)))
-    def h(self, arg): self.circuit.append(H(self.index(arg)))
-    def s(self, arg): self.circuit.append(S(self.index(arg)))
-    def t(self, arg): self.circuit.append(T(self.index(arg)))
-    def measure(self, arg): self.circuit.append(Mz(self.index(arg)))
+    def indices(self, args):
+        return get_indices(args, self.labels)
 
-    def cnot(self, a1, a2):self.circuit.append(CNOT(*self.indices([a1, a2])))
-    def swap(self, a1, a2):self.circuit.append(SWAP(*self.indices([a1, a2])))
-    def cphase(self, a1, a2):self.circuit.append(CPHASE(*self.indices([a1, a2])))
+    def index(self, arg):
+        return get_index(arg, self.labels)
+    
+    def nop(self, *args):
+        pass
+    
+    def x(self, arg):
+        self.circuit.append(X(self.index(arg)))
+        
+    def z(self, arg):
+        self.circuit.append(Z(self.index(arg)))
+        
+    def h(self, arg):
+        self.circuit.append(H(self.index(arg)))
+        
+    def s(self, arg):
+        self.circuit.append(S(self.index(arg)))
+        
+    def t(self, arg):
+        self.circuit.append(T(self.index(arg)))
+        
+    def measure(self, arg):
+        self.circuit.append(Mz(self.index(arg)))
+
+    def cnot(self, a1, a2):
+        self.circuit.append(CNOT(*self.indices([a1, a2])))
+        
+    def swap(self, a1, a2):
+        self.circuit.append(SWAP(*self.indices([a1, a2])))
+        
+    def cphase(self, a1, a2):
+        self.circuit.append(CPHASE(*self.indices([a1, a2])))
 
     def toffoli(self, a1, a2, a3):
         i1, i2, i3 = self.indices([a1, a2, a3])
@@ -180,6 +207,7 @@ class Qasm(object):
     def cx(self, a1, a2):
         fi, fj = self.indices([a1, a2])
         self.circuit.append(CGate(fi, X(fj)))
+        
     def cz(self, a1, a2):
         fi, fj = self.indices([a1, a2])
         self.circuit.append(CGate(fi, Z(fj)))
