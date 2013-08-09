@@ -196,6 +196,3 @@ class Qasm(object):
             self.defs[command] = CreateCGate(symbol)
         else:
             self.defs[command] = CreateOneQubitGate(symbol)
-
-if __name__ == '__main__':
-    import doctest; doctest.testmod()
