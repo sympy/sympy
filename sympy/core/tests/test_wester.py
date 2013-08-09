@@ -504,8 +504,9 @@ def test_H33():
 
 # I. Trigonometry
 
+@XFAIL
 def test_I1():
-    assert nsimplify(tan(7*pi/10)) == -sqrt(1 + 2/sqrt(5))
+    assert tan(7*pi/10) == -sqrt(1 + 2/sqrt(5))
 
 
 def test_I2():
