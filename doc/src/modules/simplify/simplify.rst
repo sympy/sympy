@@ -109,6 +109,14 @@ cse
 ^^^
 .. autofunction:: cse
 
+opt_cse
+^^^
+.. autofunction:: opt_cse
+
+tree_cse
+^^^
+.. autofunction:: tree_cse
+
 Hypergeometric Function Expansion
 ---------------------------------
 .. module:: sympy.simplify.hyperexpand

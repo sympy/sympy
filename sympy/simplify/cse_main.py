@@ -138,7 +138,24 @@ def postprocess_for_cse(expr, optimizations):
 
 def opt_cse(exprs):
     """Find optimization opportunities in Adds, Muls, Pows and negative
-    coefficient Muls"""
+    coefficient Muls
+
+    Parameters
+    ----------
+    exprs : list of sympy expressions
+
+    Returns
+    -------
+    opt_subs : dictionary of expression substitutions
+
+    Examples
+    --------
+    >>> from sympy.simplify.cse_main import opt_cse
+    >>> from sympy.abc import x
+    >>> opt_subs = opt_cse([x**-2])
+    >>> print(opt_subs)
+    {x**(-2): 1/(x**2)}
+    """
     from sympy.matrices import Matrix
 
     opt_subs = dict()
@@ -232,7 +249,16 @@ def opt_cse(exprs):
 
 
 def tree_cse(exprs, symbols, opt_subs=None):
-    """Perform blind CSE on expression tree, taking opt_subs into account"""
+    """Perform raw CSE on expression tree, taking opt_subs into account.
+
+    Parameters
+    ==========
+
+    exprs : list of sympy expressions
+    symbols : infinite iterator yielding unique Symbols
+    opt_subs : dictionary of expression substitutions
+        Expressions to be substituted before any CSE action is performed.
+    """
     from sympy.matrices import Matrix
 
     if opt_subs is None:
