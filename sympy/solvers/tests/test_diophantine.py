@@ -2,7 +2,7 @@ from sympy.solvers.diophantine import (diop_solve, diop_pell, diop_bf_pell, leng
     parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
     ldescent, classify_diop, diophantine)
 
-from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor, factor_list
+from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
 from sympy.utilities.pytest import XFAIL, slow
 
 x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
