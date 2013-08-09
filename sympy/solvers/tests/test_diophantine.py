@@ -409,7 +409,7 @@ def check_solutions(eq):
     terms = factor_list(eq)[1]
 
     var = list(eq.free_symbols)
-    var.sort()
+    var = sorted(var)
 
     okay = True
 
