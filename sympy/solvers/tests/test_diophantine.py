@@ -9,6 +9,11 @@ from sympy.utilities import default_sort_key
 x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
 
 
+@XFAIL
+def test_factor_list():
+    assert factor_list(y**2 + x*y) == (1, [(y, 1), (x + y, 1)])
+
+
 def test_linear():
 
     assert diop_solve(2*x + 3*y - 5) == (3*t - 5, -2*t + 5)
