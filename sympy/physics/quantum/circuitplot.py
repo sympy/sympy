@@ -31,6 +31,7 @@ __all__ = [
     'Mz',
     'Mx',
     'CreateOneQubitGate',
+    'CreateCGate',
 ]
 
 np = import_module('numpy')
