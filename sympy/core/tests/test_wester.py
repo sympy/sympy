@@ -128,7 +128,7 @@ def test_C17():
 
 
 def test_C18():
-    assert nsimplify(sqrt(-2 + sqrt(-5)) * sqrt(-2 - sqrt(-5))) == 3
+    assert simplify((sqrt(-2 + sqrt(-5)) * sqrt(-2 - sqrt(-5))).expand(complex=True)) == 3
 
 
 @XFAIL
