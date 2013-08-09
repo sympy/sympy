@@ -106,11 +106,11 @@ def test_C13():
 
 
 def test_C14():
-    assert nsimplify(sqrt(2*sqrt(3) + 4)) == 1 + sqrt(3)
+    assert sqrtdenest(sqrt(2*sqrt(3) + 4)) == 1 + sqrt(3)
 
 
 def test_C15():
-    test = nsimplify(sqrt(14 + 3*sqrt(3 + 2*sqrt(5 - 12*sqrt(3 - 2*sqrt(2))))))
+    test = sqrtdenest(sqrt(14 + 3*sqrt(3 + 2*sqrt(5 - 12*sqrt(3 - 2*sqrt(2))))))
     good = sqrt(2) + 3
     assert test == good
 
