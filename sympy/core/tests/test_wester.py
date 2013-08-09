@@ -661,8 +661,9 @@ def test_K1():
     assert im(z1 + I*z2) == im(z1) + re(z2)
 
 
+@XFAIL  # abs(...).n() does evaluate to 1.00000...
 def test_K2():
-    assert nsimplify(abs(3 - sqrt(7) + I*sqrt(6*sqrt(7) - 15))) == 1
+    assert abs(3 - sqrt(7) + I*sqrt(6*sqrt(7) - 15)) == 1
 
 
 @XFAIL
