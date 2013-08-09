@@ -1809,14 +1809,14 @@ def minlex(seq, directed=True, is_set=False, small=None):
     is_str = isinstance(seq, str)
     seq = list(seq)
     if small is None:
-        small = min(seq)
+        small = min(seq, key=default_sort_key)
     if is_set:
         i = seq.index(small)
         if not directed:
             n = len(seq)
             p = (i + 1) % n
             m = (i - 1) % n
-            if seq[p] > seq[m]:
+            if default_sort_key(seq[p]) > default_sort_key(seq[m]):
                 seq = list(reversed(seq))
                 i = n - i - 1
         if i:

@@ -426,7 +426,7 @@ def TR3(rv):
         if not isinstance(rv, C.TrigonometricFunction):
             return rv
         rv = rv.func(signsimp(rv.args[0]))
-        if S.Pi/4 < rv.args[0] < S.Pi/2:
+        if (S.Pi/4 < rv.args[0]) is (rv.args[0] < S.Pi/2) is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
             rv = fmap[rv.func](S.Pi/2 - rv.args[0])
         return rv
@@ -496,9 +496,9 @@ def _TR56(rv, f, g, h, max, pow):
         if not (rv.is_Pow and rv.base.func == f):
             return rv
 
-        if rv.exp < 0:
+        if (rv.exp < 0) is True:
             return rv
-        if rv.exp > max:
+        if (rv.exp > max) is True:
             return rv
         if rv.exp == 2:
             return h(g(rv.base.args[0])**2)

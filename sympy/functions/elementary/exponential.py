@@ -114,7 +114,7 @@ class ExpBase(Function):
         if be.is_polar:
             return rv
         besmall = abs(be) <= S.Pi
-        if besmall:
+        if besmall is True:
             return rv
         elif besmall is False and e.is_Rational and e.q == 2:
             return -rv

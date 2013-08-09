@@ -7,6 +7,7 @@ from sympy.functions.elementary.complexes import sign
 from sympy.core.compatibility import iterable, as_int, with_metaclass
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
+from sympy.core.decorators import deprecated
 from sympy.solvers import solve
 
 oo = S.Infinity
@@ -128,17 +129,17 @@ class Reals(with_metaclass(Singleton, Interval)):
         return Interval.__new__(cls, -oo, oo)
 
 
-class TransformationSet(Set):
+class ImageSet(Set):
     """
-    A set that is a transformation of another through some algebraic expression
+    Image of a set under a mathematical function
 
     Examples
     --------
-    >>> from sympy import Symbol, S, TransformationSet, FiniteSet, Lambda
+    >>> from sympy import Symbol, S, ImageSet, FiniteSet, Lambda
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
-    >>> squares = TransformationSet(Lambda(x, x**2), N) # {x**2 for x in N}
+    >>> squares = ImageSet(Lambda(x, x**2), N) # {x**2 for x in N}
     >>> 4 in squares
     True
     >>> 5 in squares
@@ -195,6 +196,13 @@ class TransformationSet(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
+class TransformationSet(ImageSet):
+    @deprecated(useinstead="ImageSet",
+                deprecated_since_version="0.7.4",
+                issue=3958,
+                feature="TransformationSet")
+    def __init__(self, *args):
+        pass
 
 class Range(Set):
     """
@@ -225,7 +233,7 @@ class Range(Set):
             start, stop, step = [S(as_int(w)) for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
-                    "Use TransformationSets of Ranges for other cases")
+                    "Use ImageSets of Ranges for other cases")
         n = ceiling((stop - start)/step)
         if n <= 0:
             return S.EmptySet
