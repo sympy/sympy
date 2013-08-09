@@ -197,7 +197,8 @@ def theano_function(inputs, outputs, dtypes={}, **kwargs):
 
     # Remove keyword arguments corresponding to dim_handling
     dim_names = inspect.getargspec(dim_handling)[0]
-    theano_kwargs = {k: v for k, v in kwargs.items() if k not in dim_names}
+    theano_kwargs = dict((k, v) for k, v in kwargs.items()
+                                if k not in dim_names)
 
     code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
     tinputs  = map(code, inputs)
