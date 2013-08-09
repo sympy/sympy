@@ -214,13 +214,12 @@ def test_BlockMatrix_Inverse_execution():
     fblocked = theano_function(inputs, [sympy.block_collapse(cutoutput)],
                                dtypes=dtypes, cache={})
 
-    import numpy
-    ninputs = [numpy.random.rand(*x.shape).astype(dtype) for x in inputs]
-    ninputs = [numpy.arange(n*k).reshape(A.shape).astype(dtype),
-               numpy.eye(n).astype(dtype)]
-    ninputs[1] += numpy.ones(B.shape)*1e-5
+    ninputs = [np.random.rand(*x.shape).astype(dtype) for x in inputs]
+    ninputs = [np.arange(n*k).reshape(A.shape).astype(dtype),
+               np.eye(n).astype(dtype)]
+    ninputs[1] += np.ones(B.shape)*1e-5
 
-    assert numpy.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
+    assert np.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
 
 def test_DenseMatrix():
     t = sy.Symbol('theta')
