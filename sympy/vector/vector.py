@@ -464,7 +464,7 @@ class CoordSys(Basic):
         newframe.position = newframe_pos.factor()
         return newframe
 
-    def _convert_coord_sys(self, coord_sys, name=None):
+    def _change_coord_sys(self, coord_sys, name=None):
         if not name:
             name = "coord_sys_" + str(Dummy._count)
             Dummy._count += 1
@@ -592,10 +592,10 @@ class CoordSys(Basic):
     @staticmethod
     def _convert_base_vect_rect(vect, coord_sys):
         """
-        vector: A is_Vector == True object
+        vector: An object is_Vector == True
         coord_sys: A CoordSys object
-        converts base vectors in rectangular coordinates to another set
-        of rectangular coordinates while chaning the orientation
+        returns base vectors in rectangular coordinates converted to another
+        set of rectangular coordinates while chaning the orientation
         """
         if vect.coord_sys == coord_sys:
             return vect
@@ -613,7 +613,7 @@ class CoordSys(Basic):
         for i, comp in enumerate(mat_components._mat):
             ret.append(VectMul(comp, base_vectors[i]))
         vect = VectAdd(*ret)
-
+        """
         # Now subs out for base scalars
         subs_dict = {}
         x0, y0, z0 = vect.coord_sys.base_scalars
@@ -624,7 +624,48 @@ class CoordSys(Basic):
 
         # Now subs for the dict
         vect = vect.subs(subs_dict)
+        """
         return vect
+
+    @staticmethod
+    def _convert_base_sclr_rect(sclr, coord_sys):
+        """
+        sclr : A BaseScalar
+        coord_sys: A CoordSys object
+        returns base vectors in rectangular coordinates converted to another
+        set of rectangular coordinates while chaning the orientation
+        """
+        if sclr.coord_sys == coord_sys:
+            return sclr
+
+        # Checking for constant terms (for example, in a constant vector)
+        if not isinstance(sclr, BaseScalar):
+            return sclr
+
+        # Let the sclr.coord_sys == B, coord_sys == A
+        # B.xyz = pos_A_wrt_B + B.dcm(A) * A.xyz
+
+        # A.x, A.y, A.z
+        x0, y0, z0 = coord_sys.base_scalars
+
+        mat = coord_sys.dcm(vect.coord_sys)
+        mat_components = mat * Matrix([[x0], [y0], [z0]])
+        mat_components = mat_components._mat
+
+        # Now, position vectors are just constant vectors. So, we can
+        # call express on them without causing a recursion error.
+        csA = coord_sys._change_coord_sys(CoordSysRect, 'csA')
+        csB = sclr.coord_sys._change_coord_sys(CoordSysRect, 'csB')
+        rel_pos_vect = coord_sys.position.express(csA) - \
+                       sclr.coord_sys.position.express(csB)
+        rel_pos_vect_comp = rel_pos_vect.expand().factor().components
+
+        res = []
+
+        for i, comp in enumerate(rel_pos_vect_comp):
+            res.append(mat_components + comp)
+
+        return res[sclr.position - 1]
 
 
 class CoordSysRect(CoordSys):
@@ -1476,7 +1517,7 @@ def express(vect, coord_sys):
         assert isinstance(vector, BaseVector)
 
         c_rect = vector.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
-        subs_dict[vector] = vector.convert_to_rect(c_rect)
+        subs_dict[vector] = vector._convert_to_rect(c_rect)
 
     # Now performig the substitution, we have changed all involved
     # variables into rectangular coordinates
