@@ -2,7 +2,7 @@ from sympy.solvers.diophantine import (diop_solve, diop_pell, diop_bf_pell, leng
     parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
     ldescent, classify_diop, diophantine)
 
-from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor, Pow
+from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor, factor_list
 from sympy.utilities.pytest import XFAIL, slow
 
 x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
@@ -406,9 +406,7 @@ def check_solutions(eq):
     """
     s = diophantine(eq)
 
-    terms = factor(eq).as_ordered_factors()
-    if isinstance(terms[0], Integer):
-        terms = terms[1:]
+    terms = factor_list(eq)[1]
 
     var = list(eq.free_symbols)
     var.sort()
@@ -421,10 +419,7 @@ def check_solutions(eq):
         okay = False
 
         for term in terms:
-            if isinstance(term, Pow):
-                subeq = term.args[0]
-            else:
-                subeq = term
+            subeq = term[0]
 
             if simplify(simplify(Subs(subeq, var, solution).doit())) == 0:
                 okay = True

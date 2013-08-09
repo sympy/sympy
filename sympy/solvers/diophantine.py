@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
-    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor, Pow)
+    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor, factor_list)
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
@@ -17,18 +17,13 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     var = list(eq.expand(force=True).free_symbols)
     var.sort()
 
-    terms = factor(eq).as_ordered_factors()
-    if isinstance(terms[0], Integer):
-        terms = terms[1:]
+    terms = factor_list(eq)[1]
 
     sols = set([])
 
     for term in terms:
 
-        if isinstance(term, Pow):
-            base = term.args[0]
-        else:
-            base = term
+        base = term[0]
 
         var_t, jnk, eq_type = classify_diop(base)
         solution = diop_solve(base, param)
