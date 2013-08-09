@@ -56,6 +56,7 @@ from sympy.polys import polyoptions as options
 
 from sympy.core.compatibility import iterable
 
+
 @public
 class Poly(Expr):
     """Generic class for representing polynomial expressions. """
@@ -360,7 +361,7 @@ class Poly(Expr):
                     f.rep.to_dict(), f.gens, gens)
 
                 if f.rep.dom != dom:
-                    f_coeffs = [ dom.convert(c, f.rep.dom) for c in f_coeffs ]
+                    f_coeffs = [dom.convert(c, f.rep.dom) for c in f_coeffs]
 
                 F = DMP(dict(list(zip(f_monoms, f_coeffs))), dom, lev)
             else:
@@ -371,7 +372,7 @@ class Poly(Expr):
                     g.rep.to_dict(), g.gens, gens)
 
                 if g.rep.dom != dom:
-                    g_coeffs = [ dom.convert(c, g.rep.dom) for c in g_coeffs ]
+                    g_coeffs = [dom.convert(c, g.rep.dom) for c in g_coeffs]
 
                 G = DMP(dict(list(zip(g_monoms, g_coeffs))), dom, lev)
             else:
@@ -751,7 +752,7 @@ class Poly(Expr):
         nth
 
         """
-        return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order) ]
+        return [f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order)]
 
     def monoms(f, order=None):
         """
@@ -791,7 +792,7 @@ class Poly(Expr):
         all_terms
 
         """
-        return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order) ]
+        return [(m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order)]
 
     def all_coeffs(f):
         """
@@ -807,7 +808,7 @@ class Poly(Expr):
         [1, 0, 2, -1]
 
         """
-        return [ f.rep.dom.to_sympy(c) for c in f.rep.all_coeffs() ]
+        return [f.rep.dom.to_sympy(c) for c in f.rep.all_coeffs()]
 
     def all_monoms(f):
         """
@@ -843,7 +844,7 @@ class Poly(Expr):
         [((3,), 1), ((2,), 0), ((1,), 2), ((0,), -1)]
 
         """
-        return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.all_terms() ]
+        return [(m, f.rep.dom.to_sympy(c)) for m, c in f.rep.all_terms()]
 
     def termwise(f, func, *gens, **args):
         """
@@ -1767,6 +1768,8 @@ class Poly(Expr):
         Poly(x**5 + 2*x**2*y**2*z + 9*x*y**3*z, x, y, z, domain='ZZ')
 
         """
+        if f.is_homogeneous:
+            return f
         if not isinstance(s, Symbol):
             raise TypeError("``Symbol`` expected, got %s" % type(s))
         if s in f.gens:
@@ -2762,7 +2765,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'gff_list')
 
-        return [ (f.per(g), k) for g, k in result ]
+        return [(f.per(g), k) for g, k in result]
 
     def sqf_norm(f):
         """
@@ -2843,7 +2846,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'sqf_list')
 
-        return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
+        return f.rep.dom.to_sympy(coeff), [(f.per(g), k) for g, k in factors]
 
     def sqf_list_include(f, all=False):
         """
@@ -2876,7 +2879,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'sqf_list_include')
 
-        return [ (f.per(g), k) for g, k in factors ]
+        return [(f.per(g), k) for g, k in factors]
 
     def factor_list(f):
         """
@@ -2903,7 +2906,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'factor_list')
 
-        return f.rep.dom.to_sympy(coeff), [ (f.per(g), k) for g, k in factors ]
+        return f.rep.dom.to_sympy(coeff), [(f.per(g), k) for g, k in factors]
 
     def factor_list_include(f):
         """
@@ -2930,7 +2933,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'factor_list_include')
 
-        return [ (f.per(g), k) for g, k in factors ]
+        return [(f.per(g), k) for g, k in factors]
 
     def intervals(f, all=False, eps=None, inf=None, sup=None, fast=False, sqf=False):
         """
@@ -3198,15 +3201,15 @@ class Poly(Expr):
         if f.degree() <= 0:
             return []
 
-        coeffs = [ coeff.evalf(n=n).as_real_imag()
-                   for coeff in f.all_coeffs() ]
+        coeffs = [coeff.evalf(n=n).as_real_imag()
+                  for coeff in f.all_coeffs()]
 
         dps = sympy.mpmath.mp.dps
         sympy.mpmath.mp.dps = n
 
         try:
             try:
-                coeffs = [ sympy.mpmath.mpc(*coeff) for coeff in coeffs ]
+                coeffs = [sympy.mpmath.mpc(*coeff) for coeff in coeffs]
             except TypeError:
                 raise DomainError(
                     "numerical domain expected, got %s" % f.rep.dom)
@@ -4576,7 +4579,7 @@ def subresultants(f, g, *gens, **args):
     result = F.subresultants(G)
 
     if not opt.polys:
-        return [ r.as_expr() for r in result ]
+        return [r.as_expr() for r in result]
     else:
         return result
 
@@ -4986,7 +4989,7 @@ def terms_gcd(f, *gens, **args):
     else:
         coeff = S.One
 
-    term = Mul(*[ x**j for x, j in zip(f.gens, J) ])
+    term = Mul(*[x**j for x, j in zip(f.gens, J)])
 
     if clear:
         return _keep_coeff(coeff, term*f.as_expr())
@@ -5182,7 +5185,7 @@ def decompose(f, *gens, **args):
     result = F.decompose()
 
     if not opt.polys:
-        return [ r.as_expr() for r in result ]
+        return [r.as_expr() for r in result]
     else:
         return result
 
@@ -5212,7 +5215,7 @@ def sturm(f, *gens, **args):
     result = F.sturm(auto=opt.auto)
 
     if not opt.polys:
-        return [ r.as_expr() for r in result ]
+        return [r.as_expr() for r in result]
     else:
         return result
 
@@ -5247,7 +5250,7 @@ def gff_list(f, *gens, **args):
     factors = F.gff_list()
 
     if not opt.polys:
-        return [ (g.as_expr(), k) for g, k in factors ]
+        return [(g.as_expr(), k) for g, k in factors]
     else:
         return factors
 
@@ -5340,7 +5343,7 @@ def _sorted_factors(factors, method):
 
 def _factors_product(factors):
     """Multiply a list of ``(expr, exp)`` pairs. """
-    return Mul(*[ f.as_expr()**k for f, k in factors ])
+    return Mul(*[f.as_expr()**k for f, k in factors])
 
 
 def _symbolic_factor_list(expr, opt, method):
@@ -5378,7 +5381,7 @@ def _symbolic_factor_list(expr, opt, method):
             if exp is S.One:
                 factors.extend(_factors)
             elif exp.is_integer or len(_factors) == 1:
-                factors.extend([ (f, k*exp) for f, k in _factors ])
+                factors.extend([(f, k*exp) for f, k in _factors])
             else:
                 other = []
 
@@ -5405,9 +5408,9 @@ def _symbolic_factor(expr, opt, method):
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
-        return expr.func(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
+        return expr.func(*[_symbolic_factor(arg, opt, method) for arg in expr.args])
     elif hasattr(expr, '__iter__'):
-        return expr.__class__([ _symbolic_factor(arg, opt, method) for arg in expr ])
+        return expr.__class__([_symbolic_factor(arg, opt, method) for arg in expr])
     else:
         return expr
 
@@ -5440,8 +5443,8 @@ def _generic_factor_list(expr, gens, args, method):
         fq = _sorted_factors(fq, method)
 
         if not opt.polys:
-            fp = [ (f.as_expr(), k) for f, k in fp ]
-            fq = [ (f.as_expr(), k) for f, k in fq ]
+            fp = [(f.as_expr(), k) for f, k in fp]
+            fq = [(f.as_expr(), k) for f, k in fq]
 
         coeff = cp/cq
 
@@ -5458,6 +5461,7 @@ def _generic_factor(expr, gens, args, method):
     options.allowed_flags(args, [])
     opt = options.build_options(gens, args)
     return _symbolic_factor(sympify(expr), opt, method)
+
 
 def to_rational_coeffs(f):
     """
@@ -5591,6 +5595,7 @@ def to_rational_coeffs(f):
                 return None, None, r[0], r[1]
     return None
 
+
 def _torational_factor_list(p, x):
     """
     helper function to factor polynomial using to_rational_coeffs
@@ -5626,12 +5631,12 @@ def _torational_factor_list(p, x):
         r1 = simplify(1/r)
         a = []
         for z in factors[1:][0]:
-            a.append((simplify(z[0].subs({x:x*r1})), z[1]))
+            a.append((simplify(z[0].subs({x: x*r1})), z[1]))
     else:
         c = factors[0]
         a = []
         for z in factors[1:][0]:
-            a.append((z[0].subs({x:x - t}), z[1]))
+            a.append((z[0].subs({x: x - t}), z[1]))
     return (c, a)
 
 
@@ -6110,19 +6115,19 @@ def reduced(f, G, *gens, **args):
 
     Q, r = polys[0].div(polys[1:])
 
-    Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
+    Q = [Poly._from_dict(dict(q), opt) for q in Q]
     r = Poly._from_dict(dict(r), opt)
 
     if retract:
         try:
-            _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
+            _Q, _r = [q.to_ring() for q in Q], r.to_ring()
         except CoercionFailed:
             pass
         else:
             Q, r = _Q, _r
 
     if not opt.polys:
-        return [ q.as_expr() for q in Q ], r.as_expr()
+        return [q.as_expr() for q in Q], r.as_expr()
     else:
         return Q, r
 
@@ -6198,6 +6203,7 @@ def is_zero_dimensional(F, *gens, **args):
     """
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
+
 @public
 class GroebnerBasis(Basic):
     """Represents a reduced Groebner basis. """
@@ -6218,7 +6224,7 @@ class GroebnerBasis(Basic):
             polys[i] = ring.from_dict(poly.rep.to_dict())
 
         G = _groebner(polys, ring, method=opt.method)
-        G = [ Poly._from_dict(g, opt) for g in G ]
+        G = [Poly._from_dict(g, opt) for g in G]
 
         return cls._new(G, opt)
 
@@ -6237,7 +6243,7 @@ class GroebnerBasis(Basic):
 
     @property
     def exprs(self):
-        return [ poly.as_expr() for poly in self._basis ]
+        return [poly.as_expr() for poly in self._basis]
 
     @property
     def polys(self):
@@ -6376,10 +6382,10 @@ class GroebnerBasis(Basic):
             polys[i] = _ring.from_dict(poly)
 
         G = matrix_fglm(polys, _ring, dst_order)
-        G = [ Poly._from_dict(dict(g), opt) for g in G ]
+        G = [Poly._from_dict(dict(g), opt) for g in G]
 
         if not domain.has_Field:
-            G = [ g.clear_denoms(convert=True)[1] for g in G ]
+            G = [g.clear_denoms(convert=True)[1] for g in G]
             opt.domain = domain
 
         return self._new(G, opt)
@@ -6433,19 +6439,19 @@ class GroebnerBasis(Basic):
 
         Q, r = polys[0].div(polys[1:])
 
-        Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
+        Q = [Poly._from_dict(dict(q), opt) for q in Q]
         r = Poly._from_dict(dict(r), opt)
 
         if retract:
             try:
-                _Q, _r = [ q.to_ring() for q in Q ], r.to_ring()
+                _Q, _r = [q.to_ring() for q in Q], r.to_ring()
             except CoercionFailed:
                 pass
             else:
                 Q, r = _Q, _r
 
         if not opt.polys:
-            return [ q.as_expr() for q in Q ], r.as_expr()
+            return [q.as_expr() for q in Q], r.as_expr()
         else:
             return Q, r
 

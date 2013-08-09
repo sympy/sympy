@@ -1194,8 +1194,8 @@ def test_Poly_total_degree():
 
 def test_Poly_homogenize():
     assert Poly(x**2+y).homogenize(z) == Poly(x**2+y*z)
-    assert Poly(x+y).homogenize(z) == Poly(x+y, x, y, z)
-    raises(ValueError, lambda: Poly(x+y).homogenize(y))
+    assert Poly(x+y).homogenize(z) == Poly(x+y, x, y)
+    raises(ValueError, lambda: Poly(x+y**2).homogenize(y))
 
 
 def test_Poly_homogeneous_order():
