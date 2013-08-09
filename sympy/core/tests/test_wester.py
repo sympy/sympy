@@ -7,7 +7,7 @@ tested system.
 """
 
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
-    binomial, rf, pi, gamma, igcd, factorint, nsimplify, radsimp, combsimp,
+    binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
@@ -133,22 +133,24 @@ def test_C18():
 
 @XFAIL
 def test_C19():
-    assert radsimp(nsimplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
+    assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
 
 
+@XFAIL
 def test_C20():
     inside = (135 + 78*sqrt(3))
-    test = nsimplify((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
+    test = simplify((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
     assert test == 12
 
 
+@XFAIL
 def test_C21():
-    assert nsimplify((41 + 29*sqrt(2)) ** R(1, 5)) == 1 + sqrt(2)
+    assert simplify((41 + 29*sqrt(2)) ** R(1, 5)) == 1 + sqrt(2)
 
 
 @XFAIL
 def test_C22():
-    test = nsimplify(((6 - 4*sqrt(2))*log(3 - 2*sqrt(2)) + (3 - 2*sqrt(2))*log(17
+    test = simplify(((6 - 4*sqrt(2))*log(3 - 2*sqrt(2)) + (3 - 2*sqrt(2))*log(17
         - 12*sqrt(2)) + 32 - 24*sqrt(2)) / (48*sqrt(2) - 72))
     good = sqrt(2)/3 - log(sqrt(2) - 1)/3
     assert test == good
