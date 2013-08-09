@@ -6,7 +6,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
     Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, TransformationSet, Tuple, Union, Ynm, Znm, arg, asin,
+    Sum, Symbol, ImageSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -473,9 +473,9 @@ def test_latex_Naturals():
     assert latex(S.Integers) == r"\mathbb{Z}"
 
 
-def test_latex_TransformationSet():
+def test_latex_ImageSet():
     x = Symbol('x')
-    assert latex(TransformationSet(Lambda(x, x**2), S.Naturals)) == \
+    assert latex(ImageSet(Lambda(x, x**2), S.Naturals)) == \
         r"\left\{x^{2}\; |\; x \in \mathbb{N}\right\}"
 
 
