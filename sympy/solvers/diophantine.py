@@ -16,7 +16,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     and combined.
     """
     var = list(eq.expand(force=True).free_symbols)
-    var = sorted(var)
+    var.sort(key=default_sort_key)
 
     terms = factor_list(eq)[1]
 
@@ -140,11 +140,7 @@ def classify_diop(eq):
     """
     eq = eq.expand(force=True)
     var = list(eq.free_symbols)
-<<<<<<< HEAD
-    var = sorted(var)
-=======
     var.sort(key=default_sort_key)
->>>>>>> master
 
     coeff = {}
     diop_type = None

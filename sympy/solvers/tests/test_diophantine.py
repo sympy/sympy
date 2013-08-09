@@ -4,6 +4,7 @@ from sympy.solvers.diophantine import (diop_solve, diop_pell, diop_bf_pell, leng
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
 from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities import default_sort_key
 
 x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
 
@@ -409,7 +410,7 @@ def check_solutions(eq):
     terms = factor_list(eq)[1]
 
     var = list(eq.free_symbols)
-    var = sorted(var)
+    var.sort(key=default_sort_key)
 
     okay = True
 
