@@ -3858,14 +3858,7 @@ def ode_lie_group(eq, func, order, match):
         rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
         r = pdsolve(rpde, func=f(x, y)).rhs
         s = pdsolve(rpde - 1, func=f(x, y)).rhs
-
-        newcoord = []
-        for coord in [r, s]:
-            if isinstance(coord, AppliedUndef):
-                newcoord.append(coord.args[0])
-            elif coord.is_Add:
-                newcoord.append(Add(
-                    *[term for term in coord.args if not isinstance(term, AppliedUndef)]))
+        newcoord = [_lie_group_remove(coord) for coord in [r, s]]
 
         r = Dummy("r")
         s = Dummy("s")
@@ -3902,6 +3895,35 @@ def ode_lie_group(eq, func, order, match):
 
         elif num: # (dr/ds) is zero which means r is constant
             return Eq(f(x), solve(rcoord - C1, y)[0])
+
+def _lie_group_remove(coords):
+    r"""
+    Helper function for the ode_lie_group function, which replaces arbitrary functions
+    with their arguments.
+    If the function is present in an Add object, it is replaced by zero.
+    If the function is present in an Mul object, it is replaced by zero.
+    """
+    if isinstance(coords, AppliedUndef):
+        return coords.args[0]
+    elif coords.is_Add:
+        subfunc = coords.atoms(AppliedUndef)
+        if subfunc:
+            for func in subfunc:
+                coords = coords.subs(func, 0)
+        return coords
+    elif coords.is_Pow:
+        base, expr = coords.as_base_exp()
+        base = _lie_group_remove(base)
+        expr = _lie_group_remove(expr)
+        return base**expr
+    elif coords.is_Mul:
+        mulargs = []
+        coordargs = coords.args
+        for arg in coordargs:
+            if not isinstance(coords, AppliedUndef):
+                mulargs.append(_lie_group_remove(arg))
+        return Mul(*mulargs)
+    return coords
 
 def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     r"""

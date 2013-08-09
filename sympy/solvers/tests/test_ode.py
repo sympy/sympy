@@ -1720,6 +1720,31 @@ def test_kamke():
     assert checkinfsol(eq, i)[0]
 
 def test_lie_group():
+    C1 = Symbol("C1")
     eq = f(x).diff(x)**2
     sol = dsolve(eq, f(x), hint='lie_group')
+    assert checkodesol(eq, sol)[0]
+
+    eq = Eq(f(x).diff(x), x**2*f(x))
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), C1*exp(x**3/S(3)))
+    assert checkodesol(eq, sol)[0]
+
+    eq = f(x).diff(x) + a*f(x) - c*exp(b*x)
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert checkodesol(eq, sol)[0]
+
+    eq = f(x).diff(x) + 2*x*f(x) - x*exp(-x**2)
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), (C1 + x**2/S(2))*exp(-x**2))
+    assert checkodesol(eq, sol)[0]
+
+    eq = (1 + 2*x)*(f(x).diff(x)) + 2 - 4*exp(-f(x))
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), log(C1/(2*x + 1) + 2))
+    assert checkodesol(eq, sol)[0]
+
+    eq = x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x))
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), C1*exp(-1/x) - exp(x - 1/x))
     assert checkodesol(eq, sol)[0]
