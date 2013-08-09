@@ -50,14 +50,12 @@ before_install:
       pip install "sphinx==1.1.3";
     fi
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
-      pip install "numpy==1.7.1"; # NumPy is preinstalled in the travis-ci venvs
+      pip install "numpy==1.7.1";
       pip install "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       sudo apt-get update;
       sudo apt-get install python-numpy python-scipy;
-      # may need a hack like this
-      # ln -s /usr/lib/python2.7/dist-packages/numpy ~/virtualenv/python2.7/lib/python2.7/site-packages/;
       pip install -e git+git@github.com:Theano/Theano.git#egg=Theano;
     fi
 install:
