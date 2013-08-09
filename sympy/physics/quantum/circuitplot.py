@@ -19,7 +19,7 @@ from __future__ import print_function, division
 from sympy import Mul
 from sympy.core.compatibility import u
 from sympy.external import import_module
-from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
+from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
 from sympy.core.core import BasicMeta
 from sympy.core.assumptions import ManagedProperties
 
@@ -147,13 +147,13 @@ else:
                 self._axes.add_line(line)
             # Also double any controlled lines off these wires
             for i,g in enumerate(self._gates()):
-                if isinstance(g,CGate) or isinstance(g,CGateS):
+                if isinstance(g, CGate) or isinstance(g, CGateS):
                     wires = g.controls + g.targets
                     for wire in wires:
                         if wire in ismeasured and \
                                self._gate_grid[i] > self._gate_grid[ismeasured[wire]]:
-                            ydata = min(wires),max(wires)
-                            xdata = self._gate_grid[i]-dy,self._gate_grid[i]-dy
+                            ydata = min(wires), max(wires)
+                            xdata = self._gate_grid[i]-dy, self._gate_grid[i]-dy
                             line = Line2D(
                                 xdata, ydata,
                                 color='k',
@@ -306,20 +306,20 @@ else:
         """
         return CircuitPlot(c, nqubits, **kwargs)
 
-def render_label(label,inits={}):
+def render_label(label, inits={}):
     """Slightly more flexible way to render labels.
     >>> from sympy.physics.quantum.circuitplot import render_label
     >>> render_label('q0')
     '$|q0\\\\rangle$'
-    >>> render_label('q0',{'q0':'0'})
+    >>> render_label('q0', {'q0':'0'})
     '$|q0\\\\rangle=|0\\\\rangle$'
     """
     init = inits.get(label)
     if init:
-        return r'$|%s\rangle=|%s\rangle$' % (label,init)
+        return r'$|%s\rangle=|%s\rangle$' % (label, init)
     return r'$|%s\rangle$' % label
 
-def labeller(n,symbol='q'):
+def labeller(n, symbol='q'):
     """Autogenerate labels for wires of quantum circuits.
 
     Parameters
@@ -360,12 +360,12 @@ class CreateOneQubitGate(ManagedProperties):
         return BasicMeta.__new__(mcl, name + "Gate", (OneQubitGate,),
                                  {'gate_name': name, 'gate_name_latex': latexname})
 
-def CreateCGate(name,latexname=None):
+def CreateCGate(name, latexname=None):
     """Use a lexical closure to make a controlled gate.
     """
     if not latexname:
         latexname = name
-    onequbitgate = CreateOneQubitGate(name,latexname)
+    onequbitgate = CreateOneQubitGate(name, latexname)
     def ControlledGate(ctrls,target):
         return CGate(tuple(ctrls),onequbitgate(target))
     return ControlledGate
