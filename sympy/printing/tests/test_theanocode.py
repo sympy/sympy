@@ -8,8 +8,7 @@ if theano:
     xt, yt, zt = [tt.scalar(name, 'floatX') for name in 'xyz']
 else:
     #bin/test will not execute any tests now
-    #disabled = True
-    pass
+    disabled = True
 
 import sympy
 from sympy import S

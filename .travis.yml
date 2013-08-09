@@ -14,26 +14,25 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="true"
-    - python: 2.7
-      env:
-        - TEST_GMPY="true"
-        - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="false"
-    - python: 2.7
-      env:
         - TEST_THEANO="true"
-      virtualenv:
-        system_site_packages: true
+        - TEST_DOCTESTS="true"
+    - python: 2.7
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - TEST_THEANO="true"
+        - TEST_DOCTESTS="false"
     - python: 3.3
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
+        - TEST_THEANO="true"
         - TEST_DOCTESTS="true"
     - python: 3.3
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
+        - TEST_THEANO="true"
         - TEST_DOCTESTS="false"
     - python: 2.7
       env: TEST_SPHINX="true"
@@ -54,9 +53,7 @@ before_install:
       pip install "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
-      sudo apt-get update;
-      sudo apt-get install python-numpy python-scipy;
-      pip install -e git+git@github.com:Theano/Theano.git#egg=Theano;
+      pip install --no-deps Theano;
     fi
 install:
   - python setup.py install
