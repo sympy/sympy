@@ -457,6 +457,8 @@ class Add(Expr, AssocOp):
         'is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr(
         'is_integer', when_multiple=None)
+    _eval_is_rational = lambda self: self._eval_template_is_attr(
+        'is_rational', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr(
         'is_commutative')
 
@@ -703,6 +705,8 @@ class Add(Expr, AssocOp):
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
             if x not in rv_fraction.free_symbols:
+                if rv_fraction.is_zero and plain.is_zero is not True:
+                    return (self - plain)._eval_as_leading_term(x)
                 return rv_fraction
             return rv
 

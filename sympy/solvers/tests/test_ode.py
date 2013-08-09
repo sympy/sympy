@@ -1650,3 +1650,68 @@ def test_heuristic_4():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     i = infinitesimals(eq, hint='chi')
     assert checkinfsol(eq, i)[0]
+
+
+def test_heuristic_function_sum():
+    xi = Function('xi')
+    eta = Function('eta')
+    eq = f(x).diff(x) - (3*(1 + x**2/f(x)**2)*atan(f(x)/x) + (1 - 2*f(x))/x +
+       (1 - 3*f(x))*(x/f(x)**2))
+    i = infinitesimals(eq, hint='function_sum')
+    assert i == [{eta(x, f(x)): f(x)**(-2) + x**(-2), xi(x, f(x)): 0}]
+    assert checkinfsol(eq, i)[0]
+
+
+def test_heuristic_abaco2_similar():
+    xi = Function('xi')
+    eta = Function('eta')
+    F = Function('F')
+    a, b = symbols("a b")
+    eq = f(x).diff(x) - F(a*x + b*f(x))
+    i = infinitesimals(eq, hint='abaco2_similar')
+    assert i == [{eta(x, f(x)): -a/b, xi(x, f(x)): 1}]
+    assert checkinfsol(eq, i)[0]
+
+    eq = f(x).diff(x) - (f(x)**2 / (sin(f(x) - x) - x**2 + 2*x*f(x)))
+    i = infinitesimals(eq, hint='abaco2_similar')
+    assert i == [{eta(x, f(x)): f(x)**2, xi(x, f(x)): f(x)**2}]
+    assert checkinfsol(eq, i)[0]
+
+
+def test_heuristic_abaco2_unique_unknown():
+    xi = Function('xi')
+    eta = Function('eta')
+    F = Function('F')
+    a, b = symbols("a b")
+    x = Symbol("x", positive=True)
+
+    eq = f(x).diff(x) - x**(a - 1)*(f(x)**(1 - b))*F(x**a/a + f(x)**b/b)
+    i = infinitesimals(eq, hint='abaco2_unique_unknown')
+    assert i == [{eta(x, f(x)): -f(x)*f(x)**(-b), xi(x, f(x)): x*x**(-a)}]
+    assert checkinfsol(eq, i)[0]
+
+    eq = f(x).diff(x) + tan(F(x**2 + f(x)**2) + atan(x/f(x)))
+    i = infinitesimals(eq, hint='abaco2_unique_unknown')
+    assert i == [{eta(x, f(x)): x, xi(x, f(x)): -f(x)}]
+    assert checkinfsol(eq, i)[0]
+
+    eq = (x*f(x).diff(x) + f(x) + 2*x)**2 -4*x*f(x) -4*x**2 -4*a
+    i = infinitesimals(eq, hint='abaco2_unique_unknown')
+    assert checkinfsol(eq, i)[0]
+
+def test_heuristic_linear():
+    xi = Function('xi')
+    eta = Function('eta')
+    F = Function('F')
+    a, b, m, n = symbols("a b m n")
+
+    eq = x**(n*(m + 1) - m)*(f(x).diff(x)) - a*f(x)**n -b*x**(n*(m + 1))
+    i = infinitesimals(eq, hint='linear')
+    assert checkinfsol(eq, i)[0]
+
+@XFAIL
+def test_kamke():
+    a, b, alpha, c = symbols("a b alpha c")
+    eq = x**2*(a*f(x)**2+(f(x).diff(x))) + b*x**alpha + c
+    i = infinitesimals(eq, hint='sum_function')
+    assert checkinfsol(eq, i)[0]

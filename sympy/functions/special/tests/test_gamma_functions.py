@@ -283,7 +283,8 @@ def test_loggamma():
     raises(ArgumentIndexError, lambda: loggamma(x).fdiff(2))
     assert loggamma(x).diff(x) == polygamma(0, x)
     s1 = loggamma(1/(x + sin(x)) + cos(x)).nseries(x, n=4)
-    s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2)
+    s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2) + \
+        log(x)*x**2/2
     assert (s1 - s2).expand(force=True).removeO() == 0
     s1 = loggamma(1/x).series(x)
     s2 = (1/x - S(1)/2)*log(1/x) - 1/x + log(2*pi)/2 + \
@@ -313,7 +314,7 @@ def test_polygamma_expansion():
         -log(x) - x/2 - x**2/12 + O(x**4)
     assert polygamma(1, 1/x).series(x, n=5) == \
         x + x**2/2 + x**3/6 + O(x**5)
-    assert polygamma(3, 1/x).nseries(x, n=8) == \
+    assert polygamma(3, 1/x).nseries(x, n=11) == \
         2*x**3 + 3*x**4 + 2*x**5 - x**7 + 4*x**9/3 + O(x**11)
 
 

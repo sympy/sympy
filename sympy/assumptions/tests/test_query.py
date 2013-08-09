@@ -1,4 +1,4 @@
-from sympy.abc import t, w, x, y, z
+from sympy.abc import t, w, x, y, z, n, k, m, p
 from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
         remove_handler)
 from sympy.assumptions.assume import global_assumptions
@@ -1201,6 +1201,28 @@ def test_even():
     assert ask(Q.even(im(x)), Q.even(x)) is True
     assert ask(Q.even(im(x)), Q.real(x)) is True
 
+    assert ask(Q.even((-1)**n), Q.integer(n)) is False
+
+    assert ask(Q.even(k**2), Q.even(k)) is True
+    assert ask(Q.even(n**2), Q.odd(n)) is False
+    assert ask(Q.even(2**k), Q.even(k)) is None
+    assert ask(Q.even(x**2)) is None
+
+    assert ask(Q.even(k**m), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
+    assert ask(Q.even(n**m), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is False
+
+    assert ask(Q.even(k**p), Q.even(k) & Q.integer(p) & Q.positive(p)) is True
+    assert ask(Q.even(n**p), Q.odd(n) & Q.integer(p) & Q.positive(p)) is False
+
+    assert ask(Q.even(m**k), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
+    assert ask(Q.even(p**k), Q.even(k) & Q.integer(p) & Q.positive(p)) is None
+
+    assert ask(Q.even(m**n), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is None
+    assert ask(Q.even(p**n), Q.odd(n) & Q.integer(p) & Q.positive(p)) is None
+
+    assert ask(Q.even(k**x), Q.even(k)) is None
+    assert ask(Q.even(n**x), Q.odd(n)) is None
+
 
 def test_extended_real():
     assert ask(Q.extended_real(x), Q.positive(x)) is True
@@ -1565,6 +1587,27 @@ def test_odd():
     assert ask(Q.odd(2*x*y), Q.irrational(x) & Q.irrational(x)) is None
 
     assert ask(Q.odd(Abs(x)), Q.odd(x)) is True
+
+    assert ask(Q.odd((-1)**n), Q.integer(n)) is True
+
+    assert ask(Q.odd(k**2), Q.even(k)) is False
+    assert ask(Q.odd(n**2), Q.odd(n)) is True
+    assert ask(Q.odd(3**k), Q.even(k)) is None
+
+    assert ask(Q.odd(k**m), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
+    assert ask(Q.odd(n**m), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is True
+
+    assert ask(Q.odd(k**p), Q.even(k) & Q.integer(p) & Q.positive(p)) is False
+    assert ask(Q.odd(n**p), Q.odd(n) & Q.integer(p) & Q.positive(p)) is True
+
+    assert ask(Q.odd(m**k), Q.even(k) & Q.integer(m) & ~Q.negative(m)) is None
+    assert ask(Q.odd(p**k), Q.even(k) & Q.integer(p) & Q.positive(p)) is None
+
+    assert ask(Q.odd(m**n), Q.odd(n) & Q.integer(m) & ~Q.negative(m)) is None
+    assert ask(Q.odd(p**n), Q.odd(n) & Q.integer(p) & Q.positive(p)) is None
+
+    assert ask(Q.odd(k**x), Q.even(k)) is None
+    assert ask(Q.odd(n**x), Q.odd(n)) is None
 
 
 def test_prime():

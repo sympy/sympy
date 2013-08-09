@@ -199,6 +199,9 @@ class sin(TrigonometricFunction):
             if pi_coeff.is_integer:
                 return S.Zero
 
+            if (2*pi_coeff).is_integer:
+                return S.NegativeOne**(pi_coeff - S.Half)
+
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
                 if narg != arg:
@@ -434,6 +437,10 @@ class cos(TrigonometricFunction):
         if pi_coeff is not None:
             if pi_coeff.is_integer:
                 return (S.NegativeOne)**pi_coeff
+
+            if (2*pi_coeff).is_integer:
+                return S.Zero
+
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
                 if narg != arg:
@@ -1084,7 +1091,7 @@ class cot(TrigonometricFunction):
         i = self.args[0].limit(x, 0)/S.Pi
         if i and i.is_Integer:
             return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
-        return Function._eval_nseries(self, x, n=n, logx=logx)
+        return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx)
 
     def _eval_conjugate(self):
         assert len(self.args) == 1

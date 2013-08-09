@@ -5,6 +5,7 @@ from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer,
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
+from sympy.utilities import default_sort_key
 
 
 def diophantine(eq, param=symbols("t", Integer=True)):
@@ -139,7 +140,11 @@ def classify_diop(eq):
     """
     eq = eq.expand(force=True)
     var = list(eq.free_symbols)
+<<<<<<< HEAD
     var = sorted(var)
+=======
+    var.sort(key=default_sort_key)
+>>>>>>> master
 
     coeff = {}
     diop_type = None

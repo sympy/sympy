@@ -2581,7 +2581,7 @@ def unrad(eq, *syms, **flags):
         # make sign canonical
         free = eq.free_symbols
         if len(free) == 1:
-            if eq.coeff(free.pop()**degree(eq)) < 0:
+            if (eq.coeff(free.pop()**degree(eq)) < 0) is True:
                 eq = -eq
         elif eq.could_extract_minus_sign():
             eq = -eq

@@ -297,6 +297,7 @@ def test_Abs():
 
     x = Symbol('x', real=True)
     n = Symbol('n', integer=True)
+    assert Abs((-1)**n) == 1
     assert x**(2*n) == Abs(x)**(2*n)
     assert Abs(x).diff(x) == sign(x)
     assert abs(x) == Abs(x)  # Python built-in

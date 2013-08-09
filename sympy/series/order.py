@@ -211,7 +211,7 @@ class Order(Expr):
         return self.expr.free_symbols
 
     def _eval_power(b, e):
-        if e.is_Number:
+        if e.is_Number and e.is_nonnegative:
             return b.func(b.expr ** e, *b.args[1:])
         return
 

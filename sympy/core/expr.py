@@ -2496,13 +2496,14 @@ class Expr(Basic, EvalfMixin):
                         if newn != ngot:
                             ndo = n + (n - ngot)*more/(newn - ngot)
                             s1 = self._eval_nseries(x, n=ndo, logx=None)
-                            # if this assertion fails then our ndo calculation
-                            # needs modification
-                            assert s1.getn() == n
+                            while s1.getn() < n:
+                                s1 = self._eval_nseries(x, n=ndo, logx=None)
+                                ndo += 1
                             break
                     else:
                         raise ValueError('Could not calculate %s terms for %s'
                                          % (str(n), self))
+                    s1 += C.Order(x**n)
                 o = s1.getO()
                 s1 = s1.removeO()
             else:
@@ -2544,6 +2545,16 @@ class Expr(Basic, EvalfMixin):
                         yielded += do
 
             return yield_lseries(self.removeO()._eval_lseries(x))
+
+    def taylor_term(self, n, x, *previous_terms):
+        """General method for the taylor term.
+
+        This method is slow, because it differentiates n-times. Subclasses can
+        redefine it to make it faster by using the "previous_terms".
+        """
+        x = sympify(x)
+        _x = C.Dummy('x')
+        return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
 
     def lseries(self, x=None, x0=0, dir='+'):
         """
