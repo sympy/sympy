@@ -148,11 +148,15 @@ class TheanoPrinter(Printer):
         return 3.141592653589793
 
     def _print_Piecewise(self, expr, **kwargs):
+        import numpy as np
         e, cond = expr.args[0].args
-        if len(expr.args) == 1:  # TODO: What to do if one expr-cond?
-            return self._print(e, **kwargs)
-        return tt.switch(self._print(cond, **kwargs), self._print(e, **kwargs),
-                self._print(sympy.Piecewise(*expr.args[1:]), **kwargs))
+        if len(expr.args) == 1:
+            return tt.switch(self._print(cond, **kwargs),
+                             self._print(e, **kwargs),
+                             np.nan)
+        return tt.switch(self._print(cond, **kwargs),
+                         self._print(e, **kwargs),
+                         self._print(sympy.Piecewise(*expr.args[1:]), **kwargs))
 
     def _print_Rational(self, expr, **kwargs):
         return tt.true_div(self._print(expr.p, **kwargs),

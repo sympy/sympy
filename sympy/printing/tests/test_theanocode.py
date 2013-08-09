@@ -3,6 +3,7 @@ from sympy.utilities.pytest import raises
 
 theano = import_module('theano')
 if theano:
+    import numpy as np
     ts = theano.scalar
     tt = theano.tensor
     xt, yt, zt = [tt.scalar(name, 'floatX') for name in 'xyz']
@@ -137,7 +138,6 @@ def test_theano_function_simple():
     assert f(2, 3) == 5
 
 def test_theano_function_numpy():
-    import numpy as np
     f = theano_function([x, y], [x+y], dim=1,
                         dtypes={x: 'float64', y: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
@@ -255,6 +255,11 @@ def test_Piecewise():
     assert result.owner.op == tt.switch
 
     expected = tt.switch(xt<0, 0, tt.switch(xt<2, xt, 1))
+    assert theq(result, expected)
+
+    expr = sy.Piecewise((x, x < 0))
+    result = theano_code(expr)
+    expected = tt.switch(xt < 0, xt, np.nan)
     assert theq(result, expected)
 
 def test_Relationals():
