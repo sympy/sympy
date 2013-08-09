@@ -6,11 +6,11 @@ Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
 
 The code returns a circuit and an associated list of labels.
 >>> from sympy.physics.quantum.qasm import Qasm
->>> q = Qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
+>>> q = Qasm('qubit q0', 'qubit q1', 'h q0', 'cnot q0,q1')
 >>> q.get_circuit()
 CNOT(1,0)*H(1)
 
->>> q = Qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
+>>> q = Qasm('qubit q0', 'qubit q1', 'cnot q0,q1', 'cnot q1,q0', 'cnot q0,q1')
 >>> q.get_circuit()
 CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
 """
@@ -19,7 +19,7 @@ __all__ = [
     'Qasm',
     ]
 
-from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS,SWAP,S,T
+from sympy.physics.quantum.gate import H, CNOT, X, Z, CGate, CGateS, SWAP, S, T,CPHASE
 from sympy.physics.quantum.circuitplot import Mz
 
 def prod(c):
@@ -28,12 +28,12 @@ def prod(c):
         p *= ci
     return p
 
-def flip_index(i,n):
+def flip_index(i, n):
     """Reorder qubit indices from largest to smallest.
     >>> from sympy.physics.quantum.qasm import flip_index
-    >>> flip_index(0,2)
+    >>> flip_index(0, 2)
     1
-    >>> flip_index(1,2)
+    >>> flip_index(1, 2)
     0
     """
     return n-i-1
@@ -59,20 +59,20 @@ def trim(line):
     if not '#' in line: return line
     return line.split('#')[0]
 
-def get_index(target,labels):
+def get_index(target, labels):
     """Get qubit labels from the rest of the line,
     and return their indices, properly flipped.
     >>> from sympy.physics.quantum.qasm import get_index
-    >>> get_index('q0',['q0','q1'])
+    >>> get_index('q0', ['q0', 'q1'])
     1
-    >>> get_index('q1',['q0','q1'])
+    >>> get_index('q1', ['q0', 'q1'])
     0
     """
     nq = len(labels)
-    return flip_index(labels.index(target),nq)
+    return flip_index(labels.index(target), nq)
 
-def get_indices(targets,labels):
-    return [get_index(t,labels) for t in targets]
+def get_indices(targets, labels):
+    return [get_index(t, labels) for t in targets]
 
 def nonblank(args):
     for line in args:
@@ -84,7 +84,7 @@ def nonblank(args):
 def fullsplit(line):
     words = line.split()
     rest = ' '.join(words[1:])
-    return fixcommand(words[0]),rest.split(',')
+    return fixcommand(words[0]), [s.strip() for s in rest.split(',')]
 
 def fixcommand(c):
     """Fix Qasm command names.
@@ -94,7 +94,7 @@ def fixcommand(c):
     forbidden_characters = ['-']
     c = c.lower()
     for char in forbidden_characters:
-        c = c.replace(char,'')
+        c = c.replace(char, '')
     if c == 'def':
         return 'qdef'
     return c
@@ -109,21 +109,21 @@ def stripquotes(s):
     >>> stripquotes('S') == 'S'
     True
     """
-    s = s.replace('"','') # Remove second set of quotes?
-    s = s.replace("'",'')
+    s = s.replace('"', '') # Remove second set of quotes?
+    s = s.replace("'", '')
     return s
 
 class Qasm(object):
     """
     >>> from sympy.physics.quantum.qasm import Qasm
-    >>> q = Qasm('qubit q0','qubit q1','h q0','cnot q0,q1')
+    >>> q = Qasm('qubit q0', 'qubit q1', 'h q0', 'cnot q0,q1')
     >>> q.get_circuit()
     CNOT(1,0)*H(1)
-    >>> q = Qasm('qubit q0','qubit q1','cnot q0,q1','cnot q1,q0','cnot q0,q1')
+    >>> q = Qasm('qubit q0', 'qubit q1', 'cnot q0,q1', 'cnot q1,q0', 'cnot q0,q1')
     >>> q.get_circuit()
     CNOT(1,0)*CNOT(0,1)*CNOT(1,0)
     """
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         self.defs = {}
         self.circuit = []
         self.labels = []
@@ -131,18 +131,18 @@ class Qasm(object):
         self.add(*args)
         self.kwargs = kwargs
 
-    def add(self,*lines):
+    def add(self, *lines):
         for line in nonblank(lines):
-            command,rest = fullsplit(line)
+            command, rest = fullsplit(line)
             if self.defs.get(command): #defs come first, since you can override built-in
                 function = self.defs.get(command)
                 indices = self.indices(rest)
                 if len(indices) == 1:
                     self.circuit.append(function(indices[0]))
                 else:
-                    self.circuit.append(function(indices[:-1],indices[-1]))
-            elif hasattr(self,command):
-                function = getattr(self,command)
+                    self.circuit.append(function(indices[:-1], indices[-1]))
+            elif hasattr(self, command):
+                function = getattr(self, command)
                 function(*rest)
             else:
                 print("Function %s not defined. Skipping" % command)
@@ -152,43 +152,43 @@ class Qasm(object):
 
     def plot(self):
         from sympy.physics.quantum.circuitplot import CircuitPlot
-        circuit,labels = self.get_circuit(), self.get_labels()
-        CircuitPlot(circuit,len(labels),labels=labels,inits=self.inits)
+        circuit, labels = self.get_circuit(), self.get_labels()
+        CircuitPlot(circuit, len(labels), labels=labels, inits=self.inits)
 
-    def qubit(self,arg,init=None):
+    def qubit(self, arg, init=None):
         self.labels.append(arg)
         if init: self.inits[arg] = init
 
-    def indices(self,args): return get_indices(args,self.labels)
-    def index(self,arg): return get_index(arg,self.labels)
-    def nop(self,*args): pass
-    def x(self,arg): self.circuit.append(X(self.index(arg)))
-    def z(self,arg): self.circuit.append(Z(self.index(arg)))
-    def h(self,arg): self.circuit.append(H(self.index(arg)))
-    def s(self,arg): self.circuit.append(S(self.index(arg)))
-    def t(self,arg): self.circuit.append(T(self.index(arg)))
-    def measure(self,arg): self.circuit.append(Mz(self.index(arg)))
+    def indices(self, args): return get_indices(args, self.labels)
+    def index(self, arg): return get_index(arg, self.labels)
+    def nop(self, *args): pass
+    def x(self, arg): self.circuit.append(X(self.index(arg)))
+    def z(self, arg): self.circuit.append(Z(self.index(arg)))
+    def h(self, arg): self.circuit.append(H(self.index(arg)))
+    def s(self, arg): self.circuit.append(S(self.index(arg)))
+    def t(self, arg): self.circuit.append(T(self.index(arg)))
+    def measure(self, arg): self.circuit.append(Mz(self.index(arg)))
 
-    def cnot(self,a1,a2):self.circuit.append(CNOT(*self.indices([a1,a2])))
-    def swap(self,a1,a2):self.circuit.append(SWAP(*self.indices([a1,a2])))
-    def cphase(self,a1,a2):self.circuit.append(CPhase(*self.indices([a1,a2])))
+    def cnot(self, a1, a2):self.circuit.append(CNOT(*self.indices([a1, a2])))
+    def swap(self, a1, a2):self.circuit.append(SWAP(*self.indices([a1, a2])))
+    def cphase(self, a1, a2):self.circuit.append(CPHASE(*self.indices([a1, a2])))
 
-    def toffoli(self,a1,a2,a3):
-        i1,i2,i3 = self.indices([a1,a2,a3])
-        self.circuit.append(CGateS((i1,i2),X(i3)))
+    def toffoli(self, a1, a2, a3):
+        i1, i2, i3 = self.indices([a1, a2, a3])
+        self.circuit.append(CGateS((i1, i2), X(i3)))
 
-    def cx(self,a1,a2):
-        fi,fj = self.indices([a1,a2])
-        self.circuit.append(CGate(fi,X(fj)))
-    def cz(self,a1,a2):
-        fi,fj = self.indices([a1,a2])
-        self.circuit.append(CGate(fi,Z(fj)))
+    def cx(self, a1, a2):
+        fi, fj = self.indices([a1, a2])
+        self.circuit.append(CGate(fi, X(fj)))
+    def cz(self, a1, a2):
+        fi, fj = self.indices([a1, a2])
+        self.circuit.append(CGate(fi, Z(fj)))
 
-    def defbox(self,*args):
-        print("defbox not supported yet. Skipping: ",args)
+    def defbox(self, *args):
+        print("defbox not supported yet. Skipping: ", args)
 
-    def qdef(self,name,ncontrols,symbol):
-        from sympy.physics.quantum.circuitplot import CreateOneQubitGate,CreateCGate
+    def qdef(self, name, ncontrols, symbol):
+        from sympy.physics.quantum.circuitplot import CreateOneQubitGate, CreateCGate
         ncontrols = int(ncontrols)
         command = fixcommand(name)
         symbol = stripquotes(symbol)
