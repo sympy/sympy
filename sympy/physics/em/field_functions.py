@@ -1,6 +1,52 @@
 from sympy import diff, integrate, S
-from sympy.physics.mechanics import MovingRefFrame
+from sympy.physics.mechanics import MovingRefFrame, Vector
 from sympy.physics.mechanics.core import _check_vector, _check_frame
+
+
+def curl(vect, frame):
+    """ The curl of a vector field in given frame """
+
+    _check_vector(vect)
+    if vect == 0:
+        return 0
+    vectx = vect.dot(frame.x)
+    vecty = vect.dot(frame.y)
+    vectz = vect.dot(frame.z)
+    outvec = 0
+    outvec += (diff(vectz, frame[1]) - diff(vecty, frame[2])) * frame.x
+    outvec += (diff(vectx, frame[2]) - diff(vectz, frame[0])) * frame.y
+    outvec += (diff(vecty, frame[0]) - diff(vectx, frame[1])) * frame.z
+    return outvec
+
+
+def divergence(vect, frame):
+    """ The divergence of a vector field in given frame """
+
+    _check_vector(vect)
+    if vect == 0:
+        return 0
+    vectx = vect.dot(frame.x)
+    vecty = vect.dot(frame.y)
+    vectz = vect.dot(frame.z)
+    out = 0
+    out += diff(vectx, frame[0])
+    out += diff(vecty, frame[1])
+    out += diff(vectz, frame[2])
+    return out
+
+
+def separate(vect):
+    
+    _check_vector(vect)
+    if vect == 0:
+        return {}
+    components = {}
+    for x in vect.args:
+        components[x[1]] = 0
+        components[x[1]] += x[0][0] * x[1].x
+        components[x[1]] += x[0][1] * x[1].y
+        components[x[1]] += x[0][2] * x[1].z
+    return components
 
 
 def is_conservative(field):
@@ -25,12 +71,13 @@ def is_conservative(field):
 
     """
 
-    _check_vector(field)
     #Field is conservative irrespective of frame
     #Take the first frame in the result of the
     #separate() method
-    frame = field.separate().keys()[0]
-    return field.curl(frame) == S(0)
+    if field == 0:
+        return True
+    frame = separate(field).keys()[0]
+    return curl(field, frame) == 0
 
 
 def is_solenoidal(field):
@@ -55,12 +102,13 @@ def is_solenoidal(field):
 
     """
 
-    _check_vector(field)
     #Field is solenoidal irrespective of frame
     #Take the first frame in the result of the
     #separate() method
-    frame = field.separate().keys()[0]
-    return field.divergence(frame) == S(0)
+    if field == 0:
+        return True
+    frame = separate(field).keys()[0]
+    return divergence(field, frame) == 0
 
 
 def scalar_potential(field, frame):
@@ -81,21 +129,30 @@ def scalar_potential(field, frame):
     Examples
     ========
 
+    >>> from sympy.physics.mechanics import MovingRefFrame
+    >>> from sympy.physics.em import scalar_potential, gradient
+    >>> scalar_potential(R.z, R) == R[2]
+    True
+    >>> scalar_field = 2*R[0]**2*R[1]*R[2]
+    >>> grad_field = gradient(scalar_field, R)
+    >>> scalar_potential(grad_field, R)
+    2*R[0]**2*R[1]*R[2]
+
     """
 
-    _check_frame(frame)
-    _check_vector(field)
     #Check whether field is conservative
     if not is_conservative(field):
         raise ValueError("Field is not conservative")
+    if field == 0:
+        return 0
     #Express the field exntirely in frame
     #Susbitute coordinate variables also
-    field = field.express(frame, variables=True)
+    field = field.express(frame)
     #Make a list of dimensions of the frame
-    dims = frame.base_vectors
+    dimensions = [x for x in frame]
     #Calculate scalar potential function
-    temp_function = integrate(field.dot(dims[0]), frame[0])
-    for i, dim in enumerate(dims[1:]):
+    temp_function = integrate(field.dot(dimensions[0]), frame[0])
+    for i, dim in enumerate(dimensions[1:]):
         partial_diff = diff(temp_function, frame[i+1])
         partial_diff = field.dot(dim) - partial_diff
         temp_function += integrate(partial_diff, frame[i+1])
@@ -133,7 +190,6 @@ def scalar_potential_difference(field, frame, position1, position2):
     
     """
 
-    _check_frame(frame)
     if isinstance(field, Vector):
         #Get the scalar potential function
         scalar_fn = scalar_potential(field, frame)
@@ -141,14 +197,14 @@ def scalar_potential_difference(field, frame, position1, position2):
         #Field is a scalar
         scalar_fn = field
     #Express positions in required frame
-    position1 = position1.express(frame, variables=True)
-    position2 = position2.express(frame, variables=True)
+    position1 = frame.express(position1)
+    position2 = frame.express(position2)
     #Get the two positions as substitution dicts for coordinate variables
     subs_dict1 = {}
     subs_dict2 = {}
     for i, x in enumerate(frame):
-        subs_dict1[frame[i]] = position1.dot(x)
-        subs_dict2[frame[i]] = position2.dot(x)
+        subs_dict1[frame[i]] = x.dot(position1)
+        subs_dict2[frame[i]] = x.dot(position2)
     return scalar_fn.subs(subs_dict2) - scalar_fn.subs(subs_dict1)
 
 def gradient(scalar, frame):
