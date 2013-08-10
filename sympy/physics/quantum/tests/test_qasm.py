@@ -1,4 +1,4 @@
-from sympy.physics.quantum.qasm import Qasm, prod, flip_index, isblank, trim,\
+from sympy.physics.quantum.qasm import Qasm, prod, flip_index, trim,\
      get_index, nonblank, fullsplit, fixcommand, stripquotes
 from sympy.physics.quantum.gate import X, Z, H, S, T
 from sympy.physics.quantum.gate import CNOT, SWAP, CPHASE, CGate, CGateS
@@ -49,10 +49,6 @@ def test_qasm_prod():
 def test_qasm_flip_index():
     assert flip_index(0, 2) == 1
     assert flip_index(1, 2) == 0
-
-def test_qasm_isblank():
-    assert isblank('  ')
-    assert not isblank(' _ ')
 
 def test_qasm_trim():
     assert trim('nothing happens here') == 'nothing happens here'
