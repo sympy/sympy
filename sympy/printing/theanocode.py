@@ -205,8 +205,9 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
     return broadcastables
 
 
-def theano_function(inputs, outputs, dtypes={}, cache=global_cache, **kwargs):
+def theano_function(inputs, outputs, dtypes={}, cache=None, **kwargs):
     """ Create Theano function from SymPy expressions """
+    cache = {} if cache == None else cache
     broadcastables = dim_handling(inputs, **kwargs)
 
     # Remove keyword arguments corresponding to dim_handling
