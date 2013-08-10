@@ -85,5 +85,4 @@ def test_qasm_qdef():
     assert str(q.get_circuit()) == 'Q(0)'
     q = Qasm("def CQ,1,Q", 'qubit q0', 'qubit q1', 'CQ q0,q1')
     Qgate = CreateCGate('Q')
-    print(str(q.get_circuit()))
     assert str(q.get_circuit()) == 'C((1),Q(0))'
