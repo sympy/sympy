@@ -286,6 +286,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Manish Gill: Fix infinite loop in Matrix constructor
 #. Markus Müller: Add Jordan form for matrices
 #. Amit Saha: Fixes to documentation
+#. QuaBoo: Optimizations in ntheory
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
