@@ -196,6 +196,7 @@ def test_BlockMatrix():
                  tt.join(1, tt.join(0, At, Ct), tt.join(0, Bt, Dt))]
     assert any(theq(Blockt, solution) for solution in solutions)
 
+@XFAIL
 def test_BlockMatrix_Inverse_execution():
     k, n = 2, 4
     dtype = 'float32'
