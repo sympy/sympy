@@ -53,7 +53,9 @@ before_install:
       pip install "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
-      pip install --no-deps Theano;
+      wget https://github.com/Theano/Theano/archive/master.zip;
+      unzip master.zip;
+      pip install --no-deps -e Theano-master/;
     fi
 install:
   - python setup.py install
