@@ -1,5 +1,5 @@
 from sympy.external import import_module
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 theano = import_module('theano')
 if theano:
