@@ -196,13 +196,12 @@ class ImageSet(Set):
     def is_iterable(self):
         return self.base_set.is_iterable
 
-class TransformationSet(ImageSet):
-    @deprecated(useinstead="ImageSet",
-                deprecated_since_version="0.7.4",
-                issue=3958,
-                feature="TransformationSet")
-    def __init__(self, *args):
-        pass
+
+@deprecated(useinstead="ImageSet", issue=3958, deprecated_since_version="0.7.4")
+def TransformationSet(*args, **kwargs):
+    """Deprecated alias for the ImageSet constructor."""
+    return ImageSet(*args, **kwargs)
+
 
 class Range(Set):
     """
