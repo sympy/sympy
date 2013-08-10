@@ -243,7 +243,7 @@ class Sum(Expr):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_integer and dif < 0:
+            if dif.is_integer and (dif < 0) is True:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -361,7 +361,7 @@ class Sum(Expr):
         f = self.function
         assert len(self.limits) == 1
         i, a, b = self.limits[0]
-        if a > b:
+        if (a > b) is True:
             a, b = b + 1, a - 1
             f = -f
         s = S.Zero

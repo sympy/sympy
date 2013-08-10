@@ -467,12 +467,17 @@ def test_sympy__sets__fancysets__Reals():
     from sympy.sets.fancysets import Reals
     assert _test_args(Reals())
 
-
 def test_sympy__sets__fancysets__TransformationSet():
     from sympy.sets.fancysets import TransformationSet
     from sympy import S, Lambda, Symbol
     x = Symbol('x')
     assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
+
+def test_sympy__sets__fancysets__ImageSet():
+    from sympy.sets.fancysets import ImageSet
+    from sympy import S, Lambda, Symbol
+    x = Symbol('x')
+    assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
 
 def test_sympy__sets__fancysets__Range():
@@ -1488,7 +1493,7 @@ def test_sympy__functions__special__polynomials__chebyshevt():
 
 def test_sympy__functions__special__polynomials__chebyshevt_root():
     from sympy.functions.special.polynomials import chebyshevt_root
-    assert _test_args(chebyshevt_root(x, 2))
+    assert _test_args(chebyshevt_root(3, 2))
 
 
 def test_sympy__functions__special__polynomials__chebyshevu():
@@ -1498,7 +1503,7 @@ def test_sympy__functions__special__polynomials__chebyshevu():
 
 def test_sympy__functions__special__polynomials__chebyshevu_root():
     from sympy.functions.special.polynomials import chebyshevu_root
-    assert _test_args(chebyshevu_root(x, 2))
+    assert _test_args(chebyshevu_root(3, 2))
 
 
 def test_sympy__functions__special__polynomials__hermite():

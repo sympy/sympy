@@ -12,23 +12,27 @@ from sympy.polys.monomials import (
 from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.abc import a, b, c, x, y, z
+from sympy.core import S
 from sympy.utilities.pytest import raises
 
+
 def test_monomials():
-    assert sorted(itermonomials([], 0)) == [1]
-    assert sorted(itermonomials([], 1)) == [1]
-    assert sorted(itermonomials([], 2)) == [1]
-    assert sorted(itermonomials([], 3)) == [1]
+    assert itermonomials([], 0) == set([S(1)])
+    assert itermonomials([], 1) == set([S(1)])
+    assert itermonomials([], 2) == set([S(1)])
+    assert itermonomials([], 3) == set([S(1)])
 
-    assert sorted(itermonomials([x], 0)) == [1]
-    assert sorted(itermonomials([x], 1)) == [1, x]
-    assert sorted(itermonomials([x], 2)) == [1, x, x**2]
-    assert sorted(itermonomials([x], 3)) == [1, x, x**2, x**3]
+    assert itermonomials([x], 0) == set([S(1)])
+    assert itermonomials([x], 1) == set([S(1), x])
+    assert itermonomials([x], 2) == set([S(1), x, x**2])
+    assert itermonomials([x], 3) == set([S(1), x, x**2, x**3])
 
-    assert sorted(itermonomials([x, y], 0)) == [1]
-    assert sorted(itermonomials([x, y], 1)) == [1, x, y]
-    assert sorted(itermonomials([x, y], 2)) == [1, x, y, x**2, y**2, x*y]
-    assert sorted(itermonomials([x, y], 3)) == [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2]
+    assert itermonomials([x, y], 0) == set([S(1)])
+    assert itermonomials([x, y], 1) == set([S(1), x, y])
+    assert itermonomials([x, y], 2) == set([S(1), x, y, x**2, y**2, x*y])
+    assert itermonomials([x, y], 3) == \
+        set([S(1), x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, y*x**2])
+
 
 def test_monomial_count():
     assert monomial_count(2, 2) == 6

@@ -274,11 +274,11 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return f1._cmp(f2, ge)
 
     def __pos__(f):
-        """Negate all cefficients in ``f``. """
+        """Negate all coefficients in ``f``. """
         return f.raw_new(f.numer, f.denom)
 
     def __neg__(f):
-        """Negate all cefficients in ``f``. """
+        """Negate all coefficients in ``f``. """
         return f.raw_new(-f.numer, f.denom)
 
     def _extract_ground(self, element):

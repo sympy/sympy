@@ -37,6 +37,11 @@ def check(a, exclude=[], check_attr=True):
     # disable this to keep the tests clean
     # XXX: Really? It *does* warn in 2.7.2 too.
     warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    # We don't care about DeprecationWarnings in the hasattr() check either;
+    # deprecated or no, the attributes need to be the same.
+    # Python 2.6+ warns about BasicException.message, for example.
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+
     protocols = [0, 1, 2, copy.copy, copy.deepcopy]
     # Python 2.x doesn't support the third pickling protocol
     if sys.version_info[0] > 2:

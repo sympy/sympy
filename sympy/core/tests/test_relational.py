@@ -261,11 +261,14 @@ def test_new_relational():
         raises(ValueError, lambda: Relational(x, 1, relation_type))
 
 
-@XFAIL
 def test_relational_bool_output():
-    # XFail test for issue:
     # http://code.google.com/p/sympy/issues/detail?id=2832
-    raises(ValueError, lambda: bool(x > 3))
+    raises(TypeError, lambda: bool(x > 3))
+    raises(TypeError, lambda: bool(x >= 3))
+    raises(TypeError, lambda: bool(x < 3))
+    raises(TypeError, lambda: bool(x <= 3))
+    raises(TypeError, lambda: bool(Eq(x, 3)))
+    raises(TypeError, lambda: bool(Ne(x, 3)))
 
 
 def test_relational_logic_symbols():

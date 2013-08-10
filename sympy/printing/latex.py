@@ -1362,7 +1362,7 @@ class LatexPrinter(Printer):
     def _print_Reals(self, i):
         return r"\mathbb{R}"
 
-    def _print_TransformationSet(self, s):
+    def _print_ImageSet(self, s):
         return r"\left\{%s\; |\; %s \in %s\right\}" % (
             self._print(s.lamda.expr),
             ', '.join([self._print(var) for var in s.lamda.variables]),
