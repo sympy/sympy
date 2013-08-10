@@ -1618,15 +1618,14 @@ def test_heuristic2():
     xi = Function('xi')
     eta = Function('eta')
     df = f(x).diff(x)
-    eq = df -(f(x)/x)*(x*log(x**2/f(x)) + 2)
+
+    # This ODE can be solved by the Lie Group method, when there are
+    # better assumptions
+    eq = df - (f(x)/x)*(x*log(x**2/f(x)) + 2)
     i = infinitesimals(eq, hint='abaco1_product')
     assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
     assert checkinfsol(eq, i)[0]
 
-    eq = x*(f(x).diff(x)) - f(x)*(2 +x*log(x**2/f(x)))
-    i = infinitesimals(eq, hint='abaco1_product')
-    assert i == [{eta(x, f(x)): f(x)*exp(-x), xi(x, f(x)): 0}]
-    assert checkinfsol(eq, i)[0]
 
 def test_heuristic3():
     y = Symbol('y')
@@ -1640,7 +1639,7 @@ def test_heuristic3():
     assert i == [{eta(x, f(x)): f(x), xi(x, f(x)): x}]
     assert checkinfsol(eq, i)[0]
 
-    eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) +2 -a*x
+    eq = x**2*(-f(x)**2 + df)- a*x**2*f(x) + 2 - a*x
     i = infinitesimals(eq, hint='bivariate')
     assert checkinfsol(eq, i)[0]
 
@@ -1747,4 +1746,9 @@ def test_lie_group():
     eq = x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x))
     sol = dsolve(eq, f(x), hint='lie_group')
     assert sol == Eq(f(x), C1*exp(-1/x) - exp(x - 1/x))
+    assert checkodesol(eq, sol)[0]
+
+    eq = x**2*f(x)**2 + x*Derivative(f(x), x)
+    sol = dsolve(eq, f(x), hint='lie_group')
+    assert sol == Eq(f(x), 2/(C1 + x**2))
     assert checkodesol(eq, sol)[0]
