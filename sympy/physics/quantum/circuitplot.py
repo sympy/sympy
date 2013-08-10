@@ -308,6 +308,7 @@ else:
 
 def render_label(label, inits={}):
     """Slightly more flexible way to render labels.
+    
     >>> from sympy.physics.quantum.circuitplot import render_label
     >>> render_label('q0')
     '$|q0\\\\rangle$'
@@ -338,16 +339,20 @@ def labeller(n, symbol='q'):
     return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
 
 class Mz(OneQubitGate):
-    """Mock-up of a z measurement gate. This is in circuitplot rather than
-    gate.py because it's not a real gate, it just draws one.
+    """Mock-up of a z measurement gate.
+
+    This is in circuitplot rather than gate.py because it's not a real
+    gate, it just draws one.
     """
     measurement = True
     gate_name='Mz'
     gate_name_latex=u('M_z')
 
 class Mx(OneQubitGate):
-    """Mock-up of an x measurement gate. This is in circuitplot rather than
-    gate.py because it's not a real gate, it just draws one.
+    """Mock-up of an x measurement gate.
+
+    This is in circuitplot rather than gate.py because it's not a real
+    gate, it just draws one.
     """
     measurement = True
     gate_name='Mx'
