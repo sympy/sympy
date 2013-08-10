@@ -1,6 +1,7 @@
 language: python
 env:
   - TEST_DOCTESTS="true"
+  -
 python:
   - 2.6
   - 2.7
