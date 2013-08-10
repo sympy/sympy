@@ -39,17 +39,6 @@ def flip_index(i, n):
     """
     return n-i-1
 
-def isblank(line):
-    """Returns True if the line is empty/blank/all whitespace.
-    
-    >>> from sympy.physics.quantum.qasm import isblank
-    >>> isblank('   ')
-    True
-    >>> isblank(' _ ')
-    False
-    """
-    return len(line.split()) == 0
-
 def trim(line):
     """Remove everything following comment # characters in line.
     
@@ -81,7 +70,7 @@ def get_indices(targets, labels):
 def nonblank(args):
     for line in args:
         line = trim(line)
-        if isblank(line):
+        if line.isspace():
             continue
         yield line
     return
