@@ -1067,6 +1067,11 @@ class BaseVector(Vector, Symbol):
         rv = self.coord_sys._convert_to_rect(self, coord_sys)
         return rv
 
+    def __repr__(self):
+        return self.coord_sys.name + "." + self.name
+
+    __str__ = __repr__
+
 
 class VectAdd(Add, Vector):
     """
@@ -1202,6 +1207,18 @@ class VectAdd(Add, Vector):
     def express(self, coord_sys):
         __doc__ = express.__doc__
         return express(self, coord_sys)
+
+    def __repr__(self):
+        # VectAdd can contain either BaseVectors or VectMuls
+        ret_str = ''
+        for arg in self.args:
+            # arg must be BaseScalar or VectMul
+            assert isinstance(arg, BaseScalar) or isinstance(arg, VectMul)
+            ret_srt += " + " + repr(arg)
+
+        # Remove the leading " + "
+        ret_str = ret_str[3:]
+        return ret_str
 
 
 class VectMul(Mul, Vector):
@@ -1386,6 +1403,26 @@ class VectMul(Mul, Vector):
     def express(self, coord_sys):
         __doc__ = express.__doc__
         return express(self, coord_sys)
+
+    def __repr__(self):
+        # VectMul can contain another VectAdd
+        ret_str = ''
+        scalar = self.scalar
+        vector = self.vector
+        if isinstance(scalar, Add):
+            ret_str = "(" + repr(scalar) + ") * "
+        else:
+            ret_str = repr(scalar) + " * "
+
+        if isinstance(vector, BaseVector):
+            ret_str += repr(vector)
+        elif isinstance(vector, VectAdd):
+            ret_str += "(" + repr(vector) + ")"
+        else:
+            # Shouldn't happen
+            raise TypeError
+
+        return ret_str
 
 
 class ZeroVectorClass(Zero):
@@ -1573,18 +1610,18 @@ def express(vect, coord_sys):
         # First process the scalar
         if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
-            subs_dict[scalar] = scalar.convert_to_rect(coord_sys)
+            subs_dict[scalar] = scalar._convert_to_rect(coord_sys)
 
         else:
             for arg_scalar in scalar.args:
                 if (isinstance(arg_scalar) and not
                     subs_dict.has_key(arg_scalar)):
-                    subs_dict[v] = arg_scalar.convert_to_rect(coord_sys)
+                    subs_dict[v] = arg_scalar._convert_to_rect(coord_sys)
 
         # Now process the vector
         # vector is necessarily BaseVector
         assert isinstance(vector, BaseVector)
-        subs_dict[vector] = vector.convert_to_rect(coord_sys)
+        subs_dict[vector] = vector._convert_to_rect(coord_sys)
 
         # Now performig the substitution, we have changed all involved
         # variables into rectangular coordinates
