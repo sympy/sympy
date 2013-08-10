@@ -30,7 +30,7 @@ def print_cache():
             if shown:
                 print('\n*** %i ***\n' % i)
 
-            for k, v in kv.iteritems():
+            for k, v in list(kv.items()):
                 print('  %s :\t%s' % (k, v))
 
 
