@@ -1,8 +1,18 @@
 from sympy.physics.quantum.qasm import Qasm, prod, flip_index, trim,\
-     get_index, nonblank, fullsplit, fixcommand, stripquotes
+     get_index, nonblank, fullsplit, fixcommand, stripquotes, read_qasm
 from sympy.physics.quantum.gate import X, Z, H, S, T
 from sympy.physics.quantum.gate import CNOT, SWAP, CPHASE, CGate, CGateS
 from sympy.physics.quantum.circuitplot import Mz, CreateOneQubitGate, CreateCGate
+
+def test_qasm_readqasm():
+    qasm_lines = """\
+    qubit q_0
+    qubit q_1
+    h q_0
+    cnot q_0,q_1
+    """
+    q = read_qasm(qasm_lines)
+    assert q.get_circuit() == CNOT(1,0)*H(1)
 
 def test_qasm_ex1():
     q = Qasm('qubit q0', 'qubit q1', 'h q0', 'cnot q0,q1')
