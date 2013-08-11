@@ -824,6 +824,10 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 # like f(2*x).diff(x).  See issue 1525 and issue 1620.
                 pass
 
+        # Any first order ODE can be ideally solved by the Lie Group
+        # method
+        matching_hints["lie_group"] = r3
+
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
@@ -942,8 +946,6 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 r2[e] /= u.diff(f(x))
                 matching_hints["almost_linear"] = r2
                 matching_hints["almost_linear_Integral"] = r2
-
-        matching_hints["lie_group"] = r3
 
 
     if order == 2:
@@ -3684,7 +3686,7 @@ def ode_separable(eq, func, order, match):
 
     >>> from sympy import Function, dsolve, Eq
     >>> from sympy.abc import x
-    >>> f = Function("f")
+    >>> f = Function('f')
     >>> pprint(dsolve(Eq(f(x)*f(x).diff(x) + x, 3*x*f(x)**2), f(x),
     ... hint='separable', simplify=False))
        /   2       \         2
@@ -3789,12 +3791,13 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
 
 def ode_lie_group(eq, func, order, match):
     r"""
-    This hint implements the lie group method of solving first order differential
+    This hint implements the Lie group method of solving first order differential
     equations. The aim is to convert the given differential equation from the
     given coordinate given system into another coordinate system where it becomes
-    invariant. The converted ODE is separable and can be solved easily. It makes
-    use of the :py:meth:`sympy.solvers.ode.infinitesimals` function which returns
-    the infinitesimals.
+    invariant under the one-parameter Lie group of translations. The converted ODE is
+    quadrature and can be solved easily. It makes use of the
+    :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the
+    infinitesimals of the transformation.
 
     The coordinates `r` and `s` can be found by solving the following Partial
     Differential Equations.
@@ -3813,6 +3816,19 @@ def ode_lie_group(eq, func, order, match):
 
     After finding the solution by integration, it is then converted back to the original
     coordinate system by subsituting `r` and `s` in terms of `x` and `y` again.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq, exp, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
+    ... hint='lie_group'))
+           /      2\    2
+           |     x |  -x
+    f(x) = |C1 + --|*e
+           \     2 /
 
 
     References
@@ -3848,8 +3864,11 @@ def ode_lie_group(eq, func, order, match):
 
     match = {'h': h, 'y': y}
 
-    # This is done so that if solve or any other function raises a NotImplementedError
+    # This is done so that if:
+    # a] solve raises a NotImplementedError.
+    # b] any heuristic raises a ValueError
     # another heuristic can be used.
+    tempsol = []  # Used by solve below
     for heuristic in lie_heuristics:
         try:
             inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
@@ -3859,6 +3878,12 @@ def ode_lie_group(eq, func, order, match):
             for infsim in inf:
                 xiinf = (infsim[xi(x, func)]).subs(func, y)
                 etainf = (infsim[eta(x, func)]).subs(func, y)
+                # This condition creates recursion while using pdsolve.
+                # Since the first step while solving a PDE of form
+                # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
+                # is to solve the ODE dy/dx = b/a
+                if simplify(etainf/xiinf) == h:
+                    continue
                 rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
                 r = pdsolve(rpde, func=f(x, y)).rhs
                 s = pdsolve(rpde - 1, func=f(x, y)).rhs
@@ -3879,7 +3904,7 @@ def ode_lie_group(eq, func, order, match):
                     num = simplify(scoord.diff(x) + scoord.diff(y)*h)
                     denom = simplify(rcoord.diff(x) + rcoord.diff(y)*h)
                     if num and denom:
-                        diffeq = simplify(num/denom).subs([(x, xsub), (y, ysub)])
+                        diffeq = simplify((num/denom).subs([(x, xsub), (y, ysub)]))
                         sep = separatevars(diffeq, symbols=[r, s], dict=True)
                         if sep:
                             # Trying to separate, r and s coordinates
@@ -3887,14 +3912,15 @@ def ode_lie_group(eq, func, order, match):
                             # Substituting and reverting back to original coordinates
                             deq = deq.subs([(r, rcoord), (s, scoord)])
                             try:
-                                deq = solve(deq, y)
+                                sdeq = solve(deq, y)
                             except NotImplementedError:
-                                continue
+                                tempsol.append(deq)
                             else:
-                                if len(deq) == 1:
-                                    return Eq(f(x), deq.pop())
+                                if len(sdeq) == 1:
+                                    return Eq(f(x), sdeq.pop())
                                 else:
-                                    return [Eq(f(x), sol) for sol in deq]
+                                    return [Eq(f(x), sol) for sol in sdeq]
+
 
                     elif denom: # (ds/dr) is zero which means s is constant
                         return Eq(f(x), solve(scoord - C1, y)[0])
@@ -3902,16 +3928,48 @@ def ode_lie_group(eq, func, order, match):
                     elif num: # (dr/ds) is zero which means r is constant
                         return Eq(f(x), solve(rcoord - C1, y)[0])
 
-    raise NotImplementedError("The given ODE" + str(eq) + "cannot be solved by"
+    # If nothing works, return solution as it is, without solving for y
+    if tempsol:
+        if len(tempsol) == 1:
+            return Eq(tempsol.pop().subs(y, f(x)), 0)
+        else:
+            return [Eq(sol.subs(y, f(x)), 0) for sol in tempsol]
+
+    raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
         + " the lie group method")
 
 
 def _lie_group_remove(coords):
     r"""
-    Helper function for the ode_lie_group function, which replaces arbitrary functions
-    with their arguments.
-    If the function is present in an Add object, it is replaced by zero.
-    If the function is present in an Mul object, it is replaced by zero.
+    This function is strictly meant for internal use by the Lie group ODE solving
+    method. It replaces arbitrary functions returned by pdsolve with either 0 or 1 or the
+    args of the arbitrary function.
+
+    The algorithm used is:
+    1] If coords is an instance of an Undefined Function, then the args are returned
+    2] If the arbitrary function is present in an Add object, it is replaced by zero.
+    3] If the arbitrary function is present in an Mul object, it is replaced by one.
+    4] If coords has no Undefined Function, it is returned as it is.
+
+    Examples
+    ========
+    >>> from sympy.solvers.ode import _lie_group_remove
+    >>> from sympy import Function
+    >>> from sympy.abc import x, y
+    >>> F = Function("F")
+    >>> eq = x**2*y
+    >>> _lie_group_remove(eq)
+    x**2*y
+    >>> eq = F(x**2*y)
+    >>> _lie_group_remove(eq)
+    x**2*y
+    >>> eq = y**2*x + F(x**3)
+    >>> _lie_group_remove(eq)
+    x*y**2
+    >>> eq = (F(x**3) + y)*x**4
+    >>> _lie_group_remove(eq)
+    x**4*y
+
     """
     if isinstance(coords, AppliedUndef):
         return coords.args[0]

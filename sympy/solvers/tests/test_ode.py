@@ -1720,6 +1720,7 @@ def test_kamke():
 
 def test_lie_group():
     C1 = Symbol("C1")
+    a, b, c = symbols("a b c")
     eq = f(x).diff(x)**2
     sol = dsolve(eq, f(x), hint='lie_group')
     assert checkodesol(eq, sol)[0]
@@ -1745,7 +1746,6 @@ def test_lie_group():
 
     eq = x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x))
     sol = dsolve(eq, f(x), hint='lie_group')
-    assert sol == Eq(f(x), C1*exp(-1/x) - exp(x - 1/x))
     assert checkodesol(eq, sol)[0]
 
     eq = x**2*f(x)**2 + x*Derivative(f(x), x)
