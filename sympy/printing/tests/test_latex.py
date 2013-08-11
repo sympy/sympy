@@ -691,9 +691,9 @@ def test_latex_order():
 
 def test_latex_Lambda():
     assert latex(Lambda(x, x + 1)) == \
-        r"\Lambda {\left (x, x + 1 \right )}"
+        r"x \mapsto x + 1"
     assert latex(Lambda((x, y), x + 1)) == \
-        r"\Lambda {\left (\begin{pmatrix}x, & y\end{pmatrix}, x + 1 \right )}"
+        r"\begin{pmatrix}x, & y\end{pmatrix} \mapsto x + 1"
 
 
 def test_latex_PolyElement():
@@ -753,8 +753,9 @@ def test_latex_RootOf():
 
 
 def test_latex_RootSum():
+    print latex(RootSum(x**5 + x + 3, sin))
     assert latex(RootSum(x**5 + x + 3, sin)) == \
-        r"\operatorname{RootSum} {\left(x^{5} + x + 3, \Lambda {\left (x, \sin{\left (x \right )} \right )}\right)}"
+        r"\operatorname{RootSum} {\left(x^{5} + x + 3, x \mapsto \sin{\left (x \right )}\right)}"
 
 
 def test_settings():
