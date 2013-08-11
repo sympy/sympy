@@ -1715,3 +1715,8 @@ def test_kamke():
     eq = x**2*(a*f(x)**2+(f(x).diff(x))) + b*x**alpha + c
     i = infinitesimals(eq, hint='sum_function')
     assert checkinfsol(eq, i)[0]
+
+
+def test_constantsimp():
+    eq = x*(f(x).diff(x)) + 1 - f(x)**2
+    assert dsolve(eq) == Eq(f(x), S(-1))
