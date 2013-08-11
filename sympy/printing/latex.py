@@ -600,7 +600,7 @@ class LatexPrinter(Printer):
             symbols = self._print(tuple(symbols))
 
         args = (symbols, self._print(expr))
-        tex = r"\Lambda {\left (%s \right )}" % ", ".join(args)
+        tex = r"%s \mapsto %s" % (symbols, self._print(expr))
 
         return tex
 
