@@ -1,5 +1,5 @@
 from sympy.external import import_module
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, SKIP
 
 theano = import_module('theano')
 if theano:
@@ -196,7 +196,7 @@ def test_BlockMatrix():
                  tt.join(1, tt.join(0, At, Ct), tt.join(0, Bt, Dt))]
     assert any(theq(Blockt, solution) for solution in solutions)
 
-@XFAIL
+@SKIP
 def test_BlockMatrix_Inverse_execution():
     k, n = 2, 4
     dtype = 'float32'
