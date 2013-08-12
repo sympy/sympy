@@ -10,6 +10,8 @@ from sympy.core import (
 
 from sympy.core.mul import _keep_coeff
 
+from sympy.core.function import FunctionClass
+
 from sympy.core.basic import preorder_traversal
 
 from sympy.core.relational import Relational
@@ -5387,6 +5389,14 @@ def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
     if isinstance(expr, Expr) and not expr.is_Relational:
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        if len(factors) == 1 and hasattr(expr, "func") and opt.expand:
+            f, exp = factors[0]
+            is_fc = isinstance(expr.func, FunctionClass)
+            if is_fc:
+                if exp == 1 and f.as_expr() == Poly(expr).as_expr():
+                    factors[0] = (expr, exp)
+            elif 0 < exp < 1 and method is 'factor' and pow(f,exp).as_expr() == Poly(expr).as_expr():
+                factors[0] = (expr, 1)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
