@@ -19,7 +19,7 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 from sympy.polys import Poly, cancel, gcd
 
 from sympy.integrals.risch import (NonElementaryIntegralException,
-    frac_in, derivation, residue_reduce,
+    frac_in, derivation, residue_reduce, is_deriv,as_poly_1t,
     residue_reduce_derivation, DecrementLevel)
 from sympy.integrals.rde import (weak_normalizer,
     bound_degree, spde, solve_poly_rde, normal_denom, special_denom)
@@ -46,10 +46,13 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     q1, q2 in k[t] X k[t] of this system with deg(q1) <= n and deg(q2)
     <= n
     """
-    print b1, b2, c1, c2
     t = DE.t
-    if(b1 == c1.as_poly(t) and b2 == c2.as_poly(t)):
-	return (Poly(1, t), Poly(0, t))
+    k = Dummy('k')
+    if not b1.has(DE.t) and not b2.has(DE.t) and not c1.has(DE.t) \
+        and not c2.has(DE.t):
+	with DecrementLevel(DE):
+            return cds_cancel_primitive(a, Poly(b1, DE.t), Poly(b2, DE.t), Poly(c1, DE.t)\
+               , Poly(c2, DE.t), DE, n)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     A1 = is_log_deriv_k_t_radical_in_field(b1a, b1d, DE)
@@ -57,28 +60,34 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     if A1 and A2:
         n1, u1 = A1
         n2, u2 = A2
-        u = u1 + u2*sqrt(a)
-        P1 = is_deriv(u1*c1 + a*u2*c2)
-        P2 = is_deriv(u2*c1 + u1*c2)
+        u = u1 + u2*a.as_expr()
+	z1a, z1d = frac_in(cancel(u1*c1.as_expr() + a.as_expr()*u2*c2.as_expr()), DE.t)
+	z2a, z2d = frac_in(cancel(u2*c1.as_expr() + a.as_expr()*u1*c2.as_expr()), DE.t)
+        P1 = is_deriv(z1a, z1d, DE)
+        P2 = is_deriv(z2a, z2d, DE)
         if P1 and P2:
             p1, _ = P1
             p2, _ = P2
-            if p1.degree() <= n and p2.degree() <= n:
-                denom = u1**2 - a*u2**2
-                return ((u1*p1 - a*u2*p2).to_field().mul_ground(1/denom),\
-                    (u1*p2 - a*u2*p1).to_field().mul_ground(1/denom))
+            if Poly(p1).degree(t) <= n and Poly(p2).degree(t) <= n:
+                num1 = Poly(cancel(u1*p1 - a.as_expr()*u2*p2), t)
+                num2 = Poly(cancel(u1*p2 - u2*p1), t) 
+                denom = Poly(cancel(u1**2 - a.as_expr()*u2**2), t)
+                return (num1.to_field().mul_ground(1/denom),\
+                    num2.to_field().mul_ground(1/denom))
             else:
                 raise NonElementaryIntegralException
     if c1 == 0 and c2 == 0:
         return (Poly(0, t), Poly(0, t))
-    if n < max(c1.as_poly(t).degree(), c2.as_poly(t).degree()):
+    if n < max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t)):
         raise NonElementaryIntegralException
     q1, q2 = (Poly(0, t), Poly(0, t))
     while c1 or c2:
-        m = max(c1.as_poly(t).degree(), c2.as_poly(t).degree())
+        m = max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t))
         if n < m:
             raise NonElementaryIntegralException
-        A = coupled_DE_system(b1, b2, c1.as_poly(t).nth(m), c2.as_poly(t).nth(m), DE)
+	c1k = as_poly_1t(c1, t, k).as_poly(t).nth(m)
+	c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
+        A = coupled_DE_system(b1, b2, c1k, c2k, DE)
         (s1, s2) = A
         q1 = q1 + s1*t**m
         q2 = q2 + s2*t**m
@@ -120,8 +129,10 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         n2, m2, u2 = A2
         m =  m1
         u = u1 + u2*sqrt(a)
-        P1 = is_deriv(u1*c1 + a*u2*c2)
-        P2 = is_deriv(u2*c1 + u1*c2)
+	z1a, z1d = frac_in(u1*c1 + a*u2*c2, DE.t)
+	z2a, z2d = frac_in(u2*c1 + u1*c2, DE.t)
+        P1 = is_deriv(z1a, z1d, DE)
+        P2 = is_deriv(z2a, z2d, DE)
         if P1 and P2:
             p1, _ = P1
             p2, _ = P2
