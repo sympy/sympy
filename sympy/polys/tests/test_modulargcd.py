@@ -3,6 +3,7 @@ from sympy.polys.domains import ZZ
 from sympy.polys.modulargcd import (
     modgcd_univariate,
     modgcd_bivariate,
+    _chinese_remainder_reconstruction_multivariate,
     modgcd_multivariate)
 
 def test_modgcd_univariate_integers():
@@ -99,6 +100,9 @@ def test_modgcd_bivariate_integers():
     f, g = x*y**2 + 2*x*y + x, x*y**3 + x
     assert modgcd_bivariate(f, g) == (x*y + x, y + 1, y**2 - y + 1)
 
+    f, g = x**2*y**2 + x**2*y + 1, x*y**2 + x*y + 1
+    assert modgcd_bivariate(f, g) == (1, f, g)
+
     f = 2*x*y**2 + 4*x*y + 2*x + y**2 + 2*y + 1
     g = 2*x*y**3 + 2*x + y**3 + 1
     assert modgcd_bivariate(f, g) == (2*x*y + 2*x + y + 1, y + 1, y**2 - y + 1)
@@ -116,6 +120,19 @@ def test_modgcd_bivariate_integers():
     f = 2*x**2 + 2*x*y - 3*x - 3*y
     g = 4*x*y - 2*x + 4*y**2 - 2*y
     assert modgcd_bivariate(f, g) == (x + y, 2*x - 3, 4*y - 2)
+
+
+def test_chinese_remainder():
+    R, x, y = ring("x, y", ZZ)
+    p, q = 3, 5
+
+    hp = x**3*y - x**2 - 1
+    hq = -x**3*y - 2*x*y**2 + 2
+
+    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+
+    assert hpq.trunc_ground(p) == hp
+    assert hpq.trunc_ground(q) == hq
 
 
 def test_modgcd_multivariate_integers():
@@ -136,6 +153,19 @@ def test_modgcd_multivariate_integers():
 
     f, g = x*y**2 + 2*x*y + x, x*y**3 + x
     assert modgcd_multivariate(f, g) == (x*y + x, y + 1, y**2 - y + 1)
+
+    f, g = x**2*y**2 + x**2*y + 1, x*y**2 + x*y + 1
+    assert modgcd_multivariate(f, g) == (1, f, g)
+
+    f = x**4 + 8*x**3 + 21*x**2 + 22*x + 8
+    g = x**3 + 6*x**2 + 11*x + 6
+
+    h = x**2 + 3*x + 2
+
+    cff = x**2 + 5*x + 4
+    cfg = x + 3
+
+    assert modgcd_multivariate(f, g) == (h, cff, cfg)
 
     R, x, y, z, u = ring("x,y,z,u", ZZ)
 
