@@ -143,10 +143,12 @@ def opt_cse(exprs):
     Parameters
     ----------
     exprs : list of sympy expressions
+        The expressions to optimize.
 
     Returns
     -------
     opt_subs : dictionary of expression substitutions
+        The expression substitutions which can be useful to optimize CSE.
 
     Examples
     --------
@@ -255,9 +257,12 @@ def tree_cse(exprs, symbols, opt_subs=None):
     ==========
 
     exprs : list of sympy expressions
+        The expressions to reduce.
     symbols : infinite iterator yielding unique Symbols
+        The symbols used to label the common subexpressions which are pulled
+        out.
     opt_subs : dictionary of expression substitutions
-        Expressions to be substituted before any CSE action is performed.
+        The expressions to be substituted before any CSE action is performed.
     """
     from sympy.matrices import Matrix
 
