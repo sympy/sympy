@@ -32,7 +32,7 @@ def n_order(a, n):
     for p, e in factors.items():
         exponent = group_order
         for f in xrange(e + 1):
-            if a**exponent % n != 1:
+            if pow(a, exponent, n) != 1:
                 order *= p ** (e - f + 1)
                 break
             exponent = exponent // p
@@ -98,7 +98,7 @@ def is_quad_residue(a, p):
         if p % 2 and jacobi_symbol(a, p) == -1:
             return False
         for i in range(2, p//2 + 1):
-            if i**2 % p == a:
+            if pow(i, 2, p) == a:
                 return True
         return False
 

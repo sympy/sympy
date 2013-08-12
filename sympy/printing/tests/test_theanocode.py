@@ -1,4 +1,5 @@
 from sympy.external import import_module
+from sympy.utilities.pytest import raises
 
 theano = import_module('theano')
 if theano:
@@ -135,10 +136,10 @@ def test_theano_function_simple():
     f = theano_function([x, y], [x+y])
     assert f(2, 3) == 5
 
-
 def test_theano_function_numpy():
     import numpy as np
-    f = theano_function([x, y], [x+y], dim=1)
+    f = theano_function([x, y], [x+y], dim=1,
+                        dtypes={x: 'float64', y: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
 
     f = theano_function([x, y], [x+y], dtypes={x: 'float64', y: 'float64'},
@@ -146,6 +147,20 @@ def test_theano_function_numpy():
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
+
+def test_theano_function_kwargs():
+    import numpy as np
+    f = theano_function([x, y, z], [x+y], dim=1, on_unused_input='ignore',
+            dtypes={x: 'float64', y: 'float64', z: 'float64'})
+    assert np.linalg.norm(f([1, 2], [3, 4], [0, 0]) - np.asarray([4, 6])) < 1e-9
+
+    f = theano_function([x, y, z], [x+y],
+                        dtypes={x: 'float64', y: 'float64', z: 'float64'},
+                        dim=1, on_unused_input='ignore')
+    xx = np.arange(3).astype('float64')
+    yy = 2*np.arange(3).astype('float64')
+    zz = 2*np.arange(3).astype('float64')
+    assert np.linalg.norm(f(xx, yy, zz) - 3*np.arange(3)) < 1e-9
 
 def test_slice():
     assert theano_code(slice(1, 2, 3)) == slice(1, 2, 3)
@@ -189,8 +204,8 @@ def test_BlockMatrix_Inverse_execution():
     inputs = A, B
     output = B.I*A
 
-    cutsizes = {A: [(n/2, n/2), (k/2, k/2)],
-                B: [(n/2, n/2), (n/2, n/2)]}
+    cutsizes = {A: [(n//2, n//2), (k//2, k//2)],
+                B: [(n//2, n//2), (n//2, n//2)]}
     cutinputs = [sympy.blockcut(i, *cutsizes[i]) for i in inputs]
     cutoutput = output.subs(dict(zip(inputs, cutinputs)))
 
@@ -221,3 +236,6 @@ def test_AppliedUndef():
     ft = theano_code(f(t))
     assert isinstance(ft, tt.TensorVariable)
     assert ft.name == 'f_t'
+
+def test_bad_keyword_args_raise_error():
+    raises(Exception, lambda : theano_function([x], [x+1], foobar=3))

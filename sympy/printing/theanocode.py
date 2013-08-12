@@ -1,4 +1,5 @@
 from __future__ import print_function, division
+import inspect
 
 from sympy.utilities import default_sort_key
 from sympy.external import import_module
@@ -173,7 +174,8 @@ def theano_code(expr, **kwargs):
     return TheanoPrinter({}).doprint(expr, **kwargs)
 
 
-def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=()):
+def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=(),
+        **kwargs):
     """ Handle various input types for dimensions in tensor_wrap
 
     See Also:
@@ -192,8 +194,14 @@ def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=()):
 def theano_function(inputs, outputs, dtypes={}, **kwargs):
     """ Create Theano function from SymPy expressions """
     broadcastables = dim_handling(inputs, **kwargs)
+
+    # Remove keyword arguments corresponding to dim_handling
+    dim_names = inspect.getargspec(dim_handling)[0]
+    theano_kwargs = dict((k, v) for k, v in kwargs.items()
+                                if k not in dim_names)
+
     code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
     tinputs  = map(code, inputs)
     toutputs = map(code, outputs)
     toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
-    return theano.function(tinputs, toutputs)
+    return theano.function(tinputs, toutputs, **theano_kwargs)

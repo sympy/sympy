@@ -1,3 +1,5 @@
+import warnings
+
 from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
                    simplify, sin, sqrt, symbols, tan)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
@@ -7,7 +9,7 @@ from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
 from sympy.utilities.randtest import test_numerically
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
@@ -669,8 +671,12 @@ def test_polygon():
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
     assert p5.distance(
         Polygon(Point(1, 8), Point(5, 8), Point(8, 12), Point(1, 12))) == 4
+    warnings.filterwarnings(
+        "error", message="Polygons may intersect producing erroneous output")
     raises(UserWarning,
            lambda: Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(Polygon(Point(0, 0), Point(0, 1), Point(1, 1))))
+    warnings.filterwarnings(
+        "ignore", message="Polygons may intersect producing erroneous output")
     assert hash(p5) == hash(Polygon(Point(0, 0), Point(4, 4), Point(0, 4)))
     assert p5 == Polygon(Point(4, 4), Point(0, 4), Point(0, 0))
     assert Polygon(Point(4, 4), Point(0, 4), Point(0, 0)) in p5
@@ -848,33 +854,19 @@ def test_polygon():
     assert p2.distance(pt1) == Rational(3)/4
     assert p3.distance(pt2) == sqrt(2)/2
 
-
-@XFAIL
-def test_polygon_to_polygon():
     '''Polygon to Polygon'''
-    # XXX: Because of the way the warnings filters work, this will fail if it's
-    # run more than once in the same session.  See issue 2492.
-
-    import warnings
     # p1.distance(p2) emits a warning
     # First, test the warning
-    warnings.filterwarnings(
-        "error", "Polygons may intersect producing erroneous output")
+    warnings.filterwarnings("error",
+        message="Polygons may intersect producing erroneous output")
     raises(UserWarning, lambda: p1.distance(p2))
     # now test the actual output
-    warnings.filterwarnings(
-        "ignore", "Polygons may intersect producing erroneous output")
+    warnings.filterwarnings("ignore",
+        message="Polygons may intersect producing erroneous output")
     assert p1.distance(p2) == half/2
-    # Keep testing reasonably thread safe, so reset the warning
-    warnings.filterwarnings(
-        "default", "Polygons may intersect producing erroneous output")
-    # Note, in Python 2.6+, this can be done more nicely using the
-    # warnings.catch_warnings context manager.
-    # See http://docs.python.org/library/warnings#testing-warnings.
 
     assert p1.distance(p3) == sqrt(2)/2
     assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
-    assert p5.distance(p6) == Rational(7)/10
 
 
 def test_convex_hull():
