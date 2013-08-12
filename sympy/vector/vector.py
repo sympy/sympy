@@ -65,24 +65,128 @@ def dot(vect_a, vect_b, coord_sys=None):
     """
     ret = S.Zero
     # Get two lists - each having vectors separated by coordinate system
-    a_vectors = _separate_to_vectors(vect_a)
-    b_vectors = _separate_to_vectors(vect_b)
 
     if not coord_sys:
         if (len(a_vectors) == 1 and len(b_vectors) == 1
             and a_vectors[0].coord_sys == b_vectors[0].coord_sys):
            coord_sys = a_vectors[0].coord_sys
-        else:
-           raise ValueError("Coordinate system not provided.")
 
-    r_vect_a = None
-    for vector in a_vectors:
-        r_vect_a += vector.express(coord_sys)
-    r_vect_b = None
-    for vector in b_vectors:
-        r_vect_b += vector.express(coord_sys)
-    # Now we have two vectors, each in the provided coord_sys
-    return _dot_same(r_vect_a, r_vect_b)
+    if coord_sys:
+        # Express each vector in coord_sys and call _dot_same
+        vect_a = vect_a.express(coord_sys)
+        vect_b = vect_b.express(coord_sys)
+        return _dot_same(vect_a, vect_b)
+    # We don't have a coord_sys so, proceed to return the output in all
+    # the base scalars
+
+    vect_a = vect_a.factor()
+    vect_b = vect_b.factor()
+
+    # Decompose the vectors
+    vect_a_dec = []
+    for arg in vect_a._all_args:
+        t = (arg.scalar, arg.vector)
+        vect_a_dec.append(t)
+
+    vect_b_dec = []
+    for arg in vect_b._all_args:
+        t = (arg.scalar, arg.vector)
+        vect_b_dec.append(t)
+
+    for i in vect_a_dec:
+        for j in vect_b_dec:
+            ret = ret + i[0] * j[0] + dot(i[1], j[1].express(i[1].coord_sys), i[1].coord_sys)
+
+    ret = ret.simplify()
+    return ret
+
+def grad(expr, coord_sys=None):
+    """
+    Calculate the gradient of a vector field
+    expr : a SymPy expression
+    coord_sys : a coord_sys to express the results in
+    """
+    # TODO : Constant vectors? How to check and where they are implemented
+    # TODO : add the is_constant method for constant scalars
+    if not _has_base_scalar(expr):
+        return ZeroVector
+
+    coord_list = _coord_sys_scalar_list(expr)
+    if not coord_sys and not len(coord_list) == 1:
+        raise ValueError("Coordinate system for output not provided")
+    elif not coord_sys:
+        coord_sys = coord_list[0]
+
+    # Now, we convert everything to given coordinate system
+    expr = _scalar_express(expr, coord_sys)
+    ret = ZeroVector
+    expr = expr.expand()
+    subs_dict = {}
+    all_base_scalars = _all_base_scalars(expr)
+    for arg in all_base_scalars:
+        # Convert base scalars to c_rect
+        c_rect = arg.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+        subs_dict[arg] = arg._convert_to_rect(c_rect)
+    expr = expr.subs(subs_dict)
+    subs_dict = {}
+
+    coord_sys_t = coord_sys._change_coord_sys(CoordSysRect, 'coord_sys_t')
+    all_base_scalars = _all_base_scalars(expr)
+
+    for arg in all_base_scalars:
+        subs_dict[arg] = CoordSys._convert_base_sclr_rect(arg, coord_sys_t)
+
+    expr = expr.subs(subs_dict)
+    subs_dict = {}
+    all_base_scalars = _all_base_scalars(expr)
+
+    # Now convert back to coord_sys
+    for arg in all_base_scalars:
+        subs_dict[arg] = arg.coord_sys._convert_to_rect(coord_sys)
+
+    expr = expr.subs(subs_dict)
+
+    # Now the expr has been converted completely to given coord_sys
+    # We differentiate now
+    ret = ZeroVector
+    h_list = coord_sys.h_list
+    base_scalars = coord_sys.base_scalars
+    base_vectors = coord_sys.base_vectors
+
+    for i, h in enumerate(h_list):
+        l = (1/h) * diff(expr, base_scalars[i])
+        ret = ret + l * base_vectors[i]
+    return ret
+    # MARK
+
+def _has_base_scalar(expr):
+    expr = expr.expand()
+    for arg in expr.args:
+        if isinstance(arg, BaseScalar):
+            return True
+        elif _has_base_scalar(arg):
+            return True
+    return False
+
+def _all_base_scalars(scalar):
+    """
+    Returns all BaseScalars contained in scalar
+    """
+    if isinstance(scalar, BaseScalar):
+        return [scalar]
+
+    ret = []
+    scalar = scalar.expand()
+    for arg in scalar.args:
+        if isinstance(arg, BaseScalar):
+            ret.append(arg)
+        else:
+            l = _all_base_scalars(arg)
+            if l:
+                ret = ret + l
+    return list(set(ret))
+    #MARK
+
 
 def _separate_to_vectors(vect):
     coord_dict = vect.separate()
@@ -633,7 +737,7 @@ class CoordSys(Basic):
         sclr : A BaseScalar
         coord_sys: A CoordSys object
         returns base vectors in rectangular coordinates converted to another
-        set of rectangular coordinates while chaning the orientation
+        set of rectangular coordinates while changing the orientation
         """
         if sclr.coord_sys == coord_sys:
             return sclr
@@ -1542,9 +1646,8 @@ def express(vect, coord_sys):
             subs_dict[scalar] = scalar._convert_to_rect(c_rect)
 
         else:
-            for arg_scalar in scalar.args:
-                if (isinstance(arg_scalar, BaseScalar) and not
-                    subs_dict.has_key(arg_scalar)):
+            for arg_scalar in _all_base_scalars(scalar):
+                if not subs_dict.has_key(arg_scalar):
                     c_rect = arg_scalar.coord_sys._change_coord_sys(
                                                         CoordSysRect, 'c_rect')
                     subs_dict[arg_scalar] = BaseScalar._convert_to_rect(vect,
@@ -1587,9 +1690,8 @@ def express(vect, coord_sys):
             subs_dict[v] = CoordSys._convert_base_sclr_rect(scalar,
                                                             coord_sys_t)
         else:
-            for arg_scalar in scalar.args:
-                if (isinstance(arg_scalar, BaseScalar) and not
-                    subs_dict.has_key(arg_scalar)):
+            for arg_scalar in _all_base_scalars(scalar):
+                if not subs_dict.has_key(arg_scalar)):
                     subs_dict[arg_scalar] = \
                         CoordSys._convert_base_sclr_rect(vect, coord_sys_t)
 
@@ -1613,9 +1715,8 @@ def express(vect, coord_sys):
             subs_dict[scalar] = scalar._convert_to_rect(coord_sys)
 
         else:
-            for arg_scalar in scalar.args:
-                if (isinstance(arg_scalar) and not
-                    subs_dict.has_key(arg_scalar)):
+            for arg_scalar in _all_base_scalars(scalar):
+                if not subs_dict.has_key(arg_scalar)):
                     subs_dict[v] = arg_scalar._convert_to_rect(coord_sys)
 
         # Now process the vector
