@@ -21,10 +21,10 @@ def test_cds_cancel_primitive():
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
         Poly(2*x/(x**2 + 1), t2)], 'L_K': [1, 2], 'E_K': [], 'L_args': [x, x**2 + 1],
-        'E_args': []}) 
+        'E_args': []})
     assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(x, x), Poly(2*x, x),
         Poly(2*x/(x**2 + 1) + x*t2 - 2*x*t1), Poly(1/x + 2*x*t2 + x*t1), DE, 5) == \
-	(t2, t1)
+        (t2, t1)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
         'L_K': [1], 'E_K': [], 'L_args': [x], 'E_args': [], 'Tfuncs': [log]})
     assert cds_cancel_primitive(Poly(sqrt(-1)), Poly((5*t + 1)/(2*t*x)),
@@ -45,7 +45,7 @@ def test_cds_cancel_primitive():
        'L_K': [1], 'E_K': [], 'L_args': [x], 'E_args': []})
     assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(-(1 + 2*t)/(2*x**2 + 2*x**2*t)),
         Poly(t/x**2), Poly(-2*t**2/x + t**2 + 2*t + 2*t/x - (t**2 + 2*t)*(1 + 2*t)/(2*(1 + t)) - t**3/x),
- 	Poly(-2*t**2/x**2 + t**2 + t**3/x - (1 + 2*t)*t**2/(2*x*(1 + t))), DE, 4) == \
+        Poly(-2*t**2/x**2 + t**2 + t**3/x - (1 + 2*t)*t**2/(2*x*(1 + t))), DE, 4) == \
         (x*t**2 + 2*x*t, t**x)
 
     assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(-1/x**2), Poly(1/x**2),

@@ -69,7 +69,7 @@ def real_imag(ba, bd, gen):
     of the rational function.
     """
     bd = bd.as_poly(gen).as_dict()
-    # Separates the real and imag 
+    # Separates the real and imag
     # on the basis of the power of the variable
     # from the denominator
     denom_real = [value if key[0] % 4 == 0 else -value if key[0] % 4 == 2 else 0 for key, value in bd.items()]
@@ -89,7 +89,7 @@ def real_imag(ba, bd, gen):
     # and rewrites a new denom which is real
     bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
 
-    # Separates the real and imag 
+    # Separates the real and imag
     # on the basis of the power of the variable
     # from the numerator
     ba = ba.as_poly(gen).as_dict()
