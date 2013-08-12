@@ -490,6 +490,12 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     given_hint = hint  # hint given by the user
 
+    xi = kwargs.get("xi")
+    eta = kwargs.get("eta")
+    if hint != "lie_group" and any([xi, eta]):
+        raise ValueError("Xi and eta should be specified only for the"
+            " hint Lie group")
+
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
         hint=hint, simplify=True, type='ode', **kwargs)
@@ -525,9 +531,12 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     else:
         # The key 'hint' stores the hint needed to be solved for.
         hint = hints['hint']
-        return _helper_simplify(eq, hint, hints, simplify)
+        if hint == 'lie_group':  # Special case
+            return _helper_simplify(eq, hint, hints, simplify, xi=xi, eta=eta)
+        else:
+            return _helper_simplify(eq, hint, hints, simplify)
 
-def _helper_simplify(eq, hint, match, simplify=True):
+def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
@@ -542,6 +551,10 @@ def _helper_simplify(eq, hint, match, simplify=True):
     func = r['func']
     order = r['order']
     match = r[hint]
+
+    if hint == 'lie_group':  # Hack to let in xi and eta
+        match.update({'xi': kwargs.get('xi'), 'eta': kwargs.get('eta')})
+
     if simplify:
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
         # attempt to solve for func, and apply any other hint specific
@@ -3841,6 +3854,8 @@ def ode_lie_group(eq, func, order, match):
     from sympy.integrals.integrals import integrate
     from sympy.solvers.pde import pdsolve
 
+    heuristics = lie_heuristics
+    inf = {}
     f = func.func
     x = func.args[0]
     df = func.diff(x)
@@ -3848,6 +3863,8 @@ def ode_lie_group(eq, func, order, match):
     eta = Function("eta")
     a = Wild('a', exclude = [df])
     b = Wild('b', exclude = [df])
+    xis = match.pop('xi')
+    etas = match.pop('eta')
 
     if match:
         h = -simplify(match[match['d']]/match[match['e']])
@@ -3862,6 +3879,15 @@ def ode_lie_group(eq, func, order, match):
             y = Dummy("y")
             h = sol[0].subs(func, y)
 
+    if xis is not None and etas is not None:
+        inf = [{xi(x, f(x)): S(xis), eta(x, f(x)): S(etas)}]
+
+        if not checkinfsol(eq, inf, func=f(x), order=1)[0][0]:
+            raise ValueError("The given infinitesimals xi and eta"
+                " are not the infinitesimals to the given equation")
+        else:
+            heuristics = ["user_defined"]
+
     match = {'h': h, 'y': y}
 
     # This is done so that if:
@@ -3869,9 +3895,10 @@ def ode_lie_group(eq, func, order, match):
     # b] any heuristic raises a ValueError
     # another heuristic can be used.
     tempsol = []  # Used by solve below
-    for heuristic in lie_heuristics:
+    for heuristic in heuristics:
         try:
-            inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
+            if not inf:
+                inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
         except ValueError:
             continue
         else:

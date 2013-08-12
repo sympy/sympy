@@ -1752,3 +1752,12 @@ def test_lie_group():
     sol = dsolve(eq, f(x), hint='lie_group')
     assert sol == Eq(f(x), 2/(C1 + x**2))
     assert checkodesol(eq, sol)[0]
+
+
+def test_user_infinitesimals():
+    C2 = Symbol("C2")
+    eq = x*(f(x).diff(x)) + 1 - f(x)**2
+    sol = dsolve(eq, hint='lie_group', xi=sqrt(f(x) - 1)/sqrt(f(x) + 1),
+        eta=0)
+    assert sol == Eq(f(x), (C2 + x**2)/(C1 - x**2))
+    raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
