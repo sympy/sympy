@@ -1630,7 +1630,6 @@ def is_deriv(a, d, DE, z=None):
     from sympy.integrals.prde import limited_integrate
     z = z or Dummy("z")
     case = DE.case
-    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
@@ -1640,7 +1639,7 @@ def is_deriv(a, d, DE, z=None):
     if case == 'primitive':
         pp = as_poly_1t(p, DE.t, z)
         q, i, b = integrate_primitive_polynomial(p, DE)
-        ret = ((g1[0].as_expr()/g1[1].as_expr() + q.as_expr()).subs(s) +
+        ret = (g1[0].as_expr()/g1[1].as_expr() + q.as_expr() +
             residue_reduce_to_basic(g2, DE, z))
         if not b:
             return None
@@ -1653,8 +1652,8 @@ def is_deriv(a, d, DE, z=None):
         qa, qd, b = integrate_hyperexponential_polynomial(pp, DE, z)
         i = pp.nth(0, 0)
 
-        ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
-            qd.as_expr()).subs(s) + residue_reduce_to_basic(g2, DE, z))
+        ret = (g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
+            qd.as_expr() + residue_reduce_to_basic(g2, DE, z))
 
         if not b:
             return None
@@ -1666,19 +1665,19 @@ def is_deriv(a, d, DE, z=None):
         q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
         Dq1_a = q1a*derivation(q1d, DE) + q1d*derivation(q1a, DE)
         Dq1_d = q1d**2
-        ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
-            ).subs(s) + residue_reduce_to_basic(g2, DE, z))
+        ret = (g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+             + residue_reduce_to_basic(g2, DE, z))
         if not b:
             return (ret, b)
         q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
         Dc = derivation(c, DE)
         if Dc !=0:
-             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
-             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             ret = (g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+             + residue_reduce_to_basic(g2, DE, z)
              + c*log(DE.t**2 + 1) + q2.as_expr())
         else:
-             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
-             ).subs(s) + residue_reduce_to_basic(g2, DE, z)
+             ret = (g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
+             + residue_reduce_to_basic(g2, DE, z)
              + q2.as_expr())
     return (ret, i)
 

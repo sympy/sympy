@@ -30,12 +30,8 @@ from sympy.core.symbol import Dummy
 from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
-<<<<<<< HEAD
-    splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)
-=======
     splitfactor, NonElementaryIntegralException, DecrementLevel,
     recognize_log_derivative)
->>>>>>> is_deriv
 
 # TODO: Add messages to NonElementaryIntegralException errors
 
@@ -223,29 +219,17 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
             dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.
-<<<<<<< HEAD
-                betaa, alphaa, alphad = real_imag(ba, bd*a, DE.t)
-                betad = alphad
-                etaa, etad = frac_in(dcoeff, DE.t)
-                if recognize_log_derivative(2*betaa, betad, DE):
-=======
                 betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
                 betad = alphad
                 etaa, etad = frac_in(dcoeff, DE.t)
                 if recognize_log_derivative(2*betaa, betad, DE):
-                    print alphaa, alphad, etaa, etad
->>>>>>> is_deriv
                     A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
                     B = parametric_log_deriv(betaa, betad, etaa, etad, DE)
                     if A is not None and B is not None:
                         a, m, z = A
                         if a == 1:
-<<<<<<< HEAD
                             n = min(n, m)
 
-=======
-                             n = min(n, m)
->>>>>>> is_deriv
     N = max(0, -nb, n - nc)
     pN = p**N
     pn = p**-n
@@ -391,6 +375,7 @@ def spde(a, b, c, n, DE):
     pow_a = 0
 
     while True:
+        print n
         if n < 0:
             if c.is_zero:
                 return (zero, zero, 0, zero, beta)
