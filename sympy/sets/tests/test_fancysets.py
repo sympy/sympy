@@ -1,5 +1,5 @@
-from sympy.sets.fancysets import TransformationSet, Range
-from sympy.core.sets import FiniteSet, Interval
+from sympy.sets.fancysets import ImageSet, Range
+from sympy.core.sets import FiniteSet, Interval, imageset
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
         Rational, sqrt)
 from sympy.utilities.pytest import XFAIL
@@ -14,7 +14,7 @@ def test_naturals():
     assert -5 not in N
     assert 5.5 not in N
     ni = iter(N)
-    a, b, c, d = ni.next(), ni.next(), ni.next(), ni.next()
+    a, b, c, d = next(ni), next(ni), next(ni), next(ni)
     assert (a, b, c, d) == (1, 2, 3, 4)
     assert isinstance(a, Basic)
 
@@ -27,7 +27,7 @@ def test_naturals():
 def test_naturals0():
     N = S.Naturals0
     assert 0 in N
-    assert iter(N).next() == 0
+    assert next(iter(N)) == 0
 
 def test_integers():
     Z = S.Integers
@@ -35,7 +35,7 @@ def test_integers():
     assert -5 in Z
     assert 5.5 not in Z
     zi = iter(Z)
-    a, b, c, d = zi.next(), zi.next(), zi.next(), zi.next()
+    a, b, c, d = next(zi), next(zi), next(zi), next(zi)
     assert (a, b, c, d) == (0, 1, -1, 2)
     assert isinstance(a, Basic)
 
@@ -46,8 +46,8 @@ def test_integers():
     assert Z.sup == oo
 
 
-def test_TransformationSet():
-    squares = TransformationSet(Lambda(x, x**2), S.Naturals)
+def test_ImageSet():
+    squares = ImageSet(Lambda(x, x**2), S.Naturals)
     assert 4 in squares
     assert 5 not in squares
     assert FiniteSet(range(10)).intersect(squares) == FiniteSet(1, 4, 9)
@@ -55,15 +55,18 @@ def test_TransformationSet():
     assert 16 not in squares.intersect(Interval(0, 10))
 
     si = iter(squares)
-    a, b, c, d = si.next(), si.next(), si.next(), si.next()
+    a, b, c, d = next(si), next(si), next(si), next(si)
     assert (a, b, c, d) == (1, 4, 9, 16)
 
-    harmonics = TransformationSet(Lambda(x, 1/x), S.Naturals)
+    harmonics = ImageSet(Lambda(x, 1/x), S.Naturals)
     assert Rational(1, 5) in harmonics
     assert .25 in harmonics
     assert .3 not in harmonics
 
     assert harmonics.is_iterable
+
+def test_image_is_ImageSet():
+    assert isinstance(imageset(x, sqrt(sin(x)), Range(5)), ImageSet)
 
 
 @XFAIL
@@ -73,7 +76,7 @@ def test_halfcircle():
     # I believe the code within fancysets is correct
     r, th = symbols('r, theta', real=True)
     L = Lambda((r, th), (r*cos(th), r*sin(th)))
-    halfcircle = TransformationSet(L, Interval(0, 1)*Interval(0, pi))
+    halfcircle = ImageSet(L, Interval(0, 1)*Interval(0, pi))
 
     assert (1, 0) in halfcircle
     assert (0, -1) not in halfcircle
@@ -82,12 +85,12 @@ def test_halfcircle():
     assert not halfcircle.is_iterable
 
 
-def test_transformation_iterator_not_injetive():
+def test_ImageSet_iterator_not_injetive():
     L = Lambda(x, x - x % 2)  # produces 0, 2, 2, 4, 4, 6, 6, ...
-    evens = TransformationSet(L, S.Naturals)
+    evens = ImageSet(L, S.Naturals)
     i = iter(evens)
     # No repeats here
-    assert (i.next(), i.next(), i.next(), i.next()) == (0, 2, 4, 6)
+    assert (next(i), next(i), next(i), next(i)) == (0, 2, 4, 6)
 
 
 def test_Range():
@@ -99,8 +102,8 @@ def test_Range():
     assert 11 not in r
     assert 30 not in r
 
-    assert list(Range(0, 5)) == range(5)
-    assert list(Range(5, 0, -1)) == range(1, 6)
+    assert list(Range(0, 5)) == list(range(5))
+    assert list(Range(5, 0, -1)) == list(range(1, 6))
 
     assert Range(5, 15).sup == 14
     assert Range(5, 15).inf == 5
@@ -135,7 +138,7 @@ def test_range_interval_intersection():
 
 
 def test_fun():
-    assert (FiniteSet(TransformationSet(Lambda(x, sin(pi*x/4)),
+    assert (FiniteSet(ImageSet(Lambda(x, sin(pi*x/4)),
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
 
 

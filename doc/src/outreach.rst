@@ -8,7 +8,7 @@ given about SymPy at conferences can be seen at `SymPy Papers
 Planet SymPy
 ------------
 
-We have a blog agregator at http://planet.sympy.org
+We have a blog aggregator at http://planet.sympy.org.
 
 SymPy logos
 -----------

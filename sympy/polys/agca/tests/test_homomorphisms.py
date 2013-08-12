@@ -1,12 +1,13 @@
 """Tests for homomorphisms."""
 
-from sympy import homomorphism, QQ, S
+from sympy import QQ, S
 from sympy.abc import x, y
+from sympy.polys.agca import homomorphism
 from sympy.utilities.pytest import raises
 
 
 def test_printing():
-    R = QQ[x]
+    R = QQ.old_poly_ring(x)
 
     assert str(homomorphism(R.free_module(1), R.free_module(1), [0])) == \
         'Matrix([[0]]) : QQ[x]**1 -> QQ[x]**1'
@@ -17,8 +18,8 @@ def test_printing():
     assert str(R.free_module(0).identity_hom()) == 'Matrix(0, 0, []) : QQ[x]**0 -> QQ[x]**0'
 
 def test_operations():
-    F = QQ[x].free_module(2)
-    G = QQ[x].free_module(3)
+    F = QQ.old_poly_ring(x).free_module(2)
+    G = QQ.old_poly_ring(x).free_module(3)
     f = F.identity_hom()
     g = homomorphism(F, F, [0, [1, x]])
     h = homomorphism(F, F, [[1, 0], 0])
@@ -52,8 +53,8 @@ def test_operations():
 
 
 def test_creation():
-    F = QQ[x].free_module(3)
-    G = QQ[x].free_module(2)
+    F = QQ.old_poly_ring(x).free_module(3)
+    G = QQ.old_poly_ring(x).free_module(2)
     SM = F.submodule([1, 1, 1])
     Q = F / SM
     SQ = Q.submodule([1, 0, 0])
@@ -88,12 +89,12 @@ def test_creation():
     raises(TypeError, lambda: homomorphism(dummy(), G, matrix))
     raises(TypeError, lambda: homomorphism(F, dummy(), matrix))
     raises(
-        ValueError, lambda: homomorphism(QQ[x, y].free_module(3), G, matrix))
+        ValueError, lambda: homomorphism(QQ.old_poly_ring(x, y).free_module(3), G, matrix))
     raises(ValueError, lambda: homomorphism(F, G, [0, 0]))
 
 
 def test_properties():
-    R = QQ[x, y]
+    R = QQ.old_poly_ring(x, y)
     F = R.free_module(2)
     h = homomorphism(F, F, [[x, 0], [y, 0]])
     assert h.kernel() == F.submodule([-y, x])
@@ -105,7 +106,7 @@ def test_properties():
     assert h.quotient_domain(
         h.kernel()).restrict_codomain(h.image()).is_isomorphism()
 
-    R2 = QQ.poly_ring(x, y, order=(("lex", x), ("ilex", y))) / [x**2 + 1]
+    R2 = QQ.old_poly_ring(x, y, order=(("lex", x), ("ilex", y))) / [x**2 + 1]
     F = R2.free_module(2)
     h = homomorphism(F, F, [[x, 0], [y, y + 1]])
     assert h.is_isomorphism()

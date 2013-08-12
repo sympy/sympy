@@ -1,5 +1,7 @@
 """A module providing information about the necessity of brackets"""
 
+from __future__ import print_function, division
+
 from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
@@ -69,6 +71,8 @@ def precedence_Float(item):
 def precedence_PolyElement(item):
     if item.is_generator:
         return PRECEDENCE["Atom"]
+    elif item.is_ground:
+        return precedence(item.coeff(1))
     elif item.is_term:
         return PRECEDENCE["Mul"]
     else:

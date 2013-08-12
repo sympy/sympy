@@ -116,7 +116,8 @@ And check manually which line is wrong. Then go to the source code and
 debug this function to figure out the exact problem.
 
 """
-from sympy import SYMPY_DEBUG
+from __future__ import print_function, division
+
 from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
 from sympy.functions import log, exp
 from sympy.series.order import Order
@@ -125,82 +126,10 @@ from sympy import cacheit
 
 from sympy.core.compatibility import reduce
 
-O = Order
-
-
-def debug(func):
-    """Only for debugging purposes: prints a tree
-
-    It will print a nice execution tree with arguments and results
-    of all decorated functions.
-    """
-    if not SYMPY_DEBUG:
-        #normal mode - do nothing
-        return func
-
-    #debug mode
-    def decorated(*args, **kwargs):
-        #r = func(*args, **kwargs)
-        r = maketree(func, *args, **kwargs)
-        #print "%s = %s(%s, %s)" % (r, func.__name__, args, kwargs)
-        return r
-
-    return decorated
-
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
-
-def tree(subtrees):
-    """Only debugging purposes: prints a tree"""
-    def indent(s, type=1):
-        x = s.split("\n")
-        r = "+-%s\n" % x[0]
-        for a in x[1:]:
-            if a == "":
-                continue
-            if type == 1:
-                r += "| %s\n" % a
-            else:
-                r += "  %s\n" % a
-        return r
-    if len(subtrees) == 0:
-        return ""
-    f = []
-    for a in subtrees[:-1]:
-        f.append(indent(a))
-    f.append(indent(subtrees[-1], 2))
-    return ''.join(f)
-
-tmp = []
-iter = 0
-
-
-def maketree(f, *args, **kw):
-    """Only debugging purposes: prints a tree"""
-    global tmp
-    global iter
-    oldtmp = tmp
-    tmp = []
-    iter += 1
-
-    # If there is a bug and the algorithm enters an infinite loop, enable the
-    # following line. It will print the names and parameters of all major functions
-    # that are called, *before* they are called
-    #print "%s%s %s%s" % (iter, reduce(lambda x, y: x + y,map(lambda x: '-',range(1,2+iter))), f.func_name, args)
-
-    r = f(*args, **kw)
-
-    iter -= 1
-    s = "%s%s = %s\n" % (f.func_name, args, r)
-    if tmp != []:
-        s += tree(tmp)
-    tmp = oldtmp
-    tmp.append(s)
-    if iter == 0:
-        print tmp[0]
-        tmp = []
-    return r
+from sympy.utilities.misc import debug_decorator as debug
 
 
 def compare(a, b, x):
@@ -277,33 +206,33 @@ class SubsSet(dict):
         return dict.__getitem__(self, key)
 
     def do_subs(self, e):
-        for expr, var in self.iteritems():
+        for expr, var in self.items():
             e = e.subs(var, expr)
         return e
 
     def meets(self, s2):
         """Tell whether or not self and s2 have non-empty intersection"""
-        return set(self.keys()).intersection(s2.keys()) != set()
+        return set(self.keys()).intersection(list(s2.keys())) != set()
 
     def union(self, s2, exps=None):
         """Compute the union of self and s2, adjusting exps"""
         res = self.copy()
         tr = {}
-        for expr, var in s2.iteritems():
+        for expr, var in s2.items():
             if expr in self:
                 if exps:
                     exps = exps.subs(var, res[expr])
                 tr[var] = res[expr]
             else:
                 res[expr] = var
-        for var, rewr in s2.rewrites.iteritems():
+        for var, rewr in s2.rewrites.items():
             res.rewrites[var] = rewr.subs(tr)
         return res, exps
 
     def copy(self):
         r = SubsSet()
         r.rewrites = self.rewrites.copy()
-        for expr, var in self.iteritems():
+        for expr, var in self.items():
             r[expr] = var
         return r
 
@@ -361,7 +290,7 @@ def mrv(e, x):
             raise NotImplementedError("MRV set computation for functions in"
                                       " several variables not implemented.")
         s, ss = l2[0], SubsSet()
-        args = map(lambda x: ss.do_subs(x[1]), l)
+        args = [ss.do_subs(x[1]) for x in l]
         return s, e.func(*args)
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derviatives"
@@ -387,7 +316,7 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     elif f.meets(g):
         return union, expsboth
 
-    c = compare(f.keys()[0], g.keys()[0], x)
+    c = compare(list(f.keys())[0], list(g.keys())[0], x)
     if c == ">":
         return f, expsf
     elif c == "<":
@@ -475,6 +404,8 @@ def limitinf(e, x):
 
     if not e.has(x):
         return e  # e is a constant
+    if e.has(Order):
+        e = e.expand().removeO()
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical bechavior from the expression.
@@ -499,9 +430,9 @@ def limitinf(e, x):
 
 def moveup2(s, x):
     r = SubsSet()
-    for expr, var in s.iteritems():
+    for expr, var in s.items():
         r[expr.subs(x, exp(x))] = var
-    for var, expr in s.rewrites.iteritems():
+    for var, expr in s.rewrites.items():
         r.rewrites[var] = s.rewrites[var].subs(x, exp(x))
     return r
 
@@ -517,14 +448,17 @@ def calculate_series(e, x, skip_abs=False, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
+    from sympy.core.exprtools import factor_terms
+
     n = 1
     while 1:
         series = e.nseries(x, n=n, logx=logx)
-        if not series.has(O):
+        if not series.has(Order):
             # The series expansion is locally exact.
             return series
 
         series = series.removeO()
+        series = factor_terms(series, fraction=True)
         if series and ((not skip_abs) or series.has(x)):
             return series
         n *= 2
@@ -587,7 +521,7 @@ def build_expression_tree(Omega, rewrites):
     class Node:
         def ht(self):
             return reduce(lambda x, y: x + y,
-                          map(lambda x: x.ht(), self.before), 1)
+                          [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:
         n = Node()
@@ -623,7 +557,7 @@ def rewrite(e, Omega, x, wsym):
     for t in Omega.keys():
         assert t.func is exp
     rewrites = Omega.rewrites
-    Omega = Omega.items()
+    Omega = list(Omega.items())
 
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)

@@ -1,5 +1,4 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from __future__ import with_statement
 from sympy import Poly, S, symbols, oo, I
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)

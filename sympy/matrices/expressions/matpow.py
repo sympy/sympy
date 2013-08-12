@@ -1,4 +1,6 @@
-from matexpr import MatrixExpr, ShapeError, Identity
+from __future__ import print_function, division
+
+from .matexpr import MatrixExpr, ShapeError, Identity
 from sympy import Pow, S, Basic
 from sympy.core.sympify import _sympify
 
@@ -28,4 +30,4 @@ class MatPow(MatrixExpr):
             # Make an explicity MatMul out of the MatPow
             return MatMul(*[self.base for k in range(self.exp)])._entry(i, j)
 
-from matmul import MatMul
+from .matmul import MatMul

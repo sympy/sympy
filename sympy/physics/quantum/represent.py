@@ -6,6 +6,8 @@ TODO:
 * Document default basis functionality.
 """
 
+from __future__ import print_function, division
+
 from sympy import Add, Expr, I, integrate, Mul, Pow
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
@@ -141,7 +143,7 @@ def represent(expr, **options):
             options['basis'] = temp_basis
         try:
             return expr._represent(**options)
-        except NotImplementedError, strerr:
+        except NotImplementedError as strerr:
             #If no _represent_FOO method exists, map to the
             #appropriate basis state and try
             #the other methods of representation

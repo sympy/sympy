@@ -15,7 +15,6 @@ Contents:
 
    autowrap.rst
    codegen.rst
-   cythonutils.rst
    decorator.rst
    iterables.rst
    lambdify.rst

@@ -243,19 +243,19 @@ def test_vector_simplify():
 
     test1 = (1 / x + 1 / y) * N.x
     assert (test1 & N.x) != (x + y) / (x * y)
-    test1.simplify()
+    test1 = test1.simplify()
     assert (test1 & N.x) == (x + y) / (x * y)
 
     test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * N.x
-    test2.simplify()
+    test2 = test2.simplify()
     assert (test2 & N.x) == (A**2 * s**4 / (4 * pi * k * m**3))
 
     test3 = ((4 + 4 * x - 2 * (2 + 2 * x)) / (2 + 2 * x)) * N.x
-    test3.simplify()
+    test3 = test3.simplify()
     assert (test3 & N.x) == 0
 
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
-    test4.simplify()
+    test4 = test4.simplify()
     assert (test4 & N.x) == -2 * y
 
 
@@ -266,17 +266,17 @@ def test_dyadic_simplify():
     dy = N.x | N.x
     test1 = (1 / x + 1 / y) * dy
     assert (N.x & test1 & N.x) != (x + y) / (x * y)
-    test1.simplify()
+    test1 = test1.simplify()
     assert (N.x & test1 & N.x) == (x + y) / (x * y)
 
     test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * dy
-    test2.simplify()
+    test2 = test2.simplify()
     assert (N.x & test2 & N.x) == (A**2 * s**4 / (4 * pi * k * m**3))
 
     test3 = ((4 + 4 * x - 2 * (2 + 2 * x)) / (2 + 2 * x)) * dy
-    test3.simplify()
+    test3 = test3.simplify()
     assert (N.x & test3 & N.x) == 0
 
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
-    test4.simplify()
+    test4 = test4.simplify()
     assert (N.x & test4 & N.x) == -2 * y

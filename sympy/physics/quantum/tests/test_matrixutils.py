@@ -19,12 +19,12 @@ def test_matrix_to_zero():
     assert matrix_to_zero(m) == m
     assert matrix_to_zero(Matrix([[0, 0], [0, 0]])) == Integer(0)
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 
 
 def test_to_numpy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     result = np.matrix([[1, 2], [3, 4]], dtype='complex')
     assert (to_numpy(m) == result).all()
@@ -32,7 +32,7 @@ def test_to_numpy():
 
 def test_matrix_tensor_product():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     l1 = zeros(4)
     for i in range(16):
@@ -100,7 +100,7 @@ scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 def test_to_scipy_sparse():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
     else:
@@ -118,14 +118,14 @@ def test_matrix_zeros_sympy():
 
 def test_matrix_zeros_numpy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     num = matrix_zeros(4, 4, format='numpy')
     assert isinstance(num, numpy_ndarray)
 
 def test_matrix_zeros_scipy():
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
 

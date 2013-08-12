@@ -247,6 +247,12 @@ def test_solve_rational():
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
 
+def test_solve_nonlinear():
+    assert solve(x**2 - y**2, x, y) == [{x: -y}, {x: y}]
+    assert solve(x**2 - y**2/exp(x), x, y) == [{x: 2*LambertW(y/2)}]
+    assert solve(x**2 - y**2/exp(x), y, x) == [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
+
+
 def test_linear_system():
     x, y, z, t, n = symbols('x, y, z, t, n')
 
@@ -532,8 +538,10 @@ def test_PR1964():
     # if you do inversion too soon then multiple roots as for the following will
     # be missed, e.g. if exp(3*x) = exp(3) -> 3*x = 3
     E = S.Exp1
-    assert set(solve(exp(3*x) - exp(3), x)) == \
-        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)])
+    assert set(solve(exp(3*x) - exp(3), x)) in [
+        set([S(1), log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)]),
+        set([S(1), log(E*(-S(1)/2 - sqrt(3)*I/2)), log(E*(-S(1)/2 + sqrt(3)*I/2))]),
+    ]
 
     # coverage test
     p = Symbol('p', positive=True)
@@ -703,7 +711,7 @@ def test_unrad():
         # get the dummy
         rv = list(rv)
         d = rv[0].atoms(Dummy)
-        reps = zip(d, [s]*len(d))
+        reps = list(zip(d, [s]*len(d)))
         # replace s with this dummy
         rv = (rv[0].subs(reps).expand(), [(p[0].subs(reps), p[1].subs(reps))
                                    for p in rv[1]],
@@ -1056,7 +1064,7 @@ def test_float_handling():
     for contain in [list, tuple, set]:
         ans = nfloat(contain([1 + 2*x]))
         assert type(ans) is contain and test(list(ans)[0], 1.0 + 2.0*x)
-    k, v = nfloat({2*x: [1 + 2*x]}).items()[0]
+    k, v = list(nfloat({2*x: [1 + 2*x]}).items())[0]
     assert test(k, 2*x) and test(v[0], 1.0 + 2.0*x)
     assert test(nfloat(cos(2*x)), cos(2.0*x))
     assert test(nfloat(3*x**2), 3.0*x**2)
@@ -1134,12 +1142,24 @@ def test_exclude():
             V1: 0,
             Vout: 0},
     ]
-    assert solve(eqs, exclude=[Vplus, s, C]) == [
-        {
-            Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
-            Vminus: Vplus,
-            Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
-            R: Vplus/(C*s*(V1 - 2*Vplus))}]
+
+    # TODO: Investingate why currently solution [0] is preferred over [1].
+    assert solve(eqs, exclude=[Vplus, s, C]) in [[{
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 + sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus - sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }, {
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 - sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus + sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }], [{
+        Vminus: Vplus,
+        Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+        Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
+        R: Vplus/(C*s*(V1 - 2*Vplus)),
+    }]]
 
 
 def test_high_order_roots():
@@ -1149,7 +1169,7 @@ def test_high_order_roots():
 
 def test_minsolve_linear_system():
     def count(dic):
-        return len([x for x in dic.itervalues() if x == 0])
+        return len([x for x in dic.values() if x == 0])
     assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) \
         == 3
     assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) \

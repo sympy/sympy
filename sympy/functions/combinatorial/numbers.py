@@ -7,9 +7,11 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
+from __future__ import print_function, division
+
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
-from sympy.core.compatibility import as_int, SYMPY_INTS
+from sympy.core.compatibility import as_int, SYMPY_INTS, xrange
 from sympy.core.cache import cacheit
 from sympy.functions.combinatorial.factorials import factorial
 
@@ -472,7 +474,7 @@ class harmonic(Function):
     polygamma(2, n + 1)/2 - polygamma(2, 1)/2
 
     >>> harmonic(n,m).rewrite(polygamma)
-    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/(m - 1)!
+    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
 
     Integer offsets in the argument can be pulled out:
 
@@ -864,7 +866,7 @@ def nP(n, k=None, replacement=False):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Permutation
+    .. [1] http://en.wikipedia.org/wiki/Permutation
 
     See Also
     ========
@@ -1039,8 +1041,8 @@ def nC(n, k=None, replacement=False):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Combination
-    * http://tinyurl.com/cep849r
+    .. [1] http://en.wikipedia.org/wiki/Combination
+    .. [2] http://tinyurl.com/cep849r
 
     See Also
     ========
@@ -1194,8 +1196,8 @@ def stirling(n, k, d=None, kind=2, signed=False):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
-    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+    .. [1] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    .. [2] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
 
     See Also
     ========
@@ -1286,7 +1288,7 @@ def nT(n, k=None):
     References
     ==========
 
-    * http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
+    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     See Also
     ========
