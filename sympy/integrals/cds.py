@@ -50,7 +50,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     k = Dummy('k')
     if not b1.has(DE.t) and not b2.has(DE.t) and not c1.has(DE.t) \
         and not c2.has(DE.t):
-	with DecrementLevel(DE):
+        with DecrementLevel(DE):
             return cds_cancel_primitive(a, Poly(b1, DE.t), Poly(b2, DE.t), Poly(c1, DE.t)\
                , Poly(c2, DE.t), DE, n)
     b1a, b1d = frac_in(b1, DE.t)
@@ -61,8 +61,8 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         n1, u1 = A1
         n2, u2 = A2
         u = u1 + u2*a.as_expr()
-	z1a, z1d = frac_in(cancel(u1*c1.as_expr() + a.as_expr()*u2*c2.as_expr()), DE.t)
-	z2a, z2d = frac_in(cancel(u2*c1.as_expr() + a.as_expr()*u1*c2.as_expr()), DE.t)
+        z1a, z1d = frac_in(cancel(u1*c1.as_expr() + a.as_expr()*u2*c2.as_expr()), DE.t)
+        z2a, z2d = frac_in(cancel(u2*c1.as_expr() + a.as_expr()*u1*c2.as_expr()), DE.t)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
         if P1 and P2:
@@ -85,8 +85,8 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         m = max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t))
         if n < m:
             raise NonElementaryIntegralException
-	c1k = as_poly_1t(c1, t, k).as_poly(t).nth(m)
-	c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
+        c1k = as_poly_1t(c1, t, k).as_poly(t).nth(m)
+        c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
         A = coupled_DE_system(b1, b2, c1k, c2k, DE)
         (s1, s2) = A
         q1 = q1 + s1*t**m
@@ -129,8 +129,8 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         n2, m2, u2 = A2
         m =  m1
         u = u1 + u2*sqrt(a)
-	z1a, z1d = frac_in(u1*c1 + a*u2*c2, DE.t)
-	z2a, z2d = frac_in(u2*c1 + u1*c2, DE.t)
+        z1a, z1d = frac_in(u1*c1 + a*u2*c2, DE.t)
+        z2a, z2d = frac_in(u2*c1 + u1*c2, DE.t)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
         if P1 and P2:
