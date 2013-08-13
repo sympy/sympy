@@ -66,10 +66,12 @@ def dot(vect_a, vect_b, coord_sys=None):
     ret = S.Zero
     # Get two lists - each having vectors separated by coordinate system
 
+    vect_a_coord_sys = _all_coordinate_systems(vect_a)
+    vect_b_coord_sys = _all_coordinate_systems(vect_b)
     if not coord_sys:
-        if (len(a_vectors) == 1 and len(b_vectors) == 1
-            and a_vectors[0].coord_sys == b_vectors[0].coord_sys):
-           coord_sys = a_vectors[0].coord_sys
+        if(len(vect_a_coord_sys) == len(vect_b_coord_sys) == 1 and
+           vect_a_coord_sys[0] == vect_b_coord_sys[0])
+            coord_sys = vect_a_coord_sys[0]
 
     if coord_sys:
         # Express each vector in coord_sys and call _dot_same
@@ -95,7 +97,7 @@ def dot(vect_a, vect_b, coord_sys=None):
 
     for i in vect_a_dec:
         for j in vect_b_dec:
-            ret = ret + i[0] * j[0] + dot(i[1], j[1].express(i[1].coord_sys), i[1].coord_sys)
+            ret = ret + i[0] * j[0] + dot(i[1], j[1], i[1].coord_sys)
 
     ret = ret.simplify()
     return ret
@@ -157,7 +159,72 @@ def grad(expr, coord_sys=None):
         l = (1/h) * diff(expr, base_scalars[i])
         ret = ret + l * base_vectors[i]
     return ret
-    # MARK
+
+def cross(vect_a, vect_b, coord_sys):
+    """
+    Cross product of two vectors
+    vect_a, vect_b : instances with is_Vector == True
+    coord_sys : an instance of subclass of CoordSys class
+    """
+    ret = ZeroVector
+    # Get two lists - each having vectors separated by coordinate system
+
+    vect_a_coord_sys = _all_coordinate_systems(vect_a)
+    vect_b_coord_sys = _all_coordinate_systems(vect_b)
+    if not coord_sys:
+        if(len(vect_a_coord_sys) == len(vect_b_coord_sys) == 1 and
+           vect_a_coord_sys[0] == vect_b_coord_sys[0])
+            coord_sys = vect_a_coord_sys[0]
+
+    if coord_sys:
+        vect_a = vect_a.express(coord_sys)
+        vect_b = vect_b.express(coord_sys)
+        return _cross_same(vect_a, vect_b)
+
+    ret = ZeroVector
+
+    vect_a = vect_a.factor()
+    vect_b = vect_b.factor()
+
+    vect_a_dec = []
+    for arg in vect_a._all_args:
+        t = (arg.scalar, arg.vector)
+        vect_a_dec.append(t)
+
+    vect_b_dec = []
+    for arg in vect_b._all_args:
+        t = (arg.scalar, arg.vector)
+        vect_b_dec.append(t)
+
+    for i in vect_a_dec:
+        for j in vect_b_dec:
+            ret = ret + i[0] * j[0] + cross(i[1], j[1], i[1].coord_sys)
+
+    ret = ret.expand().factor()
+    return ret
+
+def _cross_same(vect_a, vect_b):
+    """
+    Cross product between two vectors of same coordinate system
+    """
+    coord_a = _all_coordinate_systems(vect_a)
+    coord_b = _all_coordinate_systems(vect_b)
+
+    try:
+        assert len(coord_a) == len(coord_b) == 1 and coord_a[0] == coord_b[0]
+    except AssertionError:
+        raise ValueError("Both vectors need to be defined in the same \
+                          coordinate system")
+
+    base_vectors = coord_a[0].base_vectors
+    comp_a = vect_a.components()
+    comp_b = vect_b.components()
+
+    ret = ((comp_a[1] * comp_b[2] - comp_a[2] * comp_b[1]) * base_vectors[0] +
+          (comp_a[2] * comp_b[0] - comp_a[0] * comp_b[2]) * base_vectors[1] +
+          (comp_a[0] * comp_b[1] - comp_a[1] * comp_b[0]) * base_vectors[2])
+
+    return ret
 
 def _has_base_scalar(expr):
     expr = expr.expand()
