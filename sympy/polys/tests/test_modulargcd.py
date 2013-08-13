@@ -3,8 +3,12 @@ from sympy.polys.domains import ZZ, QQ, AlgebraicField
 from sympy.polys.modulargcd import (
     modgcd_univariate,
     modgcd_bivariate,
+    _chinese_remainder_reconstruction_multivariate,
     modgcd_multivariate,
-    func_field_modgcd)
+    _to_ZZ_poly,
+    _to_ANP_poly,
+    func_field_modgcd,
+    _func_field_modgcd_m)
 from sympy import sqrt
 
 
@@ -102,6 +106,9 @@ def test_modgcd_bivariate_integers():
     f, g = x*y**2 + 2*x*y + x, x*y**3 + x
     assert modgcd_bivariate(f, g) == (x*y + x, y + 1, y**2 - y + 1)
 
+    f, g = x**2*y**2 + x**2*y + 1, x*y**2 + x*y + 1
+    assert modgcd_bivariate(f, g) == (1, f, g)
+
     f = 2*x*y**2 + 4*x*y + 2*x + y**2 + 2*y + 1
     g = 2*x*y**3 + 2*x + y**3 + 1
     assert modgcd_bivariate(f, g) == (2*x*y + 2*x + y + 1, y + 1, y**2 - y + 1)
@@ -119,6 +126,30 @@ def test_modgcd_bivariate_integers():
     f = 2*x**2 + 2*x*y - 3*x - 3*y
     g = 4*x*y - 2*x + 4*y**2 - 2*y
     assert modgcd_bivariate(f, g) == (x + y, 2*x - 3, 4*y - 2)
+
+
+def test_chinese_remainder():
+    R, x, y = ring("x, y", ZZ)
+    p, q = 3, 5
+
+    hp = x**3*y - x**2 - 1
+    hq = -x**3*y - 2*x*y**2 + 2
+
+    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+
+    assert hpq.trunc_ground(p) == hp
+    assert hpq.trunc_ground(q) == hq
+
+    T, z = ring("z", R)
+    p, q = 3, 7
+
+    hp = (x*y + 1)*z**2 + x
+    hq = (x**2 - 3*y)*z + 2
+
+    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+
+    assert hpq.trunc_ground(p) == hp
+    assert hpq.trunc_ground(q) == hq
 
 
 def test_modgcd_multivariate_integers():
@@ -139,6 +170,19 @@ def test_modgcd_multivariate_integers():
 
     f, g = x*y**2 + 2*x*y + x, x*y**3 + x
     assert modgcd_multivariate(f, g) == (x*y + x, y + 1, y**2 - y + 1)
+
+    f, g = x**2*y**2 + x**2*y + 1, x*y**2 + x*y + 1
+    assert modgcd_multivariate(f, g) == (1, f, g)
+
+    f = x**4 + 8*x**3 + 21*x**2 + 22*x + 8
+    g = x**3 + 6*x**2 + 11*x + 6
+
+    h = x**2 + 3*x + 2
+
+    cff = x**2 + 5*x + 4
+    cfg = x + 3
+
+    assert modgcd_multivariate(f, g) == (h, cff, cfg)
 
     R, x, y, z, u = ring("x,y,z,u", ZZ)
 
@@ -205,6 +249,28 @@ def test_modgcd_multivariate_integers():
     assert H == h and H*cff == f and H*cfg == g
 
 
+def test_to_ZZ_ANP_poly():
+    A = AlgebraicField(QQ, sqrt(2))
+    R, x = ring("x", A)
+    f = x*(sqrt(2) + 1)
+
+    T, x_, z_ = ring("x_, z_", ZZ)
+    f_ = x_*z_ + x_
+
+    assert _to_ZZ_poly(f, T) == f_
+    assert _to_ANP_poly(f_, R) == f
+
+    R, x, t, s = ring("x, t, s", A)
+    f = x*t**2 + x*s + sqrt(2)
+
+    D, t_, s_ = ring("t_, s_", ZZ)
+    T, x_, z_ = ring("x_, z_", D)
+    f_ = (t_**2 + s_)*x_ + z_
+
+    assert _to_ZZ_poly(f, T) == f_
+    assert _to_ANP_poly(f_, R) == f
+
+
 def test_modgcd_algebraic_field():
     A = AlgebraicField(QQ, sqrt(2))
     R, x = ring("x", A)
@@ -240,3 +306,20 @@ def test_modgcd_algebraic_field():
     h = x**13*y**3 + 1/2*x**10 + 1/sqrt(2)
     f, g = h*(x + 1), h*sqrt(2)/sqrt(3)
     assert func_field_modgcd(f, g) == (h, x + 1, R(sqrt(2)/sqrt(3)))
+
+    A = AlgebraicField(QQ, sqrt(2)**(-1)*sqrt(3))
+    R, x = ring("x", A)
+
+    f, g = x + 1, x - 1
+    assert func_field_modgcd(f, g) == (A.one, f, g)
+
+
+# when func_field_modgcd suppors function fields, this test can be changed
+def test_modgcd_func_field():
+    D, t = ring("t", ZZ)
+    R, x, z = ring("x, z", D)
+
+    minpoly = (z**2*t**2 + z**2*t - 1).drop(0)
+    f, g = x + 1, x - 1
+
+    assert _func_field_modgcd_m(f, g, minpoly) == R.one
