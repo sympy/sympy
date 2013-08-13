@@ -2,6 +2,9 @@
 Classical ciphers and LFSRs
 """
 
+from __future__ import print_function
+
+
 def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Returns the list of characters in the string input defining the alphabet.
@@ -66,7 +69,7 @@ def cycle_list(k,n):
     >>> [A[i] for i in L]
     ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'A', 'B', 'C']
     """
-    L = range(n)
+    L = list(range(n))
     return L[k:]+ L[:k]
 
 def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
@@ -385,12 +388,14 @@ def matrix_inverse_mod(K, m):
     >>> from sympy.crypto.crypto import matrix_inverse_mod
     >>> from sympy import Matrix
     >>> A = Matrix(2, 2, [1, 2, 3, 4])
-    >>> print matrix_inverse_mod(A, 5)
-    [3, 1]
-    [4, 2]
-    >>> print matrix_inverse_mod(A, 3)
-    [1, 1]
-    [0, 1]
+    >>> matrix_inverse_mod(A, 5)
+    Matrix([
+    [3, 1],
+    [4, 2]])
+    >>> matrix_inverse_mod(A, 3)
+    Matrix([
+    [1, 1],
+    [0, 1]])
 
     """
     from sympy import Matrix, gcd
@@ -538,7 +543,7 @@ def encipher_bifid5(pt, key, verbose=False):
 
     OUTPUT:
         ciphertext (using Bifid5 cipher in all caps, no spaces, no "J"s)
-        if verbose = True then it also outputs the pairs of integers comprising the "long key"
+        if verbose is True then it also prints the pairs of integers comprising the "long key"
 
     This is the version of the Bifid cipher that uses the `5 x 5` Polybius square.
 
@@ -569,7 +574,7 @@ def encipher_bifid5(pt, key, verbose=False):
     # the fractionalization
     pairs = [[long_key.index(x)//5, long_key.index(x)%5] for x in pt0]
     if verbose:
-        print pairs
+        print(pairs)
     tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
     ct = "".join([long_key[5*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
     return ct
@@ -624,12 +629,13 @@ def bifid5_square(key):
     ========
 
     >>> from sympy.crypto.crypto import bifid5_square
-    >>> print bifid5_square("gold bug")
-    [G, O, L, D, B]
-    [U, A, C, E, F]
-    [H, I, K, M, N]
-    [P, Q, R, S, T]
-    [V, W, X, Y, Z]
+    >>> bifid5_square("gold bug")
+    Matrix([
+    [G, O, L, D, B],
+    [U, A, C, E, F],
+    [H, I, K, M, N],
+    [P, Q, R, S, T],
+    [V, W, X, Y, Z]])
 
     """
     from sympy import Matrix
@@ -696,14 +702,15 @@ def bifid7_square(key):
     ========
 
     >>> from sympy.crypto.crypto import bifid7_square
-    >>> print bifid7_square("gold bug")
-    [ G,  O,  L,  D,  B,  U,  A]
-    [ C,  E,  F,  H,  I,  J,  K]
-    [ M,  N,  P,  Q,  R,  S,  T]
-    [ V,  W,  X,  Y,  Z,  0,  1]
-    [ 2,  3,  4,  5,  6,  7,  8]
-    [ 9, 10, 11, 12, 13, 14, 15]
-    [16, 17, 18, 19, 20, 21, 22]
+    >>> bifid7_square("gold bug")
+    Matrix([
+    [ G,  O,  L,  D,  B,  U,  A],
+    [ C,  E,  F,  H,  I,  J,  K],
+    [ M,  N,  P,  Q,  R,  S,  T],
+    [ V,  W,  X,  Y,  Z,  0,  1],
+    [ 2,  3,  4,  5,  6,  7,  8],
+    [ 9, 10, 11, 12, 13, 14, 15],
+    [16, 17, 18, 19, 20, 21, 22]])
 
     """
     from sympy import Matrix
@@ -758,7 +765,7 @@ def encipher_bifid7(pt, key):
     return ct
 
 
-def encipher_bifid6(pt, key, verbose = False):
+def encipher_bifid6(pt, key, verbose=False):
     """
     Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
 
@@ -770,7 +777,7 @@ def encipher_bifid6(pt, key, verbose = False):
 
     * ciphertext from Bifid cipher (all caps, no spaces)
 
-    * if verbose = True then it also outputs the pairs of integers comprising the "long key"
+    * if verbose is True then it also prints the pairs of integers comprising the "long key"
 
     This is the version of the Bifid cipher that uses the `6 x 6` Polybius square.
 
@@ -782,7 +789,7 @@ def encipher_bifid6(pt, key, verbose = False):
     >>> pt = "meet me on monday at 8am"
     >>> encipher_bifid6(pt, key)
     'HNHOKNTA5MEPEGNQZYG'
-    >>> encipher_bifid6(pt, key, verbose = True)
+    >>> encipher_bifid6(pt, key, verbose=True)
     [[2, 5], [0, 0], [0, 0], [1, 0], [2, 5], [0, 0], [3, 0], [0, 1], [2, 5], [3, 0], [0, 1], [1, 3], [1, 1], [0, 4], [1, 1], [1, 0], [5, 4], [1, 1], [2, 5]]
     'HNHOKNTA5MEPEGNQZYG'
 
@@ -799,7 +806,8 @@ def encipher_bifid6(pt, key, verbose = False):
     n = len(pt0)
     # the fractionalization
     pairs = [[long_key.index(x)//6, long_key.index(x)%6] for x in pt0]
-    if verbose == True: print pairs
+    if verbose is True:
+        print(pairs)
     tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
     ct = "".join([long_key[6*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
     return ct
@@ -858,13 +866,14 @@ def bifid6_square(key):
 
     >>> from sympy.crypto.crypto import bifid6_square
     >>> key = "encrypt"
-    >>> print bifid6_square(key)
-    [E, N, C, R, Y, P]
-    [T, A, B, D, F, G]
-    [H, I, J, K, L, M]
-    [O, Q, S, U, V, W]
-    [X, Z, 0, 1, 2, 3]
-    [4, 5, 6, 7, 8, 9]
+    >>> bifid6_square(key)
+    Matrix([
+    [E, N, C, R, Y, P],
+    [T, A, B, D, F, G],
+    [H, I, J, K, L, M],
+    [O, Q, S, U, V, W],
+    [X, Z, 0, 1, 2, 3],
+    [4, 5, 6, 7, 8, 9]])
 
     """
     from sympy import Matrix
