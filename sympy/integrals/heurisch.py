@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from collections import defaultdict
 from itertools import permutations
 

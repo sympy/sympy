@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import print_function
 from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
 

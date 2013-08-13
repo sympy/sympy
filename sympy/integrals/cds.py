@@ -4,14 +4,15 @@ Algorithms for solving Coupled Differential System.
 This method is used for solving Coupled Differntial System.
 Given a differntial field K of characterstic 0 and f1, f2, g1, g2
 in K, it decides whether the system of equations
+
      /     \        /          \    /    \       /    \
     |  Dy1  |      |  f1   af2  |  |  y1  |     |  g1  |
     |       |  +   |            |  |      |  =  |      |
     |  Dy2  |      |  f2   f1   |  |  y2  |     |  g2  |
      \     /        \          /    \    /       \    /
 
-Hence returning (y1, y2) if a solution exist, None otherwise
 """
+from __future__ import print_function
 from sympy import sqrt
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
@@ -37,7 +38,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
          /     \       /        \    /  \        /    \
         |  Dq1  |     |  b1 ab2  |  | q1 |      |  c1  |
         |       |  +  |          |  |    |  =   |      |
-        |  Dq2  |     |  b2  b1  |  | q2 |      |  c1  |
+        |  Dq2  |     |  b2  b1  |  | q2 |      |  c2  |
          \     /       \        /    \  /        \    /
 
     Equation 8.4 from Manuel Bronstien
@@ -48,10 +49,9 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     """
     t = DE.t
     k = Dummy('k')
-    if not b1.has(DE.t) and not b2.has(DE.t) and not c1.has(DE.t) \
-        and not c2.has(DE.t):
+    if not c1.has(DE.t) and not c2.has(DE.t):
         with DecrementLevel(DE):
-            return cds_cancel_primitive(a, Poly(b1, DE.t), Poly(b2, DE.t), Poly(c1, DE.t)\
+            return coupled_DE_system(Poly(b1, DE.t), Poly(b2, DE.t), Poly(c1, DE.t)
                , Poly(c2, DE.t), DE, n)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
@@ -111,7 +111,7 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
           /     \       /        \    /  \        /    \
          |  Dq1  |     |  b1 ab2  |  | q1 |      |  c1  |
          |       |  +  |          |  |    |  =   |      |
-         |  Dq2  |     |  b2  b1  |  | q2 |      |  c1  |
+         |  Dq2  |     |  b2  b1  |  | q2 |      |  c2  |
           \     /       \        /    \  /        \    /
 
     has no solution with both degrees at most n in k[t], or a solution
@@ -228,9 +228,9 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
     Given a differntial field K of characterstic 0 and f1, f2, g1, g2
     in K, it decides whether the system of equations
         /     \        /          \    /    \       /    \
-       |  Dy1  |      |  f1   af2  |  |  y1  |     |  g1  |
+       |  Dy1  |      |  b1   ab2  |  |  y1  |     |  c1  |
        |       |  +   |            |  |      |  =  |      |
-       |  Dy2  |      |  f2   f1   |  |  y2  |     |  g2  |
+       |  Dy2  |      |  b2   b1   |  |  y2  |     |  c2  |
         \     /        \          /    \    /       \    /
 
     Hence returning (y1, y2) if a solution exist, None otherwise

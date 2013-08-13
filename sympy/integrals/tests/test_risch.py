@@ -412,8 +412,8 @@ def test_integrate_hypertangent_reduced():
 def test_integrate_hypertangent_reduced_fail():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)], 'Tfuncs': [Lambda(x, tan(x))]})
     assert integrate_hypertangent_reduced(Poly((t**5 + t**3 + x**2*t + 1)/(t**2 + 1)**3), DE) == \
-        (Poly(((1 + x/3)*t - (x**2 - 1/18))/(6*(t**2 + 1)**3) + (5*(1 + x/3)*t + 77/12)/(24*(t**2 + 1)**2)
-        + (5*(1 + x/3)*t - 43/6)/(16*(t**2 + 1))), Poly(5/16(1 + x/3)))
+        (Poly(((1 + x/3)*t - (x**2 - S(1)/18))/(6*(t**2 + 1)**3) + (5*(1 + x/3)*t + 77/12)/(24*(t**2 + 1)**2)
+        + (5*(1 + x/3)*t - 43/6)/(16*(t**2 + 1))), Poly(5*(1 + x/3)/16))
 
 
 def test_integrate_hypertangent():

@@ -23,6 +23,7 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
+from __future__ import print_function
 from sympy import real_roots
 from sympy.abc import z
 from sympy.core.function import Lambda
@@ -1492,7 +1493,7 @@ def integrate_hypertangent_polynomial(pa, pd, DE):
 
 def integrate_hypertangent_reduced(pa, pd, DE):
     """
-    Integration of hypertangent reducded elements
+    Integration of hypertangent reduced elements
 
     Given a differential field k such that sqrt(-1) is not in k, a
     hypertangent monomial t over k, and p in k[t], return q in k[t] and
