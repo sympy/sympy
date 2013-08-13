@@ -14,28 +14,30 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_THEANO="true"
         - TEST_DOCTESTS="true"
     - python: 2.7
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_THEANO="true"
         - TEST_DOCTESTS="false"
     - python: 3.3
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_THEANO="true"
         - TEST_DOCTESTS="true"
     - python: 3.3
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_THEANO="true"
         - TEST_DOCTESTS="false"
     - python: 2.7
       env: TEST_SPHINX="true"
+    - python: 2.7
+      env:
+        - TEST_THEANO="true"
+    - python: 3.3
+      env:
+        - TEST_THEANO="true"
   allow_failures:
     - python: "pypy"
 before_install:
