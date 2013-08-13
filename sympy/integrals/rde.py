@@ -375,7 +375,6 @@ def spde(a, b, c, n, DE):
     pow_a = 0
 
     while True:
-        print n
         if n < 0:
             if c.is_zero:
                 return (zero, zero, 0, zero, beta)
