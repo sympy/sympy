@@ -1,8 +1,9 @@
-""" SymPy interface to Unificaiton engine
+""" SymPy interface to Unification engine
 
 See sympy.unify for module level docstring
 See sympy.unify.core for algorithmic docstring """
 
+from __future__ import print_function, division
 
 from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
@@ -58,7 +59,7 @@ def construct(t):
     if not isinstance(t, Compound):
         return t
     if any(issubclass(t.op, cls) for cls in eval_false_legal):
-        return t.op(*map(construct, t.args), **{'evaluate': False})
+        return t.op(*map(construct, t.args), evaluate=False)
     elif any(issubclass(t.op, cls) for cls in basic_new_legal):
         return Basic.__new__(t.op, *map(construct, t.args))
     else:
@@ -78,15 +79,14 @@ def unify(x, y, s=None, variables=(), **kwargs):
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Basic
+    >>> from sympy import Basic, cos
     >>> from sympy.abc import x, y, z, p, q
-    >>> from sympy.core.compatibility import next
 
     >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
     {x: 2}
 
     >>> expr = 2*x + y + z
-    >>> pattern = 2*p +q
+    >>> pattern = 2*p + q
     >>> next(unify(expr, pattern, {}, variables=(p, q)))
     {p: x, q: y + z}
 
@@ -97,7 +97,21 @@ def unify(x, y, s=None, variables=(), **kwargs):
     >>> len(list(unify(expr, pattern, {}, variables=(p, q))))
     12
 
-    Wilds may be specified directly in the call to unify
+    Symbols not indicated to be variables are treated as literal,
+    else they are wild-like and match anything in a sub-expression.
+
+    >>> expr = x*y*z + 3
+    >>> pattern = x*y + 3
+    >>> next(unify(expr, pattern, {}, variables=[x, y]))
+    {x: y, y: x*z}
+
+    The x and y of the pattern above were in a Mul and matched factors
+    in the Mul of expr. Here, a single symbol matches an entire term:
+
+    >>> expr = x*y + 3
+    >>> pattern = p + 3
+    >>> next(unify(expr, pattern, {}, variables=[p]))
+    {p: x*y}
 
     """
     decons = lambda x: deconstruct(x, variables)

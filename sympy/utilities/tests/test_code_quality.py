@@ -1,12 +1,9 @@
-from __future__ import with_statement
-
-from os import walk, sep, chdir, pardir
+from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
 import sys
-from sympy.utilities.pytest import raises
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -82,7 +79,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
             continue
         if filter(lambda ex: ex in fname, exclusions):
             continue
-        if pattern is None or re.match(patttern, fname):
+        if pattern is None or re.match(pattern, fname):
             file_check(fname)
 
 
@@ -153,8 +150,11 @@ def test_files():
         # glob imports are allowed in top-level __init__.py:
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
         # these __init__.py should be fixed:
+        # XXX: not really, they use useful import pattern (DRY)
         "%(sep)smechanics%(sep)s__init__.py" % sepd,
         "%(sep)squantum%(sep)s__init__.py" % sepd,
+        "%(sep)spolys%(sep)s__init__.py" % sepd,
+        "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # isympy executes ``from sympy import *``:

@@ -1,6 +1,10 @@
 """Computations with ideals of polynomial rings."""
 
+from __future__ import print_function, division
+
 from sympy.polys.polyerrors import CoercionFailed
+
+from sympy.core.compatibility import reduce
 
 
 class Ideal(object):
@@ -11,7 +15,7 @@ class Ideal(object):
 
     >>> from sympy import QQ
     >>> from sympy.abc import x
-    >>> QQ[x].ideal(x+1)
+    >>> QQ.old_poly_ring(x).ideal(x+1)
     <x + 1>
 
     Attributes
@@ -117,9 +121,9 @@ class Ideal(object):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].ideal(x+1, x-1).contains(3)
+        >>> QQ.old_poly_ring(x).ideal(x+1, x-1).contains(3)
         True
-        >>> QQ[x].ideal(x**2, x**3).contains(x)
+        >>> QQ.old_poly_ring(x).ideal(x**2, x**3).contains(x)
         False
         """
         return self._contains_elem(self.ring.convert(elem))
@@ -132,12 +136,12 @@ class Ideal(object):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> I = QQ[x].ideal(x+1)
+        >>> I = QQ.old_poly_ring(x).ideal(x+1)
         >>> I.subset([x**2 - 1, x**2 + 2*x + 1])
         True
         >>> I.subset([x**2 + 1, x + 1])
         False
-        >>> I.subset(QQ[x].ideal(x**2 - 1))
+        >>> I.subset(QQ.old_poly_ring(x).ideal(x**2 - 1))
         True
         """
         if isinstance(other, Ideal):
@@ -153,7 +157,7 @@ class Ideal(object):
 
         >>> from sympy.abc import x, y
         >>> from sympy import QQ
-        >>> R = QQ[x, y]
+        >>> R = QQ.old_poly_ring(x, y)
         >>> R.ideal(x*y).quotient(R.ideal(x))
         <y>
         """
@@ -166,7 +170,7 @@ class Ideal(object):
 
         >>> from sympy.abc import x, y
         >>> from sympy import QQ
-        >>> R = QQ[x, y]
+        >>> R = QQ.old_poly_ring(x, y)
         >>> R.ideal(x).intersect(R.ideal(y))
         <x*y>
         """
@@ -189,7 +193,7 @@ class Ideal(object):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].ideal(x**2 - 1).union(QQ[x].ideal((x+1)**2)) == QQ[x].ideal(x+1)
+        >>> QQ.old_poly_ring(x).ideal(x**2 - 1).union(QQ.old_poly_ring(x).ideal((x+1)**2)) == QQ.old_poly_ring(x).ideal(x+1)
         True
         """
         self._check_ideal(J)
@@ -204,7 +208,7 @@ class Ideal(object):
 
         >>> from sympy.abc import x, y
         >>> from sympy import QQ
-        >>> QQ[x, y].ideal(x).product(QQ[x, y].ideal(y))
+        >>> QQ.old_poly_ring(x, y).ideal(x).product(QQ.old_poly_ring(x, y).ideal(y))
         <x*y>
         """
         self._check_ideal(J)
@@ -301,7 +305,7 @@ class ModuleImplementedIdeal(Ideal):
 
         >>> from sympy import QQ
         >>> from sympy.abc import x, y
-        >>> list(QQ[x, y].ideal(x, y, x**2 + y).gens)
+        >>> list(QQ.old_poly_ring(x, y).ideal(x, y, x**2 + y).gens)
         [x, y, x**2 + y]
         """
         return (x[0] for x in self._module.gens)
@@ -312,9 +316,9 @@ class ModuleImplementedIdeal(Ideal):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].ideal(x).is_zero()
+        >>> QQ.old_poly_ring(x).ideal(x).is_zero()
         False
-        >>> QQ[x].ideal().is_zero()
+        >>> QQ.old_poly_ring(x).ideal().is_zero()
         True
         """
         return self._module.is_zero()
@@ -325,11 +329,11 @@ class ModuleImplementedIdeal(Ideal):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ, ilex
-        >>> QQ[x].ideal(x).is_whole_ring()
+        >>> QQ.old_poly_ring(x).ideal(x).is_whole_ring()
         False
-        >>> QQ[x].ideal(3).is_whole_ring()
+        >>> QQ.old_poly_ring(x).ideal(3).is_whole_ring()
         True
-        >>> QQ.poly_ring(x, order=ilex).ideal(2 + x).is_whole_ring()
+        >>> QQ.old_poly_ring(x, order=ilex).ideal(2 + x).is_whole_ring()
         True
         """
         return self._module.is_full_module()
@@ -351,7 +355,7 @@ class ModuleImplementedIdeal(Ideal):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> I = QQ[x].ideal(x**2 + 1, x)
+        >>> I = QQ.old_poly_ring(x).ideal(x**2 + 1, x)
         >>> I.in_terms_of_generators(1)
         [1, -x]
         """

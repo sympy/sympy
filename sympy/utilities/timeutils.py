@@ -1,21 +1,25 @@
-"""Simple tools for timing functions execution, when IPython is not
-   available. """
+"""Simple tools for timing functions' execution, when IPython is not available. """
+
+from __future__ import print_function, division
 
 import timeit
 import math
 
+from sympy.core.compatibility import u
+
 _scales = [1e0, 1e3, 1e6, 1e9]
-_units = [u's', u'ms', u'\u03bcs', u'ns']
+_units = [u('s'), u('ms'), u('\u03bcs'), u('ns')]
 
 
-def timed(func, setup=None):
+def timed(func, setup="pass", limit=None):
     """Adaptively measure execution time of a function. """
     timer = timeit.Timer(func, setup=setup)
-
     repeat, number = 3, 1
 
     for i in range(1, 10):
         if timer.timeit(number) >= 0.2:
+            break
+        elif limit is not None and number >= limit:
             break
         else:
             number *= 10
@@ -43,7 +47,7 @@ _timestack = None
 
 
 def _print_timestack(stack, level=1):
-    print '-'*level, '%.2f %s%s' % (stack[2], stack[0], stack[3])
+    print('-'*level, '%.2f %s%s' % (stack[2], stack[0], stack[3]))
     for s in stack[1]:
         _print_timestack(s, level + 1)
 

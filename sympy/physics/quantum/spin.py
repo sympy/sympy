@@ -1,8 +1,11 @@
 """Quantum mechanical angular momemtum."""
 
+from __future__ import print_function, division
+
 from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
                    pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
-                   Tuple)
+                   Tuple, Dummy)
+from sympy.core.compatibility import u, unicode
 from sympy.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import pretty_symbol
@@ -401,7 +404,7 @@ class J2Op(SpinOpBase, HermitianOperator):
 
     def _print_contents_pretty(self, printer, *args):
         a = prettyForm(unicode(self.name))
-        b = prettyForm(u'2')
+        b = prettyForm(u('2'))
         return a**b
 
     def _print_contents_latex(self, printer, *args):
@@ -497,7 +500,7 @@ class Rotation(UnitaryOperator):
 
     def _print_operator_name_pretty(self, printer, *args):
         if printer._use_unicode:
-            return prettyForm(u"\u211B" + u" ")
+            return prettyForm(u('\u211B') + u(' '))
         else:
             return prettyForm("R ")
 
@@ -618,6 +621,70 @@ class Rotation(UnitaryOperator):
     def _represent_JzOp(self, basis, **options):
         return self._represent_base(basis, **options)
 
+    def _apply_operator_uncoupled(self, state, ket, **options):
+        a = self.alpha
+        b = self.beta
+        g = self.gamma
+        j = ket.j
+        m = ket.m
+        if j.is_number:
+            s = []
+            size = m_values(j)
+            sz = size[1]
+            for mp in sz:
+                r = Rotation.D(j, m, mp, a, b, g)
+                z = r.doit()
+                s.append(z * state(j, mp))
+            return Add(*s)
+        else:
+            if options.pop('dummy', True):
+                mp = Dummy('mp')
+            else:
+                mp = symbols('mp')
+            return Sum(Rotation.D(j, m, mp, a, b, g) * state(j, mp), (mp, -j, j))
+
+    def _apply_operator_JxKet(self, ket, **options):
+        return self._apply_operator_uncoupled(JxKet, ket, **options)
+
+    def _apply_operator_JyKet(self, ket, **options):
+        return self._apply_operator_uncoupled(JyKet, ket, **options)
+
+    def _apply_operator_JzKet(self, ket, **options):
+        return self._apply_operator_uncoupled(JzKet, ket, **options)
+
+    def _apply_operator_coupled(self, state, ket, **options):
+        a = self.alpha
+        b = self.beta
+        g = self.gamma
+        j = ket.j
+        m = ket.m
+        jn = ket.jn
+        coupling = ket.coupling
+        if j.is_number:
+            s = []
+            size = m_values(j)
+            sz = size[1]
+            for mp in sz:
+                r = Rotation.D(j, m, mp, a, b, g)
+                z = r.doit()
+                s.append(z * state(j, mp, jn, coupling))
+            return Add(*s)
+        else:
+            if options.pop('dummy', True):
+                mp = Dummy('mp')
+            else:
+                mp = symbols('mp')
+            return Sum(Rotation.D(j, m, mp, a, b, g) * state(
+                j, mp, jn, coupling), (mp, -j, j))
+
+    def _apply_operator_JxKetCoupled(self, ket, **options):
+        return self._apply_operator_coupled(JxKetCoupled, ket, **options)
+
+    def _apply_operator_JyKetCoupled(self, ket, **options):
+        return self._apply_operator_coupled(JyKetCoupled, ket, **options)
+
+    def _apply_operator_JzKetCoupled(self, ket, **options):
+        return self._apply_operator_coupled(JzKetCoupled, ket, **options)
 
 class WignerD(Expr):
     """Wigner-D function
@@ -792,7 +859,7 @@ class WignerD(Expr):
         gamma = sympify(self.gamma)
         if not j.is_number:
             raise ValueError(
-                "j parameter must be numerical to evaluate, got %s", j)
+                'j parameter must be numerical to evaluate, got %s' % j)
         r = 0
         if beta == pi/2:
             # Varshalovich Equation (5), Section 4.16, page 113, setting
@@ -1146,9 +1213,10 @@ class JzKet(SpinState, Ket):
         >>> from sympy.physics.quantum.represent import represent
         >>> from sympy.physics.quantum.spin import Jx, Jz
         >>> represent(JzKet(1,-1), basis=Jx)
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
+        Matrix([
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2]])
 
     Apply innerproducts between states:
 
@@ -1182,25 +1250,27 @@ class JzKet(SpinState, Ket):
     tensor product of the vector representation of the component eigenstates:
 
         >>> represent(TensorProduct(JzKet(1,0),JzKet(1,1)))
-        [0]
-        [0]
-        [0]
-        [1]
-        [0]
-        [0]
-        [0]
-        [0]
-        [0]
+        Matrix([
+        [0],
+        [0],
+        [0],
+        [1],
+        [0],
+        [0],
+        [0],
+        [0],
+        [0]])
         >>> represent(TensorProduct(JzKet(1,1),JxKet(1,1)), basis=Jz)
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
+        Matrix([
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2],
+        [        0],
+        [        0],
+        [        0],
+        [        0],
+        [        0],
+        [        0]])
 
     See Also
     ========
@@ -1341,12 +1411,9 @@ class CoupledSpinState(SpinState):
 
     def _print_label(self, printer, *args):
         label = [printer._print(self.j), printer._print(self.m)]
-        # After 2.5 is dropped:
-        #for i, ji in enumerate(self.jn, start=1):
-        #    label.append('j%d=%s' % (i, ji) )
-        for i, ji in enumerate(self.jn):
+        for i, ji in enumerate(self.jn, start=1):
             label.append('j%d=%s' % (
-                i + 1, printer._print(ji)
+                i, printer._print(ji)
             ))
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             label.append('j(%s)=%s' % (
@@ -1356,11 +1423,8 @@ class CoupledSpinState(SpinState):
 
     def _print_label_pretty(self, printer, *args):
         label = [self.j, self.m]
-        # After 2.5 is dropped:
-        #for i, ji in enumerate(self.jn, start=1):
-        #    n = '%d' % (i)
-        for i, ji in enumerate(self.jn):
-            symb = 'j%d' % (i + 1)
+        for i, ji in enumerate(self.jn, start=1):
+            symb = 'j%d' % i
             symb = pretty_symbol(symb)
             symb = prettyForm(symb + '=')
             item = prettyForm(*symb.right(printer._print(ji)))
@@ -1376,11 +1440,8 @@ class CoupledSpinState(SpinState):
 
     def _print_label_latex(self, printer, *args):
         label = [self.j, self.m]
-        # After 2.5 dropped
-        #for i, ji in enumerate(self.jn, start=1):
-        #    label.append('j_{%d}=%s' % (i, printer._print(ji)) )
-        for i, ji in enumerate(self.jn):
-            label.append('j_{%d}=%s' % (i + 1, printer._print(ji)) )
+        for i, ji in enumerate(self.jn, start=1):
+            label.append('j_{%d}=%s' % (i, printer._print(ji)) )
         for jn, (n1, n2) in zip(self.coupled_jn[:-1], self.coupled_n[:-1]):
             n = ','.join(str(i) for i in sorted(n1 + n2))
             label.append('j_{%s}=%s' % (n, printer._print(jn)) )
@@ -1660,10 +1721,11 @@ class JzKetCoupled(CoupledSpinState, Ket):
         >>> from sympy.physics.quantum.spin import Jx
         >>> from sympy import S
         >>> represent(JzKetCoupled(1,-1,(S(1)/2,S(1)/2)), basis=Jx)
-        [        0]
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
+        Matrix([
+        [        0],
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2]])
 
     See Also
     ========

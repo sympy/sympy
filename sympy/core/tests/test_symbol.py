@@ -2,7 +2,8 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
     StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
 )
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import u
+from sympy.utilities.pytest import raises
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
@@ -199,10 +200,7 @@ def test_Wild_properties():
                 assert d is None
 
 
-@XFAIL
 def test_symbols_each_char():
-    # XXX: Because of the way the warnings filters work, this will fail if it's
-    # run more than once in the same session.  See issue 2492.
     import warnings
     # each_char is deprecated and emits a warning.
 
@@ -211,12 +209,11 @@ def test_symbols_each_char():
     y = Symbol('y')
     z = Symbol('z')
 
-    # First, test the warning
-    warnings.filterwarnings("error")
+    # First, test the warning (SymPyDeprecationWarning should already raises during tests)
     raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
     raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
     # now test the actual output
-    warnings.filterwarnings("ignore")
+    warnings.simplefilter("ignore", SymPyDeprecationWarning)
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
     assert all(w.is_Function for w in flatten(
         symbols(['wx', 'yz'], each_char=True, cls=Function)))
@@ -242,11 +239,7 @@ def test_symbols_each_char():
     assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
 
     # Keep testing reasonably thread safe, so reset the warning
-    warnings.filterwarnings("default", "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
-    # Note, in Python 2.6+, this can be done more nicely using the
-    # warnings.catch_warnings context manager.
-    # See http://docs.python.org/library/warnings#testing-warnings.
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
 
 def test_symbols():
@@ -339,7 +332,47 @@ def test_symbols():
     assert symbols('aa:d,x:z') == (aa, ab, ac, ad, x, y, z)
     assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
+
+    # issue 3576
+    def sym(s):
+        return str(symbols(s))
+    assert sym('a0:4') == '(a0, a1, a2, a3)'
+    assert sym('a2:4,b1:3') == '(a2, a3, b1, b2)'
+    assert sym('a1(2:4)') == '(a12, a13)'
+    assert sym(('a0:2.0:2')) == '(a0.0, a0.1, a1.0, a1.1)'
+    assert sym(('aa:cz')) == '(aaz, abz, acz)'
+    assert sym('aa:c0:2') == '(aa0, aa1, ab0, ab1, ac0, ac1)'
+    assert sym('aa:ba:b') == '(aaa, aab, aba, abb)'
+    assert sym('a:3b') == '(a0b, a1b, a2b)'
+    assert sym('a-1:3b') == '(a-1b, a-2b)'
+    assert sym('a:2\,:2' + chr(0)) == '(a0,0%s, a0,1%s, a1,0%s, a1,1%s)' % (
+        (chr(0),)*4)
+    assert sym('x(:a:3)') == '(x(a0), x(a1), x(a2))'
+    assert sym('x(:c):1') == '(xa0, xb0, xc0)'
+    assert sym('x((:a)):3') == '(x(a)0, x(a)1, x(a)2)'
+    assert sym('x(:a:3') == '(x(a0, x(a1, x(a2)'
+    assert sym(':2') == '(0, 1)'
+    assert sym(':b') == '(a, b)'
+    assert sym(':b:2') == '(a0, a1, b0, b1)'
+    assert sym(':2:2') == '(00, 01, 10, 11)'
+    assert sym(':b:b') == '(aa, ab, ba, bb)'
+
+    raises(ValueError, lambda: symbols(':'))
+    raises(ValueError, lambda: symbols('a:'))
+    raises(ValueError, lambda: symbols('::'))
+    raises(ValueError, lambda: symbols('a::'))
+    raises(ValueError, lambda: symbols(':a:'))
+    raises(ValueError, lambda: symbols('::a'))
+
+
 def test_call():
     f = Symbol('f')
     assert f(2)
     raises(TypeError, lambda: Wild('x')(1))
+
+def test_unicode():
+    xu = Symbol(u('x'))
+    x = Symbol('x')
+    assert x == xu
+
+    raises(TypeError, lambda: Symbol(1))

@@ -1,5 +1,7 @@
 """Advanced tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_strip, dmp_strip,
     dup_convert, dmp_convert,
@@ -34,14 +36,11 @@ from sympy.polys.polyerrors import (
     DomainError
 )
 
-from sympy.utilities import (
-    cythonized, variations
-)
+from sympy.utilities import variations
 
 from math import ceil as _ceil, log as _log
+from sympy.core.compatibility import xrange
 
-
-@cythonized("m,n,i,j")
 def dup_integrate(f, m, K):
     """
     Computes the indefinite integral of ``f`` in ``K[x]``.
@@ -49,13 +48,13 @@ def dup_integrate(f, m, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dup_integrate
+    >>> from sympy.polys import ring, QQ
+    >>> R, x = ring("x", QQ)
 
-    >>> dup_integrate([QQ(1), QQ(2), QQ(0)], 1, QQ)
-    [1/3, 1/1, 0/1, 0/1]
-    >>> dup_integrate([QQ(1), QQ(2), QQ(0)], 2, QQ)
-    [1/12, 1/3, 0/1, 0/1, 0/1]
+    >>> R.dup_integrate(x**2 + 2*x, 1)
+    1/3*x**3 + x**2
+    >>> R.dup_integrate(x**2 + 2*x, 2)
+    1/12*x**4 + 1/3*x**3
 
     """
     if m <= 0 or not f:
@@ -74,7 +73,6 @@ def dup_integrate(f, m, K):
     return g
 
 
-@cythonized("m,u,v,n,i,j")
 def dmp_integrate(f, m, u, K):
     """
     Computes the indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
@@ -82,13 +80,13 @@ def dmp_integrate(f, m, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dmp_integrate
+    >>> from sympy.polys import ring, QQ
+    >>> R, x,y = ring("x,y", QQ)
 
-    >>> dmp_integrate([[QQ(1)], [QQ(2), QQ(0)]], 1, 1, QQ)
-    [[1/2], [2/1, 0/1], []]
-    >>> dmp_integrate([[QQ(1)], [QQ(2), QQ(0)]], 2, 1, QQ)
-    [[1/6], [1/1, 0/1], [], []]
+    >>> R.dmp_integrate(x + 2*y, 1)
+    1/2*x**2 + 2*x*y
+    >>> R.dmp_integrate(x + 2*y, 2)
+    1/6*x**3 + x**2*y
 
     """
     if not u:
@@ -110,7 +108,6 @@ def dmp_integrate(f, m, u, K):
     return g
 
 
-@cythonized("m,v,w,i,j")
 def _rec_integrate_in(g, m, v, i, j, K):
     """Recursive helper for :func:`dmp_integrate_in`."""
     if i == j:
@@ -121,7 +118,6 @@ def _rec_integrate_in(g, m, v, i, j, K):
     return dmp_strip([ _rec_integrate_in(c, m, w, i, j, K) for c in g ], v)
 
 
-@cythonized("m,j,u")
 def dmp_integrate_in(f, m, j, u, K):
     """
     Computes the indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
@@ -129,13 +125,13 @@ def dmp_integrate_in(f, m, j, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dmp_integrate_in
+    >>> from sympy.polys import ring, QQ
+    >>> R, x,y = ring("x,y", QQ)
 
-    >>> dmp_integrate_in([[QQ(1)], [QQ(2), QQ(0)]], 1, 0, 1, QQ)
-    [[1/2], [2/1, 0/1], []]
-    >>> dmp_integrate_in([[QQ(1)], [QQ(2), QQ(0)]], 1, 1, 1, QQ)
-    [[1/1, 0/1], [1/1, 0/1, 0/1]]
+    >>> R.dmp_integrate_in(x + 2*y, 1, 0)
+    1/2*x**2 + 2*x*y
+    >>> R.dmp_integrate_in(x + 2*y, 1, 1)
+    x*y + y**2
 
     """
     if j < 0 or j > u:
@@ -144,7 +140,6 @@ def dmp_integrate_in(f, m, j, u, K):
     return _rec_integrate_in(f, m, u, 0, j, K)
 
 
-@cythonized("m,n,k,i")
 def dup_diff(f, m, K):
     """
     ``m``-th order derivative of a polynomial in ``K[x]``.
@@ -152,13 +147,13 @@ def dup_diff(f, m, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_diff
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_diff([ZZ(1), ZZ(2), ZZ(3), ZZ(4)], 1, ZZ)
-    [3, 4, 3]
-    >>> dup_diff([ZZ(1), ZZ(2), ZZ(3), ZZ(4)], 2, ZZ)
-    [6, 4]
+    >>> R.dup_diff(x**3 + 2*x**2 + 3*x + 4, 1)
+    3*x**2 + 4*x + 3
+    >>> R.dup_diff(x**3 + 2*x**2 + 3*x + 4, 2)
+    6*x + 4
 
     """
     if m <= 0:
@@ -188,7 +183,6 @@ def dup_diff(f, m, K):
     return dup_strip(deriv)
 
 
-@cythonized("u,v,m,n,k,i")
 def dmp_diff(f, m, u, K):
     """
     ``m``-th order derivative in ``x_0`` of a polynomial in ``K[X]``.
@@ -196,15 +190,15 @@ def dmp_diff(f, m, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_diff
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1, 2, 3], [2, 3, 1]])
+    >>> f = x*y**2 + 2*x*y + 3*x + 2*y**2 + 3*y + 1
 
-    >>> dmp_diff(f, 1, 1, ZZ)
-    [[1, 2, 3]]
-    >>> dmp_diff(f, 2, 1, ZZ)
-    [[]]
+    >>> R.dmp_diff(f, 1)
+    y**2 + 2*y + 3
+    >>> R.dmp_diff(f, 2)
+    0
 
     """
     if not u:
@@ -236,7 +230,6 @@ def dmp_diff(f, m, u, K):
     return dmp_strip(deriv, u)
 
 
-@cythonized("m,v,w,i,j")
 def _rec_diff_in(g, m, v, i, j, K):
     """Recursive helper for :func:`dmp_diff_in`."""
     if i == j:
@@ -247,7 +240,6 @@ def _rec_diff_in(g, m, v, i, j, K):
     return dmp_strip([ _rec_diff_in(c, m, w, i, j, K) for c in g ], v)
 
 
-@cythonized("m,j,u")
 def dmp_diff_in(f, m, j, u, K):
     """
     ``m``-th order derivative in ``x_j`` of a polynomial in ``K[X]``.
@@ -255,15 +247,15 @@ def dmp_diff_in(f, m, j, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_diff_in
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1, 2, 3], [2, 3, 1]])
+    >>> f = x*y**2 + 2*x*y + 3*x + 2*y**2 + 3*y + 1
 
-    >>> dmp_diff_in(f, 1, 0, 1, ZZ)
-    [[1, 2, 3]]
-    >>> dmp_diff_in(f, 1, 1, 1, ZZ)
-    [[2, 2], [4, 3]]
+    >>> R.dmp_diff_in(f, 1, 0)
+    y**2 + 2*y + 3
+    >>> R.dmp_diff_in(f, 1, 1)
+    2*x*y + 2*x + 4*y + 3
 
     """
     if j < 0 or j > u:
@@ -279,10 +271,10 @@ def dup_eval(f, a, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_eval
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_eval([ZZ(1), ZZ(2), ZZ(3)], 2, ZZ)
+    >>> R.dup_eval(x**2 + 2*x + 3, 2)
     11
 
     """
@@ -298,7 +290,6 @@ def dup_eval(f, a, K):
     return result
 
 
-@cythonized("u,v")
 def dmp_eval(f, a, u, K):
     """
     Evaluate a polynomial at ``x_0 = a`` in ``K[X]`` using the Horner scheme.
@@ -306,13 +297,11 @@ def dmp_eval(f, a, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_eval
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[2, 3], [1, 2]])
-
-    >>> dmp_eval(f, 2, 1, ZZ)
-    [5, 8]
+    >>> R.dmp_eval(2*x*y + 3*x + y + 2, 2)
+    5*y + 8
 
     """
     if not u:
@@ -330,7 +319,6 @@ def dmp_eval(f, a, u, K):
     return result
 
 
-@cythonized("v,i,j")
 def _rec_eval_in(g, a, v, i, j, K):
     """Recursive helper for :func:`dmp_eval_in`."""
     if i == j:
@@ -341,7 +329,6 @@ def _rec_eval_in(g, a, v, i, j, K):
     return dmp_strip([ _rec_eval_in(c, a, v, i, j, K) for c in g ], v)
 
 
-@cythonized("u")
 def dmp_eval_in(f, a, j, u, K):
     """
     Evaluate a polynomial at ``x_j = a`` in ``K[X]`` using the Horner scheme.
@@ -349,15 +336,15 @@ def dmp_eval_in(f, a, j, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_eval_in
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[2, 3], [1, 2]])
+    >>> f = 2*x*y + 3*x + y + 2
 
-    >>> dmp_eval_in(f, 2, 0, 1, ZZ)
-    [5, 8]
-    >>> dmp_eval_in(f, 2, 1, 1, ZZ)
-    [7, 4]
+    >>> R.dmp_eval_in(f, 2, 0)
+    5*y + 8
+    >>> R.dmp_eval_in(f, 2, 1)
+    7*x + 4
 
     """
     if j < 0 or j > u:
@@ -366,7 +353,6 @@ def dmp_eval_in(f, a, j, u, K):
     return _rec_eval_in(f, a, u, 0, j, K)
 
 
-@cythonized("i,u")
 def _rec_eval_tail(g, i, A, u, K):
     """Recursive helper for :func:`dmp_eval_tail`."""
     if i == u:
@@ -380,7 +366,6 @@ def _rec_eval_tail(g, i, A, u, K):
             return dup_eval(h, A[-u + i - 1], K)
 
 
-@cythonized("u")
 def dmp_eval_tail(f, A, u, K):
     """
     Evaluate a polynomial at ``x_j = a_j, ...`` in ``K[X]``.
@@ -388,15 +373,15 @@ def dmp_eval_tail(f, A, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_eval_tail
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[2, 3], [1, 2]])
+    >>> f = 2*x*y + 3*x + y + 2
 
-    >>> dmp_eval_tail(f, (2, 2), 1, ZZ)
+    >>> R.dmp_eval_tail(f, [2])
+    7*x + 4
+    >>> R.dmp_eval_tail(f, [2, 2])
     18
-    >>> dmp_eval_tail(f, (2,), 1, ZZ)
-    [7, 4]
 
     """
     if not A:
@@ -413,7 +398,6 @@ def dmp_eval_tail(f, A, u, K):
         return dmp_strip(e, u - len(A))
 
 
-@cythonized("m,v,i,j")
 def _rec_diff_eval(g, m, a, v, i, j, K):
     """Recursive helper for :func:`dmp_diff_eval`."""
     if i == j:
@@ -424,7 +408,6 @@ def _rec_diff_eval(g, m, a, v, i, j, K):
     return dmp_strip([ _rec_diff_eval(c, m, a, v, i, j, K) for c in g ], v)
 
 
-@cythonized("m,j,u")
 def dmp_diff_eval_in(f, m, a, j, u, K):
     """
     Differentiate and evaluate a polynomial in ``x_j`` at ``a`` in ``K[X]``.
@@ -432,15 +415,15 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_diff_eval_in
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1, 2, 3], [2, 3, 1]])
+    >>> f = x*y**2 + 2*x*y + 3*x + 2*y**2 + 3*y + 1
 
-    >>> dmp_diff_eval_in(f, 1, 2, 0, 1, ZZ)
-    [1, 2, 3]
-    >>> dmp_diff_eval_in(f, 1, 2, 1, 1, ZZ)
-    [6, 11]
+    >>> R.dmp_diff_eval_in(f, 1, 2, 0)
+    y**2 + 2*y + 3
+    >>> R.dmp_diff_eval_in(f, 1, 2, 1)
+    6*x + 11
 
     """
     if j > u:
@@ -458,13 +441,11 @@ def dup_trunc(f, p, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_trunc
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([2, 3, 5, 7])
-
-    >>> dup_trunc(f, ZZ(3), ZZ)
-    [-1, 0, -1, 1]
+    >>> R.dup_trunc(2*x**3 + 3*x**2 + 5*x + 7, ZZ(3))
+    -x**3 - x + 1
 
     """
     if K.is_ZZ:
@@ -483,7 +464,6 @@ def dup_trunc(f, p, K):
     return dup_strip(g)
 
 
-@cythonized("u")
 def dmp_trunc(f, p, u, K):
     """
     Reduce a ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
@@ -491,20 +471,19 @@ def dmp_trunc(f, p, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_trunc
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[3, 8], [5, 6], [2, 3]])
-    >>> g = ZZ.map([1, -1])
+    >>> f = 3*x**2*y + 8*x**2 + 5*x*y + 6*x + 2*y + 3
+    >>> g = (y - 1).drop(x)
 
-    >>> dmp_trunc(f, g, 1, ZZ)
-    [[11], [11], [5]]
+    >>> R.dmp_trunc(f, g)
+    11*x**2 + 11*x + 5
 
     """
     return dmp_strip([ dmp_rem(c, p, u - 1, K) for c in f ], u)
 
 
-@cythonized("u,v")
 def dmp_ground_trunc(f, p, u, K):
     """
     Reduce a ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
@@ -512,13 +491,13 @@ def dmp_ground_trunc(f, p, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_ground_trunc
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[3, 8], [5, 6], [2, 3]])
+    >>> f = 3*x**2*y + 8*x**2 + 5*x*y + 6*x + 2*y + 3
 
-    >>> dmp_ground_trunc(f, ZZ(3), 1, ZZ)
-    [[-1], [-1, 0], [-1, 0]]
+    >>> R.dmp_ground_trunc(f, ZZ(3))
+    -x**2 - x*y - y
 
     """
     if not u:
@@ -536,14 +515,15 @@ def dup_monic(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densetools import dup_monic
+    >>> from sympy.polys import ring, ZZ, QQ
 
-    >>> dup_monic([ZZ(3), ZZ(6), ZZ(9)], ZZ)
-    [1, 2, 3]
+    >>> R, x = ring("x", ZZ)
+    >>> R.dup_monic(3*x**2 + 6*x + 9)
+    x**2 + 2*x + 3
 
-    >>> dup_monic([QQ(3), QQ(4), QQ(2)], QQ)
-    [1/1, 4/3, 2/3]
+    >>> R, x = ring("x", QQ)
+    >>> R.dup_monic(3*x**2 + 4*x + 2)
+    x**2 + 4/3*x + 2/3
 
     """
     if not f:
@@ -557,7 +537,6 @@ def dup_monic(f, K):
         return dup_exquo_ground(f, lc, K)
 
 
-@cythonized("u")
 def dmp_ground_monic(f, u, K):
     """
     Divide all coefficients by ``LC(f)`` in ``K[X]``.
@@ -565,17 +544,19 @@ def dmp_ground_monic(f, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densetools import dmp_ground_monic
+    >>> from sympy.polys import ring, ZZ, QQ
 
-    >>> f = ZZ.map([[3, 6], [3, 0], [9, 3]])
-    >>> g = QQ.map([[3, 8], [5, 6], [2, 3]])
+    >>> R, x,y = ring("x,y", ZZ)
+    >>> f = 3*x**2*y + 6*x**2 + 3*x*y + 9*y + 3
 
-    >>> dmp_ground_monic(f, 1, ZZ)
-    [[1, 2], [1, 0], [3, 1]]
+    >>> R.dmp_ground_monic(f)
+    x**2*y + 2*x**2 + x*y + 3*y + 1
 
-    >>> dmp_ground_monic(g, 1, QQ)
-    [[1/1, 8/3], [5/3, 2/1], [2/3, 1/1]]
+    >>> R, x,y = ring("x,y", QQ)
+    >>> f = 3*x**2*y + 8*x**2 + 5*x*y + 6*x + 2*y + 3
+
+    >>> R.dmp_ground_monic(f)
+    x**2*y + 8/3*x**2 + 5/3*x*y + 2*x + 2/3*y + 1
 
     """
     if not u:
@@ -599,16 +580,19 @@ def dup_content(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densetools import dup_content
+    >>> from sympy.polys import ring, ZZ, QQ
 
-    >>> f = ZZ.map([6, 8, 12])
-    >>> g = QQ.map([6, 8, 12])
+    >>> R, x = ring("x", ZZ)
+    >>> f = 6*x**2 + 8*x + 12
 
-    >>> dup_content(f, ZZ)
+    >>> R.dup_content(f)
     2
-    >>> dup_content(g, QQ)
-    2/1
+
+    >>> R, x = ring("x", QQ)
+    >>> f = 6*x**2 + 8*x + 12
+
+    >>> R.dup_content(f)
+    2
 
     """
     from sympy.polys.domains import QQ
@@ -631,7 +615,6 @@ def dup_content(f, K):
     return cont
 
 
-@cythonized("u,v")
 def dmp_ground_content(f, u, K):
     """
     Compute the GCD of coefficients of ``f`` in ``K[X]``.
@@ -639,16 +622,19 @@ def dmp_ground_content(f, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densetools import dmp_ground_content
+    >>> from sympy.polys import ring, ZZ, QQ
 
-    >>> f = ZZ.map([[2, 6], [4, 12]])
-    >>> g = QQ.map([[2, 6], [4, 12]])
+    >>> R, x,y = ring("x,y", ZZ)
+    >>> f = 2*x*y + 6*x + 4*y + 12
 
-    >>> dmp_ground_content(f, 1, ZZ)
+    >>> R.dmp_ground_content(f)
     2
-    >>> dmp_ground_content(g, 1, QQ)
-    2/1
+
+    >>> R, x,y = ring("x,y", QQ)
+    >>> f = 2*x*y + 6*x + 4*y + 12
+
+    >>> R.dmp_ground_content(f)
+    2
 
     """
     from sympy.polys.domains import QQ
@@ -681,16 +667,19 @@ def dup_primitive(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densetools import dup_primitive
+    >>> from sympy.polys import ring, ZZ, QQ
 
-    >>> f = ZZ.map([6, 8, 12])
-    >>> g = QQ.map([6, 8, 12])
+    >>> R, x = ring("x", ZZ)
+    >>> f = 6*x**2 + 8*x + 12
 
-    >>> dup_primitive(f, ZZ)
-    (2, [3, 4, 6])
-    >>> dup_primitive(g, QQ)
-    (2/1, [3/1, 4/1, 6/1])
+    >>> R.dup_primitive(f)
+    (2, 3*x**2 + 4*x + 6)
+
+    >>> R, x = ring("x", QQ)
+    >>> f = 6*x**2 + 8*x + 12
+
+    >>> R.dup_primitive(f)
+    (2, 3*x**2 + 4*x + 6)
 
     """
     if not f:
@@ -704,7 +693,6 @@ def dup_primitive(f, K):
         return cont, dup_quo_ground(f, cont, K)
 
 
-@cythonized("u")
 def dmp_ground_primitive(f, u, K):
     """
     Compute content and the primitive form of ``f`` in ``K[X]``.
@@ -712,16 +700,19 @@ def dmp_ground_primitive(f, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.densetools import dmp_ground_primitive
+    >>> from sympy.polys import ring, ZZ, QQ
 
-    >>> f = ZZ.map([[2, 6], [4, 12]])
-    >>> g = QQ.map([[2, 6], [4, 12]])
+    >>> R, x,y = ring("x,y", ZZ)
+    >>> f = 2*x*y + 6*x + 4*y + 12
 
-    >>> dmp_ground_primitive(f, 1, ZZ)
-    (2, [[1, 3], [2, 6]])
-    >>> dmp_ground_primitive(g, 1, QQ)
-    (2/1, [[1/1, 3/1], [2/1, 6/1]])
+    >>> R.dmp_ground_primitive(f)
+    (2, x*y + 3*x + 2*y + 6)
+
+    >>> R, x,y = ring("x,y", QQ)
+    >>> f = 2*x*y + 6*x + 4*y + 12
+
+    >>> R.dmp_ground_primitive(f)
+    (2, x*y + 3*x + 2*y + 6)
 
     """
     if not u:
@@ -745,14 +736,11 @@ def dup_extract(f, g, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_extract
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([6, 12, 18])
-    >>> g = ZZ.map([4, 8, 12])
-
-    >>> dup_extract(f, g, ZZ)
-    (2, [3, 6, 9], [2, 4, 6])
+    >>> R.dup_extract(6*x**2 + 12*x + 18, 4*x**2 + 8*x + 12)
+    (2, 3*x**2 + 6*x + 9, 2*x**2 + 4*x + 6)
 
     """
     fc = dup_content(f, K)
@@ -767,7 +755,6 @@ def dup_extract(f, g, K):
     return gcd, f, g
 
 
-@cythonized("u")
 def dmp_ground_extract(f, g, u, K):
     """
     Extract common content from a pair of polynomials in ``K[X]``.
@@ -775,14 +762,11 @@ def dmp_ground_extract(f, g, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_ground_extract
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[6, 12], [18]])
-    >>> g = ZZ.map([[4, 8], [12]])
-
-    >>> dmp_ground_extract(f, g, 1, ZZ)
-    (2, [[3, 6], [9]], [[2, 4], [6]])
+    >>> R.dmp_ground_extract(6*x*y + 12*x + 18, 4*x*y + 8*x + 12)
+    (2, 3*x*y + 6*x + 9, 2*x*y + 4*x + 6)
 
     """
     fc = dmp_ground_content(f, u, K)
@@ -804,16 +788,15 @@ def dup_real_imag(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_real_imag
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> dup_real_imag([ZZ(1), ZZ(1), ZZ(1), ZZ(1)], ZZ)
-    ([[1], [1], [-3, 0, 1], [-1, 0, 1]], [[3, 0], [2, 0], [-1, 0, 1, 0]])
+    >>> R.dup_real_imag(x**3 + x**2 + x + 1)
+    (x**3 + x**2 - 3*x*y**2 + x - y**2 + 1, 3*x**2*y + 2*x*y - y**3 + y)
 
     """
     if not K.is_ZZ and not K.is_QQ:
-        raise DomainError(
-            "computing real and imaginary parts is not supported over %s" % K)
+        raise DomainError("computing real and imaginary parts is not supported over %s" % K)
 
     f1 = dmp_zero(1)
     f2 = dmp_zero(1)
@@ -830,7 +813,7 @@ def dup_real_imag(f, K):
 
     H = dup_to_raw_dict(h)
 
-    for k, h in H.iteritems():
+    for k, h in H.items():
         m = k % 4
 
         if not m:
@@ -845,7 +828,6 @@ def dup_real_imag(f, K):
     return f1, f2
 
 
-@cythonized('i,n')
 def dup_mirror(f, K):
     """
     Evaluate efficiently the composition ``f(-x)`` in ``K[x]``.
@@ -853,11 +835,11 @@ def dup_mirror(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_mirror
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_mirror([ZZ(1), ZZ(2), -ZZ(4), ZZ(2)], ZZ)
-    [-1, 2, 4, 2]
+    >>> R.dup_mirror(x**3 + 2*x**2 - 4*x + 2)
+    -x**3 + 2*x**2 + 4*x + 2
 
     """
     f, n, a = list(f), dup_degree(f), -K.one
@@ -868,7 +850,6 @@ def dup_mirror(f, K):
     return f
 
 
-@cythonized('i,n')
 def dup_scale(f, a, K):
     """
     Evaluate efficiently composition ``f(a*x)`` in ``K[x]``.
@@ -876,11 +857,11 @@ def dup_scale(f, a, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_scale
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_scale([ZZ(1), -ZZ(2), ZZ(1)], ZZ(2), ZZ)
-    [4, -4, 1]
+    >>> R.dup_scale(x**2 - 2*x + 1, ZZ(2))
+    4*x**2 - 4*x + 1
 
     """
     f, n, b = list(f), dup_degree(f), a
@@ -891,7 +872,6 @@ def dup_scale(f, a, K):
     return f
 
 
-@cythonized('i,j,n')
 def dup_shift(f, a, K):
     """
     Evaluate efficiently Taylor shift ``f(x + a)`` in ``K[x]``.
@@ -899,11 +879,11 @@ def dup_shift(f, a, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_shift
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_shift([ZZ(1), -ZZ(2), ZZ(1)], ZZ(2), ZZ)
-    [1, 2, 1]
+    >>> R.dup_shift(x**2 - 2*x + 1, ZZ(2))
+    x**2 + 2*x + 1
 
     """
     f, n = list(f), dup_degree(f)
@@ -915,7 +895,6 @@ def dup_shift(f, a, K):
     return f
 
 
-@cythonized('i,n')
 def dup_transform(f, p, q, K):
     """
     Evaluate functional transformation ``q**n * f(p/q)`` in ``K[x]``.
@@ -923,15 +902,11 @@ def dup_transform(f, p, q, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_transform
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([1, -2, 1])
-    >>> p = ZZ.map([1, 0, 1])
-    >>> q = ZZ.map([1, -1])
-
-    >>> dup_transform(f, p, q, ZZ)
-    [1, -2, 5, -4, 4]
+    >>> R.dup_transform(x**2 - 2*x + 1, x**2 + 1, x - 1)
+    x**4 - 2*x**3 + 5*x**2 - 4*x + 4
 
     """
     if not f:
@@ -958,14 +933,11 @@ def dup_compose(f, g, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_compose
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([1, 1, 0])
-    >>> g = ZZ.map([1, -1])
-
-    >>> dup_compose(f, g, ZZ)
-    [1, -1, 0]
+    >>> R.dup_compose(x**2 + x, x - 1)
+    x**2 - x
 
     """
     if len(g) <= 1:
@@ -983,7 +955,6 @@ def dup_compose(f, g, K):
     return h
 
 
-@cythonized("u")
 def dmp_compose(f, g, u, K):
     """
     Evaluate functional composition ``f(g)`` in ``K[X]``.
@@ -991,14 +962,11 @@ def dmp_compose(f, g, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_compose
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1, 2], [1, 0]])
-    >>> g = ZZ.map([[1, 0]])
-
-    >>> dmp_compose(f, g, 1, ZZ)
-    [[1, 3, 0]]
+    >>> R.dmp_compose(x*y + 2*x + y, y)
+    y**2 + 3*y
 
     """
     if not u:
@@ -1016,7 +984,6 @@ def dmp_compose(f, g, u, K):
     return h
 
 
-@cythonized("s,n,r,i,j")
 def _dup_right_decompose(f, s, K):
     """Helper function for :func:`_dup_decompose`."""
     n = dup_degree(f)
@@ -1045,7 +1012,6 @@ def _dup_right_decompose(f, s, K):
     return dup_from_raw_dict(g, K)
 
 
-@cythonized("i")
 def _dup_left_decompose(f, h, K):
     """Helper function for :func:`_dup_decompose`."""
     g, i = {}, 0
@@ -1062,7 +1028,6 @@ def _dup_left_decompose(f, h, K):
     return dup_from_raw_dict(g, K)
 
 
-@cythonized("df,s")
 def _dup_decompose(f, K):
     """Helper function for :func:`dup_decompose`."""
     df = dup_degree(f)
@@ -1106,13 +1071,11 @@ def dup_decompose(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_decompose
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([1, -2, 1, 0, 0])
-
-    >>> dup_decompose(f, ZZ)
-    [[1, 0, 0], [1, -1, 0]]
+    >>> R.dup_decompose(x**4 - 2*x**3 + x**2)
+    [x**2, x**2 - x]
 
     References
     ==========
@@ -1134,7 +1097,6 @@ def dup_decompose(f, K):
     return [f] + F
 
 
-@cythonized("u")
 def dmp_lift(f, u, K):
     """
     Convert algebraic coefficients to integers in ``K[X]``.
@@ -1142,15 +1104,16 @@ def dmp_lift(f, u, K):
     Examples
     ========
 
+    >>> from sympy.polys import ring, QQ
     >>> from sympy import I
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dmp_lift
 
     >>> K = QQ.algebraic_field(I)
-    >>> f = [K(1), K([QQ(1), QQ(0)]), K([QQ(2), QQ(0)])]
+    >>> R, x = ring("x", K)
 
-    >>> dmp_lift(f, 0, K)
-    [1/1, 0/1, 2/1, 0/1, 9/1, 0/1, -8/1, 0/1, 16/1]
+    >>> f = x**2 + K([QQ(1), QQ(0)])*x + K([QQ(2), QQ(0)])
+
+    >>> R.dmp_lift(f)
+    x**8 + 2*x**6 + 9*x**4 - 8*x**2 + 16
 
     """
     if not K.is_Algebraic:
@@ -1159,7 +1122,7 @@ def dmp_lift(f, u, K):
 
     F, monoms, polys = dmp_to_dict(f, u), [], []
 
-    for monom, coeff in F.iteritems():
+    for monom, coeff in F.items():
         if not coeff.is_ground:
             monoms.append(monom)
 
@@ -1184,12 +1147,10 @@ def dup_sign_variations(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dup_sign_variations
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([1, 0, -1, -1, 1])
-
-    >>> dup_sign_variations(f, ZZ)
+    >>> R.dup_sign_variations(x**4 - x**2 - x + 1)
     2
 
     """
@@ -1212,16 +1173,15 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ, ZZ
-    >>> from sympy.polys.densetools import dup_clear_denoms
+    >>> from sympy.polys import ring, QQ
+    >>> R, x = ring("x", QQ)
 
-    >>> f = [QQ(1,2), QQ(1,3)]
-    >>> dup_clear_denoms(f, QQ, convert=False)
-    (6, [3/1, 2/1])
+    >>> f = QQ(1,2)*x + QQ(1,3)
 
-    >>> f = [QQ(1,2), QQ(1,3)]
-    >>> dup_clear_denoms(f, QQ, convert=True)
-    (6, [3, 2])
+    >>> R.dup_clear_denoms(f, convert=False)
+    (6, 3*x + 2)
+    >>> R.dup_clear_denoms(f, convert=True)
+    (6, 3*x + 2)
 
     """
     if K1 is None:
@@ -1244,7 +1204,6 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
         return common, dup_convert(f, K0, K1)
 
 
-@cythonized("v,w")
 def _rec_clear_denoms(g, v, K0, K1):
     """Recursive helper for :func:`dmp_clear_denoms`."""
     common = K1.one
@@ -1261,7 +1220,6 @@ def _rec_clear_denoms(g, v, K0, K1):
     return common
 
 
-@cythonized("u")
 def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
     """
     Clear denominators, i.e. transform ``K_0`` to ``K_1``.
@@ -1269,16 +1227,15 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ, ZZ
-    >>> from sympy.polys.densetools import dmp_clear_denoms
+    >>> from sympy.polys import ring, QQ
+    >>> R, x,y = ring("x,y", QQ)
 
-    >>> f = [[QQ(1,2)], [QQ(1,3), QQ(1)]]
-    >>> dmp_clear_denoms(f, 1, QQ, convert=False)
-    (6, [[3/1], [2/1, 6/1]])
+    >>> f = QQ(1,2)*x + QQ(1,3)*y + 1
 
-    >>> f = [[QQ(1,2)], [QQ(1,3), QQ(1)]]
-    >>> dmp_clear_denoms(f, 1, QQ, convert=True)
-    (6, [[3], [2, 6]])
+    >>> R.dmp_clear_denoms(f, convert=False)
+    (6, 3*x + 2*y + 6)
+    >>> R.dmp_clear_denoms(f, convert=True)
+    (6, 3*x + 2*y + 6)
 
     """
     if not u:
@@ -1301,7 +1258,6 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
         return common, dmp_convert(f, u, K0, K1)
 
 
-@cythonized('i,n')
 def dup_revert(f, n, K):
     """
     Compute ``f**(-1)`` mod ``x**n`` using Newton iteration.
@@ -1313,13 +1269,13 @@ def dup_revert(f, n, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dup_revert
+    >>> from sympy.polys import ring, QQ
+    >>> R, x = ring("x", QQ)
 
-    >>> f = [-QQ(1,720), QQ(0), QQ(1,24), QQ(0), -QQ(1,2), QQ(0), QQ(1)]
+    >>> f = -QQ(1,720)*x**6 + QQ(1,24)*x**4 - QQ(1,2)*x**2 + 1
 
-    >>> dup_revert(f, 8, QQ)
-    [61/720, 0/1, 5/24, 0/1, 1/2, 0/1, 1/1]
+    >>> R.dup_revert(f, 8)
+    61/720*x**6 + 5/24*x**4 + 1/2*x**2 + 1
 
     """
     g = [K.revert(dup_TC(f, K))]
@@ -1343,8 +1299,8 @@ def dmp_revert(f, g, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.densetools import dmp_revert
+    >>> from sympy.polys import ring, QQ
+    >>> R, x,y = ring("x,y", QQ)
 
     """
     if not u:

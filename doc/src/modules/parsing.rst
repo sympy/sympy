@@ -45,8 +45,28 @@ applied in the order given.
 
 .. autodata:: sympy.parsing.sympy_parser.standard_transformations
 
+.. autofunction:: sympy.parsing.sympy_parser.split_symbols
+
+.. autofunction:: sympy.parsing.sympy_parser.split_symbols_custom
+
+.. autofunction:: sympy.parsing.sympy_parser.implicit_multiplication
+
+.. autofunction:: sympy.parsing.sympy_parser.implicit_application
+
+.. autofunction:: sympy.parsing.sympy_parser.function_exponentiation
+
 .. autofunction:: sympy.parsing.sympy_parser.implicit_multiplication_application
 
 .. autofunction:: sympy.parsing.sympy_parser.rationalize
 
 .. autofunction:: sympy.parsing.sympy_parser.convert_xor
+
+These are included in
+:data:``sympy.parsing.sympy_parser.standard_transformations`` and generally
+don't need to be manually added by the user.
+
+.. autofunction:: sympy.parsing.sympy_parser.factorial_notation
+
+.. autofunction:: sympy.parsing.sympy_parser.auto_symbol
+
+.. autofunction:: sympy.parsing.sympy_parser.auto_number

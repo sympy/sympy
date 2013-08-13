@@ -1,9 +1,12 @@
 """
 Handlers for keys related to number theory: prime, even, odd, etc.
 """
+from __future__ import print_function, division
+
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.ntheory import isprime
+from sympy.core import S
 
 
 class AskPrimeHandler(CommonHandler):
@@ -61,25 +64,11 @@ class AskPrimeHandler(CommonHandler):
     def Integer(expr, assumptions):
         return isprime(expr)
 
-    @staticmethod
-    def Rational(expr, assumptions):
-        return False
+    Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
 
     @staticmethod
     def Float(expr, assumptions):
         return AskPrimeHandler._number(expr, assumptions)
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
 
     @staticmethod
     def NumberSymbol(expr, assumptions):
@@ -178,32 +167,30 @@ class AskEvenHandler(CommonHandler):
             return _result
 
     @staticmethod
+    def Pow(expr, assumptions):
+        if expr.is_number:
+            return AskEvenHandler._number(expr, assumptions)
+        if ask(Q.integer(expr.exp), assumptions):
+            if ask(Q.positive(expr.exp), assumptions):
+                return ask(Q.even(expr.base), assumptions)
+            elif ask(~Q.negative(expr.exp) & Q.odd(expr.base), assumptions):
+                return False
+            elif expr.base is S.NegativeOne:
+                return False
+
+    @staticmethod
     def Integer(expr, assumptions):
         return not bool(expr.p & 1)
 
-    @staticmethod
-    def Rational(expr, assumptions):
-        return False
+    Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
 
     @staticmethod
     def Float(expr, assumptions):
         return expr % 2 == 0
 
     @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
     def NumberSymbol(expr, assumptions):
         return AskEvenHandler._number(expr, assumptions)
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
 
     @staticmethod
     def Abs(expr, assumptions):

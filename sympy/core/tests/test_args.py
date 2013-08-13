@@ -4,8 +4,6 @@
 # be instantiated, add it here anyway with @SKIP("abstract class) (see
 # e.g. Function).
 
-from __future__ import with_statement
-
 import os
 import re
 import warnings
@@ -28,7 +26,8 @@ def test_all_classes_are_tested():
     modules = {}
 
     # Ignore sympy.statistics import warning
-    warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    warnings.filterwarnings("ignore", message="sympy.statistics has been deprecated since SymPy 0.7.2",
+        category=SymPyDeprecationWarning)
 
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
@@ -57,7 +56,7 @@ def test_all_classes_are_tested():
                 cls = getattr(mod, name)
                 return issubclass(cls, Basic)
 
-            names = filter(is_Basic, names)
+            names = list(filter(is_Basic, names))
 
             if names:
                 modules[submodule] = names
@@ -65,7 +64,7 @@ def test_all_classes_are_tested():
     ns = globals()
     failed = []
 
-    for module, names in modules.iteritems():
+    for module, names in modules.items():
         mod = module.replace('.', '__')
 
         for name in names:
@@ -74,7 +73,8 @@ def test_all_classes_are_tested():
             if test not in ns:
                 failed.append(module + '.' + name)
 
-    warnings.filterwarnings("default", category=SymPyDeprecationWarning)
+    # reset all SymPyDeprecationWarning into errors
+    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
     assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
@@ -455,6 +455,9 @@ def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())
 
+def test_sympy__sets__fancysets__Naturals0():
+    from sympy.sets.fancysets import Naturals0
+    assert _test_args(Naturals0())
 
 def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
@@ -467,11 +470,11 @@ def test_sympy__sets__fancysets__Reals():
     assert _test_args(Reals())
 
 
-def test_sympy__sets__fancysets__TransformationSet():
-    from sympy.sets.fancysets import TransformationSet
+def test_sympy__sets__fancysets__ImageSet():
+    from sympy.sets.fancysets import ImageSet
     from sympy import S, Lambda, Symbol
     x = Symbol('x')
-    assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
+    assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
 
 def test_sympy__sets__fancysets__Range():
@@ -528,11 +531,22 @@ def test_sympy__stats__crv__ProductContinuousPSpace():
     B = SingleContinuousPSpace(y, nd)
     assert _test_args(ProductContinuousPSpace(A, B))
 
-
 @SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+def test_sympy__stats__drv__SingleDiscreteDomain():
+    from sympy.stats.drv import SingleDiscreteDomain
+    assert _test_args(SingleDiscreteDomain(x, S.Naturals))
+
+def test_sympy__stats__drv__SingleDiscretePSpace():
+    from sympy.stats.drv import SingleDiscretePSpace
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(SingleDiscretePSpace(x, PoissonDistribution(1)))
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
@@ -560,11 +574,9 @@ def test_sympy__stats__rv__PSpace():
     assert _test_args(PSpace(D, die))
 
 
+@SKIP("abstract Class")
 def test_sympy__stats__rv__SinglePSpace():
-    from sympy.stats.rv import SinglePSpace, RandomDomain
-    from sympy import Dict, FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3, 4, 5, 6))
-    assert _test_args(SinglePSpace(D, die))
+    pass
 
 
 def test_sympy__stats__rv__RandomSymbol():
@@ -592,7 +604,7 @@ def test_sympy__stats__rv__ProductDomain():
 def test_sympy__stats__frv_types__DiscreteUniformDistribution():
     from sympy.stats.frv_types import DiscreteUniformDistribution
     from sympy.core.containers import Tuple
-    assert _test_args(DiscreteUniformDistribution(Tuple(range(6))))
+    assert _test_args(DiscreteUniformDistribution(Tuple(*list(range(6)))))
 
 
 def test_sympy__stats__frv_types__DieDistribution():
@@ -848,6 +860,13 @@ def test_sympy__stats__crv_types__WignerSemicircleDistribution():
     from sympy.stats.crv_types import WignerSemicircleDistribution
     assert _test_args(WignerSemicircleDistribution(1))
 
+def test_sympy__stats__drv_types__PoissonDistribution():
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(PoissonDistribution(1))
+
+def test_sympy__stats__drv_types__GeometricDistribution():
+    from sympy.stats.drv_types import GeometricDistribution
+    assert _test_args(GeometricDistribution(.5))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -1219,6 +1238,28 @@ def test_sympy__functions__special__bessel__yn():
     assert _test_args(yn(0, x))
 
 
+def test_sympy__functions__special__elliptic_integrals__elliptic_k():
+    from sympy.functions.special.elliptic_integrals import elliptic_k as K
+    assert _test_args(K(x))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_f():
+    from sympy.functions.special.elliptic_integrals import elliptic_f as F
+    assert _test_args(F(x, y))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_e():
+    from sympy.functions.special.elliptic_integrals import elliptic_e as E
+    assert _test_args(E(x))
+    assert _test_args(E(x, y))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_pi():
+    from sympy.functions.special.elliptic_integrals import elliptic_pi as P
+    assert _test_args(P(x, y))
+    assert _test_args(P(x, y, z))
+
+
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))
@@ -1233,6 +1274,29 @@ def test_sympy__functions__special__error_functions__erf():
     from sympy.functions.special.error_functions import erf
     assert _test_args(erf(2))
 
+def test_sympy__functions__special__error_functions__erfc():
+    from sympy.functions.special.error_functions import erfc
+    assert _test_args(erfc(2))
+
+def test_sympy__functions__special__error_functions__erfi():
+    from sympy.functions.special.error_functions import erfi
+    assert _test_args(erfi(2))
+
+def test_sympy__functions__special__error_functions__erf2():
+    from sympy.functions.special.error_functions import erf2
+    assert _test_args(erf2(2, 3))
+
+def test_sympy__functions__special__error_functions__erfinv():
+    from sympy.functions.special.error_functions import erfinv
+    assert _test_args(erfinv(2))
+
+def test_sympy__functions__special__error_functions__erfcinv():
+    from sympy.functions.special.error_functions import erfcinv
+    assert _test_args(erfcinv(2))
+
+def test_sympy__functions__special__error_functions__erf2inv():
+    from sympy.functions.special.error_functions import erf2inv
+    assert _test_args(erf2inv(2, 3))
 
 @SKIP("abstract class")
 def test_sympy__functions__special__error_functions__FresnelIntegral():
@@ -1257,6 +1321,16 @@ def test_sympy__functions__special__error_functions__erfs():
 def test_sympy__functions__special__error_functions__Ei():
     from sympy.functions.special.error_functions import Ei
     assert _test_args(Ei(2))
+
+
+def test_sympy__functions__special__error_functions__li():
+    from sympy.functions.special.error_functions import li
+    assert _test_args(li(2))
+
+
+def test_sympy__functions__special__error_functions__Li():
+    from sympy.functions.special.error_functions import Li
+    assert _test_args(Li(2))
 
 
 @SKIP("abstract class")
@@ -1316,6 +1390,11 @@ def test_sympy__functions__special__gamma_functions__uppergamma():
 
 @SKIP("abstract class")
 def test_sympy__functions__special__hyper__TupleParametersBase():
+    pass
+
+
+@SKIP("abstract class")
+def test_sympy__functions__special__hyper__TupleArg():
     pass
 
 
@@ -1411,7 +1490,7 @@ def test_sympy__functions__special__polynomials__chebyshevt():
 
 def test_sympy__functions__special__polynomials__chebyshevt_root():
     from sympy.functions.special.polynomials import chebyshevt_root
-    assert _test_args(chebyshevt_root(x, 2))
+    assert _test_args(chebyshevt_root(3, 2))
 
 
 def test_sympy__functions__special__polynomials__chebyshevu():
@@ -1421,7 +1500,7 @@ def test_sympy__functions__special__polynomials__chebyshevu():
 
 def test_sympy__functions__special__polynomials__chebyshevu_root():
     from sympy.functions.special.polynomials import chebyshevu_root
-    assert _test_args(chebyshevu_root(x, 2))
+    assert _test_args(chebyshevu_root(3, 2))
 
 
 def test_sympy__functions__special__polynomials__hermite():
@@ -1447,6 +1526,16 @@ def test_sympy__functions__special__polynomials__laguerre():
 def test_sympy__functions__special__polynomials__assoc_laguerre():
     from sympy.functions.special.polynomials import assoc_laguerre
     assert _test_args(assoc_laguerre(x, 0, y))
+
+
+def test_sympy__functions__special__spherical_harmonics__Ynm():
+    from sympy.functions.special.spherical_harmonics import Ynm
+    assert _test_args(Ynm(1, 1, x, y))
+
+
+def test_sympy__functions__special__spherical_harmonics__Znm():
+    from sympy.functions.special.spherical_harmonics import Znm
+    assert _test_args(Znm(1, 1, x, y))
 
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():
@@ -1568,6 +1657,51 @@ def test_sympy__integrals__transforms__HankelTransform():
     from sympy.integrals.transforms import HankelTransform
     assert _test_args(HankelTransform(2, x, y, 0))
 
+@XFAIL
+def test_sympy__liealgebras__cartan_type__CartanType_generator():
+    from sympy.liealgebras.cartan_type import CartanType_generator
+    assert _test_args(CartanType_generator("A2"))
+
+@XFAIL
+def test_sympy__liealgebras__cartan_type__Standard_Cartan():
+    from sympy.liealgebras.cartan_type import Standard_Cartan
+    assert _test_args(Standard_Cartan(A, 2))
+
+@XFAIL
+def test_sympy__liealgebras__type_a__TypeA():
+    from sympy.liealgebras.type_a import TypeA
+    assert _test_args(TypeA(2))
+
+@XFAIL
+def test_sympy__liealgebras__type_b__TypeB():
+    from sympy.liealgebras.type_b import TypeB
+    assert _test_args(TypeB(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_c__TypeC():
+    from sympy.liealgebras.type_c import TypeC
+    assert _test_args(TypeC(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_d__TypeD():
+    from sympy.liealgebras.type_d import TypeD
+    assert _test_args(TypeD(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_e__TypeE():
+    from sympy.liealgebras.type_e import TypeE
+    assert _test_args(TypeE(6))
+
+@XFAIL
+def test_sympy__liealgebras__type_f__TypeF():
+    from sympy.liealgebras.type_f import TypeF
+    assert _test_args(TypeF(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_g__TypeG():
+    from sympy.liealgebras.type_g import TypeG
+    assert _test_args(TypeG(2))
+
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
@@ -1596,7 +1730,7 @@ def test_sympy__logic__boolalg__ITE():
 
 def test_sympy__logic__boolalg__Implies():
     from sympy.logic.boolalg import Implies
-    assert _test_args(Implies(x, 2))
+    assert _test_args(Implies(x, y))
 
 
 def test_sympy__logic__boolalg__Nand():
@@ -1606,17 +1740,17 @@ def test_sympy__logic__boolalg__Nand():
 
 def test_sympy__logic__boolalg__Nor():
     from sympy.logic.boolalg import Nor
-    assert _test_args(Nor(x, y, 2))
+    assert _test_args(Nor(x, y))
 
 
 def test_sympy__logic__boolalg__Not():
     from sympy.logic.boolalg import Not
-    assert _test_args(Not(2))
+    assert _test_args(Not(x))
 
 
 def test_sympy__logic__boolalg__Or():
     from sympy.logic.boolalg import Or
-    assert _test_args(Or(x, y, 2))
+    assert _test_args(Or(x, y))
 
 
 def test_sympy__logic__boolalg__Xor():
@@ -1693,6 +1827,10 @@ def test_sympy__matrices__expressions__matexpr__Identity():
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
 
+def test_sympy__matrices__expressions__matexpr__MatrixElement():
+    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+    from sympy import S
+    assert _test_args(MatrixElement(MatrixSymbol('A', 3, 5), S(2), S(3)))
 
 @XFAIL
 def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
@@ -1713,6 +1851,17 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
+def test_sympy__matrices__expressions__diagonal__DiagonalMatrix():
+    from sympy.matrices.expressions.diagonal import DiagonalMatrix
+    from sympy.matrices.expressions import MatrixSymbol
+    x = MatrixSymbol('x', 10, 1)
+    assert _test_args(DiagonalMatrix(x))
+
+def test_sympy__matrices__expressions__diagonal__DiagonalOf():
+    from sympy.matrices.expressions.diagonal import DiagonalOf
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('x', 10, 10)
+    assert _test_args(DiagonalOf(X))
 
 def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -1746,6 +1895,11 @@ def test_sympy__matrices__expressions__trace__Trace():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Trace(MatrixSymbol('A', 3, 3)))
 
+def test_sympy__matrices__expressions__determinant__Determinant():
+    from sympy.matrices.expressions.determinant import Determinant
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Determinant(MatrixSymbol('A', 3, 3)))
+
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     from sympy.matrices.expressions.funcmatrix import FunctionMatrix
@@ -1753,6 +1907,66 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
+def test_sympy__matrices__expressions__fourier__DFT():
+    from sympy.matrices.expressions.fourier import DFT
+    from sympy import S
+    assert _test_args(DFT(S(2)))
+
+def test_sympy__matrices__expressions__fourier__IDFT():
+    from sympy.matrices.expressions.fourier import IDFT
+    from sympy import S
+    assert _test_args(IDFT(S(2)))
+
+from sympy.matrices.expressions import MatrixSymbol
+X = MatrixSymbol('X', 10, 10)
+
+def test_sympy__matrices__expressions__factorizations__LofLU():
+    from sympy.matrices.expressions.factorizations import LofLU
+    assert _test_args(LofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__UofLU():
+    from sympy.matrices.expressions.factorizations import UofLU
+    assert _test_args(UofLU(X))
+
+def test_sympy__matrices__expressions__factorizations__QofQR():
+    from sympy.matrices.expressions.factorizations import QofQR
+    assert _test_args(QofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__RofQR():
+    from sympy.matrices.expressions.factorizations import RofQR
+    assert _test_args(RofQR(X))
+
+def test_sympy__matrices__expressions__factorizations__LofCholesky():
+    from sympy.matrices.expressions.factorizations import LofCholesky
+    assert _test_args(LofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__UofCholesky():
+    from sympy.matrices.expressions.factorizations import UofCholesky
+    assert _test_args(UofCholesky(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenVectors():
+    from sympy.matrices.expressions.factorizations import EigenVectors
+    assert _test_args(EigenVectors(X))
+
+def test_sympy__matrices__expressions__factorizations__EigenValues():
+    from sympy.matrices.expressions.factorizations import EigenValues
+    assert _test_args(EigenValues(X))
+
+def test_sympy__matrices__expressions__factorizations__UofSVD():
+    from sympy.matrices.expressions.factorizations import UofSVD
+    assert _test_args(UofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__VofSVD():
+    from sympy.matrices.expressions.factorizations import VofSVD
+    assert _test_args(VofSVD(X))
+
+def test_sympy__matrices__expressions__factorizations__SofSVD():
+    from sympy.matrices.expressions.factorizations import SofSVD
+    assert _test_args(SofSVD(X))
+
+@SKIP("abstract class")
+def test_sympy__matrices__expressions__factorizations__Factorization():
+    pass
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
@@ -1844,6 +2058,13 @@ def test_sympy__physics__quantum__cg__Wigner9j():
     from sympy.physics.quantum.cg import Wigner9j
     assert _test_args(Wigner9j(2, 1, 1, S(3)/2, S(1)/2, 1, S(1)/2, S(1)/2, 0))
 
+def test_sympy__physics__quantum__circuitplot__Mz():
+    from sympy.physics.quantum.circuitplot import Mz
+    assert _test_args(Mz(0))
+
+def test_sympy__physics__quantum__circuitplot__Mx():
+    from sympy.physics.quantum.circuitplot import Mx
+    assert _test_args(Mx(0))
 
 def test_sympy__physics__quantum__commutator__Commutator():
     from sympy.physics.quantum.commutator import Commutator
@@ -1865,6 +2086,11 @@ def test_sympy__physics__quantum__dagger__Dagger():
 def test_sympy__physics__quantum__gate__CGate():
     from sympy.physics.quantum.gate import CGate, Gate
     assert _test_args(CGate((0, 1), Gate(2)))
+
+
+def test_sympy__physics__quantum__gate__CGateS():
+    from sympy.physics.quantum.gate import CGateS, Gate
+    assert _test_args(CGateS((0, 1), Gate(2)))
 
 
 def test_sympy__physics__quantum__gate__CNotGate():
@@ -2505,9 +2731,14 @@ def test_sympy__series__order__Order():
     assert _test_args(Order(1, x, y))
 
 
-def test_sympy__simplify__cse_opts__Neg():
-    from sympy.simplify.cse_opts import Neg
-    assert _test_args(Neg())
+def test_sympy__simplify__hyperexpand__Hyper_Function():
+    from sympy.simplify.hyperexpand import Hyper_Function
+    assert _test_args(Hyper_Function([2], [1]))
+
+
+def test_sympy__simplify__hyperexpand__G_Function():
+    from sympy.simplify.hyperexpand import G_Function
+    assert _test_args(G_Function([2], [1], [], []))
 
 
 def test_sympy__tensor__indexed__Idx():
@@ -2526,6 +2757,67 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', shape=(x, y)))
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorIndexType():
+    from sympy.tensor.tensor import TensorIndexType
+    from sympy import Symbol
+    assert _test_args(TensorIndexType('Lorentz', metric=False))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorSymmetry():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
+
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorType():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorType
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    assert _test_args(TensorType([Lorentz], sym))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorHead():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, TensorHead
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    assert _test_args(TensorHead('p', S1, 0))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorIndex():
+    from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    assert _test_args(TensorIndex('i', Lorentz))
+
+@SKIP("abstract class")
+def test_sympy__tensor__tensor__TensExpr():
+    pass
+
+def test_sympy__tensor__tensor__TensAdd():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensAdd
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    p, q = S1('p,q')
+    t1 = p(a)
+    t2 = q(a)
+    assert _test_args(TensAdd(t1, t2))
+
+
+def test_sympy__tensor__tensor__TensMul():
+    from sympy.core import S
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    p = S1('p')
+    free, dum =  TensMul.from_indices(a)
+    assert _test_args(TensMul(S.One, [p], free, dum))
+
 
 
 @XFAIL
@@ -2743,3 +3035,9 @@ def test_sympy__categories__baseclasses__Category():
     d2 = Diagram([f])
     K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
+
+def test_sympy__ntheory__factor___totient():
+    from sympy.ntheory.factor_ import totient
+    k = symbols('k', integer=True)
+    t = totient(k)
+    assert _test_args(t)

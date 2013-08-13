@@ -1,20 +1,23 @@
-"""The module helps converting sympy expressions into shorter forms of them.
+"""The module helps converting SymPy expressions into shorter forms of them.
 
 for example:
 the expression E**(pi*I) will be converted into -1
 the expression (x+x)**2 will be converted into 4*x**2
 """
-from simplify import (collect, rcollect, separate, radsimp, ratsimp, fraction,
+from .simplify import (collect, rcollect, separate, radsimp, ratsimp, fraction,
     simplify, trigsimp, powsimp, combsimp, hypersimp, hypersimilar, nsimplify,
     logcombine, separatevars, numer, denom, powdenest, posify, polarify,
-    unpolarify, collect_const, signsimp, besselsimp, ratsimpmodprime)
+    unpolarify, collect_const, signsimp, besselsimp, ratsimpmodprime,
+    exptrigsimp)
 
-from sqrtdenest import sqrtdenest
+from .fu import FU, fu
 
-from cse_main import cse
+from .sqrtdenest import sqrtdenest
 
-from traversaltools import use
+from .cse_main import cse
 
-from epathtools import epath, EPath
+from .traversaltools import use
 
-from hyperexpand import hyperexpand
+from .epathtools import epath, EPath
+
+from .hyperexpand import hyperexpand

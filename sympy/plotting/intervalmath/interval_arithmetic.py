@@ -31,10 +31,10 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # A It will not affect most of the plots. The interval arithmetic
 # module based suffers the same problems as that of floating point
 # arithmetic.
-from __future__ import division
+from __future__ import print_function, division
+
 from sympy.external import import_module
 from sympy.simplify.simplify import nsimplify
-np = import_module('numpy')
 
 
 class interval(object):
@@ -81,7 +81,7 @@ class interval(object):
                 self.end = float(args[0])
 
         else:
-            raise ValueError("interval takes a maximum of two float values"
+            raise ValueError("interval takes a maximum of two float values "
                             "as arguments")
 
     @property
@@ -398,6 +398,9 @@ class interval(object):
             return other.__pow__(self)
         else:
             return NotImplemented
+
+    def __hash__(self):
+        return hash((self.is_valid, self.start, self.end))
 
 
 def _pow_float(inter, power):

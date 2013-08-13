@@ -8,8 +8,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     MatrixSymbol, subfactorial)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum, groebner
-from sympy.statistics.distributions import Normal, Sample, Uniform
+from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.geometry import Point, Circle
 
 from sympy.utilities.pytest import raises
@@ -101,15 +100,15 @@ def test_factorial():
     assert str(factorial(-2)) == "0"
     assert str(factorial(0)) == "1"
     assert str(factorial(7)) == "5040"
-    assert str(factorial(n)) == "n!"
-    assert str(factorial(2*n)) == "(2*n)!"
-    assert str(factorial(factorial(n))) == '(n!)!'
-    assert str(factorial(factorial2(n))) == '(n!!)!'
-    assert str(factorial2(factorial(n))) == '(n!)!!'
-    assert str(factorial2(factorial2(n))) == '(n!!)!!'
+    assert str(factorial(n)) == "factorial(n)"
+    assert str(factorial(2*n)) == "factorial(2*n)"
+    assert str(factorial(factorial(n))) == 'factorial(factorial(n))'
+    assert str(factorial(factorial2(n))) == 'factorial(factorial2(n))'
+    assert str(factorial2(factorial(n))) == 'factorial2(factorial(n))'
+    assert str(factorial2(factorial2(n))) == 'factorial2(factorial2(n))'
     assert str(subfactorial(3)) == "2"
-    assert str(subfactorial(n)) == "!n"
-    assert str(subfactorial(2*n)) == "!(2*n)"
+    assert str(subfactorial(n)) == "subfactorial(n)"
+    assert str(subfactorial(2*n)) == "subfactorial(2*n)"
 
 
 def test_Function():
@@ -179,13 +178,18 @@ def test_list():
     assert str([x**2, [y + x]]) == sstr([x**2, [y + x]]) == "[x**2, [x + y]]"
 
 
-def test_Matrix():
+def test_Matrix_str():
     M = Matrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
+    M = Matrix([[1]])
+    assert str(M) == sstr(M) == "Matrix([[1]])"
+    M = Matrix([[1, 2]])
+    assert str(M) == sstr(M) ==  "Matrix([[1, 2]])"
     M = Matrix()
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 0, [])"
     M = Matrix(0, 1, lambda i, j: 0)
-    assert str(M) == sstr(M) == "[]"
+    assert str(M) == sstr(M) == "Matrix(0, 1, [])"
 
 
 def test_Mul():
@@ -218,15 +222,16 @@ def test_NaN():
 def test_NegativeInfinity():
     assert str(-oo) == "-oo"
 
-
-def test_Normal():
-    assert str(Normal(x + y, z)) == "Normal(x + y, z)"
-
-
 def test_Order():
     assert str(O(x)) == "O(x)"
     assert str(O(x**2)) == "O(x**2)"
     assert str(O(x*y)) == "O(x*y, x, y)"
+    assert str(O(x, x)) == "O(x)"
+    assert str(O(x, x, 0)) == "O(x)"
+    assert str(O(x, x, oo)) == "O(x, x, oo)"
+    assert str(O(x, x, y)) == "O(x, x, y)"
+    assert str(O(x, x, y, 0)) == "O(x, x, y)"
+    assert str(O(x, x, y, oo)) == "O(x, x, y, oo)"
 
 
 def test_Permutation_Cycle():
@@ -324,8 +329,61 @@ def test_Poly():
         "Poly(-w*x**21*y**7*z - 2*x*z + (w + 1)*z**3 + 1, x, y, z, domain='ZZ[w]')"
 
     assert str(Poly(x**2 + 1, x, modulus=2)) == "Poly(x**2 + 1, x, modulus=2)"
-    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)
-               ) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
+    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
+
+
+def test_PolyRing():
+    assert str(ring("x", ZZ, lex)[0]) == "Polynomial ring in x over ZZ with lex order"
+    assert str(ring("x,y", QQ, grlex)[0]) == "Polynomial ring in x, y over QQ with grlex order"
+    assert str(ring("x,y,z", ZZ["t"], lex)[0]) == "Polynomial ring in x, y, z over ZZ[t] with lex order"
+
+
+def test_FracField():
+    assert str(field("x", ZZ, lex)[0]) == "Rational function field in x over ZZ with lex order"
+    assert str(field("x,y", QQ, grlex)[0]) == "Rational function field in x, y over QQ with grlex order"
+    assert str(field("x,y,z", ZZ["t"], lex)[0]) == "Rational function field in x, y, z over ZZ[t] with lex order"
+
+
+def test_PolyElement():
+    Ruv, u,v = ring("u,v", ZZ);
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
+
+    assert str(x - x) == "0"
+    assert str(x - 1) == "x - 1"
+    assert str(x + 1) == "x + 1"
+
+    assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
+    assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
+    assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1"
+    assert str((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == "-(u**2 - 3*u*v + 1)*x**2*y - (u + 1)*x - 1"
+
+    assert str(-(v**2 + v + 1)*x + 3*u*v + 1) == "-(v**2 + v + 1)*x + 3*u*v + 1"
+    assert str(-(v**2 + v + 1)*x - 3*u*v + 1) == "-(v**2 + v + 1)*x - 3*u*v + 1"
+
+
+def test_FracElement():
+    Fuv, u,v = field("u,v", ZZ);
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
+
+    assert str(x - x) == "0"
+    assert str(x - 1) == "x - 1"
+    assert str(x + 1) == "x + 1"
+
+    assert str(x/3) == "x/3"
+    assert str(x/z) == "x/z"
+    assert str(x*y/z) == "x*y/z"
+    assert str(x/(z*t)) == "x/(z*t)"
+    assert str(x*y/(z*t)) == "x*y/(z*t)"
+
+    assert str((x - 1)/y) == "(x - 1)/y"
+    assert str((x + 1)/y) == "(x + 1)/y"
+    assert str((-x - 1)/y) == "(-x - 1)/y"
+    assert str((x + 1)/(y*z)) == "(x + 1)/(y*z)"
+    assert str(-y/(x + 1)) == "-y/(x + 1)"
+    assert str(y*z/(x + 1)) == "y*z/(x + 1)"
+
+    assert str(((u + 1)*x*y + 1)/((v - 1)*z - 1)) == "((u + 1)*x*y + 1)/((v - 1)*z - 1)"
+    assert str(((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)) == "((u + 1)*x*y + 1)/((v - 1)*z - u*v*t - 1)"
 
 
 def test_Pow():
@@ -431,7 +489,7 @@ def test_RootSum():
     assert str(
         RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
     assert str(RootSum(f, Lambda(
-        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(z, z**2))"
 
 
 def test_GroebnerBasis():
@@ -445,18 +503,6 @@ def test_GroebnerBasis():
     assert str(groebner(F, order='lex')) == \
         "GroebnerBasis([2*x - y**2 - y + 1, y**4 + 2*y**3 - 3*y**2 - 16*y + 7], x, y, domain='ZZ', order='lex')"
 
-
-def test_Sample():
-    assert str(Sample([x, y, 1])) in [
-        "Sample([x, y, 1])",
-        "Sample([y, 1, x])",
-        "Sample([1, x, y])",
-        "Sample([y, x, 1])",
-        "Sample([x, 1, y])",
-        "Sample([1, y, x])",
-    ]
-
-
 def test_set():
     assert sstr(set()) == 'set()'
     assert sstr(frozenset()) == 'frozenset()'
@@ -468,7 +514,8 @@ def test_set():
 
 def test_SparseMatrix():
     M = SparseMatrix([[x**+1, 1], [y, x + y]])
-    assert str(M) == sstr(M) == "[x,     1]\n[y, x + y]"
+    assert str(M) == "Matrix([[x, 1], [y, x + y]])"
+    assert sstr(M) == "Matrix([\n[x,     1],\n[y, x + y]])"
 
 
 def test_Sum():
@@ -489,12 +536,6 @@ def test_tuple():
     assert str((x + y, 1 + x)) == sstr((x + y, 1 + x)) == "(x + y, x + 1)"
     assert str((x + y, (
         1 + x, x**2))) == sstr((x + y, (1 + x, x**2))) == "(x + y, (x + 1, x**2))"
-
-
-def test_Uniform():
-    assert str(Uniform(x, y)) == "Uniform(x, y)"
-    assert str(Uniform(x + y, y)) == "Uniform(x + y, y)"
-
 
 def test_Unit():
     assert str(second) == "s"
@@ -590,14 +631,14 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: 0 < x1"
+    assert str(where(X > 0)) == "Domain: x1 > 0"
 
     D = Die('d1', 6)
     assert str(where(D > 4)) == "Domain: Or(d1 == 5, d1 == 6)"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(a >= 0, b >= 0)"
 
 
 def test_FiniteSet():

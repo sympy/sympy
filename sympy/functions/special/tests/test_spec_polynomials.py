@@ -2,7 +2,7 @@ from sympy import (
     Symbol, Dummy, diff, Derivative, Rational, roots, sympify, S, sqrt, hyper,
     cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, Sum, RisingFactorial,
     legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root, chebyshevu_root,
-    laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi)
+    laguerre, assoc_laguerre, laguerre_poly, hermite, gegenbauer, jacobi, jacobi_normalized)
 
 from sympy.utilities.pytest import raises
 
@@ -47,6 +47,10 @@ def test_jacobi():
     assert diff(jacobi(n, a, b, x), x) == \
         (a/2 + b/2 + n/2 + S(1)/2)*jacobi(n - 1, a + 1, b + 1, x)
 
+    assert jacobi_normalized(n, a, b, x) == \
+           (jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)
+                                    /((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1))))
+
 
 def test_gegenbauer():
     n = Symbol("n")
@@ -71,7 +75,7 @@ def test_gegenbauer():
         gamma(a + n/2)/(gamma(a)*gamma(-n/2 + S(1)/2)*gamma(n + 1))
     assert gegenbauer(n, a, 1) == gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
-    assert gegenbauer(n, a, -1) == zoo
+    assert gegenbauer(n, Rational(3, 4), -1) == zoo
 
     m = Symbol("m", positive=True)
     assert gegenbauer(m, a, oo) == oo*RisingFactorial(a, m)

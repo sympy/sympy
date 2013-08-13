@@ -1,9 +1,12 @@
 from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                   oo, LambertW, I, meijerg, exp_polar)
+                   oo, LambertW, I, meijerg, exp_polar, Max)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.plotting.plot import matplotlib, unset_show
+from sympy.plotting.plot import unset_show
 from sympy.utilities.pytest import skip
+from sympy.plotting.experimental_lambdify import lambdify
+from sympy.external import import_module
+
 from tempfile import NamedTemporaryFile
 import warnings
 
@@ -190,11 +193,20 @@ def plot_and_save(name):
     #Characteristic function of a StudentT distribution with nu=10
     plot((meijerg(((1 / 2,), ()), ((5, 0, 1 / 2), ()), 5 * x**2 * exp_polar(-I*pi)/2)
             + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
-                5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2))
+                5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2)).save(tmp_file())
 
 
 def test_matplotlib():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         plot_and_save('test')
     else:
         skip("Matplotlib not the default backend")
+
+
+# Tests for exceptiion handling in experimental_lambdify
+def test_experimental_lambify():
+    x = Symbol('x')
+    lambdify([x], Max(x, 5))
+    assert Max(2, 5) == 5
+    assert Max(7, 5) == 7

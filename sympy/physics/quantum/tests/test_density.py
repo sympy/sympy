@@ -169,8 +169,7 @@ def test_entropy():
     assert entropy(d) == 0.5*log(2)
     assert d.entropy() == 0.5*log(2)
 
-    np = import_module(
-        'numpy', min_python_version=(2, 6), min_module_version='1.4.0')
+    np = import_module('numpy', min_module_version='1.4.0')
     if np:
         #do this test only if 'numpy' is available on test machine
         np_mat = represent(d, format='numpy')
@@ -205,8 +204,8 @@ def test_eval_trace():
     k1 = TestTimeDepKet(0, 0.5)
     k2 = TestTimeDepKet(0, 1)
     d = Density([k1, 0.5], [k2, 0.5])
-    assert d.doit() == (0.5 * OuterProduct(k1, k1.dual()) +
-                        0.5 * OuterProduct(k2, k2.dual()))
+    assert d.doit() == (0.5 * OuterProduct(k1, k1.dual) +
+                        0.5 * OuterProduct(k2, k2.dual))
 
     t = Tr(d)
     assert t.doit() == 1

@@ -1,11 +1,15 @@
 """Boolean algebra module for SymPy"""
+from __future__ import print_function, division
+
 from collections import defaultdict
+from itertools import product
 
 from sympy.core.basic import Basic
+from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import ordered, product
+from sympy.core.compatibility import ordered, xrange
 
 
 class Boolean(Basic):
@@ -62,11 +66,34 @@ class And(LatticeOp, BooleanFunction):
 
     >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
+    >>> from sympy.logic.boolalg import And
     >>> x & y
     And(x, y)
+
+    Notes
+    =====
+
+    The operator operator ``&`` will perform bitwise operations
+    on integers and for convenience will construct an Add when
+    the arguments are symbolic, but the And function does not
+    perform bitwise operations and when any argument is True it
+    is simply removed from the arguments:
+
+    >>> And(x, y).subs(x, 1)
+    y
     """
     zero = False
     identity = True
+
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, And)
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -75,9 +102,87 @@ class Or(LatticeOp, BooleanFunction):
 
     It evaluates its arguments in order, giving True immediately
     if any of them are True, and False if they are all False.
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.abc import x, y
+    >>> from sympy.logic.boolalg import Or
+    >>> x | y
+    Or(x, y)
+
+    Notes
+    =====
+
+    The operator operator ``|`` will perform bitwise operations
+    on integers and for convenience will construct an Or when
+    the arguments are symbolic, but the Or function does not
+    perform bitwise operations and when any argument is False it
+    is simply removed from the arguments:
+
+    >>> Or(x, y).subs(x, 0)
+    y
     """
     zero = True
     identity = False
+
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, Or)
+
+
+class Not(BooleanFunction):
+    """
+    Logical Not function (negation)
+
+    Notes
+    =====
+
+    De Morgan rules are applied automatically.
+    """
+
+    is_Not = True
+
+    @classmethod
+    def eval(cls, arg):
+        """
+        Logical Not function (negation)
+
+        Returns True if the statement is False
+        Returns False if the statement is True
+
+        Examples
+        ========
+
+        >>> from sympy.logic.boolalg import Not, And, Or
+        >>> from sympy.abc import x
+        >>> Not(True)
+        False
+        >>> Not(False)
+        True
+        >>> Not(And(True, False))
+        True
+        >>> Not(Or(True, False))
+        False
+        >>> Not(And(And(True, x), Or(x, False)))
+        Not(x)
+        """
+        if isinstance(arg, Number) or arg in (0, 1):
+            return False if arg else True
+        # apply De Morgan Rules
+        if arg.func is And:
+            return Or(*[Not(a) for a in arg.args])
+        if arg.func is Or:
+            return And(*[Not(a) for a in arg.args])
+        if arg.func is Not:
+            return arg.args[0]
 
 
 class Xor(BooleanFunction):
@@ -116,61 +221,6 @@ class Xor(BooleanFunction):
             B = args.pop()
             A = Or(And(A, Not(B)), And(Not(A), B))
         return A
-
-
-class Not(BooleanFunction):
-    """
-    Logical Not function (negation)
-
-    Note: De Morgan rules applied automatically
-    """
-
-    is_Not = True
-
-    @classmethod
-    def eval(cls, *args):
-        """
-        Logical Not function (negation)
-
-        Returns True if the statement is False
-        Returns False if the statement is True
-
-        Examples
-        ========
-
-        >>> from sympy.logic.boolalg import Not, And, Or
-        >>> from sympy.abc import x
-        >>> Not(True)
-        False
-        >>> Not(False)
-        True
-        >>> Not(And(True, False))
-        True
-        >>> Not(Or(True, False))
-        False
-
-        If multiple statements are given, returns an array of each result
-
-        >>> Not(True, False)
-        [False, True]
-        >>> Not(True and False, True or False, True)
-        [True, False, False]
-
-        >>> Not(And(And(True, x), Or(x, False)))
-        Not(x)
-        """
-        if len(args) > 1:
-            return map(cls, args)
-        arg = args[0]
-        if arg in (0, 1):  # includes True and False, too
-            return not bool(arg)
-        # apply De Morgan Rules
-        if arg.func is And:
-            return Or(*[Not(a) for a in arg.args])
-        if arg.func is Or:
-            return And(*[Not(a) for a in arg.args])
-        if arg.func is Not:
-            return arg.args[0]
 
 
 class Nand(BooleanFunction):
@@ -260,7 +310,13 @@ class Implies(BooleanFunction):
         True
         """
         try:
-            A, B = args
+            newargs = []
+            for x in args:
+                if isinstance(x, Number) or x in (0, 1):
+                    newargs.append(True if x else False)
+                else:
+                    newargs.append(x)
+            A, B = newargs
         except ValueError:
             raise ValueError(
                 "%d operand(s) used for an Implies "
@@ -299,7 +355,13 @@ class Equivalent(BooleanFunction):
 
         """
 
-        argset = set(args)
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        argset = set(newargs)
         if len(argset) <= 1:
             return True
         if True in argset:
@@ -425,11 +487,11 @@ def _distribute(info):
         else:
             return info[0]
         rest = info[2](*[a for a in info[0].args if a is not conj])
-        return info[1](*map(_distribute,
-                   [(info[2](c, rest), info[1], info[2]) for c in conj.args]))
+        return info[1](*list(map(_distribute,
+            [(info[2](c, rest), info[1], info[2]) for c in conj.args])))
     elif info[0].func is info[1]:
-        return info[1](*map(_distribute,
-                            [(x, info[1], info[2]) for x in info[0].args]))
+        return info[1](*list(map(_distribute,
+            [(x, info[1], info[2]) for x in info[0].args])))
     else:
         return info[0]
 
@@ -611,7 +673,7 @@ def eliminate_implications(expr):
     expr = sympify(expr)
     if expr.is_Atom:
         return expr  # (Atoms are unchanged.)
-    args = map(eliminate_implications, expr.args)
+    args = list(map(eliminate_implications, expr.args))
     if expr.func is Implies:
         a, b = args[0], args[-1]
         return (~a) | b
@@ -623,24 +685,14 @@ def eliminate_implications(expr):
 
 
 @deprecated(
-    useinstead="sympify", issue=2947, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
     A rule is a string of the form "symbol1 & symbol2 | ..."
 
-    Note: this is nearly the same as sympifying the expression, but
-    this function converts all variables to Symbols -- there are no
-    special function names recognized.
+    Note: This function is deprecated.  Use sympify() instead.
 
-    Examples
-    ========
-
-    >>> from sympy.logic.boolalg import compile_rule
-    >>> compile_rule('A & B')
-    And(A, B)
-    >>> compile_rule('(~B & ~C)|A')
-    Or(A, And(Not(B), Not(C)))
     """
     import re
     return sympify(re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)', r'Symbol("\1")', s))
@@ -661,7 +713,7 @@ def to_int_repr(clauses, symbols):
     """
 
     # Convert the symbol list into a dict
-    symbols = dict(zip(symbols, xrange(1, len(symbols) + 1)))
+    symbols = dict(list(zip(symbols, list(xrange(1, len(symbols) + 1)))))
 
     def append_symbol(arg, symbols):
         if arg.func is Not:
@@ -726,7 +778,7 @@ def _simplified_pairs(terms):
     with one less variable in the terms using QM method.
     """
     simplified_terms = []
-    todo = range(len(terms))
+    todo = list(range(len(terms)))
     for i, ti in enumerate(terms[:-1]):
         for j_i, tj in enumerate(terms[(i + 1):]):
             index = _check_pair(ti, tj)
@@ -737,7 +789,7 @@ def _simplified_pairs(terms):
                 if newterm not in simplified_terms:
                     simplified_terms.append(newterm)
     simplified_terms.extend(
-        [terms[i] for i in filter(lambda _: _ is not None, todo)])
+        [terms[i] for i in [_ for _ in todo if _ is not None]])
     return simplified_terms
 
 
@@ -905,7 +957,6 @@ def simplify_logic(expr):
     >>> from sympy.logic import simplify_logic
     >>> from sympy.abc import x, y, z
     >>> from sympy import S
-
     >>> b = '(~x & ~y & ~z) | ( ~x & ~y & z)'
     >>> simplify_logic(b)
     And(Not(x), Not(y))
@@ -923,7 +974,7 @@ def simplify_logic(expr):
     truthtable = []
     for t in product([0, 1], repeat=len(variables)):
         t = list(t)
-        if expr.subs(zip(variables, t)) == True:
+        if expr.subs(list(zip(variables, t))) == True:
             truthtable.append(t)
     if (len(truthtable) >= (2 ** (len(variables) - 1))):
         return SOPform(variables, truthtable)
@@ -953,7 +1004,7 @@ def _finger(eq):
     So y and x have unique fingerprints, but a and b do not.
     """
     f = eq.free_symbols
-    d = dict(zip(f, [[0] * 5 for fi in f]))
+    d = dict(list(zip(f, [[0] * 5 for fi in f])))
     for a in eq.args:
         if a.is_Symbol:
             d[a][0] += 1
@@ -969,7 +1020,7 @@ def _finger(eq):
                     d[ai.args[0]][3] += 1
                     d[ai.args[0]][-1] += o
     inv = defaultdict(list)
-    for k, v in ordered(d.iteritems()):
+    for k, v in ordered(iter(d.items())):
         inv[tuple(v)].append(k)
     return inv
 

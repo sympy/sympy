@@ -2,19 +2,21 @@
 Generating and counting primes.
 
 """
+from __future__ import print_function, division
+
 import random
 from bisect import bisect
 # Using arrays for sieving instead of lists greatly reduces
 # memory consumption
 from array import array as _array
 
-from sympy.core.compatibility import as_int
-from primetest import isprime
+from .primetest import isprime
+from sympy.core.compatibility import as_int, xrange
 
 
 def _arange(a, b):
     ar = _array('l', [0]*(b - a))
-    for i, e in enumerate(xrange(a, b)):
+    for i, e in enumerate(range(a, b)):
         ar[i] = e
     return ar
 
@@ -111,7 +113,7 @@ class Sieve:
         ========
 
         >>> from sympy import sieve
-        >>> print [i for i in sieve.primerange(7, 18)]
+        >>> print([i for i in sieve.primerange(7, 18)])
         [7, 11, 13, 17]
         """
         from sympy.functions.elementary.integers import ceiling
@@ -241,7 +243,6 @@ def primepi(n):
     if n < 2:
         return 0
     else:
-        n = int(n)
         return sieve.search(n)[0]
 
 
@@ -390,7 +391,7 @@ def primerange(a, b):
         ========
 
         >>> from sympy import primerange, sieve
-        >>> print [i for i in primerange(1, 30)]
+        >>> print([i for i in primerange(1, 30)])
         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
 
         The Sieve method, primerange, is generally faster but it will
@@ -563,7 +564,7 @@ def cycle_length(f, x0, nmax=None, values=False):
 
     and given a seed of 4 and the mu and lambda terms calculated:
 
-        >>> cycle_length(func, 4).next()
+        >>> next(cycle_length(func, 4))
         (6, 2)
 
     We can see what is meant by looking at the output:
@@ -577,7 +578,7 @@ def cycle_length(f, x0, nmax=None, values=False):
     If a sequence is suspected of being longer than you might wish, ``nmax``
     can be used to exit early (and mu will be returned as None):
 
-        >>> cycle_length(func, 4, nmax = 4).next()
+        >>> next(cycle_length(func, 4, nmax = 4))
         (4, None)
         >>> [ni for ni in cycle_length(func, 4, nmax = 4, values=True)]
         [17, 35, 2, 5]

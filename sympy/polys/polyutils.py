@@ -1,12 +1,16 @@
 """Useful utilities for higher level polynomial classes. """
 
-from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
+from __future__ import print_function, division
+
+from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, GeneratorsError
 from sympy.polys.polyoptions import build_options
 
 from sympy.core.exprtools import decompose_power
 
 from sympy.core import S, Add, Mul, Pow, expand_mul, expand_multinomial
 from sympy.assumptions import ask, Q
+
+from sympy.core.compatibility import xrange
 
 import re
 
@@ -248,7 +252,7 @@ def _parallel_dict_from_expr_no_gens(exprs, opt):
         for coeff, term in terms:
             monom = [0]*k
 
-            for base, exp in term.iteritems():
+            for base, exp in term.items():
                 monom[indices[base]] = exp
 
             monom = tuple(monom)
@@ -335,7 +339,7 @@ def expr_from_dict(rep, *gens):
     """Convert a multinomial form into an expression. """
     result = []
 
-    for monom, coeff in rep.iteritems():
+    for monom, coeff in rep.items():
         term = [coeff]
         for g, m in zip(gens, monom):
             if m:
@@ -358,16 +362,24 @@ def _dict_reorder(rep, gens, new_gens):
     coeffs = rep.values()
 
     new_monoms = [ [] for _ in xrange(len(rep)) ]
+    used_indices = set()
 
     for gen in new_gens:
         try:
             j = gens.index(gen)
+            used_indices.add(j)
 
             for M, new_M in zip(monoms, new_monoms):
                 new_M.append(M[j])
         except ValueError:
             for new_M in new_monoms:
                 new_M.append(0)
+
+    for i, _ in enumerate(gens):
+        if i not in used_indices:
+            for monom in monoms:
+                if monom[i]:
+                    raise GeneratorsError("unable to drop generators")
 
     return map(tuple, new_monoms), coeffs
 
@@ -391,8 +403,8 @@ class PicklableWithSlots(object):
 
     To make :mod:`pickle` happy in doctest we have to use this hack::
 
-        >>> import __builtin__ as builtin
-        >>> builtin.Some = Some
+        >>> from sympy.core.compatibility import builtins
+        >>> builtins.Some = Some
 
     Next lets see if we can create an instance, pickle it and unpickle::
 
@@ -431,7 +443,7 @@ class PicklableWithSlots(object):
 
     def __setstate__(self, d):
         # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
+        for name, value in d.items():
             try:
                 setattr(self, name, value)
             except AttributeError:    # This is needed in cases like Rational :> Half

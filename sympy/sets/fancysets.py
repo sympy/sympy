@@ -1,16 +1,19 @@
+from __future__ import print_function, division
+
 from sympy import (Dummy, S, symbols, Lambda, pi, Basic, sympify, ask, Q, Min,
         Max)
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.complexes import sign
-from sympy.core.compatibility import iterable, as_int
+from sympy.core.compatibility import iterable, as_int, with_metaclass
 from sympy.core.sets import Set, Interval, FiniteSet, Intersection
 from sympy.core.singleton import Singleton, S
+from sympy.core.decorators import deprecated
 from sympy.solvers import solve
 
 oo = S.Infinity
 
 
-class Naturals(Set):
+class Naturals(with_metaclass(Singleton, Set)):
     """
     Represents the Natural Numbers. The Naturals are available as a singleton
     as S.Naturals
@@ -22,22 +25,23 @@ class Naturals(Set):
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Naturals)
-        >>> print iterable.next()
+        >>> print(next(iterable))
         1
-        >>> print iterable.next()
+        >>> print(next(iterable))
         2
-        >>> print iterable.next()
+        >>> print(next(iterable))
         3
         >>> pprint(S.Naturals.intersect(Interval(0, 10)))
         {1, 2, ..., 10}
     """
 
-    __metaclass__ = Singleton
     is_iterable = True
+    _inf = S.One
+    _sup = oo
 
     def _intersect(self, other):
         if other.is_Interval:
-            return Intersection(S.Integers, other, Interval(1, oo))
+            return Intersection(S.Integers, other, Interval(self._inf, oo))
         return None
 
     def _contains(self, other):
@@ -46,21 +50,25 @@ class Naturals(Set):
         return False
 
     def __iter__(self):
-        i = S(1)
+        i = self._inf
         while True:
             yield i
             i = i + 1
 
-    @property
-    def _inf(self):
-        return S.One
+class Naturals0(Naturals):
+    """ The Natural Numbers starting at 0
 
-    @property
-    def _sup(self):
-        return oo
+    See also:
+        S.Naturals - starts at 1
+    """
+    _inf = S.Zero
 
+    def _contains(self, other):
+        if ask(Q.negative(other)) == False and ask(Q.integer(other)):
+            return True
+        return False
 
-class Integers(Set):
+class Integers(with_metaclass(Singleton, Set)):
     """
     Represents the Integers. The Integers are available as a singleton
     as S.Integers
@@ -72,20 +80,19 @@ class Integers(Set):
         >>> 5 in S.Naturals
         True
         >>> iterable = iter(S.Integers)
-        >>> print iterable.next()
+        >>> print(next(iterable))
         0
-        >>> print iterable.next()
+        >>> print(next(iterable))
         1
-        >>> print iterable.next()
+        >>> print(next(iterable))
         -1
-        >>> print iterable.next()
+        >>> print(next(iterable))
         2
 
         >>> pprint(S.Integers.intersect(Interval(-4, 4)))
         {-4, -3, ..., 4}
     """
 
-    __metaclass__ = Singleton
     is_iterable = True
 
     def _intersect(self, other):
@@ -116,24 +123,23 @@ class Integers(Set):
         return oo
 
 
-class Reals(Interval):
-    __metaclass__ = Singleton
+class Reals(with_metaclass(Singleton, Interval)):
 
     def __new__(cls):
         return Interval.__new__(cls, -oo, oo)
 
 
-class TransformationSet(Set):
+class ImageSet(Set):
     """
-    A set that is a transformation of another through some algebraic expression
+    Image of a set under a mathematical function
 
     Examples
     --------
-    >>> from sympy import Symbol, S, TransformationSet, FiniteSet, Lambda
+    >>> from sympy import Symbol, S, ImageSet, FiniteSet, Lambda
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
-    >>> squares = TransformationSet(Lambda(x, x**2), N) # {x**2 for x in N}
+    >>> squares = ImageSet(Lambda(x, x**2), N) # {x**2 for x in N}
     >>> 4 in squares
     True
     >>> 5 in squares
@@ -144,7 +150,7 @@ class TransformationSet(Set):
 
     >>> square_iterable = iter(squares)
     >>> for i in range(4):
-    ...     square_iterable.next()
+    ...     next(square_iterable)
     1
     4
     9
@@ -191,6 +197,12 @@ class TransformationSet(Set):
         return self.base_set.is_iterable
 
 
+@deprecated(useinstead="ImageSet", issue=3958, deprecated_since_version="0.7.4")
+def TransformationSet(*args, **kwargs):
+    """Deprecated alias for the ImageSet constructor."""
+    return ImageSet(*args, **kwargs)
+
+
 class Range(Set):
     """
     Represents a range of integers.
@@ -220,7 +232,7 @@ class Range(Set):
             start, stop, step = [S(as_int(w)) for w in (start, stop, step)]
         except ValueError:
             raise ValueError("Inputs to Range must be Integer Valued\n" +
-                    "Use TransformationSets of Ranges for other cases")
+                    "Use ImageSets of Ranges for other cases")
         n = ceiling((stop - start)/step)
         if n <= 0:
             return S.EmptySet

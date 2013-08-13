@@ -1,12 +1,15 @@
+import warnings
+
 from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sqrt, symbols, tan)
+                   simplify, sin, sqrt, symbols, tan)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, centroid)
 from sympy.geometry.line import Undecidable
 from sympy.geometry.entity import rotate, scale, translate
 from sympy.geometry.polygon import _asa as asa, rad, deg
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.randtest import test_numerically
+from sympy.utilities.pytest import raises
 
 x = Symbol('x', real=True)
 y = Symbol('y', real=True)
@@ -71,6 +74,7 @@ def test_point():
     p2 = Point(y1, y2)
     p3 = Point(0, 0)
     p4 = Point(1, 1)
+    p5 = Point(0, 1)
 
     assert p1 in p1
     assert p1 not in p2
@@ -96,6 +100,7 @@ def test_point():
     assert Point.is_collinear(p3, p4)
     assert Point.is_collinear(p3, p4, p1_1, p1_2)
     assert Point.is_collinear(p3, p4, p1_1, p1_3) is False
+    assert Point.is_collinear(p3, p3, p4, p5) is False
 
     assert p3.intersection(Point(0, 0)) == [p3]
     assert p3.intersection(p4) == []
@@ -193,7 +198,7 @@ def test_line():
     assert Line(p1, p2).scale(2, 1) == Line(p1, p9)
 
     assert l2.arbitrary_point() in l2
-    for ind in xrange(0, 5):
+    for ind in range(0, 5):
         assert l3.random_point() in l3
 
     # Orthogonality
@@ -250,9 +255,8 @@ def test_line():
     assert Ray((1, 1), angle=3.0*pi) == Ray((1, 1), (0, 1))
     assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
-    # XXX don't know why this fails without str
-    assert str(Ray((1, 1), angle=4.05*pi)) == str(Ray(Point(1, 1),
-               Point(2, 1 + C.tan(0.05*pi))))
+    assert Ray((1, 1), angle=4.05*pi) == Ray(Point(1, 1),
+               Point(2, 1 + C.tan(4.05*pi)))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
 
@@ -268,7 +272,7 @@ def test_line():
     assert r3 != r1
     t = Symbol('t', real=True)
     assert Ray((1, 1), angle=pi/4).arbitrary_point() == \
-        Point(1/(1 - t), 1/(1 - t))
+        Point(t + 1, t + 1)
 
     s1 = Segment(p1, p2)
     s2 = Segment(p1, p1_1)
@@ -382,7 +386,7 @@ def test_line():
     assert Line(p1, p10) != p1
     assert Line(p1, p10).plot_interval() == [t, -5, 5]
     assert Ray((0, 0), angle=pi/4).plot_interval() == \
-        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
+        [t, 0, 10]
 
 
 def test_ellipse():
@@ -414,7 +418,7 @@ def test_ellipse():
     assert p2 not in e2
     assert e1.area == pi
     assert e2.area == pi/2
-    assert e3.area == pi*(y1**2)
+    assert e3.area == pi*y1*abs(y1)
     assert c1.area == e1.area
     assert c1.circumference == e1.circumference
     assert e3.circumference == 2*pi*y1
@@ -603,11 +607,17 @@ def test_ellipse():
     assert e.rotate(pi/3, (1, 2)) == \
         Ellipse(Point(S(1)/2 + sqrt(3), -sqrt(3)/2 + 1), 2, 1)
 
+    # transformations
+    c = Circle((1, 1), 2)
+    assert c.scale(-1) == Circle((-1, 1), 2)
+    assert c.scale(y=-1) == Circle((1, -1), 2)
+    assert c.scale(2) == Ellipse((2, 1), 4, 2)
+
 
 def test_ellipse_random_point():
     e3 = Ellipse(Point(0, 0), y1, y1)
     rx, ry = Symbol('rx'), Symbol('ry')
-    for ind in xrange(0, 5):
+    for ind in range(0, 5):
         r = e3.random_point()
         # substitution should give zero*y1**2
         assert e3.equation(rx, ry).subs(zip((rx, ry), r.args)).equals(0)
@@ -661,8 +671,12 @@ def test_polygon():
         Polygon(Point(10, 10), Point(14, 14), Point(10, 14))) == 6 * sqrt(2)
     assert p5.distance(
         Polygon(Point(1, 8), Point(5, 8), Point(8, 12), Point(1, 12))) == 4
+    warnings.filterwarnings(
+        "error", message="Polygons may intersect producing erroneous output")
     raises(UserWarning,
            lambda: Polygon(Point(0, 0), Point(1, 0), Point(1, 1)).distance(Polygon(Point(0, 0), Point(0, 1), Point(1, 1))))
+    warnings.filterwarnings(
+        "ignore", message="Polygons may intersect producing erroneous output")
     assert hash(p5) == hash(Polygon(Point(0, 0), Point(4, 4), Point(0, 4)))
     assert p5 == Polygon(Point(4, 4), Point(0, 4), Point(0, 0))
     assert Polygon(Point(4, 4), Point(0, 4), Point(0, 0)) in p5
@@ -840,33 +854,19 @@ def test_polygon():
     assert p2.distance(pt1) == Rational(3)/4
     assert p3.distance(pt2) == sqrt(2)/2
 
-
-@XFAIL
-def test_polygon_to_polygon():
     '''Polygon to Polygon'''
-    # XXX: Because of the way the warnings filters work, this will fail if it's
-    # run more than once in the same session.  See issue 2492.
-
-    import warnings
     # p1.distance(p2) emits a warning
     # First, test the warning
-    warnings.filterwarnings(
-        "error", "Polygons may intersect producing erroneous output")
+    warnings.filterwarnings("error",
+        message="Polygons may intersect producing erroneous output")
     raises(UserWarning, lambda: p1.distance(p2))
     # now test the actual output
-    warnings.filterwarnings(
-        "ignore", "Polygons may intersect producing erroneous output")
+    warnings.filterwarnings("ignore",
+        message="Polygons may intersect producing erroneous output")
     assert p1.distance(p2) == half/2
-    # Keep testing reasonably thread safe, so reset the warning
-    warnings.filterwarnings(
-        "default", "Polygons may intersect producing erroneous output")
-    # Note, in Python 2.6+, this can be done more nicely using the
-    # warnings.catch_warnings context manager.
-    # See http://docs.python.org/library/warnings#testing-warnings.
 
     assert p1.distance(p3) == sqrt(2)/2
     assert p3.distance(p4) == (sqrt(2)/2 - sqrt(Rational(2)/25)/2)
-    assert p5.distance(p6) == Rational(7)/10
 
 
 def test_convex_hull():
@@ -994,10 +994,8 @@ def test_line_intersection():
         Triangle(
             Point(0, 0),
             Point(8, 0),
-            Point((8*tan(13*pi/45)**2 + 8*sqrt(3)*tan(13*pi/45))/
-                (-3 + tan(13*pi/45)**2),
-            (-24*tan(13*pi/45) - 8*sqrt(3)*tan(13*pi/45)**2)/
-                (-3 + tan(13*pi/45)**2)))
+            Point(-4*cos(19*pi/90)/sin(2*pi/45),
+            4*sqrt(3)*cos(19*pi/90)/sin(2*pi/45)))
     assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == \
         [Point(1, 1)]
     assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == \
@@ -1062,3 +1060,43 @@ def test_geometry_transforms():
         [[1, 0, 0], [0, 2, 0], [0, -4, 1]]
     assert RegularPolygon((0, 0), 1, 4).scale(2, 3, (4, 5)) == \
         Polygon(Point(-2, -10), Point(-4, -7), Point(-6, -10), Point(-4, -13))
+
+def test_reflect():
+    b = Symbol('b')
+    m = Symbol('m')
+    l = Line((0, b), slope=m)
+    p = Point(x, y)
+    r = p.reflect(l)
+    dp = l.perpendicular_segment(p).length
+    dr = l.perpendicular_segment(r).length
+    assert test_numerically(dp, dr)
+    t = Triangle((0, 0), (1, 0), (2, 3))
+    assert t.area == -t.reflect(l).area
+    e = Ellipse((1, 0), 1, 2)
+    assert e.area == -e.reflect(Line((1, 0), slope=0)).area
+    assert e.area == -e.reflect(Line((1, 0), slope=oo)).area
+    raises(NotImplementedError, lambda: e.reflect(Line((1,0), slope=m)))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=oo)) \
+        == Triangle(Point(5, 0), Point(4, 0), Point(4, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=oo)) \
+        == Triangle(Point(-1, 0), Point(-2, 0), Point(-2, 2))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((0, 3), slope=0)) \
+        == Triangle(Point(1, 6), Point(2, 6), Point(2, 4))
+    assert Polygon((1, 0), (2, 0), (2, 2)).reflect(Line((3, 0), slope=0)) \
+        == Triangle(Point(1, 0), Point(2, 0), Point(2, -2))
+
+    # test entity overrides
+    c = Circle((x, y), 3)
+    cr = c.reflect(l)
+    assert cr == Circle(r, -3)
+    assert c.area == -cr.area
+    pent = RegularPolygon((1, 2), 1, 5)
+    l = Line((0, pi), slope=sqrt(2))
+    rpent = pent.reflect(l)
+    poly_pent = Polygon(*pent.vertices)
+    assert rpent.center == pent.center.reflect(l)
+    assert str([w.n(3) for w in rpent.vertices]) == (
+        '[Point(-0.586, 4.27), Point(-1.69, 4.66), '
+        'Point(-2.41, 3.73), Point(-1.74, 2.76), '
+        'Point(-0.616, 3.10)]')
+    assert pent.area.equals(-rpent.area)

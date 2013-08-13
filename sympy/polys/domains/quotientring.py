@@ -1,15 +1,19 @@
 """Implementation of :class:`QuotientRing` class."""
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.ring import Ring
 from sympy.polys.polyerrors import NotReversible, CoercionFailed
 from sympy.polys.agca.modules import FreeModuleQuotientRing
+
+from sympy.utilities import public
 
 # TODO
 # - successive quotients (when quotient ideals are implemented)
 # - poly rings over quotients?
 # - division by non-units in integral domains?
 
-
+@public
 class QuotientRingElement(object):
     """
     Class representing elements of (commutative) quotient rings.
@@ -88,27 +92,27 @@ class QuotientRing(Ring):
     """
     Class representing (commutative) quotient rings.
 
-    You should not usually instatiate this by hand, instead use the constructor
-    from the ring you are quotienting out by:
+    You should not usually instantiate this by hand, instead use the constructor
+    from the base ring in the construction.
 
     >>> from sympy.abc import x
     >>> from sympy import QQ
-    >>> I = QQ[x].ideal(x**3 + 1)
-    >>> QQ[x].quotient_ring(I)
+    >>> I = QQ.old_poly_ring(x).ideal(x**3 + 1)
+    >>> QQ.old_poly_ring(x).quotient_ring(I)
     QQ[x]/<x**3 + 1>
 
     Shorter versions are possible:
 
-    >>> QQ[x]/I
+    >>> QQ.old_poly_ring(x)/I
     QQ[x]/<x**3 + 1>
 
-    >>> QQ[x]/[x**3 + 1]
+    >>> QQ.old_poly_ring(x)/[x**3 + 1]
     QQ[x]/<x**3 + 1>
 
     Attributes:
 
     - ring - the base ring
-    - base_ideal - the ideal we are quotienting by
+    - base_ideal - the ideal used to form the quotient
     """
 
     has_assoc_Ring = True
@@ -129,7 +133,7 @@ class QuotientRing(Ring):
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.ring, self.base_ideal))
 
-    def __call__(self, a):
+    def new(self, a):
         """Construct an element of `self` domain from `a`. """
         if not isinstance(a, self.ring.dtype):
             a = self.ring(a)
@@ -138,25 +142,17 @@ class QuotientRing(Ring):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        if not isinstance(other, QuotientRing):
-            return False
-        return self.ring == other.ring and self.base_ideal == other.base_ideal
-
-    def __ne__(self, other):
-        """Returns `False` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return isinstance(other, QuotientRing) and \
+            self.ring == other.ring and self.base_ideal == other.base_ideal
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
         return K1(K1.ring.convert(a, K0))
 
     from_QQ_python = from_ZZ_python
-    from_ZZ_sympy = from_ZZ_python
-    from_QQ_sympy = from_ZZ_python
     from_ZZ_gmpy = from_ZZ_python
     from_QQ_gmpy = from_ZZ_python
-    from_RR_sympy = from_ZZ_python
-    from_RR_mpmath = from_ZZ_python
+    from_RealField = from_ZZ_python
     from_GlobalPolynomialRing = from_ZZ_python
     from_FractionField = from_ZZ_python
 
@@ -197,7 +193,7 @@ class QuotientRing(Ring):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> (QQ[x]/[x**2 + 1]).free_module(2)
+        >>> (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(2)
         (QQ[x]/<x**2 + 1>)**2
         """
         return FreeModuleQuotientRing(self, rank)

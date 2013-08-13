@@ -25,8 +25,9 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
+from __future__ import print_function, division
+
 from sympy.core import oo, S, pi, Expr
-from sympy.core.compatibility import next
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -49,7 +50,7 @@ def _create_lookup_table(table):
     """ Add formulae for the function -> meijerg lookup table. """
     def wild(n):
         return Wild(n, exclude=[z])
-    p, q, a, b, c = map(wild, 'pqabc')
+    p, q, a, b, c = list(map(wild, 'pqabc'))
     n = Wild('n', properties=[lambda x: x.is_Integer and x > 0])
     t = p*z**q
 
@@ -81,7 +82,7 @@ def _create_lookup_table(table):
 
     # Section 8.4.2
     from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
-                       factorial, log, erf, polar_lift)
+                       factorial, log, erf, erfc, erfi, polar_lift)
     # TODO this needs more polar_lift (c/f entry for exp)
     add(Heaviside(t - b)*(t - b)**(a - 1), [a], [], [], [0], t/b,
         gamma(a)*b**(a - 1), And(b > 0))
@@ -190,9 +191,12 @@ def _create_lookup_table(table):
     add(expint(a, t), [], [a], [a - 1, 0], [], t)
 
     # Section 8.4.14
-    # TODO erfc
     add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
     # TODO exp(-x)*erf(I*x) does not work
+    add(erfc(t), [], [1], [0, S(1)/2], [], t**2, 1/sqrt(pi))
+    # This formula for erfi(z) yields a wrong(?) minus sign
+    #add(erfi(t), [1], [], [S(1)/2], [0], -t**2, I/sqrt(pi))
+    add(erfi(t), [S(1)/2], [], [0], [-S(1)/2], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
     add(fresnels(t), [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
@@ -248,6 +252,11 @@ def _create_lookup_table(table):
     add(besselk(a, t), [], [], [a/2, -a/2], [], t**2/4, S(1)/2)
     # TODO many more formulas. should all be derivable
 
+    # Complete elliptic integrals K(z) and E(z)
+    from sympy import elliptic_k, elliptic_e
+    add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
+    add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, -S.Half/2)
+
 
 ####################################################################
 # First some helper functions.
@@ -259,7 +268,7 @@ timeit = timethis('meijerg')
 
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
-    if not f.has(x):
+    if x not in f.free_symbols:
         return ()
     elif f.is_Function:
         return (type(f),)
@@ -343,7 +352,7 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if e.has(x))
+    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
 
 
 def _find_splitting_points(expr, x):
@@ -362,7 +371,7 @@ def _find_splitting_points(expr, x):
     set([-3, 0])
     """
     from sympy import Tuple
-    p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
+    p, q = [Wild(n, exclude=[x]) for n in 'pq']
 
     def compute_innermost(expr, res):
         if not isinstance(expr, Expr):
@@ -401,10 +410,10 @@ def _split_mul(f, x):
     for a in args:
         if a == x:
             po *= x
-        elif not a.has(x):
+        elif x not in a.free_symbols:
             fac *= a
         else:
-            if a.is_Pow:
+            if a.is_Pow and x not in a.exp.free_symbols:
                 c, t = a.base.as_coeff_mul(x)
                 if t != (x,):
                     c, t = expand_mul(a.base).as_coeff_mul(x)
@@ -532,7 +541,7 @@ def _dummy(name, token, expr, **kwargs):
     This is for being cache-friendly.
     """
     d = _dummy_(name, token, **kwargs)
-    if expr.has(d):
+    if d in expr.free_symbols:
         return Dummy(name, **kwargs)
     return d
 
@@ -552,7 +561,7 @@ def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
     from sympy import Heaviside, Abs
-    return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
+    return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
 def _condsimp(cond):
@@ -576,7 +585,7 @@ def _condsimp(cond):
     from sympy.logic.boolalg import BooleanFunction
     if not isinstance(cond, BooleanFunction):
         return cond
-    cond = cond.func(*map(_condsimp, cond.args))
+    cond = cond.func(*list(map(_condsimp, cond.args)))
     change = True
     p, q, r = symbols('p q r', cls=Wild)
     rules = [
@@ -597,7 +606,7 @@ def _condsimp(cond):
             if fro.func != cond.func:
                 continue
             for n, arg in enumerate(cond.args):
-                if fro.args[0].has(r):
+                if r in fro.args[0].free_symbols:
                     m = arg.match(fro.args[1])
                     num = 1
                 else:
@@ -605,8 +614,7 @@ def _condsimp(cond):
                     m = arg.match(fro.args[0])
                 if not m:
                     continue
-                otherargs = map(
-                    lambda x: x.subs(m), fro.args[:num] + fro.args[num + 1:])
+                otherargs = [x.subs(m) for x in fro.args[:num] + fro.args[num + 1:]]
                 otherlist = [n]
                 for arg2 in otherargs:
                     for k, arg3 in enumerate(cond.args):
@@ -871,10 +879,10 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     _, s = _get_coeff_exp(po, x)
     _, b1 = _get_coeff_exp(g1.argument, x)
     _, b2 = _get_coeff_exp(g2.argument, x)
-    if b1 < 0:
+    if (b1 < 0) is True:
         b1 = -b1
         g1 = _flip_g(g1)
-    if b2 < 0:
+    if (b2 < 0) is True:
         b2 = -b2
         g2 = _flip_g(g2)
     if not b1.is_Rational or not b2.is_Rational:
@@ -962,7 +970,7 @@ def _check_antecedents(g1, g2, x):
         for a in g1.an:
             for b in g1.bm:
                 diff = a - b
-                if diff > 0 and diff.is_integer:
+                if (diff > 0) is True and diff.is_integer:
                     c1 = False
 
     tmp = []
@@ -1502,7 +1510,7 @@ def _rewrite_single(f, x, recursive=True):
         # (also if the dummy is already in the expression, there is no point in
         #  putting in another one)
         a = _dummy_('a', 'rewrite-single')
-        if not f.has(a) and _is_analytic(f, x):
+        if a not in f.free_symbols and _is_analytic(f, x):
             try:
                 F, strip, _ = mellin_transform(f.subs(x, a*x), x, s,
                                                integrator=my_integrator,
@@ -1630,7 +1638,7 @@ def _meijerint_indefinite_1(f, x):
 
         def tr(p):
             return [a + rho + 1 for a in p]
-        if any(b.is_integer and b <= 0 for b in tr(g.bm)):
+        if any(b.is_integer and (b <= 0) is True for b in tr(g.bm)):
             r = -meijerg(
                 tr(g.an), tr(g.aother) + [1], tr(g.bm) + [0], tr(g.bother), t)
         else:
@@ -1988,7 +1996,7 @@ def meijerint_inversion(f, x, t):
                 if arg2.is_Mul:
                     args += arg2.args
                     continue
-                if not arg.base.has(x):
+                if x not in arg.base.free_symbols:
                     try:
                         a, b = _get_coeff_exp(arg.exp, x)
                     except _CoeffExpValueError:

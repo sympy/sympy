@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Integer
 from sympy.core.compatibility import is_sequence
 
@@ -22,19 +24,22 @@ from util import parse_option_string
 
 from sympy.geometry.entity import GeometryEntity
 
+from sympy.utilities.decorator import doctest_depends_on
 
+@doctest_depends_on(modules=('pyglet',))
 class PygletPlot(object):
     """
     Plot Examples
     =============
 
-    See examples/plotting.py for many more examples.
+    See examples/advaned/pyglet_plotting.py for many more examples.
 
 
-    >>> from sympy import Plot
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> from sympy.abc import x, y, z
 
     >>> Plot(x*y**3-y*x**3)
+    [0]: -x**3*y + x*y**3, 'mode=cartesian'
 
     >>> p = Plot()
     >>> p[1] = x*y
@@ -53,13 +58,20 @@ class PygletPlot(object):
     from the defaults for the current coordinate mode:
 
     >>> Plot(x**2) # implies [x,-5,5,100]
+    [0]: x**2, 'mode=cartesian'
     >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40]
+    [0]: x**2, 'mode=cartesian'
     >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100]
+    [0]: x**2 - y**2, 'mode=cartesian'
     >>> Plot(x**2, [x,-13,13,100])
+    [0]: x**2, 'mode=cartesian'
     >>> Plot(x**2, [-13,13]) # [x,-13,13,100]
-    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,100]
+    [0]: x**2, 'mode=cartesian'
+    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,10]
+    [0]: x**2, 'mode=cartesian'
     >>> Plot(1*x, [], [x], mode='cylindrical')
     ... # [unbound_theta,0,2*Pi,40], [x,-1,1,20]
+    [0]: x, 'mode=cartesian'
 
 
     Coordinate Modes
@@ -84,7 +96,7 @@ class PygletPlot(object):
     1: parametric, cartesian, polar
     2: parametric, cartesian, cylindrical = polar, spherical
 
-    >>> Plot(1, mode='spherical')
+    >>> Plot(1, mode='spherical') # doctest: +SKIP
 
 
     Calculator-like Interface
@@ -94,8 +106,8 @@ class PygletPlot(object):
     >>> f = x**2
     >>> p[1] = f
     >>> p[2] = f.diff(x)
-    >>> p[3] = f.diff(x).diff(x)
-    >>> p
+    >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
+    >>> p # doctest: +SKIP
     [1]: x**2, 'mode=cartesian'
     [2]: 2*x, 'mode=cartesian'
     [3]: 2, 'mode=cartesian'
@@ -145,6 +157,7 @@ class PygletPlot(object):
 
     """
 
+    @doctest_depends_on(modules=('pyglet',))
     def __init__(self, *fargs, **win_args):
         """
         Positional Arguments
@@ -154,6 +167,7 @@ class PygletPlot(object):
         initialize a plot function at index 1. In
         other words...
 
+        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
         >>> from sympy.core import Symbol
         >>> from sympy.abc import x
         >>> p = Plot(x**2, visible=False)
@@ -242,6 +256,10 @@ class PygletPlot(object):
         else:
             self._win_args['visible'] = True
             self.axes.reset_resources()
+
+            if hasattr(self, '_doctest_depends_on'):
+                self._win_args['runfromdoctester'] = True
+
             self._window = PlotWindow(self, **self._win_args)
 
     def close(self):
@@ -384,7 +402,6 @@ class PygletPlot(object):
                 sleep(0)
         self._render_lock.release()
 
-
 class ScreenShot:
     def __init__(self, plot):
         self._plot = plot
@@ -398,6 +415,8 @@ class ScreenShot:
         if self.screenshot_requested:
             return 1
         return 0
+
+    __bool__ = __nonzero__
 
     def _execute_saving(self):
         if self.flag < 3:
@@ -436,7 +455,7 @@ class ScreenShot:
 
         if self.outfile is None:
             self.outfile = self._create_unique_path()
-            print self.outfile
+            print(self.outfile)
 
     def _create_unique_path(self):
         cwd = getcwd()

@@ -9,6 +9,8 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
+from __future__ import print_function, division
+
 from sympy import Derivative, Expr
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
@@ -97,6 +99,7 @@ class Operator(QExpr):
     @classmethod
     def default_args(self):
         return ("O",)
+
     #-------------------------------------------------------------------------
     # Printing
     #-------------------------------------------------------------------------
@@ -163,17 +166,12 @@ class Operator(QExpr):
     def matrix_element(self, *args):
         raise NotImplementedError('matrix_elements is not defined')
 
-    #-------------------------------------------------------------------------
-    # Printing
-    #-------------------------------------------------------------------------
-
     def inverse(self):
         return self._eval_inverse()
 
     inv = inverse
 
     def _eval_inverse(self):
-        # TODO: make non-commutative Exprs print powers using A**-1, not 1/A.
         return self**(-1)
 
 

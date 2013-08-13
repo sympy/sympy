@@ -1,18 +1,18 @@
 """Implementation of :class:`PythonRationalField` class. """
 
-from sympy.polys.domains.rationalfield import RationalField
+from __future__ import print_function, division
 
-from sympy.polys.domains.groundtypes import PythonIntegerType
-from sympy.polys.domains.groundtypes import PythonRationalType
-from sympy.polys.domains.groundtypes import SymPyRationalType
+from sympy.polys.domains.rationalfield import RationalField
+from sympy.polys.domains.groundtypes import PythonInteger, PythonRational, SymPyRational
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
-
+@public
 class PythonRationalField(RationalField):
     """Rational field based on Python rational number type. """
 
-    dtype = PythonRationalType
+    dtype = PythonRational
     zero = dtype(0)
     one = dtype(1)
     alias = 'QQ_python'
@@ -20,52 +20,47 @@ class PythonRationalField(RationalField):
     def __init__(self):
         pass
 
+    def get_ring(self):
+        """Returns ring associated with ``self``. """
+        from sympy.polys.domains import PythonIntegerRing
+        return PythonIntegerRing()
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        return SymPyRationalType(a.numerator, a.denominator)
+        return SymPyRational(a.numerator, a.denominator)
 
     def from_sympy(self, a):
         """Convert SymPy's Rational to `dtype`. """
         if a.is_Rational:
-            return PythonRationalType(a.p, a.q)
+            return PythonRational(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR
-            return PythonRationalType(*RR.as_integer_ratio(a))
+            p, q = RR.to_rational(a)
+            return PythonRational(int(p), int(q))
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
-        return PythonRationalType(a)
+        return PythonRational(a)
 
     def from_QQ_python(K1, a, K0):
         """Convert a Python `Fraction` object to `dtype`. """
         return a
 
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
-        return PythonRationalType(a.p)
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
-        return PythonRationalType(a.p, a.q)
-
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
-        return PythonRationalType(PythonIntegerType(a))
+        return PythonRational(PythonInteger(a))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return PythonRationalType(PythonIntegerType(a.numer()),
-                                  PythonIntegerType(a.denom()))
+        return PythonRational(PythonInteger(a.numer()),
+                              PythonInteger(a.denom()))
 
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Float` object to `dtype`. """
-        return PythonRationalType(*K0.as_integer_ratio(a))
-
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return PythonRationalType(*K0.as_integer_ratio(a))
+        p, q = K0.to_rational(a)
+        return PythonRational(int(p), int(q))
 
     def numer(self, a):
         """Returns numerator of `a`. """

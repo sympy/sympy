@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from sympy.core import Dummy, Wild, S
-from sympy.core.numbers import Rational, Integer
-from sympy.functions import binomial, sin, cos, tan, sec, csc, cot
-from sympy.core.cache import cacheit
+from __future__ import print_function, division
+
+from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
+from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -25,7 +25,7 @@ def _pat_sincos(x):
 _u = Dummy('u')
 
 
-def trigintegrate(f, x):
+def trigintegrate(f, x, conds='piecewise'):
     """Integrate f = Mul(trig) over x
 
        >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
@@ -64,6 +64,7 @@ def trigintegrate(f, x):
     n, m = M[n], M[m]
     if n is S.Zero and m is S.Zero:
         return x
+    zz = x if n is S.Zero else S.Zero
 
     a = M[a]
 
@@ -90,6 +91,8 @@ def trigintegrate(f, x):
 
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
+        if conds == 'piecewise':
+            return Piecewise((zz, Eq(a, 0)), (fx / a, True))
         return fx / a
 
     # n & m are both even
@@ -216,6 +219,8 @@ def trigintegrate(f, x):
                 res = (Rational(-1, m + 1) * cos(x)**(m + 1) * sin(x)**(n - 1) +
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
+    if conds == 'piecewise':
+        return Piecewise((zz, Eq(a, 0)), (res.subs(x, a*x) / a, True))
     return res.subs(x, a*x) / a
 
 

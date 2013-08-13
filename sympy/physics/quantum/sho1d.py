@@ -1,6 +1,9 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
+from __future__ import print_function, division
+
 from sympy import sqrt, I, Symbol, Integer, S
+from sympy.core.compatibility import u
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State
@@ -37,7 +40,7 @@ class RaisingOp(SHOOp):
 
     When a^dagger acts on a state it raises the state up by one. Taking
     the adjoint of a^dagger returns 'a', the Lowering Operator. a^dagger
-    can be rewritten in terms of postion and momentum. We can represent
+    can be rewritten in terms of position and momentum. We can represent
     a^dagger as a matrix, which will be its default basis.
 
     Parameters
@@ -50,14 +53,14 @@ class RaisingOp(SHOOp):
     Examples
     ========
 
-    Create a Raising Operator and rewrite it in terms of positon and
+    Create a Raising Operator and rewrite it in terms of position and
     momentum, and show that taking its adjoint returns 'a':
 
         >>> from sympy.physics.quantum.sho1d import RaisingOp
         >>> from sympy.physics.quantum import Dagger
 
         >>> ad = RaisingOp('a')
-        >>> ad().rewrite('xp').doit()
+        >>> ad.rewrite('xp').doit()
         sqrt(2)*(m*omega*X - I*Px)/(2*sqrt(hbar)*sqrt(m*omega))
 
         >>> Dagger(ad)
@@ -93,10 +96,11 @@ class RaisingOp(SHOOp):
         >>> from sympy.physics.quantum.represent import represent
         >>> ad = RaisingOp('a')
         >>> represent(ad, basis=N, ndim=4, format='sympy')
-        [0,       0,       0, 0]
-        [1,       0,       0, 0]
-        [0, sqrt(2),       0, 0]
-        [0,       0, sqrt(3), 0]
+        Matrix([
+        [0,       0,       0, 0],
+        [1,       0,       0, 0],
+        [0, sqrt(2),       0, 0],
+        [0,       0, sqrt(3), 0]])
 
     """
 
@@ -121,7 +125,7 @@ class RaisingOp(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -153,7 +157,7 @@ class RaisingOp(SHOOp):
     def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\u2020')
+        pform = pform**prettyForm(u('\u2020'))
         return pform
 
     def _print_contents_latex(self, printer, *args):
@@ -178,14 +182,14 @@ class LoweringOp(SHOOp):
     Examples
     ========
 
-    Create a Lowering Operator and rewrite it in terms of positon and
+    Create a Lowering Operator and rewrite it in terms of position and
     momentum, and show that taking its adjoint returns a^dagger:
 
         >>> from sympy.physics.quantum.sho1d import LoweringOp
         >>> from sympy.physics.quantum import Dagger
 
         >>> a = LoweringOp('a')
-        >>> a().rewrite('xp').doit()
+        >>> a.rewrite('xp').doit()
         sqrt(2)*(m*omega*X + I*Px)/(2*sqrt(hbar)*sqrt(m*omega))
 
         >>> Dagger(a)
@@ -231,10 +235,11 @@ class LoweringOp(SHOOp):
         >>> from sympy.physics.quantum.represent import represent
         >>> a = LoweringOp('a')
         >>> represent(a, basis=N, ndim=4, format='sympy')
-        [0, 1,       0,       0]
-        [0, 0, sqrt(2),       0]
-        [0, 0,       0, sqrt(3)]
-        [0, 0,       0,       0]
+        Matrix([
+        [0, 1,       0,       0],
+        [0, 0, sqrt(2),       0],
+        [0, 0,       0, sqrt(3)],
+        [0, 0,       0,       0]])
 
     """
 
@@ -262,7 +267,7 @@ class LoweringOp(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -309,11 +314,11 @@ class NumberOp(SHOOp):
         >>> from sympy.physics.quantum.sho1d import NumberOp
 
         >>> N = NumberOp('N')
-        >>> N().rewrite('a').doit()
+        >>> N.rewrite('a').doit()
         RaisingOp(a)*a
-        >>> N().rewrite('xp').doit()
+        >>> N.rewrite('xp').doit()
         -1/2 + (m**2*omega**2*X**2 + Px**2)/(2*hbar*m*omega)
-        >>> N().rewrite('H').doit()
+        >>> N.rewrite('H').doit()
         -1/2 + H/(hbar*omega)
 
     Take the Commutator of the Number Operator with other Operators:
@@ -349,10 +354,11 @@ class NumberOp(SHOOp):
         >>> from sympy.physics.quantum.represent import represent
         >>> N = NumberOp('N')
         >>> represent(N, basis=N, ndim=4, format='sympy')
-        [0, 0, 0, 0]
-        [0, 1, 0, 0]
-        [0, 0, 2, 0]
-        [0, 0, 0, 3]
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 2, 0],
+        [0, 0, 0, 3]])
 
     """
 
@@ -382,7 +388,7 @@ class NumberOp(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -428,11 +434,11 @@ class Hamiltonian(SHOOp):
         >>> from sympy.physics.quantum.sho1d import Hamiltonian
 
         >>> H = Hamiltonian('H')
-        >>> H().rewrite('a').doit()
+        >>> H.rewrite('a').doit()
         hbar*omega*(1/2 + RaisingOp(a)*a)
-        >>> H().rewrite('xp').doit()
+        >>> H.rewrite('xp').doit()
         (m**2*omega**2*X**2 + Px**2)/(2*m)
-        >>> H().rewrite('N').doit()
+        >>> H.rewrite('N').doit()
         hbar*omega*(1/2 + N)
 
     Take the Commutator of the Hamiltonian and the Number Operator:
@@ -462,10 +468,11 @@ class Hamiltonian(SHOOp):
 
         >>> H = Hamiltonian('H')
         >>> represent(H, basis=N, ndim=4, format='sympy')
-        [hbar*omega/2,              0,              0,              0]
-        [           0, 3*hbar*omega/2,              0,              0]
-        [           0,              0, 5*hbar*omega/2,              0]
-        [           0,              0,              0, 7*hbar*omega/2]
+        Matrix([
+        [hbar*omega/2,              0,              0,              0],
+        [           0, 3*hbar*omega/2,              0,              0],
+        [           0,              0, 5*hbar*omega/2,              0],
+        [           0,              0,              0, 7*hbar*omega/2]])
 
     """
 
@@ -488,7 +495,7 @@ class Hamiltonian(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -506,7 +513,7 @@ class Hamiltonian(SHOOp):
                 value = float(value)
             matrix[i,i] = value
         if format == 'scipy.sparse':
-            matirx = matrix.tocsr()
+            matrix = matrix.tocsr()
         return hbar*omega*matrix
 
 #------------------------------------------------------------------------------
@@ -556,7 +563,7 @@ class SHOKet(SHOState, Ket):
         >>> k = SHOKet('k')
         >>> b = SHOBra('b')
         >>> InnerProduct(b,k).doit()
-        KroneckerDelta(k, b)
+        KroneckerDelta(b, k)
 
     Vector representation of a numerical state ket:
 
@@ -566,10 +573,11 @@ class SHOKet(SHOState, Ket):
         >>> k = SHOKet(3)
         >>> N = NumberOp('N')
         >>> represent(k, basis=N, ndim=4)
-        [0]
-        [0]
-        [0]
-        [1]
+        Matrix([
+        [0],
+        [0],
+        [0],
+        [1]])
 
     """
 
@@ -638,7 +646,7 @@ class SHOBra(SHOState, Bra):
         >>> b = SHOBra(3)
         >>> N = NumberOp('N')
         >>> represent(b, basis=N, ndim=4)
-        [0, 0, 0, 1]
+        Matrix([[0, 0, 0, 1]])
 
     """
 
@@ -652,7 +660,7 @@ class SHOBra(SHOState, Bra):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        opitons['spmatrix'] = 'lil'
+        options['spmatrix'] = 'lil'
         vector = matrix_zeros(1, ndim_info, **options)
         if isinstance(self.n, Integer):
             if self.n >= ndim_info:

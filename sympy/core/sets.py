@@ -1,10 +1,13 @@
+from __future__ import print_function, division
+
+from itertools import product
+
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable
-from sympy.core.decorators import deprecated
+from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
@@ -225,6 +228,10 @@ class Set(Basic):
         """
         return self._measure
 
+    def _eval_imageset(self, f):
+        from sympy.sets.fancysets import ImageSet
+        return ImageSet(f, self)
+
     @property
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
@@ -383,7 +390,6 @@ class ProductSet(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            from sympy.core.compatibility import product
             return product(*self.sets)
         else:
             raise TypeError("Not all constituent sets are iterable")
@@ -410,7 +416,7 @@ class Interval(Set, EvalfMixin):
     Examples
     ========
 
-    >>> from sympy import Symbol, Interval, sets
+    >>> from sympy import Symbol, Interval
 
     >>> Interval(0, 1)
     [0, 1]
@@ -629,6 +635,22 @@ class Interval(Set, EvalfMixin):
 
         return expr
 
+    def _eval_imageset(self, f):
+        # Cut out 0, perform image, add back in image of 0
+        if self.contains(0) == True:
+            return imageset(f, self - FiniteSet(0)) + imageset(f, FiniteSet(0))
+
+        from sympy.functions.elementary.miscellaneous import Min, Max
+        # TODO: manage left_open and right_open better in case of
+        # non-comparable left/right (e.g. Interval(x, y))
+        _left, _right = f(self.left), f(self.right)
+        left, right = Min(_left, _right), Max(_left, _right)
+        if _right == left: # switch happened
+            left_open, right_open = self.right_open, self.left_open
+        else:
+            left_open, right_open = self.left_open, self.right_open
+        return Interval(left, right, left_open, right_open)
+
     @property
     def _measure(self):
         return self.end - self.start
@@ -660,27 +682,21 @@ class Interval(Set, EvalfMixin):
 
     def as_relational(self, symbol):
         """Rewrite an interval in terms of inequalities and logic operators. """
-        from sympy.core.relational import Lt, Le
-
-        if not self.is_left_unbounded:
-            if self.left_open:
-                left = Lt(self.start, symbol)
-            else:
-                left = Le(self.start, symbol)
-
-        if not self.is_right_unbounded:
-            if self.right_open:
-                right = Lt(symbol, self.right)
-            else:
-                right = Le(symbol, self.right)
-        if self.is_left_unbounded and self.is_right_unbounded:
-            return True  # XXX: Contained(symbol, Floats)
-        elif self.is_left_unbounded:
-            return right
-        elif self.is_right_unbounded:
-            return left
+        other = sympify(symbol)
+        if self.right_open:
+            right = other < self.end
         else:
-            return And(left, right)
+            right = other <= self.end
+        if right is True:
+            if self.left_open:
+                return other > self.start
+            else:
+                return other >= self.start
+        if self.left_open:
+            left = self.start < other
+        else:
+            left = self.start <= other
+        return And(left, right)
 
     @property
     def free_symbols(self):
@@ -857,6 +873,9 @@ class Union(Set, EvalfMixin):
             parity *= -1
         return measure
 
+    def _eval_imageset(self, f):
+        return Union(imageset(f, arg) for arg in self.args)
+
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
         return Or(*[set.as_relational(symbol) for set in self.args])
@@ -955,6 +974,9 @@ class Intersection(Set):
     def _complement(self):
         raise NotImplementedError()
 
+    def _eval_imageset(self, f):
+        return Intersection(imageset(f, arg) for arg in self.args)
+
     def _contains(self, other):
         from sympy.logic.boolalg import And
         return And(*[set.contains(other) for set in self.args])
@@ -1030,7 +1052,7 @@ class Intersection(Set):
         return And(*[set.as_relational(symbol) for set in self.args])
 
 
-class EmptySet(Set):
+class EmptySet(with_metaclass(Singleton, Set)):
     """
     Represents the empty set. The empty set is available as a singleton
     as S.EmptySet.
@@ -1054,7 +1076,6 @@ class EmptySet(Set):
     ==========
     http://en.wikipedia.org/wiki/Empty_set
     """
-    __metaclass__ = Singleton
     is_EmptySet = True
 
     def _intersect(self, other):
@@ -1083,8 +1104,10 @@ class EmptySet(Set):
     def __iter__(self):
         return iter([])
 
+    def _eval_imageset(self, f):
+        return self
 
-class UniversalSet(Set):
+class UniversalSet(with_metaclass(Singleton, Set)):
     """
     Represents the set of all things.
     The universal set is available as a singleton as S.UniversalSet
@@ -1109,7 +1132,6 @@ class UniversalSet(Set):
     http://en.wikipedia.org/wiki/Universal_set
     """
 
-    __metaclass__ = Singleton
     is_UniversalSet = True
 
     def _intersect(self, other):
@@ -1140,7 +1162,7 @@ class FiniteSet(Set, EvalfMixin):
     Examples
     ========
 
-        >>> from sympy import Symbol, FiniteSet, sets
+        >>> from sympy import FiniteSet
 
         >>> FiniteSet(1, 2, 3, 4)
         {1, 2, 3, 4}
@@ -1160,7 +1182,7 @@ class FiniteSet(Set, EvalfMixin):
             if len(args) == 1 and iterable(args[0]):
                 args = args[0]
 
-            args = map(sympify, args)
+            args = list(map(sympify, args))
 
             if len(args) == 0:
                 return EmptySet()
@@ -1217,6 +1239,9 @@ class FiniteSet(Set, EvalfMixin):
 
         """
         return other in self._elements
+
+    def _eval_imageset(self, f):
+        return FiniteSet(*map(f, self))
 
     @property
     def _complement(self):
@@ -1287,3 +1312,33 @@ class FiniteSet(Set, EvalfMixin):
     def _sorted_args(self):
         from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
+
+def imageset(*args):
+    """ Image of set under transformation ``f``
+
+    .. math::
+        { f(x) | x \in self }
+
+    Examples
+    ========
+
+    >>> from sympy import Interval, Symbol, imageset
+    >>> x = Symbol('x')
+
+    >>> imageset(x, 2*x, Interval(0, 2))
+    [0, 4]
+
+    >>> imageset(lambda x: 2*x, Interval(0, 2))
+    [0, 4]
+
+    See Also:
+        ImageSet
+    """
+    if len(args) == 3:
+        from sympy import Lambda
+        f = Lambda(*args[:2])
+    else:
+        f = args[0]
+    set = args[-1]
+
+    return set._eval_imageset(f)

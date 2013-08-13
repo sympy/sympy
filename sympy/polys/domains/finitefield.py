@@ -1,18 +1,22 @@
 """Implementation of :class:`FiniteField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.domains.groundtypes import SymPyIntegerType
+from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.utilities import public
 
-
+@public
 class FiniteField(Field, SimpleDomain):
     """General class for finite fields. """
 
     rep = 'FF'
 
+    is_FiniteField = is_FF = True
     is_Numerical = True
 
     has_assoc_Ring = False
@@ -21,14 +25,17 @@ class FiniteField(Field, SimpleDomain):
     dom = None
     mod = None
 
-    def __init__(self, mod, symmetric=True):
+    def __init__(self, mod, dom=None, symmetric=True):
         if mod <= 0:
-            raise ValueError(
-                'modulus must be a positive integer, got %s' % mod)
+            raise ValueError('modulus must be a positive integer, got %s' % mod)
+        if dom is None:
+            from sympy.polys.domains import ZZ
+            dom = ZZ
 
-        self.dtype = ModularIntegerFactory(mod, self.dom, symmetric)
+        self.dtype = ModularIntegerFactory(mod, dom, symmetric, self)
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
+        self.dom = dom
         self.mod = mod
 
     def __str__(self):
@@ -42,11 +49,6 @@ class FiniteField(Field, SimpleDomain):
         return isinstance(other, FiniteField) and \
             self.mod == other.mod and self.dom == other.dom
 
-    def __ne__(self, other):
-        """Returns ``False`` if two domains are equivalent. """
-        return not isinstance(other, FiniteField) or \
-            self.mod != other.mod or self.dom != other.dom
-
     def characteristic(self):
         """Return the characteristic of this domain. """
         return self.mod
@@ -57,7 +59,7 @@ class FiniteField(Field, SimpleDomain):
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        return SymPyIntegerType(int(a))
+        return SymPyInteger(int(a))
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to SymPy's ``Integer``. """
@@ -81,19 +83,6 @@ class FiniteField(Field, SimpleDomain):
         if a.denominator == 1:
             return K1.from_ZZ_python(a.numerator)
 
-    def from_FF_sympy(K1, a, K0=None):
-        """Convert ``ModularInteger(Integer)`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ_sympy(a.val, K0.dom))
-
-    def from_ZZ_sympy(K1, a, K0=None):
-        """Convert SymPy's ``Integer`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ_sympy(a, K0))
-
-    def from_QQ_sympy(K1, a, K0=None):
-        """Convert SymPy's ``Rational`` to ``dtype``. """
-        if a.q == 1:
-            return K1.from_ZZ_python(a.p)
-
     def from_FF_gmpy(K1, a, K0=None):
         """Convert ``ModularInteger(mpz)`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_gmpy(a.val, K0.dom))
@@ -104,19 +93,12 @@ class FiniteField(Field, SimpleDomain):
 
     def from_QQ_gmpy(K1, a, K0=None):
         """Convert GMPY's ``mpq`` to ``dtype``. """
-        if a.denom() == 1:
-            return K1.from_ZZ_gmpy(a.numer())
+        if a.denominator == 1:
+            return K1.from_ZZ_gmpy(a.numerator)
 
-    def from_RR_sympy(K1, a, K0=None):
-        """Convert SymPy's ``Float`` to ``dtype``. """
-        p, q = K0.as_integer_ratio(a)
-
-        if q == 1:
-            return K1.dtype(self.dom.dtype(p))
-
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert mpmath's ``mpf`` to ``dtype``. """
-        p, q = K0.as_integer_ratio(a)
+        p, q = K0.to_rational(a)
 
         if q == 1:
             return K1.dtype(self.dom.dtype(p))

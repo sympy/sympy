@@ -1,16 +1,21 @@
+from __future__ import print_function, division
+
 from sympy.core.assumptions import StdFactKB
-from basic import Basic
-from core import C
-from sympify import sympify
-from singleton import S
-from expr import Expr, AtomicExpr
-from cache import cacheit
-from function import FunctionClass
+from sympy.core.compatibility import string_types
+from .basic import Basic
+from .core import C
+from .sympify import sympify
+from .singleton import S
+from .expr import Expr, AtomicExpr
+from .cache import cacheit
+from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
+from sympy.utilities.iterables import cartes
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-import re, string
+import string
+import re as _re
 
 
 class Symbol(AtomicExpr, Boolean):
@@ -60,14 +65,6 @@ class Symbol(AtomicExpr, Boolean):
 
         """
 
-        if 'dummy' in assumptions:
-            SymPyDeprecationWarning(
-                feature="Symbol('x', dummy=True)",
-                useinstead="Dummy() or symbols(..., cls=Dummy)",
-                issue=3378, deprecated_since_version="0.7.0",
-            ).warn()
-            if assumptions.pop('dummy'):
-                return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
             return S.Zero
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
@@ -78,7 +75,8 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        assert isinstance(name, str), repr(type(name))
+        if not isinstance(name, string_types):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)
@@ -96,12 +94,12 @@ class Symbol(AtomicExpr, Boolean):
         return {'_assumptions': self._assumptions}
 
     def _hashable_content(self):
-        return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
+        return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
         return dict((key, value) for key, value
-                in self._assumptions.iteritems() if value is not None)
+                in self._assumptions.items() if value is not None)
 
     @cacheit
     def sort_key(self, order=None):
@@ -111,7 +109,7 @@ class Symbol(AtomicExpr, Boolean):
         return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):
-        from function import Function
+        from .function import Function
         return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True, **hints):
@@ -149,9 +147,8 @@ class Dummy(Symbol):
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
-    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
-    >>> Dummy()          # used here to make sure that the doctest passes.
-    _0
+    >>> Dummy() #doctest: +SKIP
+    _Dummy_10
 
     """
 
@@ -163,7 +160,7 @@ class Dummy(Symbol):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = str(Dummy._count)
+            name = "Dummy_" + str(Dummy._count)
 
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
@@ -249,10 +246,8 @@ class Wild(Symbol):
     def __call__(self, *args, **kwargs):
         raise TypeError("'%s' object is not callable" % type(self).__name__)
 
-_re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
-_re_var_scope = re.compile(r"^(.*?|)(.):(.)(.*?|)$")
-_re_var_split = re.compile(r"\s*,\s*|\s+")
 
+_range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
 def symbols(names, **args):
     """
@@ -288,13 +283,21 @@ def symbols(names, **args):
         >>> symbols('x', seq=True)
         (x,)
 
-    To reduce typing, range syntax is supported to create indexed symbols::
+    To reduce typing, range syntax is supported to create indexed symbols.
+    Ranges are indicated by a colon and the type of range is determined by
+    the character to the right of the colon. If the character is a digit
+    then all continguous digits to the left are taken as the nonnegative
+    starting value (or 0 if there are no digit of the colon) and all
+    contiguous digits to the right are taken as 1 greater than the ending
+    value::
 
         >>> symbols('x:10')
         (x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
 
         >>> symbols('x5:10')
         (x5, x6, x7, x8, x9)
+        >>> symbols('x5(:2)')
+        (x50, x51)
 
         >>> symbols('x5:10,y:5')
         (x5, x6, x7, x8, x9, y0, y1, y2, y3, y4)
@@ -302,18 +305,46 @@ def symbols(names, **args):
         >>> symbols(('x5:10', 'y:5'))
         ((x5, x6, x7, x8, x9), (y0, y1, y2, y3, y4))
 
-    To reduce typing even more, lexicographic range syntax is supported::
+    If the character to the right of the colon is a letter, then the single
+    letter to the left (or 'a' if there is none) is taken as the start
+    and all characters in the lexicographic range *through* the letter to
+    the right are used as the range::
 
         >>> symbols('x:z')
         (x, y, z)
+        >>> symbols('x:c')  # null range
+        ()
+        >>> symbols('x(:c)')
+        (xa, xb, xc)
 
-        >>> symbols('a:d,x:z')
+        >>> symbols(':c')
+        (a, b, c)
+
+        >>> symbols('a:d, x:z')
         (a, b, c, d, x, y, z)
 
         >>> symbols(('a:d', 'x:z'))
         ((a, b, c, d), (x, y, z))
 
-    All newly created symbols have assumptions set accordingly to ``args``::
+    Multiple ranges are supported; contiguous numerical ranges should be
+    separated by parentheses to disambiguate the ending number of one
+    range from the starting number of the next::
+
+        >>> symbols('x:2(1:3)')
+        (x01, x02, x11, x12)
+        >>> symbols(':3:2')  # parsing is from left to right
+        (00, 01, 10, 11, 20, 21)
+
+    Only one pair of parentheses surrounding ranges are removed, so to
+    include parentheses around ranges, double them. And to include spaces,
+    commas, or colons, escape them with a backslash::
+
+        >>> symbols('x((a:b))')
+        (x(a), x(b))
+        >>> symbols('x(:1\,:2)')  # or 'x((:1)\,(:2))'
+        (x(0,0), x(0,1))
+
+    All newly created symbols have assumptions set according to ``args``::
 
         >>> a = symbols('a', integer=True)
         >>> a.is_integer
@@ -323,9 +354,9 @@ def symbols(names, **args):
         >>> x.is_real and y.is_real and z.is_real
         True
 
-    Despite its name, :func:`symbols` can create symbol--like objects of
-    other type, for example instances of Function or Wild classes. To
-    achieve this, set ``cls`` keyword argument to the desired type::
+    Despite its name, :func:`symbols` can create symbol-like objects like
+    instances of Function or Wild classes. To achieve this, set ``cls``
+    keyword argument to the desired type::
 
         >>> symbols('f,g,h', cls=Function)
         (f, g, h)
@@ -346,7 +377,24 @@ def symbols(names, **args):
             issue=1919, deprecated_since_version="0.7.0", value=value
         ).warn()
 
-    if isinstance(names, basestring):
+    if isinstance(names, string_types):
+        marker = 0
+        literals = ['\,', '\:', '\ ']
+        for i in range(len(literals)):
+            lit = literals.pop(0)
+            if lit in names:
+                while chr(marker) in names:
+                    marker += 1
+                lit_char = chr(marker)
+                marker += 1
+                names = names.replace(lit, lit_char)
+                literals.append((lit_char, lit[1:]))
+        def literal(s):
+            if literals:
+                for c, l in literals:
+                    s = s.replace(c, l)
+            return s
+
         names = names.strip()
         as_seq = names.endswith(',')
         if as_seq:
@@ -354,7 +402,14 @@ def symbols(names, **args):
         if not names:
             raise ValueError('no symbols given')
 
-        names = _re_var_split.split(names)
+        # split on commas
+        names = [n.strip() for n in names.split(',')]
+        if not all(n for n in names):
+            raise ValueError('missing symbol between commas')
+        # split on spaces
+        for i in range(len(names) - 1, -1, -1):
+            names[i: i + 1] = names[i].split()
+
         if args.pop('each_char', False) and not as_seq and len(names) == 1:
             return symbols(tuple(names[0]), **args)
 
@@ -366,49 +421,50 @@ def symbols(names, **args):
                 raise ValueError('missing symbol')
 
             if ':' not in name:
-                symbol = cls(name, **args)
+                symbol = cls(literal(name), **args)
                 result.append(symbol)
                 continue
 
-            match = _re_var_range.match(name)
-
-            if match is not None:
-                name, start, end = match.groups()
-
-                if not start:
-                    start = 0
+            split = _range.split(name)
+            # remove 1 layer of bounding parentheses around ranges
+            for i in range(len(split) - 1):
+                if i and ':' in split[i] and split[i] != ':' and \
+                        split[i - 1].endswith('(') and \
+                        split[i + 1].startswith(')'):
+                    split[i - 1] = split[i - 1][:-1]
+                    split[i + 1] = split[i + 1][1:]
+            for i, s in enumerate(split):
+                if ':' in s:
+                    if s[-1].endswith(':'):
+                        raise ValueError('missing end range')
+                    a, b = s.split(':')
+                    if b[-1] in string.digits:
+                        a = 0 if not a else int(a)
+                        b = int(b)
+                        split[i] = [str(c) for c in range(a, b)]
+                    else:
+                        a = a or 'a'
+                        split[i] = [string.ascii_letters[c] for c in range(
+                            string.ascii_letters.index(a),
+                            string.ascii_letters.index(b) + 1)]  # inclusive
+                    if not split[i]:
+                        break
                 else:
-                    start = int(start)
-
-                for i in xrange(start, int(end)):
-                    symbol = cls("%s%i" % (name, i), **args)
-                    result.append(symbol)
-
+                    split[i] = [s]
+            else:
                 seq = True
-                continue
-
-            match = _re_var_scope.match(name)
-
-            if match is not None:
-                name, start, end, suffix = match.groups()
-                letters = list(string.ascii_lowercase + string.ascii_uppercase
-                        + string.digits)
-                start = letters.index(start)
-                end = letters.index(end)
-
-                for subname in xrange(start, end + 1):
-                    symbol = cls(name + letters[subname] + suffix, **args)
-                    result.append(symbol)
-
-                seq = True
-                continue
-
-            raise ValueError(
-                "'%s' is not a valid symbol range specification" % name)
+                if len(split) == 1:
+                    names = split[0]
+                else:
+                    names = [''.join(s) for s in cartes(*split)]
+                if literals:
+                    result.extend([cls(literal(s), **args) for s in names])
+                else:
+                    result.extend([cls(s, **args) for s in names])
 
         if not seq and len(result) <= 1:
             if not result:
-                raise ValueError('missing symbol')  # should never happen
+                return ()
             return result[0]
 
         return tuple(result)

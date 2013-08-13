@@ -1,3 +1,5 @@
+from itertools import product as cartes
+
 from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
                    tan, cot, integrate, Sum, sign)
@@ -6,7 +8,6 @@ from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.core.compatibility import product as cartes
 
 
 def test_basic1():
@@ -31,11 +32,10 @@ def test_basic1():
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) -
            log(y), y, oo))
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
@@ -116,7 +116,6 @@ def test_floor():
     assert limit(floor(x), x, 248, "-") == 247
 
 
-@XFAIL
 def test_floor_requires_robust_assumptions():
     assert limit(floor(sin(x)), x, 0, "+") == 0
     assert limit(floor(sin(x)), x, 0, "-") == -1
@@ -143,7 +142,6 @@ def test_ceiling():
     assert limit(ceiling(x), x, 248, "-") == 248
 
 
-@XFAIL
 def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(sin(x)), x, 0, "+") == 1
     assert limit(ceiling(sin(x)), x, 0, "-") == 0
@@ -188,6 +186,7 @@ def test_exponential():
     assert limit((1 + x/(2*n))**n, n, oo) == exp(x/2)
     assert limit((1 + x/(2*n + 1))**n, n, oo) == exp(x/2)
     assert limit(((x - 1)/(x + 1))**x, x, oo) == exp(-2)
+    assert limit(1 + (1 + 1/x)**x, x, oo) == 1 + S.Exp1
 
 
 @XFAIL
@@ -258,8 +257,8 @@ def test_issue2084():
             assert limit(eq, x, 0, dir=d) == res
         except AssertionError:
             if 0:  # change to 1 if you want to see the failing tests
-                print
-                print i, res, eq, d, limit(eq, x, 0, dir=d)
+                print()
+                print(i, res, eq, d, limit(eq, x, 0, dir=d))
             else:
                 assert None
 
@@ -272,7 +271,6 @@ def test_issue2085():
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
 
-@XFAIL
 def test_issue2130():
     assert limit((1 + y)**(1/y) - S.Exp1, y, 0) == 0
 
@@ -292,8 +290,8 @@ def test_issue1447():
             assert limit(eq, x, l, dir=d) == res
         except AssertionError:
             if 0:  # change to 1 if you want to see the failing tests
-                print
-                print i, res, eq, l, d, limit(eq, x, l, dir=d)
+                print()
+                print(i, res, eq, l, d, limit(eq, x, l, dir=d))
             else:
                 assert None
 
@@ -327,10 +325,6 @@ def test_extended_real_line():
     assert limit(x**2/(x - 5) - oo, x, oo) == -oo
     assert limit(1/(x + sin(x)) - oo, x, 0) == -oo
     assert limit(oo/x, x, oo) == oo
-
-
-@XFAIL
-def test_extended_real_line_fail():
     assert limit(x - oo + 1/x, x, oo) == -oo
     assert limit(x - oo + 1/x, x, 0) == -oo
 
@@ -357,6 +351,10 @@ def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
 
+def test_rational():
+    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,oo) ==  1/y - 1/(y*z)
+    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,-oo) ==  1/y - 1/(y*z)
+
 
 def test_issue_2641():
     assert limit(log(x)/z - log(2*x)/z, x, 0) == -log(2)/z
@@ -365,4 +363,27 @@ def test_issue_2641():
 def test_issue_3267():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
-    assert limit(r, x, 1) == n/2
+    assert limit(r, x, 1).simplify() == n/2
+
+
+def test_factorial():
+    from sympy import factorial, E
+    f = factorial(x)
+    assert limit(f, x, oo) == oo
+    assert limit(x/f, x, oo) == 0
+    # see Stirling's approximation:
+    # http://en.wikipedia.org/wiki/Stirling's_approximation
+    assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
+    assert limit(f, x, -oo) == factorial(-oo)
+    assert limit(f, x, x**2) == factorial(x**2)
+    assert limit(f, x, -x**2) == factorial(-x**2)
+
+
+def test_issue_3461():
+    e = 5*x**3/4 - 3*x/4 + (y*(3*x**2/2 - S(1)/2) + \
+        35*x**4/8 - 15*x**2/4 + S(3)/8)/(2*(y + 1))
+    assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
+
+
+def test_issue_2641():
+    assert limit(log(x)*z - log(2*x)*y, x, 0) == oo*sign(y - z)

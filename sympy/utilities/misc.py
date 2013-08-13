@@ -1,6 +1,10 @@
 """Miscellaneous stuff that doesn't really fit anywhere else."""
 
+from __future__ import print_function, division
+
+import os
 from textwrap import fill, dedent
+from sympy.core.compatibility import get_function_name
 
 # if you use
 # filldedent('''
@@ -29,21 +33,21 @@ def rawlines(s):
     >>> from sympy.utilities.misc import rawlines
     >>> from sympy import TableForm
     >>> s = str(TableForm([[1, 10]], headings=(None, ['a', 'bee'])))
-    >>> print rawlines(s) # the \\ appears as \ when printed
+    >>> print(rawlines(s)) # the \\ appears as \ when printed
     (
         'a bee\\n'
         '-----\\n'
         '1 10 '
     )
-    >>> print rawlines('''this
-    ... that''')
+    >>> print(rawlines('''this
+    ... that'''))
     dedent('''\\
         this
         that''')
 
-    >>> print rawlines('''this
+    >>> print(rawlines('''this
     ... that
-    ... ''')
+    ... '''))
     dedent('''\\
         this
         that
@@ -52,15 +56,15 @@ def rawlines(s):
     >>> s = \"\"\"this
     ... is a triple '''
     ... \"\"\"
-    >>> print rawlines(s)
+    >>> print(rawlines(s))
     dedent(\"\"\"\\
         this
         is a triple '''
         \"\"\")
 
-    >>> print rawlines('''this
+    >>> print(rawlines('''this
     ... that
-    ...     ''')
+    ...     '''))
     (
         'this\\n'
         'that\\n'
@@ -98,10 +102,73 @@ if size > 2**32:
 else:
     ARCH = "32-bit"
 
-# Python 2.5 does not have sys.flags (it doesn't have hash randomization either)
-HASH_RANDOMIZATION = hasattr(sys, 'flags') and getattr(sys.flags,
-                                                       'hash_randomization',
-                                                       False)
+
+# XXX: PyPy doesn't support hash randomization
+HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
+
+_debug_tmp = []
+_debug_iter = 0
+
+def debug_decorator(func):
+    """If SYMPY_DEBUG is True, it will print a nice execution tree with
+    arguments and results of all decorated functions, else do nothing.
+    """
+    from sympy import SYMPY_DEBUG
+
+    if not SYMPY_DEBUG:
+        return func
+
+    def maketree(f, *args, **kw):
+        global _debug_tmp
+        global _debug_iter
+        oldtmp = _debug_tmp
+        _debug_tmp = []
+        _debug_iter += 1
+
+        def tree(subtrees):
+            def indent(s, type=1):
+                x = s.split("\n")
+                r = "+-%s\n" % x[0]
+                for a in x[1:]:
+                    if a == "":
+                        continue
+                    if type == 1:
+                        r += "| %s\n" % a
+                    else:
+                        r += "  %s\n" % a
+                return r
+            if len(subtrees) == 0:
+                return ""
+            f = []
+            for a in subtrees[:-1]:
+                f.append(indent(a))
+            f.append(indent(subtrees[-1], 2))
+            return ''.join(f)
+
+        # If there is a bug and the algorithm enters an infinite loop, enable the
+        # following lines. It will print the names and parameters of all major functions
+        # that are called, *before* they are called
+        #from sympy.core.compatibility import reduce
+        #print("%s%s %s%s" % (_debug_iter, reduce(lambda x, y: x + y, \
+        #    map(lambda x: '-', range(1, 2 + _debug_iter))), get_function_name(f), args))
+
+        r = f(*args, **kw)
+
+        _debug_iter -= 1
+        s = "%s%s = %s\n" % (get_function_name(f), args, r)
+        if _debug_tmp != []:
+            s += tree(_debug_tmp)
+        _debug_tmp = oldtmp
+        _debug_tmp.append(s)
+        if _debug_iter == 0:
+            print((_debug_tmp[0]))
+            _debug_tmp = []
+        return r
+
+    def decorated(*args, **kwargs):
+        return maketree(func, *args, **kwargs)
+
+    return decorated
 
 
 def debug(*args):
@@ -111,5 +178,39 @@ def debug(*args):
     from sympy import SYMPY_DEBUG
     if SYMPY_DEBUG:
         for a in args:
-            print a,
-        print
+            print(a, end="")
+        print()
+
+
+def find_executable(executable, path=None):
+    """Try to find 'executable' in the directories listed in 'path' (a
+    string listing directories separated by 'os.pathsep'; defaults to
+    os.environ['PATH']).  Returns the complete filename or None if not
+    found
+    """
+    if path is None:
+        path = os.environ['PATH']
+    paths = path.split(os.pathsep)
+    extlist = ['']
+    if os.name == 'os2':
+        (base, ext) = os.path.splitext(executable)
+        # executable files on OS/2 can have an arbitrary extension, but
+        # .exe is automatically appended if no dot is present in the name
+        if not ext:
+            executable = executable + ".exe"
+    elif sys.platform == 'win32':
+        pathext = os.environ['PATHEXT'].lower().split(os.pathsep)
+        (base, ext) = os.path.splitext(executable)
+        if ext.lower() not in pathext:
+            extlist = pathext
+    for ext in extlist:
+        execname = executable + ext
+        if os.path.isfile(execname):
+            return execname
+        else:
+            for p in paths:
+                f = os.path.join(p, execname)
+                if os.path.isfile(f):
+                    return f
+    else:
+        return None

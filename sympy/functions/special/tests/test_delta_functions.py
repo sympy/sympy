@@ -1,13 +1,11 @@
 from sympy import (
     adjoint, conjugate, DiracDelta, Heaviside, nan, oo, pi, sqrt, symbols,
-    transpose,
+    transpose, Symbol, Piecewise, I, S, Eq
 )
 
 from sympy.utilities.pytest import raises
 
 from sympy.core.function import ArgumentIndexError
-
-from sympy.core import I
 
 x, y = symbols('x y')
 
@@ -66,3 +64,10 @@ def test_heaviside():
     raises(ArgumentIndexError, lambda: Heaviside(x).fdiff(2))
     raises(ValueError, lambda: Heaviside(I))
     raises(ValueError, lambda: Heaviside(2 + 3*I))
+
+
+def test_rewrite():
+    x, y = Symbol('x', real=True), Symbol('y')
+    assert Heaviside(x).rewrite(Piecewise) == \
+        Piecewise((1, x > 0), (S(1)/2, Eq(x, 0)), (0, True))
+    assert Heaviside(y).rewrite(Piecewise) == Heaviside(y)

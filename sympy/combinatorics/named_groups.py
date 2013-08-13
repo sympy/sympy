@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.group_constructs import DirectProduct
 from sympy.combinatorics.permutations import Permutation
@@ -84,15 +86,15 @@ def AlternatingGroup(n):
     if n in (1, 2):
         return PermutationGroup([Permutation([0])])
 
-    a = range(n)
+    a = list(range(n))
     a[0], a[1], a[2] = a[1], a[2], a[0]
     gen1 = a
     if n % 2:
-        a = range(1, n)
+        a = list(range(1, n))
         a.append(0)
         gen2 = a
     else:
-        a = range(2, n)
+        a = list(range(2, n))
         a.append(1)
         a.insert(0, 0)
         gen2 = a
@@ -103,8 +105,14 @@ def AlternatingGroup(n):
 
     if n < 4:
         G._is_abelian = True
+        G._is_nilpotent = True
     else:
         G._is_abelian = False
+        G._is_nilpotent = False
+    if n < 5:
+        G._is_solvable = True
+    else:
+        G._is_solvable = False
     G._degree = n
     G._is_transitive = True
     G._is_alt = True
@@ -138,12 +146,14 @@ def CyclicGroup(n):
     SymmetricGroup, DihedralGroup, AlternatingGroup
 
     """
-    a = range(1, n)
+    a = list(range(1, n))
     a.append(0)
     gen = _af_new(a)
     G = PermutationGroup([gen])
 
     G._is_abelian = True
+    G._is_nilpotent = True
+    G._is_solvable = True
     G._degree = n
     G._is_transitive = True
     G._order = n
@@ -194,15 +204,20 @@ def DihedralGroup(n):
         return PermutationGroup([Permutation([1, 0, 3, 2]),
                Permutation([2, 3, 0, 1]), Permutation([3, 2, 1, 0])])
 
-    a = range(1, n)
+    a = list(range(1, n))
     a.append(0)
     gen1 = _af_new(a)
-    a = range(n)
+    a = list(range(n))
     a.reverse()
     gen2 = _af_new(a)
     G = PermutationGroup([gen1, gen2])
-
+    # if n is a power of 2, group is nilpotent
+    if n & (n-1) == 0:
+        G._is_nilpotent = True
+    else:
+        G._is_nilpotent = False
     G._is_abelian = False
+    G._is_solvable = True
     G._degree = n
     G._is_transitive = True
     G._order = 2*n
@@ -250,18 +265,23 @@ def SymmetricGroup(n):
     elif n == 2:
         G = PermutationGroup([Permutation([1, 0])])
     else:
-        a = range(1, n)
+        a = list(range(1, n))
         a.append(0)
         gen1 = _af_new(a)
-        a = range(n)
+        a = list(range(n))
         a[0], a[1] = a[1], a[0]
         gen2 = _af_new(a)
         G = PermutationGroup([gen1, gen2])
-
     if n < 3:
         G._is_abelian = True
+        G._is_nilpotent = True
     else:
         G._is_abelian = False
+        G._is_nilpotent = False
+    if n < 5:
+        G._is_solvable = True
+    else:
+        G._is_solvable = False
     G._degree = n
     G._is_transitive = True
     G._is_sym = True

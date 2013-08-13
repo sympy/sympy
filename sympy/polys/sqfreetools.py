@@ -1,5 +1,7 @@
 """Square-free decomposition algorithms and related tools. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_strip,
     dup_LC, dmp_ground_LC,
@@ -34,9 +36,6 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     DomainError)
 
-from sympy.utilities import cythonized
-
-
 def dup_sqf_p(f, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[x]``.
@@ -44,12 +43,12 @@ def dup_sqf_p(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dup_sqf_p
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_sqf_p([ZZ(1),-ZZ(2), ZZ(1)], ZZ)
+    >>> R.dup_sqf_p(x**2 - 2*x + 1)
     False
-    >>> dup_sqf_p([ZZ(1), ZZ(0),-ZZ(1)], ZZ)
+    >>> R.dup_sqf_p(x**2 - 1)
     True
 
     """
@@ -59,7 +58,6 @@ def dup_sqf_p(f, K):
         return not dup_degree(dup_gcd(f, dup_diff(f, 1, K), K))
 
 
-@cythonized("u")
 def dmp_sqf_p(f, u, K):
     """
     Return ``True`` if ``f`` is a square-free polynomial in ``K[X]``.
@@ -67,15 +65,12 @@ def dmp_sqf_p(f, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dmp_sqf_p
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0]])
-    >>> dmp_sqf_p(f, 1, ZZ)
+    >>> R.dmp_sqf_p(x**2 + 2*x*y + y**2)
     False
-
-    >>> f = ZZ.map([[1], [], [1, 0, 0]])
-    >>> dmp_sqf_p(f, 1, ZZ)
+    >>> R.dmp_sqf_p(x**2 + y**2)
     True
 
     """
@@ -85,7 +80,6 @@ def dmp_sqf_p(f, u, K):
         return not dmp_degree(dmp_gcd(f, dmp_diff(f, 1, u, K), u, K), u)
 
 
-@cythonized("s")
 def dup_sqf_norm(f, K):
     """
     Square-free norm of ``f`` in ``K[x]``, useful over algebraic domains.
@@ -96,19 +90,20 @@ def dup_sqf_norm(f, K):
     Examples
     ========
 
+    >>> from sympy.polys import ring, QQ
     >>> from sympy import sqrt
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.sqfreetools import dup_sqf_norm
 
     >>> K = QQ.algebraic_field(sqrt(3))
+    >>> R, x = ring("x", K)
+    >>> _, X = ring("x", QQ)
 
-    >>> s, f, r = dup_sqf_norm([K(1), K(0), K(-2)], K)
+    >>> s, f, r = R.dup_sqf_norm(x**2 - 2)
 
     >>> s == 1
     True
-    >>> f == [K(1), K([QQ(-2), QQ(0)]), K(1)]
+    >>> f == x**2 + K([QQ(-2), QQ(0)])*x + 1
     True
-    >>> r == [1, 0, -10, 0, 1]
+    >>> r == X**4 - 10*X**2 + 1
     True
 
     """
@@ -129,7 +124,6 @@ def dup_sqf_norm(f, K):
     return s, f, r
 
 
-@cythonized("s,u")
 def dmp_sqf_norm(f, u, K):
     """
     Square-free norm of ``f`` in ``K[X]``, useful over algebraic domains.
@@ -140,19 +134,20 @@ def dmp_sqf_norm(f, u, K):
     Examples
     ========
 
+    >>> from sympy.polys import ring, QQ
     >>> from sympy import I
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.sqfreetools import dmp_sqf_norm
 
     >>> K = QQ.algebraic_field(I)
+    >>> R, x, y = ring("x,y", K)
+    >>> _, X, Y = ring("x,y", QQ)
 
-    >>> s, f, r = dmp_sqf_norm([[K(1), K(0)], [K(1), K(0), K(0)]], 1, K)
+    >>> s, f, r = R.dmp_sqf_norm(x*y + y**2)
 
     >>> s == 1
     True
-    >>> f == [[K(1), K(0)], [K(1), K([QQ(-1), QQ(0)]), K(0)]]
+    >>> f == x*y + y**2 + K([QQ(-1), QQ(0)])*y
     True
-    >>> r == [[1, 0, 0], [2, 0, 0, 0], [1, 0, 1, 0, 0]]
+    >>> r == X**2*Y**2 + 2*X*Y**3 + Y**4 + Y**2
     True
 
     """
@@ -179,7 +174,6 @@ def dmp_sqf_norm(f, u, K):
     return s, f, r
 
 
-@cythonized("i")
 def dup_gf_sqf_part(f, K):
     """Compute square-free part of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
@@ -189,7 +183,7 @@ def dup_gf_sqf_part(f, K):
 
 def dmp_gf_sqf_part(f, K):
     """Compute square-free part of ``f`` in ``GF(p)[X]``. """
-    raise DomainError('multivariate polynomials over %s' % K)
+    raise NotImplementedError('multivariate polynomials over finite fields')
 
 
 def dup_sqf_part(f, K):
@@ -199,14 +193,14 @@ def dup_sqf_part(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dup_sqf_part
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_sqf_part([ZZ(1), ZZ(0), -ZZ(3), -ZZ(2)], ZZ)
-    [1, -1, -2]
+    >>> R.dup_sqf_part(x**3 - 3*x - 2)
+    x**2 - x - 2
 
     """
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dup_gf_sqf_part(f, K)
 
     if not f:
@@ -218,13 +212,12 @@ def dup_sqf_part(f, K):
     gcd = dup_gcd(f, dup_diff(f, 1, K), K)
     sqf = dup_quo(f, gcd, K)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dup_monic(sqf, K)
     else:
         return dup_primitive(sqf, K)[1]
 
 
-@cythonized("u")
 def dmp_sqf_part(f, u, K):
     """
     Returns square-free part of a polynomial in ``K[X]``.
@@ -232,19 +225,17 @@ def dmp_sqf_part(f, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dmp_sqf_part
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0], []])
-
-    >>> dmp_sqf_part(f, 1, ZZ)
-    [[1], [1, 0], []]
+    >>> R.dmp_sqf_part(x**3 + 2*x**2*y + x*y**2)
+    x**2 + x*y
 
     """
     if not u:
         return dup_sqf_part(f, K)
 
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dmp_gf_sqf_part(f, u, K)
 
     if dmp_zero_p(f, u):
@@ -256,13 +247,12 @@ def dmp_sqf_part(f, u, K):
     gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
     sqf = dmp_quo(f, gcd, u, K)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dmp_ground_monic(sqf, u, K)
     else:
         return dmp_ground_primitive(sqf, u, K)[1]
 
 
-@cythonized("i")
 def dup_gf_sqf_list(f, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[x]``. """
     f = dup_convert(f, K, K.dom)
@@ -277,10 +267,9 @@ def dup_gf_sqf_list(f, K, all=False):
 
 def dmp_gf_sqf_list(f, u, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[X]``. """
-    raise DomainError('multivariate polynomials over %s' % K)
+    raise NotImplementedError('multivariate polynomials over finite fields')
 
 
-@cythonized("i")
 def dup_sqf_list(f, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
@@ -288,22 +277,21 @@ def dup_sqf_list(f, K, all=False):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dup_sqf_list
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([2, 16, 50, 76, 56, 16])
+    >>> f = 2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16
 
-    >>> dup_sqf_list(f, ZZ)
-    (2, [([1, 1], 2), ([1, 2], 3)])
-
-    >>> dup_sqf_list(f, ZZ, all=True)
-    (2, [([1], 1), ([1, 1], 2), ([1, 2], 3)])
+    >>> R.dup_sqf_list(f)
+    (2, [(x + 1, 2), (x + 2, 3)])
+    >>> R.dup_sqf_list(f, all=True)
+    (2, [(1, 1), (x + 1, 2), (x + 2, 3)])
 
     """
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dup_gf_sqf_list(f, K, all=all)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         coeff = dup_LC(f, K)
         f = dup_monic(f, K)
     else:
@@ -346,16 +334,15 @@ def dup_sqf_list_include(f, K, all=False):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dup_sqf_list_include
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([2, 16, 50, 76, 56, 16])
+    >>> f = 2*x**5 + 16*x**4 + 50*x**3 + 76*x**2 + 56*x + 16
 
-    >>> dup_sqf_list_include(f, ZZ)
-    [([2], 1), ([1, 1], 2), ([1, 2], 3)]
-
-    >>> dup_sqf_list_include(f, ZZ, all=True)
-    [([2], 1), ([1, 1], 2), ([1, 2], 3)]
+    >>> R.dup_sqf_list_include(f)
+    [(2, 1), (x + 1, 2), (x + 2, 3)]
+    >>> R.dup_sqf_list_include(f, all=True)
+    [(2, 1), (x + 1, 2), (x + 2, 3)]
 
     """
     coeff, factors = dup_sqf_list(f, K, all=all)
@@ -368,7 +355,6 @@ def dup_sqf_list_include(f, K, all=False):
         return [(g, 1)] + factors
 
 
-@cythonized("u,i")
 def dmp_sqf_list(f, u, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[X]``.
@@ -376,25 +362,24 @@ def dmp_sqf_list(f, u, K, all=False):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dmp_sqf_list
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0], [], [], []])
+    >>> f = x**5 + 2*x**4*y + x**3*y**2
 
-    >>> dmp_sqf_list(f, 1, ZZ)
-    (1, [([[1], [1, 0]], 2), ([[1], []], 3)])
-
-    >>> dmp_sqf_list(f, 1, ZZ, all=True)
-    (1, [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)])
+    >>> R.dmp_sqf_list(f)
+    (1, [(x + y, 2), (x, 3)])
+    >>> R.dmp_sqf_list(f, all=True)
+    (1, [(1, 1), (x + y, 2), (x, 3)])
 
     """
     if not u:
         return dup_sqf_list(f, K, all=all)
 
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dmp_gf_sqf_list(f, u, K, all=all)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         coeff = dmp_ground_LC(f, u, K)
         f = dmp_ground_monic(f, u, K)
     else:
@@ -430,7 +415,6 @@ def dmp_sqf_list(f, u, K, all=False):
     return coeff, result
 
 
-@cythonized("u")
 def dmp_sqf_list_include(f, u, K, all=False):
     """
     Return square-free decomposition of a polynomial in ``K[x]``.
@@ -438,16 +422,15 @@ def dmp_sqf_list_include(f, u, K, all=False):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dmp_sqf_list_include
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[1], [2, 0], [1, 0, 0], [], [], []])
+    >>> f = x**5 + 2*x**4*y + x**3*y**2
 
-    >>> dmp_sqf_list_include(f, 1, ZZ)
-    [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)]
-
-    >>> dmp_sqf_list_include(f, 1, ZZ, all=True)
-    [([[1]], 1), ([[1], [1, 0]], 2), ([[1], []], 3)]
+    >>> R.dmp_sqf_list_include(f)
+    [(1, 1), (x + y, 2), (x, 3)]
+    >>> R.dmp_sqf_list_include(f, all=True)
+    [(1, 1), (x + y, 2), (x, 3)]
 
     """
     if not u:
@@ -470,13 +453,11 @@ def dup_gff_list(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dup_gff_list
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = ZZ.map([1, 2, -1, -2, 0, 0])
-
-    >>> dup_gff_list(f, ZZ)
-    [([1, 0], 1), ([1, 2], 4)]
+    >>> R.dup_gff_list(x**5 + 2*x**4 - x**3 - 2*x**2)
+    [(x, 1), (x + 2, 4)]
 
     """
     if not f:
@@ -509,8 +490,8 @@ def dmp_gff_list(f, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.sqfreetools import dmp_gff_list
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
     """
     if not u:

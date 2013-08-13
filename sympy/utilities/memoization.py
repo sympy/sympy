@@ -1,4 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core.decorators import wraps
+from sympy.core.compatibility import xrange
 
 
 def recurrence_memo(initial):
@@ -10,6 +13,7 @@ def recurrence_memo(initial):
     cache = initial
 
     def decorator(f):
+        @wraps(f)
         def g(n):
             L = len(cache)
             if n <= L - 1:
@@ -34,6 +38,7 @@ def assoc_recurrence_memo(base_seq):
     cache = []
 
     def decorator(f):
+        @wraps(f)
         def g(n, m):
             L = len(cache)
             if n < L:

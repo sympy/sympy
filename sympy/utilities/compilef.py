@@ -80,12 +80,12 @@ and to see the results of some benchmarks.
 
 """
 
+from __future__ import print_function, division
+
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
 from sympy.external import import_module
-
-numpy = import_module('numpy')
 
 libtccpath = './libtcc.so'
 dps = 17  # decimal places of float precision
@@ -275,7 +275,7 @@ def clambdify(args, expr, **kwargs):
 
     Supports all standard C math functions, pi and e.
 
-    >>> from sympy import symbols, sqrt
+    >>> from sympy import sqrt
     >>> from sympy.abc import x, y
     >>> cf = clambdify((x,y), sqrt(x*y))
     >>> cf(0.5, 4)
@@ -312,7 +312,7 @@ def frange(*args, **kwargs):
     >>> frange('lambda x: sqrt(x)', 1, 4) # doctest: +ELLIPSIS
     <__main__.c_double_Array_3 object at ...>
     >>> for i in _:
-    ...     print i
+    ...     print(i)
     ...
     1.0
     1.41421356237
@@ -512,6 +512,7 @@ def test_evalonarray_ctypes():
 
 
 def test_evalonarray_numpy():
+    numpy = import_module('numpy')
     a = numpy.arange(10, dtype=float)
     evalonarray('lambda x: x + 1', a)
     for i, j in enumerate(a):
@@ -545,8 +546,8 @@ def benchmark():
         global cf, pf, psyf
         start = time()
         cf = clambdify(var, f)
-        print 'compile time (including sympy overhead): %f s' % (
-            time() - start)
+        print('compile time (including sympy overhead): %f s' % (
+            time() - start))
         pf = lambdify(var, f, 'math')
         psyf = None
         psyco = import_module('psyco')
@@ -561,15 +562,15 @@ def benchmark():
             t3 = Timer(code, 'from __main__ import psyf as f')
         else:
             t3 = None
-        print 'for x = (0, 1, 2, ..., 999)/1000'
-        print '20 times in 3 runs'
-        print 'compiled:      %.4f %.4f %.4f' % tuple(t1.repeat(3, 20))
-        print 'Python lambda: %.4f %.4f %.4f' % tuple(t2.repeat(3, 20))
+        print('for x = (0, 1, 2, ..., 999)/1000')
+        print('20 times in 3 runs')
+        print('compiled:      %.4f %.4f %.4f' % tuple(t1.repeat(3, 20)))
+        print('Python lambda: %.4f %.4f %.4f' % tuple(t2.repeat(3, 20)))
         if t3:
-            print 'Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20))
+            print('Psyco lambda:  %.4f %.4f %.4f' % tuple(t3.repeat(3, 20)))
 
-    print 'big function:'
-    from sympy import diff, _exp, _sin, _cos, pi, lambdify
+    print('big function:')
+    from sympy import _exp, _sin, _cos, pi, lambdify
     x = Symbol('x')
 ##    f1 = diff(_exp(x)**2 - _sin(x)**pi, x) \
 ##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \
@@ -578,33 +579,34 @@ def benchmark():
         + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5
         + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
     fbenchmark(f1)
-    print
-    print 'simple function:'
+    print()
+    print('simple function:')
     y = Symbol('y')
     f2 = sqrt(x*y) + x*5
     fbenchmark(f2, [x, y])
     times = 100000
     fstr = '_exp(_sin(_exp(-x**2)) + sqrt(pi)*_cos(x**5/(x**3-x**2+pi*x)))'
     print
-    print 'frange with f(x) ='
-    print fstr
-    print 'for x=1, ..., %i' % times
-    print 'in 3 runs including full compile time'
+    print('frange with f(x) =')
+    print(fstr)
+    print('for x=1, ..., %i' % times)
+    print('in 3 runs including full compile time')
     t4 = Timer("frange('lambda x: %s', 0, %i)" % (fstr, times),
                'from __main__ import frange')
 
     numpy = import_module('numpy')
 
-    print 'frange:        %.4f %.4f %.4f' % tuple(t4.repeat(3, 1))
+    print('frange:        %.4f %.4f %.4f' % tuple(t4.repeat(3, 1)))
     if numpy:
         t5 = Timer('x = arange(%i); result = %s' % (times, fstr),
                    'from numpy import arange, sqrt, exp, sin, cos, exp, pi')
-        print 'numpy:         %.4f %.4f %.4f' % tuple(t5.repeat(3, 1))
+        print('numpy:         %.4f %.4f %.4f' % tuple(t5.repeat(3, 1)))
     # TODO: integration into fbenchmark
 
 if __name__ == '__main__':
     if __debug__:
-        print 'Running tests...',
+        print('Running tests...',)
+        numpy = import_module('numpy')
         test_cexpr()
         test_clambdify()
         test_frange()
@@ -614,7 +616,7 @@ if __name__ == '__main__':
         test_use_cse()
         import doctest
         doctest.testmod()
-        print 'OK'
+        print('OK')
         print
-    print 'Running benchmark...'
+    print('Running benchmark...')
     benchmark()

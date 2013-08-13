@@ -1,7 +1,7 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection
+    FiniteSet, Intersection, imageset
 )
 from sympy.mpmath import mpi
 
@@ -367,8 +367,8 @@ def test_Interval_as_relational():
     assert Interval(-oo, 2, right_open=False).as_relational(x) == Le(x, 2)
     assert Interval(-oo, 2, right_open=True).as_relational(x) == Lt(x, 2)
 
-    assert Interval(-2, oo, left_open=False).as_relational(x) == Le(-2, x)
-    assert Interval(-2, oo, left_open=True).as_relational(x) == Lt(-2, x)
+    assert Interval(-2, oo, left_open=False).as_relational(x) == Ge(x, -2)
+    assert Interval(-2, oo, left_open=True).as_relational(x) == Gt(x, -2)
 
     assert Interval(-oo, oo).as_relational(x) is True
 
@@ -501,3 +501,35 @@ def test_universalset():
 def test_Interval_free_symbols():
     x = Symbol('x', real=True)
     assert set(Interval(0, x).free_symbols) == set((x,))
+
+def test_image_interval():
+    x = Symbol('x', real=True)
+    assert imageset(x, 2*x, Interval(-2, 1)) == Interval(-4, 2)
+    assert imageset(x, 2*x, Interval(-2, 1, True, False)) == \
+            Interval(-4, 2, True, False)
+    assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
+            Interval(0, 4, False, True)
+    assert imageset(x, x**2, Interval(-2, 1)) == Interval(0, 4)
+    assert imageset(x, x**2, Interval(-2, 1, True, False)) == \
+            Interval(0, 4, False, True)
+    assert imageset(x, x**2, Interval(-2, 1, True, True)) == \
+            Interval(0, 4, False, True)
+
+def test_image_FiniteSet():
+    x = Symbol('x', real=True)
+    assert imageset(x, 2*x, FiniteSet(1, 2, 3)) == FiniteSet(2, 4, 6)
+
+def test_image_Union():
+    x = Symbol('x', real=True)
+    assert imageset(x, x**2, Interval(-2, 0) + FiniteSet(1, 2, 3)) == \
+            (Interval(0, 4) + FiniteSet(9))
+
+def test_image_Intersection():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert imageset(x, x**2, Interval(-2, 0).intersect(Interval(x, y))) == \
+           Interval(0, 4).intersect(Interval(Min(x**2, y**2), Max(x**2, y**2)))
+
+def test_image_EmptySet():
+    x = Symbol('x', real=True)
+    assert imageset(x, 2*x, S.EmptySet) == S.EmptySet

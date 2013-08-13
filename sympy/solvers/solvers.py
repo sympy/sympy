@@ -1,4 +1,4 @@
-"""
+﻿"""
 This module contain solvers for all kinds of equations:
 
     - algebraic or transcendental, use solve()
@@ -12,15 +12,18 @@ This module contain solvers for all kinds of equations:
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key, reduce)
+    default_sort_key, reduce, xrange)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
-    Expr, Mul)
+    Expr, Mul, Pow)
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops)
+                          count_ops, Function, expand_power_exp)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -28,17 +31,22 @@ from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
-                             asinh, atanh, acoth, Abs, sign)
+                             asinh, atanh, acoth, Abs, sign, re, im, arg,
+                             sqrt, atan2)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify)
+                            nsimplify, denom, logcombine)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
+from sympy.simplify.fu import TR1, hyper_as_trig
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, Poly, together, factor
+from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
+    degree, PolynomialError)
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import uniq
+
 from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
@@ -48,23 +56,25 @@ from sympy.assumptions import Q, ask
 
 from types import GeneratorType
 from collections import defaultdict
+import warnings
 
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
-    return e.is_Pow or e.func is exp
+    return isinstance(e, Expr) and (e.is_Pow or e.func is exp)
 
 
 def denoms(eq, symbols=None):
     """Return (recursively) set of all denominators that appear in eq
     that contain any symbol in iterable ``symbols``; if ``symbols`` is
-    None (default) then all denominators with symbols will be returned.
+    None (default) then all denominators will be returned.
 
     Examples
     ========
 
     >>> from sympy.solvers.solvers import denoms
     >>> from sympy.abc import x, y, z
+    >>> from sympy import sqrt
 
     >>> denoms(x/y)
     set([y])
@@ -74,21 +84,27 @@ def denoms(eq, symbols=None):
 
     >>> denoms(3/x + y/z)
     set([x, z])
+
+    >>> denoms(x/2 + y/z)
+    set([2, z])
     """
 
-    symbols = symbols or eq.free_symbols
+    pot = preorder_traversal(eq)
     dens = set()
-    if not symbols or not eq.has(*symbols):
+    for p in pot:
+        den =  denom(p)
+        if den is S.One:
+            continue
+        for d in Mul.make_args(den):
+            dens.add(d)
+    if not symbols:
         return dens
-    pt = preorder_traversal(eq)
-    for e in pt:
-        if _ispow(e):
-            n, d = e.as_numer_denom()
-            if d in dens:
-                pt.skip()
-            elif d.has(*symbols):
-                dens.add(d.as_base_exp()[0])
-    return dens
+    rv = []
+    for d in dens:
+        free = d.free_symbols
+        if any(s in free for s in symbols):
+            rv.append(d)
+    return set(rv)
 
 
 def checksol(f, symbol, sol=None, **flags):
@@ -129,7 +145,7 @@ def checksol(f, symbol, sol=None, **flags):
         'minimal=True (default is False)'
            a very fast, minimal testing.
         'warn=True (default is False)'
-           print a warning if checksol() could not conclude.
+           show a warning if checksol() could not conclude.
         'simplify=True (default)'
            simplify solution before substituting into function and
            simplify the function before trying specific simplifications
@@ -167,7 +183,7 @@ def checksol(f, symbol, sol=None, **flags):
     if not f:
         return True
 
-    if sol and not f.has(*sol.keys()):
+    if sol and not f.has(*list(sol.keys())):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
         return None
 
@@ -175,7 +191,7 @@ def checksol(f, symbol, sol=None, **flags):
                S.ComplexInfinity,
                S.Infinity,
                S.NegativeInfinity])
-    if any(sympify(v).atoms() & illegal for k, v in sol.iteritems()):
+    if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
 
     was = f
@@ -189,7 +205,7 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if val.free_symbols:
-                if not val.is_constant(*sol.keys()):
+                if not val.is_constant(*list(sol.keys())):
                     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
@@ -269,7 +285,7 @@ def checksol(f, symbol, sol=None, **flags):
         was = val
 
     if flags.get('warn', False):
-        print("\n\tWarning: could not verify solution %s." % sol)
+        warnings.warn("\n\tWarning: could not verify solution %s." % sol)
     # returns None if it can't conclude
     # TODO: improve solution testing
 
@@ -309,7 +325,7 @@ def check_assumptions(expr, **assumptions):
     expr = sympify(expr)
 
     result = True
-    for key, expected in assumptions.iteritems():
+    for key, expected in assumptions.items():
         if expected is None:
             continue
         test = getattr(expr, 'is_' + key, None)
@@ -366,7 +382,7 @@ def solve(f, *symbols, **flags):
         'minimal=True (default is False)'
             a very fast, minimal testing.
         'warning=True (default is False)'
-            print a warning if checksol() could not conclude.
+            show a warning if checksol() could not conclude.
         'simplify=True (default)'
             simplify all but cubic and quartic solutions before
             returning them and (if check is not False) use the
@@ -433,10 +449,10 @@ def solve(f, *symbols, **flags):
         [3]
         >>> solve(Poly(x - 3), x)
         [3]
-        >>> set(solve(x**2 - y**2, x))
-        set([-y, y])
-        >>> set(solve(x**4 - 1, x))
-        set([-1, 1, -I, I])
+        >>> solve(x**2 - y**2, x, set=True)
+        ([x], set([(-y,), (y,)]))
+        >>> solve(x**4 - 1, x, set=True)
+        ([x], set([(-1,), (1,), (-I,), (I,)]))
 
     * single expression with no symbol that is in the expression
 
@@ -449,17 +465,17 @@ def solve(f, *symbols, **flags):
 
           In this case, all free symbols will be selected as potential
           symbols to solve for. If the equation is univariate then a list
-          of solutionsis returned; otherwise -- as is the case when symbols are
+          of solutions is returned; otherwise -- as is the case when symbols are
           given as an iterable of length > 1 -- a list of mappings will be returned.
 
             >>> solve(x - 3)
             [3]
-            >>> solve(x**2 - y**2) # doctest: +SKIP
+            >>> solve(x**2 - y**2)
             [{x: -y}, {x: y}]
-            >>> solve(z**2*x**2 - z**2*y**2) # doctest: +SKIP
-            [{x: -y}, {x: y}]
+            >>> solve(z**2*x**2 - z**2*y**2)
+            [{x: -y}, {x: y}, {z: 0}]
             >>> solve(z**2*x - z**2*y**2)
-            [{x: y**2}]
+            [{x: y**2}, {z: 0}]
 
     * when an object other than a Symbol is given as a symbol, it is
       isolated algebraically and an implicit solution may be obtained.
@@ -474,8 +490,8 @@ def solve(f, *symbols, **flags):
           [x + f(x)]
           >>> solve(f(x).diff(x) - f(x) - x, f(x))
           [-x + Derivative(f(x), x)]
-          >>> set(solve(x + exp(x)**2, exp(x)))
-          set([-sqrt(-x), sqrt(-x)])
+          >>> solve(x + exp(x)**2, exp(x), set=True)
+          ([exp(x)], set([(-sqrt(-x),), (sqrt(-x),)]))
 
           >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
           >>> A = IndexedBase('A')
@@ -503,7 +519,7 @@ def solve(f, *symbols, **flags):
 
             >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
             >>> solve(eqs, y, x + 2)
-            {y: sqrt(3)/(-x - 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}
+            {y: -sqrt(3)/(x + 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}
             >>> solve(eqs, y*x, x)
             {x: -y - 4, x*y: -3*y - sqrt(3)}
 
@@ -538,17 +554,17 @@ def solve(f, *symbols, **flags):
 
             * that are nonlinear
 
-                >>> set(solve((a + b)*x - b**2 + 2, a, b))
-                set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))])
+                >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
+                ([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))
 
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
 
-            >>> solve(x**2 - y**2, x, y) # doctest: +SKIP
+            >>> solve(x**2 - y**2, x, y)
             [{x: -y}, {x: y}]
             >>> solve(x**2 - y**2/exp(x), x, y)
             [{x: 2*LambertW(y/2)}]
-            >>> solve(x**2 - y**2/exp(x), y, x) # doctest: +SKIP
+            >>> solve(x**2 - y**2/exp(x), y, x)
             [{y: -x*exp(x/2)}, {y: x*exp(x/2)}]
 
     * iterable of one or more of the above
@@ -580,8 +596,8 @@ def solve(f, *symbols, **flags):
 
         * when the system is not linear
 
-            >>> set(solve([x**2 + y -2, y**2 - 4], x, y))
-            set([(-2, -2), (0, 2), (2, -2)])
+            >>> solve([x**2 + y -2, y**2 - 4], x, y, set=True)
+            ([x, y], set([(-2, -2), (0, 2), (2, -2)]))
 
         * if no symbols are given, all free symbols will be selected and a list
           of mappings returned
@@ -609,15 +625,15 @@ def solve(f, *symbols, **flags):
     then use the check=False option:
 
         >>> from sympy import sin, limit
-        >>> solve(sin(x)/x)
-        []
+        >>> solve(sin(x)/x)  # 0 is excluded
+        [pi]
 
     If check=False then a solution to the numerator being zero is found: x = 0.
     In this case, this is a spurious solution since sin(x)/x has the well known
     limit (without dicontinuity) of 1 at x = 0:
 
         >>> solve(sin(x)/x, check=False)
-        [0]
+        [0, pi]
 
     In the following case, however, the limit exists and is equal to the the
     value of x = 0 that is excluded when check=True:
@@ -646,7 +662,7 @@ def solve(f, *symbols, **flags):
     ###########################################################################
 
     def _sympified_list(w):
-        return map(sympify, w if iterable(w) else [w])
+        return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
     ordered_symbols = (symbols and
                        symbols[0] and
@@ -669,9 +685,32 @@ def solve(f, *symbols, **flags):
         elif isinstance(fi, bool) or fi.is_Relational:
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
+
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
-        f[i] = piecewise_fold(f[i])
+        # However, this is necessary only if one of the piecewise
+        # functions depends on one of the symbols we are solving for.
+        def _has_piecewise(e):
+            if e.is_Piecewise:
+                return e.has(*symbols)
+            return any([_has_piecewise(a) for a in e.args])
+        if _has_piecewise(f[i]):
+            f[i] = piecewise_fold(f[i])
+
+        # if we have a Matrix, we need to iterate over its elements again
+        if f[i].is_Matrix:
+            bare_f = False
+            f.extend(list(f[i]))
+            f[i] = S.Zero
+
+        # if we can split it into real and imaginary parts then do so
+        freei = f[i].free_symbols
+        if freei and all(s.is_real or s.is_imaginary for s in freei):
+            fr, fi = f[i].as_real_imag()
+            if fr and fi and not any(i.has(re, im, arg) for i in (fr, fi)):
+                if bare_f:
+                    bare_f = False
+                f[i: i + 1] = [fr, fi]
 
     # preprocess symbol(s)
     ###########################################################################
@@ -705,6 +744,36 @@ def solve(f, *symbols, **flags):
         exclude = reduce(set.union, [e.free_symbols for e in sympify(exclude)])
     symbols = [s for s in symbols if s not in exclude]
 
+    # real/imag handling
+    for i, fi in enumerate(f):
+        _abs = [a for a in fi.atoms(Abs) if a.has(*symbols)]
+        fi = f[i] = fi.xreplace(dict(list(zip(_abs,
+            [sqrt(a.args[0]**2) for a in _abs]))))
+        _arg = [a for a in fi.atoms(arg) if a.has(*symbols)]
+        f[i] = fi.xreplace(dict(list(zip(_arg,
+            [atan(im(a.args[0])/re(a.args[0])) for a in _arg]))))
+    # see if re(s) or im(s) appear
+    irf = []
+    for s in symbols:
+        # if s is real or complex then re(s) or im(s) will not appear in the equation;
+        if s.is_real or s.is_complex:
+            continue
+        # if re(s) or im(s) appear, the auxiliary equation must be present
+        irs = re(s), im(s)
+        if any(_f.has(i) for _f in f for i in irs):
+            symbols.extend(irs)
+            irf.append((s, re(s) + S.ImaginaryUnit*im(s)))
+    if irf:
+        for s, rhs in irf:
+            for i, fi in enumerate(f):
+                f[i] = fi.xreplace({s: rhs})
+        if bare_f:
+            bare_f = False
+        flags['dict'] = True
+        f.extend(s - rhs for s, rhs in irf)
+    # end of real/imag handling
+
+    symbols = list(uniq(symbols))
     if not ordered_symbols:
         # we do this to make the results returned canonical in case f
         # contains a system of nonlinear equations; all other cases should
@@ -723,7 +792,7 @@ def solve(f, *symbols, **flags):
         symbols_new.append(s_new)
 
     if symbol_swapped:
-        swap_sym = zip(symbols, symbols_new)
+        swap_sym = list(zip(symbols, symbols_new))
         f = [fi.subs(swap_sym) for fi in f]
         symbols = symbols_new
         swap_sym = dict([(v, k) for k, v in swap_sym])
@@ -781,15 +850,14 @@ def solve(f, *symbols, **flags):
     for fi in f:
         pot = preorder_traversal(fi)
         for p in pot:
-            if isinstance(p, bool) or isinstance(p, Piecewise):
+            if not isinstance(p, Expr) or isinstance(p, Piecewise):
                 pass
             elif (isinstance(p, bool) or
-                not p.args or
-                p in symset or
-                p.is_Add or p.is_Mul or
-                p.is_Pow and not implicit or
-                p.is_Function and not isinstance(p, AppliedUndef) and
-                  not implicit):
+                    not p.args or
+                    p in symset or
+                    p.is_Add or p.is_Mul or
+                    p.is_Pow and not implicit or
+                    p.is_Function and not implicit):
                 continue
             elif not p in seen:
                 seen.add(p)
@@ -799,9 +867,10 @@ def solve(f, *symbols, **flags):
                     continue
             pot.skip()
     del seen
-    non_inverts = dict(zip(non_inverts, [Dummy() for d in non_inverts]))
+    non_inverts = dict(list(zip(non_inverts, [Dummy() for d in non_inverts])))
     f = [fi.subs(non_inverts) for fi in f]
-    non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.iteritems()]
+
+    non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.items()]
 
     # rationalize Floats
     floats = False
@@ -827,7 +896,7 @@ def solve(f, *symbols, **flags):
 
         def _do_dict(solution):
             return dict([(k, v.subs(non_inverts)) for k, v in
-                         solution.iteritems()])
+                         solution.items()])
         for i in range(1):
             if type(solution) is dict:
                 solution = _do_dict(solution)
@@ -862,11 +931,11 @@ def solve(f, *symbols, **flags):
         symbols = [swap_sym[k] for k in symbols]
         if type(solution) is dict:
             solution = dict([(swap_sym[k], v.subs(swap_sym))
-                             for k, v in solution.iteritems()])
+                             for k, v in solution.items()])
         elif solution and type(solution) is list and type(solution[0]) is dict:
             for i, sol in enumerate(solution):
                 solution[i] = dict([(swap_sym[k], v.subs(swap_sym))
-                              for k, v in sol.iteritems()])
+                              for k, v in sol.items()])
 
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present
@@ -907,7 +976,7 @@ def solve(f, *symbols, **flags):
             elif type(solution[0]) is dict:
                 for sol in solution:
                     a_None = False
-                    for symb, val in sol.iteritems():
+                    for symb, val in sol.items():
                         test = check_assumptions(val, **symb.assumptions0)
                         if test:
                             continue
@@ -929,7 +998,7 @@ def solve(f, *symbols, **flags):
 
         elif type(solution) is dict:
             a_None = False
-            for symb, val in solution.iteritems():
+            for symb, val in solution.items():
                 test = check_assumptions(val, **symb.assumptions0)
                 if test:
                     continue
@@ -945,7 +1014,7 @@ def solve(f, *symbols, **flags):
         elif isinstance(solution, (Relational, And, Or)):
             assert len(symbols) == 1
             if warning and symbols[0].assumptions0:
-                print(filldedent("""
+                warnings.warn(filldedent("""
                     \tWarning: assumptions about variable '%s' are
                     not handled currently.""" % symbols[0]))
             # TODO: check also variable assumptions for inequalities
@@ -955,7 +1024,7 @@ def solve(f, *symbols, **flags):
 
         solution = no_False
         if warning and got_None:
-            print(filldedent("""
+            warnings.warn(filldedent("""
                 \tWarning: assumptions concerning following solution(s)
                 can't be checked:""" + '\n\t' +
                 ', '.join(str(s) for s in got_None)))
@@ -974,14 +1043,14 @@ def solve(f, *symbols, **flags):
     if not as_dict and not as_set:
         return solution or []
 
-    # make return a list of mappings or []
+    # return a list of mappings or []
     if not solution:
         solution = []
     else:
         if isinstance(solution, dict):
             solution = [solution]
         elif iterable(solution[0]):
-            solution = [dict(zip(symbols, s)) for s in solution]
+            solution = [dict(list(zip(symbols, s))) for s in solution]
         elif isinstance(solution[0], dict):
             pass
         else:
@@ -992,7 +1061,7 @@ def solve(f, *symbols, **flags):
     assert as_set
     if not solution:
         return [], set()
-    k = sorted(solution[0].keys(), key=lambda i: i.sort_key())
+    k = sorted(list(solution[0].keys()), key=lambda i: i.sort_key())
     return k, set([tuple([s[ki] for ki in k]) for s in solution])
 
 
@@ -1018,23 +1087,36 @@ def _solve(f, *symbols, **flags):
             return soln
         # find first successful solution
         failed = []
+        got_s = set([])
+        result = []
         for s in symbols:
             n, d = solve_linear(f, symbols=[s])
             if n.is_Symbol:
                 # no need to check but we should simplify if desired
                 if flags.get('simplify', True):
                     d = simplify(d)
-                return [{n: d}]
+                if got_s and any([ss in d.free_symbols for ss in got_s]):
+                    # sol depends on previously solved symbols: discard it
+                    continue
+                got_s.add(n)
+                result.append({n: d})
             elif n and d:  # otherwise there was no solution for s
                 failed.append(s)
         if not failed:
-            return []
+            return result
         for s in failed:
             try:
                 soln = _solve(f, s, **flags)
-                return [{s: sol} for sol in soln]
+                for sol in soln:
+                    if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                        # sol depends on previously solved symbols: discard it
+                        continue
+                    got_s.add(s)
+                    result.append({s: sol})
             except NotImplementedError:
                 continue
+        if got_s:
+            return result
         else:
             msg = "No algorithms are implemented to solve equation %s"
             raise NotImplementedError(msg % f)
@@ -1058,25 +1140,30 @@ def _solve(f, *symbols, **flags):
 
     elif f.is_Piecewise:
         result = set()
-        for expr, cond in f.args:
-            candidates = _solve(expr, *symbols)
-            if cond is True:
-                # Only include solutions that do not match the condition
-                # of any of the other pieces.
-                for candidate in candidates:
+        for n, (expr, cond) in enumerate(f.args):
+            candidates = _solve(expr, *symbols, **flags)
+
+            for candidate in candidates:
+                if candidate in result:
+                    continue
+                cond = cond is True or cond.subs(symbol, candidate)
+                if cond is not False:
+                    # Only include solutions that do not match the condition
+                    # of any previous pieces.
                     matches_other_piece = False
-                    for other_expr, other_cond in f.args:
-                        if other_cond is True:
+                    for other_n, (other_expr, other_cond) in enumerate(f.args):
+                        if other_n == n:
+                            break
+                        if other_cond is False:
                             continue
-                        if bool(other_cond.subs(symbol, candidate)):
+                        if other_cond.subs(symbol, candidate) is True:
                             matches_other_piece = True
                             break
                     if not matches_other_piece:
-                        result.add(candidate)
-            else:
-                for candidate in candidates:
-                    if bool(cond.subs(symbol, candidate)):
-                        result.add(candidate)
+                        result.add(Piecewise(
+                            (candidate, cond is True or cond.doit()),
+                            (S.NaN, True)
+                        ))
         check = False
     else:
         # first see if it really depends on symbol and whether there
@@ -1098,152 +1185,202 @@ def _solve(f, *symbols, **flags):
         # a polynomial and tell us the different generators that it
         # contains, so we will inspect the generators identified by
         # polys to figure out what to do.
-        poly = Poly(f_num)
-        if poly is None:
-            raise ValueError('could not convert %s to Poly' % f_num)
-        gens = [g for g in poly.gens if g.has(symbol)]
 
-        if len(gens) > 1:
-            # If there is more than one generator, it could be that the
-            # generators have the same base but different powers, e.g.
-            #   >>> Poly(exp(x)+1/exp(x))
-            #   Poly(exp(-x) + exp(x), exp(-x), exp(x), domain='ZZ')
-            #   >>> Poly(sqrt(x)+sqrt(sqrt(x)))
-            #   Poly(sqrt(x) + x**(1/4), sqrt(x), x**(1/4), domain='ZZ')
-            # If the exponents are Rational then a change of variables
-            # will make this a polynomial equation in a single base.
-
-            def _as_base_q(x):
-                """Return (b**e, q) for x = b**(p*e/q) where p/q is the leading
-                Rational of the exponent of x, e.g. exp(-2*x/3) -> (exp(x), 3)
-                """
-                b, e = x.as_base_exp()
-                if e.is_Rational:
-                    return b, e.q
-                if not e.is_Mul:
-                    return x, 1
-                c, ee = e.as_coeff_Mul()
-                if c.is_Rational and c is not S.One:  # c could be a Float
-                    return b**ee, c.q
-                return x, 1
-
-            bases, qs = zip(*[_as_base_q(g) for g in gens])
-            bases = set(bases)
-
-            if len(bases) > 1:
-                funcs = set(b.func for b in bases if b.is_Function)
-
-                trig = set([cos, sin, tan, cot])
-                other = funcs - trig
-                if not other and len(funcs.intersection(trig)) > 1:
-                    return _solve(f_num.rewrite(tan), symbol, **flags)
-
-                trigh = set([cosh, sinh, tanh, coth])
-                other = funcs - trigh
-                if not other and len(funcs.intersection(trigh)) > 1:
-                    return _solve(f_num.rewrite(tanh), symbol, **flags)
-
-                # just a simple case - see if replacement of single function
-                # clears all symbol-dependent functions, e.g.
-                # log(x) - log(log(x) - 1) - 3 can be solved even though it has
-                # two generators.
-
-                funcs = [f for f in bases if f.is_Function]
-                if funcs:
-                    funcs.sort(key=count_ops)  # put shallowest function first
-                    f1 = funcs[0]
-                    t = Dummy('t')
-                    # perform the substitution
-                    ftry = f_num.subs(f1, t)
-
-                    # if no Functions left, we can proceed with usual solve
-                    if not ftry.has(symbol):
-                        cv_sols = _solve(ftry, t)
-                        cv_inv = _solve(t - f1, symbol)[0]
-                        sols = list()
-                        for sol in cv_sols:
-                            sols.append(cv_inv.subs(t, sol))
-                        return sols
-
-                msg = 'multiple generators %s' % gens
-
-            elif any(q != 1 for q in qs):
-                # e.g. for x**(1/2) + x**(1/4) a change of variables
-                # can be made using p**4 to give p**2 + p
-                base = bases.pop()
-                m = reduce(ilcm, qs)
-                p = Dummy('p', positive=True)
-                cov = p**m
-                fnew = f_num.subs(base, cov)
-                poly = Poly(fnew, p)  # we now have a single generator, p
-
-                # for cubics and quartics, if the flag wasn't set, DON'T do it
-                # by default since the results are quite long. Perhaps one
-                # could base this decision on a certain critical length of the
-                # roots.
-                if poly.degree() > 2:
-                    flags['simplify'] = flags.get('simplify', False)
-
-                soln = roots(poly, cubics=True, quartics=True).keys()
-                if not soln:
-                    soln = poly.all_roots()
-                    check = False  # RootOf instances can not be checked
-
-                # We now know what the values of p are equal to. Now find out
-                # how they are related to the original x, e.g. if p**2 = cos(x)
-                # then x = acos(p**2)
-                #
-                inversion = _solve(cov - base, symbol, **flags)
-                result = [i.subs(p, s) for i in inversion for s in soln]
-
-            else:  # len(bases) == 1 and all(q == 1 for q in qs):
-                # e.g. case where gens are exp(x), exp(-x)
-                u = bases.pop()
-                t = Dummy('t')
-                inv = _solve(u - t, symbol)
-                ftry = f_num.subs(u, t)
-                if not ftry.has(symbol):
-                    soln = _solve(ftry, t)
-                    sols = list()
-                    for sol in soln:
+        # but first remove radicals as this will help Polys
+        if flags.pop('unrad', True):
+            try:
+                # try remove all...
+                u = unrad(f_num)
+            except ValueError:
+                # ...else hope for the best while letting some remain
+                try:
+                    u = unrad(f, symbol)
+                except ValueError:
+                    u = None  # hope for best with original equation
+            if u:
+                flags['unrad'] = False  # don't unrad next time
+                eq, cov, dens2 = u
+                dens.update(dens2)
+                if cov:
+                    if len(cov) > 1:
+                        raise NotImplementedError('Not sure how to handle this.')
+                    isym, ieq = cov[0]
+                    # since cov is written in terms of positive symbols, set
+                    # check to False or else 0 would be excluded; the solution
+                    # will be checked below
+                    absent = Dummy()
+                    check = flags.get('check', absent)
+                    flags['check'] = False
+                    sol = _solve(eq, isym, **flags)
+                    inv = _solve(ieq, symbol, **flags)
+                    result = []
+                    for s in sol:
                         for i in inv:
-                            sols.append(i.subs(t, sol))
-                    return sols
+                            result.append(i.subs(isym, s))
+                    if check == absent:
+                        flags.pop('check')
+                    else:
+                        flags['check'] = check
+                else:
+                    result = _solve(eq, symbol, **flags)
 
-        elif len(gens) == 1:
+        if result is False:
+            # rewrite hyperbolics in terms of exp
+            f_num = f_num.replace(lambda w: isinstance(w, C.HyperbolicFunction),
+                lambda w: w.rewrite(exp))
 
-            # There is only one generator that we are interested in, but there
-            # may have been more than one generator identified by polys (e.g.
-            # for symbols other than the one we are interested in) so recast
-            # the poly in terms of our generator of interest.
+            poly = Poly(f_num)
+            if poly is None:
+                raise ValueError('could not convert %s to Poly' % f_num)
+            gens = [g for g in poly.gens if g.has(symbol)]
 
-            if len(poly.gens) > 1:
-                poly = Poly(poly, gens[0])
+            if len(gens) > 1:
+                # If there is more than one generator, it could be that the
+                # generators have the same base but different powers, e.g.
+                #   >>> Poly(exp(x)+1/exp(x))
+                #   Poly(exp(-x) + exp(x), exp(-x), exp(x), domain='ZZ')
+                #   >>> Poly(sqrt(x)+sqrt(sqrt(x)))
+                #   Poly(sqrt(x) + x**(1/4), sqrt(x), x**(1/4), domain='ZZ')
+                # If the exponents are Rational then a change of variables
+                # will make this a polynomial equation in a single base.
 
-            # if we haven't tried tsolve yet, do so now
-            if not flags.pop('tsolve', False):
-                # for cubics and quartics, if the flag wasn't set, DON'T do it
-                # by default since the results are quite long. Perhaps one
-                # could base this decision on a certain critical length of the
-                # roots.
-                if poly.degree() > 2:
-                    flags['simplify'] = flags.get('simplify', False)
-                soln = roots(poly, cubics=True, quartics=True).keys()
-                if not soln:
-                    soln = poly.all_roots()
-                    check = False  # RootOf instances can not be checked
-                gen = poly.gen
-                if gen != symbol:
-                    u = Dummy()
+                def _as_base_q(x):
+                    """Return (b**e, q) for x = b**(p*e/q) where p/q is the leading
+                    Rational of the exponent of x, e.g. exp(-2*x/3) -> (exp(x), 3)
+                    """
+                    b, e = x.as_base_exp()
+                    if e.is_Rational:
+                        return b, e.q
+                    if not e.is_Mul:
+                        return x, 1
+                    c, ee = e.as_coeff_Mul()
+                    if c.is_Rational and c is not S.One:  # c could be a Float
+                        return b**ee, c.q
+                    return x, 1
+
+                bases, qs = list(zip(*[_as_base_q(g) for g in gens]))
+                bases = set(bases)
+
+                if len(bases) > 1:
+                    funcs = set(b for b in bases if b.is_Function)
+
+                    trig = set([_ for _ in funcs if
+                        isinstance(_, C.TrigonometricFunction)])
+                    other = funcs - trig
+                    if not other and len(funcs.intersection(trig)) > 1:
+                        newf = TR1(f_num).rewrite(tan)
+                        if newf != f_num:
+                            return _solve(newf, symbol, **flags)
+
+                    # just a simple case - see if replacement of single function
+                    # clears all symbol-dependent functions, e.g.
+                    # log(x) - log(log(x) - 1) - 3 can be solved even though it has
+                    # two generators.
+
+                    if funcs:
+                        funcs = list(ordered(funcs))  # put shallowest function first
+                        f1 = funcs[0]
+                        t = Dummy()
+                        # perform the substitution
+                        ftry = f_num.subs(f1, t)
+
+                        # if no Functions left, we can proceed with usual solve
+                        if not ftry.has(symbol):
+                            cv_sols = _solve(ftry, t, **flags)
+                            cv_inv = _solve(t - f1, symbol, **flags)[0]
+                            sols = list()
+                            for sol in cv_sols:
+                                sols.append(cv_inv.subs(t, sol))
+                            return list(ordered(sols))
+
+                    msg = 'multiple generators %s' % gens
+
+                else:  # len(bases) == 1 and all(q == 1 for q in qs):
+                    # e.g. case where gens are exp(x), exp(-x)
+                    u = bases.pop()
+                    t = Dummy('t')
+                    inv = _solve(u - t, symbol, **flags)
+                    if isinstance(u, (Pow, exp)):
+                        # this will be resolved by factor in _tsolve but we might
+                        # as well try a simple expansion here to get things in
+                        # order so something like the following will work now without
+                        # having to factor:
+                        # >>> eq = (exp(I*(-x-2))+exp(I*(x+2)))
+                        # >>> eq.subs(exp(x),y)  # fails
+                        # exp(I*(-x - 2)) + exp(I*(x + 2))
+                        # >>> eq.expand().subs(exp(x),y)  # works
+                        # y**I*exp(2*I) + y**(-I)*exp(-2*I)
+                        def _expand(p):
+                            b, e = p.as_base_exp()
+                            e = expand_mul(e)
+                            return expand_power_exp(b**e)
+                        ftry = f_num.replace(
+                            lambda w: w.is_Pow or isinstance(w, exp),
+                            _expand).subs(u, t)
+                        if not ftry.has(symbol):
+                            soln = _solve(ftry, t, **flags)
+                            sols = list()
+                            for sol in soln:
+                                for i in inv:
+                                    sols.append(i.subs(t, sol))
+                            return list(ordered(sols))
+
+            elif len(gens) == 1:
+
+                # There is only one generator that we are interested in, but there
+                # may have been more than one generator identified by polys (e.g.
+                # for symbols other than the one we are interested in) so recast
+                # the poly in terms of our generator of interest.
+
+                if len(poly.gens) > 1:
+                    poly = Poly(poly, gens[0])
+
+                # if we aren't on the tsolve-pass, use roots
+                if not flags.pop('tsolve', False):
                     flags['tsolve'] = True
-                    inversion = _solve(gen - u, symbol, **flags)
-                    soln = list(set([i.subs(u, s) for i in
-                                inversion for s in soln]))
-                result = soln
+                    if poly.degree() == 1 and (
+                            poly.gen.is_Pow and
+                            poly.gen.exp.is_Rational and
+                            not poly.gen.exp.is_Integer):
+                        pass
+                    else:
+                        # for cubics and quartics, if the flag wasn't set, DON'T do it
+                        # by default since the results are quite long. Perhaps one
+                        # could base this decision on a certain critical length of the
+                        # roots.
+                        deg = poly.degree()
+                        if deg > 2:
+                            flags['simplify'] = flags.get('simplify', False)
+
+                        # TODO: Just pass composite=True to roots()
+                        poly = Poly(poly.as_expr(), poly.gen, composite=True)
+                        soln = list(roots(poly, cubics=True, quartics=True,
+                                                             quintics=True).keys())
+
+                        if len(soln) < deg:
+                            try:
+                                # get all_roots if possible
+                                soln = list(ordered(uniq(poly.all_roots())))
+                            except NotImplementedError:
+                                pass
+                        gen = poly.gen
+                        if gen != symbol:
+                            u = Dummy()
+                            inversion = _solve(gen - u, symbol, **flags)
+                            soln = list(ordered(set([i.subs(u, s) for i in
+                                        inversion for s in soln])))
+                        result = soln
+
 
     # fallback if above fails
     if result is False:
-        result = _tsolve(f_num, symbol, **flags)
+
+        # allow tsolve to be used on next pass if needed
+        flags.pop('tsolve', None)
+        try:
+            result = _tsolve(f_num, symbol, **flags)
+        except PolynomialError:
+            result = None
         if result is None:
             result = False
 
@@ -1252,7 +1389,7 @@ def _solve(f, *symbols, **flags):
         "\nNo algorithms are implemented to solve equation %s" % f)
 
     if flags.get('simplify', True):
-        result = map(simplify, result)
+        result = list(map(simplify, result))
         # we just simplified the solution so we now set the flag to
         # False so the simplification doesn't happen again in checksol()
         flags['simplify'] = False
@@ -1260,11 +1397,11 @@ def _solve(f, *symbols, **flags):
     if check:
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
-        result = [s for s in result if
+        result = [s for s in result if isinstance(s, RootOf) or
                   all(not checksol(den, {symbol: s}, **flags)
                     for den in dens)]
         # keep only results if the check is not False
-        result = [r for r in result if
+        result = [r for r in result if isinstance(r, RootOf) or
                   checksol(f_num, {symbol: r}, **flags) is not False]
     return result
 
@@ -1288,7 +1425,7 @@ def _solve_system(exprs, symbols, **flags):
             failed.append(g)
             continue
 
-        poly = g.as_poly(*symbols, **{'extension': True})
+        poly = g.as_poly(*symbols, extension=True)
 
         if poly is not None:
             polys.append(poly)
@@ -1305,7 +1442,7 @@ def _solve_system(exprs, symbols, **flags):
             for i, poly in enumerate(polys):
                 for monom, coeff in poly.terms():
                     try:
-                        j = list(monom).index(1)
+                        j = monom.index(1)
                         matrix[i, j] = coeff
                     except ValueError:
                         matrix[i, m] = -coeff
@@ -1322,27 +1459,39 @@ def _solve_system(exprs, symbols, **flags):
                     result = None
             if failed:
                 if result:
-                    solved_syms = result.keys()
+                    solved_syms = list(result.keys())
                 else:
                     solved_syms = []
 
         else:
             if len(symbols) > len(polys):
                 from sympy.utilities.iterables import subsets
-                from sympy.core.compatibility import set_union
 
-                free = set_union(*[p.free_symbols for p in polys])
+                free = set.union(*[p.free_symbols for p in polys])
                 free = list(free.intersection(symbols))
                 free.sort(key=default_sort_key)
+                got_s = set([])
+                result = []
                 for syms in subsets(free, len(polys)):
                     try:
                         # returns [] or list of tuples of solutions for syms
-                        result = solve_poly_system(polys, *syms)
-                        if result:
-                            solved_syms = syms
-                            break
+                        res = solve_poly_system(polys, *syms)
+                        if res:
+                            for r in res:
+                                skip = False
+                                for r1 in r:
+                                    if got_s and any([ss in r1.free_symbols
+                                           for ss in got_s]):
+                                        # sol depends on previously
+                                        # solved symbols: discard it
+                                        skip = True
+                                if not skip:
+                                    got_s.update(syms)
+                                    result.extend([dict(list(zip(syms, r)))])
                     except NotImplementedError:
                         pass
+                if got_s:
+                    solved_syms = list(got_s)
                 else:
                     raise NotImplementedError('no valid subset found')
             else:
@@ -1352,14 +1501,13 @@ def _solve_system(exprs, symbols, **flags):
                 except NotImplementedError:
                     failed.extend([g.as_expr() for g in polys])
                     solved_syms = []
-
-            if result:
-                # we don't know here if the symbols provided were given
-                # or not, so let solve resolve that. A list of dictionaries
-                # is going to always be returned from here.
-                #
-                # We do not check the solution obtained from polys, either.
-                result = [dict(zip(solved_syms, r)) for r in result]
+                if result:
+                    # we don't know here if the symbols provided were given
+                    # or not, so let solve resolve that. A list of dictionaries
+                    # is going to always be returned from here.
+                    #
+                    # We do not check the solution obtained from polys, either.
+                    result = [dict(list(zip(solved_syms, r))) for r in result]
 
     if failed:
         # For each failed equation, see if we can solve for one of the
@@ -1388,7 +1536,7 @@ def _solve_system(exprs, symbols, **flags):
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
             newresult = []
             bad_results = []
-            got_s = None
+            got_s = set([])
             u = Dummy()
             for r in result:
                 # update eq with everything that is known so far
@@ -1424,6 +1572,9 @@ def _solve_system(exprs, symbols, **flags):
                     if do_simplify:
                         flags['simplify'] = False  # for checksol's sake
                     for sol in soln:
+                        if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                            # sol depends on previously solved symbols: discard it
+                            continue
                         if check:
                             # check that it satisfies *other* equations
                             ok = False
@@ -1439,20 +1590,18 @@ def _solve_system(exprs, symbols, **flags):
                                 continue
                         # update existing solutions with this new one
                         rnew = r.copy()
-                        for k, v in r.iteritems():
+                        for k, v in r.items():
                             rnew[k] = v.subs(s, sol)
                         # and add this new solution
                         rnew[s] = sol
                         newresult.append(rnew)
                     if simplify_flag is not None:
                         flags['simplify'] = simplify_flag
-                    got_s = s
-                    break
-                else:
+                    got_s.add(s)
+                if not got_s:
                     raise NotImplementedError('could not solve %s' % eq2)
             if got_s:
                 result = newresult
-                solved_syms.add(got_s)
             for b in bad_results:
                 result.remove(b)
         # if there is only one result should we return just the dictionary?
@@ -1616,7 +1765,7 @@ def minsolve_linear_system(system, *symbols, **flags):
     quick = flags.get('quick', False)
     # Check if there are any non-zero solutions at all
     s0 = solve_linear_system(system, *symbols, **flags)
-    if not s0 or all(v == 0 for v in s0.itervalues()):
+    if not s0 or all(v == 0 for v in s0.values()):
         return s0
     if quick:
         # We just solve the system and try to heuristically find a nice
@@ -1624,7 +1773,7 @@ def minsolve_linear_system(system, *symbols, **flags):
         s = solve_linear_system(system, *symbols)
         def update(determined, solution):
             delete = []
-            for k, v in solution.iteritems():
+            for k, v in solution.items():
                 solution[k] = v.subs(determined)
                 if not solution[k].free_symbols:
                     delete.append(k)
@@ -1635,14 +1784,14 @@ def minsolve_linear_system(system, *symbols, **flags):
         update(determined, s)
         while s:
             # NOTE sort by default_sort_key to get deterministic result
-            k = max((k for k in s.itervalues()),
+            k = max((k for k in s.values()),
                     key=lambda x: (len(x.free_symbols), default_sort_key(x)))
             x = max(k.free_symbols, key=default_sort_key)
             if len(k.free_symbols) != 1:
                 determined[x] = S(0)
             else:
                 val = solve(k)[0]
-                if val == 0 and all(v.subs(x, val) == 0 for v in s.itervalues()):
+                if val == 0 and all(v.subs(x, val) == 0 for v in s.values()):
                     determined[x] = S(1)
                 else:
                     determined[x] = val
@@ -1656,24 +1805,24 @@ def minsolve_linear_system(system, *symbols, **flags):
         # variables, we will find an optimal solution.
         # We speed up slightly by starting at one less than the number of
         # variables the quick method manages.
-        from sympy.core.compatibility import combinations
+        from itertools import combinations
         from sympy.utilities.misc import debug
         N = len(symbols)
-        bestsol = minsolve_linear_system(system, *symbols, **{'quick': True})
-        n0 = len([x for x in bestsol.itervalues() if x != 0])
+        bestsol = minsolve_linear_system(system, *symbols, quick=True)
+        n0 = len([x for x in bestsol.values() if x != 0])
         for n in range(n0 - 1, 1, -1):
             debug('minsolve: %s' % n)
             thissol = None
-            for nonzeros in combinations(range(N), n):
+            for nonzeros in combinations(list(range(N)), n):
                 subm = Matrix([system.col(i).T for i in nonzeros] + [system.col(-1).T]).T
                 s = solve_linear_system(subm, *[symbols[i] for i in nonzeros])
-                if s and not all(v == 0 for v in s.itervalues()):
+                if s and not all(v == 0 for v in s.values()):
                     subs = [(symbols[v], S(1)) for v in nonzeros]
-                    for k, v in s.iteritems():
+                    for k, v in s.items():
                         s[k] = v.subs(subs)
                     for sym in symbols:
                         if sym not in s:
-                            if list(symbols).index(sym) in nonzeros:
+                            if symbols.index(sym) in nonzeros:
                                 s[sym] = S(1)
                             else:
                                 s[sym] = S(0)
@@ -1895,7 +2044,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
 
     equ = cancel(equ).as_numer_denom()[0]
 
-    system = collect(equ.expand(), sym, evaluate=False).values()
+    system = list(collect(equ.expand(), sym, evaluate=False).values())
 
     if not any(equ.has(sym) for equ in system):
         # consecutive powers in the input expressions have
@@ -1941,46 +2090,6 @@ def solve_linear_system_LU(matrix, syms):
         solutions[syms[i]] = soln[i, 0]
     return solutions
 
-_x = Dummy('x')
-_a, _b, _c, _d, _e, _f, _g, _h = [Wild(t, exclude=[_x]) for t in 'abcdefgh']
-_patterns = None
-
-
-def _generate_patterns():
-    """
-    Generates patterns for transcendental equations.
-
-    This is lazily calculated (called) in the tsolve() function and stored in
-    the patterns global variable.
-    """
-
-    tmp1 = _f ** (_h - (_c*_g/_b))
-    tmp2 = (-_e*tmp1/_a)**(1/_d)
-    global _patterns
-    _patterns = [
-        (_a*_x*exp(_b*_x) - _c,
-            LambertW(_b*_c/_a)/_b),
-        (_a*_x*log(_b*_x) - _c,
-            exp(LambertW(_b*_c/_a))/_b),
-        (_a*(_b*_x + _c)**_d + _e,
-            ((-(_e/_a))**(1/_d) - _c)/_b),
-        (_b + _c*exp(_d*_x + _e),
-            (log(-_b/_c) - _e)/_d),
-        (_a*_x + _b + _c*exp(_d*_x + _e),
-            -_b/_a - LambertW(_c*_d*exp(_e - _b*_d/_a)/_a)/_d),
-        (_b + _c*_f**(_d*_x + _e),
-            (log(-_b/_c) - _e*log(_f))/_d/log(_f)),
-        (_a*_x + _b + _c*_f**(_d*_x + _e),
-            -_b/_a - LambertW(_c*_d*_f**(_e - _b*_d/_a)*log(_f)/_a)/_d/log(_f)),
-        (_b + _c*log(_d*_x + _e),
-            (exp(-_b/_c) - _e)/_d),
-        (_a*_x + _b + _c*log(_d*_x + _e),
-            -_e/_d + _c/_a*LambertW(_a/_c/_d*exp(-_b/_c + _a*_e/_c/_d))),
-        (_a*(_b*_x + _c)**_d + _e*_f**(_g*_x + _h),
-            -_c/_b - _d*LambertW(-tmp2*_g*log(_f)/_b/_d)/_g/log(_f))
-    ]
-
-
 def tsolve(eq, sym):
     SymPyDeprecationWarning(
         feature="tsolve()",
@@ -1991,102 +2100,143 @@ def tsolve(eq, sym):
     return _tsolve(eq, sym)
 
 
+# these are functions that have multiple inverse values per period
+multi_inverses = {
+    sin: lambda x: (asin(x), S.Pi - asin(x)),
+    cos: lambda x: (acos(x), 2*S.Pi - acos(x)),
+}
+
+
 def _tsolve(eq, sym, **flags):
     """
     Helper for _solve that solves a transcendental equation with respect
     to the given symbol. Various equations containing powers and logarithms,
     can be solved.
 
-    Only a single solution is returned. This solution is generally
-    not unique. In some cases, a complex solution may be returned
-    even though a real solution exists.
+    There is currently no guarantee that all solutions will be returned or
+    that a real solution will be favored over a complex one.
 
-        >>> from sympy import log
-        >>> from sympy.solvers.solvers import _tsolve as tsolve
-        >>> from sympy.abc import x
+    Examples
+    ========
 
-        >>> tsolve(3**(2*x+5)-4, x)
-        [(-5*log(3) + 2*log(2))/(2*log(3))]
+    >>> from sympy import log
+    >>> from sympy.solvers.solvers import _tsolve as tsolve
+    >>> from sympy.abc import x
 
-        >>> tsolve(log(x) + 2*x, x)
-        [LambertW(2)/2]
+    >>> tsolve(3**(2*x + 5) - 4, x)
+    [-5/2 + log(2)/log(3), log(-2*sqrt(3)/27)/log(3)]
+
+    >>> tsolve(log(x) + 2*x, x)
+    [LambertW(2)/2]
 
     """
-    if _patterns is None:
-        _generate_patterns()
-    eq2 = eq.subs(sym, _x)
-    for p, sol in _patterns:
-        m = eq2.match(p)
-        if m:
-            soln = sol.subs(m).subs(_x, sym)
-            if sym not in soln.free_symbols:
-                return [soln]
-
-    try:
-        u = unrad(eq, sym)
-    except ValueError:
-        raise NotImplementedError('Radicals cannot be cleared from %s' % eq)
-    if u:
-        eq, cov, dens = u
-        if cov:
-            if len(cov) > 1:
-                raise NotImplementedError('Not sure how to handle this.')
-            isym, ieq = cov[0]
-            # since cov is written in terms of positive symbols, set
-            # check to False or else 0 would be excluded; _solve will check
-            # the results
-            flags['check'] = False
-            sol = _solve(eq, isym, **flags)
-            inv = _solve(ieq, sym, **flags)
-            result = []
-            for s in sol:
-                for i in inv:
-                    result.append(i.subs(isym, s))
-            return result
-        else:
-            return _solve(eq, sym, **flags)
+    if 'tsolve_saw' not in flags:
+        flags['tsolve_saw'] = []
+    if eq in flags['tsolve_saw']:
+        return None
+    else:
+        flags['tsolve_saw'].append(eq)
 
     rhs, lhs = _invert(eq, sym)
 
-    if lhs.is_Add:
-        # it's time to try factoring
-        fac = factor(lhs - rhs)
-        if fac.is_Mul:
-            return _solve(fac, sym)
+    if lhs == sym:
+        return [rhs]
+    try:
+        if lhs.is_Add:
+            # it's time to try factoring; powdenest is used
+            # to try get powers in standard form for better factoring
+            f = factor(powdenest(lhs - rhs))
+            if f.is_Mul:
+                return _solve(f, sym, **flags)
+            if rhs:
+                f = logcombine(lhs, force=flags.get('force', False))
+                if f.count(log) != lhs.count(log):
+                    if f.func is log:
+                        return _solve(f.args[0] - exp(rhs), sym, **flags)
+                    return _tsolve(f - rhs, sym)
 
-    elif lhs.is_Pow:
-        if lhs.exp.is_Integer:
-            if lhs - rhs != eq:
-                return _solve(lhs - rhs, sym)
-            elif not rhs:
-                return _solve(lhs.base, sym)
-        elif sym not in lhs.exp.free_symbols:
-            return _solve(lhs.base - rhs**(1/lhs.exp), sym)
-        elif not rhs and sym in lhs.exp.free_symbols:
-            # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
-            # the same place
-            sol_base = _solve(lhs.base, sym)
-            if not sol_base:
-                return sol_base
-            return list(set(sol_base) - set(_solve(lhs.exp, sym)))
-        elif (rhs is not S.Zero and
-              lhs.base.is_positive and
-              lhs.exp.is_real):
-            return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
+        elif lhs.is_Pow:
+            if lhs.exp.is_Integer:
+                if lhs - rhs != eq:
+                    return _solve(lhs - rhs, sym, **flags)
+            elif sym not in lhs.exp.free_symbols:
+                return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
+            elif not rhs and sym in lhs.exp.free_symbols:
+                # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
+                # the same place
+                sol_base = _solve(lhs.base, sym, **flags)
+                if not sol_base:
+                    return sol_base  # no solutions to remove so return now
+                return list(ordered(set(sol_base) - set(
+                    _solve(lhs.exp, sym, **flags))))
+            elif (rhs is not S.Zero and
+                        lhs.base.is_positive and
+                        lhs.exp.is_real):
+                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
 
-    elif lhs.is_Mul and rhs.is_positive:
-        llhs = expand_log(log(lhs))
-        if llhs.is_Add:
-            return _solve(llhs - log(rhs), sym)
+        elif lhs.is_Mul and rhs.is_positive:
+            llhs = expand_log(log(lhs))
+            if llhs.is_Add:
+                return _solve(llhs - log(rhs), sym, **flags)
 
-    rewrite = lhs.rewrite(exp)
-    if rewrite != lhs:
-        return _solve(rewrite - rhs, sym)
+        elif lhs.is_Function and lhs.nargs == 1 and lhs.func in multi_inverses:
+            # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
+            soln = []
+            for i in multi_inverses[lhs.func](rhs):
+                soln.extend(_solve(lhs.args[0] - i, sym, **flags))
+            return list(ordered(soln))
+
+        rewrite = lhs.rewrite(exp)
+        if rewrite != lhs:
+            return _solve(rewrite - rhs, sym, **flags)
+    except NotImplementedError:
+        pass
+
+    # maybe it is a lambert pattern
+    if flags.pop('bivariate', True):
+        # lambert forms may need some help being recognized, e.g. changing
+        # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
+        # to 2**(3*x) + (x*log(2) + 1)**3
+        g = _filtered_gens(eq.as_poly(), sym)
+        up_or_log = set()
+        for gi in g:
+            if gi.func is exp or gi.func is log:
+                up_or_log.add(gi)
+            elif gi.is_Pow:
+                gisimp = powdenest(expand_power_exp(gi))
+                if gisimp.is_Pow and sym in gisimp.exp.free_symbols:
+                    up_or_log.add(gi)
+        down = g.difference(up_or_log)
+        eq_down = expand_log(expand_power_exp(eq)).subs(
+            dict(list(zip(up_or_log, [0]*len(up_or_log)))))
+        eq = expand_power_exp(factor(eq_down, deep=True) + (eq - eq_down))
+        rhs, lhs = _invert(eq, sym)
+        if lhs.has(sym):
+            try:
+                poly = lhs.as_poly()
+                g = _filtered_gens(poly, sym)
+                return _solve_lambert(lhs - rhs, sym, g)
+            except NotImplementedError:
+                # maybe it's a convoluted function
+                if len(g) == 2:
+                    try:
+                        gpu = bivariate_type(lhs - rhs, *g)
+                        if gpu is None:
+                            raise NotImplementedError
+                        g, p, u = gpu
+                        flags['bivariate'] = False
+                        inversion = _tsolve(g - u, sym, **flags)
+                        if inversion:
+                            sol = _solve(p, u, **flags)
+                            return list(ordered([i.subs(u, s)
+                                for i in inversion for s in sol]))
+                    except NotImplementedError:
+                        pass
 
     if flags.pop('force', True):
         flags['force'] = False
         pos, reps = posify(lhs - rhs)
-        for u, s in reps.iteritems():
+        for u, s in reps.items():
             if s == sym:
                 break
         else:
@@ -2095,7 +2245,8 @@ def _tsolve(eq, sym, **flags):
             soln = _solve(pos, u, **flags)
         except NotImplementedError:
             return
-        return [s.subs(reps) for s in soln]
+        return list(ordered([s.subs(reps) for s in soln]))
+
 
 # TODO: option for calculating J numerically
 
@@ -2125,7 +2276,7 @@ def nsolve(*args, **kwargs):
     >>> x2 = Symbol('x2')
     >>> f1 = 3 * x1**2 - 2 * x2**2 - 1
     >>> f2 = x1**2 - 2 * x1 + x2**2 + 2 * x2 - 8
-    >>> print nsolve((f1, f2), (x1, x2), (-1, 1))
+    >>> print(nsolve((f1, f2), (x1, x2), (-1, 1)))
     [-1.19287309935246]
     [ 1.27844411169911]
 
@@ -2181,13 +2332,13 @@ def nsolve(*args, **kwargs):
             need at least as many equations as variables'''))
     verbose = kwargs.get('verbose', False)
     if verbose:
-        print 'f(x):'
-        print f
+        print('f(x):')
+        print(f)
     # derive Jacobian
     J = f.jacobian(fargs)
     if verbose:
-        print 'J(x):'
-        print J
+        print('J(x):')
+        print(J)
     # create functions
     f = lambdify(fargs, f.T, modules)
     J = lambdify(fargs, J, modules)
@@ -2201,8 +2352,8 @@ def _invert(eq, *symbols, **kwargs):
     contains symbols. ``i`` and ``d`` are obtained after recursively using
     algebraic inversion until an uninvertible ``d`` remains. If there are no
     free symbols then ``d`` will be zero. Some (but not necessarily all)
-    solutions to the expression ``i - d`` will be related the solutions of the
-    original expression.
+    solutions to the expression ``i - d`` will be related to the solutions of
+    the original expression.
 
     Examples
     ========
@@ -2215,7 +2366,7 @@ def _invert(eq, *symbols, **kwargs):
     >>> invert(3)
     (3, 0)
     >>> invert(2*cos(x) - 1)
-    (pi/3, x)
+    (1/2, cos(x))
     >>> invert(sqrt(x) - 3)
     (3, sqrt(x))
     >>> invert(sqrt(x) + y, x)
@@ -2250,17 +2401,6 @@ def _invert(eq, *symbols, **kwargs):
 
     dointpow = bool(kwargs.get('integer_power', False))
 
-    inverses = {
-        asin: sin,
-        acos: cos,
-        atan: tan,
-        acot: cot,
-        asinh: sinh,
-        acosh: cosh,
-        atanh: tanh,
-        acoth: coth,
-    }
-
     lhs = eq
     rhs = S.Zero
     while True:
@@ -2294,7 +2434,7 @@ def _invert(eq, *symbols, **kwargs):
                 terms.setdefault(d, []).append(i)
             if any(len(v) > 1 for v in terms.values()):
                 args = []
-                for d, i in terms.iteritems():
+                for d, i in terms.items():
                     if len(i) > 1:
                         args.append(Add(*i)*d)
                     else:
@@ -2303,8 +2443,9 @@ def _invert(eq, *symbols, **kwargs):
 
         # if it's a two-term Add with rhs = 0 and two powers we can get the
         # dependent terms together, e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
-        if lhs.is_Add and not rhs and len(lhs.args) == 2:
-            a, b = lhs.as_two_terms()
+        if lhs.is_Add and not rhs and len(lhs.args) == 2 and \
+                not lhs.is_polynomial(*symbols):
+            a, b = ordered(lhs.args)
             ai, ad = a.as_independent(*symbols)
             bi, bd = b.as_independent(*symbols)
             if any(_ispow(i) for i in (ad, bd)):
@@ -2315,36 +2456,39 @@ def _invert(eq, *symbols, **kwargs):
                     lhs = powsimp(powdenest(ad/bd))
                     rhs = -bi/ai
                 else:
-                    bases = (b_base, a_base)
-                    expos = (b_exp, a_exp)
-                    if (all(i.is_real for i in bases + expos) and
-                            all(i.is_positive for i in bases) and
-                            any(i.has(*symbols) for i in expos) and
-                            not any(i.has(*symbols) for i in bases) and
-                            sign(ai*bi).is_negative):
-                        # ai*a_base**a_exp = -bi*b_base**b_exp
-                        lhs = a_exp*log(a_base) - b_exp*log(b_base)
-                        rhs = -log(ai/-bi)
+                    rat = ad/bd
+                    _lhs = powsimp(ad/bd)
+                    if _lhs != rat:
+                        lhs = _lhs
+                        rhs = -bi/ai
+            if ai*bi is S.NegativeOne:
+                if all(
+                        isinstance(i, Function) for i in (ad, bd)) and \
+                        ad.func == bd.func and ad.nargs == bd.nargs:
+                    if len(ad.args) == 1:
+                        lhs = ad.args[0] - bd.args[0]
+                    else:
+                        # should be able to solve
+                        # f(x, y) == f(2, 3) -> x == 2
+                        # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
+                        raise NotImplementedError('equal function with more than 1 argument')
 
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
-        #                    -1
-        # f(x) = g  ->  x = f  (g)
-        elif lhs.is_Function and (lhs.nargs == 1 or len(lhs.args) == 1) and \
-                                 (hasattr(lhs, 'inverse') or
-                                  lhs.func in inverses or
-                                  lhs.func is Abs):
-            if lhs.func in inverses:
-                inv = inverses[lhs.func]
-            elif lhs.func is Abs:
-                inv = lambda w: w**2
-                lhs = Basic(lhs.args[0]**2)  # get it ready to remove the args
-            else:
-                inv = lhs.inverse()
-            rhs = inv(rhs)
-            lhs = lhs.args[0]
-
+        if lhs.is_Function:
+            if hasattr(lhs, 'inverse') and len(lhs.args) == 1:
+                #                    -1
+                # f(x) = g  ->  x = f  (g)
+                #
+                # /!\ inverse should not be defined if there are multiple values
+                # for the function -- these are handled in _tsolve
+                #
+                rhs = lhs.inverse()(rhs)
+                lhs = lhs.args[0]
+            elif lhs.func is atan2:
+                y, x = lhs.args
+                lhs = 2*atan(y/(sqrt(x**2 + y**2) + x))
         if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:
             lhs = 1/lhs
             rhs = 1/rhs
@@ -2376,7 +2520,7 @@ def unrad(eq, *syms, **flags):
 
     ValueError is raised if there are radicals and they cannot be removed.
 
-    Otherwise
+    Otherwise the tuple, ``(eq, cov, dens)``, is returned where::
 
         ``eq``, ``cov``
             equation without radicals, perhaps written in terms of
@@ -2397,8 +2541,15 @@ def unrad(eq, *syms, **flags):
             interest will be cleared.
 
     ``flags`` are used internally for communication during recursive calls.
+    Two options are also recognized::
 
-    Radicals can be removed from an expression if:
+        ``take``, when defined, is interpreted as a single-argument function
+        that returns True if a given Pow should be handled.
+        ``all``, when True, will signify that an attempt should be made to
+        remove all radicals. ``take``, if present, has priority over ``all``.
+
+    Radicals can be removed from an expression if::
+
         *   all bases of the radicals are the same; a change of variables is
             done in this case.
         *   if all radicals appear in one term of the expression
@@ -2411,33 +2562,70 @@ def unrad(eq, *syms, **flags):
         >>> from sympy.solvers.solvers import unrad
         >>> from sympy.abc import x
         >>> from sympy import sqrt, Rational
-        >>> unrad(sqrt(x)*x**Rational(1,3) + 2)
+        >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
         (x**5 - 64, [], [])
-        >>> unrad(sqrt(x) + (x + 1)**Rational(1,3))
+        >>> unrad(sqrt(x) + (x + 1)**Rational(1, 3))
         (x**3 - x**2 - 2*x - 1, [], [])
-        >>> unrad(sqrt(x) + x**Rational(1,3) + 2)
+        >>> unrad(sqrt(x) + x**Rational(1, 3) + 2)
         (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
 
     """
+    def _canonical(eq):
+        # remove constants since these don't change the location of the root
+        # and expand the expression
+        eq = factor_terms(eq)
+        if eq.is_Mul:
+            eq = Mul(*[f for f in eq.args if not f.is_number])
+        eq = _mexpand(eq)
+
+        # make sign canonical
+        free = eq.free_symbols
+        if len(free) == 1:
+            if (eq.coeff(free.pop()**degree(eq)) < 0) is True:
+                eq = -eq
+        elif eq.could_extract_minus_sign():
+            eq = -eq
+
+        return eq
+
     if eq.is_Atom:
         return
-    cov, dens, nwas = [flags.get(k, v) for k, v in
-                       sorted(dict(dens=None, cov=None, n=None).items())]
+    cov, dens, nwas, rpt = [flags.get(k, v) for k, v in
+        sorted(dict(dens=None, cov=None, n=None, rpt=0).items())]
 
-    def _take(d):
-        # see if this is a term that has symbols of interest
-        # and merits further processing
-        free = d.free_symbols
-        if not free:
-            return False
-        return not syms or free.intersection(syms)
+    if flags.get('take', None):
+        _take = flags.pop('take')
+    elif flags.pop('all', None):
+        _rad = lambda w: w.is_Pow and w.exp.is_Rational and w.exp.q != 1
+        def _take(d):
+            return _rad(d) or any(_rad(i) for i in d.atoms(Pow))
+        if eq.has(S.ImaginaryUnit):
+            i = Dummy()
+            flags['take'] = _take
+            try:
+                rv = unrad(eq.xreplace({S.ImaginaryUnit: sqrt(i)}), *syms, **flags)
+                rep = {i: S.NegativeOne}
+                rv = (_canonical(rv[0].xreplace(rep)),
+                      [tuple([j.xreplace(rep) for j in i]) for i in rv[1]],
+                      [i.xreplace(rep) for i in rv[2]])
+                return rv
+            except ValueError as msg:
+                raise msg
+    else:
+        def _take(d):
+            # see if this is a term that has symbols of interest
+            # and merits further processing
+            free = d.free_symbols
+            if not free:
+                return False
+            return not syms or free.intersection(syms)
 
     if dens is None:
         dens = set()
     if cov is None:
         cov = []
 
-    eq = powdenest(eq)
+    eq = powdenest(factor_terms(eq, radical=True))
     eq, d = eq.as_numer_denom()
     eq = _mexpand(eq)
     if _take(d):
@@ -2469,7 +2657,7 @@ def unrad(eq, *syms, **flags):
     depth = sqrt_depth(eq)
 
     # get terms together that have common generators
-    drad = dict(zip(rads, range(len(rads))))
+    drad = dict(list(zip(rads, list(range(len(rads))))))
     rterms = {(): []}
     args = Add.make_args(poly.as_expr())
     for t in args:
@@ -2483,7 +2671,7 @@ def unrad(eq, *syms, **flags):
     rterms = [Add(*rterms[k]) for k in rterms.keys()]
     # the output will depend on the order terms are processed, so
     # make it canonical quickly
-    rterms.sort(key=default_sort_key)
+    rterms = list(reversed(list(ordered(rterms))))
 
     # continue handling
     ok = True
@@ -2493,21 +2681,23 @@ def unrad(eq, *syms, **flags):
     elif len(rterms) == 2 and not args:
         eq = rterms[0]**lcm - rterms[1]**lcm
 
-    elif log(lcm, 2).is_Integer and (not args and len(rterms) == 4 or len(rterms) < 4):
+    elif log(lcm, 2).is_Integer and (not args and
+            len(rterms) == 4 or len(rterms) < 4):
+        def _norm2(a, b):
+            return a**2 + b**2 + 2*a*b
+
         if len(rterms) == 4:
             # (r0+r1)**2 - (r2+r3)**2
-            t1, t2, t3, t4 = [t**2 for t in rterms]
-            eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
-                (t3 + t4 + 2*rterms[2]*rterms[3])
+            r0, r1, r2, r3 = rterms
+            eq = _norm2(r0, r1) - _norm2(r2, r3)
         elif len(rterms) == 3:
-            # (r0+r1)**2 - (r2+a)**2
-            t1, t2, t3 = [t**2 for t in rterms]
-            eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
-                (t3 + args**2 + 2*args*rterms[2])
+            # (r1+r2)**2 - (r0+args)**2
+            r0, r1, r2 = rterms
+            eq = _norm2(r1, r2) - _norm2(r0, args)
         elif len(rterms) == 2:
-            t1, t2 = [t**2 for t in rterms[:2]]
-            # r0**2 - (r1+a)**2
-            eq = t1 - (t2 + args**2 + 2*args*rterms[1])
+            # r0**2 - (r1+args)**2
+            r0, r1 = rterms
+            eq = r0**2 - _norm2(r1, args)
 
     elif len(bases) == 1:  # change of variables may work
         ok = False
@@ -2533,13 +2723,20 @@ def unrad(eq, *syms, **flags):
         ok = False
 
     new_depth = sqrt_depth(eq)
-    if not ok or (nwas is not None and len(rterms) == nwas and new_depth and new_depth == depth):
+    rpt += 1  # XXX how many repeats with others unchanging is enough?
+    if not ok or (
+                nwas is not None and len(rterms) == nwas and
+                new_depth is not None and new_depth == depth and
+                rpt > 3):
         # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 
-    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms)))
+    neq = unrad(eq, *syms, cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take)
     if neq:
         eq = neq[0]
-    if eq.could_extract_minus_sign():
-        eq = -eq
-    return (_mexpand(eq), cov, list(dens))
+
+    return (_canonical(eq), cov, list(dens))
+
+
+from sympy.solvers.bivariate import (
+    bivariate_type, _solve_lambert, _filtered_gens)

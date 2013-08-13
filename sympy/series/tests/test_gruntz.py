@@ -407,3 +407,9 @@ def test_exp_log_series():
 
 def test_issue545():
     assert gruntz(((x**7 + x + 1)/(2**x + x**2))**(-1/x), x, oo) == 2
+
+
+def test_issue3744():
+    n = Symbol('n', integer=True, positive=True)
+    r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
+    assert gruntz(r, x, 1).simplify() == n/2

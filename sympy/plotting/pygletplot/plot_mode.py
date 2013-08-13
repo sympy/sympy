@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import Symbol, sympify
 from plot_interval import PlotInterval
 from plot_object import PlotObject
@@ -210,7 +212,7 @@ class PlotMode(PlotObject):
         #try:
         cls._init_mode()
 
-        #except Exception, e:
+        #except Exception as e:
         #    raise RuntimeError( ("Failed to initialize "
         #                      "plot mode %s. Reason: %s")
         #                       % (name, (str(e))) )
@@ -232,7 +234,7 @@ class PlotMode(PlotObject):
                 # also set that.
                 PlotMode._mode_default_map[d][i] = cls
 
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError(("Failed to register "
                               "plot mode %s. Reason: %s")
                                % (name, (str(e))))

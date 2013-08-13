@@ -17,18 +17,14 @@ SymPy is case sensitive. The implementation below does not care and leaves
 the responsibility for generating properly cased Fortran code to the user.
 """
 
+from __future__ import print_function, division
 
-from sympy.core import S, C, Add
+import string
+
+from sympy.core import S, C, Add, N
+from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
-    cosh, tanh, sqrt, log, exp, Abs, sign, conjugate, Piecewise
-
-implicit_functions = set([
-    sin, cos, tan, asin, acos, atan, atan2, sinh, cosh, tanh, sqrt, log, exp,
-    Abs, sign, conjugate
-])
-
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
@@ -44,11 +40,16 @@ class FCodePrinter(CodePrinter):
         'source_format': 'fixed',
     }
 
+    _implicit_functions = set([
+        "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh",
+        "cosh", "tanh", "sqrt", "log", "exp", "erf", "Abs", "sign", "conjugate",
+    ])
+
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
         assign_to = self._settings['assign_to']
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             self._settings['assign_to'] = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("FCodePrinter cannot assign to object of type %s" %
@@ -113,6 +114,7 @@ class FCodePrinter(CodePrinter):
         self._not_supported = set()
 
         lines = []
+        from sympy.functions import Piecewise
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
             for i, (e, c) in enumerate(expr.args):
@@ -194,7 +196,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Function(self, expr):
         name = self._settings["user_functions"].get(expr.__class__)
+        eargs = expr.args
         if name is None:
+            from sympy.functions import conjugate
             if expr.func == conjugate:
                 name = "conjg"
             else:
@@ -202,10 +206,13 @@ class FCodePrinter(CodePrinter):
             if hasattr(expr, '_imp_') and isinstance(expr._imp_, C.Lambda):
                 # inlined function.
                 # the expression is printed with _print to avoid loops
-                return self._print(expr._imp_(*expr.args))
-            if expr.func not in implicit_functions:
+                return self._print(expr._imp_(*eargs))
+            if expr.func.__name__ not in self._implicit_functions:
                 self._not_supported.add(expr)
-        return "%s(%s)" % (name, self.stringify(expr.args, ", "))
+            else:
+                # convert all args to floats
+                eargs = map(N, eargs)
+        return "%s(%s)" % (name, self.stringify(eargs, ", "))
 
     _print_factorial = _print_Function
 
@@ -272,7 +279,7 @@ class FCodePrinter(CodePrinter):
            complex rule to give nice results.
         """
         # routine to find split point in a code line
-        my_alnum = set("_+-.0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_")
+        my_alnum = set("_+-." + string.digits + string.ascii_letters)
         my_white = set(" \t()")
 
         def split_pos_code(line, endpos):
@@ -335,7 +342,7 @@ class FCodePrinter(CodePrinter):
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -419,7 +426,7 @@ def fcode(expr, **settings):
        '      8*sqrt(2.0d0)*tau**(7.0d0/2.0d0)'
        >>> fcode(sin(x), assign_to="s")
        '      s = sin(x)'
-       >>> print fcode(pi)
+       >>> print(fcode(pi))
              parameter (pi = 3.14159265358979d0)
              pi
 
@@ -434,4 +441,4 @@ def print_fcode(expr, **settings):
 
        See fcode for the meaning of the optional arguments.
     """
-    print fcode(expr, **settings)
+    print(fcode(expr, **settings))

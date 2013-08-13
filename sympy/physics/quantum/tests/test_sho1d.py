@@ -31,7 +31,7 @@ omega = Symbol('omega')
 m = Symbol('m')
 ndim = Integer(4)
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
 
 ad_rep_sympy = represent(ad, basis=N, ndim=4, format='sympy')
@@ -48,21 +48,21 @@ def test_RaisingOp():
     assert qapply(ad*k) == (sqrt(k.n + 1)*SHOKet(k.n + 1)).expand()
     assert qapply(ad*kz) == (sqrt(kz.n + 1)*SHOKet(kz.n + 1)).expand()
     assert qapply(ad*kf) == (sqrt(kf.n + 1)*SHOKet(kf.n + 1)).expand()
-    assert ad().rewrite('xp').doit() == \
+    assert ad.rewrite('xp').doit() == \
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(Integer(-1)*I*Px + m*omega*X)
     assert ad.hilbert_space == ComplexSpace(S.Infinity)
     for i in range(ndim - 1):
         assert ad_rep_sympy[i + 1,i] == sqrt(i + 1)
 
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
 
     ad_rep_numpy = represent(ad, basis=N, ndim=4, format='numpy')
     for i in range(ndim - 1):
         assert ad_rep_numpy[i + 1,i] == float(sqrt(i + 1))
 
     if not np:
-        skip("numpy not installed or Python too old.")
+        skip("numpy not installed.")
     if not scipy:
         skip("scipy not installed.")
     else:
@@ -82,7 +82,7 @@ def test_LoweringOp():
     assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n-Integer(1))).expand()
     assert qapply(a*kz) == Integer(0)
     assert qapply(a*kf) == (sqrt(kf.n)*SHOKet(kf.n-Integer(1))).expand()
-    assert a().rewrite('xp').doit() == \
+    assert a.rewrite('xp').doit() == \
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
     for i in range(ndim - 1):
         assert a_rep[i,i + 1] == sqrt(i + 1)
@@ -92,10 +92,10 @@ def test_NumberOp():
     assert Commutator(N, a).doit() == Integer(-1)*a
     assert Commutator(N, H).doit() == Integer(0)
     assert qapply(N*k) == (k.n*k).expand()
-    assert N().rewrite('a').doit() == ad*a
-    assert N().rewrite('xp').doit() == (Integer(1)/(Integer(2)*m*hbar*omega))*(
+    assert N.rewrite('a').doit() == ad*a
+    assert N.rewrite('xp').doit() == (Integer(1)/(Integer(2)*m*hbar*omega))*(
         Px**2 + (m*omega*X)**2) - Integer(1)/Integer(2)
-    assert N().rewrite('H').doit() == H/(hbar*omega) - Integer(1)/Integer(2)
+    assert N.rewrite('H').doit() == H/(hbar*omega) - Integer(1)/Integer(2)
     for i in range(ndim):
         assert N_rep[i,i] == i
     assert N_rep == ad_rep_sympy*a_rep
@@ -103,10 +103,10 @@ def test_NumberOp():
 def test_Hamiltonian():
     assert Commutator(H, N).doit() == Integer(0)
     assert qapply(H*k) == ((hbar*omega*(k.n + Integer(1)/Integer(2)))*k).expand()
-    assert H().rewrite('a').doit() == hbar*omega*(ad*a + Integer(1)/Integer(2))
-    assert H().rewrite('xp').doit() == \
+    assert H.rewrite('a').doit() == hbar*omega*(ad*a + Integer(1)/Integer(2))
+    assert H.rewrite('xp').doit() == \
         (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
-    assert H().rewrite('N').doit() == hbar*omega*(N + Integer(1)/Integer(2))
+    assert H.rewrite('N').doit() == hbar*omega*(N + Integer(1)/Integer(2))
     for i in range(ndim):
         assert H_rep[i,i] == hbar*omega*(i + Integer(1)/Integer(2))
 

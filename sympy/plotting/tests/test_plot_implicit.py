@@ -1,8 +1,9 @@
 from sympy import (plot_implicit, cos, Symbol, Eq, sin, re, And, Or, exp, I,
                    tan, pi)
-from sympy.plotting.plot import matplotlib, unset_show
+from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile
 from sympy.utilities.pytest import skip
+from sympy.external import import_module
 
 #Set plots not to show
 unset_show()
@@ -51,6 +52,7 @@ def plot_and_save(name):
 
 
 def test_matplotlib():
+    matplotlib = import_module('matplotlib', min_module_version='1.1.0', catch=(RuntimeError,))
     if matplotlib:
         plot_and_save('test')
     else:

@@ -23,14 +23,12 @@ access any SymPy module, or use this contens:
    concrete.rst
    evalf.rst
    functions/index.rst
-   geometry.rst
    galgebra/index.rst
-   galgebra/GA/GAsympy.rst
-   galgebra/latex_ex/latex_ex.rst
+   geometry.rst
    integrals/integrals.rst
    logic.rst
    matrices/index.rst
-   mpmath/index.rst
+   Mpmath <mpmath/index.rst>
    polys/index.rst
    printing.rst
    plotting.rst
@@ -43,6 +41,7 @@ access any SymPy module, or use this contens:
    statistics.rst
    stats.rst
    solvers/ode.rst
+   solvers/pde.rst
    solvers/solvers.rst
    tensor/index.rst
    utilities/index.rst

@@ -24,18 +24,18 @@ Arithmetic. Master's thesis. University of Toronto, 1996
 
 """
 
-from plot import BaseSeries, Plot
-from experimental_lambdify import experimental_lambdify, vectorized_lambdify
-from intervalmath import interval
+from __future__ import print_function, division
+
+from .plot import BaseSeries, Plot
+from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
+from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Expr, Dummy
+from sympy import Eq, Tuple, sympify, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
+from sympy.utilities.decorator import doctest_depends_on
 import warnings
-
-np = import_module('numpy')
 
 
 class ImplicitSeries(BaseSeries):
@@ -91,6 +91,7 @@ class ImplicitSeries(BaseSeries):
         k = self.depth
         interval_list = []
         #Create initial 32 divisions
+        np = import_module('numpy')
         xsample = np.linspace(self.start_x, self.end_x, 33)
         ysample = np.linspace(self.start_y, self.end_y, 33)
 
@@ -178,8 +179,9 @@ class ImplicitSeries(BaseSeries):
         elif isinstance(self.expr, (LessThan, StrictLessThan)):
             expr = self.expr.rhs - self.expr.lhs
         else:
-            raise NotImplementedError("The expression is not supported for"
+            raise NotImplementedError("The expression is not supported for "
                                     "plotting in uniform meshed plot.")
+        np = import_module('numpy')
         xarray = np.linspace(self.start_x, self.end_x, self.nb_of_points)
         yarray = np.linspace(self.start_y, self.end_y, self.nb_of_points)
         x_grid, y_grid = np.meshgrid(xarray, yarray)
@@ -194,6 +196,7 @@ class ImplicitSeries(BaseSeries):
             return xarray, yarray, z_grid, 'contourf'
 
 
+@doctest_depends_on(modules=('matplotlib',))
 def plot_implicit(expr, *args, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
@@ -235,41 +238,41 @@ def plot_implicit(expr, *args, **kwargs):
 
     Plot expressions:
 
-    >>> from sympy import plot_implicit, cos, sin, symbols, Eq
+    >>> from sympy import plot_implicit, cos, sin, symbols, Eq, And
     >>> x, y = symbols('x y')
 
     Without any ranges for the symbols in the expression
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))  # doctest: +SKIP
+    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
 
     With the range for the symbols
 
     >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
-    ...         (x, -3, 3), (y, -3, 3))  # doctest: +SKIP
+    ...         (x, -3, 3), (y, -3, 3))
 
     With depth of recursion as argument.
 
     >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -4, 4), (y, -4, 4), depth = 2)  # doctest: +SKIP
+    ...         (x, -4, 4), (y, -4, 4), depth = 2)
 
     Using mesh grid and not using adaptive meshing.
 
     >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -5, 5), (y, -2, 2), adaptive=False)  # doctest: +SKIP
+    ...         (x, -5, 5), (y, -2, 2), adaptive=False)
 
     Using mesh grid with number of points as input.
 
     >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
     ...         (x, -5, 5), (y, -2, 2),
-    ...         adaptive=False, points=400)  # doctest: +SKIP
+    ...         adaptive=False, points=400)
 
     Plotting regions.
 
-    >>> p6 = plot_implicit(y > x**2)  # doctest: +SKIP
+    >>> p6 = plot_implicit(y > x**2)
 
     Plotting Using boolean conjunctions.
 
-    >>> p7 = plot_implicit(And(y > x, y > -x))  # doctest: +SKIP
+    >>> p7 = plot_implicit(And(y > x, y > -x))
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
@@ -301,7 +304,7 @@ def plot_implicit(expr, *args, **kwargs):
 
     free_symbols = set(expr.free_symbols)
     range_symbols = set([t[0] for t in args])
-    symbols = set_union(free_symbols, range_symbols)
+    symbols = set.union(free_symbols, range_symbols)
     if len(symbols) > 2:
         raise NotImplementedError("Implicit plotting is not implemented for "
                                   "more than 2 variables")

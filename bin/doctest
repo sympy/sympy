@@ -7,6 +7,8 @@ The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.dotest?" for documentation.
 """
 
+from __future__ import print_function
+
 # files listed here can be in unix forward slash format with paths
 # listed relative to sympy (which contains bin, etc...)
 blacklist = []
@@ -29,8 +31,8 @@ parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
 parser.add_option("-n", "--normal", action="store_true", dest="normal",
         help="run normal doctests; do not require explicit imports", default=False)
 parser.add_option('-t', '--types', dest='types', action='store',
-        default=None, choices=['gmpy', 'python', 'sympy'],
-        help='setup ground types: gmpy | python | sympy')
+        default=None, choices=['gmpy', 'gmpy1', 'python'],
+        help='setup ground types: gmpy | gmpy1 | python')
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
@@ -53,8 +55,8 @@ if options.types:
 
 import sympy
 
-ok = sympy.doctest(*args, **{"verbose": options.verbose,
-    "blacklist": blacklist, "normal": options.normal, "subprocess": options.subprocess})
+ok = sympy.doctest(*args, verbose=options.verbose, blacklist=blacklist,
+    normal=options.normal, subprocess=options.subprocess)
 
 if ok:
     sys.exit(0)

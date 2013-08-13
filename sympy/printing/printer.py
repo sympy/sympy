@@ -67,6 +67,8 @@ Some more information how the single concepts work and who should use which:
     not defined in the Printer subclass this will be the same as str(expr).
 """
 
+from __future__ import print_function, division
+
 from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
@@ -196,7 +198,7 @@ class Printer(object):
 
         self._settings = self._default_settings.copy()
 
-        for key, val in self._global_settings.iteritems():
+        for key, val in self._global_settings.items():
             if key in self._default_settings:
                 self._settings[key] = val
 
@@ -215,7 +217,7 @@ class Printer(object):
     @classmethod
     def set_global_settings(cls, **settings):
         """Set system-wide printing settings. """
-        for key, val in settings.iteritems():
+        for key, val in settings.items():
             if val is not None:
                 cls._global_settings[key] = val
 
@@ -230,7 +232,7 @@ class Printer(object):
         """Returns printer's representation for expr (as a string)"""
         return self._str(self._print(expr))
 
-    def _print(self, expr, *args):
+    def _print(self, expr, *args, **kwargs):
         """Internal dispatcher
 
         Tries the following concepts to print an expression:
@@ -245,14 +247,14 @@ class Printer(object):
             # should be printed, use that method.
             if (self.printmethod and hasattr(expr, self.printmethod)
                     and not isinstance(expr, BasicMeta)):
-                return getattr(expr, self.printmethod)(self, *args)
+                return getattr(expr, self.printmethod)(self, *args, **kwargs)
 
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
             for cls in type(expr).__mro__:
                 printmethod = '_print_' + cls.__name__
                 if hasattr(self, printmethod):
-                    return getattr(self, printmethod)(expr, *args)
+                    return getattr(self, printmethod)(expr, *args, **kwargs)
 
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)

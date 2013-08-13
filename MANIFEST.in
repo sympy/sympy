@@ -8,3 +8,4 @@ include sympy/utilities/mathml/data/*.xsl
 include LICENSE
 include TODO
 include AUTHORS
+include README.rst

@@ -3,8 +3,146 @@ Reimplementations of constructs introduced in later versions of Python than
 we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
+from __future__ import print_function, division
 
+import operator
 from collections import defaultdict
+from sympy.external import import_module
+
+
+"""
+Python 2 and Python 3 compatible imports
+
+String and Unicode compatible changes:
+    * `unicode()` removed in Python 3, defined as `str()`
+    * `u()` escapes unicode sequences in Python 2 (e.g. u('\u2020'))
+    * `u_decode()` decodes utf-8 fomrmatted unicode strings
+    * `string_types` gives str in Python 3, unicode and str in Python 2,
+      equivalent to basestring
+
+Integer related changes:
+    * `long()` removed in Python 3, defined as `int()`
+    * `integer_types` gives int in Python 3, int and long in Python 2
+
+Types related changes:
+    * `class_types` gives type in Python 3, type and ClassType in Python 2
+
+Renamed function attributes:
+    * Python 2 `.func_code`, Python 3 `.__func__`, access with
+      `get_function_code()`
+    * Python 2 `.func_globals`, Python 3 `.__globals__`, access with
+      `get_function_globals()`
+    * Python 2 `.func_name`, Python 3 `.__name__`, access with
+      `get_function_name()`
+
+Moved modules:
+    * `reduce()`
+    * `StringIO()`
+    * `cStringIO()` (same as `StingIO()` in Python 3)
+    * Python 2 `__builtins__`, access with Python 3 name, `builtins`
+
+exec:
+    * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
+
+Metaclasses:
+    * Use `with_metaclass()`, examples below
+    * Define class `Foo` with metaclass `Meta`, and no parent:
+        class Foo(with_metaclass(Meta)):
+            pass
+    * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
+        class Foo(with_metaclass(Meta, Bar)):
+            pass
+"""
+
+import sys
+PY3 = sys.version_info[0] > 2
+
+if PY3:
+    import collections
+
+    class_types = type,
+    integer_types = (int,)
+    string_types = (str,)
+    long = int
+
+    # String / unicode compatibility
+    unicode = str
+    def u(x):
+        return x
+    def u_decode(x):
+        return x
+
+    Iterator = object
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("__code__")
+    get_function_globals = operator.attrgetter("__globals__")
+    get_function_name = operator.attrgetter("__name__")
+
+    import builtins
+    # This is done to make filter importable
+    from functools import reduce
+    from io import StringIO
+    cStringIO = StringIO
+
+    exec_ = getattr(builtins, "exec")
+
+    xrange = range
+else:
+    import codecs
+    import types
+
+    class_types = (type, types.ClassType)
+    integer_types = (int, long)
+    string_types = (str, unicode)
+    long = long
+
+    # String / unicode compatibility
+    unicode = unicode
+    def u(x):
+        return codecs.unicode_escape_decode(x)[0]
+    def u_decode(x):
+        return x.decode('utf-8')
+
+    class Iterator(object):
+        def next(self):
+            return type(self).__next__(self)
+
+    # Moved definitions
+    get_function_code = operator.attrgetter("func_code")
+    get_function_globals = operator.attrgetter("func_globals")
+    get_function_name = operator.attrgetter("func_name")
+
+    import __builtin__ as builtins
+    reduce = reduce
+    from StringIO import StringIO
+    from cStringIO import StringIO as cStringIO
+
+    def exec_(_code_, _globs_=None, _locs_=None):
+        """Execute code in a namespace."""
+        if _globs_ is None:
+            frame = sys._getframe(1)
+            _globs_ = frame.f_globals
+            if _locs_ is None:
+                _locs_ = frame.f_locals
+            del frame
+        elif _locs_ is None:
+            _locs_ = _globs_
+        exec("exec _code_ in _globs_, _locs_")
+
+    xrange = xrange
+
+def with_metaclass(meta, *bases):
+    """Create a base class with a metaclass."""
+    class metaclass(meta):
+        __call__ = type.__call__
+        __init__ = type.__init__
+        def __new__(cls, name, this_bases, d):
+            if this_bases is None:
+                return type.__new__(cls, name, (), d)
+            return meta(name, bases, d)
+    return metaclass("NewBase", None, {})
+
 
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
@@ -12,7 +150,7 @@ from collections import defaultdict
 # I think putting them here also makes it easier to use them in the core.
 
 
-def iterable(i, exclude=(basestring, dict)):
+def iterable(i, exclude=(string_types, dict)):
     """
     Return a boolean indicating whether ``i`` is SymPy iterable.
 
@@ -30,7 +168,7 @@ def iterable(i, exclude=(basestring, dict)):
     >>> from sympy import Tuple
     >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
     >>> for i in things:
-    ...     print iterable(i), type(i)
+    ...     print('%s %s' % (iterable(i), type(i)))
     True <... 'list'>
     True <... 'tuple'>
     True <... 'set'>
@@ -96,25 +234,6 @@ def is_sequence(i, include=None):
             bool(include) and
             isinstance(i, include))
 
-"""
-Wrapping some imports in try/except statements to allow the same code to
-be used in Python 3+ as well.
-"""
-
-try:
-    callable = callable
-except NameError:
-    import collections
-
-    def callable(obj):
-        return isinstance(obj, collections.Callable)
-
-try:
-    from functools import reduce
-except ImportError:
-    reduce = reduce
-
-
 def cmp_to_key(mycmp):
     """
     Convert a cmp= function into a key= function
@@ -144,143 +263,10 @@ def cmp_to_key(mycmp):
             return mycmp(self.obj, other.obj) != 0
     return K
 
-try:
-    import __builtin__
-    cmp = __builtin__.cmp
-except AttributeError:
-    def cmp(a, b):
-        return (a > b) - (a < b)
 
 try:
-    from itertools import product
-except ImportError:  # Python 2.5
-    def product(*args, **kwargs):
-        """
-        Cartesian product of input iterables.
-
-        Equivalent to nested for-loops in a generator expression. For example,
-        cartes(A, B) returns the same as ((x,y) for x in A for y in B).
-
-        The nested loops cycle like an odometer with the rightmost element
-        advancing on every iteration. This pattern creates a lexicographic
-        ordering so that if the input's iterables are sorted, the product
-        tuples are emitted in sorted order.
-
-        To compute the product of an iterable with itself, specify the number
-        of repetitions with the optional repeat keyword argument. For example,
-        product(A, repeat=4) means the same as product(A, A, A, A).
-
-        Examples
-        ========
-
-        >>> from sympy.utilities.iterables import cartes
-        >>> [''.join(p) for p in list(cartes('ABC', 'xy'))]
-        ['Ax', 'Ay', 'Bx', 'By', 'Cx', 'Cy']
-        >>> list(cartes(range(2), repeat=2))
-        [(0, 0), (0, 1), (1, 0), (1, 1)]
-
-        See Also
-        ========
-        variations
-        """
-        pools = map(tuple, args) * kwargs.get('repeat', 1)
-        result = [[]]
-        for pool in pools:
-            result = [x + [y] for x in result for y in pool]
-        for prod in result:
-            yield tuple(prod)
-
-try:
-    from itertools import permutations
-except ImportError:  # Python 2.5
-    def permutations(iterable, r=None):
-        """
-        Return successive r length permutations of elements in the iterable.
-
-        If r is not specified or is None, then r defaults to the length of
-        the iterable and all possible full-length permutations are generated.
-
-        Permutations are emitted in lexicographic sort order. So, if the input
-        iterable is sorted, the permutation tuples will be produced in sorted
-        order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, there will be no repeat
-        values in each permutation.
-
-        Examples;
-        >>> from sympy.core.compatibility import permutations
-        >>> [''.join(p) for p in list(permutations('ABC', 2))]
-        ['AB', 'AC', 'BA', 'BC', 'CA', 'CB']
-        >>> list(permutations(range(3)))
-        [(0, 1, 2), (0, 2, 1), (1, 0, 2), (1, 2, 0), (2, 0, 1), (2, 1, 0)]
-        """
-
-        pool = tuple(iterable)
-        n = len(pool)
-        r = n if r is None else r
-        if r > n:
-            return
-        indices = range(n)
-        cycles = range(n, n - r, -1)
-        yield tuple(pool[i] for i in indices[:r])
-        while n:
-            for i in reversed(range(r)):
-                cycles[i] -= 1
-                if cycles[i] == 0:
-                    indices[i:] = indices[i + 1:] + indices[i:i + 1]
-                    cycles[i] = n - i
-                else:
-                    j = cycles[i]
-                    indices[i], indices[-j] = indices[-j], indices[i]
-                    yield tuple(pool[i] for i in indices[:r])
-                    break
-            else:
-                return
-
-try:
-    from itertools import combinations, combinations_with_replacement
-except ImportError:  # < python 2.6
-    def combinations(iterable, r):
-        """
-        Return r length subsequences of elements from the input iterable.
-
-        Combinations are emitted in lexicographic sort order. So, if the
-        input iterable is sorted, the combination tuples will be produced
-        in sorted order.
-
-        Elements are treated as unique based on their position, not on their
-        value. So if the input elements are unique, there will be no repeat
-        values in each combination.
-
-        See also: combinations_with_replacement
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import combinations
-        >>> list(combinations('ABC', 2))
-        [('A', 'B'), ('A', 'C'), ('B', 'C')]
-        >>> list(combinations(range(4), 3))
-        [(0, 1, 2), (0, 1, 3), (0, 2, 3), (1, 2, 3)]
-        """
-        pool = tuple(iterable)
-        n = len(pool)
-        if r > n:
-            return
-        indices = range(r)
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != i + n - r:
-                    break
-            else:
-                return
-            indices[i] += 1
-            for j in range(i + 1, r):
-                indices[j] = indices[j - 1] + 1
-            yield tuple(pool[i] for i in indices)
-
+    from itertools import combinations_with_replacement
+except ImportError:  # <= Python 2.6
     def combinations_with_replacement(iterable, r):
         """Return r length subsequences of elements from the input iterable
         allowing individual elements to be repeated more than once.
@@ -316,120 +302,6 @@ except ImportError:  # < python 2.6
                 return
             indices[i:] = [indices[i] + 1] * (r - i)
             yield tuple(pool[i] for i in indices)
-
-
-def set_intersection(*sets):
-    """Return the intersection of all the given sets.
-
-    As of Python 2.6 you can write ``set.intersection(*sets)``.
-
-    Examples
-    ========
-
-    >>> from sympy.core.compatibility import set_intersection
-    >>> set_intersection(set([1, 2]), set([2, 3]))
-    set([2])
-    >>> set_intersection()
-    set()
-    """
-    if not sets:
-        return set()
-    rv = sets[0]
-    for s in sets:
-        rv &= s
-    return rv
-
-
-def set_union(*sets):
-    """Return the union of all the given sets.
-
-    As of Python 2.6 you can write ``set.union(*sets)``.
-
-    >>> from sympy.core.compatibility import set_union
-    >>> set_union(set([1, 2]), set([2, 3]))
-    set([1, 2, 3])
-    >>> set_union()
-    set()
-    """
-    rv = set()
-    for s in sets:
-        rv |= s
-    return rv
-
-try:
-    bin = bin
-except NameError:  # Python 2.5
-    def bin(x):
-        """
-        bin(number) -> string
-
-        Stringifies an int or long in base 2.
-        """
-        if x < 0:
-            return '-' + bin(-x)
-        out = []
-        if x == 0:
-            out.append('0')
-        while x > 0:
-            out.append('01'[x & 1])
-            x >>= 1
-            pass
-        return '0b' + ''.join(reversed(out))
-
-try:
-    next = next
-except NameError:  # Python 2.5
-    def next(*args):
-        """
-        next(iterator[, default])
-
-        Return the next item from the iterator. If default is given and the
-        iterator is exhausted, it is returned instead of raising StopIteration.
-        """
-        if len(args) == 1:
-            return args[0].next()
-        elif len(args) == 2:
-            try:
-                return args[0].next()
-            except StopIteration:
-                return args[1]
-        else:
-            raise TypeError('Expected 1 or 2 arguments, got %s' % len(args))
-
-try:
-    from __builtin__ import bin
-except ImportError:  # Python 2.5
-    _hexDict = {
-        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101',
-        '6': '0110', '7': '0111', '8': '1000', '9': '1001', 'a': '1010', 'b': '1011',
-        'c': '1100', 'd': '1101', 'e': '1110', 'f': '1111', 'L': ''}
-
-    def bin(n):
-        """Return the equivalent to Python 2.6's bin function.
-
-        Examples
-        ========
-
-        >>> from sympy.core.compatibility import bin
-        >>> bin(-123)
-        '-0b1111011'
-        >>> bin(0) # this is the only time a 0 will be to the right of 'b'
-        '0b0'
-
-        See Also
-        ========
-        sympy.physics.quantum.shor.arr
-
-        Modified from http://code.activestate.com/recipes/576847/
-        """
-        # =========================================================
-        # create hex of int, remove '0x'. now for each hex char,
-        # look up binary string, append in list and join at the end.
-        # =========================================================
-        if n < 0:
-            return '-%s' % bin(-n)
-        return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
-                                  ]).lstrip('0') or '0')
 
 
 def as_int(n):
@@ -486,7 +358,7 @@ def default_sort_key(item, order=None):
     Examples
     ========
 
-    >>> from sympy import Basic, S, I, default_sort_key
+    >>> from sympy import S, I, default_sort_key
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
@@ -578,7 +450,7 @@ def default_sort_key(item, order=None):
     if isinstance(item, Basic):
         return item.sort_key(order=order)
 
-    if iterable(item, exclude=basestring):
+    if iterable(item, exclude=string_types):
         if isinstance(item, dict):
             args = item.items()
             unordered = True
@@ -598,7 +470,7 @@ def default_sort_key(item, order=None):
 
         cls_index, args = 10, (len(args), tuple(args))
     else:
-        if not isinstance(item, basestring):
+        if not isinstance(item, string_types):
             try:
                 item = sympify(item)
             except SympifyError:
@@ -624,7 +496,7 @@ def _nodes(e):
     but for other object is 1 (unless the object is an iterable or dict
     for which the sum of nodes is returned).
     """
-    from basic import Basic
+    from .basic import Basic
 
     if isinstance(e, Basic):
         return e.count(Basic)
@@ -650,7 +522,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import ordered, default_sort_key
+    >>> from sympy.utilities.iterables import ordered
     >>> from sympy import count_ops
     >>> from sympy.abc import x, y
 
@@ -739,8 +611,84 @@ def ordered(seq, keys=None, default=True, warn=False):
             yield v
         d.pop(k)
 
+# If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
+# HAS_GMPY contains the major version number of gmpy; i.e. 1 for gmpy, and
+# 2 for gmpy2.
+
+# Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
+# For example, int(gmpy.mpz(2**256)) would raise OverflowError.
+# See issue 1881.
+
+# Minimum version of gmpy changed to 1.13 to allow a single code base to also
+# work with gmpy2.
+
+def _getenv(key, default=None):
+    from os import getenv
+    return getenv(key, default)
+
+GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
+
+HAS_GMPY = 0
+
+if GROUND_TYPES != 'python':
+
+    # Don't try to import gmpy2 if ground types is set to gmpy1. This is
+    # primarily intended for testing.
+
+    if GROUND_TYPES != 'gmpy1':
+        gmpy = import_module('gmpy2', min_module_version='2.0.0',
+            module_version_attr='version', module_version_attr_call_args=())
+        if gmpy:
+            HAS_GMPY = 2
+    else:
+        GROUND_TYPES = 'gmpy'
+
+    if not HAS_GMPY:
+        gmpy = import_module('gmpy', min_module_version='1.13',
+            module_version_attr='version', module_version_attr_call_args=())
+        if gmpy:
+            HAS_GMPY = 1
+
+if GROUND_TYPES == 'auto':
+    if HAS_GMPY:
+        GROUND_TYPES = 'gmpy'
+    else:
+        GROUND_TYPES = 'python'
+
+if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
+    from warnings import warn
+    warn("gmpy library is not installed, switching to 'python' ground types")
+    GROUND_TYPES = 'python'
+
+# SYMPY_INTS is a tuple containing the base types for valid integer types.
+
+import sys
+
+if sys.version_info[0] == 2:
+    SYMPY_INTS = (int, long)
+else:
+    SYMPY_INTS = (int,)
+
+if GROUND_TYPES == 'gmpy':
+    SYMPY_INTS += (type(gmpy.mpz(0)),)
+
+# check_output() is new in Python 2.7
+import os
+
 try:
-    next = next
-except NameError:
-    def next(x):
-        return x.next()
+    from subprocess import CalledProcessError
+    try:
+        from subprocess import check_output
+    except ImportError:
+        from subprocess import check_call
+        def check_output(*args, **kwargs):
+            with open(os.devnull, 'w') as fh:
+                kwargs['stdout'] = fh
+                try:
+                    return check_call(*args, **kwargs)
+                except CalledProcessError as e:
+                    e.output = ("program output is not available for Python 2.6.x")
+                    raise e
+except ImportError:
+    # running on platform like App Engine, no subprocess at all
+    pass

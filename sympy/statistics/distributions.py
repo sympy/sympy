@@ -1,6 +1,11 @@
+from __future__ import print_function, division
+
 from sympy.core import sympify, Lambda, Dummy, Integer, Rational, oo, Float, pi
+from sympy.core.compatibility import xrange
 from sympy.functions import sqrt, exp, erf
 from sympy.printing import sstr
+from sympy.utilities import default_sort_key
+
 import random
 
 
@@ -31,7 +36,7 @@ class Sample(tuple):
 
     """
     def __new__(cls, sample):
-        s = tuple.__new__(cls, sorted(sample))
+        s = tuple.__new__(cls, sorted(sample, key=default_sort_key))
         s.mean = mean = sum(s) / Integer(len(s))
         s.variance = sum([(x - mean)**2 for x in s]) / Integer(len(s))
         s.stddev = sqrt(s.variance)
@@ -269,7 +274,7 @@ class Uniform(ContinuousProbability):
         """
         x = sympify(x)
         if not x.is_Number:
-            raise NotImplementedError("SymPy does not yet support"
+            raise NotImplementedError("SymPy does not yet support "
                 "piecewise functions")
         if x < s.a or x > s.b:
             return Rational(0)
@@ -291,7 +296,7 @@ class Uniform(ContinuousProbability):
         """
         x = sympify(x)
         if not x.is_Number:
-            raise NotImplementedError("SymPy does not yet support"
+            raise NotImplementedError("SymPy does not yet support "
                 "piecewise functions")
         if x <= s.a:
             return Rational(0)
