@@ -1,8 +1,8 @@
 """
 Algorithms for solving Coupled Differential System.
 
-This method is used for solving Coupled Differntial System.
-Given a differntial field K of characterstic 0 and f1, f2, g1, g2
+This method is used for solving Coupled Differential System.
+Given a differential field K of characteristic 0 and f1, f2, g1, g2
 in K, it decides whether the system of equations
 
      /     \        /          \    /    \       /    \
@@ -101,7 +101,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
 
 def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     """
-    Cancellation - hyperexponantial case
+    Cancellation - hyperexponential case
 
     Given a derivation D on k[t], n either an integer or positive
     infinity, a in Const(k), b1, b2 in k and c1, c2 in k[t] with Dt/t
@@ -224,8 +224,8 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
     """
     Algorithms for solving Coupled Differential System.
 
-    This method is used for solving Coupled Differntial System.
-    Given a differntial field K of characterstic 0 and f1, f2, g1, g2
+    This method is used for solving Coupled Differential System.
+    Given a differential field K of characteristic 0 and f1, f2, g1, g2
     in K, it decides whether the system of equations
         /     \        /          \    /    \       /    \
        |  Dy1  |      |  b1   ab2  |  |  y1  |     |  c1  |
