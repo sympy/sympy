@@ -13,3 +13,5 @@ def test_type_A():
     assert c.lie_algebra() == "su(4)"
     diag = "0---0---0\n1   2   3"
     assert c.dynkin_diagram() == diag
+    assert c.positive_roots() == {1: [1, -1, 0, 0], 2: [1, 0, -1, 0],
+            3: [1, 0, 0, -1], 4: [0, 1, -1, 0], 5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}

@@ -58,6 +58,31 @@ class TypeA(Standard_Cartan):
 
         return self.basic_root(i-1, i)
 
+    def positive_roots(self):
+        """
+        This method generates all the positive roots of
+        A_n.  This is half of all of the roots of A_n;
+        by multiplying all the positive roots by -1 we
+        get the negative roots.
+
+        Example
+        ======
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("A3")
+        >>> c.positive_roots()
+        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
+                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+        """
+
+        n = self.n
+        posroots = {}
+        k = 0
+        for i in range(0, n):
+            for j in range(i+1, n+1):
+               k += 1
+               posroots[k] = self.basic_root(i, j)
+        return posroots
+
     def highest_root(self):
         """
         Returns the heighest weight root for A_n

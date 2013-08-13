@@ -60,6 +60,57 @@ class TypeF(Standard_Cartan):
             root = [-0.5]*4
             return root
 
+    def positive_roots(self):
+        """
+        This method generates all the positive roots of
+        A_n.  This is half of all of the roots of F_4;
+        by multiplying all the positive roots by -1 we
+        get the negative roots.
+
+        Example
+        ======
+        >>> from sympy.liealgebras.cartan_type import CartanType
+        >>> c = CartanType("A3")
+        >>> c.positive_roots()
+        {1: [1, -1, 0, 0], 2: [1, 0, -1, 0], 3: [1, 0, 0, -1], 4: [0, 1, -1, 0],
+                5: [0, 1, 0, -1], 6: [0, 0, 1, -1]}
+        """
+
+        n = self.n
+        posroots = {}
+        k = 0
+        for i in range(0, n-1):
+            for j in range(i+1, n):
+               k += 1
+               posroots[k] = self.basic_root(i, j)
+               k += 1
+               root = self.basic_root(i, j)
+               root[j] = 1
+               posroots[k] = root
+
+        for i in range(0, n):
+            k += 1
+            root = [0]*n
+            root[i] = 1
+            posroots[k] = root
+
+        k += 1
+        root = [1/2]*n
+        posroots[k] = root
+        for i in range(1, 4):
+            k += 1
+            root = [1/2]*n
+            root[i] = -1/2
+            posroots[k] = root
+
+        posroots[k+1] = [1/2, 1/2, -1/2, -1/2]
+        posroots[k+2] = [1/2, -1/2, 1/2, -1/2]
+        posroots[k+3] = [1/2, -1/2, -1/2, 1/2]
+        posroots[k+4] = [1/2, -1/2, -1/2, -1/2]
+
+        return posroots
+
+
     def roots(self):
         """
         Returns the total number of roots for F_4
