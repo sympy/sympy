@@ -152,7 +152,7 @@ class Qasm(object):
 
     def get_circuit(self):
         return prod(reversed(self.circuit))
-    
+
     def get_labels(self):
         return list(reversed(self.labels))
 
@@ -170,34 +170,34 @@ class Qasm(object):
 
     def index(self, arg):
         return get_index(arg, self.labels)
-    
+
     def nop(self, *args):
         pass
-    
+
     def x(self, arg):
         self.circuit.append(X(self.index(arg)))
-        
+
     def z(self, arg):
         self.circuit.append(Z(self.index(arg)))
-        
+
     def h(self, arg):
         self.circuit.append(H(self.index(arg)))
-        
+
     def s(self, arg):
         self.circuit.append(S(self.index(arg)))
-        
+
     def t(self, arg):
         self.circuit.append(T(self.index(arg)))
-        
+
     def measure(self, arg):
         self.circuit.append(Mz(self.index(arg)))
 
     def cnot(self, a1, a2):
         self.circuit.append(CNOT(*self.indices([a1, a2])))
-        
+
     def swap(self, a1, a2):
         self.circuit.append(SWAP(*self.indices([a1, a2])))
-        
+
     def cphase(self, a1, a2):
         self.circuit.append(CPHASE(*self.indices([a1, a2])))
 
@@ -208,7 +208,7 @@ class Qasm(object):
     def cx(self, a1, a2):
         fi, fj = self.indices([a1, a2])
         self.circuit.append(CGate(fi, X(fj)))
-        
+
     def cz(self, a1, a2):
         fi, fj = self.indices([a1, a2])
         self.circuit.append(CGate(fi, Z(fj)))
