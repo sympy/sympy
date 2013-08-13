@@ -19,7 +19,7 @@ from sympy.printing.theanocode import (theano_code, dim_handling,
 
 def fgraph_of(*exprs):
     """ Transform SymPy expressions into Theano Computation """
-    outs = map(theano_code, exprs)
+    outs = list(map(theano_code, exprs))
     ins = theano.gof.graph.inputs(outs)
     ins, outs = theano.gof.graph.clone(ins, outs)
     return theano.gof.FunctionGraph(ins, outs)
