@@ -308,7 +308,7 @@ else:
 
 def render_label(label, inits={}):
     """Slightly more flexible way to render labels.
-    
+
     >>> from sympy.physics.quantum.circuitplot import render_label
     >>> render_label('q0')
     '$|q0\\\\rangle$'
