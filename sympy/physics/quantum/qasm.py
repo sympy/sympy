@@ -36,7 +36,7 @@ def prod(c):
 
 def flip_index(i, n):
     """Reorder qubit indices from largest to smallest.
-    
+
     >>> from sympy.physics.quantum.qasm import flip_index
     >>> flip_index(0, 2)
     1
@@ -47,7 +47,7 @@ def flip_index(i, n):
 
 def trim(line):
     """Remove everything following comment # characters in line.
-    
+
     >>> from sympy.physics.quantum.qasm import trim
     >>> trim('nothing happens here')
     'nothing happens here'
@@ -60,7 +60,7 @@ def trim(line):
 
 def get_index(target, labels):
     """Get qubit labels from the rest of the line,and return indices
-    
+
     >>> from sympy.physics.quantum.qasm import get_index
     >>> get_index('q0', ['q0', 'q1'])
     1
@@ -88,7 +88,7 @@ def fullsplit(line):
 
 def fixcommand(c):
     """Fix Qasm command names.
-    
+
     Remove all of forbidden characters from command c, and
     replace 'def' with 'qdef'.
     """
@@ -102,7 +102,7 @@ def fixcommand(c):
 
 def stripquotes(s):
     """Replace explicit quotes in a string.
-    
+
     >>> from sympy.physics.quantum.qasm import stripquotes
     >>> stripquotes("'S'") == 'S'
     True
@@ -117,7 +117,7 @@ def stripquotes(s):
 
 class Qasm(object):
     """Class to form objects from Qasm lines
-    
+
     >>> from sympy.physics.quantum.qasm import Qasm
     >>> q = Qasm('qubit q0', 'qubit q1', 'h q0', 'cnot q0,q1')
     >>> q.get_circuit()
