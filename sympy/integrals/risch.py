@@ -132,6 +132,10 @@ class DifferentialExtension(object):
     - E_args: The arguments of each of the exponentials in E_K.
     - L_K: List of the positions of the logarithmic extensions in T.
     - L_args: The arguments of each of the logarithms in L_K.
+    - T_K: List of the positions of the trigonometric extensions in T.
+    - T_args: The arguments of each of the trigonometric functions in T_K.
+    - AT_K: List of the positions of the inverse trigonometric extensions in T.
+    - AT_args: The arguments of each of the inverse trigonometric functions in AT_K.
     (See the docstrings of is_deriv_k() and is_log_deriv_k_t_radical() for
     more information on E_K, E_args, L_K, and L_args)
     - cases: List of string representations of the cases of T.
@@ -160,8 +164,8 @@ class DifferentialExtension(object):
     # only create one DifferentialExtension per integration).  Also, it's nice
     # to have a safeguard when debugging.
     __slots__ = ('f', 'x', 'T', 'D', 'fa', 'fd', 'Tfuncs', 'backsubs', 'E_K',
-        'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
-        'ts')
+        'E_args','T_K','T_args','AT_K','AT_args', 'L_K', 'L_args', 'cases', 'case',
+        't', 'd', 'newf', 'level','ts')
 
     def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, rewrite_complex=False):
         """
