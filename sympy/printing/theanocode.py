@@ -201,7 +201,7 @@ def theano_function(inputs, outputs, dtypes={}, **kwargs):
                                 if k not in dim_names)
 
     code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
-    tinputs  = map(code, inputs)
-    toutputs = map(code, outputs)
+    tinputs  = list(map(code, inputs))
+    toutputs = list(map(code, outputs))
     toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
     return theano.function(tinputs, toutputs, **theano_kwargs)
