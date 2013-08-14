@@ -221,7 +221,11 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
             dcoeff = DE.d.quo(Poly(DE.t**2 + 1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.
+<<<<<<< HEAD
                 betaa, alphaa, alphad =  real_imag(ba, bd*a, DE.t)
+=======
+                betaa, alphaa, alphad = real_imag(ba, bd*a, DE.t)
+>>>>>>> 42aa86d... Changes in cds_cancel_tan
                 betad = alphad
                 etaa, etad = frac_in(dcoeff, DE.t)
                 if recognize_log_derivative(2*betaa, betad, DE):

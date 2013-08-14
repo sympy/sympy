@@ -32,8 +32,8 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
 
     Given a derivation D on k[t], n either an integer or positive
     infinity, a in Const(k), b1, b2 in k and c1, c2 in k[t] with
-    Dt in k, sqrt(a) not in k(t) and b1 != 0 or b2 != 0, return either
-    "no solution" in which case the system as follows
+    Dt in k, sqrt(a) not in k(t) and b1 != 0 or b2 != 0, raises either
+    "raise NonElementaryIntegralException" in which case the system as follows
 
          /     \       /        \    /  \        /    \
         |  Dq1  |     |  b1 ab2  |  | q1 |      |  c1  |
@@ -110,8 +110,8 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
 
     Given a derivation D on k[t], n either an integer or positive
     infinity, a in Const(k), b1, b2 in k and c1, c2 in k[t] with Dt/t
-    in k, sqrt(a) not in k(t) and b1 != 0  or b2 != 0, return either
-    "no solution", in which case the system as below
+    in k, sqrt(a) not in k(t) and b1 != 0  or b2 != 0, raises either
+    "NonElementaryIntegralException", in which case the system as below
 
           /     \       /        \    /  \        /    \
          |  Dq1  |     |  b1 ab2  |  | q1 |      |  c1  |
@@ -130,12 +130,11 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     A1 = parametric_log_deriv(b1a, b1d, wa, wd, DE)
     A2 = parametric_log_deriv(b2a, b2d, wa, wd, DE)
     if A1 is not None and A2 is not None:
-        n1, m1, u1 = A1
-        n2, m2, u2 = A2
-        m =  m1
-        u = u1 + u2*sqrt(a)
-        z1a, z1d = frac_in(u1*c1 + a*u2*c2, DE.t)
-        z2a, z2d = frac_in(u2*c1 + u1*c2, DE.t)
+        n1, u1 = A1
+        n2, u2 = A2
+        u = u1 + u2*a.as_expr()
+        z1a, z1d = frac_in(cancel(u1*c1.as_expr() + a.as_expr()*u2*c2.as_expr()), DE.t)
+        z2a, z2d = frac_in(cancel(u2*c1.as_expr() + a.as_expr()*u1*c2.as_expr()), DE.t)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
         if P1 and P2:
@@ -143,7 +142,10 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
             p2, _ = P2
             q1 = ((u1*p1 - a*u2*p2)*t**(-m)).as_expr()/(u1**2 - a*u2**2).as_expr()
             q2 = ((u1*p2 - u2*p1)*t**(-m)).as_expr()/(u1**2 - a*u2**2).as_expr()
-            if q1 in k[t] and q2 in k[t] and q1.degree()<=n and p2.degree()<=n:
+            q1a, q1d = frac_in(q1, DE.t, cancel=True)
+            q2a, q2d = frac_in(q2, DE.t, cancel=True)
+            if  not q1d.has(DE.t) and  not q2d.has(DE.t) and Poly(p1).degree(t) <= n \
+                and Poly(p2).degree(t) <= n:
                 return (q1, q2)
             else:
                 raise NonElementaryIntegralException
@@ -174,8 +176,8 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
 
     Given a derivation D on k[t], n either an integer or positive infinity,
     b0, b2 in k and c1, c2 in k[t] with Dt/(t**2 + 1) = eta in k, sqrt(-1)
-    not in k(t) and b0 != 0 or b2 != 0, return either "no solution", in
-    which case the system
+    not in k(t) and b0 != 0 or b2 != 0, raises either "NonElementaryIntegralException",
+    in which case the system
          /     \       /                           \    /    \     /  \
         |  Dq1  |     |  b0 - n*eta*t     -b2       |  |  q1  |   | c1 |
         |       |  +  |                             |  |      | = |    |
@@ -193,34 +195,18 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     p = t - sqrt(-1)
     eta = DE.d.exquo(Poly(t**2 + 1, t))
     #u1 + u2*I = c1(I) + c2(I)*I
-    c1_ = c1.eval(sqrt(-1))
-    c2_ = c2.eval(sqrt(-1))
-    ca, cd = frac_in(c1_ + c2_*sqrt(-1), t)
-
-    ca_dict = ca.as_poly(sqrt(-1)).as_dict()
-    ca_r = [value if key[0] % 2 == 0 else 0 for key, value in ca_dict.items()]
-    ca_i = [value if key[0] % 2 == 1 else 0 for key, value in ca_dict.items()]
-    ca_r = sum(r for r in  ca_r)
-    ca_i = sum(r for r in  ca_i)
-    cd_dict = cd.as_poly(sqrt(-1)).as_dict()
-    cd_r = [value if key[0] % 2 == 0 else 0 for key, value in cd_dict.items()]
-    cd_i = [value if key[0] % 2 == 1 else 0 for key, value in cd_dict.items()]
-    cd_r = sum(r for r in  cd_r)
-    cd_i = sum(r for r in  cd_i)
-
-    u1a = ca_r*cd_r - ca_i*cd_i
-    u1d = cd_r*cd_r + cd_i*cd_i
-    u2a = ca_i*cd_r - ca_r*cd_i
+    ca, cd = frac_in(c1 + c2*sqrt(-1), t)
+    u1a, u2a, u1d = real_imag(ca, cd, DE.t)
     u2d = u1d
-    u1 = (u1a.as_expr()/u1d.as_expr()).as_poly(t)
-    u2 = (u2a.as_expr()/u1d.as_expr()).as_poly(t)
+    u1 = u1a.to_field().mul_ground(1/u1d)
+    u2 = u2a.to_field().mul_ground(1/u2d)
     A = coupled_DE_system(b0, b2, u1, u2, DE)
     (s1, s2) = A
     c = c1 - u1 + n*eta*(s1*t + s2) + (c2 - u2 + n*eta*(s2*t - s1))*sqrt(-1)
-    c = (c.as_expr()/p.as_expr()).as_poly(DE.t)
+    c = c.to_field().mul_ground(1/p)
     d1a, d2a, d1d = real_imag(c)
-    d1 = (d1a.as_expr()/d1d.as_expr()).as_poly(t)
-    d2 = (d2a.as_expr()/d1d.as_expr()).as_poly(t)
+    d1 = d1a.to_field().mul_ground(1/d1d)
+    d2 = d2a.to_field().mul_ground(1/d1d)
     B = cds_cancel_tan(b0, b2 + eta, d1, d2, DE, n-1)
     h1, h2 = B
     return (h1*t + h2 + s1, h2*t - h1 + s2)

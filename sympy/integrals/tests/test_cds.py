@@ -77,13 +77,15 @@ def test_cds_cancel_exp():
 
 
 def test_cds_cancel_tan():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
+        'L_K': [], 'E_K': [], 'T_K': [1], 'AT_K': [], 'L_args': [], 'E_args': [],
+        'T_args': [x], 'AT_args': []})
     b0 = Poly(5*t + 2*t**3, DE.t)
     b2 = Poly(4*t**2, DE.t)
     c1 = Poly(-t**2 + 2*t - 8*x**2 + 1, DE.t)
     c2 = Poly(2*(1 - 2*x), DE.t)
     n = 2
-#    cds_cancel_tan(b0, b2, c1, c2, DE, n)
+    cds_cancel_tan(b0, b2, c1, c2, DE, n)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
        'L_K': [], 'E_K': [], 'L_args': [], 'E_args': []})
     b0 = Poly(0, DE.t)
