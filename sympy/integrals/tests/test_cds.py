@@ -22,7 +22,7 @@ def test_cds_cancel_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
         Poly(2*x/(x**2 + 1), t2)], 'L_K': [1, 2], 'E_K': [], 'L_args': [x, x**2 + 1],
         'E_args': []})
-    assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(x, x), Poly(2*x, x),
+    assert cds_cancel_primitive(Poly(sqrt(-1), t), Poly(x, t), Poly(2*x, t),
         Poly(2*x/(x**2 + 1) + x*t2 - 2*x*t1), Poly(1/x + 2*x*t2 + x*t1), DE, 5) == \
         (t2, t1)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],

@@ -20,7 +20,7 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 from sympy.polys import Poly, cancel, gcd
 
 from sympy.integrals.risch import (NonElementaryIntegralException,
-    frac_in, derivation, residue_reduce, is_deriv,as_poly_1t,
+    frac_in, derivation, residue_reduce, is_deriv, as_poly_1t,
     residue_reduce_derivation, DecrementLevel)
 from sympy.integrals.rde import (weak_normalizer,
     bound_degree, spde, solve_poly_rde, normal_denom, special_denom)
@@ -51,8 +51,8 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     k = Dummy('k')
     if not c1.has(DE.t) and not c2.has(DE.t):
         with DecrementLevel(DE):
-            return coupled_DE_system(Poly(b1, DE.t), Poly(b2, DE.t), Poly(c1, DE.t)
-               , Poly(c2, DE.t), DE, n)
+            return coupled_DE_system(Poly(b1, DE.t), Poly(b2, DE.t), Poly(c1, DE.t),
+                Poly(c2, DE.t), DE)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     A1 = is_log_deriv_k_t_radical_in_field(b1a, b1d, DE)
@@ -81,7 +81,11 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     if n < max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t)):
         raise NonElementaryIntegralException
     q1, q2 = (Poly(0, t), Poly(0, t))
+    print(as_poly_1t(c1, t, k).degree(t))
+    print(as_poly_1t(c2, t, k).degree(t))
     while c1 or c2:
+        print(c1)
+	print(c2)
         m = max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t))
         if n < m:
             raise NonElementaryIntegralException
@@ -89,6 +93,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
         A = coupled_DE_system(b1, b2, c1k, c2k, DE)
         (s1, s2) = A
+	print(A)
         q1 = q1 + s1*t**m
         q2 = q2 + s2*t**m
         n = m - 1
@@ -258,6 +263,7 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
         q = no_cancel_b_large(b, c, n, DE)
         qa , qd = frac_in(q, DE.t)
         qa_r, qa_i, qd = real_imag(qa, qd, k)
+	print((alpha*qa_r/(m*qd), alpha*qa_i/(m*qd)))
         return (alpha*qa_r/(m*qd), alpha*qa_i/(m*qd))
 
     elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) \
