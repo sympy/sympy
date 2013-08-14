@@ -53,6 +53,7 @@ def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     symbols = "".join(symbols)
     return list(symbols)
 
+
 ######## shift cipher examples ############
 
 
@@ -73,6 +74,7 @@ def cycle_list(k,n):
     """
     L = list(range(n))
     return L[k:]+ L[:k]
+
 
 def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
@@ -124,6 +126,7 @@ def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     L = cycle_list(key,n)
     C = [A[(A.index(pt[i]) + key)%n] for i in range(len(pt))]
     return "".join(C)
+
 
 ######## affine cipher examples ############
 
@@ -220,7 +223,6 @@ def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
     ct = [key[A.index(x)] for x in pt0]
     return "".join(ct)
-
 
 
 ######################################################################
@@ -495,6 +497,7 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     C = flatten(C)
     return "".join([A[i%N] for i in C])
 
+
 def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Deciphering is the same as ciphering but using the inverse of the key matrix.
@@ -653,6 +656,7 @@ def bifid5_square(key):
     M = Matrix(5, 5, f)
     return M
 
+
 def decipher_bifid5(ct, key):
     """
     INPUT:
@@ -693,6 +697,7 @@ def decipher_bifid5(ct, key):
     pt = "".join([long_key[5*tmp_plain[2*i]+tmp_plain[2*i+1]] for i in range(n)])
     return pt
 
+
 def bifid7_square(key):
     """
     7x7 Polybius square.
@@ -729,6 +734,7 @@ def bifid7_square(key):
     f = lambda i,j: Symbol(long_key[7*i+j])
     M = Matrix(7, 7, f)
     return M
+
 
 def encipher_bifid7(pt, key):
     """
@@ -898,6 +904,7 @@ def bifid6_square(key):
 
 #################### RSA  #############################
 
+
 def rsa_public_key(p,q,e):
     """
     The RSA *public key* is the pair `(n,e)`, where `n`
@@ -923,6 +930,7 @@ def rsa_public_key(p,q,e):
         return n,e
     return False
 
+
 def rsa_private_key(p,q,e):
     """
     The RSA *private key* is the pair `(n,d)`, where `n`
@@ -946,6 +954,7 @@ def rsa_private_key(p,q,e):
         return n,pow(e,phi-1,phi)
     return False
 
+
 def encipher_rsa(pt, puk):
     """
     In RSA, a message m is encrypted by computing
@@ -964,6 +973,7 @@ def encipher_rsa(pt, puk):
     n,e = puk
     return pow(pt,e,n)
 
+
 def decipher_rsa(ct, prk):
     """
     In RSA, a ciphertext `c` is decrypted by computing
@@ -981,6 +991,7 @@ def decipher_rsa(ct, prk):
     """
     n,d = prk
     return pow(ct,d,n)
+
 
 #################### kid krypto (kid RSA) #############################
 
@@ -1021,6 +1032,7 @@ def kid_rsa_public_key(a,b,A,B):
     n = S((e*d-1)//M)
     return n,e
 
+
 def kid_rsa_private_key(a,b,A,B):
     """
     Compute `M = ab-1`, `e = AM+a`, `d = BM+b`, `n = (ed-1)/M`.
@@ -1042,6 +1054,7 @@ def kid_rsa_private_key(a,b,A,B):
     n = S((e*d-1)//M)
     return n,d
 
+
 def encipher_kid_rsa(pt, puk):
     """
     Here ``pt`` is the plaintext and ``puk`` is the public key.
@@ -1057,6 +1070,7 @@ def encipher_kid_rsa(pt, puk):
     161
     """
     return (pt*puk[1])%puk[0]
+
 
 def decipher_kid_rsa(ct, prk):
     """
@@ -1085,7 +1099,6 @@ def decipher_kid_rsa(ct, prk):
 
 
 def encode_morse(pt):
-
     """
     Encodes a plaintext into popular Morse Code with letters separated by "|"
     and words by "||".
@@ -1152,9 +1165,7 @@ def encode_morse(pt):
     return "||".join(morsestring)
 
 
-
 def decode_morse(mc):
-
     """
     Decodes a Morse Code with letters separated by "|"
     and words by "||" into plaintext.
@@ -1315,6 +1326,7 @@ def lfsr_sequence(key, fill, n):
         s.append(F(x))
     return L       # use [x.to_int() for x in L] for int version
 
+
 def lfsr_autocorrelation(L, P, k):
     """
     This function computes the autocorrelation function.
@@ -1351,6 +1363,7 @@ def lfsr_autocorrelation(L, P, k):
     L2 = [(-1)**(L1[i].to_int() + L1[i + k].to_int()) for i in range(P)]
     tot = sum(L2)
     return Rational(tot, P)
+
 
 def lfsr_connection_polynomial(s):
     """
