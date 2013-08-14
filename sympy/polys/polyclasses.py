@@ -504,7 +504,26 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def total_degree(f):
         """Returns the total degree of ``f``. """
-        return max([sum(m) for m in f.monoms()])
+        return max(sum(m) for m in f.monoms())
+
+    def homogenize(f, s):
+        """Return homogeneous polynomial of ``f``"""
+        td = f.total_degree()
+        result = {}
+        new_symbol = (s == len(f.terms()[0][0]))
+        for term in f.terms():
+            d = sum(term[0])
+            if d < td:
+                i = td - d
+            else:
+                i = 0
+            if new_symbol:
+                result[term[0] + (i,)] = term[1]
+            else:
+                l = list(term[0])
+                l[s] += i
+                result[tuple(l)] = term[1]
+        return DMP(result, f.dom, f.lev + int(new_symbol), f.ring)
 
     def homogeneous_order(f):
         """Returns the homogeneous order of ``f``. """
