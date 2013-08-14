@@ -226,6 +226,75 @@ def _cross_same(vect_a, vect_b):
 
     return ret
 
+def div(vect, coord_sys=None):
+    """
+    Calculate the divergence of a vector field.
+    vect : an object with is_Vector == True
+    coord_sys : an instance of subclass of CoordSys class
+    """
+    coord_list = _all_coord_systems(coord_sys)
+    if not cooord_sys and len(coord_list) == 1:
+        coord_sys = coord_list[0]
+    else:
+        raise TypeError("Coordinate system to express the vector in not known")
+
+    if coord_sys.dim > 3:
+        raise NotImplementedError
+
+    vect = vect.express(coord_sys)
+    base_scalars = coord_sys.base_scalars
+    vect_comp = vect.components
+
+    indices = [(1,2), (2, 0), (0, 1)] # Indices
+    h_list = coord_sys.h_list
+    ret = S.Zero
+
+    for i, index in enumerate(indices):
+        ret = ret + diff(vect_comp[i] * h_list[index[0]] * h_list[index[1]]).factor()
+    ret = (1/(h_list[0] * h_list[1] * h_list[2])) * ret
+
+    return ret.factor()
+
+
+def curl(vect, coord_sys):
+    """
+    Calculate the curl of a vector field.
+    vect : an object with is_Vector == True
+    coord_sys : an instance of subclass of CoordSys class
+    """
+    coord_list = _all_coord_systems(coord_sys)
+    if not cooord_sys and len(coord_list) == 1:
+        coord_sys = coord_list[0]
+    else:
+        raise TypeError("Coordinate system to express the vector in not known")
+
+    if coord_sys.dim > 3:
+        raise NotImplementedError
+    vect = vect.express(coord_sys)
+    bv = coord_sys.base_vectors
+    bs = coord_sys.base_scalars
+    comp = vect.components
+
+    indices = [(2, 1), (0, 2), (1, 0)] # Coordinate Indices
+    h = coord_sys.h_list
+    ret = ZeroVector
+
+    for i, index in enumerate(indices):
+        diff_1 = h[index[0]] * comp[index[0]]
+        diff_2 = h[index[1]] * comp[index[1]]
+        l = ((diff(diff_1, bs[index[1]]) - diff(diff_2, bs[index[0]])) *
+            (h[i] * bv[i]))
+        ret = ret + l.expand().factor()
+    return ret.factor()
+
+def laplacian(expr, coord_sys=None):
+    """
+    Calculate the laplacian of scalar field.
+    expr : a SymPy expression
+    coord_sys : an object of subclass of CoordSys class
+    """
+    return div(grad(expr, coord_sys))
+
 def _has_base_scalar(expr):
     expr = expr.expand()
     for arg in expr.args:
@@ -252,8 +321,6 @@ def _all_base_scalars(scalar):
             if l:
                 ret = ret + l
     return list(set(ret))
-    #MARK
-
 
 def _separate_to_vectors(vect):
     coord_dict = vect.separate()
@@ -323,6 +390,10 @@ class BaseScalar(Expr):
         return self.coord_sys.name + "." + self.name
 
     __repr__ = __str__
+
+    def grad(self, coord_sys):
+        __doc__ = grad.__doc__
+        return grad(self, coord_sys)
 
     @staticmethod
     def coord_rel_rect(base_scalar, coord_sys):
@@ -1110,6 +1181,21 @@ class Vector(Expr):
     #_sympystr = __str__
     #_sympyrepr = __str__
 
+    def dot(self, other, coord_sys=None):
+        __doc__ = dot.__doc__
+        return dot(self, other, coord_sys)
+
+    def cross(self, other, coord_sys=None):
+        __doc__ = cross.__doc__
+        return dot(self, other, coord_sys)
+
+    def div(self, coord_sys=None):
+        __doc__ = div.__doc__
+        return div(self, coord_sys)
+
+    def curl(self, coord_sys=None):
+        __doc__ = curl.__doc__
+        return curl(self, coord_sys)
 
     def __neg__(self):
         return VectMul(S.NegativeOne, self)
@@ -1173,14 +1259,6 @@ class BaseVector(Vector, Symbol):
         assumptions = {}
         assumptions['commutative'] = is_commutative
         self._assumptions = StdFactKB(assumptions)
-
-    def __str__(self):
-        return self.coord_sys.name + "." + self.name
-
-    __repr__ = __str__
-
-    def dot(self, other, coord_sys=None):
-        return dot(self, other, coord_sys)
 
     def separate(self):
         # We just have a Vector - just return it
