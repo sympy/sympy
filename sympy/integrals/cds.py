@@ -12,7 +12,7 @@ in K, it decides whether the system of equations
      \     /        \          /    \    /       \    /
 
 """
-from __future__ import print_function
+from __future__ import print_function, division
 from sympy import sqrt
 
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S

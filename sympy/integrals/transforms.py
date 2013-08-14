@@ -1,5 +1,6 @@
 """ Integral Transforms """
-from __future__ import print_function
+from __future__ import print_function, division
+
 from sympy.integrals import integrate, Integral
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
