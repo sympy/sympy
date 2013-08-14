@@ -1768,14 +1768,16 @@ class Poly(Expr):
         Poly(x**5 + 2*x**2*y**2*z + 9*x*y**3*z, x, y, z, domain='ZZ')
 
         """
-        if f.is_homogeneous:
-            return f
         if not isinstance(s, Symbol):
             raise TypeError("``Symbol`` expected, got %s" % type(s))
         if s in f.gens:
-            raise ValueError("This symbol is already in use.")
+            i = f.gens.index(s)
+            gens = f.gens
+        else:
+            i = len(f.gens)
+            gens = f.gens + (s,)
         if hasattr(f.rep, 'homogenize'):
-            return f.per(f.rep.homogenize(), gens=f.gens + (s,))
+            return f.per(f.rep.homogenize(i), gens=gens)
         raise OperationNotSupported(f, 'homogeneous_order')
 
     def homogeneous_order(f):
