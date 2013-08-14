@@ -1,5 +1,5 @@
 Basic Cryptography Module
-============================
+=========================
 
 Included in this module are both block ciphers and stream ciphers.
  
@@ -13,7 +13,7 @@ Included in this module are both block ciphers and stream ciphers.
  * Kid RSA
  * linear feedback shift registers (a stream cipher)
 
-.. module:: sympy.crypto
+.. module:: sympy.crypto.crypto
 
 .. autofunction:: alphabet_of_cipher
 
@@ -37,15 +37,19 @@ Included in this module are both block ciphers and stream ciphers.
 
 .. autofunction:: encipher_bifid5
 
-.. autofunction:: bifid5_square
-
 .. autofunction:: decipher_bifid5
+
+.. autofunction:: bifid5_square
 
 .. autofunction:: encipher_bifid6
 
 .. autofunction:: decipher_bifid6
 
 .. autofunction:: bifid6_square
+
+.. autofunction:: encipher_bifid7
+
+.. autofunction:: bifid7_square
 
 .. autofunction:: rsa_public_key
 
@@ -62,6 +66,10 @@ Included in this module are both block ciphers and stream ciphers.
 .. autofunction:: encipher_kid_rsa
 
 .. autofunction:: decipher_kid_rsa
+
+.. autofunction:: encode_morse
+
+.. autofunction:: decode_morse
 
 .. autofunction:: lfsr_sequence
 

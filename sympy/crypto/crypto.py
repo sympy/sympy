@@ -227,12 +227,11 @@ def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 #################### Vigenere cipher examples ########################
 ######################################################################
 
-"""
-
-"""
 
 def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
+    Encode using the Vigenere cipher.
+
     Notes
     =====
 
@@ -344,6 +343,7 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 def decipher_vigenere(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
+    Decode using the Vigenere cipher.
 
     Examples
     ========
@@ -584,7 +584,7 @@ def encipher_bifid5(pt, key, verbose=False):
 
 def bifid5_square(key):
     """
-    5x5 polybius square
+    5x5 Polybius square.
 
     Notes
     =====
@@ -695,6 +695,8 @@ def decipher_bifid5(ct, key):
 
 def bifid7_square(key):
     """
+    7x7 Polybius square.
+
     Produced the Polybius square for the 7x7 Bifid cipher.
     Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "22".
     (Also, assumes you have some way of distinguishing "22"
@@ -860,6 +862,8 @@ def decipher_bifid6(ct, key):
 
 def bifid6_square(key):
     """
+    6x6 Polybius square.
+
     Produces the Polybius square for the 6x6 Bifid cipher.
     Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
 
