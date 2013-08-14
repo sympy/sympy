@@ -2,6 +2,8 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
+from __future__ import print_function, division
+
 import math
 
 import sympy.mpmath.libmp as libmp
@@ -15,14 +17,14 @@ from sympy.mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
 from sympy.mpmath.libmp import bitcount as mpmath_bitcount
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
-from sympy.mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
+from sympy.mpmath.libmp.libmpf import dps_to_prec
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
-from sympy.core.compatibility import SYMPY_INTS
-from sympify import sympify
-from core import C
-from singleton import S
-from containers import Tuple
+from .compatibility import SYMPY_INTS
+from .sympify import sympify
+from .core import C
+from .singleton import S
+from .containers import Tuple
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -460,7 +462,7 @@ def evalf_add(v, prec, options):
         acc = complex_accuracy((re, im, re_acc, im_acc))
         if acc >= target_prec:
             if options.get('verbose'):
-                print "ADD: wanted", target_prec, "accurate bits, got", re_acc, im_acc
+                print("ADD: wanted", target_prec, "accurate bits, got", re_acc, im_acc)
             break
         else:
             if (prec - target_prec) > options['maxprec']:
@@ -469,7 +471,7 @@ def evalf_add(v, prec, options):
             prec = prec + max(10 + 2**i, target_prec - acc)
             i += 1
             if options.get('verbose'):
-                print "ADD: restarting with prec", prec
+                print("ADD: restarting with prec", prec)
 
     options['maxprec'] = oldmaxprec
     if iszero(re, scaled=True):
@@ -587,7 +589,7 @@ def evalf_mul(v, prec, options):
             re = mpf_add(A, B, use_prec)
             im = mpf_add(C, D, use_prec)
         if options.get('verbose'):
-            print "MUL: wanted", prec, "accurate bits, got", acc
+            print("MUL: wanted", prec, "accurate bits, got", acc)
         # multiply by I
         if direction & 1:
             re, im = mpf_neg(im), re
@@ -749,8 +751,8 @@ def evalf_trig(v, prec, options):
         accuracy = (xprec - xsize) - gap
         if accuracy < prec:
             if options.get('verbose'):
-                print "SIN/COS", accuracy, "wanted", prec, "gap", gap
-                print to_str(y, 10)
+                print("SIN/COS", accuracy, "wanted", prec, "gap", gap)
+                print(to_str(y, 10))
             if xprec > options.get('maxprec', DEFAULT_MAXPREC):
                 return y, None, accuracy, None
             xprec += gap
@@ -947,6 +949,9 @@ def do_integral(expr, prec, options):
 
 
 def evalf_integral(expr, prec, options):
+    limits = expr.limits
+    if len(limits) != 1 or len(limits[0]) != 3:
+        raise NotImplementedError
     workprec = prec
     i = 0
     maxprec = options.get('maxprec', INF)
@@ -1066,8 +1071,7 @@ def hypsum(expr, n, start, prec):
 def evalf_sum(expr, prec, options):
     func = expr.function
     limits = expr.limits
-    if len(limits) != 1 or not isinstance(limits[0], Tuple) or \
-            len(limits[0]) != 3:
+    if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
     prec2 = prec + 10
     try:
@@ -1202,10 +1206,10 @@ def evalf(x, prec, options):
         except AttributeError:
             raise NotImplementedError
     if options.get("verbose"):
-        print "### input", x
-        print "### output", to_str(r[0] or fzero, 50)
-        print "### raw", r  # r[0], r[2]
-        print
+        print("### input", x)
+        print("### output", to_str(r[0] or fzero, 50))
+        print("### raw", r ) # r[0], r[2]
+        print()
     chop = options.get('chop', False)
     if chop:
         if chop is True:
@@ -1366,7 +1370,7 @@ def N(x, n=15, **options):
     Examples
     ========
 
-    >>> from sympy import Sum, Symbol, oo, N
+    >>> from sympy import Sum, oo, N
     >>> from sympy.abc import k
     >>> Sum(1/k**k, (k, 1, oo))
     Sum(k**(-k), (k, 1, oo))

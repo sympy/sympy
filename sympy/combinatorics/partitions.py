@@ -1,5 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, C, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key
+from sympy.core.compatibility import as_int, default_sort_key, xrange
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.utilities.iterables import has_dups, flatten, group
@@ -54,7 +56,7 @@ class Partition(C.FiniteSet):
         if has_dups(partition):
             raise ValueError("Partition contained duplicated elements.")
 
-        obj = C.FiniteSet.__new__(cls, map(C.FiniteSet, args))
+        obj = C.FiniteSet.__new__(cls, list(map(C.FiniteSet, args)))
         obj.members = tuple(partition)
         obj.size = len(partition)
         return obj
@@ -74,7 +76,7 @@ class Partition(C.FiniteSet):
         >>> a = Partition([[1, 2]])
         >>> b = Partition([[3, 4]])
         >>> c = Partition([[1, x]])
-        >>> d = Partition([range(4)])
+        >>> d = Partition([list(range(4))])
         >>> l = [d, b, a + 1, a, c]
         >>> l.sort(key=default_sort_key); l
         [{{1, 2}}, {{1}, {2}}, {{1, x}}, {{3, 4}}, {{0, 1, 2, 3}}]
@@ -84,7 +86,7 @@ class Partition(C.FiniteSet):
         else:
             members = tuple(sorted(self.members,
                              key=lambda w: default_sort_key(w, order)))
-        return self.size, members, self.rank
+        return list(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
     def partition(self):
@@ -98,7 +100,8 @@ class Partition(C.FiniteSet):
         [[1], [2, 3]]
         """
         if self._partition is None:
-            self._partition = sorted(sorted(p) for p in self.args)
+            self._partition = sorted([sorted(p, key=default_sort_key)
+                                      for p in self.args])
         return self._partition
 
     def __add__(self, other):
@@ -228,7 +231,8 @@ class Partition(C.FiniteSet):
         for i, part in enumerate(partition):
             for j in part:
                 rgs[j] = i
-        return tuple([rgs[i] for i in sorted(i for p in partition for i in p)])
+        return tuple([rgs[i] for i in sorted(
+            [i for p in partition for i in p], key=default_sort_key)])
 
     @classmethod
     def from_rgs(self, rgs, elements):
@@ -307,7 +311,7 @@ class IntegerPartition(Basic):
         >>> a = IntegerPartition([5, 4, 3, 1, 1])
         >>> a
         IntegerPartition(14, (5, 4, 3, 1, 1))
-        >>> print a
+        >>> print(a)
         [5, 4, 3, 1, 1]
         >>> IntegerPartition({1:3, 2:1})
         IntegerPartition(5, (2, 1, 1, 1))
@@ -324,7 +328,7 @@ class IntegerPartition(Basic):
             integer, partition = partition, integer
         if isinstance(partition, (dict, Dict)):
             _ = []
-            for k, v in sorted(partition.items(), reverse=True):
+            for k, v in sorted(list(partition.items()), reverse=True):
                 if not v:
                     continue
                 k, v = as_int(k), as_int(v)
@@ -358,7 +362,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([4])
-        >>> print p.prev_lex()
+        >>> print(p.prev_lex())
         [3, 1]
         >>> p.partition > p.prev_lex().partition
         True
@@ -395,7 +399,7 @@ class IntegerPartition(Basic):
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
         >>> p = IntegerPartition([3, 1])
-        >>> print p.next_lex()
+        >>> print(p.next_lex())
         [4]
         >>> p.partition < p.next_lex().partition
         True
@@ -519,7 +523,7 @@ class IntegerPartition(Basic):
         ========
 
         >>> from sympy.combinatorics.partitions import IntegerPartition
-        >>> print IntegerPartition([1, 1, 5]).as_ferrers()
+        >>> print(IntegerPartition([1, 1, 5]).as_ferrers())
         #####
         #
         #
@@ -579,13 +583,14 @@ def RGS_generalized(m):
 
     >>> from sympy.combinatorics.partitions import RGS_generalized
     >>> RGS_generalized(6)
-    [  1,   1,   1,  1,  1, 1, 1]
-    [  1,   2,   3,  4,  5, 6, 0]
-    [  2,   5,  10, 17, 26, 0, 0]
-    [  5,  15,  37, 77,  0, 0, 0]
-    [ 15,  52, 151,  0,  0, 0, 0]
-    [ 52, 203,   0,  0,  0, 0, 0]
-    [203,   0,   0,  0,  0, 0, 0]
+    Matrix([
+    [  1,   1,   1,  1,  1, 1, 1],
+    [  1,   2,   3,  4,  5, 6, 0],
+    [  2,   5,  10, 17, 26, 0, 0],
+    [  5,  15,  37, 77,  0, 0, 0],
+    [ 15,  52, 151,  0,  0, 0, 0],
+    [ 52, 203,   0,  0,  0, 0, 0],
+    [203,   0,   0,  0,  0, 0, 0]])
     """
     d = zeros(m + 1)
     for i in xrange(0, m + 1):
@@ -620,7 +625,7 @@ def RGS_enum(m):
     We can check that the enumeration is correct by actually generating
     the partitions. Here, the 15 partitions of 4 items are generated:
 
-    >>> a = Partition([range(4)])
+    >>> a = Partition([list(range(4))])
     >>> s = set()
     >>> for i in range(20):
     ...     s.add(a)
@@ -669,7 +674,7 @@ def RGS_unrank(rank, m):
         else:
             L[i] = int(rank / v + 1)
             rank %= v
-    return map(lambda x: x - 1, L[1:])
+    return [x - 1 for x in L[1:]]
 
 
 def RGS_rank(rgs):

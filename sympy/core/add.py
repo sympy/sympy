@@ -1,6 +1,9 @@
+from __future__ import print_function, division
+
 from collections import defaultdict
 
 from sympy.core.core import C
+from sympy.core.compatibility import reduce
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
@@ -51,6 +54,8 @@ def _unevaluated_Add(*args):
     while args:
         a = args.pop()
         if a.is_Add:
+            # this will keep nesting from building up
+            # so that x + (x + 1) -> x + x + 1 (3 args)
             args.extend(a.args)
         elif a.is_Number:
             co += a
@@ -96,26 +101,6 @@ class Add(Expr, AssocOp):
                 a, b = b, a
             if a.is_Rational:
                 if b.is_Mul:
-                    # if it's an unevaluated 2-arg, expand it
-                    c, t = b.as_coeff_Mul()
-                    if t.is_Add:
-                        h, t = t.as_coeff_Add()
-                        bargs = [c*ti for ti in Add.make_args(t)]
-                        _addsort(bargs)
-                        ch = c*h
-                        if ch:
-                            bargs.insert(0, ch)
-                        b = Add._from_args(bargs)
-                if b.is_Add:
-                    bargs = list(b.args)
-                    if bargs[0].is_Number:
-                        bargs[0] += a
-                        if not bargs[0]:
-                            bargs.pop(0)
-                    else:
-                        bargs.insert(0, a)
-                    rv = bargs, [], None
-                elif b.is_Mul:
                     rv = [a, b], [], None
             if rv:
                 if all(s.is_commutative for s in rv[0]):
@@ -173,14 +158,6 @@ class Add(Expr, AssocOp):
             elif o.is_Mul:
                 c, s = o.as_coeff_Mul()
 
-                # 3*...
-                # unevaluated 2-arg Mul, but we always unfold it so
-                # it can combine with other terms (just like is done
-                # with the Pow below)
-                if c.is_Number and s.is_Add:
-                    seq.extend([c*a for a in s.args])
-                    continue
-
             # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
             elif o.is_Pow:
                 b, e = o.as_base_exp()
@@ -225,7 +202,9 @@ class Add(Expr, AssocOp):
                     # so we can simply put c in slot0 and go the fast way.
                     cs = s._new_rawargs(*((c,) + s.args))
                     newseq.append(cs)
-
+                elif s.is_Add:
+                    # we just re-create the unevaluated Mul
+                    newseq.append(Mul(c, s, evaluate=False))
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
                     newseq.append(Mul(c, s))
@@ -236,12 +215,12 @@ class Add(Expr, AssocOp):
         if coeff is S.Infinity:
             newseq = [f for f in newseq if not
                       (f.is_nonnegative or f.is_real and
-                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+                       (f.is_bounded or f.is_infinitesimal))]
 
         elif coeff is S.NegativeInfinity:
             newseq = [f for f in newseq if not
                       (f.is_nonpositive or f.is_real and
-                       (f.is_bounded or f.is_finite or f.is_infinitesimal))]
+                       (f.is_bounded or f.is_infinitesimal))]
 
         if coeff is S.ComplexInfinity:
             # zoo might be
@@ -314,7 +293,7 @@ class Add(Expr, AssocOp):
         for ai in a.args:
             c, m = ai.as_coeff_Mul()
             d[m].append(c)
-        for k, v in d.iteritems():
+        for k, v in d.items():
             if len(v) == 1:
                 d[k] = v[0]
             else:
@@ -332,7 +311,7 @@ class Add(Expr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
         >>> (7 + 3*x).as_coeff_add()
         (7, (3*x,))
         >>> (7*x).as_coeff_add()
@@ -369,11 +348,11 @@ class Add(Expr, AssocOp):
     # issue 2425.
 
     def _eval_derivative(self, s):
-        return Add(*[f.diff(s) for f in self.args])
+        return self.func(*[f.diff(s) for f in self.args])
 
     def _eval_nseries(self, x, n, logx):
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        return Add(*terms)
+        return self.func(*terms)
 
     def _matches_simple(self, expr, repl_dict):
         # handle (w+3).matches('x+5') -> {w: x+2}
@@ -439,20 +418,20 @@ class Add(Expr, AssocOp):
         # check for quick exit
         if len(nd) == 1:
             d, n = nd.popitem()
-            return Add(
+            return self.func(
                 *[_keep_coeff(ncon, ni) for ni in n]), _keep_coeff(dcon, d)
 
         # sum up the terms having a common denominator
-        for d, n in nd.iteritems():
+        for d, n in nd.items():
             if len(n) == 1:
                 nd[d] = n[0]
             else:
-                nd[d] = Add(*n)
+                nd[d] = self.func(*n)
 
         # assemble single numerator and denominator
-        denoms, numers = [list(i) for i in zip(*nd.iteritems())]
-        n, d = Add(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
-                   for i in xrange(len(numers))]), Mul(*denoms)
+        denoms, numers = [list(i) for i in zip(*iter(nd.items()))]
+        n, d = self.func(*[Mul(*(denoms[:i] + [numers[i]] + denoms[i + 1:]))
+                   for i in range(len(numers))]), Mul(*denoms)
 
         return _keep_coeff(ncon, n), _keep_coeff(dcon, d)
 
@@ -461,6 +440,9 @@ class Add(Expr, AssocOp):
 
     def _eval_is_rational_function(self, syms):
         return all(term._eval_is_rational_function(syms) for term in self.args)
+
+    def _eval_is_algebraic_expr(self, syms):
+        return all(term._eval_is_algebraic_expr(syms) for term in self.args)
 
     # assumption methods
     _eval_is_real = lambda self: self._eval_template_is_attr(
@@ -475,6 +457,8 @@ class Add(Expr, AssocOp):
         'is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr(
         'is_integer', when_multiple=None)
+    _eval_is_rational = lambda self: self._eval_template_is_attr(
+        'is_rational', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr(
         'is_commutative')
 
@@ -607,29 +591,29 @@ class Add(Expr, AssocOp):
 
         if coeff_self.is_Rational and coeff_old.is_Rational:
             if terms_self == terms_old:   # (2 + a).subs( 3 + a, y) -> -1 + y
-                return Add(new, coeff_self, -coeff_old)
+                return self.func(new, coeff_self, -coeff_old)
             if terms_self == -terms_old:  # (2 + a).subs(-3 - a, y) -> -1 - y
-                return Add(-new, coeff_self, coeff_old)
+                return self.func(-new, coeff_self, coeff_old)
 
         if coeff_self.is_Rational and coeff_old.is_Rational \
                 or coeff_self == coeff_old:
-            args_old, args_self = Add.make_args(
-                terms_old), Add.make_args(terms_self)
+            args_old, args_self = self.func.make_args(
+                terms_old), self.func.make_args(terms_self)
             if len(args_old) < len(args_self):  # (a+b+c).subs(b+c,x) -> a+x
                 self_set = set(args_self)
                 old_set = set(args_old)
 
                 if old_set < self_set:
                     ret_set = self_set - old_set
-                    return Add(new, coeff_self, -coeff_old,
+                    return self.func(new, coeff_self, -coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
-                args_old = Add.make_args(
+                args_old = self.func.make_args(
                     -terms_old)     # (a+b+c+d).subs(-b-c,x) -> a-x+d
                 old_set = set(args_old)
                 if old_set < self_set:
                     ret_set = self_set - old_set
-                    return Add(-new, coeff_self, coeff_old,
+                    return self.func(-new, coeff_self, coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
     def removeO(self):
@@ -705,9 +689,9 @@ class Add(Expr, AssocOp):
 
         unbounded = [t for t in self.args if t.is_unbounded]
         if unbounded:
-            return Add._from_args(unbounded)
+            return self.func._from_args(unbounded)
 
-        self = Add(*[t.as_leading_term(x) for t in self.args]).removeO()
+        self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
         if not self:
             # simple leading term analysis gave us 0 but we have to send
             # back a term, so compute the leading term (via series)
@@ -715,26 +699,28 @@ class Add(Expr, AssocOp):
         elif not self.is_Add:
             return self
         else:
-            plain = Add(*[s for s, _ in self.extract_leading_order(x)])
+            plain = self.func(*[s for s, _ in self.extract_leading_order(x)])
             rv = factor_terms(plain, fraction=False)
             rv_fraction = factor_terms(rv, fraction=True)
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
             if x not in rv_fraction.free_symbols:
+                if rv_fraction.is_zero and plain.is_zero is not True:
+                    return (self - plain)._eval_as_leading_term(x)
                 return rv_fraction
             return rv
 
     def _eval_adjoint(self):
-        return Add(*[t.adjoint() for t in self.args])
+        return self.func(*[t.adjoint() for t in self.args])
 
     def _eval_conjugate(self):
-        return Add(*[t.conjugate() for t in self.args])
+        return self.func(*[t.conjugate() for t in self.args])
 
     def _eval_transpose(self):
-        return Add(*[t.transpose() for t in self.args])
+        return self.func(*[t.transpose() for t in self.args])
 
     def __neg__(self):
-        return Add(*[-t for t in self.args])
+        return self.func(*[-t for t in self.args])
 
     def _sage_(self):
         s = 0
@@ -842,7 +828,7 @@ class Add(Expr, AssocOp):
 
         See docstring of Expr.as_content_primitive for more examples.
         """
-        con, prim = Add(*[_keep_coeff(*a.as_content_primitive(
+        con, prim = self.func(*[_keep_coeff(*a.as_content_primitive(
             radical=radical)) for a in self.args]).primitive()
         if radical and prim.is_Add:
             # look for common radicals that can be removed
@@ -869,7 +855,7 @@ class Add(Expr, AssocOp):
                 # process rads
                 # keep only those in common_q
                 for r in rads:
-                    for q in r.keys():
+                    for q in list(r.keys()):
                         if q not in common_q:
                             r.pop(q)
                     for q in r:
@@ -883,7 +869,7 @@ class Add(Expr, AssocOp):
                 if G:
                     G = Mul(*G)
                     args = [ai/G for ai in args]
-                    prim = G*Add(*args)
+                    prim = G*prim.func(*args)
 
         return con, prim
 
@@ -892,5 +878,5 @@ class Add(Expr, AssocOp):
         from sympy.core.compatibility import default_sort_key
         return sorted(self.args, key=lambda w: default_sort_key(w))
 
-from mul import Mul, _keep_coeff, prod
+from .mul import Mul, _keep_coeff, prod
 from sympy.core.numbers import Rational

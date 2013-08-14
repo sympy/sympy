@@ -1,6 +1,9 @@
+from __future__ import print_function, division
+
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core.compatibility import string_types
 from sympy.functions import tan, cot, factorial, gamma
-from gruntz import gruntz
+from .gruntz import gruntz
 
 
 def limit(e, z, z0, dir="+"):
@@ -100,7 +103,7 @@ def limit(e, z, z0, dir="+"):
         if ex.is_number:
             if c is None:
                 base = b.subs(z, z0)
-                if base.is_finite and (ex.is_bounded or base is not S.One):
+                if base != 0 and (ex.is_bounded or base is not S.One):
                     return base**ex
             else:
                 if z0 == 0 and ex < 0:
@@ -163,105 +166,13 @@ def limit(e, z, z0, dir="+"):
                             return -oo*i
 
     if e.is_Add:
-        if e.is_polynomial() and not z0.is_unbounded:
-            return Add(*[limit(term, z, z0, dir) for term in e.args])
-
-        # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
-        # but we need to make sure, that the general gruntz() algorithm is
-        # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
-
-        unbounded = []
-        unbounded_result = []
-        unbounded_const = []
-        unknown = []
-        unknown_result = []
-        finite = []
-        zero = []
-
-        def _sift(term):
-            if z not in term.free_symbols:
-                if term.is_unbounded:
-                    unbounded_const.append(term)
-                else:
-                    finite.append(term)
-            else:
-                result = term.subs(z, z0)
-                bounded = result.is_bounded
-                if bounded is False or result is S.NaN:
-                    unbounded.append(term)
-                    if result != S.NaN:
-                        # take result from direction given
-                        result = limit(term, z, z0, dir)
-                    unbounded_result.append(result)
-                elif bounded:
-                    if result:
-                        finite.append(result)
-                    else:
-                        zero.append(term)
-                else:
-                    unknown.append(term)
-                    unknown_result.append(result)
-
-        for term in e.args:
-            _sift(term)
-
-        bad = bool(unknown and unbounded)
-        if bad or len(unknown) > 1 or len(unbounded) > 1 and not zero:
-            uu = unknown + unbounded
-            # we won't be able to resolve this with unbounded
-            # terms, e.g. Sum(1/k, (k, 1, n)) - log(n) as n -> oo:
-            # since the Sum is unevaluated it's boundedness is
-            # unknown and the log(n) is oo so you get Sum - oo
-            # which is unsatisfactory. BUT...if there are both
-            # unknown and unbounded terms (condition 'bad') or
-            # there are multiple terms that are unknown, or
-            # there are multiple symbolic unbounded terms they may
-            # respond better if they are made into a rational
-            # function, so give them a chance to do so before
-            # reporting failure.
-            u = Add(*uu)
-            f = u.normal()
-            if f != u:
-                unknown = []
-                unbounded = []
-                unbounded_result = []
-                unknown_result = []
-                _sift(limit(f, z, z0, dir))
-
-            # We came in with a) unknown and unbounded terms or b) had multiple
-            # unknown terms
-
-            # At this point we've done one of 3 things.
-            # (1) We did nothing with f so we now report the error
-            # showing the troublesome terms which are now in uu. OR
-
-            # (2) We did something with f but the result came back as unknown.
-            # Normally this wouldn't be a problem,
-            # but we had either multiple terms that were troublesome (unk and
-            # unbounded or multiple unknown terms) so if we
-            # weren't able to resolve the boundedness by now, that indicates a
-            # problem so we report the error showing the troublesome terms which are
-            # now in uu.
-            if unknown:
-                if bad:
-                    msg = 'unknown and unbounded terms present in %s'
-                elif unknown:
-                    msg = 'multiple terms with unknown boundedness in %s'
-                raise NotImplementedError(msg % uu)
-            # OR
-            # (3) the troublesome terms have been identified as finite or unbounded
-            # and we proceed with the non-error code since the lists have been updated.
-
-        u = Add(*unknown_result)
-        if unbounded_result or unbounded_const:
-            unbounded.extend(zero)
-            inf_limit = Add(*(unbounded_result + unbounded_const))
-            if inf_limit is not S.NaN:
-                return inf_limit + u
-            if finite:
-                return Add(*finite) + limit(Add(*unbounded), z, z0, dir) + u
-        else:
-            return Add(*finite) + u
+        if e.is_polynomial():
+            if not z0.is_unbounded:
+                return Add(*[limit(term, z, z0, dir) for term in e.args])
+        elif e.is_rational_function(z):
+            rval = Add(*[limit(term, z, z0, dir) for term in e.args])
+            if rval != S.NaN:
+                return rval
 
     if e.is_Order:
         args = e.args
@@ -319,7 +230,7 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
-        if isinstance(dir, basestring):
+        if isinstance(dir, string_types):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))

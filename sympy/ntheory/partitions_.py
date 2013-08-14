@@ -1,9 +1,12 @@
+from __future__ import print_function, division
+
 from sympy.mpmath.libmp import (fzero,
     from_man_exp, from_int, from_rational,
     fone, fhalf, bitcount, to_int, to_str, mpf_mul, mpf_div, mpf_sub,
     mpf_add, mpf_sqrt, mpf_pi, mpf_cosh_sinh, pi_fixed, mpf_cos)
 from sympy.core.numbers import igcd
 import math
+from sympy.core.compatibility import xrange
 
 
 def _a(n, j, prec):
@@ -85,11 +88,10 @@ def npartitions(n, verbose=False):
         d = _d(n, q, p, sq23pi, sqrt8)
         s = mpf_add(s, mpf_mul(a, d), prec)
         if verbose:
-            print "step", q, "of", M, to_str(a, 10), to_str(d, 10)
+            print("step", q, "of", M, to_str(a, 10), to_str(d, 10))
         # On average, the terms decrease rapidly in magnitude. Dynamically
         # reducing the precision greatly improves performance.
         p = bitcount(abs(to_int(d))) + 50
-    np = to_int(mpf_add(s, fhalf, prec))
-    return int(np)
+    return int(to_int(mpf_add(s, fhalf, prec)))
 
 __all__ = ['npartitions']

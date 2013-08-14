@@ -1,5 +1,7 @@
-from sympy import Basic, Expr, S, Q, ask
-from matexpr import ShapeError
+from __future__ import print_function, division
+
+from sympy import Basic, Expr, S, Q
+from .matexpr import ShapeError
 
 
 class Determinant(Expr):
@@ -30,8 +32,6 @@ class Determinant(Expr):
         return self.args[0]
 
     def doit(self, expand=False):
-        if ask(Q.singular(self)):
-            return S.Zero
         try:
             return self.arg._eval_determinant()
         except (AttributeError, NotImplementedError):

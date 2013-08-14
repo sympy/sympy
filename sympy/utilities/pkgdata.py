@@ -17,9 +17,11 @@ getResource to its get_data implementation and return it as a file-like
 object (such as StringIO).
 """
 
+from __future__ import print_function, division
+
 import sys
 import os
-from cStringIO import StringIO
+from sympy.core.compatibility import cStringIO as StringIO
 
 
 def get_resource(identifier, pkgname=__name__):
@@ -49,7 +51,7 @@ def get_resource(identifier, pkgname=__name__):
     if loader is not None:
         try:
             data = loader.get_data(path)
-        except IOError:
+        except (IOError,AttributeError):
             pass
         else:
             return StringIO(data)

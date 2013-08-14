@@ -78,3 +78,12 @@ def test_determinant():
     assert det(2*C) == 2**n*det(C)
     assert det(2*C*D) == 2**n*det(C)*det(D)
     assert det(3*C*A*A.T*D) == 3**n*det(C)*det(A*A.T)*det(D)
+
+def test_doit():
+    C = MatrixSymbol('C', n, n)
+    D = MatrixSymbol('D', n, n)
+
+    assert MatMul(C, 2, D).args == (C, 2, D)
+    assert MatMul(C, 2, D).doit().args == (2, C, D)
+    assert MatMul(C, Transpose(D*C)).args == (C, Transpose(D*C))
+    assert MatMul(C, Transpose(D*C)).doit(deep=True).args == (C, C.T, D.T)

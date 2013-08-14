@@ -7,12 +7,13 @@ tested system.
 """
 
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
-    binomial, rf, pi, gamma, igcd, factorint, nsimplify, radsimp, combsimp,
+    binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
-    bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart, sqrtdenest,
-    factorial2, powdenest, Mul, S, mpmath, ZZ, Poly, expand_func)
+    bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
+    im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
+    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -20,6 +21,10 @@ from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy.physics.quantum import Commutator
+from sympy.assumptions import assuming
+from sympy.polys.rings import vring
+from sympy.polys.fields import vfield
+from sympy.polys.solvers import solve_lin_sys
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -101,11 +106,11 @@ def test_C13():
 
 
 def test_C14():
-    assert nsimplify(sqrt(2*sqrt(3) + 4)) == 1 + sqrt(3)
+    assert sqrtdenest(sqrt(2*sqrt(3) + 4)) == 1 + sqrt(3)
 
 
 def test_C15():
-    test = nsimplify(sqrt(14 + 3*sqrt(3 + 2*sqrt(5 - 12*sqrt(3 - 2*sqrt(2))))))
+    test = sqrtdenest(sqrt(14 + 3*sqrt(3 + 2*sqrt(5 - 12*sqrt(3 - 2*sqrt(2))))))
     good = sqrt(2) + 3
     assert test == good
 
@@ -117,33 +122,35 @@ def test_C16():
 
 
 def test_C17():
-    test = nsimplify((sqrt(3) + sqrt(2)) / (sqrt(3) - sqrt(2)))
+    test = radsimp((sqrt(3) + sqrt(2)) / (sqrt(3) - sqrt(2)))
     good = 5 + 2*sqrt(6)
     assert test == good
 
 
 def test_C18():
-    assert nsimplify(sqrt(-2 + sqrt(-5)) * sqrt(-2 - sqrt(-5))) == 3
+    assert simplify((sqrt(-2 + sqrt(-5)) * sqrt(-2 - sqrt(-5))).expand(complex=True)) == 3
 
 
 @XFAIL
 def test_C19():
-    assert radsimp(nsimplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
+    assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
 
 
+@XFAIL
 def test_C20():
     inside = (135 + 78*sqrt(3))
-    test = nsimplify((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
+    test = simplify((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
     assert test == 12
 
 
+@XFAIL
 def test_C21():
-    assert nsimplify((41 + 29*sqrt(2)) ** R(1, 5)) == 1 + sqrt(2)
+    assert simplify((41 + 29*sqrt(2)) ** R(1, 5)) == 1 + sqrt(2)
 
 
 @XFAIL
 def test_C22():
-    test = nsimplify(((6 - 4*sqrt(2))*log(3 - 2*sqrt(2)) + (3 - 2*sqrt(2))*log(17
+    test = simplify(((6 - 4*sqrt(2))*log(3 - 2*sqrt(2)) + (3 - 2*sqrt(2))*log(17
         - 12*sqrt(2)) + 32 - 24*sqrt(2)) / (48*sqrt(2) - 72))
     good = sqrt(2)/3 - log(sqrt(2) - 1)/3
     assert test == good
@@ -509,14 +516,12 @@ def test_I2():
     assert sqrt((1 + cos(6))/2) == -cos(3)
 
 
-@XFAIL
 def test_I3():
     assert cos(n*pi) + sin((4*n - 1)*pi/2) == (-1)**n - 1
 
 
-@XFAIL
 def test_I4():
-    assert cos(pi*cos(n*pi)) + sin(pi/2*cos(n*pi)) == (-1)**n - 1
+    assert refine(cos(pi*cos(n*pi)) + sin(pi/2*cos(n*pi)), Q.integer(n)) == (-1)**n - 1
 
 
 @XFAIL
@@ -592,19 +597,18 @@ def test_J6():
     assert mpmath.besselj(2, 1 + 1j).ae(mpc('0.04157988694396212', '0.24739764151330632'))
 
 
-@XFAIL
 def test_J7():
-    raise NotImplementedError("jv(R(-5,2), pi/2) == 12/(pi**2)")
+    assert simplify(besselj(R(-5,2), pi/2)) == 12/(pi**2)
 
 
-@XFAIL
 def test_J8():
-    raise NotImplementedError("jv(R(3,2), z) == sqrt(2/(pi*z))*(sin(z)/z - cos(z))")
+    p = besselj(R(3,2), z)
+    q = (sin(z)/z - cos(z))/sqrt(pi*z/2)
+    assert simplify(expand_func(p) -q) == 0
 
 
-@XFAIL
 def test_J9():
-    raise NotImplementedError("diff(j0(z), z) == -j1(z)")
+    assert besselj(0, z).diff(z) == - besselj(1, z)
 
 
 def test_J10():
@@ -626,9 +630,9 @@ def test_J13():
     assert chebyshevt(a, -1) == (-1)**a
 
 
-@XFAIL
 def test_J14():
-    raise NotImplementedError("F(R(1,2),R(1,2),R(3,2),z**2) == asin(z)/z; F(.) is hypergeometric function")
+    p = hyper([S(1)/2, S(1)/2], [S(3)/2], z**2)
+    assert hyperexpand(p) == asin(z)/z
 
 
 @XFAIL
@@ -746,14 +750,14 @@ def test_L7():
 
 @XFAIL
 def test_L8():
-    assert (4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1)) \
-        *(2*sqrt(x) + 1)**(1/(2*sqrt(x) + 1)) - 2*sqrt(x) - 1 == 0
+    assert simplify((4*x + 4*sqrt(x) + 1)**(sqrt(x)/(2*sqrt(x) + 1)) \
+        *(2*sqrt(x) + 1)**(1/(2*sqrt(x) + 1)) - 2*sqrt(x) - 1) == 0
 
 
 @XFAIL
 def test_L9():
     z = symbols('z', complex=True)
-    assert 2**(1 - z)*gamma(z)*zeta(z)*cos(z*pi/2) - pi**2*zeta(1 - z) == 0
+    assert simplify(2**(1 - z)*gamma(z)*zeta(z)*cos(z*pi/2) - pi**2*zeta(1 - z)) == 0
 
 # M. Equations
 
@@ -763,13 +767,11 @@ def test_M1():
     assert Equality(x, 2)/2 + Equality(1, 1) == Equality(x/2 + 1, 2)
 
 
-@XFAIL
 def test_M2():
     # The roots of this equation should all be real. Note that this doesn't test
     # that they are correct.
     sol = solve(3*x**3 - 18*x**2 + 33*x - 19, x)
-    for i in sol:
-        assert im(i) == 0
+    assert all(expand(x, complex=True).is_real for x in sol)
 
 
 @XFAIL
@@ -785,14 +787,14 @@ def test_M6():
 def test_M7():
     assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
         226*x**2 - 140*x + 46, x)) == set([
-        1 + sqrt(-6 + 2*sqrt(-4*sqrt(3) - 3))/2,
-        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 - 2*sqrt(-4*sqrt(3) - 3))/2,
-        1 - sqrt(-6 + 2*sqrt(-4*sqrt(3) - 3))/2,
-        1 + sqrt(-6 - 2*sqrt(-4*sqrt(3) - 3))/2,
+        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 + sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*sqrt(-3 + sqrt(-3 + 4*sqrt(3)))/2,
         ])
 
 
@@ -824,39 +826,39 @@ def test_M11():
     assert solve(x**x - x, x) == [-1, 1]
 
 
-@XFAIL
 def test_M12():
-    raise NotImplementedError("solve((x+1)*(sin(x)**2+1)**2*cos(3*x)**3,x)")
+    # TODO: x = [-1, 2*(+/-asinh(1)*I + n*pi}, 3*(pi/6 + n*pi/3)]
+    assert solve((x + 1)*(sin(x)**2 + 1)**2*cos(3*x)**3, x) == [
+        -1, pi/6, pi/2,
+           - I*log(1 + sqrt(2)),      I*log(1 + sqrt(2)),
+        pi - I*log(1 + sqrt(2)), pi + I*log(1 + sqrt(2)),
+    ]
 
 
-@XFAIL
 def test_M13():
-    raise NotImplementedError("solve(sin(x)-cos(x),x)")
+    assert solve(sin(x) - cos(x), x) == [-3*pi/4, pi/4]
 
 
 def test_M14():
     assert solve(tan(x) - 1, x) == [pi/4]
 
 
-@XFAIL
 def test_M15():
-    assert solve(sin(x) - 1/2) == [pi/6, 5*pi/6]
+    assert solve(sin(x) - S.Half) == [pi/6, 5*pi/6]
 
 
-@XFAIL
 def test_M16():
-    raise NotImplementedError("solve(sin(x)-tan(x),x)")
+    assert solve(sin(x) - tan(x), x) == [0, 2*pi]
 
 
 @XFAIL
 def test_M17():
-    raise NotImplementedError("solve(asin(x)-atan(x),x)")
+    assert solve(asin(x) - atan(x),x) == [0]
 
 
 @XFAIL
 def test_M18():
-    raise NotImplementedError("solve(acos(x)-atan(x),x)")
-    #assert solve(acos(x) - atan(x), x) == [sqrt((sqrt(5) - 1)/2)]
+    assert solve(acos(x) - atan(x), x) == [sqrt((sqrt(5) - 1)/2)]
 
 
 def test_M19():
@@ -865,3 +867,221 @@ def test_M19():
 
 def test_M20():
     assert solve(sqrt(x**2 + 1) - x + 2, x) == []
+
+
+def test_M21():
+    assert solve(x + sqrt(x) - 2) == [1]
+
+
+def test_M22():
+    assert solve(2*sqrt(x) + 3*x**R(1, 4) - 2) == [R(1, 16)]
+
+
+def test_M23():
+    x = symbols('x', complex=True)
+
+    assert solve(x - 1/sqrt(1 + x**2)) == [
+        simplify(-I*sqrt((sqrt(5) + 1)/2)),
+        simplify(   sqrt((sqrt(5) - 1)/2)),
+    ]
+
+
+def test_M24():
+    solution = solve(1 - binomial(m, 2)*2**k, k)
+    answer = log(2/(m*(m - 1)), 2)
+    assert solution[0].expand() == answer.expand()
+
+
+def test_M25():
+    a, b, c, d = symbols(':d', positive=True)
+    x = symbols('x')
+    assert solve(a*b**x - c*d**x, x)[0].expand() == (log(c/a)/log(b/d)).expand()
+
+
+def test_M26():
+    assert solve(sqrt(log(x)) - log(sqrt(x))) == [1, exp(4)]
+
+
+@XFAIL
+def test_M27():
+    x = symbols('x', real=True)
+    b = symbols('b', real=True)
+    with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
+        solve(log(acos(asin(x**R(2,3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2))**R(3/2), b + sin(1 + cos(1/e**2))**R(3/2)]
+
+
+@XFAIL
+def test_M28():
+    assert solve(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
+
+
+def test_M29():
+    assert solve(abs(x - 1) - 2) == [-1, 3]
+
+
+@XFAIL
+def test_M30():
+    assert solve(abs(2*x + 5) - abs(x - 2),x, assume=Q.real(x)) == [-1, -7]
+
+
+@XFAIL
+def test_M31():
+    assert solve(1 - abs(x) - max(-x - 2, x - 2),x, assume=Q.real(x)) == [-3/2, 3/2]
+
+
+@XFAIL
+def test_M32():
+    assert solve(max(2 - x**2, x)- max(-x, (x**3)/9), assume=Q.real(x)) == [-1, 3]
+
+
+@XFAIL
+def test_M33():
+    # Second answer can be written in another form. The second answer is the root of x**3 + 9*x**2 - 18 = 0 in the interval (-2, -1).
+    assert solve(max(2 - x**2, x) - x**3/9, assume=Q.real(x)) == [-3, -1.554894, 3]
+
+
+@XFAIL
+def test_M34():
+    z = symbols('z', complex=True)
+    assert solve((1 + I) * z + (2 - I) * conjugate(z) + 3*I, z) == [2 + 3*I]
+
+
+def test_M35():
+    x, y = symbols('x y', real=True)
+    assert solve((3*x - 2*y - I*y + 3*I).as_real_imag()) == {y: 3, x: 2}
+
+
+@XFAIL
+def test_M36():
+    assert solve(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]
+
+
+def test_M37():
+    assert solve([x + y + z - 6, 2*x + y + 2*z - 10, x + 3*y + z - 10 ]) == {x: -z + 4, y: 2}
+
+
+@slow
+def test_M38():
+    variabes = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
+    system = [
+        -b*k8/a + c*k8/a, -b*k11/a + c*k11/a, -b*k10/a + c*k10/a + k2, -k3 - b*k9/a + c*k9/a,
+        -b*k14/a + c*k14/a, -b*k15/a + c*k15/a, -b*k18/a + c*k18/a - k2, -b*k17/a + c*k17/a,
+        -b*k16/a + c*k16/a + k4, -b*k13/a + c*k13/a - b*k21/a + c*k21/a + b*k5/a - c*k5/a,
+        b*k44/a - c*k44/a, -b*k45/a + c*k45/a, -b*k20/a + c*k20/a, -b*k44/a + c*k44/a,
+        b*k46/a - c*k46/a, b**2*k47/a**2 - 2*b*c*k47/a**2 + c**2*k47/a**2, k3, -k4,
+        -b*k12/a + c*k12/a - a*k6/b + c*k6/b, -b*k19/a + c*k19/a + a*k7/c - b*k7/c,
+        b*k45/a - c*k45/a, -b*k46/a + c*k46/a, -k48 + c*k48/a + c*k48/b - c**2*k48/(a*b),
+        -k49 + b*k49/a + b*k49/c - b**2*k49/(a*c), a*k1/b - c*k1/b, a*k4/b - c*k4/b,
+        a*k3/b - c*k3/b + k9, -k10 + a*k2/b - c*k2/b, a*k7/b - c*k7/b, -k9, k11,
+        b*k12/a - c*k12/a + a*k6/b - c*k6/b, a*k15/b - c*k15/b, k10 + a*k18/b - c*k18/b,
+        -k11 + a*k17/b - c*k17/b, a*k16/b - c*k16/b, -a*k13/b + c*k13/b + a*k21/b - c*k21/b + a*k5/b - c*k5/b,
+        -a*k44/b + c*k44/b, a*k45/b - c*k45/b, a*k14/c - b*k14/c + a*k20/b - c*k20/b,
+        a*k44/b - c*k44/b, -a*k46/b + c*k46/b, -k47 + c*k47/a + c*k47/b - c**2*k47/(a*b),
+        a*k19/b - c*k19/b, -a*k45/b + c*k45/b, a*k46/b - c*k46/b, a**2*k48/b**2 - 2*a*c*k48/b**2 + c**2*k48/b**2,
+        -k49 + a*k49/b + a*k49/c - a**2*k49/(b*c), k16, -k17, -a*k1/c + b*k1/c,
+        -k16 - a*k4/c + b*k4/c, -a*k3/c + b*k3/c, k18 - a*k2/c + b*k2/c, b*k19/a - c*k19/a - a*k7/c + b*k7/c,
+        -a*k6/c + b*k6/c, -a*k8/c + b*k8/c, -a*k11/c + b*k11/c + k17, -a*k10/c + b*k10/c - k18,
+        -a*k9/c + b*k9/c, -a*k14/c + b*k14/c - a*k20/b + c*k20/b, -a*k13/c + b*k13/c + a*k21/c - b*k21/c - a*k5/c + b*k5/c,
+        a*k44/c - b*k44/c, -a*k45/c + b*k45/c, -a*k44/c + b*k44/c, a*k46/c - b*k46/c,
+        -k47 + b*k47/a + b*k47/c - b**2*k47/(a*c), -a*k12/c + b*k12/c, a*k45/c - b*k45/c,
+        -a*k46/c + b*k46/c, -k48 + a*k48/b + a*k48/c - a**2*k48/(b*c),
+        a**2*k49/c**2 - 2*a*b*k49/c**2 + b**2*k49/c**2, k8, k11, -k15, k10 - k18,
+        -k17, k9, -k16, -k29, k14 - k32, -k21 + k23 - k31, -k24 - k30, -k35, k44,
+        -k45, k36, k13 - k23 + k39, -k20 + k38, k25 + k37, b*k26/a - c*k26/a - k34 + k42,
+        -2*k44, k45, k46, b*k47/a - c*k47/a, k41, k44, -k46, -b*k47/a + c*k47/a,
+        k12 + k24, -k19 - k25, -a*k27/b + c*k27/b - k33, k45, -k46, -a*k48/b + c*k48/b,
+        a*k28/c - b*k28/c + k40, -k45, k46, a*k48/b - c*k48/b, a*k49/c - b*k49/c,
+        -a*k49/c + b*k49/c, -k1, -k4, -k3, k15, k18 - k2, k17, k16, k22, k25 - k7,
+        k24 + k30, k21 + k23 - k31, k28, -k44, k45, -k30 - k6, k20 + k32, k27 + b*k33/a - c*k33/a,
+        k44, -k46, -b*k47/a + c*k47/a, -k36, k31 - k39 - k5, -k32 - k38, k19 - k37,
+        k26 - a*k34/b + c*k34/b - k42, k44, -2*k45, k46, a*k48/b - c*k48/b,
+        a*k35/c - b*k35/c - k41, -k44, k46, b*k47/a - c*k47/a, -a*k49/c + b*k49/c,
+        -k40, k45, -k46, -a*k48/b + c*k48/b, a*k49/c - b*k49/c, k1, k4, k3, -k8,
+        -k11, -k10 + k2, -k9, k37 + k7, -k14 - k38, -k22, -k25 - k37, -k24 + k6,
+        -k13 - k23 + k39, -k28 + b*k40/a - c*k40/a, k44, -k45, -k27, -k44, k46,
+        b*k47/a - c*k47/a, k29, k32 + k38, k31 - k39 + k5, -k12 + k30, k35 - a*k41/b + c*k41/b,
+        -k44, k45, -k26 + k34 + a*k42/c - b*k42/c, k44, k45, -2*k46, -b*k47/a + c*k47/a,
+        -a*k48/b + c*k48/b, a*k49/c - b*k49/c, k33, -k45, k46, a*k48/b - c*k48/b,
+        -a*k49/c + b*k49/c
+        ]
+    solution = {
+        k49: 0, k48: 0, k47: 0, k46: 0, k45: 0, k44: 0, k41: 0, k40: 0,
+        k38: 0, k37: 0, k36: 0, k35: 0, k33: 0, k32: 0, k30: 0, k29: 0,
+        k28: 0, k27: 0, k25: 0, k24: 0, k22: 0, k21: 0, k20: 0, k19: 0,
+        k18: 0, k17: 0, k16: 0, k15: 0, k14: 0, k13: 0, k12: 0, k11: 0,
+        k10: 0, k9:  0, k8:  0, k7:  0, k6:  0, k5:  0, k4:  0, k3:  0,
+        k2:  0, k1:  0,
+        k34: b/c*k42, k31: k39, k26: a/c*k42, k23: k39
+    }
+    assert solve_lin_sys(system, variabes) == solution
+
+def test_M39():
+    x, y, z = symbols('x y z', complex=True)
+    assert solve([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) ==\
+            [{y: 1, z: 1, x: -1}, {y: 1, z: 1, x: 1},\
+             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: -sqrt(-1 - sqrt(2)*I)},\
+             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: sqrt(-1 - sqrt(2)*I)},\
+             {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: -sqrt(-1 + sqrt(2)*I)},\
+             {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: sqrt(-1 + sqrt(2)*I)}]
+
+# N. Inequalities
+
+
+def test_N1():
+    assert ask(Q.is_true(E**pi > pi**E))
+
+
+@XFAIL
+def test_N2():
+    x = symbols('x', real=True)
+    assert ask(Q.is_true(x**4 - x + 1 > 0))
+    assert ask(Q.is_true(x**4 - x + 1 > 1)) == False
+
+
+@XFAIL
+def test_N3():
+    x = symbols('x', real=True)
+    assert ask(Q.is_true(And(Lt(-1, x), Lt(x, 1))), Q.is_true(abs(x) < 1 ))
+
+@XFAIL
+def test_N4():
+    x, y = symbols('x y', real=True)
+    assert ask(Q.is_true(2*x**2 > 2*y**2), Q.is_true((x > y) & (y > 0)))
+
+
+@XFAIL
+def test_N5():
+    x, y, k = symbols('x y k', real=True)
+    assert ask(Q.is_true(k*x**2 > k*y**2), Q.is_true((x > y) & (y > 0) & (k > 0)))
+
+
+@XFAIL
+def test_N6():
+    x, y, k, n = symbols('x y k n', real=True)
+    assert ask(Q.is_true(k*x**n > k*y**n), Q.is_true((x > y) & (y > 0) & (k > 0) & (n > 0)))
+
+
+@XFAIL
+def test_N7():
+    x, y = symbols('x y', real=True)
+    assert ask(Q.is_true(y > 0), Q.is_true((x > 1) & (y >= x - 1)))
+
+
+@XFAIL
+def test_N8():
+    x, y, z = symbols('x y z', real=True)
+    assert ask(Q.is_true((x == y) & (y == z)), Q.is_true((x >= y) & (y >= z) & (z >= x)))
+
+
+def test_N9():
+    with assuming(Q.real(x)):
+        assert solve(abs(x-1) > 2) == Or(x < -1, x > 3)
+
+
+def test_N10():
+    p=(x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
+    assert solve(expand(p) < 0, assume=Q.real(x)) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+
+
+def test_N11():
+    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)

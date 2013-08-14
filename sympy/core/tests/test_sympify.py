@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval
 from sympy.abc import x, y
@@ -9,7 +8,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import HAS_GMPY
+from sympy.core.compatibility import exec_, HAS_GMPY
 
 from sympy import mpmath
 
@@ -450,6 +449,11 @@ def test_kernS():
     # issue 3588
     assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
     assert kernS('_kern') == Symbol('_kern')
+    assert kernS('E**-(x)') == exp(-x)
+    e = 2*(x + y)*y
+    assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
+    assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
+        -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
 
 
 def test_issue_3441_3453():
@@ -463,5 +467,5 @@ def test_issue_2497():
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
-    exec "from sympy.abc import Q, C" in locals
+    exec_("from sympy.abc import Q, C", locals)
     assert str(S('C&Q', locals)) == 'And(C, Q)'

@@ -1,14 +1,16 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from sympy_tokenize import \
+from __future__ import print_function, division
+
+from .sympy_tokenize import \
     generate_tokens, untokenize, TokenError, \
     NUMBER, STRING, NAME, OP, ENDMARKER
 
 from keyword import iskeyword
-from StringIO import StringIO
 import re
 import unicodedata
 
+from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
@@ -119,6 +121,7 @@ def _flatten(result):
             result2.append(tok)
     return result2
 
+
 def _group_parentheses(recursor):
     def _inner(tokens, local_dict, global_dict):
         """Group tokens between parentheses with ParenthesisGroup.
@@ -197,10 +200,9 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
     - A close parenthesis next to an AppliedFunction ("(x+2)sin x")\
 
-    - A closeparenthesis next to an open parenthesis ("(x+2)(x+3)")
+    - A close parenthesis next to an open parenthesis ("(x+2)(x+3)")
 
-    - An AppliedFunction next to an implicitly applied function ("sin(x)cos
-      x")
+    - AppliedFunction next to an implicitly applied function ("sin(x)cos x")
 
     """
     result = []
@@ -436,6 +438,7 @@ def implicit_application(result, local_dict, global_dict):
     result = _flatten(result)
     return result
 
+
 def implicit_multiplication_application(result, local_dict, global_dict):
     """Allows a slightly relaxed syntax.
 
@@ -627,6 +630,7 @@ def rationalize(tokens, local_dict, global_dict):
 
     return result
 
+
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
@@ -717,7 +721,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if global_dict is None:
         global_dict = {}
-        exec 'from sympy import *' in global_dict
+        exec_('from sympy import *', global_dict)
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
     return eval_expr(code, local_dict, global_dict)

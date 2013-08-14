@@ -4,7 +4,7 @@ of Basic or Atom."""
 from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, with_metaclass
 
 from sympy.utilities.pytest import raises
 
@@ -97,26 +97,24 @@ def test_xreplace():
 
 
 def test_Singleton():
-    global instanciated
-    instanciated = 0
+    global instantiated
+    instantiated = 0
 
-    class MySingleton(Basic):
-        __metaclass__ = Singleton
-
+    class MySingleton(with_metaclass(Singleton, Basic)):
         def __new__(cls):
-            global instanciated
-            instanciated += 1
+            global instantiated
+            instantiated += 1
             return Basic.__new__(cls)
 
-    assert instanciated == 1
+    assert instantiated == 1
     assert MySingleton() is not Basic()
     assert MySingleton() is MySingleton()
     assert S.MySingleton is MySingleton()
-    assert instanciated == 1
+    assert instantiated == 1
 
     class MySingleton_sub(MySingleton):
         pass
-    assert instanciated == 2
+    assert instantiated == 2
     assert MySingleton_sub() is not MySingleton()
     assert MySingleton_sub() is MySingleton_sub()
 

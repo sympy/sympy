@@ -2,7 +2,8 @@ from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
     StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
 )
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.core.compatibility import u
+from sympy.utilities.pytest import raises
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
@@ -199,10 +200,7 @@ def test_Wild_properties():
                 assert d is None
 
 
-@XFAIL
 def test_symbols_each_char():
-    # XXX: Because of the way the warnings filters work, this will fail if it's
-    # run more than once in the same session.  See issue 2492.
     import warnings
     # each_char is deprecated and emits a warning.
 
@@ -211,12 +209,11 @@ def test_symbols_each_char():
     y = Symbol('y')
     z = Symbol('z')
 
-    # First, test the warning
-    warnings.filterwarnings("error")
+    # First, test the warning (SymPyDeprecationWarning should already raises during tests)
     raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
     raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
     # now test the actual output
-    warnings.filterwarnings("ignore")
+    warnings.simplefilter("ignore", SymPyDeprecationWarning)
     assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
     assert all(w.is_Function for w in flatten(
         symbols(['wx', 'yz'], each_char=True, cls=Function)))
@@ -242,11 +239,7 @@ def test_symbols_each_char():
     assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
 
     # Keep testing reasonably thread safe, so reset the warning
-    warnings.filterwarnings("default", "The each_char option to symbols\(\) and var\(\) is "
-        "deprecated.  Separate symbol names by spaces or commas instead.")
-    # Note, in Python 2.6+, this can be done more nicely using the
-    # warnings.catch_warnings context manager.
-    # See http://docs.python.org/library/warnings#testing-warnings.
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
 
 def test_symbols():
@@ -378,7 +371,7 @@ def test_call():
     raises(TypeError, lambda: Wild('x')(1))
 
 def test_unicode():
-    xu = Symbol(u'x')
+    xu = Symbol(u('x'))
     x = Symbol('x')
     assert x == xu
 

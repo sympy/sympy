@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from plot_mode import PlotMode
 from threading import Thread, Event, RLock
@@ -5,8 +7,7 @@ from color_scheme import ColorScheme
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
 from time import sleep
-
-from sympy.core.compatibility import callable
+import warnings
 
 
 class PlotModeBase(PlotMode):
@@ -113,7 +114,7 @@ class PlotModeBase(PlotMode):
                 e = self._get_lambda_evaluator()
                 return e
             except:
-                print ("\nWarning: creating lambda evaluator failed. "
+                warnings.warn("\nWarning: creating lambda evaluator failed. "
                        "Falling back on sympy subs evaluator.")
         return self._get_sympy_evaluator()
 
@@ -329,7 +330,7 @@ class PlotModeBase(PlotMode):
         if v == self._style:
             return
         self._style = v
-        #except Exception, e:
+        #except Exception as e:
             #raise RuntimeError(("Style change failed. "
             #                 "Reason: %s is not a valid "
             #                 "style. Use one of %s.") %
@@ -350,7 +351,7 @@ class PlotModeBase(PlotMode):
                 return
             self._on_change_color(v)
             self._color = v
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError(("Color change failed. "
                                 "Reason: %s" % (str(e))))
 

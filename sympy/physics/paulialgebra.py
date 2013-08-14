@@ -4,9 +4,12 @@ properties of Pauli matrices are used (we don't use the Matrix class).
 
 See the documentation to the class Pauli for examples.
 
-See also:
-    http://en.wikipedia.org/wiki/Pauli_matrices
+References
+~~~~~~~~~~
+.. [1] http://en.wikipedia.org/wiki/Pauli_matrices
 """
+
+from __future__ import print_function, division
 
 from sympy import Symbol, I
 

@@ -1,6 +1,8 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
-                   Symbol, Mul)
-from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, integral_steps
+                   Symbol, Mul, Integral, integrate, pi, Dummy,
+                   Derivative, diff, I, sqrt, erf)
+from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
+    integral_steps, _parts_rule
 
 x = Symbol('x')
 y = Symbol('y')
@@ -42,6 +44,14 @@ def test_manualintegrate_parts():
         -6*x*exp(x) + (3*x**2 + 5)*exp(x) + 6*exp(x)
     assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
 
+    # Make sure _parts_rule doesn't pick u = constant but can pick dv =
+    # constant if necessary, e.g. for integrate(atan(x))
+    assert _parts_rule(cos(x), x) == None
+    assert _parts_rule(exp(x), x) == None
+    assert _parts_rule(x**2, x) == None
+    result = _parts_rule(atan(x), x)
+    assert result[0] == atan(x) and result[1] == 1
+
 def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(x), x) == -cos(x)
     assert manualintegrate(tan(x), x) == -log(cos(x))
@@ -75,3 +85,31 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1 / (16 + 16 * x**2), x) == atan(x) / 16
     assert manualintegrate(1 / (4 + x**2), x) == atan(x / 2) / 2
     assert manualintegrate(1 / (1 + 4 * x**2), x) == atan(2*x) / 2
+
+def test_manualintegrate_derivative():
+    assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
+        pi * ((x**2 + 2*x + 3))
+    assert manualintegrate(Derivative(x**2 + 2*x + 3, y), x) == \
+        x * Derivative(x**2 + 2*x + 3, y)
+    assert manualintegrate(Derivative(sin(x), x, x, y, x), x) == \
+        Derivative(sin(x), x, x, y)
+
+def test_issue_3700():
+    r, x, phi = map(Symbol, 'r x phi'.split())
+    n = Symbol('n', integer=True, positive=True)
+
+    integrand = (cos(n*(x-phi))*cos(n*x))
+    limits = (x, -pi, pi)
+    assert manualintegrate(integrand, x).has(Integral)
+    assert r * integrate(integrand.expand(trig=True), limits) / pi == r * cos(n * phi)
+    assert not integrate(integrand, limits).has(Dummy)
+
+def test_issue_3796():
+    assert manualintegrate(diff(exp(x + x**2)), x) == exp(x + x**2)
+    assert integrate(x * exp(x**4), x, risch=False) == -I*sqrt(pi)*erf(I*x**2)/4
+
+def test_manual_true():
+    assert integrate(exp(x) * sin(x), x, manual=True) == \
+        (exp(x) * sin(x)) / 2 - (exp(x) * cos(x)) / 2
+    assert integrate(sin(x) * cos(x), x, manual=True) in \
+        [sin(x) ** 2 / 2, -cos(x)**2 / 2]

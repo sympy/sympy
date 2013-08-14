@@ -9,7 +9,10 @@ sympy.utilities.codegen. The codegen module can be used to generate complete
 source code files that are compilable without further modifications.
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, C
+from sympy.core.compatibility import string_types
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from sympy.core.compatibility import default_sort_key
@@ -40,8 +43,8 @@ class CCodePrinter(CodePrinter):
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         for k, v in userfuncs.items():
-            if not isinstance(v, tuple):
-                userfuncs[k] = (lambda *x: True, v)
+            if not isinstance(v, list):
+                userfuncs[k] = [(lambda *x: True, v)]
         self.known_functions.update(userfuncs)
 
     def _rate_index_position(self, p):
@@ -60,7 +63,7 @@ class CCodePrinter(CodePrinter):
         Actually format the expression as C code.
         """
 
-        if isinstance(assign_to, basestring):
+        if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
             raise TypeError("CCodePrinter cannot assign to object of type %s" %
@@ -202,7 +205,7 @@ class CCodePrinter(CodePrinter):
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, basestring):
+        if isinstance(code, string_types):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 
@@ -240,7 +243,7 @@ def ccode(expr, assign_to=None, **settings):
             the precision for numbers such as pi [default=15]
         user_functions : optional
             A dictionary where keys are FunctionClass instances and values
-            are there string representations.  Alternatively, the
+            are their string representations.  Alternatively, the
             dictionary value can be a list of tuples i.e. [(argument_test,
             cfunction_string)].  See below for examples.
         human : optional
@@ -252,12 +255,19 @@ def ccode(expr, assign_to=None, **settings):
         Examples
         ========
 
-        >>> from sympy import ccode, symbols, Rational, sin
+        >>> from sympy import ccode, symbols, Rational, sin, ceiling, Abs
         >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))
         '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
         >>> ccode(sin(x), assign_to="s")
         's = sin(x);'
+        >>> custom_functions = {
+        ...   "ceiling": "CEIL",
+        ...   "Abs": [(lambda x: not x.is_integer, "fabs"),
+        ...           (lambda x: x.is_integer, "ABS")]
+        ... }
+        >>> ccode(Abs(x) + ceiling(x), user_functions=custom_functions)
+        'fabs(x) + CEIL(x)'
 
 
     """
@@ -266,4 +276,4 @@ def ccode(expr, assign_to=None, **settings):
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""
-    print ccode(expr, **settings)
+    print(ccode(expr, **settings))

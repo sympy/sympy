@@ -22,6 +22,8 @@ image distance
     positive for real images
 """
 
+from __future__ import print_function, division
+
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
     together)
 from sympy.utilities.misc import filldedent
@@ -51,12 +53,14 @@ class RayTransferMatrix(Matrix):
 
     >>> mat = RayTransferMatrix(1, 2, 3, 4)
     >>> mat
-    [1,  2]
-    [3,  4]
+    Matrix([
+    [1, 2],
+    [3, 4]])
 
     >>> RayTransferMatrix(Matrix([[1, 2], [3, 4]]))
-    [1,  2]
-    [3,  4]
+    Matrix([
+    [1, 2],
+    [3, 4]])
 
     >>> mat.A
     1
@@ -64,8 +68,9 @@ class RayTransferMatrix(Matrix):
     >>> f = Symbol('f')
     >>> lens = ThinLens(f)
     >>> lens
-    [   1, 0]
-    [-1/f, 1]
+    Matrix([
+    [   1, 0],
+    [-1/f, 1]])
 
     >>> lens.C
     -1/f
@@ -80,7 +85,7 @@ class RayTransferMatrix(Matrix):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
+    .. [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
     def __new__(cls, *args):
@@ -193,8 +198,9 @@ class FreeSpace(RayTransferMatrix):
     >>> from sympy import symbols
     >>> d = symbols('d')
     >>> FreeSpace(d)
-    [1, d]
-    [0, 1]
+    Matrix([
+    [1, d],
+    [0, 1]])
     """
     def __new__(cls, d):
         return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
@@ -222,8 +228,9 @@ class FlatRefraction(RayTransferMatrix):
     >>> from sympy import symbols
     >>> n1, n2 = symbols('n1 n2')
     >>> FlatRefraction(n1, n2)
-    [1,     0]
-    [0, n1/n2]
+    Matrix([
+    [1,     0],
+    [0, n1/n2]])
     """
     def __new__(cls, n1, n2):
         n1, n2 = map(sympify, (n1, n2))
@@ -253,8 +260,9 @@ class CurvedRefraction(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R, n1, n2 = symbols('R n1 n2')
     >>> CurvedRefraction(R, n1, n2)
-    [               1,     0]
-    [(n1 - n2)/(R*n2), n1/n2]
+    Matrix([
+    [               1,     0],
+    [(n1 - n2)/(R*n2), n1/n2]])
     """
     def __new__(cls, R, n1, n2):
         R, n1, n2 = map(sympify, (R, n1, n2))
@@ -275,8 +283,9 @@ class FlatMirror(RayTransferMatrix):
 
     >>> from sympy.physics.gaussopt import FlatMirror
     >>> FlatMirror()
-    [1, 0]
-    [0, 1]
+    Matrix([
+    [1, 0],
+    [0, 1]])
     """
     def __new__(cls):
         return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
@@ -303,8 +312,9 @@ class CurvedMirror(RayTransferMatrix):
     >>> from sympy import symbols
     >>> R = symbols('R')
     >>> CurvedMirror(R)
-    [   1, 0]
-    [-2/R, 1]
+    Matrix([
+    [   1, 0],
+    [-2/R, 1]])
     """
     def __new__(cls, R):
         R = sympify(R)
@@ -332,8 +342,9 @@ class ThinLens(RayTransferMatrix):
     >>> from sympy import symbols
     >>> f = symbols('f')
     >>> ThinLens(f)
-    [   1, 0]
-    [-1/f, 1]
+    Matrix([
+    [   1, 0],
+    [-1/f, 1]])
     """
     def __new__(cls, f):
         f = sympify(f)
@@ -363,16 +374,19 @@ class GeometricRay(Matrix):
     >>> d, h, angle = symbols('d, h, angle')
 
     >>> GeometricRay(h, angle)
-    [    h]
-    [angle]
+    Matrix([
+    [    h],
+    [angle]])
 
     >>> FreeSpace(d)*GeometricRay(h, angle)
-    [angle*d + h]
-    [      angle]
+    Matrix([
+    [angle*d + h],
+    [      angle]])
 
     >>> GeometricRay( Matrix( ((h,), (angle,)) ) )
-    [    h]
-    [angle]
+    Matrix([
+    [    h],
+    [angle]])
 
     See Also
     ========
@@ -475,7 +489,7 @@ class BeamParameter(Expr):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
+    .. [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
     """
     #TODO A class Complex may be implemented. The BeamParameter may
     # subclass it. See:

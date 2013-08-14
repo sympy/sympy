@@ -1,8 +1,10 @@
 """Efficient functions for generating orthogonal polynomials. """
 
+from __future__ import print_function, division
+
 from sympy import Dummy
 
-from sympy.utilities import cythonized
+from sympy.utilities import public
 
 from sympy.polys.constructor import construct_domain
 from sympy.polys.polytools import Poly, PurePoly
@@ -14,8 +16,9 @@ from sympy.polys.densearith import (
 
 from sympy.polys.domains import ZZ, QQ
 
+from sympy.core.compatibility import xrange
 
-@cythonized("n,i")
+
 def dup_jacobi(n, a, b, K):
     """Low-level implementation of Jacobi polynomials. """
     seq = [[K.one], [(a + b + K(2))/K(2), (a - b)/K(2)]]
@@ -33,6 +36,7 @@ def dup_jacobi(n, a, b, K):
     return seq[n]
 
 
+@public
 def jacobi_poly(n, a, b, x=None, **args):
     """Generates Jacobi polynomial of degree `n` in `x`. """
     if n < 0:
@@ -52,7 +56,6 @@ def jacobi_poly(n, a, b, x=None, **args):
         return poly
 
 
-@cythonized("n,i")
 def dup_gegenbauer(n, a, K):
     """Low-level implementation of Gegenbauer polynomials. """
     seq = [[K.one], [K(2)*a, K.zero]]
@@ -87,7 +90,6 @@ def gegenbauer_poly(n, a, x=None, **args):
         return poly
 
 
-@cythonized("n,i")
 def dup_chebyshevt(n, K):
     """Low-level implementation of Chebyshev polynomials of the 1st kind. """
     seq = [[K.one], [K.one, K.zero]]
@@ -99,6 +101,7 @@ def dup_chebyshevt(n, K):
     return seq[n]
 
 
+@public
 def chebyshevt_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the first kind of degree `n` in `x`. """
     if n < 0:
@@ -118,7 +121,6 @@ def chebyshevt_poly(n, x=None, **args):
         return poly
 
 
-@cythonized("n,i")
 def dup_chebyshevu(n, K):
     """Low-level implementation of Chebyshev polynomials of the 2nd kind. """
     seq = [[K.one], [K(2), K.zero]]
@@ -130,6 +132,7 @@ def dup_chebyshevu(n, K):
     return seq[n]
 
 
+@public
 def chebyshevu_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the second kind of degree `n` in `x`. """
     if n < 0:
@@ -149,7 +152,6 @@ def chebyshevu_poly(n, x=None, **args):
         return poly
 
 
-@cythonized("n,i")
 def dup_hermite(n, K):
     """Low-level implementation of Hermite polynomials. """
     seq = [[K.one], [K(2), K.zero]]
@@ -165,6 +167,7 @@ def dup_hermite(n, K):
     return seq[n]
 
 
+@public
 def hermite_poly(n, x=None, **args):
     """Generates Hermite polynomial of degree `n` in `x`. """
     if n < 0:
@@ -183,7 +186,6 @@ def hermite_poly(n, x=None, **args):
         return poly
 
 
-@cythonized("n,i")
 def dup_legendre(n, K):
     """Low-level implementation of Legendre polynomials. """
     seq = [[K.one], [K.one, K.zero]]
@@ -197,6 +199,7 @@ def dup_legendre(n, K):
     return seq[n]
 
 
+@public
 def legendre_poly(n, x=None, **args):
     """Generates Legendre polynomial of degree `n` in `x`. """
     if n < 0:
@@ -215,7 +218,6 @@ def legendre_poly(n, x=None, **args):
         return poly
 
 
-@cythonized("n,i")
 def dup_laguerre(n, alpha, K):
     """Low-level implementation of Laguerre polynomials. """
     seq = [[K.zero], [K.one]]
@@ -229,6 +231,7 @@ def dup_laguerre(n, alpha, K):
     return seq[-1]
 
 
+@public
 def laguerre_poly(n, x=None, alpha=None, **args):
     """Generates Laguerre polynomial of degree `n` in `x`. """
     if n < 0:
@@ -253,7 +256,6 @@ def laguerre_poly(n, x=None, alpha=None, **args):
         return poly
 
 
-@cythonized("n,i")
 def dup_spherical_bessel_fn(n, K):
     """ Low-level implementation of fn(n, x) """
     seq = [[K.one], [K.one, K.zero]]
@@ -265,7 +267,6 @@ def dup_spherical_bessel_fn(n, K):
     return dup_lshift(seq[n], 1, K)
 
 
-@cythonized("n,i")
 def dup_spherical_bessel_fn_minus(n, K):
     """ Low-level implementation of fn(-n, x) """
     seq = [[K.one, K.zero], [K.zero]]

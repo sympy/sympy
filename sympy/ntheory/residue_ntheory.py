@@ -1,7 +1,9 @@
+from __future__ import print_function, division
+
 from sympy.core.numbers import igcd
-from sympy.core.compatibility import as_int
-from primetest import isprime
-from factor_ import factorint, trailing, totient
+from sympy.core.compatibility import as_int, xrange
+from .primetest import isprime
+from .factor_ import factorint, trailing, totient
 
 
 def n_order(a, n):
@@ -27,10 +29,10 @@ def n_order(a, n):
     order = 1
     if a > n:
         a = a % n
-    for p, e in factors.iteritems():
+    for p, e in factors.items():
         exponent = group_order
-        for f in xrange(0, e + 1):
-            if (a ** (exponent)) % n != 1:
+        for f in xrange(e + 1):
+            if pow(a, exponent, n) != 1:
                 order *= p ** (e - f + 1)
                 break
             exponent = exponent // p
@@ -65,10 +67,7 @@ def is_primitive_root(a, p):
         raise ValueError("The two numbers should be relatively prime")
     if a > p:
         a = a % p
-    if n_order(a, p) == totient(p):
-        return True
-    else:
-        return False
+    return n_order(a, p) == totient(p)
 
 
 def is_quad_residue(a, p):
@@ -99,19 +98,11 @@ def is_quad_residue(a, p):
         if p % 2 and jacobi_symbol(a, p) == -1:
             return False
         for i in range(2, p//2 + 1):
-            if i**2 % p == a:
+            if pow(i, 2, p) == a:
                 return True
         return False
 
-    def square_and_multiply(a, n, p):
-        if n == 1:
-            return a
-        elif n % 2 == 1:
-            return ((square_and_multiply(a, n // 2, p) ** 2) * a) % p
-        else:
-            return (square_and_multiply(a, n // 2, p) ** 2) % p
-
-    return (square_and_multiply(a, (p - 1) // 2, p) % p) == 1
+    return pow(a, (p - 1) // 2, p) == 1
 
 
 def legendre_symbol(a, p):
@@ -143,13 +134,12 @@ def legendre_symbol(a, p):
     a, p = as_int(a), as_int(p)
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
-    _, a = divmod(a, p)
+    a = a % p
     if not a:
         return 0
     if is_quad_residue(a, p):
         return 1
-    else:
-        return -1
+    return -1
 
 
 def jacobi_symbol(m, n):

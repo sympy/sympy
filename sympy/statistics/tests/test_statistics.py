@@ -1,22 +1,26 @@
-from sympy import sqrt, Rational, oo, Symbol, exp, pi
+from sympy import sqrt, Rational, oo, Symbol, exp, pi, symbols
 from sympy.functions import erf
 
 from operator import abs
 
 from sympy.mpmath import mp
 
+from sympy.utilities.tests.test_pickling import check
+
 # Disable sympy.statistics deprecation warning for the tests
 # The warning is in __init__.py, so we only need to disable it for imports
 
 import warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+warnings.filterwarnings("ignore", message="sympy.statistics has been deprecated since SymPy 0.7.2",
+    category=SymPyDeprecationWarning)
 
-from sympy.statistics.distributions import Normal, Uniform
-from sympy.statistics.distributions import PDF
+from sympy.statistics.distributions import (Normal, Uniform, Sample, PDF,
+    ContinuousProbability)
 
-warnings.filterwarnings("default")
+warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
+x, y, z = symbols('x y z')
 
 def test_normal():
     dps, mp.dps = mp.dps, 20
@@ -76,7 +80,6 @@ def test_fit():
 
 
 def test_sample():
-    from sympy.statistics.distributions import Sample
     s = Sample([0, 1])
     assert str(s) == "Sample([0, 1])"
     assert repr(s) == "Sample([0, 1])"
@@ -111,3 +114,24 @@ def test_PDF():
     exponential = exponential.transform(x, x)
     assert exponential.pdf(x) == 1
     assert exponential.cdf(x) == x - 1
+
+# These last two tests are here instead of test_str.py and test_pickling.py
+# because this module is deprecated.
+
+def test_printing():
+    assert str(Normal(x + y, z)) == "Normal(x + y, z)"
+    assert str(Sample([x, y, 1])) in [
+        "Sample([x, y, 1])",
+        "Sample([y, 1, x])",
+        "Sample([1, x, y])",
+        "Sample([y, x, 1])",
+        "Sample([x, 1, y])",
+        "Sample([1, y, x])",
+    ]
+    assert str(Uniform(x, y)) == "Uniform(x, y)"
+    assert str(Uniform(x + y, y)) == "Uniform(x + y, y)"
+
+def test_pickling():
+    for c in (ContinuousProbability, ContinuousProbability(), Normal,
+              Normal(x, y), Sample, Sample([1, 3, 4]), Uniform, Uniform(x, y)):
+        check(c)

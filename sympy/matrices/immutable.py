@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, Integer, Tuple, Dict
 from sympy.core.sympify import converter as sympify_converter
 
@@ -20,9 +22,10 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     >>> from sympy import eye
     >>> from sympy.matrices import ImmutableMatrix
     >>> ImmutableMatrix(eye(3))
-    [1, 0, 0]
-    [0, 1, 0]
-    [0, 0, 1]
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     >>> _[0, 0] = 42
     Traceback (most recent call last):
     ...
@@ -98,11 +101,12 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
     >>> from sympy import eye
     >>> from sympy.matrices.immutable import ImmutableSparseMatrix
     >>> ImmutableSparseMatrix(1, 1, {})
-    [0]
+    Matrix([[0]])
     >>> ImmutableSparseMatrix(eye(3))
-    [1, 0, 0]
-    [0, 1, 0]
-    [0, 0, 1]
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
     >>> _[0, 0] = 42
     Traceback (most recent call last):
     ...
@@ -132,3 +136,6 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
     subs = MatrixBase.subs
+
+    def __hash__(self):
+        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))

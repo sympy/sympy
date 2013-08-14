@@ -7,6 +7,8 @@ The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.dotest?" for documentation.
 """
 
+from __future__ import print_function
+
 # files listed here can be in unix forward slash format with paths
 # listed relative to sympy (which contains bin, etc...)
 blacklist = []
@@ -53,8 +55,8 @@ if options.types:
 
 import sympy
 
-ok = sympy.doctest(*args, **{"verbose": options.verbose,
-    "blacklist": blacklist, "normal": options.normal, "subprocess": options.subprocess})
+ok = sympy.doctest(*args, verbose=options.verbose, blacklist=blacklist,
+    normal=options.normal, subprocess=options.subprocess)
 
 if ok:
     sys.exit(0)

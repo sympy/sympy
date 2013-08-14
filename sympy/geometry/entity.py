@@ -7,7 +7,9 @@ GeometryEntity
 
 """
 
-from sympy.core.compatibility import cmp, is_sequence
+from __future__ import print_function, division
+
+from sympy.core.compatibility import is_sequence
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
@@ -162,23 +164,31 @@ class GeometryEntity(Basic):
         g = self
         l = line
         o = Point(0, 0)
-        if l == Line(o, slope=0):
-            return g.scale(y=-1)
-        elif l == Line(o, slope=oo):
-            return g.scale(-1)
-        if not hasattr(g, 'reflect') and not all(
-                isinstance(arg, Point) for arg in g.args):
-            raise NotImplementedError
-        a = atan(l.slope)
-        c = l.coefficients
-        d = -c[-1]/c[1]  # y-intercept
-        # apply the transform to a single point
-        x, y = Dummy(), Dummy()
-        xf = Point(x, y)
-        xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
-            ).rotate(a, o).translate(y=d)
-        # replace every point using that transform
-        reps = [(p, xf.xreplace({x: p.x, y: p.y})) for p in g.atoms(Point)]
+        if l.slope == 0:
+            y = l.args[0].y
+            if not y:  # x-axis
+                return g.scale(y=-1)
+            reps = [(p, p.translate(y=2*(y - p.y))) for p in g.atoms(Point)]
+        elif l.slope == oo:
+            x = l.args[0].x
+            if not x:  # y-axis
+                return g.scale(x=-1)
+            reps = [(p, p.translate(x=2*(x - p.x))) for p in g.atoms(Point)]
+        else:
+            if not hasattr(g, 'reflect') and not all(
+                    isinstance(arg, Point) for arg in g.args):
+                raise NotImplementedError(
+                    'reflect undefined or non-Point args in %s' % g)
+            a = atan(l.slope)
+            c = l.coefficients
+            d = -c[-1]/c[1]  # y-intercept
+            # apply the transform to a single point
+            x, y = Dummy(), Dummy()
+            xf = Point(x, y)
+            xf = xf.translate(y=-d).rotate(-a, o).scale(y=-1
+                ).rotate(a, o).translate(y=d)
+            # replace every point using that transform
+            reps = [(p, xf.xreplace({x: p.x, y: p.y})) for p in g.atoms(Point)]
         return g.xreplace(dict(reps))
 
     def encloses(self, o):
@@ -278,7 +288,7 @@ class GeometryEntity(Basic):
         """Comparison of two GeometryEntities."""
         n1 = self.__class__.__name__
         n2 = other.__class__.__name__
-        c = cmp(n1, n2)
+        c = (n1 > n2) - (n1 < n2)
         if not c:
             return 0
 
@@ -302,7 +312,7 @@ class GeometryEntity(Basic):
         if i2 == -1:
             return c
 
-        return cmp(i1, i2)
+        return (i1 > i2) - (i1 < i2)
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""

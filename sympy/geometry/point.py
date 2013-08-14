@@ -6,13 +6,15 @@ Point
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, sympify
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
-from entity import GeometryEntity
+from .entity import GeometryEntity
 from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 
@@ -204,6 +206,9 @@ class Point(GeometryEntity):
         False
 
         """
+        # Coincident points are irrelevant and can confuse this algorithm.
+        # Use only unique points.
+        points = list(set(points))
         if len(points) == 0:
             return False
         if len(points) <= 2:
@@ -283,7 +288,7 @@ class Point(GeometryEntity):
             return (not Point.is_collinear(*points))
 
         try:
-            from ellipse import Circle
+            from .ellipse import Circle
             c = Circle(points[0], points[1], points[2])
             for point in points[3:]:
                 if point not in c:
@@ -408,7 +413,7 @@ class Point(GeometryEntity):
             coords = [x.evalf(**options) for x in self.args]
         else:
             coords = [x.evalf(prec, **options) for x in self.args]
-        return Point(*coords, **dict(evaluate=False))
+        return Point(*coords, evaluate=False)
 
     n = evalf
 

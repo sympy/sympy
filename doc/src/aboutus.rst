@@ -240,8 +240,10 @@ want to be mentioned here, so see our repository history for a full list).
 #. Thomas Hisch: Improvements to the printing module
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
+#. Case Van Horsen: Fixes to gmpy support
 #. Mary Clark: Improvements to the group theory module
-#. Rishabh Dixit: Fix in logic module
+#. Rishabh Dixit: Bug fixes
+#. Acebulf: Typos
 #. Manoj Kumar: Bug fix
 #. Akshit Agarwal: improvements to range handling in symbols
 #. CJ Carey: Fix for limits of factorials
@@ -258,8 +260,33 @@ want to be mentioned here, so see our repository history for a full list).
 #. Demian Wassermann: fix to ccode printer for Piecewise
 #. Khagesh Patel: Addition to matrix expressions
 #. Stephen Loo: Update minimum gmpy2 version
-#. Rishabh Dixit: Improvements to assumptions
+#. hm: Fixes to printing
 #. Katja Sophie Hotz: use expansion in minpoly
+#. Varun Joshi: Addition to functions
+#. Chetna Gupta: Improvements to the Risch integration algorithm
+#. Thilina Rathnayake: Fix to the matrices
+#. Shravas K Rao: Implement prev_lexicographic and next_lexicographic
+#. Max Hutchinson: Fix to HadamardProduct
+#. Matthew Tadd: fix definition in units module
+#. Alexander Hirzel: Updates to ODE docs
+#. Randy Heydon: improve collinear point detection
+#. Ramana Venkata: improvements to special functions
+#. Oliver Lee: improvements to mechanics
+#. Seshagiri Prabhu: hardcoded 3x3 determinant
+#. Pradyumna: Fix to printing
+#. Erik Welch: Fix a warning
+#. Eric Nelson: Fixes to printing
+#. Roland Puntaier: Improve App Engine support
+#. Chris Conley: Use warnings instead of prints
+#. Tim Swast: Help with pull requests and IPython
+#. Dmitry Batkovich: Fix to series
+#. Francesco Bonazzi: Improvements to matrices and tensors
+#. Yuriy Demidov: Add examples from "Review of CAS mathematical capabilities"
+#. Rick Muller: Implementation of quantum circuit plotting
+#. Manish Gill: Fix infinite loop in Matrix constructor
+#. Markus Müller: Add Jordan form for matrices
+#. Amit Saha: Fixes to documentation
+#. QuaBoo: Optimizations in ntheory
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -279,6 +306,7 @@ Financial and Infrastructure Support
   * in 2010 for 5 students (`GSoC 2010 <https://github.com/sympy/sympy/wiki/GSoC-2010-report>`_)
   * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
+  * in 2013 for 7 students (`GSoC 2013 <https://github.com/sympy/sympy/wiki/Gsoc-2013-report>`_)
 
 * `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
   various GSoC students over the years:

@@ -1,6 +1,7 @@
 from sympy.utilities.pytest import raises
 from sympy import symbols, Function, Integer, Matrix, Abs, \
-    Rational, Float, S, WildFunction, ImmutableMatrix
+    Rational, Float, S, WildFunction, ImmutableMatrix, sin
+from sympy.core.compatibility import exec_
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 from sympy.polys import ring, field, ZZ, QQ, lex, grlex
@@ -10,7 +11,7 @@ x, y = symbols('x,y')
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
 ENV = {}
-exec "from sympy import *" in ENV
+exec_("from sympy import *", ENV)
 
 
 def sT(expr, string):
@@ -42,6 +43,8 @@ def test_Function():
     # test unapplied Function
     sT(Function('f'), "Function('f')")
 
+    sT(sin(x), "sin(Symbol('x'))")
+    sT(sin, "sin")
 
 def test_Geometry():
     sT(Point(0, 0), "Point(Integer(0), Integer(0))")

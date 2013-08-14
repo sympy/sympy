@@ -2,6 +2,8 @@
 
 # hook in-tree SymPy into Python path, if possible
 # TODO this should be shared with isympy
+from __future__ import print_function
+
 import os
 import sys
 

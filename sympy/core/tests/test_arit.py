@@ -2,7 +2,9 @@ from __future__ import division
 
 from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
+        sign, im
 )
+from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.randtest import test_numerically
 
@@ -174,6 +176,24 @@ def test_pow3():
     assert sqrt(2)**3 == sqrt(8)
 
 
+def test_pow_E():
+    assert 2**(y/log(2)) == S.Exp1**y
+    assert 2**(y/log(2)/3) == S.Exp1**(y/3)
+    assert 3**(1/log(-3)) != S.Exp1
+    assert (3 + 2*I)**(1/(log(-3 - 2*I) + I*pi)) == S.Exp1
+    assert (4 + 2*I)**(1/(log(-4 - 2*I) + I*pi)) == S.Exp1
+    assert (3 + 2*I)**(1/(log(-3 - 2*I, 3)/2 + I*pi/log(3)/2)) == 9
+    assert (3 + 2*I)**(1/(log(3 + 2*I, 3)/2)) == 9
+    # every time tests are run they will affirm with a different random
+    # value that this identity holds
+    while 1:
+        b = x._random()
+        r, i = b.as_real_imag()
+        if i:
+            break
+    assert test_numerically(b**(1/(log(-b) + sign(i)*I*pi).n()), S.Exp1)
+
+
 def test_pow_issue417():
     assert 4**Rational(1, 4) == sqrt(2)
 
@@ -194,34 +214,34 @@ def test_pow_im():
     args = [I, I, I, I, 2]
     e = Rational(1, 3)
     ans = 2**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args = [I, I, I, 2]
     e = Rational(1, 3)
     ans = 2**e*(-I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-3)
     ans = (6*I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-1)
     ans = (-6*I)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
 
     args = [I, I, 2]
     e = Rational(1, 3)
     ans = (-2)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-3)
     ans = (6)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     args.append(-1)
     ans = (-6)**e
-    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args, evaluate=False)**e == ans
     assert Mul(*args)**e == ans
     assert Mul(Pow(-1, Rational(3, 2), evaluate=False), I, I) == I
     assert Mul(I*Pow(I, S.Half, evaluate=False)) == (-1)**Rational(3, 4)
@@ -256,7 +276,8 @@ def test_ncmul():
 
     assert A/(1 + A) == A/(1 + A)
 
-    assert (A + B + 2*(A + B)) == 3*A + 3*B
+    assert set((A + B + 2*(A + B)).args) == \
+        set([A, B, 2*(A + B)])
 
 
 def test_ncpow():
@@ -404,6 +425,17 @@ def test_Mul_is_rational():
     assert (x/pi).is_rational is None
     assert (x/n).is_rational is None
     assert (n/pi).is_rational is False
+
+
+def test_Add_is_rational():
+    x = Symbol('x')
+    n = Symbol('n', rational=True)
+    m = Symbol('m', rational=True)
+
+    assert (n + m).is_rational is True
+    assert (x + pi).is_rational is None
+    assert (x + n).is_rational is None
+    assert (n + pi).is_rational is False
 
 
 def test_Add_is_even_odd():
@@ -855,6 +887,8 @@ def test_Pow_is_integer():
     assert Pow(4, S.Half, evaluate=False).is_integer is True
     assert Pow(S.Half, -2, evaluate=False).is_integer is True
 
+    assert ((-1)**k).is_integer
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -888,12 +922,7 @@ def test_Pow_is_real():
     assert (i**k).is_real is None
 
 
-@XFAIL
 def test_real_Pow():
-    """
-    This test fails perhaps because (pi/log(x)).is_real is True even with
-    no assumptions on x. See issue 2322.
-    """
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
 
@@ -922,6 +951,10 @@ def test_Pow_is_even_odd():
     n = Symbol('n', odd=True)
     m = Symbol('m', integer=True, nonnegative=True)
     p = Symbol('p', integer=True, positive=True)
+
+    assert ((-1)**n).is_odd
+    assert ((-1)**k).is_odd
+    assert ((-1)**(m - p)).is_odd
 
     assert (k**2).is_even is True
     assert (n**2).is_even is False
@@ -1259,12 +1292,7 @@ def test_Pow_as_content_primitive():
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)
-    assert 2 + u == 4 + 2*x
-    # the Number is only suppose to distribute on a commutative Add
-    n = Symbol('n', commutative=False)
-    u = 2*(1 + n)
-    assert u.is_Mul
-    assert 2 + u == 4 + 2*n
+    assert (2 + u).args == (2, u)
 
 
 def test_product_irrational():
@@ -1459,9 +1487,9 @@ def test_float_int():
     assert int(float(sqrt(10))) == int(sqrt(10))
     assert int(pi**1000) % 10 == 2
     assert int(Float('1.123456789012345678901234567890e20', '')) == \
-        112345678901234567890L
+        long(112345678901234567890)
     assert int(Float('1.123456789012345678901234567890e25', '')) == \
-        11234567890123456789012345L
+        long(11234567890123456789012345)
     # decimal forces float so it's not an exact integer ending in 000000
     assert int(Float('1.123456789012345678901234567890e35', '')) == \
         112345678901234567890123456789000192
@@ -1495,3 +1523,19 @@ def test_issue_3512a():
     assert Mul.flatten([3**Rational(1, 3),
         Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
         ([Rational(1, 3), (-1)**Rational(2, 3)], [], None)
+
+
+def test_denest_add_mul():
+    # when working with evaluated expressions make sure they denest
+    eq = x + 1
+    eq = Add(eq, 2, evaluate=False)
+    eq = Add(eq, 2, evaluate=False)
+    assert Add(*eq.args) == x + 5
+    eq = x*2
+    eq = Mul(eq, 2, evaluate=False)
+    eq = Mul(eq, 2, evaluate=False)
+    assert Mul(*eq.args) == 8*x
+    # but don't let them denest unecessarily
+    eq = Mul(-2, x - 2, evaluate=False)
+    assert 2*eq == Mul(-4, x - 2, evaluate=False)
+    assert -eq == Mul(2, x - 2, evaluate=False)

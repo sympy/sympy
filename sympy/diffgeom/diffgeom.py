@@ -1,10 +1,14 @@
+from __future__ import print_function, division
+
+from itertools import permutations
+
 from sympy.matrices import Matrix
 from sympy.core import Basic, Expr, Dummy, Function, sympify, diff, Pow, Mul, Add
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.functions import factorial
 from sympy.simplify import simplify
-from sympy.core.compatibility import reduce, permutations
+from sympy.core.compatibility import reduce
 from sympy.combinatorics import Permutation
 
 # TODO you are a bit excessive in the use of Dummies
@@ -48,6 +52,7 @@ class Patch(Basic):
     =========
 
     Define a Manifold and a Patch on that Manifold:
+
     >>> from sympy.diffgeom import Manifold, Patch
     >>> m = Manifold('M', 3)
     >>> p = Patch('P', m)
@@ -98,27 +103,32 @@ class CoordSystem(Basic):
 
     >>> polar.connect_to(rect, [r, theta], [r*cos(theta), r*sin(theta)])
     >>> polar.coord_tuple_transform_to(rect, [0, 2])
-    [0]
-    [0]
+    Matrix([
+    [0],
+    [0]])
     >>> polar.coord_tuple_transform_to(rect, [2, pi/2])
-    [0]
-    [2]
+    Matrix([
+    [0],
+    [2]])
     >>> rect.coord_tuple_transform_to(polar, [1, 1])
-    [sqrt(2)]
-    [   pi/4]
+    Matrix([
+    [sqrt(2)],
+    [   pi/4]])
 
     Calculate the jacobian of the polar to cartesian transformation:
 
     >>> polar.jacobian(rect, [r, theta])
-    [cos(theta), -r*sin(theta)]
-    [sin(theta),  r*cos(theta)]
+    Matrix([
+    [cos(theta), -r*sin(theta)],
+    [sin(theta),  r*cos(theta)]])
 
     Define a point using coordinates in one of the coordinate systems:
 
     >>> p = polar.point([1, 3*pi/4])
     >>> rect.point_to_coords(p)
-    [-sqrt(2)/2]
-    [ sqrt(2)/2]
+    Matrix([
+    [-sqrt(2)/2],
+    [ sqrt(2)/2]])
 
     Define a basis scalar field (i.e. a coordinate function), that takes a
     point and returns its coordinates. It is an instance of ``BaseScalarField``.
@@ -245,14 +255,14 @@ class CoordSystem(Basic):
         coords = Matrix(coords)
         if self != to_sys:
             transf = self.transforms[to_sys]
-            coords = transf[1].subs(zip(transf[0], coords))
+            coords = transf[1].subs(list(zip(transf[0], coords)))
         return coords
 
     def jacobian(self, to_sys, coords):
         """Return the jacobian matrix of a transformation."""
         with_dummies = self.coord_tuple_transform_to(
             to_sys, self._dummies).jacobian(self._dummies)
-        return with_dummies.subs(zip(self._dummies, coords))
+        return with_dummies.subs(list(zip(self._dummies, coords)))
 
     ##########################################################################
     # Base fields.
@@ -356,11 +366,13 @@ class Point(Basic):
 
     >>> p = Point(polar, [r, 3*pi/4])
     >>> p.coords()
-    [     r]
-    [3*pi/4]
+    Matrix([
+    [     r],
+    [3*pi/4]])
     >>> p.coords(rect)
-    [-sqrt(2)*r/2]
-    [ sqrt(2)*r/2]
+    Matrix([
+    [-sqrt(2)*r/2],
+    [ sqrt(2)*r/2]])
 
     """
     def __init__(self, coord_sys, coords):
@@ -549,7 +561,7 @@ class BaseVectorField(Expr):
         # TODO: you need a real dummy function for the next line
         d_funcs = [Function('_#_%s' % i)(d_var) for i,
                    b in enumerate(base_scalars)]
-        d_result = scalar_field.subs(zip(base_scalars, d_funcs))
+        d_result = scalar_field.subs(list(zip(base_scalars, d_funcs)))
         d_result = d_result.diff(d_var)
 
         # Second step: e_x(x) -> 1 and e_x(r) -> cos(atan2(x, y))
@@ -559,11 +571,11 @@ class BaseVectorField(Expr):
         for b in base_scalars:
             jac = self._coord_sys.jacobian(b._coord_sys, coords)
             d_funcs_deriv_sub.append(jac[b._index, self._index])
-        d_result = d_result.subs(zip(d_funcs_deriv, d_funcs_deriv_sub))
+        d_result = d_result.subs(list(zip(d_funcs_deriv, d_funcs_deriv_sub)))
 
         # Remove the dummies
-        result = d_result.subs(zip(d_funcs, base_scalars))
-        result = result.subs(zip(coords, self._coord_sys.coord_functions()))
+        result = d_result.subs(list(zip(d_funcs, base_scalars)))
+        result = result.subs(list(zip(coords, self._coord_sys.coord_functions())))
         return result.doit()  # XXX doit for the Subs instances
 
 
@@ -877,7 +889,7 @@ class WedgeProduct(TensorProduct):
         mul = 1/Mul(*(factorial(o) for o in orders))
         perms = permutations(vector_fields)
         perms_par = (Permutation(
-            p).signature() for p in permutations(range(len(vector_fields))))
+            p).signature() for p in permutations(list(range(len(vector_fields)))))
         tensor_prod = TensorProduct(*self.args)
         return mul*Add(*[tensor_prod(*p[0])*p[1] for p in zip(perms, perms_par)])
 
@@ -969,11 +981,11 @@ class BaseCovarDerivativeOp(Expr):
         # TODO: you need a real dummy function for the next line
         d_funcs = [Function('_#_%s' % i)(wrt_scalar) for i,
                    b in enumerate(vectors)]
-        d_result = field.subs(zip(vectors, d_funcs))
+        d_result = field.subs(list(zip(vectors, d_funcs)))
         d_result = wrt_vector(d_result)
 
         # Second step: backsubstitute the vectors in
-        d_result = d_result.subs(zip(d_funcs, vectors))
+        d_result = d_result.subs(list(zip(d_funcs, vectors)))
 
         # Third step: evaluate the derivatives of the vectors
         derivs = []
@@ -983,7 +995,7 @@ class BaseCovarDerivativeOp(Expr):
                       for k in range(v._coord_sys.dim)])
             derivs.append(d)
         to_subs = [wrt_vector(d) for d in d_funcs]
-        result = d_result.subs(zip(to_subs, derivs))
+        result = d_result.subs(list(zip(to_subs, derivs)))
 
         return result  # TODO .doit() # XXX doit for the Subs instances
 
@@ -1023,7 +1035,7 @@ class CovarDerivativeOp(Expr):
         vectors = list(self._wrt.atoms(BaseVectorField))
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
                     for v in vectors]
-        return self._wrt.subs(zip(vectors, base_ops)).rcall(field)
+        return self._wrt.subs(list(zip(vectors, base_ops))).rcall(field)
 
     def _latex(self, printer, *args):
         return r'\mathbb{\nabla}_{%s}' % printer._print(self._wrt)
@@ -1082,35 +1094,42 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
     Calculate the series:
 
     >>> intcurve_series(vector_field, t, start_point, n=3)
-    [t + x]
-    [    y]
+    Matrix([
+    [t + x],
+    [    y]])
 
     Or get the elements of the expansion in a list:
 
     >>> series = intcurve_series(vector_field, t, start_point, n=3, coeffs=True)
     >>> series[0]
-    [x]
-    [y]
+    Matrix([
+    [x],
+    [y]])
     >>> series[1]
-    [t]
-    [0]
+    Matrix([
+    [t],
+    [0]])
     >>> series[2]
-    [0]
-    [0]
+    Matrix([
+    [0],
+    [0]])
 
     The series in the polar coordinate system:
 
     >>> series = intcurve_series(vector_field, t, start_point,
     ...             n=3, coord_sys=R2_p, coeffs=True)
     >>> series[0]
-    [sqrt(x**2 + y**2)]
-    [      atan2(y, x)]
+    Matrix([
+    [sqrt(x**2 + y**2)],
+    [      atan2(y, x)]])
     >>> series[1]
-    [t*x/sqrt(x**2 + y**2)]
-    [   -t*y/(x**2 + y**2)]
+    Matrix([
+    [t*x/sqrt(x**2 + y**2)],
+    [   -t*y/(x**2 + y**2)]])
     >>> series[2]
-    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2]
-    [                                t**2*x*y/(x**2 + y**2)**2]
+    Matrix([
+    [t**2*(-x**2/(x**2 + y**2)**(3/2) + 1/sqrt(x**2 + y**2))/2],
+    [                                t**2*x*y/(x**2 + y**2)**2]])
 
     """
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
@@ -1218,7 +1237,7 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
 def dummyfy(args, exprs):
     # TODO Is this a good idea?
     d_args = Matrix([s.as_dummy() for s in args])
-    d_exprs = Matrix([sympify(expr).subs(zip(args, d_args)) for expr in exprs])
+    d_exprs = Matrix([sympify(expr).subs(list(zip(args, d_args))) for expr in exprs])
     return d_args, d_exprs
 
 
@@ -1346,7 +1365,7 @@ def vectors_in_basis(expr, to_sys):
         jac = cs.jacobian(to_sys, cs.coord_functions())
         new = (jac.T*Matrix(to_sys.base_vectors()))[v._index]
         new_vectors.append(new)
-    return expr.subs(zip(vectors, new_vectors))
+    return expr.subs(list(zip(vectors, new_vectors)))
 
 
 ###############################################################################
@@ -1366,14 +1385,17 @@ def twoform_to_matrix(expr):
     >>> from sympy.diffgeom import twoform_to_matrix, TensorProduct
     >>> TP = TensorProduct
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [1, 0]
-    [0, 1]
+    Matrix([
+    [1, 0],
+    [0, 1]])
     >>> twoform_to_matrix(R2.x*TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy))
-    [x, 0]
-    [0, 1]
+    Matrix([
+    [x, 0],
+    [0, 1]])
     >>> twoform_to_matrix(TP(R2.dx, R2.dx) + TP(R2.dy, R2.dy) - TP(R2.dx, R2.dy)/2)
-    [   1, 0]
-    [-1/2, 1]
+    Matrix([
+    [   1, 0],
+    [-1/2, 1]])
 
     """
     if covariant_order(expr) != 2 or contravariant_order(expr):
@@ -1416,7 +1438,7 @@ def metric_to_Christoffel_1st(expr):
     coord_sys = expr.atoms(CoordSystem).pop()
     deriv_matrices = [matrix.applyfunc(lambda a: d(a))
                       for d in coord_sys.base_vectors()]
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
                     for j in indices]
@@ -1444,7 +1466,7 @@ def metric_to_Christoffel_2nd(expr):
     """
     ch_1st = metric_to_Christoffel_1st(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     # XXX workaround, inverting a matrix does not work if it contains non
     # symbols
     #matrix = twoform_to_matrix(expr).inv()
@@ -1454,7 +1476,7 @@ def metric_to_Christoffel_2nd(expr):
         s_fields.update(e.atoms(BaseScalarField))
     s_fields = list(s_fields)
     dums = coord_sys._dummies
-    matrix = matrix.subs(zip(s_fields, dums)).inv().subs(zip(dums, s_fields))
+    matrix = matrix.subs(list(zip(s_fields, dums))).inv().subs(list(zip(dums, s_fields)))
     # XXX end of workaround
     christoffel = [[[Add(*[matrix[i, l]*ch_1st[l][j][k] for l in indices])
                      for k in indices]
@@ -1495,7 +1517,7 @@ def metric_to_Riemann_components(expr):
     """
     ch_2nd = metric_to_Christoffel_2nd(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     deriv_ch = [[[[d(ch_2nd[i][j][k])
                    for d in coord_sys.base_vectors()]
                   for k in indices]
@@ -1546,7 +1568,7 @@ def metric_to_Ricci_components(expr):
     """
     riemann = metric_to_Riemann_components(expr)
     coord_sys = expr.atoms(CoordSystem).pop()
-    indices = range(coord_sys.dim)
+    indices = list(range(coord_sys.dim))
     ricci = [[Add(*[riemann[k][i][k][j] for k in indices])
               for j in indices]
              for i in indices]
