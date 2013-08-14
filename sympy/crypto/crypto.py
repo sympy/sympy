@@ -18,7 +18,7 @@ def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     A *substitution cipher* is a method of encryption by which
     "units" (not necessarily characters) of plaintext are replaced with
-    ciphertext according to a regular system.  The "units" may be
+    ciphertext according to a regular system. The "units" may be
     characters (ie, words of length `1`), words of length `2`, and so forth.
 
     A *transposition cipher* is a method of encryption by which
@@ -39,15 +39,17 @@ def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     >>> from sympy.crypto.crypto import alphabet_of_cipher
     >>> alphabet_of_cipher()
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-    >>> L = [str(i) for i in range(10)]+["a","b","c"]; L
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    >>> L = [str(i) for i in range(10)] + ['a', 'b', 'c']; L
     ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c']
     >>> A = "".join(L); A
     '0123456789abc'
     >>> alphabet_of_cipher(A)
     ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c']
-    >>> A = alphabet_of_cipher(); A
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    >>> alphabet_of_cipher()
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
     """
     symbols = "".join(symbols)
@@ -66,11 +68,15 @@ def cycle_list(k,n):
 
     >>> from sympy.crypto.crypto import cycle_list, alphabet_of_cipher
     >>> L = cycle_list(3,26); L
-    [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 1, 2]
+    [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+    17, 18, 19, 20, 21, 22, 23, 24, 25, 0, 1, 2]
     >>> A = alphabet_of_cipher(); A
-    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
     >>> [A[i] for i in L]
-    ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'A', 'B', 'C']
+    ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'A', 'B', 'C']
+
     """
     L = list(range(n))
     return L[k:]+ L[:k]
@@ -91,20 +97,24 @@ def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 
     ALGORITHM:
+
         INPUT:
-            k: an integer from 0 to 25 (the secret key)
-            m: string of upper-case letters (the plaintext message)
+
+            ``k``: an integer from 0 to 25 (the secret key)
+
+            ``m``: string of upper-case letters (the plaintext message)
 
         OUTPUT:
-            c: string of upper-case letters (the ciphertext message)
+
+            ``c``: string of upper-case letters (the ciphertext message)
 
         STEPS:
             0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-            1. Compute from the string m a list L1 of corresponding
+            1. Compute from the string ``m`` a list ``L1`` of corresponding
                integers.
-            2. Compute from the list L1 a new list L2, given by
-               adding (k mod 26) to each element in L1.
-            3. Compute from the list L2 a string c of corresponding
+            2. Compute from the list ``L1`` a new list ``L2``, given by
+               adding ``(k mod 26)`` to each element in ``L1``.
+            3. Compute from the list ``L2`` a string ``c`` of corresponding
                letters.
 
     Examples
@@ -132,12 +142,13 @@ def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 
 def encipher_affine(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-    """
-    Performs the affine cipher encryption on plaintext pt, and returns the ciphertext.
-    Encryption is based on the map `x -> ax+b` (mod `26`). Decryption is based on
-    the map `x -> cx+d` (mod `26`), where `c = a^{-1}` (mod `26`) and
+    r"""
+    Performs the affine cipher encryption on plaintext ``pt``, and returns the ciphertext.
+
+    Encryption is based on the map `x \rightarrow ax+b` (mod `26`). Decryption is based on
+    the map `x \rightarrow cx+d` (mod `26`), where `c = a^{-1}` (mod `26`) and
     `d = -a^{-1}c` (mod `26`). (In particular, for the map to be invertible,
-    we need `gcd(a, 26) = 1.`)
+    we need `\mathrm{gcd}(a, 26) = 1.`)
 
     Notes
     =====
@@ -145,22 +156,25 @@ def encipher_affine(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     This is a straightforward generalization of the shift cipher.
 
     ALGORITHM:
+
         INPUT:
-            a, b: a pair integers, where `gcd(a, 26) = 1` (the secret key)
-            m: string of upper-case letters (the plaintext message)
+
+            ``a, b``: a pair integers, where ``gcd(a, 26) = 1`` (the secret key)
+
+            ``m``: string of upper-case letters (the plaintext message)
 
         OUTPUT:
-            c: string of upper-case letters (the ciphertext message)
+
+            ``c``: string of upper-case letters (the ciphertext message)
 
         STEPS:
             0. Identify the alphabet "A", ..., "Z" with the integers 0, ..., 25.
-            1. Compute from the string m a list L1 of corresponding
+            1. Compute from the string ``m`` a list ``L1`` of corresponding
                integers.
-            2. Compute from the list L1 a new list L2, given by
-               replacing `x` by  `ax+b` (mod `26`), for each element x in L1.
-            3. Compute from the list L2 a string c of corresponding
+            2. Compute from the list ``L1`` a new list ``L2``, given by replacing
+               ``x`` by ``a*x + b (mod 26)``, for each element ``x`` in ``L1``.
+            3. Compute from the list ``L2`` a string ``c`` of corresponding
                letters.
-
 
     Examples
     ========
@@ -178,7 +192,6 @@ def encipher_affine(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     >>> encipher_affine(ct, (9, 17))
     'GONAVYBEATARMY'
 
-
     """
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
@@ -195,9 +208,11 @@ def encipher_affine(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Assumes the pt has only letters taken from symbols.
-    Assumes key is a permutation of the symbols. This funciton permutes the
-    letters of the plaintext using the permutation given in key.
+    Performs the substitution cipher encryption on plaintext ``pt``, and returns the ciphertext.
+
+    Assumes the ``pt`` has only letters taken from ``symbols``.
+    Assumes ``key`` is a permutation of the symbols. This funciton permutes the
+    letters of the plaintext using the permutation given in ``key``.
     The decription uses the inverse permutation.
     Note that if the permutation in key is order 2 (eg, a transposition) then
     the encryption permutation and the decryption permutation are the same.
@@ -232,7 +247,7 @@ def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
-    Encode using the Vigenere cipher.
+    Performs the Vigenere cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
     Notes
     =====
@@ -264,29 +279,33 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 
     ALGORITHM:
+
         INPUT:
-            key: a string of upper-case letters (the secret key)
-            m: string of upper-case letters (the plaintext message)
+
+            ``key``: a string of upper-case letters (the secret key)
+
+            ``m``: string of upper-case letters (the plaintext message)
 
         OUTPUT:
-            c: string of upper-case letters (the ciphertext message)
+
+            ``c``: string of upper-case letters (the ciphertext message)
 
         STEPS:
             0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-            1. Compute from the string key a list L1 of corresponding
-               integers. Let n1 = len(L1).
-            2. Compute from the string m a list L2 of corresponding
-               integers. Let n2 = len(L2).
-            3. Break L2 up sequencially into sublists of size n1, and one sublist
-               at the end of size <=n1.
-            4. For each of these sublists L of L2, compute a new list C given by
-               C[i] = L[i]+L1[i] (mod 26) to the i-th element in the sublist,
-               for each i.
-            5. Assemble these lists C by concatenation into a new list of length n2.
-            6. Compute from the new list a string c of corresponding letters.
+            1. Compute from the string ``key`` a list ``L1`` of corresponding
+               integers. Let ``n1 = len(L1)``.
+            2. Compute from the string ``m`` a list ``L2`` of corresponding
+               integers. Let ``n2 = len(L2)``.
+            3. Break ``L2`` up sequencially into sublists of size ``n1``, and one sublist
+               at the end of size smaller or equal to ``n1``.
+            4. For each of these sublists ``L`` of ``L2``, compute a new list ``C`` given by
+               ``C[i] = L[i] + L1[i] (mod 26)`` to the ``i``-th element in the sublist,
+               for each ``i``.
+            5. Assemble these lists ``C`` by concatenation into a new list of length ``n2``.
+            6. Compute from the new list a string ``c`` of corresponding letters.
 
     Once it is known that the key is, say, `n` characters long, frequency analysis
-    can be applied to every $n-th$ letter of the ciphertext to determine the plaintext.
+    can be applied to every `n`-th letter of the ciphertext to determine the plaintext.
     This method is called *Kasiski examination* (although it was first discovered
     by Babbage).
 
@@ -294,24 +313,28 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     described as follows.
 
     ALGORITHM:
+
         INPUT:
-          key: a string of upper-case letters (the secret key)
-          m: string of upper-case letters (the plaintext message)
+
+          ``key``: a string of upper-case letters (the secret key)
+
+          ``m``: string of upper-case letters (the plaintext message)
 
         OUTPUT:
-          c: string of upper-case letters (the ciphertext message)
+
+          ``c``: string of upper-case letters (the ciphertext message)
 
         STEPS:
             0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-            1. Compute from the string m a list L2 of corresponding
-                integers. Let n2 = len(L2).
-            2. Let n1 be the length of the key. Concatenate the string
-                key with the first n2-n1 characters of the plaintext message.
-                Compute from this string of length n2 a list L1 of corresponding
-                integers. Note n2 = len(L1).
-            3. Compute a new list C given by C[i] = L1[i]+L2[i] (mod 26), for each i.
-                Note n2 = len(C).
-            4. Compute from the new list a string c of corresponding letters.
+            1. Compute from the string ``m`` a list ``L2`` of corresponding
+               integers. Let ``n2 = len(L2)``.
+            2. Let ``n1`` be the length of the key. Concatenate the string
+               ``key`` with the first ``n2 - n1`` characters of the plaintext message.
+               Compute from this string of length ``n2`` a list ``L1`` of corresponding
+               integers. Note ``n2 = len(L1)``.
+            3. Compute a new list ``C`` given by ``C[i] = L1[i] + L2[i] (mod 26)``,
+               for each ``i``. Note ``n2 = len(C)``.
+            4. Compute from the new list a string ``c`` of corresponding letters.
 
     References
     ==========
@@ -375,16 +398,16 @@ def decipher_vigenere(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 #################### Hill cipher  ########################
 
 def matrix_inverse_mod(K, m):
-    """
+    r"""
     Returns the inverse of the matrix `K` (mod `m`), if it exists.
 
-    Method to find the matrix inverse of `K` mod `m` implemented in this function:
+    Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
 
-    * Compute `adj(K) = cof(K)^t`, the adjoint matrix of `K`.
+    * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
 
-    * Compute `r = 1/det(K) \pmod m`.
+    * Compute `r = 1/\mathrm{det}(K) \pmod m`.
 
-    * `K^{-1} = r\cdot adj(K) \pmod m`.
+    * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
 
     Examples
     ========
@@ -416,44 +439,51 @@ def matrix_inverse_mod(K, m):
     return K_inv
 
 def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-    """
+    r"""
+    Performs the Hill cipher encryption on plaintext ``pt``, and returns the ciphertext.
+
     Notes
     =====
 
     The Hill cipher [1]_, invented by Lester S. Hill in 1920's [2]_,
-    it was the first polygraphic cipher in which it was practical (though barely)
+    was the first polygraphic cipher in which it was practical (though barely)
     to operate on more than three symbols at once. The following discussion assumes
     an elementary knowledge of matrices.
 
     First, each letter is first encoded as a number. We assume here that
-    "A" <-> 0, "B" <-> 1, ..., "Z" <-> 25. We denote the integers `\{0, 1, ..., 25\}`
-    by `Z_{26}`. Suppose your message m consists of n capital letters, with no spaces.
-    This may be regarded an n-tuple M of elements of `Z_{26}`. A key in the Hill cipher
+    "A" `\leftrightarrow` 0, "B" `\leftrightarrow` 1, ..., "Z" `\leftrightarrow` 25.
+    We denote the integers `\{0, 1, ..., 25\}`
+    by `Z_{26}`. Suppose your message m consists of `n` capital letters, with no spaces.
+    This may be regarded an `n`-tuple M of elements of `Z_{26}`. A key in the Hill cipher
     is a `k x k` matrix `K`, all of whose entries are in `Z_{26}`, such that the matrix
-    `K` is invertible (ie, that the linear transformation `K: Z_{26}^k --> Z_{26}^k`
+    `K` is invertible (ie, that the linear transformation `K: Z_{26}^k \rightarrow Z_{26}^k`
     is one-to-one).
 
     ALGORITHM:
+
         INPUT:
-            key: a kxk invertible matrix K, all of whose entries are in `Z_{26}`
-            m: string of n upper-case letters (the plaintext message)
-            (Note: Sage assumes that n is a multiple of k.)
+
+            ``key``: a `k x k` invertible matrix `K`, all of whose entries are in `Z_{26}`
+
+            ``m``: string of `n` upper-case letters (the plaintext message)
+            (Note: Sage assumes that `n` is a multiple of `k`.)
 
         OUTPUT:
-            c: string of upper-case letters (the ciphertext message)
+
+            ``c``: string of upper-case letters (the ciphertext message)
 
         STEPS:
             0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-            1. Compute from the string m a list L of corresponding
-                integers. Let n = len(L).
-            2. Break the list L up into t = ceiling(n/k) sublists
-                L_1, ..., L_t of size k (where the last list might be
-                "padded" by 0's to ensure it is size k).
-            3. Compute new list C_1, ..., C_t given by C[i] = K*L_i
-                (arithmetic is done mod 26), for each i.
-            4. Concatenate these into a list C = C_1 + ... + C_t.
-            5. Compute from C a string c of corresponding letters.
-               This has length k*t.
+            1. Compute from the string ``m`` a list ``L`` of corresponding
+               integers. Let ``n = len(L)``.
+            2. Break the list ``L`` up into ``t = ceiling(n/k)`` sublists
+               ``L_1``, ..., ``L_t`` of size ``k`` (where the last list might be
+               "padded" by 0's to ensure it is size ``k``).
+            3. Compute new list ``C_1``, ..., ``C_t`` given by ``C[i] = K*L_i``
+               (arithmetic is done mod 26), for each ``i``.
+            4. Concatenate these into a list ``C = C_1 + ... + C_t``.
+            5. Compute from ``C`` a string ``c`` of corresponding letters.
+               This has length ``k*t``.
 
     References
     ==========
@@ -468,14 +498,14 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     >>> from sympy.crypto.crypto import encipher_hill
     >>> from sympy import Matrix
     >>> pt = "meet me on monday"
-    >>> key =  Matrix( ((1,2), (3,5)) )
+    >>> key = Matrix([[1, 2], [3, 5]])
     >>> encipher_hill(pt, key)
     'UEQDUEODOCTCWQ'
     >>> pt = "meet me on tuesday"
     >>> encipher_hill(pt, key)
     'UEQDUEODHBOYDJYU'
     >>> pt = "GONAVYBEATARMY"
-    >>> key = Matrix([[1,0,1],[0,1,1],[2,2,3]])
+    >>> key = Matrix([[1, 0, 1], [0, 1, 1], [2, 2, 3]])
     >>> encipher_hill(pt, key)
     'TBBYTKBEKKRLMYU'
 
@@ -508,7 +538,7 @@ def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     >>> from sympy.crypto.crypto import decipher_hill
     >>> from sympy import Matrix
     >>> ct = "UEQDUEODOCTCWQ"
-    >>> key =  Matrix( ((1,2), (3,5)) )
+    >>> key = Matrix([[1, 2], [3, 5]])
     >>> decipher_hill(ct, key)
     'MEETMEONMONDAY'
     >>> ct = "UEQDUEODHBOYDJYU"
@@ -540,17 +570,58 @@ def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 
 def encipher_bifid5(pt, key, verbose=False):
-    """
-    INPUT:
-        pt: plaintext string (no "j"s)
+    r"""
+    Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
-        key: short string for key (no repetitions, no "j"s)
+    This is the version of the Bifid cipher that uses the `5 \times 5` Polybius square.
 
-    OUTPUT:
-        ciphertext (using Bifid5 cipher in all caps, no spaces, no "J"s)
-        if verbose is True then it also prints the pairs of integers comprising the "long key"
+    Notes
+    =====
 
-    This is the version of the Bifid cipher that uses the `5 x 5` Polybius square.
+    The Bifid cipher was invented around 1901 by Felix Delastelle.
+    It is a *fractional substitution* cipher, where letters are
+    replaced by pairs of symbols from a smaller alphabet. The
+    cipher uses a `5 \times 5` square filled with some ordering of the alphabet,
+    except that "i"s and "j"s are identified (this is a so-called
+    Polybius square; there is a `6 \times 6` analog if you add back in "j" and also
+    append onto the usual 26 letter alphabet, the digits 0, 1, ..., 9).
+    According to Helen Gaines' book *Cryptanalysis*, this type of cipher
+    was used in the field by the German Army during World War I.
+
+    ALGORITHM: (5x5 case)
+
+        INPUT:
+
+            ``pt``: plaintext string (no "j"s)
+
+            ``key``: short string for key (no repetitions, no "j"s)
+
+        OUTPUT:
+
+            ciphertext (using Bifid5 cipher in all caps, no spaces, no "J"s)
+
+            if verbose is True then it also prints the pairs of integers comprising the "long key"
+
+        STEPS:
+            1. Create the `5 \times 5` Polybius square ``S`` associated to the ``k`` as
+               follows:
+
+                a) starting top left, moving left-to-right, top-to-bottom,
+                   place the letters of the key into a 5x5 matrix,
+                b) when finished, add the letters of the alphabet
+                   not in the key until the 5x5 square is filled
+
+            2. Create a list ``P`` of pairs of numbers which are the coordinates
+               in the Polybius square of the letters in ``pt``.
+            3. Let ``L1`` be the list of all first coordinates of ``P`` (length
+               of ``L1 = n``), let ``L2`` be the list of all second coordinates
+               of ``P`` (so the length of ``L2`` is also ``n``).
+            4. Let ``L`` be the concatenation of ``L1`` and ``L2`` (length ``L = 2*n``),
+               except that consecutive numbers are paired ``(L[2*i], L[2*i + 1])``.
+               You can regard ``L`` as a list of pairs of length ``n``.
+            5. Let ``C`` be the list of all letters which are of the form
+               ``S[i, j]``, for all ``(i, j)`` in ``L``. As a string, this
+               is the ciphertext ``ct``.
 
     Examples
     ========
@@ -559,7 +630,8 @@ def encipher_bifid5(pt, key, verbose=False):
     >>> pt = "meet me on monday"
     >>> key = "encrypt"
     >>> encipher_bifid5(pt, key, verbose=True)
-    [[3, 1], [0, 0], [0, 0], [1, 1], [3, 1], [0, 0], [3, 2], [0, 1], [3, 1], [3, 2], [0, 1], [1, 4], [1, 2], [0, 4]]
+    [[3, 1], [0, 0], [0, 0], [1, 1], [3, 1], [0, 0], [3, 2],
+     [0, 1], [3, 1], [3, 2], [0, 1], [1, 4], [1, 2], [0, 4]]
     'LNLLQNPPNPGADK'
     >>> pt = "meet me on friday"
     >>> encipher_bifid5(pt, key)
@@ -585,88 +657,21 @@ def encipher_bifid5(pt, key, verbose=False):
     return ct
 
 
-def bifid5_square(key):
-    """
-    5x5 Polybius square.
-
-    Notes
-    =====
-
-    The Bifid cipher was invented around 1901 by Felix Delastelle.
-    It is a *fractional substitution* cipher, where letters are
-    replaced by pairs of symbols from a smaller alphabet. The
-    cipher uses a `5 x 5` square filled with some ordering of the alphabet,
-    except that "i"s and "j"s are identified (this is a so-called
-    Polybius square; there is a 6x6 analog if you add back in "j" and also
-    append onto the usual 26 letter alphabet, the digits 0, 1, ..., 9).
-    According to Helen Gaines' book *Cryptanalysis*, this type of cipher
-    was used in the field by the German Army during World War I.
-
-    ALGORITHM: (5x5 case)
-        INPUT:
-            key: a string of letters for the key (no repetitions)
-            pt: a string of letters for the plaintext (length n)
-
-        OUTPUT:
-            ct: ciphertext message
-
-        STEPS:
-            1. Create the 5x5 Polybius square S associated to the k as
-               follows:
-
-                a) starting top left, moving left-to-right, top-to-bottom,
-                   place the letters of the key into a 5x5 matrix,
-                b) when finished, add the letters of the alphabet
-                   not in the key until the 5x5 square is filled
-
-            2. Create a list P of pairs of numbers which are the coordinates
-               in the Polybius square of the letters in pt.
-            3. Let L1 be the list of all first coordinates of P (length of L1 = n),
-               let L2 be the list of all second coordinates of P (so the
-               length of L2 is also n)
-            4. Let L be the concatenation of L1 and L2 (so length L = 2n),
-               except that consecutive numbers are paired (L[2i], L[2i+1]).
-               You can regard L as a list of pairs of length n.
-            5. Let C be the list of all letters which are of the form
-               S[i,j], for all (i,j) in L. As a string, this is the ciphertext ct.
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import bifid5_square
-    >>> bifid5_square("gold bug")
-    Matrix([
-    [G, O, L, D, B],
-    [U, A, C, E, F],
-    [H, I, K, M, N],
-    [P, Q, R, S, T],
-    [V, W, X, Y, Z]])
-
-    """
-    from sympy import Matrix
-    from sympy import Symbol
-    A = alphabet_of_cipher()
-    # first make sure the letters are capitalized
-    # and key has no spaces or duplicates
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    # create long key
-    long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
-    f = lambda i,j: Symbol(long_key[5*i+j])
-    M = Matrix(5, 5, f)
-    return M
-
-
 def decipher_bifid5(ct, key):
-    """
+    r"""
+    Performs the Bifid cipher decryption on ciphertext ``ct``, and returns the plaintext.
+
+    This is the version of the Bifid cipher that uses the `5 \times 5` Polybius square.
+
     INPUT:
-        ct: ciphertext string      (digits okay)
-        key: short string for key (no repetitions, digits okay)
+
+        ``ct``: ciphertext string (digits okay)
+
+        ``key``: short string for key (no repetitions, digits okay)
 
     OUTPUT:
-        plaintext from Bifid5 cipher (all caps, no spaces, no "J"s)
 
-    This is the version of the Bifid cipher that uses the `6 x 6` Polybius square.
+        plaintext from Bifid5 cipher (all caps, no spaces, no "J"s)
 
     Examples
     ========
@@ -698,11 +703,225 @@ def decipher_bifid5(ct, key):
     return pt
 
 
-def bifid7_square(key):
+def bifid5_square(key):
+    r"""
+    5x5 Polybius square.
+
+    Produce the Polybius square for the `5 \times 5` Bifid cipher.
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import bifid5_square
+    >>> bifid5_square("gold bug")
+    Matrix([
+    [G, O, L, D, B],
+    [U, A, C, E, F],
+    [H, I, K, M, N],
+    [P, Q, R, S, T],
+    [V, W, X, Y, Z]])
+
     """
+    from sympy import Matrix
+    from sympy import Symbol
+    A = alphabet_of_cipher()
+    # first make sure the letters are capitalized
+    # and key has no spaces or duplicates
+    key = uniq(key)
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    # create long key
+    long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
+    f = lambda i,j: Symbol(long_key[5*i+j])
+    M = Matrix(5, 5, f)
+    return M
+
+
+def encipher_bifid6(pt, key, verbose=False):
+    r"""
+    Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
+
+    This is the version of the Bifid cipher that uses the `6 \times 6` Polybius square.
+    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
+
+    INPUT:
+
+        ``pt``: plaintext string (digits okay)
+
+        ``key``: short string for key (no repetitions, digits okay)
+
+    OUTPUT:
+
+        ciphertext from Bifid cipher (all caps, no spaces)
+
+        if verbose is True then it also prints the pairs of integers comprising the "long key"
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_bifid6
+    >>> key = "encrypt"
+    >>> pt = "meet me on monday at 8am"
+    >>> encipher_bifid6(pt, key)
+    'HNHOKNTA5MEPEGNQZYG'
+    >>> encipher_bifid6(pt, key, verbose=True)
+    [[2, 5], [0, 0], [0, 0], [1, 0], [2, 5], [0, 0], [3, 0], [0, 1], [2, 5], [3, 0],
+     [0, 1], [1, 3], [1, 1], [0, 4], [1, 1], [1, 0], [5, 4], [1, 1], [2, 5]]
+    'HNHOKNTA5MEPEGNQZYG'
+
+    """
+    from sympy.utilities.iterables import flatten
+    A = alphabet_of_cipher()+[str(a) for a in range(10)]
+    # first make sure the letters are capitalized
+    # and text has no spaces
+    key = uniq(key)
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
+    # create long key
+    long_key = key0+[x for x in A if not(x in key0)]
+    n = len(pt0)
+    # the fractionalization
+    pairs = [[long_key.index(x)//6, long_key.index(x)%6] for x in pt0]
+    if verbose is True:
+        print(pairs)
+    tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
+    ct = "".join([long_key[6*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
+    return ct
+
+
+def decipher_bifid6(ct, key):
+    r"""
+    Performs the Bifid cipher decryption on ciphertext ``ct``, and returns the plaintext.
+
+    This is the version of the Bifid cipher that uses the `6 \times 6` Polybius square.
+    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
+
+    INPUT:
+
+        ``ct``: ciphertext string (digits okay)
+
+        ``key``: short string for key (no repetitions, digits okay)
+
+    OUTPUT:
+
+        plaintext from Bifid cipher (all caps, no spaces)
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_bifid6, decipher_bifid6
+    >>> key = "encrypt"
+    >>> pt = "meet me on monday at 8am"
+    >>> encipher_bifid6(pt, key)
+    'HNHOKNTA5MEPEGNQZYG'
+    >>> ct = "HNHOKNTA5MEPEGNQZYG"
+    >>> decipher_bifid6(ct, key)
+    'MEETMEONMONDAYAT8AM'
+
+    """
+    from sympy.utilities.iterables import flatten
+    A = alphabet_of_cipher()+[str(a) for a in range(10)]
+    # first make sure the letters are capitalized
+    # and text has no spaces
+    key = uniq(key)
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    ct0 = [x.capitalize() for x in ct if x.isalnum()]
+    # create long key
+    long_key = key0+[x for x in A if not(x in key0)]
+    n = len(ct0)
+    # the fractionalization
+    pairs = flatten([[long_key.index(x)//6, long_key.index(x)%6] for x in ct0])
+    tmp_plain = flatten([[pairs[i],pairs[n+i]] for i in range(n)])
+    pt = "".join([long_key[6*tmp_plain[2*i]+tmp_plain[2*i+1]] for i in range(n)])
+    return pt
+
+
+def bifid6_square(key):
+    r"""
+    6x6 Polybius square.
+
+    Produces the Polybius square for the `6 \times 6` Bifid cipher.
+    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import bifid6_square
+    >>> key = "encrypt"
+    >>> bifid6_square(key)
+    Matrix([
+    [E, N, C, R, Y, P],
+    [T, A, B, D, F, G],
+    [H, I, J, K, L, M],
+    [O, Q, S, U, V, W],
+    [X, Z, 0, 1, 2, 3],
+    [4, 5, 6, 7, 8, 9]])
+
+    """
+    from sympy import Matrix
+    from sympy import Symbol
+    A = alphabet_of_cipher()+[str(a) for a in range(10)]
+    # first make sure the letters are capitalized
+    # and text has no spaces
+    key = uniq(key)
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    # create long key
+    long_key = key0+[x for x in A if not(x in key0)]
+    f = lambda i,j: Symbol(long_key[6*i+j])
+    M = Matrix(6, 6, f)
+    return M
+
+
+def encipher_bifid7(pt, key):
+    r"""
+    Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
+
+    This is the version of the Bifid cipher that uses the `7 \times 7` Polybius square.
+    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "22".
+    (Also, assumes you have some way of distinguishing "22"
+    from "2", "2" juxtaposed together for deciphering...)
+
+    INPUT:
+
+        ``pt``: plaintext string (digits okay)
+
+        ``key``: short string for key (no repetitions, digits okay)
+
+    OUTPUT:
+
+        ciphertext from Bifid7 cipher (all caps, no spaces)
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encipher_bifid7
+    >>> key = "encrypt"
+    >>> pt = "meet me on monday at 8am"
+    >>> encipher_bifid7(pt, key)
+    'JEJJLNAA3ME19YF3J222R'
+
+    """
+    from sympy.utilities.iterables import flatten
+    A = alphabet_of_cipher()+[str(a) for a in range(23)]
+    # first make sure the letters are capitalized
+    # and text has no spaces
+    key = uniq(key)
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
+    # create long key
+    long_key = key0+[x for x in A if not(x in key0)]
+    n = len(pt0)
+    # the fractionalization
+    pairs = [[long_key.index(x)//7, long_key.index(x)%7] for x in pt0]
+    tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
+    ct = "".join([long_key[7*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
+    return ct
+
+
+def bifid7_square(key):
+    r"""
     7x7 Polybius square.
 
-    Produced the Polybius square for the 7x7 Bifid cipher.
+    Produce the Polybius square for the `7 \times 7` Bifid cipher.
     Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "22".
     (Also, assumes you have some way of distinguishing "22"
     from "2", "2" juxtaposed together for deciphering...)
@@ -736,177 +955,11 @@ def bifid7_square(key):
     return M
 
 
-def encipher_bifid7(pt, key):
-    """
-    INPUT:
-        pt: plaintext string      (digits okay)
-        key: short string for key (no repetitions, digits okay)
-
-    OUTPUT:
-        ciphertext from Bifid7 cipher (all caps, no spaces)
-
-    This is the version of the Bifid cipher that uses the `7 x 7`
-    Polybius square.
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import encipher_bifid7
-    >>> key = "encrypt"
-    >>> pt = "meet me on monday at 8am"
-    >>> encipher_bifid7(pt, key)
-    'JEJJLNAA3ME19YF3J222R'
-
-    """
-    from sympy.utilities.iterables import flatten
-    A = alphabet_of_cipher()+[str(a) for a in range(23)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
-    # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
-    n = len(pt0)
-    # the fractionalization
-    pairs = [[long_key.index(x)//7, long_key.index(x)%7] for x in pt0]
-    tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
-    ct = "".join([long_key[7*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
-    return ct
-
-
-def encipher_bifid6(pt, key, verbose=False):
-    """
-    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
-
-    INPUT:
-        pt: plaintext string      (digits okay)
-        key: short string for key (no repetitions, digits okay)
-
-    OUTPUT:
-
-    * ciphertext from Bifid cipher (all caps, no spaces)
-
-    * if verbose is True then it also prints the pairs of integers comprising the "long key"
-
-    This is the version of the Bifid cipher that uses the `6 x 6` Polybius square.
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import encipher_bifid6
-    >>> key = "encrypt"
-    >>> pt = "meet me on monday at 8am"
-    >>> encipher_bifid6(pt, key)
-    'HNHOKNTA5MEPEGNQZYG'
-    >>> encipher_bifid6(pt, key, verbose=True)
-    [[2, 5], [0, 0], [0, 0], [1, 0], [2, 5], [0, 0], [3, 0], [0, 1], [2, 5], [3, 0], [0, 1], [1, 3], [1, 1], [0, 4], [1, 1], [1, 0], [5, 4], [1, 1], [2, 5]]
-    'HNHOKNTA5MEPEGNQZYG'
-
-    """
-    from sympy.utilities.iterables import flatten
-    A = alphabet_of_cipher()+[str(a) for a in range(10)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    pt0 = [x.capitalize() for x in pt if x.isalnum()]
-    # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
-    n = len(pt0)
-    # the fractionalization
-    pairs = [[long_key.index(x)//6, long_key.index(x)%6] for x in pt0]
-    if verbose is True:
-        print(pairs)
-    tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
-    ct = "".join([long_key[6*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
-    return ct
-
-
-def decipher_bifid6(ct, key):
-    """
-    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
-
-    INPUT:
-        ct: ciphertext string      (digits okay)
-        key: short string for key (no repetitions, digits okay)
-
-    OUTPUT:
-        plaintext from Bifid cipher (all caps, no spaces)
-
-    This is the version of the Bifid cipher that uses the `6 x 6` Polybius square.
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import encipher_bifid6, decipher_bifid6
-    >>> key = "encrypt"
-    >>> pt = "meet me on monday at 8am"
-    >>> encipher_bifid6(pt, key)
-    'HNHOKNTA5MEPEGNQZYG'
-    >>> ct = "HNHOKNTA5MEPEGNQZYG"
-    >>> decipher_bifid6(ct, key)
-    'MEETMEONMONDAYAT8AM'
-
-    """
-    from sympy.utilities.iterables import flatten
-    A = alphabet_of_cipher()+[str(a) for a in range(10)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    ct0 = [x.capitalize() for x in ct if x.isalnum()]
-    # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
-    n = len(ct0)
-    # the fractionalization
-    pairs = flatten([[long_key.index(x)//6, long_key.index(x)%6] for x in ct0])
-    tmp_plain = flatten([[pairs[i],pairs[n+i]] for i in range(n)])
-    pt = "".join([long_key[6*tmp_plain[2*i]+tmp_plain[2*i+1]] for i in range(n)])
-    return pt
-
-
-def bifid6_square(key):
-    """
-    6x6 Polybius square.
-
-    Produces the Polybius square for the 6x6 Bifid cipher.
-    Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import bifid6_square
-    >>> key = "encrypt"
-    >>> bifid6_square(key)
-    Matrix([
-    [E, N, C, R, Y, P],
-    [T, A, B, D, F, G],
-    [H, I, J, K, L, M],
-    [O, Q, S, U, V, W],
-    [X, Z, 0, 1, 2, 3],
-    [4, 5, 6, 7, 8, 9]])
-
-    """
-    from sympy import Matrix
-    from sympy import Symbol
-    A = alphabet_of_cipher()+[str(a) for a in range(10)]
-    # first make sure the letters are capitalized
-    # and text has no spaces
-    key = uniq(key)
-    key0 = [x.capitalize() for x in key if x.isalnum()]
-    # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
-    f = lambda i,j: Symbol(long_key[6*i+j])
-    M = Matrix(6, 6, f)
-    return M
-
-
 #################### RSA  #############################
 
 
 def rsa_public_key(p,q,e):
-    """
+    r"""
     The RSA *public key* is the pair `(n,e)`, where `n`
     is a product of two primes and `e` is relatively
     prime to the Euler totient `\phi(n)`.
@@ -915,12 +968,13 @@ def rsa_public_key(p,q,e):
     ========
 
     >>> from sympy.crypto.crypto import rsa_public_key
-    >>> p,q,e = 3,5,7
-    >>> n, e = rsa_public_key(p,q,e)
+    >>> p, q, e = 3, 5, 7
+    >>> n, e = rsa_public_key(p, q, e)
     >>> n
     15
     >>> e
     7
+
     """
     from sympy.ntheory import totient, isprime
     from sympy import gcd
@@ -932,7 +986,7 @@ def rsa_public_key(p,q,e):
 
 
 def rsa_private_key(p,q,e):
-    """
+    r"""
     The RSA *private key* is the pair `(n,d)`, where `n`
     is a product of two primes and `d` is the inverse of
     `e` (mod `\phi(n)`).
@@ -941,8 +995,8 @@ def rsa_private_key(p,q,e):
     ========
 
     >>> from sympy.crypto.crypto import rsa_private_key
-    >>> p,q,e = 3,5,7
-    >>> rsa_private_key(p,q,e)
+    >>> p, q, e = 3, 5, 7
+    >>> rsa_private_key(p, q, e)
     (15, 7)
 
     """
@@ -957,18 +1011,19 @@ def rsa_private_key(p,q,e):
 
 def encipher_rsa(pt, puk):
     """
-    In RSA, a message m is encrypted by computing
-    `m^e` (mod `n`), where puk is the public key `(n,e)`.
+    In RSA, a message `m` is encrypted by computing
+    `m^e` (mod `n`), where ``puk`` is the public key `(n,e)`.
 
     Examples
     ========
 
     >>> from sympy.crypto.crypto import encipher_rsa, rsa_public_key
-    >>> p,q,e = 3,5,7
-    >>> puk = rsa_public_key(p,q,e)
+    >>> p, q, e = 3, 5, 7
+    >>> puk = rsa_public_key(p, q, e)
     >>> pt = 12
     >>> encipher_rsa(pt, puk)
     3
+
     """
     n,e = puk
     return pow(pt,e,n)
@@ -977,17 +1032,18 @@ def encipher_rsa(pt, puk):
 def decipher_rsa(ct, prk):
     """
     In RSA, a ciphertext `c` is decrypted by computing
-    `c^d` (mod `n`), where prk is the private key `(n, d)`.
+    `c^d` (mod `n`), where ``prk`` is the private key `(n, d)`.
 
     Examples
     ========
 
     >>> from sympy.crypto.crypto import decipher_rsa, rsa_private_key
-    >>> p,q,e = 3,5,7
-    >>> prk = rsa_private_key(p,q,e)
+    >>> p, q, e = 3, 5, 7
+    >>> prk = rsa_private_key(p, q, e)
     >>> ct = 3
     >>> decipher_rsa(ct, prk)
     12
+
     """
     n,d = prk
     return pow(ct,d,n)
@@ -997,31 +1053,30 @@ def decipher_rsa(ct, prk):
 
 
 def kid_rsa_public_key(a,b,A,B):
-    """
+    r"""
     Kid RSA is a version of RSA useful to teach grade school children
     since it does not involve exponentiation.
 
     Alice wants to talk to Bob. Bob generates keys as follows.
     Key generation:
 
-    * Select positive integers `a,b,A,B` at random.
-    * Compute `M = ab-1`, `e = AM+a`, `d = BM+b`, `n = (ed-1)/M`.
-    * The *public key* is `(n,e)`. Bob sends these to Alice.
+    * Select positive integers `a, b, A, B` at random.
+    * Compute `M = a b - 1`, `e = A M + a`, `d = B M + b`, `n = (e d - 1)  /M`.
+    * The *public key* is `(n, e)`. Bob sends these to Alice.
     * The *private key* is `d`, which Bob keeps secret.
 
     Encryption: If `m` is the plaintext message then the
-    ciphertext is `c=me\pmod n`.
+    ciphertext is `c = m e \pmod n`.
 
     Decryption: If `c` is the ciphertext message then the
-    plaintext is `m=cd\pmod n`.
+    plaintext is `m = c d \pmod n`.
 
     Examples
     ========
 
     >>> from sympy.crypto.crypto import kid_rsa_public_key
     >>> a, b, A, B = 3, 4, 5, 6
-    >>> n, e = kid_rsa_public_key(a,b,A,B)
-    >>> n, e
+    >>> kid_rsa_public_key(a, b, A, B)
     (369, 58)
 
     """
@@ -1035,7 +1090,7 @@ def kid_rsa_public_key(a,b,A,B):
 
 def kid_rsa_private_key(a,b,A,B):
     """
-    Compute `M = ab-1`, `e = AM+a`, `d = BM+b`, `n = (ed-1)/M`.
+    Compute `M = a b - 1`, `e = A M + a`, `d = B M + b`, `n = (e d - 1) / M`.
     The *private key* is `d`, which Bob keeps secret.
 
     Examples
@@ -1043,7 +1098,7 @@ def kid_rsa_private_key(a,b,A,B):
 
     >>> from sympy.crypto.crypto import kid_rsa_private_key
     >>> a, b, A, B = 3, 4, 5, 6
-    >>> d = kid_rsa_private_key(a,b,A,B); d
+    >>> kid_rsa_private_key(a, b, A, B)
     (369, 70)
 
     """
@@ -1065,9 +1120,10 @@ def encipher_kid_rsa(pt, puk):
     >>> from sympy.crypto.crypto import encipher_kid_rsa, kid_rsa_public_key
     >>> pt = 200
     >>> a, b, A, B = 3, 4, 5, 6
-    >>> pk = kid_rsa_public_key(a,b,A,B)
+    >>> pk = kid_rsa_public_key(a, b, A, B)
     >>> encipher_kid_rsa(pt, pk)
     161
+
     """
     return (pt*puk[1])%puk[0]
 
@@ -1081,10 +1137,10 @@ def decipher_kid_rsa(ct, prk):
 
     >>> from sympy.crypto.crypto import kid_rsa_public_key, kid_rsa_private_key, decipher_kid_rsa, encipher_kid_rsa
     >>> a, b, A, B = 3, 4, 5, 6
-    >>> d = kid_rsa_private_key(a,b,A,B)
+    >>> d = kid_rsa_private_key(a, b, A, B)
     >>> pt = 200
-    >>> pk = kid_rsa_public_key(a,b,A,B)
-    >>> prk = kid_rsa_private_key(a,b,A,B)
+    >>> pk = kid_rsa_public_key(a, b, A, B)
+    >>> prk = kid_rsa_private_key(a, b, A, B)
     >>> ct = encipher_kid_rsa(pt, pk)
     >>> decipher_kid_rsa(ct, prk)
     200
@@ -1115,6 +1171,7 @@ def encode_morse(pt):
     >>> pt = 'ATTACK THE RIGHT FLANK'
     >>> encode_morse(pt)
     '.-|-|-|.-|-.-.|-.-||-|....|.||.-.|..|--.|....|-||..-.|.-..|.-|-.|-.-'
+
     """
 
     morse_encoding_map = {"A": ".-", "B": "-...",
@@ -1182,6 +1239,7 @@ def decode_morse(mc):
     >>> mc = '--|---|...-|.||.|.-|...|-'
     >>> decode_morse(mc)
     'MOVE EAST'
+
     """
 
     morse_decoding_map = {".-": "A", "-...": "B",
@@ -1239,57 +1297,61 @@ def lfsr_sequence(key, fill, n):
     This function creates an lfsr sequence.
 
     INPUT:
-        key: a list of finite field elements,
-            `[c_0,c_1,...,c_k].`
-        fill: the list of the initial terms of the lfsr
-            sequence, `[x_0,x_1,...,x_k].`
-        n: number of terms of the sequence that the
+
+        ``key``: a list of finite field elements,
+            `[c_0, c_1, \ldots, c_k].`
+
+        ``fill``: the list of the initial terms of the lfsr
+            sequence, `[x_0, x_1, \ldots, x_k].`
+
+        ``n``: number of terms of the sequence that the
             function returns.
 
     OUTPUT:
-        The lfsr sequence defined by `x_{n+1} = c_kx_n+...+c_0x_{n-k}`, for
+
+        The lfsr sequence defined by `x_{n+1} = c_k x_n + \ldots + c_0 x_{n-k}`, for
         `n \leq k`.
 
     Notes
     =====
 
     S. Golomb [G]_ gives a list of three statistical properties a
-    sequence of numbers `a=\{a_n\}_{n=1}^\infty`,
+    sequence of numbers `a = \{a_n\}_{n=1}^\infty`,
     `a_n \in \{0,1\}`, should display to be considered
     "random". Define the autocorrelation of `a` to be
 
     .. math::
 
-         C(k)=C(k,a)=\lim_{N\rightarrow \infty} {1\over N}\sum_{n=1}^N (-1)^{a_n+a_{n+k}}.
+        C(k) = C(k,a) = \lim_{N\rightarrow \infty} {1\over N}\sum_{n=1}^N (-1)^{a_n + a_{n+k}}.
 
     In the case where `a` is periodic with period
     `P` then this reduces to
 
     .. math::
 
-         C(k)={1\over P}\sum_{n=1}^P (-1)^{a_n+a_{n+k}}.
+        C(k) = {1\over P}\sum_{n=1}^P (-1)^{a_n + a_{n+k}}.
 
     Assume `a` is periodic with period `P`.
 
-    -  balance:
+    - balance:
+
+      .. math::
+
+        \left|\sum_{n=1}^P(-1)^{a_n}\right| \leq 1.
+
+    - low autocorrelation:
 
        .. math::
 
-         |\sum_{n=1}^P(-1)^{a_n}|\leq 1.
+         C(k) = \left\{ \begin{array}{cc} 1,& k = 0,\\ \epsilon, & k \ne 0. \end{array} \right.
 
-    -  low autocorrelation:
+      (For sequences satisfying these first two properties, it is known
+      that `\epsilon = -1/P` must hold.)
 
-       .. math::
-
-          C(k)= \left\{ \begin{array}{cc} 1,& k=0,\\ \epsilon, & k\not= 0. \end{array} \right.
-
-       (For sequences satisfying these first two properties, it is known
-       that `\epsilon=-1/P` must hold.)
-
-    -  proportional runs property: In each period, half the runs have
-       length `1`, one-fourth have length `2`, etc.
-       Moreover, there are as many runs of `1`'s as there are of
-       `0`'s.
+    - proportional runs property: In each period, half the runs have
+      length `1`, one-fourth have length `2`, etc.
+      Moreover, there are as many runs of `1`'s as there are of
+      `0`'s.
 
     References
     ==========
@@ -1302,8 +1364,9 @@ def lfsr_sequence(key, fill, n):
     >>> from sympy.crypto.crypto import lfsr_sequence
     >>> from sympy.polys.domains import FF
     >>> F = FF(2)
-    >>> fill = [F(1),F(1),F(0),F(1)]; key = [F(1),F(0),F(0),F(1)]
-    >>> L = lfsr_sequence(key, fill, 10); L
+    >>> fill = [F(1), F(1), F(0), F(1)]
+    >>> key = [F(1), F(0), F(0), F(1)]
+    >>> lfsr_sequence(key, fill, 10)
     [1 mod 2, 1 mod 2, 0 mod 2, 1 mod 2, 0 mod 2, 1 mod 2, 1 mod 2, 0 mod 2, 0 mod 2, 1 mod 2]
 
     """
@@ -1329,15 +1392,20 @@ def lfsr_sequence(key, fill, n):
 
 def lfsr_autocorrelation(L, P, k):
     """
-    This function computes the autocorrelation function.
+    This function computes the lsfr autocorrelation function.
 
     INPUT:
-        L: is a periodic sequence of elements of `GF(2)`. L must have length ` > P`
-        P: the period of L
-        k: an integer (`0 < k < p`)
+
+        ``L``: is a periodic sequence of elements of `GF(2)`.
+        ``L`` must have length larger than ``P``.
+
+        ``P``: the period of ``L``
+
+        ``k``: an integer (`0 < k < p`)
 
     OUTPUT:
-        the kth value of the autocorrelation of the LFSR L
+
+        the ``k``-th value of the autocorrelation of the LFSR ``L``
 
     Examples
     ========
@@ -1345,11 +1413,12 @@ def lfsr_autocorrelation(L, P, k):
     >>> from sympy.crypto.crypto import lfsr_sequence, lfsr_autocorrelation
     >>> from sympy.polys.domains import FF
     >>> F = FF(2)
-    >>> fill = [F(1),F(1),F(0),F(1)]; key = [F(1),F(0),F(0),F(1)]
+    >>> fill = [F(1), F(1), F(0), F(1)]
+    >>> key = [F(1), F(0), F(0), F(1)]
     >>> s = lfsr_sequence(key, fill, 20)
-    >>> lfsr_autocorrelation(s,15,7)
+    >>> lfsr_autocorrelation(s, 15, 7)
     -1/15
-    >>> lfsr_autocorrelation(s,15,0)
+    >>> lfsr_autocorrelation(s, 15, 0)
     1
 
     """
@@ -1367,13 +1436,23 @@ def lfsr_autocorrelation(L, P, k):
 
 def lfsr_connection_polynomial(s):
     """
+    This function computes the lsfr connection polynomial.
+
     INPUT:
-        s: a sequence of elements of even length, with entries in a finite field
+
+        ``s``: a sequence of elements of even length, with entries in a finite field
 
     OUTPUT:
-        C(x): the connection polynomial of a minimal LFSR yielding `s`.
+
+        ``C(x)``: the connection polynomial of a minimal LFSR yielding ``s``.
 
     This implements the algorithm in section 3 of J. L. Massey's article [M]_.
+
+    References
+    ==========
+
+    .. [M] James L. Massey, "Shift-Register Synthesis and BCH Decoding."
+        IEEE Trans. on Information Theory, vol. 15(1), pp. 122-127, Jan 1969.
 
     Examples
     ========
@@ -1381,28 +1460,26 @@ def lfsr_connection_polynomial(s):
     >>> from sympy.crypto.crypto import lfsr_sequence, lfsr_connection_polynomial
     >>> from sympy.polys.domains import FF
     >>> F = FF(2)
-    >>> fill = [F(1),F(1),F(0),F(1)]; key = [F(1),F(0),F(0),F(1)]
+    >>> fill = [F(1), F(1), F(0), F(1)]
+    >>> key = [F(1), F(0), F(0), F(1)]
     >>> s = lfsr_sequence(key, fill, 20)
     >>> lfsr_connection_polynomial(s)
     x**4 + x + 1
-    >>> fill = [F(1),F(0),F(0),F(1)]; key = [F(1),F(1),F(0),F(1)]
+    >>> fill = [F(1), F(0), F(0), F(1)]
+    >>> key = [F(1), F(1), F(0), F(1)]
     >>> s = lfsr_sequence(key, fill, 20)
     >>> lfsr_connection_polynomial(s)
-    x**3  + 1
-    >>> fill = [F(1),F(0),F(1)]; key = [F(1),F(1),F(0)]
+    x**3 + 1
+    >>> fill = [F(1), F(0), F(1)]
+    >>> key = [F(1), F(1), F(0)]
     >>> s = lfsr_sequence(key, fill, 20)
     >>> lfsr_connection_polynomial(s)
-    x**3  + x**2  + 1
-    >>> fill = [F(1),F(0),F(1)]; key = [F(1),F(0),F(1)]
+    x**3 + x**2 + 1
+    >>> fill = [F(1), F(0), F(1)]
+    >>> key = [F(1), F(0), F(1)]
     >>> s = lfsr_sequence(key, fill, 20)
     >>> lfsr_connection_polynomial(s)
-    x**3  + x + 1
-
-    References
-    ==========
-
-    .. [M] James L. Massey, "Shift-Register Synthesis and BCH Decoding."
-        IEEE Trans. on Information Theory, vol. 15(1), pp. 122-127, Jan 1969.
+    x**3 + x + 1
 
     """
     from sympy import Symbol
