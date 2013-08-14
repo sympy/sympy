@@ -4,6 +4,8 @@ Classical ciphers and LFSRs
 
 from __future__ import print_function
 
+from sympy.utilities.iterables import uniq
+
 
 def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
@@ -328,7 +330,7 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
-    key0 = unique(key)
+    key0 = uniq(key)
     key0 = [x.capitalize() for x in key0 if x.isalnum()]
     K = [A.index(x) for x in key0]
     k = len(K)
@@ -356,7 +358,7 @@ def decipher_vigenere(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
-    key0 = unique(key)
+    key0 = uniq(key)
     key0 = [x.capitalize() for x in key0 if x.isalnum()]
     K = [A.index(x) for x in key0]
     k = len(K)
@@ -565,7 +567,7 @@ def encipher_bifid5(pt, key, verbose=False):
     A = alphabet_of_cipher()
     # first make sure the letters are capitalized
     # and text has no spaces
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
@@ -643,7 +645,7 @@ def bifid5_square(key):
     A = alphabet_of_cipher()
     # first make sure the letters are capitalized
     # and key has no spaces or duplicates
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
@@ -679,7 +681,7 @@ def decipher_bifid5(ct, key):
     A = alphabet_of_cipher()
     # first make sure the letters are capitalized
     # and text has no spaces
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     ct0 = [x.capitalize() for x in ct if x.isalnum()]
     # create long key
@@ -718,7 +720,7 @@ def bifid7_square(key):
     A = alphabet_of_cipher()+[str(a) for a in range(23)]
     # first make sure the letters are capitalized
     # and text has no spaces
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0))]
@@ -752,7 +754,7 @@ def encipher_bifid7(pt, key):
     A = alphabet_of_cipher()+[str(a) for a in range(23)]
     # first make sure the letters are capitalized
     # and text has no spaces
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
@@ -798,7 +800,7 @@ def encipher_bifid6(pt, key, verbose=False):
     A = alphabet_of_cipher()+[str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
@@ -843,7 +845,7 @@ def decipher_bifid6(ct, key):
     A = alphabet_of_cipher()+[str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     ct0 = [x.capitalize() for x in ct if x.isalnum()]
     # create long key
@@ -881,7 +883,7 @@ def bifid6_square(key):
     A = alphabet_of_cipher()+[str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
-    key = unique(key)
+    key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
@@ -1423,13 +1425,3 @@ def lfsr_connection_polynomial(s):
     dC = Poly(C).degree()
     coeffsC = [C.subs(x,0)]+[C.coeff(x**i) for i in range(1,dC+1)]
     return sum([coeffsC[i]%p*x**i for i in range(dC+1) if coeffsC[i]!=None])
-
-
-
-############################################################################
-
-## {{{ http://code.activestate.com/recipes/52560/ (r1)
-def unique(alist):    # Fastest order preserving
-    set = {}
-    return [set.setdefault(e,e) for e in alist if e not in set]
-## end of http://code.activestate.com/recipes/52560/ }}}
