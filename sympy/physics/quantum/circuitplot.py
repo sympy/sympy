@@ -19,7 +19,10 @@ from __future__ import print_function, division
 from sympy import Mul
 from sympy.core.compatibility import u
 from sympy.external import import_module
-from sympy.physics.quantum.gate import Gate,OneQubitGate,CGate,CGateS
+from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
+from sympy.core.core import BasicMeta
+from sympy.core.assumptions import ManagedProperties
+
 
 __all__ = [
     'CircuitPlot',
@@ -27,6 +30,8 @@ __all__ = [
     'labeller',
     'Mz',
     'Mx',
+    'CreateOneQubitGate',
+    'CreateCGate',
 ]
 
 np = import_module('numpy')
@@ -46,6 +51,9 @@ else:
     Line2D = matplotlib.lines.Line2D
     Circle = matplotlib.patches.Circle
 
+    #from matplotlib import rc
+    #rc('text',usetex=True)
+
     class CircuitPlot(object):
         """A class for managing a circuit plot."""
 
@@ -56,6 +64,7 @@ else:
         not_radius = 0.15
         swap_delta = 0.05
         labels = []
+        inits = {}
         label_buffer = 0.5
 
         def __init__(self, c, nqubits, **kwargs):
@@ -113,9 +122,11 @@ else:
                 )
                 self._axes.add_line(line)
                 if self.labels:
+                    init_label_buffer = 0
+                    if self.inits.get(self.labels[i]): init_label_buffer = 0.25
                     self._axes.text(
-                        xdata[0]-self.label_buffer,ydata[0],
-                        r'$|%s\rangle$' % self.labels[i],
+                        xdata[0]-self.label_buffer-init_label_buffer,ydata[0],
+                        render_label(self.labels[i],self.inits),
                         size=self.fontsize,
                         color='k',ha='center',va='center')
             self._plot_measured_wires()
@@ -136,13 +147,13 @@ else:
                 self._axes.add_line(line)
             # Also double any controlled lines off these wires
             for i,g in enumerate(self._gates()):
-                if isinstance(g,CGate) or isinstance(g,CGateS):
+                if isinstance(g, CGate) or isinstance(g, CGateS):
                     wires = g.controls + g.targets
                     for wire in wires:
                         if wire in ismeasured and \
                                self._gate_grid[i] > self._gate_grid[ismeasured[wire]]:
-                            ydata = min(wires),max(wires)
-                            xdata = self._gate_grid[i]-dy,self._gate_grid[i]-dy
+                            ydata = min(wires), max(wires)
+                            xdata = self._gate_grid[i]-dy, self._gate_grid[i]-dy
                             line = Line2D(
                                 xdata, ydata,
                                 color='k',
@@ -295,7 +306,21 @@ else:
         """
         return CircuitPlot(c, nqubits, **kwargs)
 
-def labeller(n,symbol='q'):
+def render_label(label, inits={}):
+    """Slightly more flexible way to render labels.
+
+    >>> from sympy.physics.quantum.circuitplot import render_label
+    >>> render_label('q0')
+    '$|q0\\\\rangle$'
+    >>> render_label('q0', {'q0':'0'})
+    '$|q0\\\\rangle=|0\\\\rangle$'
+    """
+    init = inits.get(label)
+    if init:
+        return r'$|%s\rangle=|%s\rangle$' % (label, init)
+    return r'$|%s\rangle$' % label
+
+def labeller(n, symbol='q'):
     """Autogenerate labels for wires of quantum circuits.
 
     Parameters
@@ -314,17 +339,38 @@ def labeller(n,symbol='q'):
     return ['%s_%d' % (symbol,n-i-1) for i in range(n)]
 
 class Mz(OneQubitGate):
-    """Mock-up of a z measurement gate. This is in circuitplot rather than
-    gate.py because it's not a real gate, it just draws one.
+    """Mock-up of a z measurement gate.
+
+    This is in circuitplot rather than gate.py because it's not a real
+    gate, it just draws one.
     """
     measurement = True
     gate_name='Mz'
     gate_name_latex=u('M_z')
 
 class Mx(OneQubitGate):
-    """Mock-up of an x measurement gate. This is in circuitplot rather than
-    gate.py because it's not a real gate, it just draws one.
+    """Mock-up of an x measurement gate.
+
+    This is in circuitplot rather than gate.py because it's not a real
+    gate, it just draws one.
     """
     measurement = True
     gate_name='Mx'
     gate_name_latex=u('M_x')
+
+class CreateOneQubitGate(ManagedProperties):
+    def __new__(mcl, name, latexname=None):
+        if not latexname:
+            latexname = name
+        return BasicMeta.__new__(mcl, name + "Gate", (OneQubitGate,),
+                                 {'gate_name': name, 'gate_name_latex': latexname})
+
+def CreateCGate(name, latexname=None):
+    """Use a lexical closure to make a controlled gate.
+    """
+    if not latexname:
+        latexname = name
+    onequbitgate = CreateOneQubitGate(name, latexname)
+    def ControlledGate(ctrls,target):
+        return CGate(tuple(ctrls),onequbitgate(target))
+    return ControlledGate
