@@ -4,7 +4,12 @@ Classical ciphers and LFSRs
 
 from __future__ import print_function
 
-from sympy.utilities.iterables import uniq
+from sympy.core import Rational, S, Symbol
+from sympy.matrices import Matrix
+from sympy.ntheory import isprime, totient
+from sympy.polys.domains import FF
+from sympy.polys.polytools import gcd, Poly
+from sympy.utilities.iterables import flatten, uniq
 
 
 def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
@@ -425,8 +430,6 @@ def matrix_inverse_mod(K, m):
     [0, 1]])
 
     """
-    from sympy import Matrix, gcd
-    from sympy.ntheory import totient
     N = K.cols
     phi = totient(m)
     det_K = K.det()
@@ -510,8 +513,6 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'TBBYTKBEKKRLMYU'
 
     """
-    from sympy import Matrix
-    from sympy.utilities.iterables import flatten
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
@@ -546,9 +547,6 @@ def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     'MEETMEONTUESDAYA'
 
     """
-    from sympy import Matrix
-    from sympy.ntheory import totient
-    from sympy.utilities.iterables import flatten
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
@@ -638,7 +636,6 @@ def encipher_bifid5(pt, key, verbose=False):
     'LNLLFGPPNPGRSK'
 
     """
-    from sympy.utilities.iterables import flatten
     A = alphabet_of_cipher()
     # first make sure the letters are capitalized
     # and text has no spaces
@@ -686,7 +683,6 @@ def decipher_bifid5(ct, key):
     'MEETMEONMONDAY'
 
     """
-    from sympy.utilities.iterables import flatten
     A = alphabet_of_cipher()
     # first make sure the letters are capitalized
     # and text has no spaces
@@ -722,8 +718,6 @@ def bifid5_square(key):
     [V, W, X, Y, Z]])
 
     """
-    from sympy import Matrix
-    from sympy import Symbol
     A = alphabet_of_cipher()
     # first make sure the letters are capitalized
     # and key has no spaces or duplicates
@@ -769,7 +763,6 @@ def encipher_bifid6(pt, key, verbose=False):
     'HNHOKNTA5MEPEGNQZYG'
 
     """
-    from sympy.utilities.iterables import flatten
     A = alphabet_of_cipher()+[str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
@@ -818,7 +811,6 @@ def decipher_bifid6(ct, key):
     'MEETMEONMONDAYAT8AM'
 
     """
-    from sympy.utilities.iterables import flatten
     A = alphabet_of_cipher()+[str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
@@ -857,8 +849,6 @@ def bifid6_square(key):
     [4, 5, 6, 7, 8, 9]])
 
     """
-    from sympy import Matrix
-    from sympy import Symbol
     A = alphabet_of_cipher()+[str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
@@ -900,7 +890,6 @@ def encipher_bifid7(pt, key):
     'JEJJLNAA3ME19YF3J222R'
 
     """
-    from sympy.utilities.iterables import flatten
     A = alphabet_of_cipher()+[str(a) for a in range(23)]
     # first make sure the letters are capitalized
     # and text has no spaces
@@ -941,8 +930,6 @@ def bifid7_square(key):
     [16, 17, 18, 19, 20, 21, 22]])
 
     """
-    from sympy import Matrix
-    from sympy import Symbol
     A = alphabet_of_cipher()+[str(a) for a in range(23)]
     # first make sure the letters are capitalized
     # and text has no spaces
@@ -976,8 +963,6 @@ def rsa_public_key(p,q,e):
     7
 
     """
-    from sympy.ntheory import totient, isprime
-    from sympy import gcd
     n = p*q
     phi = totient(n)
     if isprime(p) and isprime(q) and gcd(e,phi)==1:
@@ -1000,8 +985,6 @@ def rsa_private_key(p,q,e):
     (15, 7)
 
     """
-    from sympy.ntheory import totient, isprime
-    from sympy import gcd
     n = p*q
     phi = totient(n)
     if isprime(p) and isprime(q) and gcd(e,phi)==1:
@@ -1080,7 +1063,6 @@ def kid_rsa_public_key(a,b,A,B):
     (369, 58)
 
     """
-    from sympy import sympify as S
     M = S(a*b-1)
     e = S(A*M+a)
     d = S(B*M+b)
@@ -1102,7 +1084,6 @@ def kid_rsa_private_key(a,b,A,B):
     (369, 70)
 
     """
-    from sympy import sympify as S
     M = S(a*b-1)
     e = S(A*M+a)
     d = S(B*M+b)
@@ -1370,19 +1351,17 @@ def lfsr_sequence(key, fill, n):
     [1 mod 2, 1 mod 2, 0 mod 2, 1 mod 2, 0 mod 2, 1 mod 2, 1 mod 2, 0 mod 2, 0 mod 2, 1 mod 2]
 
     """
-    from sympy.polys.domains import FF
-    import copy
-    p = key[0].mod
-    F = FF(p)
     if not isinstance(key, list):
         raise TypeError("key must be a list")
     if not isinstance(fill, list):
         raise TypeError("fill must be a list")
+    p = key[0].mod
+    F = FF(p)
     s = fill
     k = len(fill)
     L = []
     for i in range(n):
-        s0 = copy.copy(s)
+        s0 = s[:]
         L.append(s[0])
         s = s[1:k]
         x = sum([int(key[i]*s0[i]) for i in range(k)])
@@ -1422,7 +1401,6 @@ def lfsr_autocorrelation(L, P, k):
     1
 
     """
-    from sympy import Rational
     if not isinstance(L, list):
         raise TypeError("L (=%s) must be a list"%L)
     P = int(P)
@@ -1482,9 +1460,6 @@ def lfsr_connection_polynomial(s):
     x**3 + x + 1
 
     """
-    from sympy import Symbol
-    from sympy.polys.domains import FF
-    from sympy.polys.polytools import Poly
     # Initialization:
     p = s[0].mod
     F = FF(p)

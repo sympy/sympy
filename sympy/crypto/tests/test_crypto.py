@@ -1,3 +1,4 @@
+from sympy.core import symbols
 from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
       encipher_vigenere, decipher_vigenere, matrix_inverse_mod,
@@ -8,9 +9,10 @@ from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
       lfsr_connection_polynomial, lfsr_autocorrelation, lfsr_sequence,
       encode_morse, decode_morse)
-from sympy import Matrix
-from sympy.polys.domains.pythonfinitefield import PythonFiniteField as FF
-from sympy import symbols
+from sympy.matrices import Matrix
+from sympy.polys.domains import FF
+from sympy.utilities.pytest import raises
+
 
 def test_alphabet_of_cipher():
     assert alphabet_of_cipher()[0] == "A"
