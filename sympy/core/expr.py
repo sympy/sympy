@@ -2314,40 +2314,6 @@ class Expr(Basic, EvalfMixin):
         the series one by one (the lazy series given when n=None), else
         all the terms at once when n != None.
 
-        Note: when n != None, if an O() term is returned then the x in the
-        in it and the entire expression represents x - x0, the displacement
-        from x0. (If there is no O() term then the series was exact and x has
-        it's normal meaning.) This is currently necessary since sympy's O()
-        can only represent terms at x0=0. So instead of::
-
-          cos(x).series(x0=1, n=2) --> (1 - x)*sin(1) + cos(1) + O((x - 1)**2)
-
-        which graphically looks like this::
-
-               |
-              .|.         . .
-             . | \      .     .
-            ---+----------------------
-               |   . .          . .
-               |    \
-              x=0
-
-        the following is returned instead::
-
-        -x*sin(1) + cos(1) + O(x**2)
-
-        whose graph is this::
-
-               \ |
-              . .|        . .
-             .   \      .     .
-            -----+\------------------.
-                 | . .          . .
-                 |  \
-                x=0
-
-        which is identical to ``cos(x + 1).series(n=2)``.
-
         Usage:
             Returns the series expansion of "self" around the point ``x = x0``
             with respect to ``x`` up to O(x**n) (default n is 6).
@@ -2420,12 +2386,7 @@ class Expr(Basic, EvalfMixin):
             s = self.subs(x, rep).series(x, x0=0, n=n, dir='+', logx=logx)
             if n is None:  # lseries...
                 return (si.subs(x, rep2 + rep2b) for si in s)
-            # nseries...
-            o = s.getO() or S.Zero
-            s = s.removeO()
-            if o and x0:
-                rep2b = 0  # when O() can handle x0 != 0 this can be removed
-            return s.subs(x, rep2 + rep2b) + o
+            return s.subs(x, rep2 + rep2b)
 
         # from here on it's x0=0 and dir='+' handling
 

@@ -469,7 +469,7 @@ def test_dir():
 def test_issue_3504():
     a = Symbol("a")
     e = asin(a*x)/x
-    assert e.series(x, 4, n=2).removeO().subs(x, x - 4) == \
+    assert e.series(x, 4, n=2).removeO() == \
         (x - 4)*(a/(4*sqrt(-16*a**2 + 1)) - asin(4*a)/16) + asin(4*a)/4
 
 
@@ -484,9 +484,9 @@ def test_issue_4441():
 
 
 def test_issue_4329():
-    assert tan(x).series(x, pi/2, n=3).removeO().subs(x, x - pi/2) == \
+    assert tan(x).series(x, pi/2, n=3).removeO() == \
         -pi/6 + x/3 - 1/(x - pi/2)
-    assert cot(x).series(x, pi, n=3).removeO().subs(x, x - pi) == \
+    assert cot(x).series(x, pi, n=3).removeO() == \
         -x/3 + pi/3 + 1/(x - pi)
     assert limit(tan(x)**tan(2*x), x, pi/4) == exp(-1)
 

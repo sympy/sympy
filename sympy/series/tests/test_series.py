@@ -36,16 +36,16 @@ def test_issue_5223():
     raises(ValueError, lambda: cos(x + y).series())
     raises(ValueError, lambda: x.series(dir=""))
 
-    assert (cos(x).series(x, 1).removeO().subs(x, x - 1) -
-            cos(x + 1).series(x).removeO().subs(x, x - 1)).expand() == 0
+    assert (cos(x).series(x, 1) -
+            cos(x + 1).series(x).subs(x, x - 1)).removeO() == 0
     e = cos(x).series(x, 1, n=None)
     assert [next(e) for i in range(2)] == [cos(1), -((x - 1)*sin(1))]
     e = cos(x).series(x, 1, n=None, dir='-')
     assert [next(e) for i in range(2)] == [cos(1), (1 - x)*sin(1)]
     # the following test is exact so no need for x -> x - 1 replacement
     assert abs(x).series(x, 1, dir='-') == x
-    assert exp(x).series(x, 1, dir='-', n=3).removeO().subs(x, x - 1) == \
-        E + E*(x - 1) + E*(x - 1)**2/2
+    assert exp(x).series(x, 1, dir='-', n=3).removeO() == \
+        E - E*(-x + 1) + E*(-x + 1)**2/2
 
     D = Derivative
     assert D(x**2 + x**3*y**2, x, 2, y, 1).series(x).doit() == 12*x*y
