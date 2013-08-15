@@ -15,8 +15,8 @@
 # element i.)
 
 # The values a, b and c are *components* of the multiset.  These
-# correspond to elements of a set, but can be present with a
-# multiplicity greater than 1.
+# correspond to elements of a set, but in a multiset can be present
+# with a multiplicity greater than 1.
 
 # The algorithm deserves some explanation.
 
@@ -36,17 +36,17 @@
 
 # In this ordering, the greatest partion of a given multiset has only
 # one part.  The least partition is the one in which the components
-# are spread out one per part.
+# are spread out, one per part.
 
 # The enumeration algorithms in this file yield the partitions of the
 # argument multiset in decreasing order.  The main data structure is a
 # stack of parts, corresponding to the current partition.  An
 # important invariant is that the parts on the stack are themselves in
-# decreasing order.  This data structure is continuously decremented
-# to find the next smaller partition.  Most often, decrementing the
-# partition will only involve adjustments to the smallest parts at the
-# top of the stack, much as adjacent integers *usually* differ only in
-# their last few digits.
+# decreasing order.  This data structure is decremented to find the
+# next smaller partition.  Most often, decrementing the partition will
+# only involve adjustments to the smallest parts at the top of the
+# stack, much as adjacent integers *usually* differ only in their last
+# few digits.
 
 # Knuth's algorithm uses two main operations on parts:
 
