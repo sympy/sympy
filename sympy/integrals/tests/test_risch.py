@@ -399,11 +399,6 @@ def test_integrate_nonlinear_no_specials():
         (0, False)
 
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 559d5d2... Raises NotImplmentedError for hypertangent cases
 def test_integrate_hypertangent_reduced():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)/2, t)],
         'E_K': [], 'E_args': [], 'L_K': [], 'T_K': [], 'L_args': [], 'E_args' : [],
@@ -447,10 +442,6 @@ def test_is_deriv():
     assert is_deriv(Poly(x*t**3 + 1, t), Poly(1, t), DE, z) == ((3*x - 1)*t**3/9, 1)
 
 
-<<<<<<< HEAD
-=======
->>>>>>> ecb741f... Raises NotImplmentedError for hypertangent cases
->>>>>>> 559d5d2... Raises NotImplmentedError for hypertangent cases
 def test_integer_powers():
     assert integer_powers([x, x/2, x**2 + 1, 2*x/3]) == [
             (x/6, [(x, 6), (x/2, 3), (2*x/3, 4)]),

@@ -81,11 +81,7 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     if n < max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t)):
         raise NonElementaryIntegralException
     q1, q2 = (Poly(0, t), Poly(0, t))
-    print(as_poly_1t(c1, t, k).degree(t))
-    print(as_poly_1t(c2, t, k).degree(t))
     while c1 or c2:
-        print(c1)
-	print(c2)
         m = max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t))
         if n < m:
             raise NonElementaryIntegralException
@@ -93,7 +89,6 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
         A = coupled_DE_system(b1, b2, c1k, c2k, DE)
         (s1, s2) = A
-	print(A)
         q1 = q1 + s1*t**m
         q2 = q2 + s2*t**m
         n = m - 1
@@ -195,7 +190,9 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     p = t - sqrt(-1)
     eta = DE.d.exquo(Poly(t**2 + 1, t))
     #u1 + u2*I = c1(I) + c2(I)*I
-    ca, cd = frac_in(c1 + c2*sqrt(-1), t)
+    c1_ = Poly(c1.eval(sqrt(-1)), t)
+    c2_ = Poly(c2.eval(sqrt(-1)), t)
+    ca, cd = frac_in(c1_ + c2_*sqrt(-1), t)
     u1a, u2a, u1d = real_imag(ca, cd, DE.t)
     u2d = u1d
     u1 = u1a.to_field().mul_ground(1/u1d)
@@ -249,7 +246,6 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
         q = no_cancel_b_large(b, c, n, DE)
         qa , qd = frac_in(q, DE.t)
         qa_r, qa_i, qd = real_imag(qa, qd, k)
-	print((alpha*qa_r/(m*qd), alpha*qa_i/(m*qd)))
         return (alpha*qa_r/(m*qd), alpha*qa_i/(m*qd))
 
     elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) \
