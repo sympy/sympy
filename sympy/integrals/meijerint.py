@@ -26,6 +26,7 @@ The main references for this are:
     Gordon and Breach Science Publisher
 """
 from __future__ import print_function, division
+
 from sympy.core import oo, S, pi, Expr
 from sympy.core.compatibility import next
 from sympy.core.function import expand, expand_mul, expand_power_base

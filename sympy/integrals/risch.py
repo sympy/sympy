@@ -24,6 +24,7 @@ will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
 from __future__ import print_function, division
+
 from sympy import real_roots
 from sympy.abc import z
 from sympy.core.function import Lambda
@@ -1490,9 +1491,6 @@ def integrate_hypertangent_polynomial(pa, pd, DE):
     """
     # XXX: Make sure that sqrt(-1) is not in k.
     q, ra, rd = polynomial_reduce_kt(pa, pd, DE)
-    print(q)
-    print(ra)
-    print(rd)
     a = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
     c = Poly(ra.nth(1)/(2*a.as_expr()), DE.t)
     return (q, c)

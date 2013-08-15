@@ -1,15 +1,18 @@
 """ Integral Transforms """
+
 from __future__ import print_function, division
 
-from sympy.integrals import integrate, Integral
+from sympy.core import S
+from sympy.core.compatibility import reduce
+from sympy.core.function import Function
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
-from sympy.core.function import Function
+from sympy.integrals import integrate, Integral
+from sympy.integrals.meijerint import _dummy
 from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
 from sympy.simplify import simplify
-from sympy.core import S
+from sympy.utilities import default_sort_key
 
-from sympy.integrals.meijerint import _dummy
 
 ##########################################################################
 # Helpers / Utilities
