@@ -1490,6 +1490,9 @@ def integrate_hypertangent_polynomial(pa, pd, DE):
     """
     # XXX: Make sure that sqrt(-1) is not in k.
     q, ra, rd = polynomial_reduce_kt(pa, pd, DE)
+    print(q)
+    print(ra)
+    print(rd)
     a = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
     c = Poly(ra.nth(1)/(2*a.as_expr()), DE.t)
     return (q, c)
@@ -1566,7 +1569,7 @@ def integrate_hypertangent(fa, fd, DE, z=None):
         return (ret, b)
     q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
     Dc = derivation(c, DE)
-    if Dc !=0:
+    if Dc == 0:
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
              ).subs(s) + residue_reduce_to_basic(g2, DE, z)
              + c*log(DE.t**2 + 1) + q2.as_expr())
