@@ -1571,12 +1571,12 @@ def integrate_hypertangent(fa, fd, DE, z=None):
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
              ).subs(s) + residue_reduce_to_basic(g2, DE, z)
              + c*log(DE.t**2 + 1) + q2.as_expr())
-        return (ret, True)
+        return (ret.subs(s), True)
     else:
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
              ).subs(s) + residue_reduce_to_basic(g2, DE, z)
              + q2.as_expr())
-        return (ret, False)
+        return (ret.subs(s), False)
 
 
 def integrate_nonlinear_no_specials(a, d, DE, z=None):
@@ -1677,7 +1677,7 @@ def is_deriv(a, d, DE, z=None):
             return (ret, b)
         q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
         Dc = derivation(c, DE)
-        if Dc !=0:
+        if Dc ==0:
              ret = (g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
              + residue_reduce_to_basic(g2, DE, z)
              + c*log(DE.t**2 + 1) + q2.as_expr())

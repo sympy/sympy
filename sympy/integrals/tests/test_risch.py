@@ -419,12 +419,12 @@ def test_integrate_hypertangent():
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly((t**2 + 1)*2*x, t)],
         'Tfuncs':[tan], 'L_K':[], 'E_K':[], 'T_K' : [1], 'AT_K':[], 'L_args':[],
         'E_args':[], 'T_args':[x**2], 'AT_args':[]})
-    assert integrate_hypertangent(Poly(x*t, t), Poly(1, t), DE, z) == (log(t**2 + 1)/4, True)
+    assert integrate_hypertangent(Poly(x*t, t), Poly(1, t), DE, z) == (log(tan(x)**2 + 1)/4, True)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)],
         'E_K': [], 'E_args': [], 'L_K': [], 'T_K': [], 'L_args': [],
         'E_args' : [], 'T_args': [x] , 'Tfuncs': [tan]})
-    assert integrate_hypertangent(Poly(t**2 + 1, t), Poly(1, t), DE) == (t, True)
-    assert integrate_hypertangent(Poly(t, t), Poly(1, t), DE) == (log(t**2 + 1)/2 , True)
+    assert integrate_hypertangent(Poly(t**2 + 1, t), Poly(1, t), DE) == (tan(x), True)
+    assert integrate_hypertangent(Poly(t, t), Poly(1, t), DE) == (log(tan(x)**2 + 1)/2 , True)
     raises(NotImplementedError, lambda: (integrate_hypertangent(Poly(x*t**2 + x*t + t**2 + 1, t),
         Poly(t + 1, t), DE)))
     assert integrate_hypertangent(Poly(x*t, t), Poly(1, t), DE, z) == (0, False)
@@ -440,9 +440,12 @@ def test_is_deriv():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
         'Tfuncs': [log]})
     assert is_deriv(Poly(t**2, t), Poly(1, t), DE) == (x*t**2 - 2*x*t, 2)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2*(t**2 + 1)*x, t)],
+        'Tfuncs': [tan]})
+    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z) == (log(t**2 + 1)/4, 0)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)], 'Tfuncs': [tan]})
     assert is_deriv(Poly(x*t**2 - t**3 + x, t), Poly(1, t), DE, z) == (-t**2/2 + t*x, x)
-    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z) == (x*log(t**2 + 1)/2, 0)
+    assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z) == (0, 0)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)], 'Tfuncs': [exp]})
     assert is_deriv(Poly(x*t, t), Poly(1, t), DE, z)  == ((x - 1)*t, 0)
     assert is_deriv(Poly(x*t**3 + 1, t), Poly(1, t), DE, z) == ((3*x - 1)*t**3/9, 1)
