@@ -2314,39 +2314,38 @@ class Expr(Basic, EvalfMixin):
         the series one by one (the lazy series given when n=None), else
         all the terms at once when n != None.
 
-        Usage:
-            Returns the series expansion of "self" around the point ``x = x0``
-            with respect to ``x`` up to O(x**n) (default n is 6).
+        Returns the series expansion of "self" around the point ``x = x0``
+        with respect to ``x`` up to ``O((x - x0)**n, x, x0)`` (default n is 6).
 
-            If ``x=None`` and ``self`` is univariate, the univariate symbol will
-            be supplied, otherwise an error will be raised.
+        If ``x=None`` and ``self`` is univariate, the univariate symbol will
+        be supplied, otherwise an error will be raised.
 
-            >>> from sympy import cos, exp
-            >>> from sympy.abc import x, y
-            >>> cos(x).series()
-            1 - x**2/2 + x**4/24 + O(x**6)
-            >>> cos(x).series(n=4)
-            1 - x**2/2 + O(x**4)
-            >>> e = cos(x + exp(y))
-            >>> e.series(y, n=2)
-            cos(x + 1) - y*sin(x + 1) + O(y**2)
-            >>> e.series(x, n=2)
-            cos(exp(y)) - x*sin(exp(y)) + O(x**2)
+        >>> from sympy import cos, exp
+        >>> from sympy.abc import x, y
+        >>> cos(x).series()
+        1 - x**2/2 + x**4/24 + O(x**6)
+        >>> cos(x).series(n=4)
+        1 - x**2/2 + O(x**4)
+        >>> e = cos(x + exp(y))
+        >>> e.series(y, n=2)
+        cos(x + 1) - y*sin(x + 1) + O(y**2)
+        >>> e.series(x, n=2)
+        cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-            If ``n=None`` then a generator of the series terms will be returned.
+        If ``n=None`` then a generator of the series terms will be returned.
 
-            >>> term=cos(x).series(n=None)
-            >>> [next(term) for i in range(2)]
-            [1, -x**2/2]
+        >>> term=cos(x).series(n=None)
+        >>> [next(term) for i in range(2)]
+        [1, -x**2/2]
 
-            For ``dir=+`` (default) the series is calculated from the right and
-            for ``dir=-`` the series from the left. For smooth functions this
-            flag will not alter the results.
+        For ``dir=+`` (default) the series is calculated from the right and
+        for ``dir=-`` the series from the left. For smooth functions this
+        flag will not alter the results.
 
-            >>> abs(x).series(dir="+")
-            x
-            >>> abs(x).series(dir="-")
-            -x
+        >>> abs(x).series(dir="+")
+        x
+        >>> abs(x).series(dir="-")
+        -x
 
         """
         from sympy import collect
