@@ -1470,8 +1470,6 @@ def lfsr_connection_polynomial(s):
             dC = Poly(C).degree()
             r = min(L+1, dC+1)
             coeffsC = [C.subs(x,0)]+[C.coeff(x**i) for i in range(1,dC+1)]
-            if None in coeffsC:
-                coeffsC[coeffsC.index(None)] = 0
             d = (s[N].to_int() + sum([coeffsC[i]*s[N-i].to_int() for i in range(1,r)]))%p
         if L == 0:
             d = s[N].to_int()*x**0

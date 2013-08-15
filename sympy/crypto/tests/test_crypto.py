@@ -24,6 +24,7 @@ def test_cycle_list():
     assert cycle_list(-1,4) == [3, 0, 1, 2]
     assert cycle_list(1,4) == [1, 2, 3, 0]
 
+
 def test_encipher_shift():
     assert encipher_shift("ABC", 0)=="ABC"
     assert encipher_shift("ABC", 1)=="BCD"
@@ -50,6 +51,7 @@ def test_encipher_vigenere():
     assert encipher_vigenere("AB", "ABC", symbols = "ABCD")=="AC"
     assert encipher_vigenere("A", "ABC", symbols = "ABCD")=="A"
 
+
 def test_decipher_vigenere():
     assert decipher_vigenere("ABC", "ABC")=="AAA"
     assert decipher_vigenere("ABC", "ABC", symbols = "ABCD")=="AAA"
@@ -59,6 +61,8 @@ def test_decipher_vigenere():
 
 
 def test_matrix_inverse_mod():
+    A = Matrix(2, 2, [1, 0, 0, 0])
+    raises(ValueError, lambda: matrix_inverse_mod(A, 2))
     A = Matrix(2, 2, [1, 2, 3, 4])
     Ai = Matrix(2, 2, [1, 1, 0, 1])
     assert matrix_inverse_mod(A, 3)==Ai
@@ -75,6 +79,8 @@ def test_encipher_hill():
     A = Matrix(2, 2, [1, 2, 3, 5])
     assert encipher_hill("ABCD", A, symbols="ABCD")=="CBAB"
     assert encipher_hill("AB", A, symbols = "ABCD")=="CB"
+    # n does not need to be a multiple of k
+    assert encipher_hill("ABA", A) == "CFAA"
 
 
 def test_decipher_hill():
@@ -86,6 +92,8 @@ def test_decipher_hill():
     A = Matrix(2, 2, [1, 2, 3, 5])
     assert decipher_hill("CBAB", A, symbols="ABCD")=="ABCD"
     assert decipher_hill("CB", A, symbols = "ABCD")=="AB"
+    # n does not need to be a multiple of k
+    assert decipher_hill("CFA", A) == "ABAA"
 
 
 def test_encipher_bifid5():
@@ -149,12 +157,14 @@ def test_rsa_public_key():
     assert rsa_public_key(2,2,1)==(4,1)
     assert rsa_public_key(2,3,1)==(6,1)
     assert rsa_public_key(5,3,3)==(15,3)
+    assert rsa_public_key(8, 8, 8) is False
 
 
 def test_rsa_private_key():
     assert rsa_private_key(2,2,1)==(4,1)
     assert rsa_private_key(2,3,1)==(6,1)
     assert rsa_private_key(5,3,3)==(15,3)
+    assert rsa_private_key(8, 8, 8) is False
 
 
 def test_encipher_rsa():
@@ -198,17 +208,22 @@ def test_decipher_kid_rsa():
     assert decipher_kid_rsa(3,(8,3))==1
     assert decipher_kid_rsa(2,(7,4))==1
 
+
 def test_encode_morse():
     assert encode_morse('ABC') == '.-|-...|-.-.'
     assert encode_morse('SMS ') == '...|--|...||'
     assert encode_morse('!@#$%^&*()_+') == '-.-.--|.--.-.|...-..-|-.--.|-.--.-|..--.-|.-.-.'
+
 
 def test_decode_morse():
     assert decode_morse('-.-|.|-.--') == 'KEY'
     assert decode_morse('.-.|..-|-.||') == 'RUN'
     assert decode_morse('.....----') == 'Invalid Morse Code'
 
+
 def test_lfsr_sequence():
+    raises(TypeError, lambda: lfsr_sequence(1, [1], 1))
+    raises(TypeError, lambda: lfsr_sequence([1], 1, 1))
     F = FF(2)
     assert lfsr_sequence([F(1)], [F(1)], 2)==[F(1), F(1)]
     assert lfsr_sequence([F(0)], [F(1)], 2)==[F(1), F(0)]
@@ -219,6 +234,7 @@ def test_lfsr_sequence():
 
 
 def test_lfsr_autocorrelation():
+    raises(TypeError, lambda: lfsr_autocorrelation(1, 2, 3))
     F = FF(2)
     s = lfsr_sequence([F(1),F(0)], [F(0),F(1)], 5)
     assert lfsr_autocorrelation(s,2,0)==1
@@ -230,3 +246,5 @@ def test_lfsr_connection_polynomial():
     x = symbols("x")
     s = lfsr_sequence([F(1),F(0)], [F(0),F(1)], 5)
     assert lfsr_connection_polynomial(s)==x**2+1
+    s = lfsr_sequence([F(1), F(1)], [F(0), F(1)], 5)
+    assert lfsr_connection_polynomial(s) == x**2 + x + 1
