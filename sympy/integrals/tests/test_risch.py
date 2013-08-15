@@ -187,10 +187,13 @@ def test_recognize_log_derivative():
     assert recognize_log_derivative(a, d, DE, z) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == True
-    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1), DE) == True
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2), DE) == False
-    assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t), DE) == True
+    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == True
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 - 2, x), DE) == False
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 + x, x), DE) == True
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2, t), DE) == False
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t, t), DE) == False
 
 
 def test_residue_reduce():
