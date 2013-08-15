@@ -1268,7 +1268,8 @@ def test_issue_3890():
 
 
 def test_lambert_multivariate():
-    from sympy.abc import a, x, y
+    from sympy.abc import x, y
+    a = Symbol("a", positive=True)
     from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert
 
     assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == set([x, exp(x)])
@@ -1284,9 +1285,6 @@ def test_lambert_multivariate():
     # coverage test
     raises(NotImplementedError, lambda: solve(x - sin(x)*log(y - x), x))
 
-    # if sign is unknown then only this one solution is obtained
-    assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]  # tested numerically
     p = symbols('p', positive=True)
     assert solve(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == [
         log((-3**(S(1)/3) - 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
@@ -1374,6 +1372,7 @@ def test_misc():
 
 
 def test_integral():
+    f = Function("f")
     eq = y - Integral(f(x), y)
     assert solve_linear(eq) == (y, 0)
     eq = x + y - Integral(f(x), y)

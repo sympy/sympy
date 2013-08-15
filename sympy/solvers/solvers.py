@@ -21,7 +21,7 @@ from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
     Expr, Mul, Pow)
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
+from sympy.core.function import (expand, expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           count_ops, Function, expand_power_exp)
 from sympy.core.numbers import ilcm, Float
@@ -1733,13 +1733,11 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if dn:
                 all_zero = False
                 if not xi in dn.free_symbols:  # Linear in xi
+                    print(nn)
                     if nn.is_Add:
-                        ntry = -nn.as_independent(xi)[0]
-                    elif not d.has(xi) or not (d/xi).has(xi):
-                        return xi, S.Zero
+                        vi = -(expand(nn).as_independent(xi)[0])/dn
                     else:
-                        return S.Zero, S.Zero
-                    vi = ntry/dn
+                        vi = S.Zero
                     if dens is None:
                         dens = denoms(eq, symbols)
                     if not any(checksol(di, {xi: vi}, minimal=True) is True
