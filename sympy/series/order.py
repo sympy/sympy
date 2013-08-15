@@ -12,9 +12,9 @@ class Order(Expr):
     r""" Represents the limiting behavior of some function
 
     The order of a function characterizes the function based on the limiting
-    behavior of the function as it goes to some limit. Only taking all limit
-    points to be 0 or positive infinity is currently supported. This is
-    expressed in big O notation [1]_.
+    behavior of the function as it goes to some limit. Only taking the limit
+    point to be a number is currently supported. This is expressed in
+    big O notation [1]_.
 
     The formal definition for the order of a function `g(x)` about a point `a`
     is such that `g(x) = O(f(x))` as `x \rightarrow a` if and only if for any
@@ -111,7 +111,8 @@ class Order(Expr):
     In the multivariate case, it is assumed the limits w.r.t. the various
     symbols commute.
 
-    If no symbols are passed then all symbols in the expression are used.
+    If no symbols are passed then all symbols in the expression are used
+    and the limit point is assumed to be zero.
 
     """
 
