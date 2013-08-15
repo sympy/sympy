@@ -32,13 +32,13 @@ def test_cds_cancel_primitive():
         Poly((3*t + 7)/5 + (5*t + 1)/(2*t)), DE, 5) == (t*x, x)
 
     assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(-1/x**2, x), Poly(-1/(2*x**2), x),
-        Poly(t + 2*x - 2*t/x - 1/x**2), Poly(-(3*t)/(2*x) + 2*t + 7/2), DE, 4) == \
+        Poly(t + 2*x - 2*t/x - 1/x**2), Poly(-(3*t)/(2*x) + 2*t + S(7)/2), DE, 4) == \
         (t*x + x**2 + 1, 2*t*x)
 
 
     assert cds_cancel_primitive(Poly(sqrt(-1)), Poly((2 + 3*t)/(5*x*t)), Poly(1/x**2),
         Poly(12*t/5 + 8*t**2/5 + 7*x/5 + 3*t*x/5 - (t*x + 1)/x**2, t),
-        Poly(t**2/x + 8*t/5 + 2/5 + 2/(5*x*t) + 3/(5*x), DE, 3)) == \
+        Poly(t**2/x + 8*t/5 + S(2/5) + 2/(5*x*t) + 3/(5*x), DE, 3)) == \
         (t**2*x + t*x**2, t*x + 1)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t/x**2, t)],
