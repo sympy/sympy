@@ -406,3 +406,6 @@ def test_order_subs_limits():
     assert (1 + Order(x)).limit(x, 0) == 1
     # issue 5769
     assert ((x + Order(x**2))/x).limit(x, 0) == 1
+
+    assert Order(x**2).subs(x, y - 1) == Order((y - 1)**2, (y, 1))
+    assert Order(10*x**2, (x, 2)).subs(x, y - 1) == Order(1, (y, 3))
