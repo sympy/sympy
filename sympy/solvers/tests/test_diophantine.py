@@ -31,6 +31,7 @@ def test_linear():
 
 
 def test_quadratic_simple_hyperbolic_case():
+
     # Simple Hyperbolic case: A = C = 0 and B != 0
     assert diop_solve(3*x*y + 34*x - 12*y + 1) == \
         set([(-Integer(133), -Integer(11)), (Integer(5), -Integer(57))])
@@ -43,12 +44,14 @@ def test_quadratic_simple_hyperbolic_case():
         (Integer(105), -Integer(2))])
     assert diop_solve(6*x*y + 9*x + 2*y + 3) == set([])
     assert diop_solve(x*y + x + y + 1) == set([(-Integer(1), t), (t, -Integer(1))])
+    assert diophantine(48*x*y)
 
 
 def test_quadratic_elliptical_case():
+
     # Elliptical case: B**2 - 4AC < 0
     # Two test cases highlighted require lot of memory due to quadratic_congruence() method.
-    # This method should be replaced by Pernici's square_mod() method when his PR gets merged.
+    # This above method should be replaced by Pernici's square_mod() method when his PR gets merged.
 
     #assert diop_solve(42*x**2 + 8*x*y + 15*y**2 + 23*x + 17*y - 4915) == set([(-Integer(11), -Integer(1))])
     assert diop_solve(4*x**2 + 3*y**2 + 5*x - 11*y + 12) == set([])
@@ -59,6 +62,7 @@ def test_quadratic_elliptical_case():
 
 
 def test_quadratic_parabolic_case():
+
     # Parabolic case: B**2 - 4AC = 0
     assert diop_solve(8*x**2 - 24*x*y + 18*y**2 + 5*x + 7*y + 16) == \
         set([(-174*t**2 + 17*t - 2, -116*t**2 + 21*t - 2), (-174*t**2 + 41*t - 4, -116*t**2 + 37*t - 4)])
@@ -71,6 +75,7 @@ def test_quadratic_parabolic_case():
 
 
 def test_quadratic_perfect_square():
+
     # B**2 - 4*A*C > 0
     # B**2 - 4*A*C is a perfect square
     assert diop_solve(48*x*y) == set([(Integer(0), t), (t, Integer(0))])
@@ -88,6 +93,7 @@ def test_quadratic_perfect_square():
 
 
 def test_quadratic_non_perfect_square():
+
     # B**2 - 4*A*C is not a perfect square
     # Used check_solutions() since the solutions are complex expressions involving
     # square roots and exponents
@@ -112,6 +118,7 @@ def test_quadratic_bugs():
 
 
 def test_DN():
+
     # Most of the test cases were adapted from,
     # Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson, July 31, 2004.
     # http://www.jpr2718.org/pell.pdf
@@ -247,8 +254,6 @@ def test_transformation_to_pell():
 
 def test_find_DN():
 
-    # Note that b**2 - 4*a*c > 0 and should not be a perfect square for this
-    # method to work
     assert find_DN(x**2 - 2*x - y**2) == (1, 1)
     assert find_DN(x**2 - 3*y**2 - 5) == (3, 5)
     assert find_DN(x**2 - 2*x*y - 4*y**2 - 7) == (5, 7)
@@ -285,12 +290,14 @@ def test_diop_ternary_quadratic_normal():
 
 
 def test_diop_ternary_quadratic():
+    # Commented out test cases should be uncommented after
+    # the bug with factor_list() gets merged.
 
     assert check_solutions(2*x**2 + z**2 + y**2 - 4*x*y)
     assert check_solutions(x**2 - y**2 - z**2 - x*y - y*z)
     assert check_solutions(3*x**2 - x*y - y*z - x*z)
     assert check_solutions(x**2 - y*z - x*z)
-    assert check_solutions(5*x**2 - 3*x*y - x*z)
+    #assert check_solutions(5*x**2 - 3*x*y - x*z)
     assert check_solutions(4*x**2 - 5*y**2 - x*z)
     assert check_solutions(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
     assert check_solutions(8*x**2 - 12*y*z)
@@ -338,6 +345,17 @@ def test_parametrize_ternary_quadratic():
     assert check_solutions(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z)
 
 
+def test_no_square_ternary_quadratic():
+    # Commented out test cases should be uncommented after
+    # the bug with factor_list() gets merged.
+
+    assert check_solutions(2*x*y + y*z - 3*x*z)
+    assert check_solutions(189*x*y - 345*y*z - 12*x*z)
+    #assert check_solutions(23*x*y + 34*y*z)
+    assert check_solutions(x*y + y*z + z*x)
+    assert check_solutions(23*x*y + 23*y*z + 23*x*z)
+
+
 def test_descent():
 
     u = ([(13, 23), (3, -11), (41, -113), (91, -3), (1, 1), (1, -1), (17, 13), (123689, 1), (19, -570)])
@@ -361,7 +379,7 @@ def test_diophantine():
     assert check_solutions((x**2 - 3*y**2 - 1)*(y - 7*z))
     assert check_solutions((x**2 + y**2 - z**2)*(x - 7*y - 3*z + 4*w))
     # Following test case caused problems in parametric representation
-    # But this can be solved by factroing out ``y``
+    # But this can be solved by factroing out y.
     # No need to use methods for ternary quadratic equations.
     #assert check_solutions(y**2 - 7*x*y + 4*y*z)
 

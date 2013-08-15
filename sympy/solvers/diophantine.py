@@ -33,7 +33,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
         if eq_type in ["univariable", "linear", "ternary_quadratic"]:
             sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type == "binary_quadratic":
+        elif eq_type in ["binary_quadratic"]:
             for sol in solution:
                 sols.add(merge_solution(var, var_t, sol))
 
@@ -1066,13 +1066,13 @@ def length(P, Q, D):
 def transformation_to_DN(eq):
     """
     This function transforms general quadratic ax**2 + bxy + cy**2 + dx + ey + f = 0
-    to more easy to deal with X**2 - DY**2 = N
+    to more easy to deal with form X**2 - DY**2 = N
 
     This can be used to solve the general quadratic by transforming it to the above form.
     Refer [1] for more detailed information on the transformation. This function returns
     a tuple (A, B) where A is a 2 * 2 matrix and B is a 2 * 1 matrix such that,
 
-    Transpose((x y)) =  A * Transpose((X Y)) + B
+    Transpose([x y]) =  A * Transpose([X Y]) + B
 
     Usage
     =====
@@ -1353,12 +1353,26 @@ def _diop_ternary_quadratic(_var, coeff):
         # If the coefficient of x is zero change the variables
         if coeff[y**2] == 0:
             if coeff[z**2] == 0:
-                # Equation of the form A*x*y + B*y*z + C*z*x = 0 and At least two of the
-                # variables A, B, C are non-zero. There are infinitely many solutions.
+                # Equation of the form A*x*y + B*y*z + C*z*x = 0 and All the
+                # coefficients A, B, C are non-zero. if at least one coefficient was zero,
+                # diophantine() would solve the equation by facotrization.
+                # There are infinitely many solutions for the equation.
                 # Ex: (0, 0, t), (0, t, 0), (t, 0, 0)
-                # I don't know whether other solution forms exist.
-                # Should decide on which form(s) to output.
-                raise NotImplementedError("Currently not implemented")
+                # Equation can be re-written as y*(A*x + B*z) = -C*x*z and we can find rather
+                # unobviuos solutions. Set y = -C and A*x + B*z = x*z. The latter can be solved by
+                # using methods for binary quadratic diophantine equations. Let's select the
+                # solution which minimizes |x + z|
+
+                sols = diophantine(coeff[x*y]*x + coeff[y*z]*z - x*z)
+                s = sols.pop()
+                min_sum = abs(s[0] + s[1])
+
+                for r in sols:
+                    if abs(r[0] + r[1]) < min:
+                        s = r
+
+                return (s[0], -coeff[x*z], s[1])
+
             else:
                 var[0], var[2] = var[2], var[0]
                 z_0, y_0, x_0 = _diop_ternary_quadratic(var, coeff)
@@ -1420,7 +1434,6 @@ def _diop_ternary_quadratic(_var, coeff):
 def simplified(x, y, z):
     """
     Simplify the solution $(x, y, z)$.
-    TODO: Implement Holzer's reduction
     """
     if x == None or y == None or z == None:
         return (x, y, z)
