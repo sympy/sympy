@@ -6,7 +6,7 @@ from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, Number
 from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
@@ -449,7 +449,7 @@ class Interval(Set, EvalfMixin):
 
         # Only allow real intervals (use symbols with 'is_real=True').
         if not start.is_real or not end.is_real:
-            raise ValueError("Only real intervals are supported")
+            raise ValueError("Only real intervals are supported but we have %r=%r and %r=%r" % (start, start.assumptions0, end, end.assumptions0))
 
         # Make sure that the created interval will be valid.
         if end.is_comparable and start.is_comparable:
@@ -702,6 +702,44 @@ class Interval(Set, EvalfMixin):
     def free_symbols(self):
         return self.start.free_symbols | self.end.free_symbols
 
+    def as_numer_denom(self):
+        """
+        >>> Interval(1,2).as_numer_denom()
+        ([1, 2], 1)
+
+        >>>Interval(1/2,2).as_numer_denom()
+        ([0.5, 2], 1)
+
+        >>>Interval(Rational(1,2),2).as_numer_denom()
+        ([1, 4], 2)
+        """
+        start_numer_denom = self.start.as_numer_denom()
+        start_numer = start_numer_denom[0]
+        start_denom = start_numer_denom[1]
+        end_numer_denom = self.end.as_numer_denom()
+        end_numer = end_numer_denom[0]
+        end_denom = end_numer_denom[1]
+        denom = start_denom * end_denom
+        return (Interval(start_numer*end_denom, end_numer*start_denom, self.left_open, self.right_open), denom)
+
+    def as_base_exp(self):
+        return self, S.One
+
+    def expand(self, deep=True, **kwargs):
+        if not deep:
+            return self
+        else:
+            return Interval(self.start.expand(deep=deep, **kwargs), self.end.expand(deep=deep, **kwargs), self.left_open, self.right_open)
+
+    def cancel(self, *gens, **args):
+        """See the cancel function in sympy.polys"""
+        from sympy.polys import cancel
+        return Interval(self.start.cancel(*gens, **args), self.end.cancel(*gens, **args), self.left_open, self.right_open)
+
+    def could_extract_minus_sign(self):
+        return self.start.is_negative and self.end.is_negative
+
+
 class Union(Set, EvalfMixin):
     """
     Represents a union of sets as a Set.
@@ -742,9 +780,12 @@ class Union(Set, EvalfMixin):
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            if iterable(arg):  # and not isinstance(arg, Set) (implicit)
+            elif iterable(arg):  # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
-            raise TypeError("Input must be Sets or iterables of Sets")
+            elif isinstance(arg, Number):
+                return [FiniteSet(arg)]
+            else:
+                raise TypeError("Input must be Sets or iterables of Sets but is %r of type %r" % (arg, type(arg)))
         args = flatten(args)
 
         # Union of no sets is EmptySet
