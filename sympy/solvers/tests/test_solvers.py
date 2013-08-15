@@ -1371,3 +1371,10 @@ def test_misc():
 
     # watch out for recursive loop in tsolve
     raises(NotImplementedError, lambda: solve((x+2)**y*x-3,x))
+
+
+def test_integral():
+    eq = y - Integral(f(x), y)
+    assert solve_linear(eq) == (y, 0)
+    eq = x + y - Integral(f(x), y)
+    assert solve_linear(eq) == (y, -x/(-f(x) + 1))
