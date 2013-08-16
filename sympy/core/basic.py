@@ -359,6 +359,13 @@ class Basic(with_metaclass(ManagedProperties)):
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
+        from .function import AppliedUndef, UndefinedFunction as UndefFunc
+
+        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
+            if self.class_key() == other.class_key():
+                return True
+            else:
+                return False
         if type(self) is not type(other):
             # issue 3001 a**1.0 == a like a**2.0 == a**2
             while isinstance(self, C.Pow) and self.exp == 1:
@@ -370,7 +377,11 @@ class Basic(with_metaclass(ManagedProperties)):
             except SympifyError:
                 return False    # sympy != other
 
-            if type(self) is not type(other):
+            if isinstance(self, AppliedUndef) and isinstance(other,
+                                                             AppliedUndef):
+                if self.class_key() != other.class_key():
+                    return False
+            elif type(self) is not type(other):
                 return False
 
         return self._hashable_content() == other._hashable_content()
@@ -989,7 +1000,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if not hasattr(arg, '_eval_subs'):
                     continue
                 arg = arg._subs(old, new, **hints)
-                if arg is not args[i]:
+                if arg != args[i]:
                     hit = True
                     args[i] = arg
             if hit:
@@ -1669,9 +1680,17 @@ def _aresame(a, b):
     False
 
     """
+    from .function import AppliedUndef, UndefinedFunction as UndefFunc
+    if len(list(preorder_traversal(a))) != len(list(preorder_traversal(b))):
+        return False
     for i, j in zip(preorder_traversal(a), preorder_traversal(b)):
         if i != j or type(i) != type(j):
-            return False
+            if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
+                (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
+                if i.class_key() != j.class_key():
+                    return False
+            else:
+                return False
     else:
         return True
 
