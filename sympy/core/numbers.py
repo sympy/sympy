@@ -85,7 +85,7 @@ def _as_integer_ratio(p):
 
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
-    if not dec.is_finite(): # NOTE: this is_finite is not SymPy's
+    if not dec.is_finite():  # NOTE: this is_finite is not SymPy's
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)
@@ -109,36 +109,63 @@ _gcdcache = {}
 # TODO caching with decorator, but not to degrade performance
 
 
-def igcd(a, b):
-    """Computes positive, integer greatest common divisor of two numbers.
+def igcd(*args):
+    """Computes positive integer greatest common divisor.
 
-       The algorithm is based on the well known Euclid's algorithm. To
-       improve speed, igcd() has its own caching mechanism implemented.
+    The algorithm is based on the well known Euclid's algorithm. To
+    improve speed, igcd() has its own caching mechanism implemented.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import igcd
+    >>> igcd(2, 4)
+    2
+    >>> igcd(*[5, 10, 15])
+    5
+
     """
-    try:
-        return _gcdcache[(a, b)]
-    except KeyError:
-        a, b = as_int(a), as_int(b)
+    a = args[0]
+    for b in args[1:]:
+        try:
+            a = _gcdcache[(a, b)]
+        except KeyError:
+            a, b = as_int(a), as_int(b)
 
-        if a and b:
-            if b < 0:
-                b = -b
+            if a and b:
+                if b < 0:
+                    b = -b
 
-            while b:
-                a, b = b, a % b
-        else:
-            a = abs(a or b)
+                while b:
+                    a, b = b, a % b
+            else:
+                a = abs(a or b)
 
-        _gcdcache[(a, b)] = a
-        return a
+            _gcdcache[(a, b)] = a
+    return a
 
 
-def ilcm(a, b):
-    """Computes integer least common multiple of two numbers. """
-    if a == 0 and b == 0:
+def ilcm(*args):
+    """Computes integer least common multiple.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import ilcm
+    >>> ilcm(5, 10)
+    10
+    >>> ilcm(7, 3)
+    21
+    >>> ilcm(*[5, 10, 15])
+    30
+
+    """
+    if 0 in args:
         return 0
-    else:
-        return a*b // igcd(a, b)
+    a = args[0]
+    for b in args[1:]:
+        a = a*b // igcd(a, b)
+    return a
 
 
 def igcdex(a, b):
@@ -1851,7 +1878,6 @@ class Zero(with_metaclass(Singleton, IntegerConstant)):
     def __neg__():
         return S.Zero
 
-
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
@@ -1954,7 +1980,6 @@ class Half(with_metaclass(Singleton, RationalConstant)):
     @staticmethod
     def __abs__():
         return S.Half
-
 
 
 class Infinity(with_metaclass(Singleton, Number)):
