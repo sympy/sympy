@@ -1733,7 +1733,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
             if dn:
                 all_zero = False
                 if not xi in dn.free_symbols:  # Linear in xi
-                    print(nn)
                     if nn.is_Add:
                         vi = -(expand(nn).as_independent(xi)[0])/dn
                     else:

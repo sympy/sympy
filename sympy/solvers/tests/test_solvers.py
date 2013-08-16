@@ -1292,8 +1292,9 @@ def test_lambert_multivariate():
         log((3*LambertW(S(1)/3)/p**5)**(1/(3*log(p)))),]  # checked numerically
     # check collection
     assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
-        -((log(a**5) + LambertW(1/(b + 3)))/(3*log(a)))]
-
+        (-5*log(a)/S(3) + log(((b + 3)*LambertW(1/(b + 3)))**(1/S(3))))/log(a),
+        (-log(a**5)/S(3) + log(((b + 3)*LambertW(1/(b + 3)))**(1/S(3))*(-1 - sqrt(3)*I)/S(2)))/log(a),
+        (-log(8*a**5)/S(3) + log(((b + 3)*LambertW(1/(b + 3)))**(1/S(3))*(-1 + sqrt(3)*I)))/log(a)]
     eq = 4*2**(2*p + 3) - 2*p - 3
     assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
         -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]
