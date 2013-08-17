@@ -136,7 +136,7 @@ def postprocess_for_cse(expr, optimizations):
     return expr
 
 
-def opt_cse(exprs):
+def opt_cse(exprs, order='canonical'):
     """Find optimization opportunities in Adds, Muls, Pows and negative
     coefficient Muls
 
@@ -144,6 +144,9 @@ def opt_cse(exprs):
     ----------
     exprs : list of sympy expressions
         The expressions to optimize.
+    order : string, 'none' or 'canonical'
+        The order by which Mul and Add arguments are processed. For large
+        expressions where speed is a concern, use the setting order='none'.
 
     Returns
     -------
@@ -205,7 +208,10 @@ def opt_cse(exprs):
     ## Process Adds and commutative Muls
 
     def _match_common_args(Func, funcs):
-        funcs = list(ordered(funcs))
+        if order != 'none':
+            funcs = list(ordered(funcs))
+        else:
+            funcs = sorted(funcs, key=lambda x: len(x.args))
 
         func_args = [set(e.args) for e in funcs]
         for i in xrange(len(func_args)):
@@ -250,7 +256,7 @@ def opt_cse(exprs):
     return opt_subs
 
 
-def tree_cse(exprs, symbols, opt_subs=None):
+def tree_cse(exprs, symbols, opt_subs=None, order='canonical'):
     """Perform raw CSE on expression tree, taking opt_subs into account.
 
     Parameters
@@ -263,6 +269,9 @@ def tree_cse(exprs, symbols, opt_subs=None):
         out.
     opt_subs : dictionary of expression substitutions
         The expressions to be substituted before any CSE action is performed.
+    order : string, 'none' or 'canonical'
+        The order by which Mul and Add arguments are processed. For large
+        expressions where speed is a concern, use the setting order='none'.
     """
     from sympy.matrices import Matrix
 
@@ -321,13 +330,16 @@ def tree_cse(exprs, symbols, opt_subs=None):
         if expr in opt_subs:
             expr = opt_subs[expr]
 
-        # Parse Muls and Adds arguments by order to ensure
-        # replacement order independent from hashes order
-        if expr.is_Mul:
-            c, nc = expr.args_cnc()
-            args = list(ordered(c)) + nc
-        elif expr.is_Add:
-            args = list(ordered(expr.args))
+        # If enabled, parse Muls and Adds arguments by order to ensure
+        # replacement order independent from hashes
+        if order != 'none':
+            if expr.is_Mul:
+                c, nc = expr.args_cnc()
+                args = list(ordered(c)) + nc
+            elif expr.is_Add:
+                args = list(ordered(expr.args))
+            else:
+                args = expr.args
         else:
             args = expr.args
 
@@ -357,7 +369,7 @@ def tree_cse(exprs, symbols, opt_subs=None):
     return replacements, reduced_exprs
 
 
-def cse(exprs, symbols=None, optimizations=None, postprocess=None):
+def cse(exprs, symbols=None, optimizations=None, postprocess=None, order='canonical'):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -377,6 +389,12 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
         returns the desired form of output from cse, e.g. if you want the
         replacements reversed the function might be the following lambda:
         lambda r, e: return reversed(r), e
+    order : string, 'none' or 'canonical'
+        The order by which Mul and Add arguments are processed. If set to
+        'none', ordering will be faster but dependent on expressions hashes,
+        thus machine dependent and variable. If set to 'canonical', arguments
+        will be canonically orderer. For large expressions where speed is a
+        concern, use the setting order='none'.
 
     Returns
     =======
@@ -409,10 +427,10 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
 
     # Find other optimization opportunities.
-    opt_subs = opt_cse(reduced_exprs)
+    opt_subs = opt_cse(reduced_exprs, order)
 
     # Main CSE algorithm.
-    replacements, reduced_exprs = tree_cse(reduced_exprs, symbols, opt_subs)
+    replacements, reduced_exprs = tree_cse(reduced_exprs, symbols, opt_subs, order)
 
     # Postprocess the expressions to return the expressions to canonical form.
     for i, (sym, subtree) in enumerate(replacements):
