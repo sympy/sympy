@@ -97,17 +97,17 @@ def test_quadratic_non_perfect_square():
     # B**2 - 4*A*C is not a perfect square
     # Used check_solutions() since the solutions are complex expressions involving
     # square roots and exponents
-    assert check_solutions(x**2 - 2*x - 5*y**2) == True
-    assert check_solutions(3*x**2 - 2*y**2 - 2*x - 2*y) == True
-    assert check_solutions(x**2 - x*y - y**2 - 3*y) == True
-    assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y) == True
+    assert check_solutions(x**2 - 2*x - 5*y**2)
+    assert check_solutions(3*x**2 - 2*y**2 - 2*x - 2*y)
+    assert check_solutions(x**2 - x*y - y**2 - 3*y)
+    assert check_solutions(x**2 - 9*y**2 - 2*x - 6*y)
 
 
 @slow
 def test_quadratic_non_perfect_slow():
-    assert check_solutions(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23) == True
-    assert check_solutions(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15) == True
-    assert check_solutions(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7) == True
+    assert check_solutions(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23)
+    assert check_solutions(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15)
+    assert check_solutions(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7)
 
 
 @XFAIL
@@ -304,6 +304,9 @@ def test_diop_ternary_quadratic():
     assert check_solutions(45*x**2 - 7*y**2 - 8*x*y - z**2)
     assert check_solutions(x**2 - 49*y**2 - z**2 + 13*z*y -8*x*y)
     assert check_solutions(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z)
+    assert check_solutions(x**2 + 3*y**2 + z**2 - x*y - 17*y*z)
+    assert check_solutions(x**2 + 3*y**2 + z**2 - x*y - 16*y*z + 12*x*z)
+    assert check_solutions(x**2 + 3*y**2 + z**2 - 13*x*y - 16*y*z + 12*x*z)
 
 
 def test_pairwise_prime():
@@ -375,6 +378,7 @@ def test_diophantine():
     #assert check_solutions(y**2 + 7*x*y)
     #assert check_solutions(x**2 - 3*x*y + y**2)
     #assert check_solutions(z*(x**2 - y**2 - 15))
+    assert check_solutions(x*(2*y - 2*z + 5))
     assert check_solutions((x**2 - 3*y**2 - 1)*(x**2 - y**2 - 15))
     assert check_solutions((x**2 - 3*y**2 - 1)*(y - 7*z))
     assert check_solutions((x**2 + y**2 - z**2)*(x - 7*y - 3*z + 4*w))

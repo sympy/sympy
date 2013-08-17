@@ -31,11 +31,13 @@ def diophantine(eq, param=symbols("t", Integer=True)):
         solution = diop_solve(base, param)
 
         if eq_type in ["univariable", "linear", "ternary_quadratic"]:
-            sols.add(merge_solution(var, var_t, solution))
+            if merge_solution(var, var_t, solution) != ():
+                sols.add(merge_solution(var, var_t, solution))
 
         elif eq_type in ["binary_quadratic"]:
             for sol in solution:
-                sols.add(merge_solution(var, var_t, sol))
+                if merge_solution(var, var_t, sol) != ():
+                    sols.add(merge_solution(var, var_t, sol))
 
     return sols
 
@@ -56,13 +58,15 @@ def merge_solution(var, var_t, solution):
     count1 = 0
     count2 = 0
 
-    for v in var:
-        if v in var_t:
-            l.append(solution[count1])
-            count1 = count1 + 1
-        else:
-            l.append(params[count2])
-            count2 = count2 + 1
+    if None not in solution:
+
+        for v in var:
+            if v in var_t:
+                l.append(solution[count1])
+                count1 = count1 + 1
+            else:
+                l.append(params[count2])
+                count2 = count2 + 1
 
     return tuple(l)
 
@@ -98,14 +102,18 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     var, coeff, eq_type = classify_diop(eq)
 
     if eq_type == "linear":
-        return diop_linear(var, coeff, param)
+        return _diop_linear(var, coeff, param)
 
     elif eq_type == "binary_quadratic":
         return diop_quadratic(var, coeff, param)
 
     elif eq_type == "ternary_quadratic":
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
-        return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
+
+        if x_0 == None:
+            return (None, None, None)
+        else:
+            return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
 
     elif eq_type == "univariable":
         return solve(eq)
@@ -184,26 +192,22 @@ def classify_diop(eq):
     return var, coeff, diop_type
 
 
-def diop_linear(var, coeff, param):
+def diop_linear(eq, param=symbols("t", Integer=True)):
     """
     Solves linear diophantine equations.
 
     Usage
     =====
 
-        diop_linear(var, coeff) -> var is a list of variables and coeff is a dictionary
-        containing coefficients of the symbols. Returns a tuple containing solutions to the
-        equation. Values in the tuple is arranged in the same order as the sorted variables.
+        diop_linear(eq) -> Returns a tuple containing solutions to the diophantine
+        equation ``eq``. Values in the tuple is arranged in the same order as the sorted
+        order of variables.
 
     Details
     =======
 
-        ``var`` list of the variables in the equation.
-        ``coeff`` dictionary containing coefficients of each variable.
-            coefficients are keyed by the variable and the constant term is keyed with
-            Integer(1).
-        ``param`` parameter to be used in the solution.
-
+        ``eq`` is a linear diophantine equation which is assumed to be zero.
+        ``param`` is the parameter to be used in the solution.
 
     Examples
     ========
@@ -211,11 +215,22 @@ def diop_linear(var, coeff, param):
     >>> from sympy.solvers.diophantine import diop_linear
     >>> from sympy.abc import x, y, z, t
     >>> from sympy import Integer
-    >>> diop_linear([x, y], {Integer(1): -5, x: 2, y:-3}, t) #solves equation 2*x - 3*y -5 = 0
+    >>> diop_linear(2*x - 3*y - 5) #solves equation 2*x - 3*y -5 = 0
     (-3*t - 5, -2*t - 5)
-    >>> diop_linear([x, y, z], {Integer(1): -3, x: 2, y: -3, z: -4}, t) # 2*x - 3*y - 4*z - 3 = 0
+
+    Here x = -3*t - 5 and y = -2*t - 5
+
+    >>> diop_linear(2*x - 3*y - 4*z -3)
     (-3*t - 4*z - 3, -2*t - 4*z - 3,  z)
     """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "linear":
+        return _diop_linear(var, coeff, param)
+
+
+def _diop_linear(var, coeff, param):
+
     x = var[0]; y = var[1]
     a = coeff[x]
     b = coeff[y]
@@ -1349,41 +1364,51 @@ def _diop_ternary_quadratic(_var, coeff):
     var = [x]*3
     var[0], var[1], var[2] = _var[0], _var[1], _var[2]
 
+    # Equations of the form B*x*y + C*z*x + E*y*z = 0 and At least two of the
+    # coefficients A, B, C are non-zero.
+    # There are infinitely many solutions for the equation.
+    # Ex: (0, 0, t), (0, t, 0), (t, 0, 0)
+    # Equation can be re-written as y*(B*x + E*z) = -C*x*z and we can find rather
+    # unobviuos solutions. Set y = -C and B*x + E*z = x*z. The latter can be solved by
+    # using methods for binary quadratic diophantine equations. Let's select the
+    # solution which minimizes |x| + |z|
+
+    if coeff[x**2] == 0 and coeff[y**2] == 0 and coeff[z**2] == 0:
+        if coeff[x*z] != 0:
+            sols = diophantine(coeff[x*y]*x + coeff[y*z]*z - x*z)
+            s = sols.pop()
+            min_sum = abs(s[0]) + abs(s[1])
+
+            for r in sols:
+                if abs(r[0]) + abs(r[1]) < min_sum:
+                    s = r
+                    min_sum = abs(s[0]) + abs(s[1])
+
+                x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
+                assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
+
+        else:
+            var[0], var[1] = _var[1], _var[0]
+            y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
+            assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
+
+        return simplified(x_0, y_0, z_0)
+
     if coeff[x**2] == 0:
         # If the coefficient of x is zero change the variables
         if coeff[y**2] == 0:
-            if coeff[z**2] == 0:
-                # Equation of the form A*x*y + B*y*z + C*z*x = 0 and All the
-                # coefficients A, B, C are non-zero. if at least one coefficient was zero,
-                # diophantine() would solve the equation by facotrization.
-                # There are infinitely many solutions for the equation.
-                # Ex: (0, 0, t), (0, t, 0), (t, 0, 0)
-                # Equation can be re-written as y*(A*x + B*z) = -C*x*z and we can find rather
-                # unobviuos solutions. Set y = -C and A*x + B*z = x*z. The latter can be solved by
-                # using methods for binary quadratic diophantine equations. Let's select the
-                # solution which minimizes |x + z|
+            var[0], var[2] = _var[2], _var[0]
+            z_0, y_0, x_0 = _diop_ternary_quadratic(var, coeff)
+            assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
 
-                sols = diophantine(coeff[x*y]*x + coeff[y*z]*z - x*z)
-                s = sols.pop()
-                min_sum = abs(s[0] + s[1])
-
-                for r in sols:
-                    if abs(r[0] + r[1]) < min:
-                        s = r
-
-                return (s[0], -coeff[x*z], s[1])
-
-            else:
-                var[0], var[2] = var[2], var[0]
-                z_0, y_0, x_0 = _diop_ternary_quadratic(var, coeff)
-                return simplified(x_0, y_0, z_0)
         else:
-            var[0], var[1] = var[1], var[0]
+            var[0], var[1] = _var[1], _var[0]
             y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
-            return simplified(x_0, y_0, z_0)
+            assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
+
     else:
         if coeff[x*y] != 0 or coeff[x*z] != 0:
-
+        # Apply the transformation x --> X - (B*y + C*z)/(2*A)
             A = coeff[x**2]
             B = coeff[x*y]
             C = coeff[x*z]
@@ -1396,39 +1421,45 @@ def _diop_ternary_quadratic(_var, coeff):
             _coeff[x**2] = 4*A**2
             _coeff[y**2] = 4*A*D - B**2
             _coeff[z**2] = 4*A*F - C**2
-            _coeff[y*z] = 4*A*E - 4*B*C
+            _coeff[y*z] = 4*A*E - 2*B*C
             _coeff[x*y] = 0
             _coeff[x*z] = 0
 
             X_0, y_0, z_0 = _diop_ternary_quadratic(var, _coeff)
-            if X_0 == None or y_0 == None or z_0 == None:
+
+            if X_0 == None:
                 return (None, None, None)
 
             l = (S(B*y_0 + C*z_0)/(2*A)).q
-            return simplified(X_0*l - (B*y_0 + C*z_0)*l/(2*A), y_0*l, z_0*l)
+            x_0, y_0, z_0 = X_0*l - (S(B*y_0 + C*z_0)/(2*A)).p, y_0*l, z_0*l
 
         elif coeff[z*y] != 0:
             if coeff[y**2] == 0:
                 if coeff[z**2] == 0:
-                    # Equations of the form A*x**2 + B*yz = 0.
+                    # Equations of the form A*x**2 + E*yz = 0.
                     A = coeff[x**2]
-                    B = coeff[y*z]
+                    E = coeff[y*z]
 
-                    b = (S(-B)/A).p
-                    a = (S(-B)/A).q
+                    b = (S(-E)/A).p
+                    a = (S(-E)/A).q
 
-                    return (b, a, b)
+                    x_0, y_0, z_0 = b, a, b
+
                 else:
-                    var[0], var[2] = var[2], var[0]
+                    # Ax**2 + E*y*z + F*z**2  = 0
+                    var[0], var[2] = _var[2], _var[0]
                     z_0, y_0, x_0 = _diop_ternary_quadratic(var, coeff)
-                    return simplified(x_0, y_0, z_0)
+
             else:
-                var[0], var[1] = var[1], var[0]
+                # A*x**2 + D*y**2 + E*y*z + F*z**2 = 0, C may be zero
+                var[0], var[1] = _var[1], _var[0]
                 y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
-                return simplified(x_0, y_0, z_0)
 
         else:
-            return _diop_ternary_quadratic_normal(var, coeff)
+            # Ax**2 + D*y**2 + F*z**2 = 0, C may be zero
+            x_0, y_0, z_0 = _diop_ternary_quadratic_normal(var, coeff)
+
+    return simplified(x_0, y_0, z_0)
 
 
 def simplified(x, y, z):
@@ -1593,11 +1624,13 @@ def _diop_ternary_quadratic_normal(var, coeff):
     z_0, x_0, y_0 = descent(A, B)
 
     if divisible(z_0, c_2) == True:
-        z_0 = z_0 // c_2
+        z_0 = z_0 // abs(c_2)
     else:
         x_0 = x_0*(S(z_0)/c_2).q
         y_0 = y_0*(S(z_0)/c_2).q
         z_0 = (S(z_0)/c_2).p
+
+    x_0, y_0, z_0 = simplified(x_0, y_0, z_0)
 
     # Holzer reduction
     if sign(a) == sign(b):
@@ -1612,6 +1645,7 @@ def _diop_ternary_quadratic_normal(var, coeff):
     z_0 = reconstruct(a_1, b_1, z_0)
 
     l = ilcm(a_0, ilcm(b_0, c_0))
+
     x_0 = abs(x_0*l//a_0)
     y_0 = abs(y_0*l//b_0)
     z_0 = abs(z_0*l//c_0)
@@ -1678,8 +1712,8 @@ def reconstruct(a, b, x):
 
     if g != 1:
         f = factorint(g)
-        for p,e in f.items():
-            if e%2 == 0:
+        for p, e in f.items():
+            if e %2 == 0:
                 x = x*p**(e//2)
             else:
                 x = x*p**((e//2)+1)
@@ -1770,12 +1804,15 @@ def quadratic_congruence(a, m, full=False, returnall=False):
             else:
                 l.append(i)
 
-    return l
+    if l == [] and not returnall:
+        return None
+    else:
+        return l
 
 
 def descent(A, B):
     """
-    Lagrange's descent() with lattice-reduction to find solutions to $x^2 = Az^2 + By^2$.
+    Lagrange's descent() with lattice-reduction to find solutions to $x^2 = Ay^2 + Bz^2$.
     Here A and B should be square free and pairwise prime. Always should be called with
     ``A`` and ``B`` so that the above equation has solutions. This is more faster than
     the normal Lagrange's descent algorithm because the gaussian reduction is used.
