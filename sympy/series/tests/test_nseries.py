@@ -107,10 +107,10 @@ def test_series1():
     e = sin(x)
     assert e.nseries(x, 0, 0) != 0
     assert e.nseries(x, 0, 0) == O(1, x)
-    assert e.nseries(x, 0, 1) == O(x, x)
-    assert e.nseries(x, 0, 2) == x + O(x**2, x)
-    assert e.nseries(x, 0, 3) == x + O(x**3, x)
-    assert e.nseries(x, 0, 4) == x - x**3/6 + O(x**4, x)
+    assert e.nseries(x, 0, 1) == O(x)
+    assert e.nseries(x, 0, 2) == x + O(x**2)
+    assert e.nseries(x, 0, 3) == x + O(x**3)
+    assert e.nseries(x, 0, 4) == x - x**3/6 + O(x**4)
 
     e = (exp(x) - 1)/x
     assert e.nseries(x, 0, 3) == 1 + x/2 + x**2/6 + O(x**3)
@@ -130,20 +130,20 @@ def test_seriesbug1():
 
 
 def test_series2x():
-    assert ((x + 1)**(-2)).nseries(x, 0, 4) == 1 - 2*x + 3*x**2 - 4*x**3 + O(x**4, x)
-    assert ((x + 1)**(-1)).nseries(x, 0, 4) == 1 - x + x**2 - x**3 + O(x**4, x)
+    assert ((x + 1)**(-2)).nseries(x, 0, 4) == 1 - 2*x + 3*x**2 - 4*x**3 + O(x**4)
+    assert ((x + 1)**(-1)).nseries(x, 0, 4) == 1 - x + x**2 - x**3 + O(x**4)
     assert ((x + 1)**0).nseries(x, 0, 3) == 1
     assert ((x + 1)**1).nseries(x, 0, 3) == 1 + x
     assert ((x + 1)**2).nseries(x, 0, 3) == 1 + 2*x + x**2
     assert ((x + 1)**3).nseries(
         x, 0, 3) == 1 + 3*x + 3*x**2 + x**3  # 1+3*x+3*x**2+O(x**3)
 
-    assert (1/(1 + x)).nseries(x, 0, 4) == 1 - x + x**2 - x**3 + O(x**4, x)
-    assert (x + 3/(1 + 2*x)).nseries(x, 0, 4) == 3 - 5*x + 12*x**2 - 24*x**3 + O(x**4, x)
+    assert (1/(1 + x)).nseries(x, 0, 4) == 1 - x + x**2 - x**3 + O(x**4)
+    assert (x + 3/(1 + 2*x)).nseries(x, 0, 4) == 3 - 5*x + 12*x**2 - 24*x**3 + O(x**4)
 
     assert ((1/x + 1)**3).nseries(x, 0, 3) == 1 + x**(-3) + 3*x**(-2) + 3/x
-    assert (1/(1 + 1/x)).nseries(x, 0, 4) == x - x**2 + x**3 - O(x**4, x)
-    assert (1/(1 + 1/x**2)).nseries(x, 0, 6) == x**2 - x**4 + O(x**6, x)
+    assert (1/(1 + 1/x)).nseries(x, 0, 4) == x - x**2 + x**3 - O(x**4)
+    assert (1/(1 + 1/x**2)).nseries(x, 0, 6) == x**2 - x**4 + O(x**6)
 
 
 def test_bug2():  # 1/log(0) * log(0) problem
@@ -189,7 +189,7 @@ def test_generalexponent():
 def test_genexp_x():
     e = 1/(1 + sqrt(x))
     assert e.nseries(x, 0, 2) == \
-        1 + x - sqrt(x) - sqrt(x)**3 + O(x**2, x)
+        1 + x - sqrt(x) - sqrt(x)**3 + O(x**2)
 
 # more complicated example
 
@@ -205,7 +205,7 @@ def test_seriesbug2():
     w = Symbol("w")
     #simple case (1):
     e = ((2*w)/w)**(1 + w)
-    assert e.nseries(w, 0, 1) == 2 + O(w, w)
+    assert e.nseries(w, 0, 1) == 2 + O(w)
     assert e.nseries(w, 0, 1).subs(w, 0) == 2
 
 
@@ -235,7 +235,7 @@ def test_seriesbug2c():
 def test_expbug4():
     x = Symbol("x", real=True)
     assert (log(
-        sin(2*x)/x)*(1 + x)).series(x, 0, 2) == log(2) + x*log(2) + O(x**2, x)
+        sin(2*x)/x)*(1 + x)).series(x, 0, 2) == log(2) + x*log(2) + O(x**2)
     assert exp(
         log(sin(2*x)/x)*(1 + x)).series(x, 0, 2) == 2 + 2*x*log(2) + O(x**2)
 
@@ -244,7 +244,7 @@ def test_expbug4():
 
 
 def test_logbug4():
-    assert log(2 + O(x)).nseries(x, 0, 2) == log(2) + O(x, x)
+    assert log(2 + O(x)).nseries(x, 0, 2) == log(2) + O(x)
 
 
 def test_expbug5():
