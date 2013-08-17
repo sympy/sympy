@@ -1,6 +1,4 @@
-from itertools import izip
-# Todo - use izip_longest when we deprecate 2.5
-
+from sympy.core.compatibility import xrange, zip_longest
 from sympy.utilities.enumerative import (
     factoring_visitor,
     list_visitor,
@@ -68,7 +66,7 @@ def multiset_partitions_baseline(multiplicities, components):
     """
 
     canon = []                  # list of components with repeats
-    for ct, elem in izip(multiplicities, components):
+    for ct, elem in zip(multiplicities, components):
         canon.extend([elem]*ct)
 
     # accumulate the multiset partitions in a set to eliminate dups
@@ -136,8 +134,8 @@ def test_multiset_partitions_versions():
     """Compares Knuth-based versions of multiset_partitions"""
     multiplicities = [5,2,2,1]
     m = MultisetPartitionTraverser()
-    for s1, s2 in izip(m.enum_all(multiplicities),
-                       multiset_partitions_taocp(multiplicities)):
+    for s1, s2 in zip_longest(m.enum_all(multiplicities),
+                              multiset_partitions_taocp(multiplicities)):
         assert compare_multiset_states(s1, s2)
 
 def subrange_exercise(mult, lb, ub):
@@ -162,7 +160,7 @@ def subrange_exercise(mult, lb, ub):
     c_it = part_range_filter(mc.enum_small(mult, ub), lb, sum(mult))
     d_it = part_range_filter(md.enum_large(mult, lb), 0, ub)
 
-    for sa, sb, sc, sd in izip(a_it, b_it, c_it, d_it):
+    for sa, sb, sc, sd in zip_longest(a_it, b_it, c_it, d_it):
         assert compare_multiset_states(sa, sb)
         assert compare_multiset_states(sa, sc)
         assert compare_multiset_states(sa, sd)

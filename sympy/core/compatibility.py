@@ -88,6 +88,7 @@ if PY3:
     exec_ = getattr(builtins, "exec")
 
     xrange = range
+    from itertools import zip_longest
 else:
     import codecs
     import types
@@ -131,6 +132,7 @@ else:
         exec("exec _code_ in _globs_, _locs_")
 
     xrange = xrange
+    from itertools import izip_longest as zip_longest
 
 def with_metaclass(meta, *bases):
     """Create a base class with a metaclass."""

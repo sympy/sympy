@@ -1,3 +1,6 @@
+from __future__ import print_function
+from sympy.core.compatibility import xrange
+
 #
 #  Algorithms and classes to support enumerative combinatorics.
 #  Currently just multiset partitions, but more could be added.
@@ -419,9 +422,9 @@ class MultisetPartitionTraverser():
         if self.debug:
             letters = 'abcdefghijklmnopqrstuvwxyz'
             state = [self.f, self.lpart, self.pstack]
-            print "DBG:", msg, \
-                ["".join(part) for part in list_visitor(state, letters)], \
-                animation_visitor(state)
+            print("DBG:", msg,
+                  ["".join(part) for part in list_visitor(state, letters)],
+                  animation_visitor(state))
 
     #
     # Helper methods for enumeration
