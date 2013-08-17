@@ -12,7 +12,7 @@ from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.iterables import flatten, uniq
 
 
-def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def alphabet_of_cipher(symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Returns the list of characters in the string input defining the alphabet.
 
@@ -64,7 +64,7 @@ def alphabet_of_cipher(symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 ######## shift cipher examples ############
 
 
-def cycle_list(k,n):
+def cycle_list(k, n):
     """
     Returns the cyclic shift of the list range(n) by k.
 
@@ -84,10 +84,10 @@ def cycle_list(k,n):
 
     """
     L = list(range(n))
-    return L[k:]+ L[:k]
+    return L[k:] + L[:k]
 
 
-def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_shift(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Performs shift cipher encryption on plaintext pt, and returns the ciphertext.
 
@@ -138,15 +138,15 @@ def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     n = len(A)
-    L = cycle_list(key,n)
-    C = [A[(A.index(pt[i]) + key)%n] for i in range(len(pt))]
+    L = cycle_list(key, n)
+    C = [A[(A.index(pt[i]) + key) % n] for i in range(len(pt))]
     return "".join(C)
 
 
 ######## affine cipher examples ############
 
 
-def encipher_affine(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_affine(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     r"""
     Performs the affine cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -203,15 +203,15 @@ def encipher_affine(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     n = len(A)
     k1 = key[0] # multiplicative coeff "a"
     k2 = key[1] # additive coeff "b"
-    L = cycle_list(k2,n)
-    C = [A[(k1*A.index(pt[i]) + k2)%n] for i in range(len(pt))]
+    L = cycle_list(k2, n)
+    C = [A[(k1*A.index(pt[i]) + k2) % n] for i in range(len(pt))]
     return "".join(C)
 
 
 #################### substitution cipher ###########################
 
 
-def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_substitution(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Performs the substitution cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -250,7 +250,7 @@ def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 ######################################################################
 
 
-def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_vigenere(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Performs the Vigenere cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -367,11 +367,11 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     P = [A.index(x) for x in pt0]
     n = len(P)
     #m = n//k
-    C = [(K[i%k]+P[i])%N for i in range(n)]
+    C = [(K[i % k] + P[i]) % N for i in range(n)]
     return "".join([str(A[x]) for x in C])
 
 
-def decipher_vigenere(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Decode using the Vigenere cipher.
 
@@ -396,7 +396,7 @@ def decipher_vigenere(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     C = [A.index(x) for x in ct0]
     n = len(C)
     #m = n//k
-    P = [(-K[i%k]+C[i])%N for i in range(n)]
+    P = [(-K[i % k] + C[i]) % N for i in range(n)]
     return "".join([str(A[x]) for x in P])
 
 
@@ -434,14 +434,14 @@ def matrix_inverse_mod(K, m):
     phi = totient(m)
     det_K = K.det()
     if gcd(det_K, m) != 1:
-        raise ValueError('Matrix is not invertible (mod %d)'%m)
-    det_inv = pow(int(det_K), int(phi-1), int(m))
+        raise ValueError('Matrix is not invertible (mod %d)' % m)
+    det_inv = pow(int(det_K), int(phi - 1), int(m))
     #det_inv = pow(det_K, phi-1)%m
     K_adj = K.cofactorMatrix().transpose()
-    K_inv = Matrix(N, N, [det_inv*K_adj[i,j]%m for i in range(N) for j in range(N)])
+    K_inv = Matrix(N, N, [det_inv*K_adj[i, j] % m for i in range(N) for j in range(N)])
     return K_inv
 
-def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def encipher_hill(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     r"""
     Performs the Hill cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -521,15 +521,15 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     P = [A.index(x) for x in pt0]
     n = len(P)
     m = n//k
-    if n>m*k:
-        P = P+[0]*(n-m*k)
-        m = m+1
-    C = [list(key*Matrix(k,1,[P[i] for i in range(k*j,k*(j+1))])) for j in range(m)]
+    if n > m*k:
+        P = P + [0]*(n - m*k)
+        m = m + 1
+    C = [list(key*Matrix(k, 1, [P[i] for i in range(k*j, k*(j + 1))])) for j in range(m)]
     C = flatten(C)
-    return "".join([A[i%N] for i in C])
+    return "".join([A[i % N] for i in C])
 
 
-def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
+def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     """
     Deciphering is the same as ciphering but using the inverse of the key matrix.
 
@@ -555,13 +555,13 @@ def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     C = [A.index(x) for x in ct0]
     n = len(C)
     m = n//k
-    if n>m*k:
-        C = C+[0]*(n-m*k)
-        m = m+1
+    if n > m*k:
+        C = C + [0]*(n - m*k)
+        m = m + 1
     key_inv = matrix_inverse_mod(key, N)
-    P = [list(key_inv*Matrix(k,1,[C[i] for i in range(k*j,k*(j+1))])) for j in range(m)]
+    P = [list(key_inv*Matrix(k, 1, [C[i] for i in range(k*j, k*(j + 1))])) for j in range(m)]
     P = flatten(P)
-    return "".join([A[i%N] for i in P])
+    return "".join([A[i % N] for i in P])
 
 
 #################### Bifid cipher  ########################
@@ -643,14 +643,14 @@ def encipher_bifid5(pt, key, verbose=False):
     key0 = [x.capitalize() for x in key if x.isalnum()]
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
+    long_key = key0 + [x for x in A if (not(x in key0) and x != "J")]
     n = len(pt0)
     # the fractionalization
-    pairs = [[long_key.index(x)//5, long_key.index(x)%5] for x in pt0]
+    pairs = [[long_key.index(x)//5, long_key.index(x) % 5] for x in pt0]
     if verbose:
         print(pairs)
-    tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
-    ct = "".join([long_key[5*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
+    tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
+    ct = "".join([long_key[5*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
     return ct
 
 
@@ -690,12 +690,12 @@ def decipher_bifid5(ct, key):
     key0 = [x.capitalize() for x in key if x.isalnum()]
     ct0 = [x.capitalize() for x in ct if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
+    long_key = key0 + [x for x in A if (not(x in key0) and x != "J")]
     n = len(ct0)
     # the fractionalization
-    pairs = flatten([[long_key.index(x)//5, long_key.index(x)%5] for x in ct0 if x!="J"])
-    tmp_plain = flatten([[pairs[i],pairs[n+i]] for i in range(n)])
-    pt = "".join([long_key[5*tmp_plain[2*i]+tmp_plain[2*i+1]] for i in range(n)])
+    pairs = flatten([[long_key.index(x)//5, long_key.index(x) % 5] for x in ct0 if x != "J"])
+    tmp_plain = flatten([[pairs[i], pairs[n + i]] for i in range(n)])
+    pt = "".join([long_key[5*tmp_plain[2*i] + tmp_plain[2*i + 1]] for i in range(n)])
     return pt
 
 
@@ -724,8 +724,8 @@ def bifid5_square(key):
     key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
-    f = lambda i,j: Symbol(long_key[5*i+j])
+    long_key = key0 + [x for x in A if (not(x in key0) and x != "J")]
+    f = lambda i, j: Symbol(long_key[5*i + j])
     M = Matrix(5, 5, f)
     return M
 
@@ -763,21 +763,21 @@ def encipher_bifid6(pt, key, verbose=False):
     'HNHOKNTA5MEPEGNQZYG'
 
     """
-    A = alphabet_of_cipher()+[str(a) for a in range(10)]
+    A = alphabet_of_cipher() + [str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
     key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
+    long_key = key0 + [x for x in A if not(x in key0)]
     n = len(pt0)
     # the fractionalization
-    pairs = [[long_key.index(x)//6, long_key.index(x)%6] for x in pt0]
+    pairs = [[long_key.index(x)//6, long_key.index(x) % 6] for x in pt0]
     if verbose is True:
         print(pairs)
-    tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
-    ct = "".join([long_key[6*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
+    tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
+    ct = "".join([long_key[6*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
     return ct
 
 
@@ -811,19 +811,19 @@ def decipher_bifid6(ct, key):
     'MEETMEONMONDAYAT8AM'
 
     """
-    A = alphabet_of_cipher()+[str(a) for a in range(10)]
+    A = alphabet_of_cipher() + [str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
     key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     ct0 = [x.capitalize() for x in ct if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
+    long_key = key0 + [x for x in A if not(x in key0)]
     n = len(ct0)
     # the fractionalization
-    pairs = flatten([[long_key.index(x)//6, long_key.index(x)%6] for x in ct0])
-    tmp_plain = flatten([[pairs[i],pairs[n+i]] for i in range(n)])
-    pt = "".join([long_key[6*tmp_plain[2*i]+tmp_plain[2*i+1]] for i in range(n)])
+    pairs = flatten([[long_key.index(x)//6, long_key.index(x) % 6] for x in ct0])
+    tmp_plain = flatten([[pairs[i], pairs[n + i]] for i in range(n)])
+    pt = "".join([long_key[6*tmp_plain[2*i] + tmp_plain[2*i + 1]] for i in range(n)])
     return pt
 
 
@@ -849,14 +849,14 @@ def bifid6_square(key):
     [4, 5, 6, 7, 8, 9]])
 
     """
-    A = alphabet_of_cipher()+[str(a) for a in range(10)]
+    A = alphabet_of_cipher() + [str(a) for a in range(10)]
     # first make sure the letters are capitalized
     # and text has no spaces
     key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
-    f = lambda i,j: Symbol(long_key[6*i+j])
+    long_key = key0 + [x for x in A if not(x in key0)]
+    f = lambda i, j: Symbol(long_key[6*i + j])
     M = Matrix(6, 6, f)
     return M
 
@@ -890,19 +890,19 @@ def encipher_bifid7(pt, key):
     'JEJJLNAA3ME19YF3J222R'
 
     """
-    A = alphabet_of_cipher()+[str(a) for a in range(23)]
+    A = alphabet_of_cipher() + [str(a) for a in range(23)]
     # first make sure the letters are capitalized
     # and text has no spaces
     key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if not(x in key0)]
+    long_key = key0 + [x for x in A if not(x in key0)]
     n = len(pt0)
     # the fractionalization
-    pairs = [[long_key.index(x)//7, long_key.index(x)%7] for x in pt0]
-    tmp_cipher = flatten([x[0] for x in pairs]+[x[1] for x in pairs])
-    ct = "".join([long_key[7*tmp_cipher[2*i]+tmp_cipher[2*i+1]] for i in range(n)])
+    pairs = [[long_key.index(x)//7, long_key.index(x) % 7] for x in pt0]
+    tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
+    ct = "".join([long_key[7*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
     return ct
 
 
@@ -930,14 +930,14 @@ def bifid7_square(key):
     [16, 17, 18, 19, 20, 21, 22]])
 
     """
-    A = alphabet_of_cipher()+[str(a) for a in range(23)]
+    A = alphabet_of_cipher() + [str(a) for a in range(23)]
     # first make sure the letters are capitalized
     # and text has no spaces
     key = uniq(key)
     key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
-    long_key = key0+[x for x in A if (not(x in key0))]
-    f = lambda i,j: Symbol(long_key[7*i+j])
+    long_key = key0 + [x for x in A if (not(x in key0))]
+    f = lambda i, j: Symbol(long_key[7*i + j])
     M = Matrix(7, 7, f)
     return M
 
@@ -945,7 +945,7 @@ def bifid7_square(key):
 #################### RSA  #############################
 
 
-def rsa_public_key(p,q,e):
+def rsa_public_key(p, q, e):
     r"""
     The RSA *public key* is the pair `(n,e)`, where `n`
     is a product of two primes and `e` is relatively
@@ -965,12 +965,12 @@ def rsa_public_key(p,q,e):
     """
     n = p*q
     phi = totient(n)
-    if isprime(p) and isprime(q) and gcd(e,phi)==1:
-        return n,e
+    if isprime(p) and isprime(q) and gcd(e, phi) == 1:
+        return n, e
     return False
 
 
-def rsa_private_key(p,q,e):
+def rsa_private_key(p, q, e):
     r"""
     The RSA *private key* is the pair `(n,d)`, where `n`
     is a product of two primes and `d` is the inverse of
@@ -987,8 +987,8 @@ def rsa_private_key(p,q,e):
     """
     n = p*q
     phi = totient(n)
-    if isprime(p) and isprime(q) and gcd(e,phi)==1:
-        return n,pow(e,phi-1,phi)
+    if isprime(p) and isprime(q) and gcd(e, phi) == 1:
+        return n, pow(e, phi - 1, phi)
     return False
 
 
@@ -1008,8 +1008,8 @@ def encipher_rsa(pt, puk):
     3
 
     """
-    n,e = puk
-    return pow(pt,e,n)
+    n, e = puk
+    return pow(pt, e, n)
 
 
 def decipher_rsa(ct, prk):
@@ -1028,14 +1028,14 @@ def decipher_rsa(ct, prk):
     12
 
     """
-    n,d = prk
-    return pow(ct,d,n)
+    n, d = prk
+    return pow(ct, d, n)
 
 
 #################### kid krypto (kid RSA) #############################
 
 
-def kid_rsa_public_key(a,b,A,B):
+def kid_rsa_public_key(a, b, A, B):
     r"""
     Kid RSA is a version of RSA useful to teach grade school children
     since it does not involve exponentiation.
@@ -1063,14 +1063,14 @@ def kid_rsa_public_key(a,b,A,B):
     (369, 58)
 
     """
-    M = S(a*b-1)
-    e = S(A*M+a)
-    d = S(B*M+b)
-    n = S((e*d-1)//M)
-    return n,e
+    M = S(a*b - 1)
+    e = S(A*M + a)
+    d = S(B*M + b)
+    n = S((e*d - 1)//M)
+    return n, e
 
 
-def kid_rsa_private_key(a,b,A,B):
+def kid_rsa_private_key(a, b, A, B):
     """
     Compute `M = a b - 1`, `e = A M + a`, `d = B M + b`, `n = (e d - 1) / M`.
     The *private key* is `d`, which Bob keeps secret.
@@ -1084,11 +1084,11 @@ def kid_rsa_private_key(a,b,A,B):
     (369, 70)
 
     """
-    M = S(a*b-1)
-    e = S(A*M+a)
-    d = S(B*M+b)
-    n = S((e*d-1)//M)
-    return n,d
+    M = S(a*b - 1)
+    e = S(A*M + a)
+    d = S(B*M + b)
+    n = S((e*d - 1)//M)
+    return n, d
 
 
 def encipher_kid_rsa(pt, puk):
@@ -1106,7 +1106,7 @@ def encipher_kid_rsa(pt, puk):
     161
 
     """
-    return (pt*puk[1])%puk[0]
+    return (pt*puk[1]) % puk[0]
 
 
 def decipher_kid_rsa(ct, prk):
@@ -1129,7 +1129,7 @@ def decipher_kid_rsa(ct, prk):
     """
     n = prk[0]
     d = prk[1]
-    return (ct*d)%n
+    return (ct*d) % n
 
 
 #################### Morse Code ######################################
@@ -1402,7 +1402,7 @@ def lfsr_autocorrelation(L, P, k):
 
     """
     if not isinstance(L, list):
-        raise TypeError("L (=%s) must be a list"%L)
+        raise TypeError("L (=%s) must be a list" % L)
     P = int(P)
     k = int(k)
     L0 = L[:P]     # slices makes a copy
@@ -1463,14 +1463,19 @@ def lfsr_connection_polynomial(s):
     # Initialization:
     p = s[0].mod
     F = FF(p)
-    x =Symbol("x")
-    C = 1*x**0; B = 1*x**0; m = 1; b = 1*x**0; L = 0; N = 0
+    x = Symbol("x")
+    C = 1*x**0
+    B = 1*x**0
+    m = 1
+    b = 1*x**0
+    L = 0
+    N = 0
     while N < len(s):
         if L > 0:
             dC = Poly(C).degree()
-            r = min(L+1, dC+1)
-            coeffsC = [C.subs(x,0)]+[C.coeff(x**i) for i in range(1,dC+1)]
-            d = (s[N].to_int() + sum([coeffsC[i]*s[N-i].to_int() for i in range(1,r)]))%p
+            r = min(L + 1, dC + 1)
+            coeffsC = [C.subs(x, 0)] + [C.coeff(x**i) for i in range(1, dC + 1)]
+            d = (s[N].to_int() + sum([coeffsC[i]*s[N - i].to_int() for i in range(1, r)])) % p
         if L == 0:
             d = s[N].to_int()*x**0
         if d == 0:
@@ -1478,17 +1483,17 @@ def lfsr_connection_polynomial(s):
             N += 1
         if d > 0:
             if 2*L > N:
-                C = (C - d*((b**(p-2))%p)*x**m*B).expand()
+                C = (C - d*((b**(p - 2)) % p)*x**m*B).expand()
                 m += 1
                 N += 1
             else:
                 T = C
-                C = (C - d*((b**(p-2))%p)*x**m*B).expand()
+                C = (C - d*((b**(p - 2)) % p)*x**m*B).expand()
                 L = N + 1 - L
                 m = 1
                 b = d
                 B = T
                 N += 1
     dC = Poly(C).degree()
-    coeffsC = [C.subs(x,0)]+[C.coeff(x**i) for i in range(1,dC+1)]
-    return sum([coeffsC[i]%p*x**i for i in range(dC+1) if coeffsC[i]!=None])
+    coeffsC = [C.subs(x, 0)] + [C.coeff(x**i) for i in range(1, dC + 1)]
+    return sum([coeffsC[i] % p*x**i for i in range(dC + 1) if coeffsC[i] is not None])
