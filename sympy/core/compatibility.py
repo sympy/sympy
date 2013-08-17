@@ -263,7 +263,10 @@ def cmp_to_key(mycmp):
             return mycmp(self.obj, other.obj) != 0
     return K
 
-
+try:
+    from itertools import zip_longest
+except ImportError: # <= Python 2.7
+    from itertools import izip_longest as zip_longest
 try:
     from itertools import combinations_with_replacement
 except ImportError:  # <= Python 2.6

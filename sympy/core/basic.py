@@ -6,13 +6,9 @@ from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
-    string_types, with_metaclass)
+    string_types, with_metaclass, zip_longest)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
-try:
-    from itertools import zip_longest
-except ImportError:
-    from itertools import izip_longest as zip_longest
 
 
 class Basic(with_metaclass(ManagedProperties)):
