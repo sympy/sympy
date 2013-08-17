@@ -1385,12 +1385,10 @@ def _diop_ternary_quadratic(_var, coeff):
                     min_sum = abs(s[0]) + abs(s[1])
 
                 x_0, y_0, z_0 = s[0], -coeff[x*z], s[1]
-                assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
 
         else:
             var[0], var[1] = _var[1], _var[0]
             y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
-            assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
 
         return simplified(x_0, y_0, z_0)
 
@@ -1399,12 +1397,10 @@ def _diop_ternary_quadratic(_var, coeff):
         if coeff[y**2] == 0:
             var[0], var[2] = _var[2], _var[0]
             z_0, y_0, x_0 = _diop_ternary_quadratic(var, coeff)
-            assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
 
         else:
             var[0], var[1] = _var[1], _var[0]
             y_0, x_0, z_0 = _diop_ternary_quadratic(var, coeff)
-            assert coeff[x**2]*x_0**2 + coeff[y**2]*y_0**2 + coeff[z**2]*z_0**2 + coeff[x*y]*x_0*y_0 + coeff[y*z]*y_0*z_0 + coeff[x*z]*x_0*z_0 == 0
 
     else:
         if coeff[x*y] != 0 or coeff[x*z] != 0:
