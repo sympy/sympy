@@ -1681,7 +1681,7 @@ class MechanicsLatexPrinter(LatexPrinter):
             else:
                 sub = r""
             if exp:
-                sup += r"^{%s}" % exp
+                sup += r"^{%s}" % self._print(exp)
             return r"%s" % (name + sup + sub)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
