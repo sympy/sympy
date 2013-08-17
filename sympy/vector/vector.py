@@ -70,7 +70,7 @@ def dot(vect_a, vect_b, coord_sys=None):
     vect_b_coord_sys = _all_coordinate_systems(vect_b)
     if not coord_sys:
         if(len(vect_a_coord_sys) == len(vect_b_coord_sys) == 1 and
-           vect_a_coord_sys[0] == vect_b_coord_sys[0])
+           vect_a_coord_sys[0] == vect_b_coord_sys[0]):
             coord_sys = vect_a_coord_sys[0]
 
     if coord_sys:
