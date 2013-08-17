@@ -3,6 +3,7 @@ import itertools
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
     Matrix, S, cos, sin, Eq, Function, Tuple, RootOf)
 from sympy.simplify.cse_opts import sub_pre, sub_post
+from sympy.simplify.cse_main import main_optimizations
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
@@ -55,7 +56,7 @@ def test_postprocess_for_cse():
 def test_cse_single():
     # Simple substitution.
     e = Add(Pow(x + y, 2), sqrt(x + y))
-    substs, reduced = cse([e], optimizations=[])
+    substs, reduced = cse([e])
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
@@ -63,7 +64,7 @@ def test_cse_single():
 def test_cse_single2():
     # Simple substitution, test for being able to pass the expression directly
     e = Add(Pow(x + y, 2), sqrt(x + y))
-    substs, reduced = cse(e, optimizations=[])
+    substs, reduced = cse(e)
     assert substs == [(x0, x + y)]
     assert reduced == [sqrt(x0) + x0**2]
     assert isinstance(cse(Matrix([[1]]))[1][0], Matrix)
@@ -72,7 +73,7 @@ def test_cse_single2():
 def test_cse_not_possible():
     # No substitution possible.
     e = Add(x, y)
-    substs, reduced = cse([e], optimizations=[])
+    substs, reduced = cse([e])
     assert substs == []
     assert reduced == [x + y]
     # issue 3230
@@ -84,7 +85,7 @@ def test_cse_not_possible():
 def test_nested_substitution():
     # Substitution within a substitution.
     e = Add(Pow(w*x + y, 2), sqrt(w*x + y))
-    substs, reduced = cse([e], optimizations=[])
+    substs, reduced = cse([e])
     assert substs == [(x0, w*x + y)]
     assert reduced == [sqrt(x0) + x0**2]
 
@@ -96,18 +97,22 @@ def test_subtraction_opt():
         [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
     assert substs == [(x0, (x - y)*(y - z))]
     assert reduced == [-x0 + exp(-x0)]
-    assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
-        ([(x0, (x - y)*(y - z))], [x0 + exp(x0)])
+    e = -(x - y)*(z - y) + exp(-(x - y)*(z - y))
+    substs, reduced = cse(
+        [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
+    assert substs == [(x0, (x - y)*(y - z))]
+    assert reduced == [x0 + exp(x0)]
     # issue 978
     n = -1 + 1/x
     e = n/x/(-n)**2 - 1/n/x
-    assert cse(e) == ([], [0])
+    assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)]) == \
+        ([], [0])
 
 
 def test_multiple_expressions():
     e1 = (x + y)*z
     e2 = (x + y)*w
-    substs, reduced = cse([e1, e2], optimizations=[])
+    substs, reduced = cse([e1, e2])
     assert substs == [(x0, x + y)]
     assert reduced == [x0*z, x0*w]
     l = [w*x*y + z, w*y]
@@ -164,12 +169,13 @@ def test_powers():
 
 
 def test_issues_1399():
-    assert cse(w/(x - y) + z/(y - x)) == ([], [(w - z)/(x - y)])
+    assert cse(w/(x - y) + z/(y - x), optimizations=main_optimizations) == \
+        ([], [(w - z)/(x - y)])
 
 
 def test_issue_921():
-    assert cse(
-        x**5 + x**4 + x**3 + x**2) == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
+    assert cse(x**5 + x**4 + x**3 + x**2, optimizations=main_optimizations) \
+        == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
 
 
 def test_issue_1104():
@@ -178,7 +184,7 @@ def test_issue_1104():
 
 def test_issue_3164():
     e = Eq(x*(-x + 1) + x*(x - 1), 0)
-    assert cse(e) == ([], [True])
+    assert cse(e, optimizations=main_optimizations) == ([], [True])
 
 
 def test_dont_cse_tuples():

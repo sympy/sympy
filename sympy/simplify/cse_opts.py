@@ -44,7 +44,5 @@ def sub_post(e):
     return e
 
 
-default_optimizations = [
-    (sub_pre, sub_post),
-    (factor_terms, None),
-]
+sub_opt = (sub_pre, sub_post)
+factor_opt = (factor_terms, None)

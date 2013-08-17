@@ -26,7 +26,7 @@ from . import cse_opts
 # ``None`` can be used to specify no transformation for either the preprocessor or
 # postprocessor.
 
-cse_optimizations = list(cse_opts.default_optimizations)
+main_optimizations = [cse_opts.sub_opt, cse_opts.factor_opt]
 
 # sometimes we want the output in a different format; non-trivial
 # transformations can be put here for users
@@ -383,8 +383,9 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None, order='canoni
         stream of symbols of the form "x0", "x1", etc. This must be an infinite
         iterator.
     optimizations : list of (callable, callable) pairs, optional
-        The (preprocessor, postprocessor) pairs. If not provided,
-        ``sympy.simplify.cse.cse_optimizations`` is used.
+        The (preprocessor, postprocessor) pairs.  Although slow for large
+        expressions, ``sympy.simplify.cse.main_optimizations`` is a good
+        choice. No optimizations are performed by default.
     postprocess : a function which accepts the two return values of cse and
         returns the desired form of output from cse, e.g. if you want the
         replacements reversed the function might be the following lambda:
@@ -415,9 +416,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None, order='canoni
         symbols = iter(symbols)
 
     if optimizations is None:
-        # Pull out the default here just in case there are some weird
-        # manipulations of the module-level list in some other thread.
-        optimizations = list(cse_optimizations)
+        optimizations = list()
 
     # Handle the case if just one expression was passed.
     if isinstance(exprs, Basic):
