@@ -28,7 +28,7 @@ class ParticleCharge(Particle):
                         (frame.x.dot(pos_vector)**2 + \
                          frame.y.dot(pos_vector)**2 + \
                          frame.z.dot(pos_vector)**2)**0.5
-        self._field = gradient(self._pot_func, frame)
+        self._field = electrostatic_field(self._pot_func, frame)
 
     def electrostatic_potential(self, frame, point=None):
         """
@@ -184,8 +184,7 @@ def charge_density(field, frame):
     
     _check_frame(frame)
     if isinstance(field, Vector):
-        return divergence(efield, frame) / (4*pi*k)
+        return divergence(field, frame) / (4*pi*k)
     else:
         field = sympify(field)
-        return -1 * laplacian(efield, frame) / (4*pi*k)
-        
+        return -1 * divergence(gradient(field, frame), frame) / (4*pi*k)
