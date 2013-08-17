@@ -9,6 +9,10 @@ from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
     string_types, with_metaclass)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
 
 
 class Basic(with_metaclass(ManagedProperties)):
@@ -358,6 +362,9 @@ class Basic(with_metaclass(ManagedProperties)):
 
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
+
+        if self is other:
+            return True
 
         from .function import AppliedUndef, UndefinedFunction as UndefFunc
 
@@ -1681,9 +1688,7 @@ def _aresame(a, b):
 
     """
     from .function import AppliedUndef, UndefinedFunction as UndefFunc
-    if len(list(preorder_traversal(a))) != len(list(preorder_traversal(b))):
-        return False
-    for i, j in zip(preorder_traversal(a), preorder_traversal(b)):
+    for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
         if i != j or type(i) != type(j):
             if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
                 (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
