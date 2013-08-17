@@ -146,8 +146,9 @@ def scalar_potential(field, frame):
     if field == 0:
         return 0
     #Express the field exntirely in frame
-    #Susbitute coordinate variables also
-    field = field.express(frame)
+    #Subsitute coordinate variables also
+    _check_frame(frame)
+    field = frame.express(field)
     #Make a list of dimensions of the frame
     dimensions = [x for x in frame]
     #Calculate scalar potential function
@@ -190,6 +191,7 @@ def scalar_potential_difference(field, frame, position1, position2):
     
     """
 
+    _check_frame(frame)
     if isinstance(field, Vector):
         #Get the scalar potential function
         scalar_fn = scalar_potential(field, frame)
