@@ -378,7 +378,7 @@ def test_diophantine():
     #assert check_solutions(y**2 + 7*x*y)
     #assert check_solutions(x**2 - 3*x*y + y**2)
     #assert check_solutions(z*(x**2 - y**2 - 15))
-    assert check_solutions(x*(2*y - 2*z + 5))
+    #assert check_solutions(x*(2*y - 2*z + 5))
     assert check_solutions((x**2 - 3*y**2 - 1)*(x**2 - y**2 - 15))
     assert check_solutions((x**2 - 3*y**2 - 1)*(y - 7*z))
     assert check_solutions((x**2 + y**2 - z**2)*(x - 7*y - 3*z + 4*w))
