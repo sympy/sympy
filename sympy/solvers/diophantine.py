@@ -1346,8 +1346,8 @@ def _find_DN(var, coeff):
 
 def check_param(x, y, a, t):
     """
-    Check if there is a number modulo a such that x and y are both
-    integers. If exist, then find a parametric representation for x and y.
+    Check if there is a number modulo ``a`` such that ``x`` and ``y`` are both
+    integers. If exist, then find a parametric representation for ``x`` and ``y``.
     """
     k, m, n = symbols("k, m, n", Integer=True)
     p = Wild("p", exclude=[k])
