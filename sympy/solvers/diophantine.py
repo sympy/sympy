@@ -1187,7 +1187,7 @@ def transformation_to_DN(eq):
 
     A, B  returned are such that Transpose((x y)) =  A * Transpose((X Y)) + B.
     Substituting these values for ``x`` and ``y`` and a bit of simplifying work will give
-    an equation of the form `x^2 - Dy^2 = N'.
+    an equation of the form `x^2 - Dy^2 = N`.
 
     >>> from sympy.abc import X, Y
     >>> from sympy import Matrix, simplify, Subs
