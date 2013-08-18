@@ -286,4 +286,3 @@ def test_dyadic_simplify():
 def test_latex_printer():
     r = Function('r')('t')
     assert MechanicsLatexPrinter().doprint(r**2) == "r^{2}"
-
