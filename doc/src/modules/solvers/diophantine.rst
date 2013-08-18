@@ -111,14 +111,14 @@ Internal Functions
 These functions are intended for the internal use in Diophantine module.
 
 :obj:`pairwise_prime`
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.pairwise_prime
 
 :obj:`make_prime`
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.make_prime
 
 :obj:`reconstruct`
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.reconstruct
 
