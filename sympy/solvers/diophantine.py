@@ -44,7 +44,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     See Also
     ========
 
-    ``diop_solve()``
+    diop_solve()
     """
     var = list(eq.expand(force=True).free_symbols)
     var.sort(key=default_sort_key)
@@ -259,7 +259,7 @@ def diop_linear(eq, param=symbols("t", Integer=True)):
     See Also
     ========
 
-    ``diop_quadratic()``, ``diop_ternary_quadratic()``
+    diop_quadratic(), diop_ternary_quadratic()
     """
     var, coeff, diop_type = classify_diop(eq)
 
@@ -447,7 +447,7 @@ def diop_quadratic(eq, param=symbols("t", Integer=True)):
     See Also
     ========
 
-    ``diop_linear()``, ``diop_ternary_quadratic()``
+    diop_linear(), diop_ternary_quadratic()
     """
     var, coeff, diop_type = classify_diop(eq)
 
@@ -711,7 +711,7 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
     See Also
     ========
 
-    ``find_DN()``, ``diop_bf_DN()``
+    find_DN(), diop_bf_DN()
 
     References
     ==========
@@ -1012,7 +1012,7 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
     See Also
     ========
 
-    ``diop_DN()``
+    diop_DN()
 
     References
     ==========
@@ -1215,7 +1215,7 @@ def transformation_to_DN(eq):
     See Also
     ========
 
-    ``find_DN()``
+    find_DN()
 
     References
     ==========
@@ -1323,7 +1323,7 @@ def find_DN(eq):
     See Also
     ========
 
-    ``transformation_to_DN()``
+    transformation_to_DN()
 
     References
     ==========
@@ -1764,7 +1764,7 @@ def pairwise_prime(a, b, c):
     See Also
     ========
 
-    ``make_prime()``, ``reocnstruct()``
+    make_prime(), reocnstruct()
     """
     a, b, c = make_prime(a, b, c)
     b, c, a = make_prime(b, c, a)
@@ -1790,7 +1790,7 @@ def make_prime(a, b, c):
     See Also
     ========
 
-    ``pairwaise_prime()``, ``reconstruct()``
+    pairwaise_prime(), reconstruct()
     """
     g = igcd(a, b)
 
