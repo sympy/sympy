@@ -530,6 +530,9 @@ class conjugate(Function):
     def _eval_transpose(self):
         return adjoint(self.args[0])
 
+    def _eval_as_leading_term(self, x):
+        return self.args[0]._eval_as_leading_term(x)
+
 
 class transpose(Function):
     """

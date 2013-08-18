@@ -476,6 +476,14 @@ def test_conjugate_transpose():
     assert transpose(x) == x
 
 
+def test_conjugate_leadterm():
+    x = Symbol('x')
+    f = Function('f')
+    assert conjugate(x).as_leading_term(x) == x
+    assert conjugate(x**2 + x).as_leading_term(x) == x
+    assert conjugate(f(x)).as_leading_term(x) == f(x)
+
+
 def test_transpose():
     a = Symbol('a', complex=True)
     assert transpose(a) == a

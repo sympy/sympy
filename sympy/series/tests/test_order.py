@@ -331,6 +331,10 @@ def test_order_conjugate_transpose():
     assert transpose(Order(y**2)) == Order(transpose(y)**2)
 
 
+def test_issue_6470():
+    assert Order(conjugate(x**2)) == Order(x**2)
+
+
 def test_order_noncommutative():
     A = Symbol('A', commutative=False)
     assert Order(A + A*x, x) == Order(1, x)
