@@ -1,7 +1,7 @@
 language: python
 env:
   - TEST_DOCTESTS="true"
-  - TEST_DOCTESTS="false"
+  -
 python:
   - 2.6
   - 2.7
@@ -19,7 +19,6 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="false"
     - python: 3.3
       env:
         - TEST_GMPY="true"
@@ -29,7 +28,6 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="false"
     - python: 2.7
       env: TEST_SPHINX="true"
   allow_failures:

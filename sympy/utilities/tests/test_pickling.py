@@ -76,7 +76,9 @@ def check(a, exclude=[], check_attr=True):
         c(a, b, d1)
         c(b, a, d2)
 
-    warnings.filterwarnings("default", category=SymPyDeprecationWarning)
+    # reset filters
+    warnings.simplefilter("default", category=DeprecationWarning)
+    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
 #================== core =========================
 

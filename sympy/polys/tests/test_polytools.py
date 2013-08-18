@@ -1192,6 +1192,12 @@ def test_Poly_total_degree():
     assert Poly(x**3 + x + 1).total_degree() == 3
 
 
+def test_Poly_homogenize():
+    assert Poly(x**2+y).homogenize(z) == Poly(x**2+y*z)
+    assert Poly(x+y).homogenize(z) == Poly(x+y, x, y, z)
+    assert Poly(x+y**2).homogenize(y) == Poly(x*y+y**2)
+
+
 def test_Poly_homogeneous_order():
     assert Poly(0, x, y).homogeneous_order() == -1
     assert Poly(1, x, y).homogeneous_order() == 0

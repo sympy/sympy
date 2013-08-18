@@ -26,7 +26,8 @@ def test_all_classes_are_tested():
     modules = {}
 
     # Ignore sympy.statistics import warning
-    warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    warnings.filterwarnings("ignore", message="sympy.statistics has been deprecated since SymPy 0.7.2",
+        category=SymPyDeprecationWarning)
 
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
@@ -72,7 +73,8 @@ def test_all_classes_are_tested():
             if test not in ns:
                 failed.append(module + '.' + name)
 
-    warnings.filterwarnings("default", category=SymPyDeprecationWarning)
+    # reset all SymPyDeprecationWarning into errors
+    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
     assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
@@ -468,11 +470,11 @@ def test_sympy__sets__fancysets__Reals():
     assert _test_args(Reals())
 
 
-def test_sympy__sets__fancysets__TransformationSet():
-    from sympy.sets.fancysets import TransformationSet
+def test_sympy__sets__fancysets__ImageSet():
+    from sympy.sets.fancysets import ImageSet
     from sympy import S, Lambda, Symbol
     x = Symbol('x')
-    assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
+    assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
 
 def test_sympy__sets__fancysets__Range():
@@ -2261,7 +2263,6 @@ def test_sympy__physics__quantum__piab__PIABHamiltonian():
 def test_sympy__physics__quantum__piab__PIABKet():
     from sympy.physics.quantum.piab import PIABKet
     assert _test_args(PIABKet('K'))
-
 
 def test_sympy__physics__quantum__qexpr__QExpr():
     from sympy.physics.quantum.qexpr import QExpr

@@ -1373,7 +1373,7 @@ class PrettyPrinter(Printer):
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
 
-    def _print_TransformationSet(self, ts):
+    def _print_ImageSet(self, ts):
         if self._use_unicode:
             inn = u("\u220a")
         else:
