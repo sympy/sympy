@@ -966,16 +966,16 @@ def PQa(P_0, Q_0, D):
 
 def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
     """
-    Uses brute force to solve the equation, x**2 - D*y**2 = N. Mainly concerned with the
-    generalized Pell equation which is the case when D > 0. For more information on the case
-    refer [1]. Let t, u be the minimal positive solution such that t**2 - D*u**2 = 1
-    (i. e. solutions to the equation x**2 - D*y**2 = 1) then this method requires that
-    sqrt(|N|*(t +/- 1) / (2*D)) is not too large.
+    Uses brute force to solve the equation, $x^2 - Dy^2 = N$. Mainly concerned with the
+    generalized Pell equation which is the case when $D > 0$. For more information on the case
+    refer [1]. Let $t, u$ be the minimal positive solution such that $t^2 - Du^2 = 1$
+    (i. e. solutions to the equation $x^2 - Dy^2 = 1$) then this method requires that
+    $\sqrt{\mid N \mid (t \pm 1) / (2*D)}$ is not too large.
 
     Usage
     =====
 
-        diop_bf_DN(D, N, t) -> D and N are integers as in x**2 - D*y**2 = N and t is
+        diop_bf_DN(D, N, t) -> D and N are integers as in $x^2 - Dy^2 = N$ and t is
         the parameter to be used in the solutions.
 
     Details
