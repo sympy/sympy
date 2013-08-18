@@ -1,6 +1,7 @@
-from sympy import cos, Matrix, sin, symbols, pi
+from sympy import cos, Matrix, sin, symbols, pi, Function
 from sympy.abc import x, y, z
 from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
+from sympy.physics.mechanics.essential import MechanicsLatexPrinter
 
 Vector.simp = True
 A = ReferenceFrame('A')
@@ -280,3 +281,8 @@ def test_dyadic_simplify():
     test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
     test4 = test4.simplify()
     assert (N.x & test4 & N.x) == -2 * y
+
+
+def test_latex_printer():
+    r = Function('r')('t')
+    assert MechanicsLatexPrinter().doprint(r**2) == "r^{2}"
