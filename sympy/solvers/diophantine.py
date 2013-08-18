@@ -13,8 +13,31 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     """
     Simplify the solution procedure of diophantine equation ``eq`` by converting it into
     a product of terms which should equal zero. For example, when solving, $x^2 - y^2 = 0$
-    this is treated as $(x + y)(x - y) = 0$ and $x+y = 0$ and $x-y = 0$ are solved independently
-    and combined.
+    this is treated as $(x + y)(x - y) = 0$ and $x+y = 0$ and $x-y = 0$ are solved
+    independently and combined. Each term is solved by calling `diop_solve()`.
+
+    Usage
+    =====
+
+        diophantine(eq, t) -> Solve the diophantine equation ``eq``.
+        ``t`` is the parameter to be used by `diop_solve()`.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import diophantine
+    >>> from sympy.abc import x, y, z
+    >>> diophantine(x**2 - y**2)
+    set([(-t, -t), (t, -t)])
+    >>> diophantine(x*(2*x + 3*y - z))
+    set([(0, n1, n2), (3*t - z, -2*t + z, z)])
+    >>> diophantine(x**2 + 3*x*y + 4*x)
+    set([(0, n1), (3*t - 4, -t)])
+
+    See Also
+    ========
+
+    diop_solve()
     """
     var = list(eq.expand(force=True).free_symbols)
     var.sort(key=default_sort_key)
@@ -46,9 +69,10 @@ def merge_solution(var, var_t, solution):
     """
     This is used to construct the full solution from the solutions of sub equations.
     For example when solving the equation $(x - y)(x**2 + y**2 - z**2) = 0$, solutions for
-    $x - y = 0$ are $(x, y) = (t, t)$. But we should introduce a value for z when we output
-    the solution for the original equation. This function converts $(t, t)$ into $(t, t, n_{1})$
-    where $n_{1}$ is an integer parameter.
+    each of the equations $x-y = 0$ and $x**2 + y**2 - z**2$ are found independently.
+    Solutions for $x - y = 0$ are $(x, y) = (t, t)$. But we should introduce a value
+    for z when we output the solution for the original equation. This function converts
+    $(t, t)$ into $(t, t, n_{1})$ where $n_{1}$ is an integer parameter.
     """
     # currently more than 3 parameters are not required.
     n1, n2, n3 = symbols("n1, n2, n3", Integer=True)
@@ -105,7 +129,7 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
         return _diop_linear(var, coeff, param)
 
     elif eq_type == "binary_quadratic":
-        return diop_quadratic(var, coeff, param)
+        return _diop_quadratic(var, coeff, param)
 
     elif eq_type == "ternary_quadratic":
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
@@ -222,6 +246,11 @@ def diop_linear(eq, param=symbols("t", Integer=True)):
 
     >>> diop_linear(2*x - 3*y - 4*z -3)
     (-3*t - 4*z - 3, -2*t - 4*z - 3,  z)
+
+    See Also
+    ========
+
+    diop_quadratic(), diop_ternary_quadratic()
     """
     var, coeff, diop_type = classify_diop(eq)
 
@@ -365,43 +394,55 @@ def extended_euclid(a, b):
 
 
 def divisible(a, b):
+    """
+    Returns True if a is divisible by b and False otherwise.
+    """
     return igcd(int(a), int(b)) == abs(int(b))
 
 
-def diop_quadratic(var, coeff, t):
+def diop_quadratic(eq, param=symbols("t", Integer=True)):
     """
     Solves quadratic diophantine equations, i.e equations of the form
-    Ax**2 + Bxy + Cy**2 + Dx + Ey + F = 0. Returns a set containing
+    $Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0$. Returns a set containing
     the tuples (x, y) which contains the solutions.
 
     Usage
     =====
 
-        diop_quadratic(var, coeff) -> var is a list of variables and
-        coeff is a dictionary containing coefficients of the symbols.
+        diop_quadratic(eq, param) -> ``eq`` is a quadratic binary diophantine
+        equation which is assumed to be zero. ``param`` is used to indicate the
+        parameter to be used in the solution.
 
-    Details
-    =======
-
-        ``var`` a list which contains two variables x and y.
-        ``coeff`` a dict which generally contains six key value pairs.
-        The set of keys is {x**2, y**2, x*y, x, y, Integer(1)}.
-        ``t`` the parameter to be used in the solution.
 
     Examples
     ========
 
     >>> from sympy.abc import x, y, t
-    >>> from sympy import Integer
     >>> from sympy.solvers.diophantine import diop_quadratic
-    >>> diop_quadratic([x, y], {x**2: 1, y**2: 1, x*y: 0, x: 2, y: 2, Integer(1): 2}, t)
+    >>> diop_quadratic(x**2 + y**2 + 2*x + 2*y + 2, t)
     set([(-1, -1)])
 
     References
     ==========
 
-    .. [1] http://www.alpertron.com.ar/METHODS.HTM
+    ..[1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0,[online],
+          Available: http://www.alpertron.com.ar/METHODS.HTM
+    ..[2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
+          Available: http://www.jpr2718.org/ax2p.pdf
+
+    See Also
+    ========
+
+    diop_linear(), diop_ternary_quadratic()
     """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "binary_quadratic":
+        return _diop_quadratic(var, coeff, param)
+
+
+def _diop_quadratic(var, coeff, t):
+
     x = var[0]
     y = var[1]
 
@@ -518,7 +559,7 @@ def diop_quadratic(var, coeff, t):
         else:
             _var = var
             _var[0], _var[1] = _var[1], _var[0] # Interchange x and y
-            s = diop_quadratic(_var, coeff, t)
+            s = _diop_quadratic(_var, coeff, t)
 
             while len(s) > 0:
                 sol = s.pop()
@@ -604,7 +645,7 @@ def diop_quadratic(var, coeff, t):
 
 def is_solution_quad(var, coeff, u, v):
     """
-    Check whether (u, v) is solution to the quadratic diophantine equation.
+    Check whether (u, v) is solution to the quadratic binary diophantine equation.
     """
     x = var[0]
     y = var[1]
@@ -616,11 +657,12 @@ def is_solution_quad(var, coeff, u, v):
 
 def diop_DN(D, N, t=symbols("t", Integer=True)):
     """
-    Solves the equation x**2 - D*y**2 = N. Mainly concerned in the case D > 0 which is the
-    geberalized Pell equation. To solve the generalized Pell equation this function
-    Uses LMM algorithm. Refer [1] for more details on the algorithm. Returns one
-    solution for each class of the solutions. Other solutions can be constructed
-    according to the values of D and N. Returns a list containing the solution tuples (x, y).
+    Solves the equation x**2 - D*y**2 = N. Mainly concerned in the case D > 0, D is
+    not a perfect square, which is the geberalized Pell equation. To solve the
+    generalized Pell equation this function Uses LMM algorithm. Refer [1] for more
+    details on the algorithm. Returns one solution for each class of the solutions.
+    Other solutions of the class can be constructed according to the values of D and N.
+    Returns a list containing the solution tuples (x, y).
 
     Usage
     =====
@@ -650,12 +692,16 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
     >>> diop_DN(986, 1) # Solves equation x**2 - 986*y**2 = 1
     [(49299, 1570)]
 
+    See Also
+    ========
+
+    find_DN(), diop_bf_DN()
+
     References
     ==========
 
     ..[1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
-          July 31, 2004, Pages 16 - 17.
-          http://www.jpr2718.org/pell.pdf
+          July 31, 2004, Pages 16 - 17. [online], Available: http://www.jpr2718.org/pell.pdf
     """
     if D < 0:
         if N == 0:
@@ -799,11 +845,25 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
 
 def cornacchia(a, b, m):
     """
-    Solves ``a*x**2 + b*y**2 = m`` gcd(a, b) = 1 = gcd(a, m). Uses the algorithm
-    due to Cornacchia. For more details see the References.
+    Solves $ax^2 + by^2 = m$ where $gcd(a, b) = 1 = gcd(a, m)$ and $a, b > 0$.
+    Uses the algorithm due to Cornacchia. The method only finds primitive solutions,
+    i.e. ones with $gcd(x, y) = 1$. For example this method can't be used to find
+    the solutions of $x^2 + y^2 = 20$ since the solution $(x,y) = (4, 2)$ is not
+    primitive. When $ a = b = 1$, only the solutions with $x \geq y$ are found.
+    For more details see the References.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import cornacchia
+    >>> cornacchia(2, 3, 35) # equation 2x**2 + 3y**2 = 35
+    set([(2, 3), (4, 1)])
+    >>> cornacchia(1, 1, 25) # equation x**2 + y**2 = 25
+    set([(4, 3)])
 
     References
     ===========
+
     .. [1] A. Nitaj, "L'algorithme de Cornacchia"
     .. [2] Solving the diophantine equation ax**2 + by**2 = m by Cornacchia's method,
            [online], Available: http://www.numbertheory.org/php/cornacchia.html
@@ -821,18 +881,17 @@ def cornacchia(a, b, m):
             continue
 
         u, r = t, m
-        while b:
+
+        while True:
             u, r = r, u % r
             if a*r**2 < m:
                 break
-        if not b:
-            return None
 
         m1 = m - a*r**2
 
         if m1 % b == 0:
             m1 = m1 // b
-            if m1 == 1 or perfect_power(m1):
+            if isinstance(sqrt(m1), Integer):
                 s = sqrt(m1)
                 sols.add((int(r), int(s)))
 
@@ -934,17 +993,17 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
     >>> diop_bf_DN(986, 1)
     [(49299, 1570)]
 
+    See Also
+    ========
+
+    diop_DN()
+
     References
     ==========
 
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
            July 31, 2004, Page 15.
            http://www.jpr2718.org/pell.pdf
-
-    See Also
-    ========
-
-    diop_DN()
     """
     sol = []
     a = diop_DN(D, 1)
@@ -1495,7 +1554,8 @@ def parametrize_ternary_quadratic(eq):
 
     References
     ==========
-    [1] .. The algorithmic resolution of Diophantine equations, Nigel P. Smart,
+
+    .. [1] The algorithmic resolution of Diophantine equations, Nigel P. Smart,
            London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
 
     """
@@ -1674,8 +1734,22 @@ def square_factor(a):
 
 def pairwise_prime(a, b, c):
     """
-    Transform $ax^2 + by^2 + cz^2 = 0$ into an equivalent equation $a'x^2 + b'y^2 + c'z^2 = 0$.
+    Transform $ax^2 + by^2 + cz^2 = 0$ into an equation $a'x^2 + b'y^2 + c'z^2 = 0$
     where $a', b', c'$ are pairwise prime. $gcd(a, b, c)$ should equal $1$ for this to work.
+    The solutions for $ax^2 + by^2 + cz^2 = 0$ can be recovered from the solutions of the latter
+    equation. Returns a tuple containing $a', b', c'$.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import pairwise_prime
+    >>> pairwise_prime(6, 15, 10)
+    (5, 2, 3)
+
+    See Also
+    ========
+
+    make_prime(), reocnstruct()
     """
     a, b, c = make_prime(a, b, c)
     b, c, a = make_prime(b, c, a)
@@ -1685,7 +1759,24 @@ def pairwise_prime(a, b, c):
 
 
 def make_prime(a, b, c):
+    """
+    Transform the equation $ax^2 + by^2 + cz^2 = 0$ to an equation
+    $a'x^2 + b'y^2 + c'z^2 = 0$ with $gcd(a', b') = 1$. Returns the
+    tuple $(a', b', c')$. Note that in the returned tuple $gcd(a', c')$ and
+    $gcd(b', c')$ can take any value.
 
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import make_prime
+    >>> make_prime(4, 2, 7)
+    (2, 1, 14)
+
+    See Also
+    ========
+
+    pairwaise_prime(), reconstruct()
+    """
     g = igcd(a, b)
 
     if g != 1:
@@ -1700,9 +1791,11 @@ def make_prime(a, b, c):
     return a, b, c
 
 
-def reconstruct(a, b, x):
+def reconstruct(a, b, z):
     """
-    Reconstruct the original solutions.
+    Reconstruct the $z$ value of a solution of $ax^2 + by^2 + cz^2$ from
+    the $z$ value of a solution of a equation which is an transformed form of the
+    above equation.
     """
     g = igcd(a, b)
 
@@ -1710,11 +1803,11 @@ def reconstruct(a, b, x):
         f = factorint(g)
         for p, e in f.items():
             if e %2 == 0:
-                x = x*p**(e//2)
+                z = z*p**(e//2)
             else:
-                x = x*p**((e//2)+1)
+                z = z*p**((e//2)+1)
 
-    return x
+    return z
 
 
 def ldescent(A, B):
@@ -1739,6 +1832,7 @@ def ldescent(A, B):
 
     References
     ==========
+
     .. [1] The algorithmic resolution of Diophantine equations, Nigel P. Smart,
            London Mathematical Society Student Texts 41, Cambridge University Press, Cambridge, 1998.
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
@@ -1827,6 +1921,7 @@ def descent(A, B):
 
     References
     ==========
+
     .. [1] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
            Volume 00, Number 0.
     """
@@ -1870,6 +1965,7 @@ def gaussian_reduce(w, a, b):
 
     References
     ==========
+
     .. [1] Gaussian lattice Reduction [online]. Available: http://home.ie.cuhk.edu.hk/~wkshum/wordpress/?p=404
     .. [2] Efficient Solution of Rational Conices, J. E. Cremona and D. Rusin, Mathematics of Computation,
            Volume 00, Number 0.
