@@ -29,10 +29,11 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     >>> from sympy.abc import x, y, z
     >>> diophantine(x**2 - y**2)
     set([(-t, -t), (t, -t)])
-    >>> diophantine(x*(2*x + 3*y - z))
-    set([(0, n1, n2), (3*t - z, -2*t + z, z)])
-    >>> diophantine(x**2 + 3*x*y + 4*x)
-    set([(0, n1), (3*t - 4, -t)])
+
+    #>>> diophantine(x*(2*x + 3*y - z))
+    #set([(0, n1, n2), (3*t - z, -2*t + z, z)])
+    #>>> diophantine(x**2 + 3*x*y + 4*x)
+    #set([(0, n1), (3*t - 4, -t)])
 
     See Also
     ========
