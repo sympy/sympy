@@ -95,14 +95,13 @@ def heuristics(e, z, z0, dir):
         return limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
 
     rv = None
-    bad = (S.Infinity, S.NegativeInfinity, S.NaN, None)
+    bad = (S.NaN, None)
     if e.is_Mul:
         r = []
         for a in e.args:
-            if not a.is_bounded:
-                r.append(a.limit(z, z0, dir))
-                if r[-1] in bad:
-                    break
+            r.append(a.limit(z, z0, dir))
+            if r[-1] in bad:
+                break
         else:
             if r:
                 rv = Mul(*r)
