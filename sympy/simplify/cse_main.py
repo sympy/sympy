@@ -1,15 +1,17 @@
 """ Tools for doing common subexpression elimination.
 """
+from __future__ import print_function, division
+
 import difflib
 
 from sympy.core import Basic, Mul, Add, sympify
 from sympy.core.basic import preorder_traversal
 from sympy.core.function import _coeff_isneg
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, xrange
 from sympy.utilities.iterables import numbered_symbols, \
     sift, topological_sort, ordered
 
-import cse_opts
+from . import cse_opts
 
 # (preprocessor, postprocessor) pairs which are commonly useful. They should
 # each take a sympy expression and return a possibly transformed expression.
@@ -43,7 +45,7 @@ def reps_toposort(r):
     >>> from sympy.abc import x, y
     >>> from sympy import Eq
     >>> for l, r in reps_toposort([(x, y + 1), (y, 2)]):
-    ...     print Eq(l, r)
+    ...     print(Eq(l, r))
     ...
     y == 2
     x == y + 1
@@ -372,7 +374,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     hit = True
     for i, subtree in enumerate(to_eliminate):
         if hit:
-            sym = symbols.next()
+            sym = next(symbols)
         hit = False
         if subtree.is_Pow and subtree.exp.is_Rational:
             update = lambda x: x.xreplace({subtree: sym, 1/subtree: 1/sym})

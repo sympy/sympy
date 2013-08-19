@@ -1,15 +1,17 @@
 """Known matrices related to physics"""
 
+from __future__ import print_function, division
+
 from sympy import Matrix, I
 
 
 def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
 
-    See Also
-    ========
+    References
+    ==========
 
-    http://en.wikipedia.org/wiki/Pauli_matrices
+    .. [1] http://en.wikipedia.org/wiki/Pauli_matrices
 
     Examples
     ========
@@ -85,10 +87,10 @@ def mgamma(mu, lower=False):
     gamma^5 = I * gamma^0 * gamma^1 * gamma^2 * gamma^3
     gamma_5 = I * gamma_0 * gamma_1 * gamma_2 * gamma_3 = - gamma^5
 
-    See Also
-    ========
+    References
+    ==========
 
-    http://en.wikipedia.org/wiki/Gamma_matrices
+    .. [1] http://en.wikipedia.org/wiki/Gamma_matrices
 
     Examples
     ========

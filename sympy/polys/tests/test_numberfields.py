@@ -23,6 +23,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
+from sympy.polys.polytools import degree
 from sympy.solvers import solve
 
 from sympy.utilities.pytest import skip
@@ -236,11 +237,6 @@ def test_minpoly_compose():
         24*sqrt(10)*sqrt(-sqrt(5) + 5))**2) + 1
     raises(ZeroDivisionError, lambda: minimal_polynomial(ex, x))
 
-def test_minpoly_compose1():
-    skip("This test hangs.")
-    # this test hangs because factor_list hangs in minpoly_op_algebraic_number
-    # on a polynomial of degree 96, which is factored by Sage very fast;
-    # one of the factors is the minimal polynomial.
     ex = sqrt(1 + 2**Rational(1,3)) + sqrt(1 + 2**Rational(1,4)) + sqrt(2)
     mp = minimal_polynomial(ex, x)
     assert degree(mp) == 48 and mp.subs({x:0}) == -16630256576

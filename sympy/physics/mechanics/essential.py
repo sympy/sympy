@@ -1,12 +1,15 @@
+from __future__ import print_function, division
+
 __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
            'MechanicsLatexPrinter']
 
 from sympy import (
-    Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
+    Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
     expand, zeros, Derivative, Function, symbols, Add,
-    solve, S)
+    solve, S, ImmutableMatrix as Matrix)
 from sympy.core import C
+from sympy.core.compatibility import reduce, u, string_types
 from sympy.core.function import UndefinedFunction
 from sympy.printing.conventions import split_super_sub
 from sympy.printing.latex import LatexPrinter
@@ -14,7 +17,6 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
-from sympy.core.compatibility import reduce
 
 
 class Dyadic(object):
@@ -211,33 +213,33 @@ class Dyadic(object):
                 for i, v in enumerate(ar):
                     # if the coef of the dyadic is 1, we skip the 1
                     if ar[i][0] == 1:
-                        ol.append(u" + " +
+                        ol.append(u(" + ") +
                                   mpp.doprint(ar[i][1]) +
-                                  u"\u2a02 " +
+                                  u("\u2a02 ") +
                                   mpp.doprint(ar[i][2]))
                     # if the coef of the dyadic is -1, we skip the 1
                     elif ar[i][0] == -1:
-                        ol.append(u" - " +
+                        ol.append(u(" - ") +
                                   mpp.doprint(ar[i][1]) +
-                                  u"\u2a02 " +
+                                  u("\u2a02 ") +
                                   mpp.doprint(ar[i][2]))
                     # If the coefficient of the dyadic is not 1 or -1,
                     # we might wrap it in parentheses, for readability.
                     elif ar[i][0] != 0:
                         arg_str = mpp.doprint(ar[i][0])
                         if isinstance(ar[i][0], Add):
-                            arg_str = u"(%s)" % arg_str
-                        if arg_str.startswith(u"-"):
+                            arg_str = u("(%s)") % arg_str
+                        if arg_str.startswith(u("-")):
                             arg_str = arg_str[1:]
-                            str_start = u" - "
+                            str_start = u(" - ")
                         else:
-                            str_start = u" + "
-                        ol.append(str_start + arg_str + u" " +
+                            str_start = u(" + ")
+                        ol.append(str_start + arg_str + u(" ") +
                                   mpp.doprint(ar[i][1]) +
-                                  u"\u2a02 " +
+                                  u("\u2a02 ") +
                                   mpp.doprint(ar[i][2]))
-                outstr = u"".join(ol)
-                if outstr.startswith(u" + "):
+                outstr = u("").join(ol)
+                if outstr.startswith(u(" + ")):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]
@@ -403,10 +405,10 @@ class Dyadic(object):
             frame2 = frame1
         _check_frame(frame1)
         _check_frame(frame2)
-        ol = S(0)
+        out = Dyadic([])
         for i, v in enumerate(self.args):
-            ol += v[0] * (v[1].express(frame1) | v[2].express(frame2))
-        return ol
+            out += v[0] * (v[1].express(frame1) | v[2].express(frame2))
+        return out
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
@@ -445,9 +447,11 @@ class Dyadic(object):
         return ol
 
     def simplify(self):
-        """Simplify the elements in the Dyadic in-place."""
-        for i, v in enumerate(self.args):
-            self.args[i] = (v[0].simplify(), v[1], v[2])
+        """Returns a simplified Dyadic."""
+        out = Dyadic([])
+        for v in self.args:
+            out += Dyadic([(v[0].simplify(), v[1], v[2])])
+        return out
 
     def subs(self, *args, **kwargs):
         """Substituion on the Dyadic.
@@ -522,7 +526,7 @@ class ReferenceFrame(object):
 
         """
 
-        if not isinstance(name, (str, unicode)):
+        if not isinstance(name, string_types):
             raise TypeError('Need to supply a valid name')
         # The if statements below are for custom printing of basis-vectors for
         # each frame.
@@ -533,17 +537,17 @@ class ReferenceFrame(object):
             if len(indices) != 3:
                 raise ValueError('Supply 3 indices')
             for i in indices:
-                if not isinstance(i, (str, unicode)):
+                if not isinstance(i, string_types):
                     raise TypeError('Indices must be strings')
             self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
                              (name + '[\'' + indices[1] + '\']'),
                              (name + '[\'' + indices[2] + '\']')]
-            self.pretty_vecs = [(u"\033[94m\033[1m" + name.lower() + u"_" +
-                                indices[0] + u"\033[0;0m\x1b[0;0m"),
-                                (u"\033[94m\033[1m" + name.lower() + u"_" +
-                                indices[1] + u"\033[0;0m\x1b[0;0m"),
-                                (u"\033[94m\033[1m" + name.lower() + u"_" +
-                                indices[2] + u"\033[0;0m\x1b[0;0m")]
+            self.pretty_vecs = [(u("\033[94m\033[1m") + name.lower() + u("_") +
+                                indices[0] + u("\033[0;0m\x1b[0;0m")),
+                                (u("\033[94m\033[1m") + name.lower() + u("_") +
+                                indices[1] + u("\033[0;0m\x1b[0;0m")),
+                                (u("\033[94m\033[1m") + name.lower() + u("_") +
+                                indices[2] + u("\033[0;0m\x1b[0;0m"))]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
                                indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
                                (name.lower(), indices[1])),
@@ -553,12 +557,12 @@ class ReferenceFrame(object):
         # Second case, when no custom indices are supplied
         else:
             self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
-            self.pretty_vecs = [(u"\033[94m\033[1m" + name.lower() +
-                                u"_x\033[0;0m\x1b[0;0m"),
-                                (u"\033[94m\033[1m" + name.lower() +
-                                u"_y\033[0;0m\x1b[0;0m"),
-                                (u"\033[94m\033[1m" + name.lower() +
-                                u"_z\033[0;0m\x1b[0;0m")]
+            self.pretty_vecs = [(u("\033[94m\033[1m") + name.lower() +
+                                u("_x\033[0;0m\x1b[0;0m")),
+                                (u("\033[94m\033[1m") + name.lower() +
+                                u("_y\033[0;0m\x1b[0;0m")),
+                                (u("\033[94m\033[1m") + name.lower() +
+                                u("_z\033[0;0m\x1b[0;0m"))]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
                                (r"\mathbf{\hat{%s}_y}" % name.lower()),
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]
@@ -570,7 +574,7 @@ class ReferenceFrame(object):
             if len(latexs) != 3:
                 raise ValueError('Supply 3 indices')
             for i in latexs:
-                if not isinstance(i, (str, unicode)):
+                if not isinstance(i, string_types):
                     raise TypeError('Latex entries must be strings')
             self.latex_vecs = latexs
         self.name = name
@@ -585,7 +589,7 @@ class ReferenceFrame(object):
 
     def __getitem__(self, ind):
         """Returns basis vector for the provided index (index being an str)"""
-        if not isinstance(ind, (str, unicode)):
+        if not isinstance(ind, string_types):
             raise TypeError('Supply a valid str for the index')
         if self.indices[0] == ind:
             return self.x
@@ -743,9 +747,6 @@ class ReferenceFrame(object):
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
 
-        Supported orientation types are Body, Space, Quaternion, Axis.
-        Examples show correct usage.
-
         Parameters
         ==========
 
@@ -753,7 +754,9 @@ class ReferenceFrame(object):
             The frame that this ReferenceFrame will have its orientation matrix
             defined in relation to.
         rot_type : str
-            The type of orientation matrix that is being created.
+            The type of orientation matrix that is being created. Supported
+            types are 'Body', 'Space', 'Quaternion', and 'Axis'. See examples
+            for correct usage.
         amounts : list OR value
             The quantities that the orientation matrix will be defined by.
         rot_order : str
@@ -1185,7 +1188,7 @@ class Vector(object):
         >>> N = ReferenceFrame('N')
         >>> b = Symbol('b')
         >>> V = 10 * b * N.x
-        >>> print V
+        >>> print(V)
         10*b*N.x
 
         """
@@ -1291,26 +1294,26 @@ class Vector(object):
                     for j in 0, 1, 2:
                         # if the coef of the basis vector is 1, we skip the 1
                         if ar[i][0][j] == 1:
-                            ol.append(u" + " + ar[i][1].pretty_vecs[j])
+                            ol.append(u(" + ") + ar[i][1].pretty_vecs[j])
                         # if the coef of the basis vector is -1, we skip the 1
                         elif ar[i][0][j] == -1:
-                            ol.append(u" - " + ar[i][1].pretty_vecs[j])
+                            ol.append(u(" - ") + ar[i][1].pretty_vecs[j])
                         elif ar[i][0][j] != 0:
                             # If the basis vector coeff is not 1 or -1,
                             # we might wrap it in parentheses, for readability.
                             arg_str = (MechanicsPrettyPrinter().doprint(
                                 ar[i][0][j]))
                             if isinstance(ar[i][0][j], Add):
-                                arg_str = u"(%s)" % arg_str
-                            if arg_str[0] == u"-":
+                                arg_str = u("(%s)") % arg_str
+                            if arg_str[0] == u("-"):
                                 arg_str = arg_str[1:]
-                                str_start = u" - "
+                                str_start = u(" - ")
                             else:
-                                str_start = u" + "
+                                str_start = u(" + ")
                             ol.append(str_start + arg_str + '*' +
                                       ar[i][1].pretty_vecs[j])
-                outstr = u"".join(ol)
-                if outstr.startswith(u" + "):
+                outstr = u("").join(ol)
+                if outstr.startswith(u(" + ")):
                     outstr = outstr[3:]
                 elif outstr.startswith(" "):
                     outstr = outstr[1:]
@@ -1589,23 +1592,23 @@ class Vector(object):
         """
 
         _check_frame(otherframe)
-        outvec = Vector(self.args + [])
+        outvec = Vector([])
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
                 temp = otherframe.dcm(v[1]) * v[0]
-                for i2, v2 in enumerate(temp):
-                    if Vector.simp is True:
-                        temp[i2] = trigsimp(v2, recursive=True)
-                    else:
-                        temp[i2] = v2
+                if Vector.simp is True:
+                    temp = temp.applyfunc(lambda x: trigsimp(x, method='fu'))
                 outvec += Vector([(temp, otherframe)])
-                outvec -= Vector([v])
+            else:
+                outvec += Vector([v])
         return outvec
 
     def simplify(self):
-        """Simplify the elements in the Vector in place. """
+        """Returns a simplified Vector."""
+        outvec = Vector([])
         for i in self.args:
-            i[0].simplify()
+            outvec += Vector([(i[0].simplify(), i[1])])
+        return outvec
 
     def subs(self, *args, **kwargs):
         """Substituion on the Vector.
@@ -1677,6 +1680,8 @@ class MechanicsLatexPrinter(LatexPrinter):
                 sub = r"_{%s}" % "".join(sub)
             else:
                 sub = r""
+            if exp:
+                sup += r"^{%s}" % self._print(exp)
             return r"%s" % (name + sup + sub)
         else:
             args = [ str(self._print(arg)) for arg in expr.args ]
@@ -1783,23 +1788,23 @@ class MechanicsPrettyPrinter(PrettyPrinter):
                     *self._print(deriv.expr).parens())
 
         if dots == 0:
-            dots = u""
+            dots = u("")
         elif dots == 1:
-            dots = u"\u0307"
+            dots = u("\u0307")
         elif dots == 2:
-            dots = u"\u0308"
+            dots = u("\u0308")
         elif dots == 3:
-            dots = u"\u20db"
+            dots = u("\u20db")
         elif dots == 4:
-            dots = u"\u20dc"
+            dots = u("\u20dc")
 
-        uni_subs = [u"\u2080", u"\u2081", u"\u2082", u"\u2083", u"\u2084",
-                    u"\u2085", u"\u2086", u"\u2087", u"\u2088", u"\u2089",
-                    u"\u208a", u"\u208b", u"\u208c", u"\u208d", u"\u208e",
-                    u"\u208f", u"\u2090", u"\u2091", u"\u2092", u"\u2093",
-                    u"\u2094", u"\u2095", u"\u2096", u"\u2097", u"\u2098",
-                    u"\u2099", u"\u209a", u"\u209b", u"\u209c", u"\u209d",
-                    u"\u209e", u"\u209f"]
+        uni_subs = [u("\u2080"), u("\u2081"), u("\u2082"), u("\u2083"), u("\u2084"),
+                    u("\u2085"), u("\u2086"), u("\u2087"), u("\u2088"), u("\u2089"),
+                    u("\u208a"), u("\u208b"), u("\u208c"), u("\u208d"), u("\u208e"),
+                    u("\u208f"), u("\u2090"), u("\u2091"), u("\u2092"), u("\u2093"),
+                    u("\u2094"), u("\u2095"), u("\u2096"), u("\u2097"), u("\u2098"),
+                    u("\u2099"), u("\u209a"), u("\u209b"), u("\u209c"), u("\u209d"),
+                    u("\u209e"), u("\u209f")]
 
         fpic = f.__dict__['picture']
         funi = f.__dict__['unicode']

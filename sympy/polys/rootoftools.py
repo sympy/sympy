@@ -1,5 +1,7 @@
 """Implementation of RootOf class and related tools. """
 
+from __future__ import print_function, division
+
 from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
         sympify, Rational)
 
@@ -26,12 +28,14 @@ from sympy.polys.domains import QQ
 from sympy.mpmath import mp, mpf, mpc, findroot
 from sympy.mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.utilities import lambdify
+from sympy.utilities import lambdify, public
+
+from sympy.core.compatibility import xrange
 
 _reals_cache = {}
 _complexes_cache = {}
 
-
+@public
 class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
@@ -195,7 +199,7 @@ class RootOf(Expr):
             else:
                 cache[factor] = [root]
 
-        for factor, roots in cache.iteritems():
+        for factor, roots in cache.items():
             _reals_cache[factor] = roots
 
         return reals
@@ -220,7 +224,7 @@ class RootOf(Expr):
             else:
                 cache[factor] = [root]
 
-        for factor, roots in cache.iteritems():
+        for factor, roots in cache.items():
             _complexes_cache[factor] = roots
 
         return complexes
@@ -484,6 +488,7 @@ class RootOf(Expr):
         a, b = min(a, b), max(a, b)
         return bisect(func, a, b, tol)
 
+@public
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
 

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, Integer, Tuple, Dict
 from sympy.core.sympify import converter as sympify_converter
 
@@ -134,3 +136,6 @@ class ImmutableSparseMatrix(Basic, SparseMatrix):
         raise TypeError("Cannot set values of ImmutableSparseMatrix")
 
     subs = MatrixBase.subs
+
+    def __hash__(self):
+        return hash((type(self).__name__,) + (self.shape, tuple(self._smat)))

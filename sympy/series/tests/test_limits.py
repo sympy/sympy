@@ -1,3 +1,5 @@
+from itertools import product as cartes
+
 from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
                    tan, cot, integrate, Sum, sign)
@@ -6,7 +8,6 @@ from sympy.series.limits import heuristics
 from sympy.series.order import Order
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.core.compatibility import product as cartes
 
 
 def test_basic1():
@@ -115,7 +116,6 @@ def test_floor():
     assert limit(floor(x), x, 248, "-") == 247
 
 
-@XFAIL
 def test_floor_requires_robust_assumptions():
     assert limit(floor(sin(x)), x, 0, "+") == 0
     assert limit(floor(sin(x)), x, 0, "-") == -1
@@ -142,7 +142,6 @@ def test_ceiling():
     assert limit(ceiling(x), x, 248, "-") == 248
 
 
-@XFAIL
 def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(sin(x)), x, 0, "+") == 1
     assert limit(ceiling(sin(x)), x, 0, "-") == 0
@@ -258,8 +257,8 @@ def test_issue2084():
             assert limit(eq, x, 0, dir=d) == res
         except AssertionError:
             if 0:  # change to 1 if you want to see the failing tests
-                print
-                print i, res, eq, d, limit(eq, x, 0, dir=d)
+                print()
+                print(i, res, eq, d, limit(eq, x, 0, dir=d))
             else:
                 assert None
 
@@ -272,7 +271,6 @@ def test_issue2085():
     assert limit(gamma(x), x, Rational(1, 2)) == sqrt(pi)
 
 
-@XFAIL
 def test_issue2130():
     assert limit((1 + y)**(1/y) - S.Exp1, y, 0) == 0
 
@@ -292,8 +290,8 @@ def test_issue1447():
             assert limit(eq, x, l, dir=d) == res
         except AssertionError:
             if 0:  # change to 1 if you want to see the failing tests
-                print
-                print i, res, eq, l, d, limit(eq, x, l, dir=d)
+                print()
+                print(i, res, eq, l, d, limit(eq, x, l, dir=d))
             else:
                 assert None
 
@@ -327,10 +325,6 @@ def test_extended_real_line():
     assert limit(x**2/(x - 5) - oo, x, oo) == -oo
     assert limit(1/(x + sin(x)) - oo, x, 0) == -oo
     assert limit(oo/x, x, oo) == oo
-
-
-@XFAIL
-def test_extended_real_line_fail():
     assert limit(x - oo + 1/x, x, oo) == -oo
     assert limit(x - oo + 1/x, x, 0) == -oo
 
@@ -369,7 +363,7 @@ def test_issue_2641():
 def test_issue_3267():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
-    assert limit(r, x, 1) == n/2
+    assert limit(r, x, 1).simplify() == n/2
 
 
 def test_factorial():

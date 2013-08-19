@@ -4,6 +4,7 @@ from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
+from sympy.utilities import default_sort_key
 from sympy.utilities.randtest import (test_numerically,
          random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
@@ -280,7 +281,7 @@ def test_lookup_table():
     table = {}
     _create_lookup_table(table)
     for _, l in sorted(table.items()):
-        for formula, terms, cond, hint in sorted(l):
+        for formula, terms, cond, hint in sorted(l, key=default_sort_key):
             subs = {}
             for a in list(formula.free_symbols) + [z_dummy]:
                 if hasattr(a, 'properties') and a.properties:

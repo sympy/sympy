@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 __all__ = ['cross',
            'dot',
            'express',
@@ -58,7 +60,7 @@ express.__doc__ += Vector.express.__doc__
 
 
 def outer(vec1, vec2):
-    """Outer prodcut convenience wrapper for Vector.outer():\n"""
+    """Outer product convenience wrapper for Vector.outer():\n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
@@ -209,9 +211,9 @@ def mprint(expr, **settings):
 
     outstr = msprint(expr, **settings)
 
-    import __builtin__
+    from sympy.core.compatibility import builtins
     if (outstr != 'None'):
-        __builtin__._ = outstr
+        builtins._ = outstr
         print(outstr)
 
 

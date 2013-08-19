@@ -1,7 +1,9 @@
 from sympy.external import import_module
+from sympy.utilities.pytest import raises
 
 theano = import_module('theano')
 if theano:
+    import numpy as np
     ts = theano.scalar
     tt = theano.tensor
     xt, yt, zt = [tt.scalar(name, 'floatX') for name in 'xyz']
@@ -37,9 +39,9 @@ def theq(a, b):
     bstr = theano.printing.debugprint(b, file='str')
 
     if not astr == bstr:
-        print
-        print astr
-        print bstr
+        print()
+        print(astr)
+        print(bstr)
 
     return astr == bstr
 
@@ -135,10 +137,9 @@ def test_theano_function_simple():
     f = theano_function([x, y], [x+y])
     assert f(2, 3) == 5
 
-
 def test_theano_function_numpy():
-    import numpy as np
-    f = theano_function([x, y], [x+y], dim=1)
+    f = theano_function([x, y], [x+y], dim=1,
+                        dtypes={x: 'float64', y: 'float64'})
     assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
 
     f = theano_function([x, y], [x+y], dtypes={x: 'float64', y: 'float64'},
@@ -146,6 +147,20 @@ def test_theano_function_numpy():
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
+
+def test_theano_function_kwargs():
+    import numpy as np
+    f = theano_function([x, y, z], [x+y], dim=1, on_unused_input='ignore',
+            dtypes={x: 'float64', y: 'float64', z: 'float64'})
+    assert np.linalg.norm(f([1, 2], [3, 4], [0, 0]) - np.asarray([4, 6])) < 1e-9
+
+    f = theano_function([x, y, z], [x+y],
+                        dtypes={x: 'float64', y: 'float64', z: 'float64'},
+                        dim=1, on_unused_input='ignore')
+    xx = np.arange(3).astype('float64')
+    yy = 2*np.arange(3).astype('float64')
+    zz = 2*np.arange(3).astype('float64')
+    assert np.linalg.norm(f(xx, yy, zz) - 3*np.arange(3)) < 1e-9
 
 def test_slice():
     assert theano_code(slice(1, 2, 3)) == slice(1, 2, 3)
@@ -189,23 +204,22 @@ def test_BlockMatrix_Inverse_execution():
     inputs = A, B
     output = B.I*A
 
-    cutsizes = {A: [(n/2, n/2), (k/2, k/2)],
-                B: [(n/2, n/2), (n/2, n/2)]}
+    cutsizes = {A: [(n//2, n//2), (k//2, k//2)],
+                B: [(n//2, n//2), (n//2, n//2)]}
     cutinputs = [sympy.blockcut(i, *cutsizes[i]) for i in inputs]
     cutoutput = output.subs(dict(zip(inputs, cutinputs)))
 
     dtypes = dict(zip(inputs, [dtype]*len(inputs)))
-    f = theano_function(inputs, [output], dtypes=dtypes)
+    f = theano_function(inputs, [output], dtypes=dtypes, cache={})
     fblocked = theano_function(inputs, [sympy.block_collapse(cutoutput)],
-                               dtypes=dtypes)
+                               dtypes=dtypes, cache={})
 
-    import numpy
-    ninputs = [numpy.random.rand(*x.shape).astype(dtype) for x in inputs]
-    ninputs = [numpy.arange(n*k).reshape(A.shape).astype(dtype),
-               numpy.eye(n).astype(dtype)]
-    ninputs[1] += numpy.ones(B.shape)*1e-5
+    ninputs = [np.random.rand(*x.shape).astype(dtype) for x in inputs]
+    ninputs = [np.arange(n*k).reshape(A.shape).astype(dtype),
+               np.eye(n).astype(dtype)]
+    ninputs[1] += np.ones(B.shape)*1e-5
 
-    assert numpy.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
+    assert np.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
 
 def test_DenseMatrix():
     t = sy.Symbol('theta')
@@ -221,3 +235,35 @@ def test_AppliedUndef():
     ft = theano_code(f(t))
     assert isinstance(ft, tt.TensorVariable)
     assert ft.name == 'f_t'
+
+def test_bad_keyword_args_raise_error():
+    raises(Exception, lambda : theano_function([x], [x+1], foobar=3))
+
+def test_cache():
+    sx = sy.Symbol('x')
+    cache = {}
+    tx = theano_code(sx, cache=cache)
+    assert theano_code(sx, cache=cache) is tx
+    assert theano_code(sx, cache={}) is not tx
+
+def test_Piecewise():
+    # A piecewise linear
+    xt, yt = theano_code(x), theano_code(y)
+    expr = sy.Piecewise((0, x<0), (x, x<2), (1, True))  # ___/III
+    result = theano_code(expr)
+    assert result.owner.op == tt.switch
+
+    expected = tt.switch(xt<0, 0, tt.switch(xt<2, xt, 1))
+    assert theq(result, expected)
+
+    expr = sy.Piecewise((x, x < 0))
+    result = theano_code(expr)
+    expected = tt.switch(xt < 0, xt, np.nan)
+    assert theq(result, expected)
+
+def test_Relationals():
+    xt, yt = theano_code(x), theano_code(y)
+    assert theq(theano_code(x > y), xt > yt)
+    assert theq(theano_code(x < y), xt < yt)
+    assert theq(theano_code(x >= y), xt >= yt)
+    assert theq(theano_code(x <= y), xt <= yt)

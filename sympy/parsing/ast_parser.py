@@ -18,59 +18,52 @@ e.g. "Integer(1)", parse it, dump it and you'll see that you need to do
 "Call(Name('Integer', Load()), [node], [], None, None)". You don't need
 to bother with lineno and col_offset, just call fix_missing_locations()
 before returning the node.
-
-If the ast module is not available (Python 2.5), we use the old compiler
-module.
 """
 
+from __future__ import print_function, division
+
 from sympy.core.basic import Basic
+from sympy.core.compatibility import exec_
 from sympy.core.sympify import SympifyError
 
-try:
-    from ast import parse, NodeTransformer, Call, Name, Load, \
-        fix_missing_locations, Str, Tuple
-    ast_enabled = True
-except ImportError:
-    ast_enabled = False
+from ast import parse, NodeTransformer, Call, Name, Load, \
+    fix_missing_locations, Str, Tuple
 
-if ast_enabled:
+class Transform(NodeTransformer):
 
-    class Transform(NodeTransformer):
+    def __init__(self, local_dict, global_dict):
+        NodeTransformer.__init__(self)
+        self.local_dict = local_dict
+        self.global_dict = global_dict
 
-        def __init__(self, local_dict, global_dict):
-            NodeTransformer.__init__(self)
-            self.local_dict = local_dict
-            self.global_dict = global_dict
-
-        def visit_Num(self, node):
-            if isinstance(node.n, int):
-                return fix_missing_locations(Call(Name('Integer', Load()),
-                        [node], [], None, None))
-            elif isinstance(node.n, float):
-                return fix_missing_locations(Call(Name('Float', Load()),
+    def visit_Num(self, node):
+        if isinstance(node.n, int):
+            return fix_missing_locations(Call(Name('Integer', Load()),
                     [node], [], None, None))
+        elif isinstance(node.n, float):
+            return fix_missing_locations(Call(Name('Float', Load()),
+                [node], [], None, None))
+        return node
+
+    def visit_Name(self, node):
+        if node.id in self.local_dict:
             return node
+        elif node.id in self.global_dict:
+            name_obj = self.global_dict[node.id]
 
-        def visit_Name(self, node):
-            if node.id in self.local_dict:
+            if isinstance(name_obj, (Basic, type)) or callable(name_obj):
                 return node
-            elif node.id in self.global_dict:
-                name_obj = self.global_dict[node.id]
+        elif node.id in ['True', 'False']:
+            return node
+        return fix_missing_locations(Call(Name('Symbol', Load()),
+                [Str(node.id)], [], None, None))
 
-                if isinstance(name_obj, (Basic, type)) or callable(name_obj):
-                    return node
-            elif node.id in ['True', 'False']:
-                return node
-            return fix_missing_locations(Call(Name('Symbol', Load()),
-                    [Str(node.id)], [], None, None))
-
-        def visit_Lambda(self, node):
-            args = [self.visit(arg) for arg in node.args.args]
-            body = self.visit(node.body)
-            n = Call(Name('Lambda', Load()),
-                [Tuple(args, Load()), body], [], None, None)
-            return fix_missing_locations(n)
-
+    def visit_Lambda(self, node):
+        args = [self.visit(arg) for arg in node.args.args]
+        body = self.visit(node.body)
+        n = Call(Name('Lambda', Load()),
+            [Tuple(args, Load()), body], [], None, None)
+        return fix_missing_locations(n)
 
 def parse_expr(s, local_dict):
     """
@@ -79,21 +72,12 @@ def parse_expr(s, local_dict):
     It converts all numbers to Integers before feeding it to Python and
     automatically creates Symbols.
     """
-    if ast_enabled:
-        global_dict = {}
-        exec 'from sympy import *' in global_dict
-        try:
-            a = parse(s.strip(), mode="eval")
-        except SyntaxError:
-            raise SympifyError("Cannot parse %s." % repr(s))
-        a = Transform(local_dict, global_dict).visit(a)
-        e = compile(a, "<string>", "eval")
-        return eval(e, global_dict, local_dict)
-    else:
-        # in Python 2.5, the "ast" module is not available, so we need
-        # to use our old implementation:
-        from ast_parser_python25 import SymPyParser
-        try:
-            return SymPyParser(local_dict=local_dict).parse_expr(s)
-        except SyntaxError:
-            raise SympifyError("Cannot parse %s." % repr(s))
+    global_dict = {}
+    exec_('from sympy import *', global_dict)
+    try:
+        a = parse(s.strip(), mode="eval")
+    except SyntaxError:
+        raise SympifyError("Cannot parse %s." % repr(s))
+    a = Transform(local_dict, global_dict).visit(a)
+    e = compile(a, "<string>", "eval")
+    return eval(e, global_dict, local_dict)

@@ -1,25 +1,24 @@
 """Implementation of :class:`RationalField` class. """
 
+from __future__ import print_function, division
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 
+from sympy.utilities import public
 
+@public
 class RationalField(Field, CharacteristicZero, SimpleDomain):
     """General class for rational fields. """
 
-    is_QQ = True
     rep = 'QQ'
 
+    is_RationalField = is_QQ = True
     is_Numerical = True
 
     has_assoc_Ring = True
     has_assoc_Field = True
-
-    def get_ring(self):
-        """Returns a ring associated with ``self``. """
-        from sympy.polys.domains import ZZ
-        return ZZ
 
     def algebraic_field(self, *extension):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """

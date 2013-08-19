@@ -1,7 +1,9 @@
+.. _installation:
+
 Installation
 ------------
 
-The SymPy CAS can be installed on virtually any computer with Python 2.5 or
+The SymPy CAS can be installed on virtually any computer with Python 2.6 or
 above. SymPy does not require any special Python modules: let us know if you
 have any problems with SymPy on a standard Python install. The current
 recommended method of installation is directly from the source files.
@@ -39,7 +41,7 @@ You may now run SymPy statements directly within the Python shell::
     >>> x, y, z, t = symbols('x y z t')
     >>> k, m, n = symbols('k m n', integer=True)
     >>> f, g, h = symbols('f g h', cls=Function)
-    >>> print diff(x**2/2, x)
+    >>> diff(x**2/2, x)
     x
 
 Git
@@ -51,7 +53,7 @@ command line::
 
     $ git clone git://github.com/sympy/sympy.git
 
-Then, execute either the setup.py or the bin/isympy scripts as demonstrated
+Then, execute either the `setup.py` or the `bin/isympy` scripts as demonstrated
 above.
 
 To update to the latest version, go into your repository and execute::
@@ -65,10 +67,6 @@ from your repository::
 
 This will cause the installed version to always point to the version in the git
 directory.
-
-If you're using the git repository with Python 3, you have to use the
-``./bin/use2to3`` script to build the Python 3 version of SymPy. This will put
-everything in the py3k-sympy directory.
 
 Anaconda
 ========
@@ -86,8 +84,8 @@ many more useful packages for scientific computing.
 Other Methods
 =============
 
-An installation executable is available for Windows users at the
-`downloads site`_ (.exe). In addition, various Linux distributions have SymPy
+An installation executable (.exe) is available for Windows users at the
+`downloads site`_. In addition, various Linux distributions have SymPy
 available as a package. Others are strongly encouraged to download from source
 (details above).
 

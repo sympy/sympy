@@ -1,6 +1,9 @@
+from __future__ import print_function, division
+
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
+from sympy.core.compatibility import string_types
 from sympy.functions import tan, cot, factorial, gamma
-from gruntz import gruntz
+from .gruntz import gruntz
 
 
 def limit(e, z, z0, dir="+"):
@@ -100,7 +103,7 @@ def limit(e, z, z0, dir="+"):
         if ex.is_number:
             if c is None:
                 base = b.subs(z, z0)
-                if base.is_finite and (ex.is_bounded or base is not S.One):
+                if base != 0 and (ex.is_bounded or base is not S.One):
                     return base**ex
             else:
                 if z0 == 0 and ex < 0:
@@ -170,8 +173,6 @@ def limit(e, z, z0, dir="+"):
             rval = Add(*[limit(term, z, z0, dir) for term in e.args])
             if rval != S.NaN:
                 return rval
-        if not any([a.is_unbounded for a in e.args]):
-            e = e.normal() # workaround for issue 3744
 
     if e.is_Order:
         args = e.args
@@ -229,7 +230,7 @@ class Limit(Expr):
         e = sympify(e)
         z = sympify(z)
         z0 = sympify(z0)
-        if isinstance(dir, basestring):
+        if isinstance(dir, string_types):
             dir = Symbol(dir)
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))

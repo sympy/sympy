@@ -8,15 +8,17 @@ Ray
 Segment
 
 """
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
 from sympy.core.logic import fuzzy_and
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
-from entity import GeometryEntity
-from point import Point
-from util import _symbol
+from .entity import GeometryEntity
+from .point import Point
+from .util import _symbol
 
 # TODO: this should be placed elsewhere and reused in other modules
 
@@ -1417,9 +1419,9 @@ class Segment(LinearEntity):
         p2 = Point(p2)
         if p1 == p2:
             return Point(p1)
-        if p1.x > p2.x:
+        if (p1.x > p2.x) is True:
             p1, p2 = p2, p1
-        elif p1.x == p2.x and p1.y > p2.y:
+        elif (p1.x == p2.x) is (p1.y > p2.y) is True:
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 

@@ -1,9 +1,12 @@
+from __future__ import print_function, division
+
 from sympy.core import Add, Basic, sympify
 from sympy.functions import adjoint
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, flatten, sort, condition, debug,
         exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
+from sympy.utilities import default_sort_key
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
@@ -58,7 +61,7 @@ def validate(*args):
 factor_of = lambda arg: arg.as_coeff_mmul()[0]
 matrix_of = lambda arg: unpack(arg.as_coeff_mmul()[1])
 def combine(cnt, mat):
-    from matmul import MatMul
+    from .matmul import MatMul
     if cnt == 1:
         return mat
     else:
@@ -68,7 +71,7 @@ rules = (rm_id(lambda x: x == 0 or isinstance(x, ZeroMatrix)),
          unpack,
          flatten,
          glom(matrix_of, factor_of, combine),
-         sort(str))
+         sort(default_sort_key))
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, MatAdd),
                                  do_one(*rules)))

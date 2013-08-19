@@ -1,3 +1,5 @@
+import sys
+
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies, Xor
 from sympy.core.relational import ( Relational, Equality, Unequality,
@@ -245,7 +247,10 @@ def test_new_relational():
     from random import randint
     for i in range(100):
         while 1:
-            strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
+            if sys.version_info[0] >= 3:
+                strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)
+            else:
+                strtype, length = (unichr, 65535) if randint(0, 1) else (chr, 255)
             relation_type = strtype( randint(0, length) )
             if randint(0, 1):
                 relation_type += strtype( randint(0, length) )
@@ -256,11 +261,14 @@ def test_new_relational():
         raises(ValueError, lambda: Relational(x, 1, relation_type))
 
 
-@XFAIL
 def test_relational_bool_output():
-    # XFail test for issue:
     # http://code.google.com/p/sympy/issues/detail?id=2832
-    raises(ValueError, lambda: bool(x > 3))
+    raises(TypeError, lambda: bool(x > 3))
+    raises(TypeError, lambda: bool(x >= 3))
+    raises(TypeError, lambda: bool(x < 3))
+    raises(TypeError, lambda: bool(x <= 3))
+    raises(TypeError, lambda: bool(Eq(x, 3)))
+    raises(TypeError, lambda: bool(Ne(x, 3)))
 
 
 def test_relational_logic_symbols():
