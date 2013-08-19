@@ -232,7 +232,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
     The contents of this file are the return value of
     ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
-    edit this file.
+    edit this file.  Instead, run ./bin/ask_update.py.
     """
 
     from sympy.logic.boolalg import And, Not, Or
