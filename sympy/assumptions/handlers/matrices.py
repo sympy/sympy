@@ -59,6 +59,7 @@ class AskSymmetricHandler(CommonHandler):
     @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.symmetric(expr.arg), assumptions)
+
     Inverse = Transpose
 
     @staticmethod
@@ -116,6 +117,7 @@ class AskOrthogonalHandler(CommonHandler):
     Handler for key 'orthogonal'
     """
     predicate = Q.orthogonal
+
     @staticmethod
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
@@ -146,6 +148,7 @@ class AskOrthogonalHandler(CommonHandler):
     @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.orthogonal(expr.arg), assumptions)
+
     Inverse = Transpose
 
     @staticmethod
@@ -183,6 +186,7 @@ class AskUnitaryHandler(CommonHandler):
     @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.unitary(expr.arg), assumptions)
+
     Inverse = Transpose
 
     @staticmethod
@@ -206,6 +210,7 @@ class AskFullRankHandler(CommonHandler):
     """
     Handler for key 'fullrank'
     """
+
     @staticmethod
     def MatMul(expr, assumptions):
         if all(ask(Q.fullrank(arg), assumptions) for arg in expr.args):
@@ -218,6 +223,7 @@ class AskFullRankHandler(CommonHandler):
     @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.fullrank(expr.arg), assumptions)
+
     Inverse = Transpose
 
     @staticmethod
@@ -229,6 +235,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
     """
     Handler for key 'positive_definite'
     """
+
     @staticmethod
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
@@ -261,6 +268,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
     @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.positive_definite(expr.arg), assumptions)
+
     Inverse = Transpose
 
     @staticmethod
@@ -274,6 +282,7 @@ class AskUpperTriangularHandler(CommonHandler):
     """
     Handler for key 'upper_triangular'
     """
+
     @staticmethod
     def MatMul(expr, assumptions):
         factor, matrices = expr.as_coeff_matrices()
@@ -313,6 +322,7 @@ class AskLowerTriangularHandler(CommonHandler):
     """
     Handler for key 'lower_triangular'
     """
+
     @staticmethod
     def MatMul(expr, assumptions):
         factor, matrices = expr.as_coeff_matrices()
@@ -352,6 +362,7 @@ class AskDiagonalHandler(CommonHandler):
     """
     Handler for key 'diagonal'
     """
+
     @staticmethod
     def MatMul(expr, assumptions):
         factor, matrices = expr.as_coeff_matrices()
@@ -412,9 +423,9 @@ class AskIntegerElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.integer_elements)
 
-    HadamardProduct = Determinant = Trace = Transpose = MatAdd
+    HadamardProduct, Determinant, Trace, Transpose = [MatAdd]*4
 
-    ZeroMatrix = Identity = staticmethod(CommonHandler.AlwaysTrue)
+    ZeroMatrix, Identity = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
     MatMul = staticmethod(partial(MatMul_elements, Q.integer_elements,
                                                    Q.integer))
@@ -426,8 +437,8 @@ class AskRealElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.real_elements)
 
-    HadamardProduct = Determinant = Trace = Transpose = Inverse = \
-            Factorization = MatAdd
+    HadamardProduct, Determinant, Trace, Transpose, Inverse, \
+            Factorization = [MatAdd]*6
 
     MatMul = staticmethod(partial(MatMul_elements, Q.real_elements, Q.real))
     MatrixSlice = staticmethod(partial(MS_elements, Q.real_elements))
@@ -439,8 +450,8 @@ class AskComplexElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex_elements)
 
-    HadamardProduct = Determinant = Trace = Transpose = Inverse = \
-            Factorization = MatAdd
+    HadamardProduct, Determinant, Trace, Transpose, Inverse, \
+         Factorization = [MatAdd]*6
 
     MatMul = staticmethod(partial(MatMul_elements, Q.complex_elements,
                                                    Q.complex))
