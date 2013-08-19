@@ -1365,7 +1365,7 @@ class Integral(Expr):
 
             else:
                 raise ValueError("First argument of subs should be  " + str(intvar) +
-                    "or a function of " + str(intvar))
+                    " or a function of " + str(intvar))
 
         # Definite integral, substitute if transformation of variables is linear
         else:

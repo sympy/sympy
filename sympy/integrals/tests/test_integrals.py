@@ -1004,3 +1004,8 @@ def test_integral_subs():
     assert eq.subs(y, x) == Integral(f(y), (y, x))
     eq = Integral(f(x), (y, 1, 2))
     assert eq.subs(y, x) == Integral(f(x), (x, 1, 2))
+    expr = Integral(x**log(x)*exp(x))
+    assert expr.subs(x*log(x), exp(x)) == Integral(exp(2*x), x)
+    assert expr.subs(x, y) == Integral(x**log(x)*exp(x), (x, y))
+    expr = Integral(x**log(x)*exp(x), (x, 1, 2))
+    assert expr.subs(x, y) == Integral(y**log(y)*exp(y), (y, 1, 2))
