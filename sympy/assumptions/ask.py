@@ -57,6 +57,8 @@ def _extract_facts(expr, symbol):
     Extracts the facts relevant to the symbol from an assumption.
     Returns None if there is nothing to extract.
     """
+    if isinstance(expr, bool):
+        return
     if not expr.has(symbol):
         return None
     if isinstance(expr, AppliedPredicate):
