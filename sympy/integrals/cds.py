@@ -119,17 +119,26 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     """
     from sympy.integrals.prde import parametric_log_deriv
     t = DE.t
+    if not c1.has(t) and not c2.has(t):
+        with DecrementLevel(DE):
+            return coupled_DE_system(Poly(b1, t), Poly(b2, t), Poly(c1, t),
+                Poly(c2, t), DE)
     wa, wd = frac_in(DE.d.quo(Poly(DE.t, DE.t)), DE.t)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     A1 = parametric_log_deriv(b1a, b1d, wa, wd, DE)
     A2 = parametric_log_deriv(b2a, b2d, wa, wd, DE)
     if A1 is not None and A2 is not None:
-        n1, u1 = A1
-        n2, u2 = A2
+        n1, m1, u1 = A1
+        n2, m2, u2 = A2
+	print(u1)
+	print(u2)
+	m = m1
         u = u1 + u2*a.as_expr()
-        z1a, z1d = frac_in(cancel(u1*c1.as_expr() + a.as_expr()*u2*c2.as_expr()), DE.t)
-        z2a, z2d = frac_in(cancel(u2*c1.as_expr() + a.as_expr()*u1*c2.as_expr()), DE.t)
+        z1a, z1d = frac_in(u1.as_expr()*c1.as_expr() +
+            a.as_expr()*u2.as_expr()*c2.as_expr(), DE.t, cancel=True)
+        z2a, z2d = frac_in(u2.as_expr()*c1.as_expr() +
+            a.as_expr()*u1.as_expr()*c2.as_expr(), DE.t, cancel=True)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
         if P1 and P2:
@@ -137,8 +146,10 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
             p2, _ = P2
             q1 = ((u1*p1 - a*u2*p2)*t**(-m)).as_expr()/(u1**2 - a*u2**2).as_expr()
             q2 = ((u1*p2 - u2*p1)*t**(-m)).as_expr()/(u1**2 - a*u2**2).as_expr()
-            q1a, q1d = frac_in(q1, DE.t, cancel=True)
-            q2a, q2d = frac_in(q2, DE.t, cancel=True)
+            q1a, q1d = frac_in(q1, DE.t)
+            q2a, q2d = frac_in(q2, DE.t)
+	    print(q1)
+            print(q2)
             if  not q1d.has(DE.t) and  not q2d.has(DE.t) and Poly(p1).degree(t) <= n \
                 and Poly(p2).degree(t) <= n:
                 return (q1, q2)
