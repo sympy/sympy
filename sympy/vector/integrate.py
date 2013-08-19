@@ -82,7 +82,7 @@ class LineVectIntegral(VectIntegral):
         Evaluate the integral symbolically, if possible. Else, return the
         LineVectIntegral object back.
         """
-        vect = vect.express(self.param_region.coord_sys)
+        vect = self.vect.express(self.param_region.coord_sys)
         # calculate the differential length element for coord_sys
         dl = self.param_region.coord_sys.h_list
         base_scalars = self.param_region.coord_sys.base_scalars
@@ -121,6 +121,28 @@ class SurfaceVectIntegral(VectIntegral):
     def __init__(self, vect, param_region)
         # The integral must be of the type F.dl
         super(LineVectIntegral, self).__init__(vect, param_region)
+
+    def eval(self):
+        vect = self.vect.express(self.param_region.coord_sys)
+        # First, we need to calculate dS (differntial surface element vector)
+        # if r(u, v) is the position vector of any point on the surface
+        # normal = (d/du)r x (d/dv)r
+        r = ZeroVector
+        base_vectors = self.param_region.coord_sys.base_vectors
+        for i in range(len(base_vectors)):
+            r = r + self.param_region.definitions[i] * base_vectors[i]
+
+        r = r.expand()
+        r_u = r.diff(self.param_region.u)
+        r_v = r.diff(self.param_region.v)
+
+        # TODO : Implement normalize
+        n = cross(r_u, r_v)
+        # http://en.wikipedia.org/wiki/Surface_integral
+        r_dot_n = dot(r, n, self.param_region.coord_sys.param_region)
+        # Now we need to calculate ∫ ∫ r_dot_n du dv
+        # How to do this??
+        # Asked on ML
 
 
 vect_integrate(vect, param_region)
