@@ -95,6 +95,32 @@ def fuzzy_not(v):
         return not v
 
 
+def fuzzy_or(*args):
+    """
+    Or in fuzzy logic. Returns True (any True), False (all False), or None
+
+    See the docstrings of fuzzy_and and fuzzy_not for more info.  fuzzy_or is
+    related to the two by the standard De Morgan's law.
+
+    >>> from sympy.core.logic import fuzzy_or
+    >>> fuzzy_or(True, False)
+    True
+    >>> fuzzy_or(True, None)
+    True
+    >>> fuzzy_or(False, False)
+    False
+    >>> print(fuzzy_or(False, None))
+    None
+
+    """
+    if len(args) == 1 and iterable(args[0]):
+        args = args[0]
+    if not args:
+        raise ValueError('fuzzy_or needs at least 1 argument')
+    else:
+        return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
+
+
 class Logic(object):
     """Logical expression"""
     # {} 'op' -> LogicClass
