@@ -1926,3 +1926,8 @@ def test_issue_3906():
 def test_issue_2734():
     assert ask(Q.positive(log(x)**2), Q.positive(x)) is None
     assert ask(~Q.negative(log(x)**2), Q.positive(x)) is True
+
+
+def test_issue_3633():
+    raises(ValueError, lambda: ask(Q.positive(x), Q.positive(x) & Q.negative(x)))
+    raises(ValueError, lambda: ask(Q.negative(x), Q.positive(x) & Q.negative(x)))
