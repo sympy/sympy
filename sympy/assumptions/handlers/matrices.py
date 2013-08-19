@@ -53,10 +53,6 @@ class AskSymmetricHandler(CommonHandler):
             return True
 
     @staticmethod
-    def Identity(expr, assumptions):
-        return True
-
-    @staticmethod
     def ZeroMatrix(expr, assumptions):
         return ask(Q.square(expr), assumptions)
 
@@ -71,6 +67,8 @@ class AskSymmetricHandler(CommonHandler):
             return None
         else:
             return ask(Q.symmetric(expr.parent), assumptions)
+
+    Identity = staticmethod(CommonHandler.AlwaysTrue)
 
 
 class AskInvertibleHandler(CommonHandler):
@@ -183,14 +181,6 @@ class AskUnitaryHandler(CommonHandler):
             return True
 
     @staticmethod
-    def Identity(expr, assumptions):
-        return True
-
-    @staticmethod
-    def ZeroMatrix(expr, assumptions):
-        return False
-
-    @staticmethod
     def Transpose(expr, assumptions):
         return ask(Q.unitary(expr.arg), assumptions)
     Inverse = Transpose
@@ -207,6 +197,10 @@ class AskUnitaryHandler(CommonHandler):
         return True
 
     Factorization = staticmethod(partial(_Factorization, Q.unitary))
+
+    Identity = staticmethod(CommonHandler.AlwaysTrue)
+
+    ZeroMatrix = staticmethod(CommonHandler.AlwaysFalse)
 
 class AskFullRankHandler(CommonHandler):
     """

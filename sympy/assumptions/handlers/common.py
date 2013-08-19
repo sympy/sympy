@@ -11,16 +11,14 @@ class CommonHandler(AskHandler):
     """Defines some useful methods common to most Handlers """
 
     @staticmethod
-    def NaN(expr, assumptions):
-        return False
-
-    @staticmethod
     def AlwaysTrue(expr, assumptions):
         return True
 
     @staticmethod
     def AlwaysFalse(expr, assumptions):
         return False
+
+    NaN = AlwaysFalse
 
 
 class AskCommutativeHandler(CommonHandler):
@@ -45,13 +43,7 @@ class AskCommutativeHandler(CommonHandler):
                 return False
         return True
 
-    @staticmethod
-    def Number(expr, assumptions):
-        return True
-
-    @staticmethod
-    def NaN(expr, assumptions):
-        return True
+    Number, NaN = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
 
 class TautologicalHandler(AskHandler):
