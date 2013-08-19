@@ -994,3 +994,13 @@ def test_issue_1704():
     x_max = Symbol("x_max")
     assert integrate(y/pi*exp(-(x_max - x)/cos(a)), x) == \
         y*exp((x - x_max)/cos(a))*cos(a)/pi
+
+
+def test_integral_subs():
+    f = Function("f")
+    g = Function("g")
+    eq = Integral(f(y), y)
+    assert eq.subs(f(y), g(y)) == Integral(g(y), y)
+    assert eq.subs(y, x) == Integral(f(y), (y, x))
+    eq = Integral(f(x), (y, 1, 2))
+    assert eq.subs(y, x) == Integral(f(x), (x, 1, 2))
