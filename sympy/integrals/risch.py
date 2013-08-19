@@ -1507,18 +1507,12 @@ def integrate_hypertangent_reduced(pa, pd, DE):
     """
 
     from sympy.integrals.cds import coupled_DE_system
+    from sympy.integrals.rde import order_at
     Z = Poly(0, DE.t)
     O = Poly(1, DE.t)
     t = DE.t
-    z = Symbol('z')
-    pa_z = Poly(pa.subs(t**2, z - 1), z, t)
-    pd_z = Poly(pd.subs(t**2, z - 1), z, t)
-    p_q, p_r = pa_z.div(pd_z)
-    if p_q.degree(z) > 0:
-        return (Z, O, True)
-    if p_r == 0 and p_q.degree() == 0:
-        return (Z, O, True)
-    m = -(Poly(p_r, z).degree(z) - Poly(pd_z, z).degree(z))
+    dtt = Poly(DE.t**2 + 1, DE.t)
+    m = order_at(pa, dtt, t) - order_at(pd, dtt, t)
     h = cancel(((t**2 + 1)**m)*pa.as_expr()/pd.as_expr())
     h = h.as_poly(t)
     (q, r) = h.div(Poly(DE.t**2 + 1, DE.t))
