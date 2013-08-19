@@ -168,20 +168,20 @@ def test_polynomial_reduce_kt():
 
 
 def test_laurent_series():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    a = Poly(36, t)
-    d = Poly((t - 2)*(t**2 - 1)**2, t)
-    F = Poly(t**2 - 1, t)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    a = Poly(36, x)
+    d = Poly((x - 2)*(x**2 - 1)**2, x)
+    F = Poly(x**2 - 1, x)
     n = 2
     assert laurent_series(a, d, F, n, DE) == \
-        (Poly(-3*t**3 + 3*t**2 - 6*t - 8, t), Poly(t**5 + t**4 - 2*t**3 - 2*t**2 + t + 1, t),
-        [Poly(-3*t**3 - 6*t**2, t), Poly(2*t**6 + 6*t**5 - 8*t**3, t)])
+        (Poly(-3*x**3 + 3*x**2 - 6*x - 8, x), Poly(x**5 + x**4 - 2*x**3 - 2*x**2 + x + 1, x),
+        [Poly(-3*x**3 - 6*x**2, x), Poly(2*x**6 + 6*x**5 - 8*x**3, x)])
 
 
 def test_recognize_derivative():
-    DE = DifferentialExtension(extension={'D': [Poly(1, t)]})
-    a = Poly(36, t)
-    d = Poly((t - 2)*(t**2 - 1)**2, t)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    a = Poly(36, x)
+    d = Poly((x - 2)*(x**2 - 1)**2, x)
     assert recognize_derivative(a, d, DE) == False
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     a = Poly(2, t)
@@ -201,9 +201,9 @@ def test_recognize_log_derivative():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == True
     assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1), DE) == True
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2), DE) == False
-    assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t), DE) == True
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 - 2, x), DE) == False
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 + x, x), DE) == True
 
 
 def test_residue_reduce():
