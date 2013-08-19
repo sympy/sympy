@@ -265,7 +265,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         for item in mapping.items()]) + ','
     return fact_string % (c, m)
 
-# handlers_dict tells us what ask handler we should use
+# handlers tells us what ask handler we should use
 # for a particular key
 _val_template = 'sympy.assumptions.handlers.%s'
 _handlers = [
@@ -307,9 +307,9 @@ _handlers = [
     ("real_elements",     "matrices.AskRealElementsHandler"),
     ("complex_elements",  "matrices.AskComplexElementsHandler"),
 ]
+
 for name, value in _handlers:
     register_handler(name, _val_template % value)
-
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
                     if not attr.startswith('__')]
