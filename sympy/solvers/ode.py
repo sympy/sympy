@@ -348,7 +348,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, xi=None, eta=None, **kwargs):
     r"""
     Solves any (supported) kind of ordinary differential equation.
 
@@ -383,6 +383,14 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
             It will still integrate with this hint. Note that the solution may
             contain more arbitrary constants than the order of the ODE with
             this option enabled.
+
+        ``xi`` and ``eta`` are the infinitesimal functions of an ordinary
+            differential equation. They are the infinitesimals of the Lie group
+            of point transformations for which the differential equation is
+            invariant. The user can specify values for the infinitesimals. If
+            nothing is specified, ``xi`` and ``eta`` are calculated using
+            :py:meth:`~sympy.solvers.ode.infinitesimals` with the help of various
+            heuristics.
 
     **Hints**
 
@@ -490,15 +498,9 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     given_hint = hint  # hint given by the user
 
-    xi = kwargs.get("xi")
-    eta = kwargs.get("eta")
-    if hint != "lie_group" and any([xi, eta]):
-        raise ValueError("Xi and eta should be specified only for the"
-            " hint Lie group")
-
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, type='ode', **kwargs)
+        hint=hint, simplify=True, xi=xi, eta=eta, type='ode', **kwargs)
 
     eq = hints.pop('eq', eq)
     all_ = hints.pop('all', False)
@@ -531,10 +533,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     else:
         # The key 'hint' stores the hint needed to be solved for.
         hint = hints['hint']
-        if hint == 'lie_group':  # Special case
-            return _helper_simplify(eq, hint, hints, simplify, xi=xi, eta=eta)
-        else:
-            return _helper_simplify(eq, hint, hints, simplify)
+        return _helper_simplify(eq, hint, hints, simplify)
 
 def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     r"""
@@ -551,9 +550,6 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     func = r['func']
     order = r['order']
     match = r[hint]
-
-    if hint == 'lie_group':  # Hack to let in xi and eta
-        match.update({'xi': kwargs.get('xi'), 'eta': kwargs.get('eta')})
 
     if simplify:
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
@@ -700,9 +696,12 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     x = func.args[0]
     f = func.func
     y = Dummy('y')
+    xi = kwargs.get('xi')
+    eta = kwargs.get('eta')
+
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, prep=False)
+            return classify_ode(eq.lhs - eq.rhs, func, xi=xi, eta=eta, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -729,7 +728,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     b2 = Wild('b2', exclude=[x, f(x), df])
     c2 = Wild('c2', exclude=[x, f(x), df])
     d2 = Wild('d2', exclude=[x, f(x), df])
-    r3 = {}  # Used for the lie_group hint
+    r3 = {'xi': xi, 'eta': eta}  # Used for the lie_group hint
 
     eq = expand(eq)
 
@@ -795,7 +794,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r['y'] = y
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
-            r3 = r
+            r3.update(r)
             ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
             # dP/dy == dQ/dx
             try:
