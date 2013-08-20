@@ -253,8 +253,10 @@ def _mulrowcol(row, col, K):
 
 def _binsearch(element, array, beg, end):
     """
-    An implementation of binary search used in
-    mulrowcol
+    An implementation of binary search.
+    It is expected to be used as follows
+    for an element i, list v--
+    _binsearch(i, v, 0, len(v) - 1).
 
     """
     if beg > end:
