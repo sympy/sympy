@@ -418,7 +418,9 @@ def test_residue():
     assert primitive_root(97) == 5
     assert primitive_root(97**2) == 5
     assert primitive_root(40487) == 5
-    assert primitive_root(40487**2) == 40492
+    # note that primitive_root(40487) + 40487 = 40492 is a primitive root,
+    # but it is not the smallest
+    assert primitive_root(40487**2) == 10
     assert primitive_root(82) == 7
 
     assert is_quad_residue(3, 7) is False

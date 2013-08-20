@@ -123,7 +123,9 @@ def primitive_root(p, all_roots=False):
             if is_primitive_root(g, p1**2):
                 return g
             else:
-                return g + p1
+                for i in xrange(2, p + p1 + 1):
+                    if igcd(i, p) == 1 and is_primitive_root(i, p):
+                        return i
 
     # see [1]
     v = [(p - 1) // i for i in factorint(p - 1).keys()]
