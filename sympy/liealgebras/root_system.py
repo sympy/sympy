@@ -80,7 +80,7 @@ class RootSystem(Basic):
         In this way all the negative roots are generated.
         """
         alpha = self.cartan_type.positive_roots()
-        keys = alpha.keys()
+        keys = list(alpha.keys())
         k = max(keys)
         for val in keys:
             k += 1
@@ -190,7 +190,7 @@ class RootSystem(Basic):
         =======
         >>> from sympy.liealgebras.root_system import RootSystem
         >>> c = RootSystem("A3")
-        >>> print c.dynkin_diagram()
+        >>> print(c.dynkin_diagram())
         0---0---0
         1   2   3
         """
