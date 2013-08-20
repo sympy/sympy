@@ -691,9 +691,9 @@ def test_latex_order():
 
 def test_latex_Lambda():
     assert latex(Lambda(x, x + 1)) == \
-        r"x \mapsto x + 1"
+        r"\left( x \mapsto x + 1 \right)"
     assert latex(Lambda((x, y), x + 1)) == \
-        r"\begin{pmatrix}x, & y\end{pmatrix} \mapsto x + 1"
+        r"\left( \begin{pmatrix}x, & y\end{pmatrix} \mapsto x + 1 \right)"
 
 
 def test_latex_PolyElement():
