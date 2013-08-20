@@ -57,6 +57,7 @@ information on each (run ``help(ode)``):
   - 1st order exact differential equations.
   - 1st order linear differential equations.
   - 1st order Bernoulli differential equations.
+  - Power series solutions for first order differential equations.
   - 2nd order Liouville differential equations.
   - `n`\th order linear homogeneous differential equation with constant
     coefficients.
@@ -242,6 +243,7 @@ from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.polys.polytools import cancel, degree, div
@@ -280,6 +282,7 @@ allhints = (
     "almost_linear",
     "linear_coefficients",
     "separable_reduced",
+    "1st_power_series",
     "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
@@ -346,7 +349,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, ics=None, **kwargs):
     r"""
     Solves any (supported) kind of ordinary differential equation.
 
@@ -490,7 +493,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
 
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, type='ode', **kwargs)
+        hint=hint, simplify=True, type='ode', ics=ics, **kwargs)
 
     eq = hints.pop('eq', eq)
     all_ = hints.pop('all', False)
@@ -553,7 +556,7 @@ def _helper_simplify(eq, hint, match, simplify=True):
             func, order, hint)
         return rv
 
-def classify_ode(eq, func=None, dict=False, **kwargs):
+def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     r"""
     Returns a tuple of possible :py:meth:`~sympy.solvers.ode.dsolve`
     classifications for an ODE.
@@ -687,7 +690,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     y = Dummy('y')
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, prep=False)
+            return classify_ode(eq.lhs - eq.rhs, func, ics=ics, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -779,7 +782,36 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r['y'] = y
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
+            rseries = r.copy()
 
+            # FIRST ORDER POWER SERIES WHICH NEEDS INITIAL CONDITIONS
+            # TODO: Hint first order series should match only if d/e is analytic.
+            # This is currently done internally in ode_1st_power_series.
+            # If initial condition is specified pass it to ode_1st_power_series
+            # by means of a dict with keys as point and value.
+            if ics is not None:
+                if ics.get('terms'):
+                    terms = ics.pop('terms')
+                funcset = [funcarg.atoms(AppliedUndef) for funcarg in ics]
+                for tryfunc in funcset:
+                    if len(tryfunc) != 1:
+                        raise ValueError("Key value of ics should be either function value"
+                            " at a point or value of the derivative at a point")
+                    else: 
+                       tfunc = tryfunc.pop()
+                       if tfunc.func != f:
+                           raise ValueError("Function present in the differential equation"
+                               " and the initial conditions should be same")
+                       else:
+                           constargs = tfunc.args
+                           if len(constargs) == 1:
+                               constant = constargs[0]
+                               if not constant.has(x):
+                                   rseries.update({'point': constant, 'value': ics[funcarg],
+                                       'terms': terms})
+                                   break
+
+            matching_hints["1st_power_series"] = rseries
             ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
             # dP/dy == dQ/dx
             try:
@@ -3045,6 +3077,72 @@ def ode_separable_reduced(eq, func, order, match):
     m2 = {y: ycoeff, x: 1, 'coeff': 1}
     r = {'m1': m1, 'm2': m2, 'y': y, 'hint': x**match['power']*f(x)}
     return ode_separable(eq, func, order, r)
+
+
+def ode_1st_power_series(eq, func, order, match):
+    r"""
+    The power series solution is a method which gives the Taylor series expansion
+    to the solution of a differential equation.
+
+    For a first order differential equation `\frac{dy}{dx} = h(x, y)`, a power
+    series solution exists at a point `x = x0` if `h(x, y)` is analytic at `x0`.
+    The solution is given by
+
+    .. math:: f(x0) + \sum_{n = 1}^{\infty} \frac{f^n(x)(x0)(x - x0)^n}{n!}
+
+
+    The following algorithm is followed, till the required number of terms are
+    generated.
+
+    1. F_1 = `h(x, y)`
+    2. F_n+1 = \frac{\partial F_n}{\partial x} + \frac{\partial F_n}{\partial y}F_1
+
+
+    References
+    ==========
+
+    - Travis W. Walker, Analytic power series technique for solving first-order
+      differential equations, p.p 17, 18
+
+    """
+
+    x = func.args[0]
+    y = match['y']
+    f = func.func
+    h = -match[match['d']]/match[match['e']]
+    C0 = Symbol("C0")
+    point = match.get('point', 0)
+    value = match.get('value', C0)
+    terms = match.get('terms', 5)
+
+    # Initialisation
+    tcounter = 0  # Tracking number of terms
+    factcount = 2
+    series = value
+    if series:
+        tcounter += 1
+
+    # First term
+    F = h
+    hc = h.subs({x: point, y: value})
+    if hc.has(oo) or hc.has(NaN):  # Derivative does not exist, not analytic
+        return Eq(f(x), oo)
+    elif hc:
+        series += hc*(x - point)
+        tcounter += 1
+
+    while tcounter < terms:
+        Fnew = F.diff(x) + F.diff(y)*h
+        Fnewc = Fnew.subs({x: point, y: value})
+        if Fnewc.has(oo) or Fnewc.has(NaN):
+            return Eq(f(x), oo)
+        elif Fnewc:
+            series += Fnewc*((x - point)**factcount)/factorial(factcount)
+            tcounter += 1
+        factcount += 1
+        F = Fnew
+    return Eq(f(x), series)
+
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='sol'):

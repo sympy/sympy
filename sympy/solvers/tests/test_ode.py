@@ -1715,3 +1715,15 @@ def test_kamke():
     eq = x**2*(a*f(x)**2+(f(x).diff(x))) + b*x**alpha + c
     i = infinitesimals(eq, hint='sum_function')
     assert checkinfsol(eq, i)[0]
+
+
+def test_series():
+    eq = f(x).diff(x) - f(x)
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x), C0*x**4/S(24) +
+        C0*x**3/S(6) + C0*x**2/S(2) + C0*x + C0)
+    eq = f(x).diff(x) - x*f(x)
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x), C0*x**8/S(384) +
+        C0*x**6/S(48) + C0*x**4/S(8) + C0*x**2/S(2) + C0)
+    eq = f(x).diff(x) - sin(x*f(x))
+    assert dsolve(eq, hint='1st_power_series', ics={f(2):2, 'terms':3}) == Eq(
+        f(x), (x - 2)**2*(2*cos(4) + 2*sin(4)*cos(4))/S(2) + (x - 2)*sin(4) + 2)
