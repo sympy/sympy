@@ -1716,7 +1716,7 @@ def test_kamke():
     i = infinitesimals(eq, hint='sum_function')
     assert checkinfsol(eq, i)[0]
 
-
-def test_constantsimp():
+@XFAIL
+def test_issue_3982():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
-    assert dsolve(eq) == Eq(f(x), S(-1))
+    assert dsolve(eq) == Eq(f(x), (C2 + x**2)/(C1 - x**2))
