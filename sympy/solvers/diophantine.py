@@ -674,7 +674,7 @@ def is_solution_quad(var, coeff, u, v):
 def diop_DN(D, N, t=symbols("t", Integer=True)):
     """
     Solves the equation `x^2 - Dy^2 = N`. Mainly concerned in the case `D > 0, D` is
-    not a perfect square, which is the same as geberalized Pell equation. To solve the
+    not a perfect square, which is the same as generalized Pell equation. To solve the
     generalized Pell equation this function Uses LMM algorithm. Refer [1] for more
     details on the algorithm. Returns one solution for each class of the solutions.
     Other solutions of the class can be constructed according to the values of ``D`` and ``N``.
