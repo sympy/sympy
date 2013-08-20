@@ -177,9 +177,7 @@ def debug(*args):
     """
     from sympy import SYMPY_DEBUG
     if SYMPY_DEBUG:
-        for a in args:
-            print(a, end="")
-        print()
+        print(*args)
 
 
 def find_executable(executable, path=None):
