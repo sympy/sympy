@@ -1,3 +1,15 @@
+"""
+Fundamental Arithmetic of Sparse Matrices.
+The Data structure for Sparse Matrix is 
+Dictionary of Keys(DOK) and Compressed Sparse
+Row(CSR).
+
+This is part of the level 0 of the architecture
+described in [1]
+
+[1] http://www.saurabhjha.me/proposal.html
+
+"""
 from sympy import SparseMatrix
 from collections import defaultdict
 
