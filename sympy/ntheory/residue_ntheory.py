@@ -41,7 +41,7 @@ def n_order(a, n):
 
 def primitive_root(p, all_roots=False):
     """
-    compute the smallest primitive root
+    Returns the smallest primitive root or None
 
     References
     ==========
@@ -52,7 +52,7 @@ def primitive_root(p, all_roots=False):
     Parameters
     ==========
 
-    p : integer
+    p : positive integer
     all_roots : if True the list of all primitive roots is returned
 
     Notes
@@ -69,7 +69,19 @@ def primitive_root(p, all_roots=False):
     >>> primitive_root(19, True)
     [2, 3, 10, 13, 14, 15]
     """
+    def _all_roots(p):
+        a = []
+        for i in xrange(3, p, 2):
+            if i % p1 == 0:
+                continue
+            if is_primitive_root(i, p):
+                a.append(i)
+        return a
     p = as_int(p)
+    if p == 1:
+        return 1
+    if p < 1:
+        raise Valuerror('p is required to be positive')
     f = factorint(p)
     if len(f) > 2:
         return None
@@ -82,7 +94,19 @@ def primitive_root(p, all_roots=False):
             if p1 != 2:
                 break
         # see Ref [2], page 72
-        return primitive_root(p1, all_roots)
+        if all_roots:
+            return _all_roots(p)
+        else:
+            a = [i for i in primitive_root(p1, True) if i % 2 == 1]
+            if a:
+                return min(a)
+            else:
+                for i in xrange(3, p, 2):
+                    if i % p1 == 0:
+                        continue
+                    if is_primitive_root(i, p):
+                        return i
+
     else:
         if 2 in f:
             if p == 2:
@@ -93,20 +117,13 @@ def primitive_root(p, all_roots=False):
         p1, n = list(f.items())[0]
         if n > 1:
             # see Ref [2], page 81
-            gv = primitive_root(p1, all_roots)
-            if not all_roots:
-                gv = [gv]
-            res = []
-            for g in gv:
-                if is_primitive_root(g, p1**2):
-                    res.append(g)
-                else:
-                    res.append(g + p1)
             if all_roots:
-                res.sort()
-                return res
+                return _all_roots(p)
+            g = primitive_root(p1)
+            if is_primitive_root(g, p1**2):
+                return g
             else:
-                return min(res)
+                return g + p1
 
     # see [1]
     v = [(p - 1) // i for i in factorint(p - 1).keys()]

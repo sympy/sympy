@@ -419,7 +419,7 @@ def test_residue():
     assert primitive_root(97**2) == 5
     assert primitive_root(40487) == 5
     assert primitive_root(40487**2) == 40492
-    assert primitive_root(97**2, True) == primitive_root(97, True)
+    assert primitive_root(82) == 7
 
     assert is_quad_residue(3, 7) is False
     assert is_quad_residue(10, 13) is True
