@@ -10,3 +10,5 @@ def test_type_F():
     assert c.simple_root(4) == [-0.5, -0.5, -0.5, -0.5]
     assert c.roots() == 48
     assert c.basis() == 52
+    diag = "0---0=>=0---0\n" + "   ".join(str(i) for i in range(1, 5))
+    assert c.dynkin_diagram() == diag

@@ -15,4 +15,3 @@ def test_type_E():
     diag += "---".join("0" for i in range(1, 6))+"\n"
     diag += "1   " + "   ".join(str(i) for i in range(3, 7))
     assert c.dynkin_diagram() == diag
-

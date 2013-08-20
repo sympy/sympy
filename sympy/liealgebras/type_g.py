@@ -6,9 +6,9 @@ from sympy.matrices import Matrix
 
 class TypeG(Standard_Cartan):
 
-    def __init__(self, n):
+    def __new__(cls, n):
         assert n == 2
-        Standard_Cartan.__init__(self, "G", 2)
+        return Standard_Cartan.__new__(cls, "G", 2)
 
 
     def dimension(self):

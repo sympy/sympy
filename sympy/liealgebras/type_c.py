@@ -4,9 +4,9 @@ from sympy.matrices import eye
 
 class TypeC(Standard_Cartan):
 
-    def __init__(self, n):
+    def __new__(cls, n):
         assert n >= 3
-        Standard_Cartan.__init__(self, "C", n)
+        return Standard_Cartan.__new__(cls, "C", n)
 
 
     def dimension(self):
