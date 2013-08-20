@@ -253,9 +253,6 @@ class Function(Application, Expr):
     def __new__(cls, *args, **options):
         # Handle calls like Function('f')
         if cls is Function:
-            #newfunc = UndefinedFunction(*args)
-            #newfunc.__eq__ = Basic.__eq__
-            #return newfunc
             return UndefinedFunction(*args)
 
         if cls.nargs is not None:
