@@ -2,9 +2,11 @@
 
 from __future__ import print_function, division
 
+from io import BytesIO
+
 from sympy import latex
 from sympy import preview
-from sympy.core.compatibility import cStringIO, integer_types, string_types
+from sympy.core.compatibility import integer_types, string_types
 
 
 def _init_python_printing(stringify_func):
@@ -62,8 +64,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             p.text(IPython.lib.pretty.pretty(arg))
 
     def _preview_wrapper(o):
-        exprbuffer = cStringIO()
-        preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
+        exprbuffer = BytesIO()
+        preview(o, output='png', viewer='BytesIO', outputbuffer=exprbuffer,
                 preamble=preamble, dvioptions=dvioptions)
         return exprbuffer.getvalue()
 
