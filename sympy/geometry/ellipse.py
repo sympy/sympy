@@ -6,6 +6,8 @@ Contains
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify, pi, Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import oo
@@ -14,14 +16,14 @@ from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
 from sympy.solvers import solve
-from entity import GeometryEntity
-from point import Point
-from line import LinearEntity, Line
-from util import _symbol, idiff
+from .entity import GeometryEntity
+from .point import Point
+from .line import LinearEntity, Line
+from .util import _symbol, idiff
 
 import random
 
-from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class Ellipse(GeometryEntity):
@@ -105,7 +107,6 @@ class Ellipse(GeometryEntity):
     t*sin(1.546086215036205357975518382), 'mode=parametric'
 
     """
-    _doctest_depends_on = {'modules': ('numpy', 'matplotlib')}
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None,
@@ -120,7 +121,7 @@ class Ellipse(GeometryEntity):
         else:
             center = Point(center)
 
-        if len(filter(None, (hradius, vradius, eccentricity))) != 2:
+        if len(list(filter(None, (hradius, vradius, eccentricity)))) != 2:
             raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
@@ -1096,9 +1097,6 @@ class Ellipse(GeometryEntity):
         elif isinstance(o, Ellipse):
             return self == o
         return False
-# once py2.5 support gets dropped replace this with a class decorator
-Ellipse._doctest_depends_on = no_attrs_in_subclass(
-    Ellipse, Ellipse._doctest_depends_on)
 
 
 class Circle(Ellipse):
@@ -1156,7 +1154,7 @@ class Circle(Ellipse):
             if Point.is_collinear(*args):
                 raise GeometryError(
                     "Cannot construct a circle from three collinear points")
-            from polygon import Triangle
+            from .polygon import Triangle
             t = Triangle(*args)
             c = t.circumcenter
             r = t.circumradius
@@ -1369,4 +1367,4 @@ class Circle(Ellipse):
         return self.func(c, -self.radius)
 
 
-from polygon import Polygon
+from .polygon import Polygon

@@ -11,7 +11,9 @@ Goals:
 * portable
 
 """
-from __future__ import with_statement
+
+from __future__ import print_function, division
+
 import os
 import sys
 import platform
@@ -30,14 +32,13 @@ import signal
 import stat
 
 from sympy.core.cache import clear_cache
+from sympy.core.compatibility import exec_, PY3, get_function_code, string_types
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Use sys.stdout encoding for ouput.
-# This was only added to Python's doctest in Python 2.6, so we must duplicate
-# it here to make utf8 files work in Python 2.5.
-pdoctest._encoding = getattr(sys.__stdout__, 'encoding', None) or 'utf-8'
+pdoctest._encoding = sys.__stdout__.encoding
 
 IS_PYTHON_3 = (sys.version_info[0] == 3)
 IS_WINDOWS = (os.name == 'nt')
@@ -48,8 +49,7 @@ class Skipped(Exception):
 
 import __future__
 # add more flags ??
-future_flags = __future__.division.compiler_flag | \
-               __future__.with_statement.compiler_flag
+future_flags = __future__.division.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -135,7 +135,7 @@ def isgeneratorfunction(object):
     """
     CO_GENERATOR = 0x20
     if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-            object.func_code.co_flags & CO_GENERATOR:
+            get_function_code(object).co_flags & CO_GENERATOR:
         return True
     return False
 
@@ -265,12 +265,12 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             tests_successful = False
 
         # Doctests
-        print
+        print()
         if not doctest(*doctest_args, **doctest_kwargs):
             tests_successful = False
 
         # Examples
-        print
+        print()
         sys.path.append("examples")
         from all import run_examples  # examples/all.py
         if not run_examples(*examples_args, **examples_kwargs):
@@ -292,7 +292,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
             # Return nonzero exit code
             sys.exit(1)
     except KeyboardInterrupt:
-        print
+        print()
         print("DO *NOT* COMMIT!")
         sys.exit(1)
 
@@ -454,6 +454,7 @@ def _test(*paths, **kwargs):
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
+    enhance_asserts = kwargs.get("enhance_asserts", False)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
@@ -482,7 +483,8 @@ def _test(*paths, **kwargs):
                     break
         t._testfiles.extend(matched)
 
-    return int(not t.test(sort=sort, timeout=timeout, slow=slow))
+    return int(not t.test(sort=sort, timeout=timeout,
+        slow=slow, enhance_asserts=enhance_asserts))
 
 
 def doctest(*paths, **kwargs):
@@ -556,8 +558,6 @@ def _doctest(*paths, **kwargs):
 
     if import_module('numpy') is None:
         blacklist.extend([
-            "sympy/galgebra/GA.py",
-            "sympy/galgebra/latex_ex.py",
             "sympy/plotting/experimental_lambdify.py",
             "sympy/plotting/plot_implicit.py",
             "examples/advanced/autowrap_integrators.py",
@@ -577,15 +577,11 @@ def _doctest(*paths, **kwargs):
             from sympy.plotting.plot import unset_show
             unset_show()
 
-        # can be removed once a fix for Issue 3696 is merged
-        blacklist.extend(["sympy/galgebra/latex_ex.py"])
-
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
-        "sympy/galgebra/GA.py",
         "sympy/utilities/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
@@ -703,33 +699,30 @@ def _doctest(*paths, **kwargs):
                     r.start(msg=msg)
                 else:
                     r.write_center(msg)
-                    print
+                    print()
             # use as the id, everything past the first 'sympy'
             file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
-            print file_id,
+            print(file_id, end=" ")
                 # get at least the name out so it is know who is being tested
             wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
             report = '[%s]' % (rstfailed or 'OK')
-            print ''.join(
+            print(''.join(
                 [test_file, ' '*(wid - len(test_file) - len(report)), report])
+            )
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
     # testing the *rst as evidenced by first_report no longer being True.
     if not first_report and failed:
-        print
+        print()
         print("DO *NOT* COMMIT!")
 
     return int(failed)
 
-# The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
-# (which doesn't exist in 2.5-)
-if sys.version_info[:2] > (2, 5):
-    from collections import namedtuple
-    SymPyTestResults = namedtuple('TestResults', 'failed attempted')
-else:
-    SymPyTestResults = lambda a, b: (a, b)
+
+from collections import namedtuple
+SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
@@ -874,7 +867,7 @@ class SymPyTests(object):
         self._testfiles = []
         self._seed = seed if seed is not None else random.random()
 
-    def test(self, sort=False, timeout=False, slow=False):
+    def test(self, sort=False, timeout=False, slow=False, enhance_asserts=False):
         """
         Runs the tests returning True if all tests pass, otherwise False.
 
@@ -889,26 +882,66 @@ class SymPyTests(object):
         self._reporter.start(self._seed)
         for f in self._testfiles:
             try:
-                self.test_file(f, sort, timeout, slow)
+                self.test_file(f, sort, timeout, slow, enhance_asserts)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
 
-    def test_file(self, filename, sort=True, timeout=False, slow=False):
+    def _enhance_asserts(self, source):
+        from ast import (NodeTransformer, Compare, Name, Store, Load, Tuple,
+            Assign, BinOp, Str, Mod, Assert, parse, fix_missing_locations)
+
+        ops = {"Eq": '==', "NotEq": '!=', "Lt": '<', "LtE": '<=',
+                "Gt": '>', "GtE": '>=', "Is": 'is', "IsNot": 'is not',
+                "In": 'in', "NotIn": 'not in'}
+
+        class Transform(NodeTransformer):
+            def visit_Assert(self, stmt):
+                if isinstance(stmt.test, Compare):
+                    compare = stmt.test
+                    values = [compare.left] + compare.comparators
+                    names = [ "_%s" % i for i, _ in enumerate(values) ]
+                    names_store = [ Name(n, Store()) for n in names ]
+                    names_load = [ Name(n, Load()) for n in names ]
+                    target = Tuple(names_store, Store())
+                    value = Tuple(values, Load())
+                    assign = Assign([target], value)
+                    new_compare = Compare(names_load[0], compare.ops, names_load[1:])
+                    msg_format = "\n%s " + "\n%s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + "\n%s"
+                    msg = BinOp(Str(msg_format), Mod(), Tuple(names_load, Load()))
+                    test = Assert(new_compare, msg, lineno=stmt.lineno, col_offset=stmt.col_offset)
+                    return [assign, test]
+                else:
+                    return stmt
+
+        tree = parse(source)
+        new_tree = Transform().visit(tree)
+        return fix_missing_locations(new_tree)
+
+    def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
         clear_cache()
         self._count += 1
         gl = {'__file__': filename}
         random.seed(self._seed)
         try:
             if IS_PYTHON_3:
-                with open(filename, encoding="utf8") as f:
-                    source = f.read()
-                c = compile(source, filename, 'exec')
-                exec c in gl
+                open_file = lambda: open(filename, encoding="utf8")
             else:
-                execfile(filename, gl)
+                open_file = lambda: open(filename)
+
+            with open_file() as f:
+                source = f.read()
+
+            if enhance_asserts:
+                try:
+                    source = self._enhance_asserts(source)
+                except ImportError:
+                    pass
+
+            code = compile(source, filename, "exec")
+            exec_(code, gl)
         except (SystemExit, KeyboardInterrupt):
             raise
         except ImportError:
@@ -1048,7 +1081,7 @@ class SymPyDocTests(object):
             try:
                 self.test_file(f)
             except KeyboardInterrupt:
-                print " interrupted by user"
+                print(" interrupted by user")
                 self._reporter.finish()
                 raise
         return self._reporter.finish()
@@ -1056,7 +1089,7 @@ class SymPyDocTests(object):
     def test_file(self, filename):
         clear_cache()
 
-        from StringIO import StringIO
+        from sympy.core.compatibility import StringIO
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1118,6 +1151,7 @@ class SymPyDocTests(object):
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
+            test.globs['print_function'] = print_function
             try:
                 f, t = runner.run(test, compileflags=future_flags,
                                   out=new.write, clear_globs=False)
@@ -1213,10 +1247,16 @@ class SymPyDocTests(object):
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            vw = '#!/usr/bin/env python\n' \
-                 'import sys\n' \
-                 'if len(sys.argv) <= 1:\n' \
-                 '    exit("wrong number of args")\n'
+            if PY3:
+                vw = '#!/usr/bin/env python3\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
+            else:
+                vw = '#!/usr/bin/env python\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
 
             for viewer in viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
@@ -1272,7 +1312,7 @@ class SymPyDocTestFinder(DocTestFinder):
         add them to ``tests``.
         """
         if self._verbose:
-            print 'Finding tests in %s' % name
+            print('Finding tests in %s' % name)
 
         # If we've already processed this object, then ignore it.
         if id(obj) in seen:
@@ -1319,13 +1359,13 @@ class SymPyDocTestFinder(DocTestFinder):
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
-                if not isinstance(valname, basestring):
+                if not isinstance(valname, string_types):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
                                      "must be strings: %r" %
                                      (type(valname),))
                 if not (inspect.isfunction(val) or inspect.isclass(val) or
                         inspect.ismethod(val) or inspect.ismodule(val) or
-                        isinstance(val, basestring)):
+                        isinstance(val, string_types)):
                     raise ValueError("SymPyDocTestFinder.find: __test__ values "
                                      "must be strings, functions, methods, "
                                      "classes, or modules: %r" %
@@ -1341,7 +1381,7 @@ class SymPyDocTestFinder(DocTestFinder):
                 if isinstance(val, staticmethod):
                     val = getattr(obj, valname)
                 if isinstance(val, classmethod):
-                    val = getattr(obj, valname).im_func
+                    val = getattr(obj, valname).__func__
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
@@ -1363,33 +1403,6 @@ class SymPyDocTestFinder(DocTestFinder):
                     self._find(tests, val, valname, module, source_lines,
                                globs, seen)
 
-    def _from_module(self, module, object):
-        """
-        Return true if the given object is defined in the given
-        module.
-
-        This is a 1 to 1 copy of _from_module function from the python 2.7.3
-        doctest module. It is needed because the doctest module shipped with
-        py 2.5 is broken (see PR 1969).
-
-        This function should be removed once we drop support for python 2.5.
-
-        """
-        if module is None:
-            return True
-        elif inspect.getmodule(object) is not None:
-            return module is inspect.getmodule(object)
-        elif inspect.isfunction(object):
-            return module.__dict__ is object.func_globals
-        elif inspect.isclass(object):
-            return module.__name__ == object.__module__
-        elif hasattr(object, '__module__'):
-            return module.__name__ == object.__module__
-        elif isinstance(object, property):
-            return True # [XX] no way not be sure.
-        else:
-            raise ValueError("object must be a class or function")
-
     def _get_test(self, obj, name, module, globs, source_lines):
         """
         Return a DocTest for the given object, if it defines a docstring;
@@ -1400,7 +1413,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # Extract the object's docstring.  If it doesn't have one,
         # then return None (no test for this object).
-        if isinstance(obj, basestring):
+        if isinstance(obj, string_types):
             # obj is a string in the case for objects in the polys package.
             # Note that source_lines is a binary string (compiled polys
             # modules), which can't be handled by _find_lineno so determine
@@ -1422,7 +1435,7 @@ class SymPyDocTestFinder(DocTestFinder):
                     docstring = ''
                 else:
                     docstring = obj.__doc__
-                    if not isinstance(docstring, basestring):
+                    if not isinstance(docstring, string_types):
                         docstring = str(docstring)
             except (TypeError, AttributeError):
                 docstring = ''
@@ -1522,6 +1535,7 @@ class SymPyDocTestRunner(DocTestRunner):
         linecache.getlines = self.__patched_linecache_getlines
 
         try:
+            test.globs['print_function'] = print_function
             return self.__run(test, compileflags, out)
         finally:
             sys.stdout = save_stdout
@@ -1851,10 +1865,7 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
-            implementation = "CPython"
-        else:
-            implementation = platform.python_implementation()
+        implementation = platform.python_implementation()
         if implementation == 'PyPy':
             implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
         self.write("executable:         %s  (%s) [%s]\n" %
@@ -1985,10 +1996,7 @@ class PyTestReporter(Reporter):
         self.write("f", "Green")
 
     def test_xpass(self, v):
-        if sys.version_info[:2] < (2, 6):
-            message = getattr(v, 'message', '')
-        else:
-            message = str(v)
+        message = str(v)
         self._xpassed.append((self._active_file, message))
         self.write("X", "Green")
 
@@ -2015,10 +2023,7 @@ class PyTestReporter(Reporter):
         char = "s"
         self._skipped += 1
         if v is not None:
-            if sys.version_info[:2] < (2, 6):
-                message = getattr(v, 'message', '')
-            else:
-                message = str(v)
+            message = str(v)
             if message == "KeyboardInterrupt":
                 char = "K"
             elif message == "Timeout":

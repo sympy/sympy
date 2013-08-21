@@ -1,9 +1,8 @@
-from __future__ import with_statement
+from __future__ import print_function, division
 
 from os.path import join
 import tempfile
 import shutil
-from cStringIO import StringIO
 
 try:
     from subprocess import STDOUT, CalledProcessError
@@ -11,9 +10,10 @@ try:
 except ImportError:
     pass
 
+from sympy.core.compatibility import cStringIO as StringIO
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
-from latex import latex
+from .latex import latex
 
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -187,7 +187,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         try:
             check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
                           'texput.tex'], cwd=workdir, stderr=STDOUT)
-        except CalledProcessError, e:
+        except CalledProcessError as e:
             raise RuntimeError(
                 "'latex' exited abnormally with the following output:\n%s" %
                 e.output)
@@ -219,7 +219,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             try:
                 check_output(cmd, cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
+            except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s' exited abnormally with the following output:\n%s" %
                     (' '.join(cmd), e.output))
@@ -294,13 +294,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         else:
             try:
                 check_output([viewer, src], cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
+            except CalledProcessError as e:
                 raise RuntimeError(
                     "'%s %s' exited abnormally with the following output:\n%s" %
                     (viewer, src, e.output))
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
-        except OSError, e:
+        except OSError as e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise

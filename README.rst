@@ -110,16 +110,8 @@ SymPy also supports Python 3. If you want to install the latest version in
 Python 3, get the Python 3 tarball from
 https://pypi.python.org/pypi/sympy/
 
-To build the git version in Python 3, run::
-
-    $ ./bin/use2to3
-
-Note that this command only works if you clone from git. When ran, it will
-create a new directory, py3k-sympy, which holds a Python 3 compatible version
-of the code. SymPy can then be used normally with Python 3 from that directory
-(installation, interactive shell, tests, etc.).  If you make any changes to
-the Python 2 source, just run that command again to update the Python 3
-source.
+To install the SymPy for Python 3, simply run the above commands with a Python
+3 interpreter.
 
 Clean
 -----

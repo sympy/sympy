@@ -1,8 +1,10 @@
+from __future__ import print_function, division
+
 from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import cmp, ordered
+from sympy.core.compatibility import ordered, xrange
 from sympy.core.logic import fuzzy_and
 
 
@@ -24,7 +26,7 @@ class AssocOp(Basic):
 
     @cacheit
     def __new__(cls, *args, **options):
-        args = map(_sympify, args)
+        args = list(map(_sympify, args))
         args = [a for a in args if a is not cls.identity]
 
         if not options.pop('evaluate', True):
@@ -168,8 +170,8 @@ class AssocOp(Basic):
             return d
 
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
-        from function import WildFunction
-        from symbol import Wild
+        from .function import WildFunction
+        from .symbol import Wild
         wild_part = []
         exact_part = []
         for p in ordered(self.args):
@@ -214,13 +216,9 @@ class AssocOp(Basic):
                     # make e**i look like Mul
                     if expr.is_Pow and expr.exp.is_Integer:
                         if expr.exp > 0:
-                            expr = C.Mul(*
-                                [expr.base, expr.base**(expr.exp - 1)],
-                                **{'evaluate': False})
+                            expr = C.Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
                         else:
-                            expr = C.Mul(*
-                                [1/expr.base, expr.base**(expr.exp + 1)],
-                                **{'evaluate': False})
+                            expr = C.Mul(*[1/expr.base, expr.base**(expr.exp + 1)], evaluate=False)
                         i += 1
                         continue
 
@@ -229,11 +227,9 @@ class AssocOp(Basic):
                     c, e = expr.as_coeff_Mul()
                     if abs(c) > 1:
                         if c > 0:
-                            expr = C.Add(*[e, (c - 1)*e],
-                                **{'evaluate': False})
+                            expr = C.Add(*[e, (c - 1)*e], evaluate=False)
                         else:
-                            expr = C.Add(*[-e, (c + 1)*e],
-                                **{'evaluate': False})
+                            expr = C.Add(*[-e, (c + 1)*e], evaluate=False)
                         i += 1
                         continue
 
@@ -475,4 +471,4 @@ class LatticeOp(AssocOp):
 
     @staticmethod
     def _compare_pretty(a, b):
-        return cmp(str(a), str(b))
+        return (str(a) > str(b)) - (str(a) < str(b))

@@ -22,14 +22,17 @@ if you care at all about performance. A new backend instance is initialized
 every time you call ``show()`` and the old one is left to the garbage collector.
 """
 
+from __future__ import print_function, division
+
 from inspect import getargspec
 from itertools import chain
+from collections import Callable
+import warnings
+
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
-from sympy.core.compatibility import set_union
 from sympy.utilities.decorator import doctest_depends_on
-import warnings
-from experimental_lambdify import (vectorized_lambdify, lambdify)
+from .experimental_lambdify import (vectorized_lambdify, lambdify)
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -169,7 +172,7 @@ class Plot(object):
         self.backend = DefaultBackend
 
         # The keyword arguments should only contain options for the plot.
-        for key, val in kwargs.iteritems():
+        for key, val in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, val)
 
@@ -338,7 +341,7 @@ class Line2DBaseSeries(BaseSeries):
                 x = self.get_parameter_points()
                 return f(centers_of_segments(x))
             else:
-                variables = map(centers_of_segments, self.get_points())
+                variables = list(map(centers_of_segments, self.get_points()))
                 if arity == 1:
                     return f(variables[0])
                 elif arity == 2:
@@ -433,7 +436,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                 #sample those points further.
                 elif p[1] is None and q[1] is None:
                     xarray = np.linspace(p[0], q[0], 10)
-                    yarray = map(f, xarray)
+                    yarray = list(map(f, xarray))
                     if any(y is not None for y in yarray):
                         for i in len(yarray) - 1:
                             if yarray[i] is not None or yarray[i + 1] is not None:
@@ -553,8 +556,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
             elif ((p[0] is None and q[1] is None) or
                     (p[1] is None and q[1] is None)):
                 param_array = np.linspace(param_p, param_q, 10)
-                x_array = map(f_x, param_array)
-                y_array = map(f_y, param_array)
+                x_array = list(map(f_x, param_array))
+                y_array = list(map(f_y, param_array))
                 if any(x is not None and y is not None
                         for x, y in zip(x_array, y_array)):
                     for i in len(y_array) - 1:
@@ -648,16 +651,16 @@ class SurfaceBaseSeries(BaseSeries):
     def get_color_array(self):
         np = import_module('numpy')
         c = self.surface_color
-        if callable(c):
+        if isinstance(c, Callable):
             f = np.vectorize(c)
             arity = len(getargspec(c)[0])
             if self.is_parametric:
-                variables = map(centers_of_faces, self.get_parameter_meshes())
+                variables = list(map(centers_of_faces, self.get_parameter_meshes()))
                 if arity == 1:
                     return f(variables[0])
                 elif arity == 2:
                     return f(*variables)
-            variables = map(centers_of_faces, self.get_meshes())
+            variables = list(map(centers_of_faces, self.get_meshes()))
             if arity == 1:
                 return f(variables[0])
             elif arity == 2:
@@ -894,7 +897,7 @@ class MatplotlibBackend(BaseBackend):
             if hasattr(s, 'label'):
                 collection.set_label(s.label)
             if s.is_line and s.line_color:
-                if isinstance(s.line_color, (float, int)) or callable(s.line_color):
+                if isinstance(s.line_color, (float, int)) or isinstance(s.line_color, Callable):
                     color_array = s.get_color_array()
                     collection.set_array(color_array)
                 else:
@@ -902,7 +905,7 @@ class MatplotlibBackend(BaseBackend):
             if s.is_3Dsurface and s.surface_color:
                 if self.matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
                     warnings.warn('The version of matplotlib is too old to use surface coloring.')
-                elif isinstance(s.surface_color, (float, int)) or callable(s.surface_color):
+                elif isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)
@@ -1070,7 +1073,9 @@ def _matplotlib_list(interval_list):
 @doctest_depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
-    Plots a function of a single variable.
+    Plots a function of a single variable and returns an instance of
+    the ``Plot`` class (also, see the description of the
+    ``show`` keyword argument below).
 
     The plotting uses an adaptive algorithm which samples recursively to
     accurately plot the plot. The adaptive algorithm uses a random point near
@@ -1110,6 +1115,14 @@ def plot(*args, **kwargs):
 
     Keyword Arguments
     =================
+
+    Arguments for ``plot`` function:
+
+    ``show``: Boolean. The default value is set to ``True``. Set show to
+    ``False`` and the function will not display the plot. The returned
+    instance of the ``Plot`` class can then be used to save or display
+    the plot by calling the ``save()`` and ``show()`` methods
+    respectively.
 
     Arguments for ``LineOver1DRangeSeries`` class:
 
@@ -1192,7 +1205,7 @@ def plot(*args, **kwargs):
     Plot, LineOver1DRangeSeries.
 
     """
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
@@ -1324,7 +1337,7 @@ def plot_parametric(*args, **kwargs):
     Plot, Parametric2DLineSeries
 
     """
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 2, 1)
@@ -1420,7 +1433,7 @@ def plot3d_parametric_line(*args, **kwargs):
     Plot, Parametric3DLineSeries
 
     """
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 1)
@@ -1532,7 +1545,7 @@ def plot3d(*args, **kwargs):
 
     """
 
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 2)
@@ -1627,7 +1640,7 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     """
 
-    args = map(sympify, args)
+    args = list(map(sympify, args))
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 2)
@@ -1664,7 +1677,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
             i = len(args) + 1
 
         exprs = Tuple(*args[:i])
-        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
+        free_symbols = list(set.union(*[e.free_symbols for e in exprs]))
         if len(args) == expr_len + nb_of_free_symbols:
             #Ranges given
             plots = [exprs + Tuple(*args[expr_len:])]
@@ -1695,7 +1708,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
 
         exprs = args[:i]
         assert all(isinstance(e, Expr) for expr in exprs for e in expr)
-        free_symbols = list(set_union(*[e.free_symbols for expr in exprs
+        free_symbols = list(set.union(*[e.free_symbols for expr in exprs
                                         for e in expr]))
 
         if len(free_symbols) > nb_of_free_symbols:

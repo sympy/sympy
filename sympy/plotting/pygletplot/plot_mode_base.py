@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from plot_mode import PlotMode
 from threading import Thread, Event, RLock
@@ -6,8 +8,6 @@ from sympy.core import S
 from sympy.core.compatibility import is_sequence
 from time import sleep
 import warnings
-
-from sympy.core.compatibility import callable
 
 
 class PlotModeBase(PlotMode):
@@ -330,7 +330,7 @@ class PlotModeBase(PlotMode):
         if v == self._style:
             return
         self._style = v
-        #except Exception, e:
+        #except Exception as e:
             #raise RuntimeError(("Style change failed. "
             #                 "Reason: %s is not a valid "
             #                 "style. Use one of %s.") %
@@ -351,7 +351,7 @@ class PlotModeBase(PlotMode):
                 return
             self._on_change_color(v)
             self._color = v
-        except Exception, e:
+        except Exception as e:
             raise RuntimeError(("Color change failed. "
                                 "Reason: %s" % (str(e))))
 

@@ -1,5 +1,8 @@
+from __future__ import print_function, division
+
 from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
+from sympy.core.compatibility import reduce
 """ The module contains implemented functions for interval arithmetic."""
 
 

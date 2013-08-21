@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 __all__ = ['cross',
            'dot',
            'express',
@@ -209,9 +211,9 @@ def mprint(expr, **settings):
 
     outstr = msprint(expr, **settings)
 
-    import __builtin__
+    from sympy.core.compatibility import builtins
     if (outstr != 'None'):
-        __builtin__._ = outstr
+        builtins._ = outstr
         print(outstr)
 
 

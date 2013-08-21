@@ -8,7 +8,8 @@ ode_order
 _desolve
 
 """
-from sympy.core.compatibility import set_union
+from __future__ import print_function, division
+
 from sympy.core.function import Function, Derivative, AppliedUndef
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Wild
@@ -63,14 +64,14 @@ def _preprocess(expr, func=None, hint='_Integral'):
     >>> _preprocess(eq, g(x))
     (Derivative(f(x), x) + Derivative(g(x), x), g(x))
     >>> try: _preprocess(eq)
-    ... except ValueError: print "A ValueError was raised."
+    ... except ValueError: print("A ValueError was raised.")
     A ValueError was raised.
 
     """
 
     derivs = expr.atoms(Derivative)
     if not func:
-        funcs = set_union(*[d.atoms(AppliedUndef) for d in derivs])
+        funcs = set.union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
             raise ValueError('The function cannot be '
                 'automatically detected for %s.' % expr)

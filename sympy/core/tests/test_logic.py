@@ -1,8 +1,6 @@
 from sympy.core.logic import fuzzy_not, Logic, And, Or, Not, fuzzy_and
 from sympy.utilities.pytest import raises
 
-from sympy.core.compatibility import cmp
-
 T = True
 F = False
 U = None
@@ -39,7 +37,6 @@ def test_logic_cmp():
     assert hash(l1) == hash(l2)
     assert (l1 == l2) == T
     assert (l1 != l2) == F
-    assert cmp(l1, l2) == 0
 
     assert And('a', 'b', 'c') == And('b', 'a', 'c')
     assert And('a', 'b', 'c') == And('c', 'b', 'a')

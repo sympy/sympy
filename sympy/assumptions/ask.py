@@ -1,4 +1,6 @@
 """Module for querying SymPy objects about assumptions."""
+from __future__ import print_function, division
+
 from sympy.core import sympify
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent, BooleanFunction
 from sympy.logic.inference import satisfiable
@@ -55,6 +57,8 @@ def _extract_facts(expr, symbol):
     Extracts the facts relevant to the symbol from an assumption.
     Returns None if there is nothing to extract.
     """
+    if isinstance(expr, bool):
+        return
     if not expr.has(symbol):
         return None
     if isinstance(expr, AppliedPredicate):
@@ -64,7 +68,7 @@ def _extract_facts(expr, symbol):
             return
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
-        return expr.func(*filter(lambda x: x is not None, args))
+        return expr.func(*[x for x in args if x is not None])
     if all(arg != None for arg in args):
         return expr.func(*args)
 
@@ -108,11 +112,16 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool)):
         raise TypeError("assumptions must be a valid logical expression")
 
-    assumptions = And(assumptions, And(*context))
     if isinstance(proposition, AppliedPredicate):
         key, expr = proposition.func, sympify(proposition.arg)
     else:
         key, expr = Q.is_true, sympify(proposition)
+
+    assumptions = And(assumptions, And(*context))
+    local_facts = _extract_facts(assumptions, expr)
+
+    if local_facts is not None and satisfiable(And(local_facts, known_facts_cnf)) is False:
+        raise ValueError("inconsistent assumptions %s" % assumptions)
 
     # direct resolution method, no logic
     res = key(expr)._eval_ask(assumptions)
@@ -122,8 +131,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if assumptions is True:
         return
 
-    local_facts = _extract_facts(assumptions, expr)
-    if local_facts is None or local_facts is True:
+    if local_facts in (None, True):
         return
 
     # See if there's a straight-forward conclusion we can make for the inference

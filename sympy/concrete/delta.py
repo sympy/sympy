@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Add, Interval, Mul, S, Dummy, symbols
 from sympy.core.compatibility import default_sort_key
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
@@ -10,14 +12,16 @@ def _expand_delta(expr, index):
     if not expr.is_Mul:
         return expr
     delta = None
+    func = Add
     terms = [S(1)]
     for h in expr.args:
         if delta is None and h.is_Add and _has_simple_delta(h, index):
             delta = True
+            func = h.func
             terms = [terms[0]*t for t in h.args]
         else:
             terms = [t*h for t in terms]
-    return Add(*terms)
+    return func(*terms)
 
 
 def _extract_delta(expr, index):
@@ -101,7 +105,7 @@ def _remove_multiple_delta(expr):
     """
     from sympy.solvers import solve
     if expr.is_Add:
-        return expr.func(*map(_remove_multiple_delta, expr.args))
+        return expr.func(*list(map(_remove_multiple_delta, expr.args)))
     if not expr.is_Mul:
         return expr
     eqs = []
@@ -135,7 +139,7 @@ def _simplify_delta(expr):
             slns = solve(expr.args[0] - expr.args[1], dict=True)
             if slns and len(slns) == 1:
                 return Mul(*[KroneckerDelta(*(key, value))
-                            for key, value in slns[0].iteritems()])
+                            for key, value in slns[0].items()])
         except NotImplementedError:
             pass
     return expr
@@ -280,7 +284,7 @@ def deltasummation(f, limit, no_piecewise=False):
     g = _expand_delta(f, x)
     if g.is_Add:
         return piecewise_fold(
-            Add(*[deltasummation(h, limit, no_piecewise) for h in g.args]))
+            g.func(*[deltasummation(h, limit, no_piecewise) for h in g.args]))
 
     # try to extract a simple KroneckerDelta term
     delta, expr = _extract_delta(g, x)

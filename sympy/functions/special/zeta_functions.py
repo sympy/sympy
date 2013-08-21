@@ -1,6 +1,9 @@
 """ Riemann zeta and related function. """
+from __future__ import print_function, division
+
 from sympy.core import Function, S, C, sympify, pi
 from sympy.core.function import ArgumentIndexError
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -416,9 +419,9 @@ class zeta(Function):
     @classmethod
     def eval(cls, z, a_=None):
         if a_ is None:
-            z, a = map(sympify, (z, 1))
+            z, a = list(map(sympify, (z, 1)))
         else:
-            z, a = map(sympify, (z, a_))
+            z, a = list(map(sympify, (z, a_)))
 
         if a.is_Number:
             if a is S.NaN:

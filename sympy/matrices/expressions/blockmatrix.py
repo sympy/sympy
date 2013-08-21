@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import ask, Q
 from sympy.core import Tuple, Basic, Add
 from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
@@ -29,17 +31,17 @@ class BlockMatrix(MatrixExpr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
-    >>> print B
+    >>> print(B)
     Matrix([
     [X, Z],
     [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
+    >>> print(C)
     Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
-    Matrix([[X, Z + Z*Y]])
+    >>> print(block_collapse(C*B))
+    Matrix([[X, Z*Y + Z]])
 
     """
     def __new__(cls, *args):
@@ -148,12 +150,12 @@ class BlockMatrix(MatrixExpr):
     def _entry(self, i, j):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
-            if i < numrows:
+            if (i < numrows) is not False:
                 break
             else:
                 i -= numrows
         for col_block, numcols in enumerate(self.colblocksizes):
-            if j < numcols:
+            if (j < numcols) is not False:
                 break
             else:
                 j -= numcols
@@ -260,17 +262,17 @@ def block_collapse(expr):
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
-    >>> print B
+    >>> print(B)
     Matrix([
     [X, Z],
     [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
-    >>> print C
+    >>> print(C)
     Matrix([[I, Z]])
 
-    >>> print block_collapse(C*B)
-    Matrix([[X, Z + Z*Y]])
+    >>> print(block_collapse(C*B))
+    Matrix([[X, Z*Y + Z]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
