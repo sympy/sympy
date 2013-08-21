@@ -86,11 +86,11 @@ The operators ``sin`` and ``/`` call routines that execute tight for loops in
 
 .. code:: c
 
-    for(int i = 0; i < x.length; i++)
+    for(int i = 0; i < n; i++)
     {
         temp[i] = sin(x[i]);
     }
-    for(int i = i; i < x.length; i++)
+    for(int i = i; i < n; i++)
     {
         y[i] = temp[i] / x[i];
     }
@@ -104,7 +104,7 @@ A better solution would fuse both element-wise operations into a single for loop
 
 .. code:: c
 
-    for(int i = i; i < x.length; i++)
+    for(int i = i; i < n; i++)
     {
         y[i] = sin(x[i]) / x[i];
     }
