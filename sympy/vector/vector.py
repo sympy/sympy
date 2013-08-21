@@ -1,13 +1,12 @@
 from sympy.core.assumptions import StdFactKB
 from sympy.matrices import Matrix, eye
-from sympy.core import (Basic, Expr, Dummy, Function, Symbol, symbols,
-                        sympify, diff, Pow, Mul, Add, S, AtomicExpr)
+from sympy.core import (Basic, Expr, Dummy, Symbol, symbols, AtomicExpr,
+                        sympify, diff, Pow, Mul, Add, S)
 from sympy.core.numbers import Zero
 from sympy.solvers import solve
 from sympy.simplify import simplify, trigsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.compatibility import as_int
-from functools import wraps
 
 import copy
 
@@ -52,23 +51,20 @@ def is_const_vect(vect):
     Check if a vector field is a constant.
     vect : an object with is_Vector == True.
     """
+    # First check if it is a vector at all
+    if not vect.is_Vector:
+        raise TypeError("argument of function needs to be a vector")
     vect = vect.expand()
-    for arg in vect.all_args:
-        if isinstance(arg, BaseScalar):
-            if (isinstance(arg.coord_sys, CoordSysCyl) or
-                isinstance(arg.coord_sys, CoordSysSph)):
-                return Flase
-        if isinstance(arg, VectMul):
-            arg = arg.expand()
-            if not isinstance(arg, VectMul) and not is_const_vect(arg):
-                return False
-            else:
-                scalar = arg.scalar
-                vector = arg.vector
-                if _has_base_scalar(scalar):
-                    return False
-                if not is_const_vect(vector):
-                    return False
+
+    for atom in vect.atoms():
+        if _has_base_scalar(atom):
+            return False
+
+        if (isinstance(atom, BaseVector) and
+            (isinstance(atom.coord_sys, CoordSysCyl) or
+             isinstance(atom.coord_sys, CoordSysSph))):
+            return False
+
     return True
 
 def _diff_scalar(scalar, s):
@@ -180,7 +176,7 @@ def cross(vect_a, vect_b, coord_sys):
     vect_b_coord_sys = _all_coordinate_systems(vect_b)
     if not coord_sys:
         if(len(vect_a_coord_sys) == len(vect_b_coord_sys) == 1 and
-           vect_a_coord_sys[0] == vect_b_coord_sys[0])
+           vect_a_coord_sys[0] == vect_b_coord_sys[0]):
             coord_sys = vect_a_coord_sys[0]
 
     if coord_sys:
@@ -239,8 +235,8 @@ def div(vect, coord_sys=None):
     vect : an object with is_Vector == True
     coord_sys : an instance of subclass of CoordSys class
     """
-    coord_list = _all_coord_systems(coord_sys)
-    if not cooord_sys and len(coord_list) == 1:
+    coord_list = _all_coordinate_systems(coord_sys)
+    if not coord_sys and len(coord_list) == 1:
         coord_sys = coord_list[0]
     else:
         raise TypeError("Coordinate system to express the vector in not known")
@@ -249,6 +245,7 @@ def div(vect, coord_sys=None):
         raise NotImplementedError
 
     vect = vect.express(coord_sys)
+    # TODO : This is never used. Why?
     base_scalars = coord_sys.base_scalars
     vect_comp = vect.components
 
@@ -269,8 +266,8 @@ def curl(vect, coord_sys):
     vect : an object with is_Vector == True
     coord_sys : an instance of subclass of CoordSys class
     """
-    coord_list = _all_coord_systems(coord_sys)
-    if not cooord_sys and len(coord_list) == 1:
+    coord_list = _all_coordinate_systems(coord_sys)
+    if not coord_sys and len(coord_list) == 1:
         coord_sys = coord_list[0]
     else:
         raise TypeError("Coordinate system to express the vector in not known")
@@ -364,7 +361,7 @@ def _coord_sys_scalar_list(scalar):
         return coord_list
 
 
-class BaseScalar(Expr):
+class BaseScalar(AtomicExpr):
     """
     BaseScalar instances are used to express coordinate variables for field.
     Not to be instantiated by the user.
@@ -390,13 +387,15 @@ class BaseScalar(Expr):
         super(BaseScalar, self).__init__()
         self.coord_sys = coord_sys
         self.name = name
-        self.position = position
+        self.position = S(position)
         self._assumptions = StdFactKB(assumptions)
+        self._args = (self.coord_sys, self.position)
 
-    def __str__(self):
+    def __str__(self, printer=None):
         return self.coord_sys.name + "." + self.name
 
     __repr__ = __str__
+    _sympystr = __str__
 
     def grad(self, coord_sys):
         __doc__ = grad.__doc__
@@ -464,7 +463,7 @@ class CoordSys(Basic):
     def __new__(cls, name=None, dim=None, position=None,
                 orient_type=None, orient_amount=None, rot_order=None,
                 parent=None, basis_vectors=None, coordinates=None):
-        return Basic.__new__(cls, name, dim, position, position_coord,
+        return Basic.__new__(cls, name, dim, position,
                              orient_type, orient_amount, rot_order, parent,
                              basis_vectors, coordinates)
 
@@ -496,6 +495,7 @@ class CoordSys(Basic):
             # check whether position is a vector
             if not position.is_Vector:
                 raise TypeError("vector expected for position")
+            # TODO : Fix the next line
             if not position.is_constant:
                 raise TypeError("Position variables cannot be BaseScalars")
 
@@ -994,6 +994,8 @@ class CoordSysRect(CoordSys):
         return self.name
 
     __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
 
 
 class CoordSysSph(CoordSys):
@@ -1053,7 +1055,7 @@ class CoordSysSph(CoordSys):
         __doc__ = CoordSysRect._convert_to_sph.__doc__
         Ar, At, Ap = vector.components
         r, theta, phi = vector.coord_sys.base_scalars
-        rho, _phi, z = base_scalars
+        rho, _phi, z = coord_sys.base_scalars
         subs_dict = { r: sqrt(rho**2 + z**2),
                       theta: atan(rho/z),
                       phi: _phi }
@@ -1078,6 +1080,8 @@ class CoordSysSph(CoordSys):
         return self.name
 
     __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
 
 
 class CoordSysCyl(CoordSys):
@@ -1113,7 +1117,7 @@ class CoordSysCyl(CoordSys):
         """
         Ar, Ap, Az = vector.components
         rho, phi, z = vector.base_scalars
-        x, y, _z = base_scalars
+        x, y, _z = coord_sys.base_scalars
         subs_dict = { rho: sqrt(x**2 + y**2),
                       phi: atan(y/x),
                       z: _z }
@@ -1162,9 +1166,11 @@ class CoordSysCyl(CoordSys):
         return self.name
 
     __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
 
 
-class Vector(Expr):
+class Vector(AtomicExpr):
     """
     Class instances will represent base vectors
     """
@@ -1207,34 +1213,42 @@ class Vector(Expr):
     def __neg__(self):
         return VectMul(S.NegativeOne, self)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
         return _vect_add(self, other)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
         return _vect_add(other, self)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
         return _vect_add(self, -other)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
         return _vect_add(other, -self)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
         return _vect_mul(self, other)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
         return _vect_mul(other, self)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
         return _vect_div(self, other)
 
+    @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
     def __rdiv__(self, other):
         raise TypeError("Cannot divide by vector")
@@ -1258,7 +1272,7 @@ class BaseVector(Vector, Symbol):
         if not isinstance(coord_sys, CoordSys):
             raise TypeError("coord_sys must be isinstance(CoordSys)")
         self.coord_sys = coord_sys
-        self.position = position
+        self.position = S(position)
         if position > coord_sys.dim:
             raise ValueError("Vector outside coordinate system dimensionality")
 
@@ -1266,6 +1280,7 @@ class BaseVector(Vector, Symbol):
         assumptions = {}
         assumptions['commutative'] = is_commutative
         self._assumptions = StdFactKB(assumptions)
+        self._args = (self.coord_sys, self.position)
 
     def separate(self):
         # We just have a Vector - just return it
@@ -1284,6 +1299,14 @@ class BaseVector(Vector, Symbol):
 
     @property
     def _all_args(self):
+        return [self]
+
+    @property
+    def scalar(self):
+        return S.One
+
+    @property
+    def vector(self):
         return self
 
     @property
@@ -1341,10 +1364,12 @@ class BaseVector(Vector, Symbol):
 
         return vect.diff(s)
 
-    def __repr__(self):
+    def __str__(self, printer=None):
         return self.coord_sys.name + "." + self.name
 
-    __str__ = __repr__
+    __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
 
 
 class VectAdd(Add, Vector):
@@ -1371,7 +1396,6 @@ class VectAdd(Add, Vector):
 
     def separate(self):
         # Flatten the VectMul so that there are no nested VectAdds
-        import ipdb;ipdb.set_trace()
         vect = self.expand()
 
         # vect.args are either BaseVector or VectMul
@@ -1402,7 +1426,7 @@ class VectAdd(Add, Vector):
 
     def expand(self):
         res = ZeroVector
-        for arg in self.args:
+        for arg in self._all_args:
             res = res + arg.expand()
         return res
 
@@ -1452,6 +1476,7 @@ class VectAdd(Add, Vector):
 
     @property
     def components(self):
+        import ipdb;ipdb.set_trace()
         if len(_all_coordinate_systems(self)) != 1:
             raise TypeError("The vector isn't in a single coordinate system")
 
@@ -1463,17 +1488,17 @@ class VectAdd(Add, Vector):
         for arg in vect.args:
             if isinstance(arg, BaseVector):
                # Component corresponding to it will be unity
-               r[int(arg.position) + 1] = S.One
+               r[int(arg.position) - 1] = S.One
             elif isinstance(arg, VectMul):
                # The scalar part would be the component
-               r[int(arg.vector.position) + 1] = arg.scalar
+               r[int(arg.vector.position) - 1] = arg.scalar
 
         return r
 
     @property
     def coord_sys(self):
         coord_list = _all_coordinate_systems(self)
-        if not len(coord_sys) == 1:
+        if not len(coord_list) == 1:
             raise ValueError("More than one coordinate systems")
         else:
             return coord_list.pop()
@@ -1500,19 +1525,22 @@ class VectAdd(Add, Vector):
 
         return ret
 
-    def __repr__(self):
+    def __str__(self, printer=None):
         # VectAdd can contain either BaseVectors or VectMuls
+        # TODO : This method works but can be improved.
         ret_str = ''
         for arg in self.args:
-            # arg must be BaseScalar or VectMul
-            assert isinstance(arg, BaseScalar) or isinstance(arg, VectMul)
-            ret_srt += " + " + repr(arg)
+            # arg must be BaseVector or VectMul
+            assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
+            ret_str += " + " + repr(arg)
 
         # Remove the leading " + "
         ret_str = ret_str[3:]
         return ret_str
 
-    __str__ = __repr__
+    __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
 
 
 class VectMul(Mul, Vector):
@@ -1593,29 +1621,44 @@ class VectMul(Mul, Vector):
         # VectMul can be either BaseVector*scalar
         # or VectAdd*scalar or BaseVector
         # We process all cases
-        scalar = S.One
-        for arg in self.args:
-            if arg.is_Vector:
-                continue
-            scalar = scalar * arg
+        scalar = self.scalar
+        vector = self.vector
+        ret = ZeroVector
 
+        # Only if the scalar is of type Add can it be distributed
+        if not isinstance(scalar, Add):
+            for arg in vector._all_args:
+                if isinstance(arg, BaseVector):
+                    v = VectMul(arg, scalar)
+                elif isinstance(arg, VectMul):
+                    v = VectMul(arg, scalar).expand()
+                else:
+                    # Shouldn't happen
+                    raise TypeError
+                ret = ret + v
+            return ret
+
+        # Now we know that scalar must be Add. So it has to distribute
         if isinstance(scalar, BaseScalar):
             scalar_args = [scalar]
         else:
             scalar_args = scalar.args
-        vect = self.vector
 
-        if isinstance(vect, BaseVector):
+        if not scalar_args:
+            # scalar.args was empty. Get atoms
+            scalar_args = list(scalar.atoms())
+
+        if isinstance(vector, BaseVector):
             ret = ZeroVector
             for arg in scalar_args:
-                ret = ret + VectMul(arg, vect)
+                ret = ret + VectMul(arg, vector)
             return ret
 
-        if isinstance(vect, VectAdd):
+        if isinstance(vector, VectAdd):
             ret = ZeroVector
-            exp_vect = vect.expand()
-            # Now, exp_vect.args should be either BaseVector or VectMul
-            for arg in exp_vect.args:
+            vector = vector.expand()
+            # Now, vect.args should be either BaseVector or VectMul
+            for arg in vector.args:
                 ret = ret +  (arg * scalar).expand()
             return ret
 
@@ -1647,7 +1690,7 @@ class VectMul(Mul, Vector):
 
     @property
     def _all_args(self):
-        return [self]
+        return list(self.args)
 
     @property
     def scalar(self):
@@ -1685,13 +1728,13 @@ class VectMul(Mul, Vector):
 
     @property
     def components(self):
-        vect = self.expnad()
+        vect = self.expand()
         if not isinstance(vect, VectMul):
             return vect.components
 
         # Since vect is just VectMul, so return the scalar part
-        r = [S.One]*vect.coord_sys.dim
-        r[int(vect.vector.position) + 1] = vect.vector.scalar
+        r = [S.Zero]*vect.coord_sys.dim
+        r[int(vect.vector.position) - 1] = vect.scalar
         return r
 
     def express(self, coord_sys):
@@ -1711,8 +1754,9 @@ class VectMul(Mul, Vector):
         ret = ret + _diff_scalar(scalar, s) * vector + vector.diff(s)
         return ret
 
-    def __repr__(self):
+    def __str__(self, printer=None):
         # VectMul can contain another VectAdd
+        # TODO : This method works but can be improved.
         ret_str = ''
         scalar = self.scalar
         vector = self.vector
@@ -1730,6 +1774,10 @@ class VectMul(Mul, Vector):
             raise TypeError
 
         return ret_str
+
+    __repr__ = __str__
+    _sympystr = __str__
+    _sympyrepr = __str__
 
 
 class ZeroVectorClass(Zero):
@@ -1889,11 +1937,11 @@ def express(vect, coord_sys):
         # Process the scalar
         if isinstance(scalar, BaseVector):
             # Because BaseScalar.args returns coord_sys as well
-            subs_dict[v] = CoordSys._convert_base_sclr_rect(scalar,
+            subs_dict[scalar] = CoordSys._convert_base_sclr_rect(scalar,
                                                             coord_sys_t)
         else:
             for arg_scalar in _all_base_scalars(scalar):
-                if not subs_dict.has_key(arg_scalar)):
+                if not subs_dict.has_key(arg_scalar):
                     subs_dict[arg_scalar] = \
                         CoordSys._convert_base_sclr_rect(vect, coord_sys_t)
 
@@ -1918,8 +1966,9 @@ def express(vect, coord_sys):
 
         else:
             for arg_scalar in _all_base_scalars(scalar):
-                if not subs_dict.has_key(arg_scalar)):
-                    subs_dict[v] = arg_scalar._convert_to_rect(coord_sys)
+                if not subs_dict.has_key(arg_scalar):
+                    subs_dict[arg_scalar] = \
+                                        arg_scalar._convert_to_rect(coord_sys)
 
         # Now process the vector
         # vector is necessarily BaseVector

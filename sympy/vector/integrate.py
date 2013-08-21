@@ -1,12 +1,13 @@
-from sympy.core import (Basic, Expr, Dummy, Function, Symbol, symbols,
-                        sympify, diff, Pow, Mul, Add, S, AtomicExpr)
+from sympy.core import (Basic, Expr, Symbol, symbols, sympify, diff, Pow, Mul,
+                        Add, S)
+from sympy.integrals.integrals import integrate, Integral
 from sympy.vector.vector import (_all_coordinate_systems, _all_base_scalars,
-                                 _vect_add, _vect_mul, _coord_sys_scalar_list
+                                 _vect_add, _vect_mul, _coord_sys_scalar_list,
                                  _has_base_scalar)
 from sympy.vector.vector import (dot, cross, express, grad, div, curl,
                                  laplacian)
 from sympy.vector.vector import (BaseScalar, Vector, BaseVector, VectMul,
-                                 VectMul, ZeroVector)
+                                 ZeroVector)
 
 
 class ParamRegion(object):
@@ -96,7 +97,7 @@ class LineVectIntegral(VectIntegral):
         # Now since vect and dl are in the same coorfinates, we have:
         comp = vect.components
         expr = S.Zero
-        for i in rangr(len(dl)):
+        for i in range(len(dl)):
             expr = expr + (comp[i] * dl[i])
         # Now, expr has been completely express in coord_sys. We just need to
         # change everything to the parametric variable, 'u'
@@ -106,8 +107,11 @@ class LineVectIntegral(VectIntegral):
 
         # Now, we can integrate the expression just as any regular integral
         bounds = self.param_region.bounds
-        res = integrate(expr, self.param_region.u, bounds[0], bounds[1])
-        return res
+        res = integrate(expr,
+                        (self.param_region.u, bounds[0][0], bounds[0][1]))
+        if not isinstance(res, Integral):
+            return res
+        return self
 
 
 class SurfaceVectIntegral(VectIntegral):
@@ -118,7 +122,7 @@ class SurfaceVectIntegral(VectIntegral):
     Not to be initialized directly. An instance of this class is returned
     by the integrate method on vectors.
     """
-    def __init__(self, vect, param_region)
+    def __init__(self, vect, param_region):
         # The integral must be of the type F.dl
         super(LineVectIntegral, self).__init__(vect, param_region)
 
@@ -139,13 +143,62 @@ class SurfaceVectIntegral(VectIntegral):
         # TODO : Implement normalize
         n = cross(r_u, r_v)
         # http://en.wikipedia.org/wiki/Surface_integral
-        r_dot_n = dot(r, n, self.param_region.coord_sys.param_region)
-        # Now we need to calculate ∫ ∫ r_dot_n du dv
-        # How to do this??
-        # Asked on ML
+        vect_dot_n = dot(vect, n, self.param_region.coord_sys.param_region)
 
+        # Now we need to calculate double_integral( vect_dot_n du dv )
+        bounds = self.param_region.bounds
 
-vect_integrate(vect, param_region)
+        # Check the bounds to ascertain the order
+        # Case 1 : Both bounds are constants - can perform either order
+        # Case 2 : Bounds for u are in terms of v : integrate wrt to u first
+        # Case 3 : Bounds for v are in terms of u : integrate wrt to v first
+        case = _bounds_case(bounds, self.param_region.u, self.param_region.v)
+        if case == 1 or case == 2:
+            res = integrate(vect_dot_n,
+                            (self.param_region.u, bounds[0][0], bounds[0][1]),
+                            (self.param_region.v, bounds[1][0], bounds[1][1]))
+            if not isinstance(res, Integral):
+                return res
+            elif case == 2:
+                return self
+
+        if case == 1 or case == 3:
+            res = integrate(vect_dot_n,
+                            (self.param_region.v, bounds[0][0], bounds[0][1]),
+                            (self.param_region.u, bounds[1][0], bounds[1][1]))
+            if not isinstance(res, Integral):
+                return res
+
+        # Integral couldn't be evaluated
+        return self
+
+def _bounds_case(bounds, u, v):
+    """
+    Check whether the given bounds depend on variables of integration and
+    return the correct case.
+    """
+    # Check bounds of u for v
+    lower = bounds[0][0]
+    upper = bounds[0][1]
+
+    atoms_lower = lower.atoms()
+    atoms_upper = upper.atoms()
+    if atoms_lower.issuperset(set([v])) or atoms_upper.issuperset(set([v])):
+        return 2
+
+    # Check bounds of v for u
+    lower = bounds[1][0]
+    upper = bounds[1][1]
+
+    atoms_lower = lower.atoms()
+    atoms_upper = upper.atoms()
+    if atoms_lower.issuperset(set([u])) or atoms_upper.issuperset(set([u])):
+        return 3
+
+    # No bounds occur in the other. Bounds are constants.
+    return 1
+
+def vect_integrate(vect, param_region):
     """
     Takes an object with is_Vector == True and a ParamRegion object and
     retuns an instance of the appropriate subclass of VectIntegral class.
@@ -154,10 +207,10 @@ vect_integrate(vect, param_region)
     coord_sys : an instance of subclass of CoordSys class
     """
     # First check if type of the integral
-    if hasattr(param_region, _u) and not hasattr(param_region, _v):
+    if hasattr(param_region, '_u') and not hasattr(param_region, '_v'):
         # Integral is of type F.dl
         obj = LineVectIntegral(vect, param_region)
-    elif hasattr(param_region, _u) and hasattr(param_region, _v):
+    elif hasattr(param_region, '_u') and hasattr(param_region, '_v'):
         # Integral is a of type F.dS (surface integral)
         obj = SurfaceVectIntegral(vect, param_region)
     # We can also consider cases with scalar*vector type integral
