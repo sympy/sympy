@@ -39,7 +39,30 @@ def n_order(a, n):
             exponent = exponent // p
     return order
 
-def primitive_root(p, all_roots=False):
+def _primitive_root_prime_iter(p):
+    """
+    Generates the primitive roots for a prime ``p``
+
+    References
+    ==========
+
+    [1] W. Stein "Elementary Number Theory" (2011), page 44
+
+    Examples
+    ========
+    >>> from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
+    >>> list(_primitive_root_prime_iter(19))
+    [2, 3, 10, 13, 14, 15]
+    """
+    v = [(p - 1) // i for i in factorint(p - 1).keys()]
+    for a in xrange(2, p):
+        for pw in v:
+            if pow(a, pw, p) == 1:
+                break
+        else:
+            yield a
+
+def primitive_root(p):
     """
     Returns the smallest primitive root or None
 
@@ -53,12 +76,6 @@ def primitive_root(p, all_roots=False):
     ==========
 
     p : positive integer
-    all_roots : if True the list of all primitive roots is returned
-
-    Notes
-    =====
-
-    Returns None if there is no primitive root.
 
     Examples
     ========
@@ -66,22 +83,12 @@ def primitive_root(p, all_roots=False):
     >>> from sympy.ntheory.residue_ntheory import primitive_root
     >>> primitive_root(19)
     2
-    >>> primitive_root(19, True)
-    [2, 3, 10, 13, 14, 15]
     """
-    def _all_roots(p):
-        a = []
-        for i in xrange(3, p, 2):
-            if i % p1 == 0:
-                continue
-            if is_primitive_root(i, p):
-                a.append(i)
-        return a
     p = as_int(p)
-    if p == 1:
-        return 1
     if p < 1:
         raise Valuerror('p is required to be positive')
+    if p <= 2:
+        return 1
     f = factorint(p)
     if len(f) > 2:
         return None
@@ -93,52 +100,29 @@ def primitive_root(p, all_roots=False):
         for p1, e1 in f.items():
             if p1 != 2:
                 break
-        # see Ref [2], page 72
-        if all_roots:
-            return _all_roots(p)
-        else:
-            a = [i for i in primitive_root(p1, True) if i % 2 == 1]
-            if a:
-                return min(a)
-            else:
-                for i in xrange(3, p, 2):
-                    if i % p1 == 0:
-                        continue
-                    if is_primitive_root(i, p):
-                        return i
+        for i in xrange(3, p, 2):
+            if i % p1 == 0:
+                continue
+            if is_primitive_root(i, p):
+                return i
 
     else:
         if 2 in f:
-            if p == 2:
-                return [1] if all_roots else 1
             if p == 4:
-                return [3] if all_roots else 3
+                return 3
             return None
         p1, n = list(f.items())[0]
         if n > 1:
             # see Ref [2], page 81
-            if all_roots:
-                return _all_roots(p)
             g = primitive_root(p1)
             if is_primitive_root(g, p1**2):
                 return g
             else:
-                for i in xrange(2, p + p1 + 1):
+                for i in xrange(2, g + p1 + 1):
                     if igcd(i, p) == 1 and is_primitive_root(i, p):
                         return i
 
-    # see [1]
-    v = [(p - 1) // i for i in factorint(p - 1).keys()]
-    pv = []
-    for a in xrange(2, p):
-        for pw in v:
-            if pow(a, pw, p) == 1:
-                break
-        else:
-            if not all_roots:
-                return a
-            pv.append(a)
-    return pv
+    return _primitive_root_prime_iter(p).next()
 
 def is_primitive_root(a, p):
     """

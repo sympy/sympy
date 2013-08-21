@@ -13,6 +13,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
     nthroot_mod
 
+from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import _mr_safe_helper, mr
@@ -413,8 +414,8 @@ def test_residue():
         assert primitive_root(p) is None
 
     for p in primerange(3, 100):
-        r = primitive_root(p, True)
-        assert len(r) == totient(totient(p))
+        it = _primitive_root_prime_iter(p)
+        assert len(list(it)) == totient(totient(p))
     assert primitive_root(97) == 5
     assert primitive_root(97**2) == 5
     assert primitive_root(40487) == 5
