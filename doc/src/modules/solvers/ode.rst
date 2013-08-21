@@ -124,6 +124,10 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
+:obj:`lie_group`
+^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_lie_group
+
 Lie heuristics
 --------------
 These functions are intended for internal use of the Lie Group Solver.
