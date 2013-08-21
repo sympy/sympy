@@ -1091,8 +1091,13 @@ def evalf_sum(expr, prec, options):
         eps = C.Float(2.0)**(-prec)
         for i in range(1, 5):
             m = n = 2**i * prec
-            s, err = expr.euler_maclaurin(m=m, n=n, eps=eps,
-                eval_integral=False)
+            try:
+                s, err = expr.euler_maclaurin(m=m, n=n, eps=eps,
+                    eval_integral=False)
+            except TypeError as e:
+                if str(e) == "symbolic boolean expression has no truth value.":
+                    raise NotImplementedError
+                raise
             err = err.evalf()
             if err <= eps:
                 break
