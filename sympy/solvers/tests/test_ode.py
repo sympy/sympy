@@ -1718,6 +1718,7 @@ def test_kamke():
     i = infinitesimals(eq, hint='sum_function')
     assert checkinfsol(eq, i)[0]
 
+
 def test_lie_group():
     C1 = Symbol("C1")
     a, b, c = symbols("a b c")
@@ -1761,3 +1762,8 @@ def test_user_infinitesimals():
         eta=0)
     assert sol == Eq(f(x), (C2 + x**2)/(C1 - x**2))
     raises(ValueError, lambda: dsolve(eq, hint='lie_group', xi=0, eta=f(x)))
+
+@XFAIL
+def test_issue_3982():
+    eq = x*(f(x).diff(x)) + 1 - f(x)**2
+    assert dsolve(eq) == Eq(f(x), (C2 + x**2)/(C1 - x**2))

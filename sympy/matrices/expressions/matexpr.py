@@ -186,7 +186,8 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                0 <= i < self.rows and 0 <= j < self.cols)
+                (0 <= i) is not False and (i < self.rows) is not False and
+                (0 <= j) is not False and (j < self.cols) is not False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):

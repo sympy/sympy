@@ -209,11 +209,11 @@ polynomials and to solve some systems of polynomial equations::
     >>> p = Symbol('p')
     >>> q = Symbol('q')
 
-    >>> sorted(solve(x**2 + p*x + q, x))
+    >>> solve(x**2 + p*x + q, x)
               __________           __________
              /  2                 /  2
        p   \/  p  - 4*q     p   \/  p  - 4*q
-    [- - + -------------, - - - -------------]
+    [- - - -------------, - - + -------------]
        2         2          2         2
 
     >>> solve_poly_system([y - x, x - 5], x, y)
@@ -222,5 +222,5 @@ polynomials and to solve some systems of polynomial equations::
     >>> solve_poly_system([y**2 - x**3 + 1, y*x], x, y)
                                        ___                 ___
                                  1   \/ 3 *I         1   \/ 3 *I
-    [(0, I), (0, -I), (1, 0), (- - + -------, 0), (- - - -------, 0)]
+    [(0, -I), (0, I), (1, 0), (- - - -------, 0), (- - + -------, 0)]
                                  2      2            2      2

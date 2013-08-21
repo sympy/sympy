@@ -1,16 +1,18 @@
 """ Integral Transforms """
+
 from __future__ import print_function, division
 
-from sympy.integrals import integrate, Integral
-from sympy.core.numbers import oo
-from sympy.core.symbol import Dummy
-from sympy.core.function import Function
-from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
-from sympy.simplify import simplify
 from sympy.core import S
 from sympy.core.compatibility import reduce
-
+from sympy.core.function import Function
+from sympy.core.numbers import oo
+from sympy.core.symbol import Dummy
+from sympy.integrals import integrate, Integral
 from sympy.integrals.meijerint import _dummy
+from sympy.logic.boolalg import to_cnf, conjuncts, disjuncts, Or, And
+from sympy.simplify import simplify
+from sympy.utilities import default_sort_key
+
 
 ##########################################################################
 # Helpers / Utilities
@@ -688,10 +690,10 @@ def _rewrite_gamma(f, s, a, b):
     arg = Mul(*exponentials)
 
     # for testability, sort the arguments
-    an.sort()
-    ap.sort()
-    bm.sort()
-    bq.sort()
+    an.sort(key=default_sort_key)
+    ap.sort(key=default_sort_key)
+    bm.sort(key=default_sort_key)
+    bq.sort(key=default_sort_key)
 
     return (an, ap), (bm, bq), arg, exponent, fac
 

@@ -35,6 +35,8 @@ from sympy.physics.quantum.dagger import Dagger
 
 from sympy.matrices.matrices import MatrixBase
 
+from sympy.utilities import default_sort_key
+
 __all__ = [
     'Gate',
     'CGate',
@@ -73,6 +75,18 @@ __all__ = [
 #-----------------------------------------------------------------------------
 
 _normalized = True
+
+
+def _max(*args, **kwargs):
+    if "key" not in kwargs:
+        kwargs["key"] = default_sort_key
+    return max(*args, **kwargs)
+
+
+def _min(*args, **kwargs):
+    if "key" not in kwargs:
+        kwargs["key"] = default_sort_key
+    return min(*args, **kwargs)
 
 
 def normalized(normalize):
@@ -140,7 +154,7 @@ class Gate(UnitaryOperator):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args) + 1)
+        return ComplexSpace(2)**(_max(args) + 1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -158,7 +172,7 @@ class Gate(UnitaryOperator):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(self.targets) + 1
+        return _max(self.targets) + 1
 
     @property
     def targets(self):
@@ -332,7 +346,7 @@ class CGate(Gate):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**max(max(args[0]) + 1, args[1].min_qubits)
+        return ComplexSpace(2)**_max(_max(args[0]) + 1, args[1].min_qubits)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -350,7 +364,7 @@ class CGate(Gate):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(max(self.controls), max(self.targets)) + 1
+        return _max(_max(self.controls), _max(self.targets)) + 1
 
     @property
     def targets(self):
@@ -427,8 +441,8 @@ class CGate(Gate):
         Plot the controlled gate. If *simplify_cgate* is true, simplify
         C-X and C-Z gates into their more familiar forms.
         """
-        min_wire = int(min(chain(self.controls, self.targets)))
-        max_wire = int(max(chain(self.controls, self.targets)))
+        min_wire = int(_min(chain(self.controls, self.targets)))
+        max_wire = int(_max(chain(self.controls, self.targets)))
         circ_plot.control_line(gate_idx, min_wire, max_wire)
         for c in self.controls:
             circ_plot.control_point(gate_idx, int(c))
@@ -514,7 +528,7 @@ class UGate(Gate):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args[0]) + 1)
+        return ComplexSpace(2)**(_max(args[0]) + 1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -869,7 +883,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     @classmethod
     def _eval_hilbert_space(cls, args):
         """This returns the smallest possible Hilbert space."""
-        return ComplexSpace(2)**(max(args) + 1)
+        return ComplexSpace(2)**(_max(args) + 1)
 
     #-------------------------------------------------------------------------
     # Properties
@@ -878,7 +892,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     @property
     def min_qubits(self):
         """The minimum number of qubits this gate needs to act on."""
-        return max(self.label) + 1
+        return _max(self.label) + 1
 
     @property
     def targets(self):
@@ -973,8 +987,8 @@ class SwapGate(TwoQubitGate):
         return g1*g2*g1
 
     def plot_gate(self, circ_plot, gate_idx):
-        min_wire = int(min(self.targets))
-        max_wire = int(max(self.targets))
+        min_wire = int(_min(self.targets))
+        max_wire = int(_max(self.targets))
         circ_plot.control_line(gate_idx, min_wire, max_wire)
         circ_plot.swap_point(gate_idx, min_wire)
         circ_plot.swap_point(gate_idx, max_wire)
@@ -988,8 +1002,8 @@ class SwapGate(TwoQubitGate):
         """
         format = options.get('format', 'sympy')
         targets = [int(t) for t in self.targets]
-        min_target = min(targets)
-        max_target = max(targets)
+        min_target = _min(targets)
+        max_target = _max(targets)
         nqubits = options.get('nqubits', self.min_qubits)
 
         op01 = matrix_cache.get_matrix('op01', format)
