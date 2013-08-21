@@ -399,6 +399,7 @@ def test_residue():
     assert n_order(5, 17) == 16
     assert n_order(17, 11) == n_order(6, 11)
     assert n_order(101, 119) == 6
+    assert n_order(11, (10**50 + 151)**2) == 10000000000000000000000000000000000000000000000030100000000000000000000000000000000000000000000022650
     raises(ValueError, lambda: n_order(6, 9))
 
     assert is_primitive_root(2, 7) is False
@@ -407,11 +408,9 @@ def test_residue():
     assert is_primitive_root(12, 17) == is_primitive_root(29, 17)
     raises(ValueError, lambda: is_primitive_root(3, 6))
 
-    assert primitive_root(2) == 1
-    assert primitive_root(4) == 3
-    assert primitive_root(14) == 3
-    for p in [8, 21, 30]:
-        assert primitive_root(p) is None
+    assert [primitive_root(i) for i in range(2, 31)] == [1, 2, 3, 2, 5, 3, \
+       None, 2, 3, 2, None, 2, 3, None, None, 3, 5, 2, None, None, 7, 5, \
+       None, 2, 7, 2, None, 2, None]
 
     for p in primerange(3, 100):
         it = _primitive_root_prime_iter(p)
@@ -419,10 +418,14 @@ def test_residue():
     assert primitive_root(97) == 5
     assert primitive_root(97**2) == 5
     assert primitive_root(40487) == 5
-    # note that primitive_root(40487) + 40487 = 40492 is a primitive root,
-    # but it is not the smallest
+    # note that primitive_root(40487) + 40487 = 40492 is a primitive root
+    # of 40487**2, but it is not the smallest
     assert primitive_root(40487**2) == 10
     assert primitive_root(82) == 7
+    p = 10**50 + 151
+    assert primitive_root(p) == 11
+    assert primitive_root(2*p) == 11
+    assert primitive_root(p**2) == 11
 
     assert is_quad_residue(3, 7) is False
     assert is_quad_residue(10, 13) is True

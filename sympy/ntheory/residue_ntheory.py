@@ -22,11 +22,21 @@ def n_order(a, n):
     >>> n_order(4, 7)
     3
     """
+    from collections import defaultdict
     a, n = as_int(a), as_int(n)
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    group_order = totient(n)
-    factors = factorint(group_order)
+    factors = defaultdict(int)
+    f = factorint(n)
+    for px, kx in f.items():
+        if kx > 1:
+            factors[px] += kx - 1
+        fpx = factorint(px - 1)
+        for py, ky in fpx.items():
+            factors[py] += ky
+    group_order = 1
+    for px, kx in factors.items():
+        group_order *= px**kx
     order = 1
     if a > n:
         a = a % n
@@ -54,13 +64,16 @@ def _primitive_root_prime_iter(p):
     >>> list(_primitive_root_prime_iter(19))
     [2, 3, 10, 13, 14, 15]
     """
+    p = as_int(p)
     v = [(p - 1) // i for i in factorint(p - 1).keys()]
-    for a in xrange(2, p):
+    a = 2
+    while a < p:
         for pw in v:
             if pow(a, pw, p) == 1:
                 break
         else:
             yield a
+        a += 1
 
 def primitive_root(p):
     """
@@ -100,7 +113,9 @@ def primitive_root(p):
         for p1, e1 in f.items():
             if p1 != 2:
                 break
-        for i in xrange(3, p, 2):
+        i = 1
+        while i < p:
+            i += 2
             if i % p1 == 0:
                 continue
             if is_primitive_root(i, p):
