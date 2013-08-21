@@ -27,6 +27,12 @@ if not sympy.doctest():
 EOF
         cd ..
         bin/doctest doc/
+    elif [[ "${TEST_THEANO}" == "true" ]]; then
+        cat << EOF | python
+import sympy
+if not sympy.test('*theano*'):
+    raise Exception('Tests failed')
+EOF
     else
         cat << EOF | python
 import sympy
