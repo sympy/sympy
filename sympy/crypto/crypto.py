@@ -402,44 +402,6 @@ def decipher_vigenere(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
 #################### Hill cipher  ########################
 
-def matrix_inverse_mod(K, m):
-    r"""
-    Returns the inverse of the matrix `K` (mod `m`), if it exists.
-
-    Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
-
-    * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
-
-    * Compute `r = 1/\mathrm{det}(K) \pmod m`.
-
-    * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
-
-    Examples
-    ========
-
-    >>> from sympy.crypto.crypto import matrix_inverse_mod
-    >>> from sympy import Matrix
-    >>> A = Matrix(2, 2, [1, 2, 3, 4])
-    >>> matrix_inverse_mod(A, 5)
-    Matrix([
-    [3, 1],
-    [4, 2]])
-    >>> matrix_inverse_mod(A, 3)
-    Matrix([
-    [1, 1],
-    [0, 1]])
-
-    """
-    N = K.cols
-    phi = totient(m)
-    det_K = K.det()
-    if gcd(det_K, m) != 1:
-        raise ValueError('Matrix is not invertible (mod %d)' % m)
-    det_inv = pow(int(det_K), int(phi - 1), int(m))
-    #det_inv = pow(det_K, phi-1)%m
-    K_adj = K.cofactorMatrix().transpose()
-    K_inv = Matrix(N, N, [det_inv*K_adj[i, j] % m for i in range(N) for j in range(N)])
-    return K_inv
 
 def encipher_hill(pt, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     r"""
@@ -558,7 +520,7 @@ def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     if n > m*k:
         C = C + [0]*(n - m*k)
         m = m + 1
-    key_inv = matrix_inverse_mod(key, N)
+    key_inv = key.inv_mod(N)
     P = [list(key_inv*Matrix(k, 1, [C[i] for i in range(k*j, k*(j + 1))])) for j in range(m)]
     P = flatten(P)
     return "".join([A[i % N] for i in P])

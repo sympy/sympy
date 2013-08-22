@@ -29,8 +29,6 @@ Included in this module are both block ciphers and stream ciphers.
 
 .. autofunction:: decipher_vigenere
 
-.. autofunction:: matrix_inverse_mod
-
 .. autofunction:: encipher_hill
 
 .. autofunction:: decipher_hill

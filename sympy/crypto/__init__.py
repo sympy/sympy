@@ -1,6 +1,6 @@
 from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
-      encipher_vigenere, decipher_vigenere, matrix_inverse_mod,
+      encipher_vigenere, decipher_vigenere,
       bifid5_square, bifid6_square, bifid7_square,
       encipher_hill, decipher_hill, encipher_bifid5, encipher_bifid6,
       encipher_bifid7, decipher_bifid5, decipher_bifid6, encipher_kid_rsa,

@@ -1,7 +1,7 @@
 from sympy.core import symbols
 from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       encipher_shift, encipher_affine, encipher_substitution,
-      encipher_vigenere, decipher_vigenere, matrix_inverse_mod,
+      encipher_vigenere, decipher_vigenere,
       encipher_hill, decipher_hill, encipher_bifid5, encipher_bifid6,
       bifid5_square, bifid6_square, bifid7_square,
       encipher_bifid7, decipher_bifid5, decipher_bifid6, encipher_kid_rsa,
@@ -58,16 +58,6 @@ def test_decipher_vigenere():
     assert decipher_vigenere("ABC", "AB", symbols="ABCD") == "AAC"
     assert decipher_vigenere("AB", "ABC", symbols="ABCD") == "AA"
     assert decipher_vigenere("A", "ABC", symbols="ABCD") == "A"
-
-
-def test_matrix_inverse_mod():
-    A = Matrix(2, 2, [1, 0, 0, 0])
-    raises(ValueError, lambda: matrix_inverse_mod(A, 2))
-    A = Matrix(2, 2, [1, 2, 3, 4])
-    Ai = Matrix(2, 2, [1, 1, 0, 1])
-    assert matrix_inverse_mod(A, 3) == Ai
-    A = Matrix(2, 2, [1, 0, 0, 1])
-    assert matrix_inverse_mod(A, 2) == A
 
 
 def test_encipher_hill():
