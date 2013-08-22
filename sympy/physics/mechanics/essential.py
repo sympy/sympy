@@ -34,7 +34,10 @@ class Dyadic(object):
 
     def __init__(self, inlist):
         """
-        Just like Vector's init, you shouldn't call this.
+        Just like Vector's init, you shouldn't call this unless creating a
+        zero dyadic.
+
+        zd = Dyadic(0)
 
         Stores a Dyadic as a list of lists; the inner list has the measure
         number and the two unit vectors; the outerlist holds each unique
@@ -43,6 +46,8 @@ class Dyadic(object):
         """
 
         self.args = []
+        if inlist == 0:
+            inlist = []
         while len(inlist) != 0:
             added = 0
             for i, v in enumerate(self.args):
@@ -95,13 +100,13 @@ class Dyadic(object):
 
         if isinstance(other, Dyadic):
             other = _check_dyadic(other)
-            ol = Dyadic([])
+            ol = Dyadic(0)
             for i, v in enumerate(self.args):
                 for i2, v2 in enumerate(other.args):
                     ol += v[0] * v2[0] * (v[2] & v2[1]) * (v[1] | v2[2])
         else:
             other = _check_vector(other)
-            ol = Vector([])
+            ol = Vector(0)
             for i, v in enumerate(self.args):
                 ol += v[0] * v[1] * (v[2] & other)
         return ol
@@ -120,7 +125,7 @@ class Dyadic(object):
         """
 
         if other == 0:
-            other = Dyadic([])
+            other = Dyadic(0)
         other = _check_dyadic(other)
         if (self.args == []) and (other.args == []):
             return True
@@ -271,7 +276,7 @@ class Dyadic(object):
         """
 
         other = _check_vector(other)
-        ol = Vector([])
+        ol = Vector(0)
         for i, v in enumerate(self.args):
             ol += v[0] * v[2] * (v[1] & other)
         return ol
@@ -300,7 +305,7 @@ class Dyadic(object):
         """
 
         other = _check_vector(other)
-        ol = Dyadic([])
+        ol = Dyadic(0)
         for i, v in enumerate(self.args):
             ol += v[0] * ((other ^ v[1]) | v[2])
         return ol
@@ -363,7 +368,7 @@ class Dyadic(object):
         """
 
         other = _check_vector(other)
-        ol = Dyadic([])
+        ol = Dyadic(0)
         for i, v in enumerate(self.args):
             ol += v[0] * (v[1] | (v[2] ^ other))
         return ol
@@ -407,7 +412,7 @@ class Dyadic(object):
             frame2 = frame1
         _check_frame(frame1)
         _check_frame(frame2)
-        ol = Dyadic([])
+        ol = Dyadic(0)
         for i, v in enumerate(self.args):
             ol += v[0] * (v[1].express(frame1) | v[2].express(frame2))
         return ol
@@ -415,7 +420,7 @@ class Dyadic(object):
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
         return sum([Dyadic([(v[0].doit(**hints), v[1], v[2])])
-                    for v in self.args], Dyadic([]))
+                    for v in self.args], Dyadic(0))
 
     def dt(self, frame):
         """Take the time derivative of this Dyadic in a frame.
@@ -441,7 +446,7 @@ class Dyadic(object):
 
         _check_frame(frame)
         t = dynamicsymbols._t
-        ol = Dyadic([])
+        ol = Dyadic(0)
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
             ol += (v[0] * (v[1].dt(frame) | v[2]))
@@ -450,7 +455,7 @@ class Dyadic(object):
 
     def simplify(self):
         """Returns a simplified Dyadic."""
-        out = Dyadic([])
+        out = Dyadic(0)
         for v in self.args:
             out += Dyadic([(v[0].simplify(), v[1], v[2])])
         return out
@@ -472,11 +477,7 @@ class Dyadic(object):
         """
 
         return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
-<<<<<<< HEAD
-                     for v in self.args])
-=======
-                    for v in self.args], Dyadic([]))
->>>>>>> Make output types of Vectors, Dyadics consistent.
+                    for v in self.args], Dyadic(0))
 
     dot = __and__
     cross = __xor__
@@ -827,7 +828,7 @@ class ReferenceFrame(object):
 
         _check_frame(otherframe)
         flist = self._dict_list(otherframe, 1)
-        outvec = Vector([])
+        outvec = Vector(0)
         for i in range(len(flist) - 1):
             outvec += flist[i]._ang_vel_dict[flist[i + 1]]
         return outvec
@@ -1136,7 +1137,7 @@ class ReferenceFrame(object):
         """
 
         if value == 0:
-            value = Vector([])
+            value = Vector(0)
         value = _check_vector(value)
         _check_frame(otherframe)
         self._ang_acc_dict.update({otherframe: value})
@@ -1172,7 +1173,7 @@ class ReferenceFrame(object):
         """
 
         if value == 0:
-            value = Vector([])
+            value = Vector(0)
         value = _check_vector(value)
         _check_frame(otherframe)
         self._ang_vel_dict.update({otherframe: value})
@@ -1342,9 +1343,14 @@ class Vector(object):
         hand, and getting the first 3 from the standard basis vectors from a
         ReferenceFrame.
 
+        The only exception is to create a zero vector:
+        zv = Vector(0)
+
         """
 
         self.args = []
+        if inlist == 0:
+            inlist = []
         while len(inlist) != 0:
             added = 0
             for i, v in enumerate(self.args):
@@ -1434,7 +1440,7 @@ class Vector(object):
         """
 
         if other == 0:
-            other = Vector([])
+            other = Vector(0)
         other = _check_vector(other)
         if (self.args == []) and (other.args == []):
             return True
@@ -1502,7 +1508,7 @@ class Vector(object):
         """
 
         other = _check_vector(other)
-        ol = Dyadic([])
+        ol = Dyadic(0)
         for i, v in enumerate(self.args):
             for i2, v2 in enumerate(other.args):
                 # it looks this way because if we are in the same frame and
@@ -1618,7 +1624,7 @@ class Vector(object):
         """
 
         other = _check_vector(other)
-        ol = Dyadic([])
+        ol = Dyadic(0)
         for i, v in enumerate(other.args):
             for i2, v2 in enumerate(self.args):
                 # it looks this way because if we are in the same frame and
@@ -1707,7 +1713,7 @@ class Vector(object):
             return NotImplemented
         other = _check_vector(other)
         if other.args == []:
-            return Vector([])
+            return Vector(0)
 
         def _det(mat):
             """This is needed as a little method for to find the determinant
@@ -1722,7 +1728,7 @@ class Vector(object):
                     mat[2][2]) + mat[0][2] * (mat[1][0] * mat[2][1] -
                     mat[1][1] * mat[2][0]))
 
-        outvec = Vector([])
+        outvec = Vector(0)
         ar = other.args  # For brevity
         for i, v in enumerate(ar):
             tempx = v[1].x
@@ -1783,7 +1789,7 @@ class Vector(object):
 
         wrt = sympify(wrt)
         _check_frame(otherframe)
-        outvec = Vector([])
+        outvec = Vector(0)
         for i, v in enumerate(self.args):
             if v[1] == otherframe:
                 outvec += Vector([(v[0].diff(wrt), otherframe)])
@@ -1806,7 +1812,7 @@ class Vector(object):
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Vector"""
-        ov = Vector([])
+        ov = Vector(0)
         for i, v in enumerate(self.args):
             ov += Vector([(v[0].applyfunc(lambda x: x.doit(**hints)), v[1])])
         return ov
@@ -1819,7 +1825,7 @@ class Vector(object):
         Refer the docstring for ReferenceFrame.express
         """
 
-        outvec = Vector([])
+        outvec = Vector(0)
         _check_frame(otherframe)
         for i, v in enumerate(self.args):
             if v[1] == otherframe:
@@ -1854,7 +1860,7 @@ class Vector(object):
         """
 
         _check_frame(otherframe)
-        outvec = Vector([])
+        outvec = Vector(0)
         for i, v in enumerate(self.args):
             if v[1] != otherframe:
                 temp = otherframe.dcm(v[1]) * v[0]
@@ -1867,7 +1873,7 @@ class Vector(object):
 
     def simplify(self):
         """Returns a simplified Vector."""
-        outvec = Vector([])
+        outvec = Vector(0)
         for i in self.args:
             outvec += Vector([(i[0].simplify(), i[1])])
         return outvec
@@ -1888,7 +1894,7 @@ class Vector(object):
 
         """
 
-        ov = Vector([])
+        ov = Vector(0)
         for i, v in enumerate(self.args):
             ov += Vector([(v[0].subs(*args, **kwargs), v[1])])
         return ov

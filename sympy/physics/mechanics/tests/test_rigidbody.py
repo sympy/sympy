@@ -10,8 +10,8 @@ def test_rigidbody():
     A2 = ReferenceFrame('A2')
     P = Point('P')
     P2 = Point('P2')
-    I = Dyadic([])
-    I2 = Dyadic([])
+    I = Dyadic(0)
+    I2 = Dyadic(0)
     B = RigidBody('B', P, A, m, (I, P))
     assert B.mass == m
     assert B.frame == A

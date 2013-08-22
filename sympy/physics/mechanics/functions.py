@@ -553,7 +553,7 @@ def linear_momentum(frame, *body):
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please specify a valid ReferenceFrame')
     else:
-        linear_momentum_sys = Vector([])
+        linear_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 linear_momentum_sys += e.linear_momentum(frame)
@@ -611,7 +611,7 @@ def angular_momentum(point, frame, *body):
     if not isinstance(point, Point):
         raise TypeError('Please specify a valid Point')
     else:
-        angular_momentum_sys = Vector([])
+        angular_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 angular_momentum_sys += e.angular_momentum(point, frame)

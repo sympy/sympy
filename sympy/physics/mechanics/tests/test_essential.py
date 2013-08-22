@@ -351,8 +351,8 @@ def test_output_type():
     A = ReferenceFrame('A')
     v = A.x + A.y
     d = v | v
-    zerov = Vector([])
-    zerod = Dyadic([])
+    zerov = Vector(0)
+    zerod = Dyadic(0)
 
     # dot products
     assert isinstance(d & d, Dyadic)

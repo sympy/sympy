@@ -99,8 +99,8 @@ def test_operator_match():
     A = ReferenceFrame('A')
     v = A.x + A.y
     d = v | v
-    zerov = Vector([])
-    zerod = Dyadic([])
+    zerov = Vector(0)
+    zerod = Dyadic(0)
 
     # dot products
     assert d & d == dot(d, d)
