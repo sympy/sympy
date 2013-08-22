@@ -55,9 +55,9 @@ def user_cacheit(func):
     """
     @wraps(func)
     def wrapper(*args, **kw_args):
-        if cacheit._use_cache == 'no':
+        if user_cacheit._use_cache == 'no':
             cache_flag = True
-            cacheit._use_cache = 'yes'
+            user_cacheit._use_cache = 'yes'
         else:
             cache_flag = False
 
@@ -65,10 +65,10 @@ def user_cacheit(func):
 
         if cache_flag is True:
             clear_cache()
-            cacheit._use_cache = 'no'
+            user_cacheit._use_cache = 'no'
         return calc_me
     return wrapper
-
+user_cacheit._use_cache = 'no'
 
 def cacheit(func):
     """
@@ -77,12 +77,11 @@ def cacheit(func):
     Goes to either off, normal, or debug. Basically uses previous cache
     functions, just wrapped into one now.
     """
-
     func_cache_it_cache = {}
     CACHE.append((func, func_cache_it_cache))
     @wraps(func)
     def wrapper(*args, **kw_args):
-        if cacheit._use_cache == 'yes':
+        if user_cacheit._use_cache == 'yes':
             k = [(x, type(x)) for x in args]
             if kw_args:
                 keys = sorted(kw_args)
@@ -99,7 +98,7 @@ def cacheit(func):
             except TypeError: # k is unhashable
                 # Note, collections.Hashable is not smart enough to be used here.
                 pass
-        elif cacheit._use_cache == 'no' or cacheit._use_cache == 'debug':
+        elif user_cacheit._use_cache == 'no' or user_cacheit._use_cache == 'debug':
             r = func(*args, **kw_args)
         else:
             raise ValueError('Bad cacheing setting')
@@ -159,4 +158,3 @@ def cacheit(func):
         raise RuntimeError(
             'unrecognized value for SYMPY_USE_CACHE: %s' % use_cache)
 """
-cacheit._use_cache = 'no'
