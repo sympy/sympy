@@ -16,17 +16,18 @@ computing package ``numpy``, code generation in ``Fortran`` or ``C``, and the
 use of the array compiler ``Theano``.
 
 
-Subs
-----
+Subs/evalf
+----------
 
 Subs is the slowest but simplest option.  It runs at SymPy speeds.
-The ``.subs`` method can substitute a numeric value for a symbolic one.
+The ``.subs(...).evalf()`` method can substitute a numeric value 
+for a symbolic one and then evaluate the result within SymPy.
 
     
     >>> from sympy import *
     >>> from sympy.abc import x
     >>> expr = sin(x)/x
-    >>> expr.subs(x, 3.14)
+    >>> expr.subs(x, 3.14).evalf()
     2.53654331239400e-6
 
 This method is slow.  You should use this method production only if performance is not an issue.  You can expect ``.subs`` to take tens of microseconds.  
@@ -46,7 +47,7 @@ leveraging a variety of numerical libraries.  It is used as follows:
     >>> f(3.14)
     2.53654331239e-06
 
-Lambdify makes a function that computes ``f(x) = sin(x)/x``.  By default
+Here lambdify makes a function that computes ``f(x) = sin(x)/x``.  By default
 lambdify relies on implementations in the ``math`` standard library.  This
 numerical evaluation takes on the order of hundreds of nanoseconds, roughly two
 orders of magnitude faster than the ``.subs`` method.  This is the speed
@@ -59,9 +60,10 @@ powerful vectorized ufuncs that are backed by compiled C code.
 
     >>> from sympy import *
     >>> from sympy.abc import x
-    >>> import numpy
     >>> expr = sin(x)/x
-    >>> f = lambdify(x, expr, numpy)
+    >>> f = lambdify(x, expr, "numpy")
+    
+    >>> import numpy
     >>> data = numpy.linspace(1, 10, 10000)
     >>> f(data)
     array([ 0.84147098,  0.84119981,  0.84092844, ..., -0.05426074,
@@ -159,7 +161,7 @@ that will often be the best choice.  If you don't have Theano but do have
 +-----------------+-------+-----------------------------+---------------+
 | Tool            | Speed | Qualities                   | Dependencies  |
 +=================+=======+=============================+===============+
-| subs            | 50us  | Simple                      | None          |
+| subs/evalf      | 50us  | Simple                      | None          |
 +-----------------+-------+-----------------------------+---------------+
 | lambdify        | 1us   | Scalar functions            | math          |
 +-----------------+-------+-----------------------------+---------------+
