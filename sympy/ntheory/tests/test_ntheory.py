@@ -445,7 +445,7 @@ def test_residue():
     assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(13) == [0, 1, 3, 4, 9, 10, 12]
 
-    assert sqrt_mod(6, 2, True) == [0]
+    assert sqrt_mod(6, 2, all_roots=True) == [0]
     assert sqrt_mod(3, 13) == 4
 
     for p in range(3, 100):
@@ -454,9 +454,16 @@ def test_residue():
             d[pow(i, 2, p)].append(i)
         for i in range(1, p):
             if d[i]:
-                assert d[i] == sqrt_mod(i, p, True)
+                assert d[i] == sqrt_mod(i, p, all_roots=True, limit=1000)
             else:
-                assert sqrt_mod(i, p, True) is None
+                assert sqrt_mod(i, p, all_roots=True) is None
+
+    for a, p, v in [(26214400, 32768000000, 5120),
+        (26214400, 16384000000, 1174405120),
+        (26214400, 16384000000, 1174405120), (262144, 1048576, 512),
+        (87169610025, 163443018796875, 1370306151495),
+        (22315420166400, 167365651248000000, 1471855378723920)]:
+        assert pow(v, 2, p) == a
 
     assert is_nthpow_residue(2, 1, 5)
     assert not is_nthpow_residue(2, 2, 5)

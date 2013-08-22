@@ -137,7 +137,7 @@ def primitive_root(p):
                     if igcd(i, p) == 1 and is_primitive_root(i, p):
                         return i
 
-    return _primitive_root_prime_iter(p).next()
+    return next(_primitive_root_prime_iter(p))
 
 def is_primitive_root(a, p):
     """
@@ -199,7 +199,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     x = pow(a, (t + 1)//2, p)*pow(D, m//2, p) % p
     return x
 
-def sqrt_mod(a, p, all_roots=False):
+def sqrt_mod(a, p, limit=3, all_roots=False):
     """
     find the solutions to ``x**2 = a mod p``
 
@@ -208,7 +208,13 @@ def sqrt_mod(a, p, all_roots=False):
 
     a : integer
     p : positive integer
+    limit : positive integer
     all_roots : if False returns the smallest root, else the list of roots
+
+    Notes
+    =====
+
+    ``limit`` puts some limit on the number of roots
 
     Examples
     ========
@@ -216,32 +222,37 @@ def sqrt_mod(a, p, all_roots=False):
     >>> from sympy.ntheory.residue_ntheory import sqrt_mod
     >>> sqrt_mod(11, 43)
     21
-    >>> sqrt_mod(11, 43, True)
+    >>> sqrt_mod(11, 43, all_roots=True)
     [21, 22]
     """
     from sympy.ntheory.modular import crt
-    a, p = as_int(a), as_int(p)
-
+    a, p, limit = as_int(a), as_int(p), as_int(limit)
+    if limit < 1:
+        raise ValueError('limit must be >= 1')
     if isprime(p):
-        res = _sqrt_mod_prime_power(a, p, 1)
+        res = _sqrt_mod_prime_power(a, p, 1, limit)
     else:
         f = factorint(p)
         v = []
         pv = []
         for px, ex in f.items():
             if a % px == 0:
-                rx = _sqrt_mod1(a, px, ex)
+                rx = _sqrt_mod1(a, px, ex, limit)
             else:
-                rx = _sqrt_mod_prime_power(a, px, ex)
+                rx = _sqrt_mod_prime_power(a, px, ex, limit)
             if rx is None:
                 return None
             v.append(rx)
             pv.append(px**ex)
         res = []
+        count = 0
         for vx in product(*v):
             r = crt(pv, vx)[0]
             if r not in res:
                 res.append(r)
+                count += 1
+                if count > 10*limit:
+                    break
             if p - r not in res:
                 if r:
                     res.append(p - r)
@@ -253,7 +264,7 @@ def sqrt_mod(a, p, all_roots=False):
         res = min(res)
     return res
 
-def _sqrt_mod_prime_power(a, p, k):
+def _sqrt_mod_prime_power(a, p, k, limit):
     """
     find the solutions to ``x**2 = a mod p**k``
 
@@ -278,7 +289,7 @@ def _sqrt_mod_prime_power(a, p, k):
     ========
 
     >>> from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
-    >>> _sqrt_mod_prime_power(11, 43, 1)
+    >>> _sqrt_mod_prime_power(11, 43, 1, 3)
     [21, 22]
     """
     from sympy.core.numbers import igcdex
@@ -286,7 +297,7 @@ def _sqrt_mod_prime_power(a, p, k):
     pk = p**k
     a = a % pk
     if a == 0:
-        res = _sqrt_mod1(a, p, k)
+        res = _sqrt_mod1(a, p, k, limit)
         return res
 
     if k == 1:
@@ -337,7 +348,7 @@ def _sqrt_mod_prime_power(a, p, k):
                 if pk - r not in res:
                     res.append(pk - r)
             return res
-        rv = _sqrt_mod_prime_power(a, p, 1)
+        rv = _sqrt_mod_prime_power(a, p, 1, limit)
         if not rv:
             return None
         r = rv[0]
@@ -361,7 +372,7 @@ def _sqrt_mod_prime_power(a, p, k):
             r = (r - fr*frinv) % px
         return [r, px - r]
 
-def _sqrt_mod1(a, p, n):
+def _sqrt_mod1(a, p, n, limit):
     """
     find solution to ``x**2 == a mod p**n`` when ``a % p == 0``
 
@@ -369,13 +380,13 @@ def _sqrt_mod1(a, p, n):
     """
     pn = p**n
     if a % pn == 0:
-        # case gcd(a, p**k) = p**r, r < n
+        # case gcd(a, p**k) = p**n
         m = n // 2
         if n % 2 == 1:
-            return list(range(0, pn, p**(m + 1)))
+            return list(range(0, p**min(n, limit), p**(m + 1)))
         else:
-            return list(range(0, pn, p**m))
-    # case gcd(a, p**k) = p**n
+            return list(range(0, p**min(n, limit), p**m))
+    # case gcd(a, p**k) = p**r, r < n
     f = factorint(a)
     r = f[p]
     if r % 2 == 1:
@@ -384,38 +395,38 @@ def _sqrt_mod1(a, p, n):
     a1 = a >> r
     if p == 2:
         if n - r == 1:
-            res = xrange(1, 2**(n - m + 1), 2)
+            res = xrange(1, 2**(min(n - m + 1, limit)), 2)
             res = [x << m for x in res]
             return res
         if n - r == 2:
-            res = _sqrt_mod_prime_power(a1, p, n - r)
+            res = _sqrt_mod_prime_power(a1, p, n - r, limit)
             if res is None:
                 return None
             res = [x << m for x in res]
             s = set()
             for r in res:
-                for i in xrange(0, pn, 2**(n - m)):
+                for i in xrange(0, 2**(n - m + min(m, limit)) , 2**(n - m)):
                     s.add(r + i)
             return list(s)
         if n - r > 2:
-            res = _sqrt_mod_prime_power(a1, p, n - r)
+            res = _sqrt_mod_prime_power(a1, p, n - r, limit)
             if res is None:
                 return None
             res = [x << m for x in res]
             s = set()
             for x in res:
-                for i in xrange(0, pn, 2**(n - m - 1)):
+                for i in xrange(0, 2**(n - m + min(m, limit)), 2**(n - m - 1)):
                     s.add((x + i) % pn)
             return list(s)
     else:
         m = r // 2
         a1 = a // p**r
-        res1 = _sqrt_mod_prime_power(a1, p, n - r)
+        res1 = _sqrt_mod_prime_power(a1, p, n - r, limit)
         if res1 is None:
             return None
         s = set()
         for x in res1:
-            for i in xrange(0, pn, p**(n-r)):
+            for i in xrange(0, p**(n - r + min(limit, r)), p**(n-r)):
                 s.add((x + i) % pn)
         res = list(s)
         res = [x*p**m for x in res]
@@ -562,7 +573,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     """
     from sympy.core.numbers import igcdex
     if n == 2:
-        return sqrt_mod(a, p, all_roots)
+        return sqrt_mod(a, p, all_roots=all_roots)
     f = totient(p)
     # see Hackman "Elementary Number Theory" (2009), page 76
     if pow(a, f // igcd(f, n), p) != 1:
@@ -595,7 +606,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         else:
             res = a
     elif pa == 2:
-        res = sqrt_mod(a, p, all_roots)
+        res = sqrt_mod(a, p, all_roots=all_roots)
     else:
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
