@@ -209,12 +209,15 @@ def sqrt_mod(a, p, limit=3, all_roots=False):
     a : integer
     p : positive integer
     limit : positive integer
-    all_roots : if False returns the smallest root, else the list of roots
+    all_roots : if False returns one root, else a list of roots
 
     Notes
     =====
 
-    ``limit`` puts some limit on the number of roots
+    ``limit`` puts some limit on the number of roots computed;
+    if ``all_roots`` is True, it is returned a list of roots under this
+    limitation; if ``all_roots`` is False, the smallest among these
+    roots is returned.
 
     Examples
     ========
@@ -266,19 +269,15 @@ def sqrt_mod(a, p, limit=3, all_roots=False):
 
 def _sqrt_mod_prime_power(a, p, k, limit):
     """
-    find the solutions to ``x**2 = a mod p**k``
+    find the solutions to ``x**2 = a mod p**k`` when ``a % p != 0``
 
     Parameters
     ==========
 
     a : integer
     p : prime number
-    k : semipositive integer
-
-    Notes
-    =====
-
-    The modulus ``m`` is ``p**k``; require that ``a % p == 0`` if ``k > 1``
+    k : positive integer
+    limit : positive integer
 
     References
     ==========
