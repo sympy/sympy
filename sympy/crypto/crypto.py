@@ -567,7 +567,7 @@ def decipher_hill(ct, key, symbols="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 #################### Bifid cipher  ########################
 
 
-def encipher_bifid5(pt, key, verbose=False):
+def encipher_bifid5(pt, key):
     r"""
     Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -598,8 +598,6 @@ def encipher_bifid5(pt, key, verbose=False):
 
             ciphertext (using Bifid5 cipher in all caps, no spaces, no "J"s)
 
-            if verbose is True then it also prints the pairs of integers comprising the "long key"
-
         STEPS:
             1. Create the `5 \times 5` Polybius square ``S`` associated to the ``k`` as
                follows:
@@ -627,9 +625,7 @@ def encipher_bifid5(pt, key, verbose=False):
     >>> from sympy.crypto.crypto import encipher_bifid5
     >>> pt = "meet me on monday"
     >>> key = "encrypt"
-    >>> encipher_bifid5(pt, key, verbose=True)
-    [[3, 1], [0, 0], [0, 0], [1, 1], [3, 1], [0, 0], [3, 2],
-     [0, 1], [3, 1], [3, 2], [0, 1], [1, 4], [1, 2], [0, 4]]
+    >>> encipher_bifid5(pt, key)
     'LNLLQNPPNPGADK'
     >>> pt = "meet me on friday"
     >>> encipher_bifid5(pt, key)
@@ -647,8 +643,6 @@ def encipher_bifid5(pt, key, verbose=False):
     n = len(pt0)
     # the fractionalization
     pairs = [[long_key.index(x)//5, long_key.index(x) % 5] for x in pt0]
-    if verbose:
-        print(pairs)
     tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
     ct = "".join([long_key[5*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
     return ct
@@ -730,7 +724,7 @@ def bifid5_square(key):
     return M
 
 
-def encipher_bifid6(pt, key, verbose=False):
+def encipher_bifid6(pt, key):
     r"""
     Performs the Bifid cipher encryption on plaintext ``pt``, and returns the ciphertext.
 
@@ -747,8 +741,6 @@ def encipher_bifid6(pt, key, verbose=False):
 
         ciphertext from Bifid cipher (all caps, no spaces)
 
-        if verbose is True then it also prints the pairs of integers comprising the "long key"
-
     Examples
     ========
 
@@ -757,9 +749,7 @@ def encipher_bifid6(pt, key, verbose=False):
     >>> pt = "meet me on monday at 8am"
     >>> encipher_bifid6(pt, key)
     'HNHOKNTA5MEPEGNQZYG'
-    >>> encipher_bifid6(pt, key, verbose=True)
-    [[2, 5], [0, 0], [0, 0], [1, 0], [2, 5], [0, 0], [3, 0], [0, 1], [2, 5], [3, 0],
-     [0, 1], [1, 3], [1, 1], [0, 4], [1, 1], [1, 0], [5, 4], [1, 1], [2, 5]]
+    >>> encipher_bifid6(pt, key)
     'HNHOKNTA5MEPEGNQZYG'
 
     """
@@ -774,8 +764,6 @@ def encipher_bifid6(pt, key, verbose=False):
     n = len(pt0)
     # the fractionalization
     pairs = [[long_key.index(x)//6, long_key.index(x) % 6] for x in pt0]
-    if verbose is True:
-        print(pairs)
     tmp_cipher = flatten([x[0] for x in pairs] + [x[1] for x in pairs])
     ct = "".join([long_key[6*tmp_cipher[2*i] + tmp_cipher[2*i + 1]] for i in range(n)])
     return ct
