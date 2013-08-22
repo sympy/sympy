@@ -233,7 +233,11 @@ def sqrt_mod(a, p, limit=3, all_roots=False):
     if limit < 1:
         raise ValueError('limit must be >= 1')
     if isprime(p):
-        res = _sqrt_mod_prime_power(a, p, 1, limit)
+        a = a % p
+        if a == 0:
+            res = _sqrt_mod1(a, p, 1, limit)
+        else:
+            res = _sqrt_mod_prime_power(a, p, 1, limit)
     else:
         f = factorint(p)
         v = []
@@ -248,17 +252,16 @@ def sqrt_mod(a, p, limit=3, all_roots=False):
             v.append(rx)
             pv.append(px**ex)
         res = []
-        count = 0
         for vx in product(*v):
             r = crt(pv, vx)[0]
             if r not in res:
                 res.append(r)
-                count += 1
-                if count > 10*limit:
-                    break
             if p - r not in res:
                 if r:
                     res.append(p - r)
+            if len(res) > 10*limit:
+                break
+
     if res is None:
         return None
     if all_roots:
@@ -295,9 +298,6 @@ def _sqrt_mod_prime_power(a, p, k, limit):
 
     pk = p**k
     a = a % pk
-    if a == 0:
-        res = _sqrt_mod1(a, p, k, limit)
-        return res
 
     if k == 1:
         if p == 2:
