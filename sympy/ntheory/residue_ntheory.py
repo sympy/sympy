@@ -285,7 +285,9 @@ def _sqrt_mod_prime_power(a, p, k, limit):
     References
     ==========
 
-    P. Hackman "Elementary Number Theory" (2009),  page 160
+    [1] P. Hackman "Elementary Number Theory" (2009),  page 160
+    [2] http://www.numbertheory.org/php/squareroot.html
+    [3] [Gathen99]_
 
     Examples
     ========
@@ -323,6 +325,7 @@ def _sqrt_mod_prime_power(a, p, k, limit):
 
     if k > 1:
         f = factorint(a)
+        # see Ref.[2]
         if p == 2:
             if a % 8 != 1:
                 return None
@@ -332,27 +335,32 @@ def _sqrt_mod_prime_power(a, p, k, limit):
                     s.add(1 + i)
                     s.add(-1 + i)
                return list(s)
+            # according to Ref.[2] for k > 2 there are two solutions
+            # (mod 2**k-1), that is four solutions (mod 2**k), which can be
+            # obtained from the roots of x**2 = 0 (mod 8)
             rv = [1, 3, 5, 7]
+            # hensel lift them to solutions of x**2 = 0 (mod 2**k)
+            # if r**2 - a = 0 mod 2**nx but not mod 2**(nx+1)
+            # then r + 2**(nx - 1) is a root mod 2**(nx+1)
             n = 3
             res = []
             for r in rv:
                 nx = n
                 while nx < k:
                     r1 = (r**2 - a) >> nx
-                    i = r1 % 2
-                    r = r + (i << (nx - 1))
+                    if r1 % 2:
+                        r = r + (1 << (nx - 1))
                     nx += 1
                 if r not in res:
                     res.append(r)
-                if pk - r not in res:
-                    res.append(pk - r)
             return res
         rv = _sqrt_mod_prime_power(a, p, 1, limit)
         if not rv:
             return None
         r = rv[0]
         fr = r**2 - a
-        # hensel lifting
+        # hensel lifting with Newton iteration, see Ref.[3] chapter 9
+        # with f(x) = x**2 - a; one has f'(a) != 0 (mod p) for p != 2
         n = 1
         px = p
         while 1:
@@ -622,7 +630,7 @@ def quadratic_residues(p):
     [0, 1, 2, 4]
     """
     r = set()
-    for i in xrange((p + 1) // 2):
+    for i in xrange(p // 2 + 1):
         r.add(pow(i, 2, p))
     return sorted(list(r))
 

@@ -444,6 +444,8 @@ def test_residue():
 
     assert quadratic_residues(12) == [0, 1, 4, 9]
     assert quadratic_residues(13) == [0, 1, 3, 4, 9, 10, 12]
+    assert [len(quadratic_residues(i)) for i in range(1, 20)] == \
+      [1, 2, 2, 2, 3, 4, 4, 3, 4, 6, 6, 4, 7, 8, 6, 4, 9, 8, 10]
 
     assert sqrt_mod(6, 2, all_roots=True) == [0]
     assert sqrt_mod(3, 13) == 4
