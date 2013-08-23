@@ -1429,21 +1429,34 @@ class Mul(Expr, AssocOp):
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
-        nuse, res = n, None
-        o, correct_o = S.NaN, C.Order(x**n, x)
-        while not correct_o.contains(o):
-            terms = [t.nseries(x, n=nuse, logx=logx) for t in self.args]
-            res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
-            if res.has(C.Order):
-                o = res.getO()
-                res += correct_o
+
+        exact, args, terms = S.One, [], []
+        for t in self.args:
+            s = t.nseries(x, n=n, logx=logx)
+            if s.has(C.Order):
+                args.append(t)
+                terms.append(s)
             else:
-                break
+                exact *= s
+
+        if not args:
+            return powsimp(exact.expand(), combine='exp', deep=True)
+
+        res = powsimp(self.func(*([exact] + terms)).expand(), combine='exp', deep=True)
+
+        correct_o = C.Order(x**n, x)
+        for o in self.atoms(C.Order):
+            o *= exact
+            if o.contains(correct_o):
+                correct_o = o
+
+        nuse = n + 1
+        while not correct_o.contains(res.getO()):
+            terms = [t.nseries(x, n=nuse, logx=logx) for t in args]
+            res = powsimp(self.func(*([exact] + terms)).expand(), combine='exp', deep=True)
             nuse += 1
-            # FIXME: cases like (2*exp(O(x))).nseries(x, 0, 2)
-            if self.has(C.Order) and nuse > n + 5:
-                break
-        return res
+
+        return res + correct_o
 
     def _eval_as_leading_term(self, x):
         return self.func(*[t.as_leading_term(x) for t in self.args])
