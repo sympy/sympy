@@ -255,6 +255,7 @@ def test_evalf_trig_zero_detection():
 def test_evalf_sum():
     assert Sum(n,(n,1,2)).evalf() == 3.
     assert Sum(n,(n,1,2)).doit().evalf() == 3.
+    # the next test should return instantly
     assert Sum(1/n,(n,1,2)).evalf() == 1.5
 
 def test_evalf_divergent_series():
