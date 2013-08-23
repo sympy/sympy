@@ -362,20 +362,20 @@ class Sum(Expr):
         assert len(self.limits) == 1
         i, a, b = self.limits[0]
         if (a > b) is True:
-            if (a,b) == (1,0):
+            if a - b == 1:
                 return S.Zero,S.Zero
             a, b = b + 1, a - 1
             f = -f
         s = S.Zero
         if m:
             if b.is_Integer and a.is_Integer:
-                m = min(m,b-a+1)
+                m = min(m, b - a + 1)
             for k in range(m):
                 term = f.subs(i, a + k)
                 if (eps and term and abs(term.evalf(3)) < eps):
                     return s, abs(term)
                 s += term
-            if b-a+1 == m:
+            if b - a + 1 == m:
                 return s, S.Zero
             a += m
         x = Dummy('x')
