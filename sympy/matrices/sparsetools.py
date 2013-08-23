@@ -1,11 +1,8 @@
 """
-Fundamental Operations of Sparse Matrices.
-The Data structure for Sparse Matrix is 
-Dictionary of Keys(DOK) and Compressed Sparse
-Row(CSR).
+Fundamental Operations of Sparse Matrices. The Data structure for Sparse
+Matrix is Dictionary of Keys(DOK) and Compressed Row(CSR).
 
-This is part of the level 0 of the architecture
-described in [1]
+This is part of the level 0 of the architecture described in [1].
 
 [1] http://www.saurabhjha.me/proposal.html
 
@@ -15,9 +12,8 @@ from sympy import SparseMatrix
 
 def trace(dok, K):
     """
-    Returns the trace of a Sparse Matrix. The
-    input and output matrix is given in DOK
-    format.
+    Returns the trace of a Sparse Matrix. The input and output matrix
+    is given in DOK format.
 
     Examples
     ========
@@ -45,8 +41,8 @@ def trace(dok, K):
 
 def conjugate(dok, K):#not working for complex entries
     """
-    Returns the conjugate of a Sparse Matrix. The
-    input and output matrix is given in DOK format.
+    Returns the conjugate of a Sparse Matrix. The input and output matrix
+    is given in DOK format.
 
     Examples
     ========
@@ -70,8 +66,8 @@ def conjugate(dok, K):#not working for complex entries
 
 def transpose(dok, K):
     """
-    Returns the transpose of a Sparse Matrix. The
-    input and output matrix is given in DOK format.
+    Returns the transpose of a Sparse Matrix. The input and output
+    matrix is given in DOK format.
 
     Examples
     ========
@@ -98,9 +94,8 @@ def transpose(dok, K):
 
 def conjugate_transpose(dok, K):
     """
-    Returns the conjugate-transpose of a Sparse
-    Matrix. The input and output matrix is given
-    in DOK format.
+    Returns the conjugate-transpose of a Sparse Matrix. The input
+    and output matrix is given in DOK format.
 
     Examples
     ========
@@ -122,8 +117,8 @@ def conjugate_transpose(dok, K):
 
 def csr_row(csr, i, K):
     """
-    Returns the i'th row of a matrix. The input
-    and output matrix is in CSR format.
+    Returns the i'th row of a matrix. The input and output matrices
+    are in CSR format.
 
     """
     a, ja, ia, shape = csr
