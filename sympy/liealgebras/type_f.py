@@ -42,7 +42,7 @@ class TypeF(Standard_Cartan):
         """
         Every lie algebra has a unique root system.
         Given a root system Q, there is a subset of the
-        roots such that an element of Q is called a 
+        roots such that an element of Q is called a
         simple root if it cannot be written as the sum
         of two elements in Q.   If we let D denote the
         set of simple roots, then it is clear that every

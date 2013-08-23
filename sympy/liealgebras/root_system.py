@@ -72,8 +72,8 @@ class RootSystem(Basic):
     def all_roots(self):
         """
         This method generates all the roots of a given root
-        system, and stores them in a dictionary where the 
-        keys are integer numbers.  It generates the roots 
+        system, and stores them in a dictionary where the
+        keys are integer numbers.  It generates the roots
         by getting the dictionary of all positive roots from
         the bases classes, and then taking each root, and
         multiplying it by -1 and adding it to the dictionary.
@@ -88,13 +88,13 @@ class RootSystem(Basic):
             newroot = [-x for x in root]
             alpha[k] = newroot
         return alpha
-    
+
     def root_space(self):
         """
         The root space is the vector space spanned by the
         simple roots, i.e. it is a vector space with a
         distinguished basis, the simple roots.  This method
-        returns a string that represents the root space as 
+        returns a string that represents the root space as
         the span of the simple roots, alpha[1],...., alpha[n].
 
         Example
@@ -141,7 +141,7 @@ class RootSystem(Basic):
         This is a method that takes two roots and adds them together
         if and only if their sum is also a root.  It takes as input
         two vectors which should be roots.  It then computes their sum
-        and checks if it is in the list of all possible roots.  If it 
+        and checks if it is in the list of all possible roots.  If it
         is, it returns the sum.  Otherwise it returns a string saying
         that the sum is not a root.
 
