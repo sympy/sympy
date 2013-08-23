@@ -436,6 +436,7 @@ def test_residue():
     assert is_quad_residue(0, 2) == is_quad_residue(1, 2) is True
     assert is_quad_residue(1, 4) is True
     assert is_quad_residue(2, 27) is False
+    assert is_quad_residue(13122380800, 13604889600) is True
     assert [j for j in range(14) if is_quad_residue(j, 14)] == \
            [0, 1, 2, 4, 7, 8, 9, 11]
     raises(ValueError, lambda: is_quad_residue(1.1, 2))
@@ -460,12 +461,10 @@ def test_residue():
             else:
                 assert sqrt_mod(i, p, all_roots=True) is None
 
-    for a, p, v in [(26214400, 32768000000, 5120),
-        (26214400, 16384000000, 1174405120),
-        (26214400, 16384000000, 1174405120), (262144, 1048576, 512),
-        (87169610025, 163443018796875, 1370306151495),
-        (22315420166400, 167365651248000000, 1471855378723920)]:
-        assert pow(v, 2, p) == a
+    for a, p in [(26214400, 32768000000), (26214400, 16384000000),
+        (262144, 1048576), (87169610025, 163443018796875),
+        (22315420166400, 167365651248000000)]:
+        assert pow(sqrt_mod(a, p), 2, p) == a
 
     assert is_nthpow_residue(2, 1, 5)
     assert not is_nthpow_residue(2, 2, 5)

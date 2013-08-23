@@ -199,7 +199,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     x = pow(a, (t + 1)//2, p)*pow(D, m//2, p) % p
     return x
 
-def sqrt_mod(a, p, limit=3, all_roots=False):
+def sqrt_mod(a, p, limit=1, all_roots=False):
     """
     find the solutions to ``x**2 = a mod p``
 
@@ -467,10 +467,11 @@ def is_quad_residue(a, p):
     if not isprime(p):
         if p % 2 and jacobi_symbol(a, p) == -1:
             return False
-        for i in range(2, p//2 + 1):
-            if pow(i, 2, p) == a:
-                return True
-        return False
+        r = sqrt_mod(a, p)
+        if r is None:
+            return False
+        else:
+            return True
 
     return pow(a, (p - 1) // 2, p) == 1
 
