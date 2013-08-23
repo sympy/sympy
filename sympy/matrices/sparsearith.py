@@ -1,11 +1,8 @@
 """
-Fundamental Arithmetic of Sparse Matrices.
-The Data structure for Sparse Matrix is 
-Dictionary of Keys(DOK) and Compressed Sparse
-Row(CSR).
+Fundamental Arithmetic of Sparse Matrices. The Data structure for Sparse
+Matrix is Dictionary of Keys(DOK) and Compressed Sparse Row(CSR).
 
-This is part of the level 0 of the architecture
-described in [1]
+This is part of the level 0 of the architecture described in [1].
 
 [1] http://www.saurabhjha.me/proposal.html
 
@@ -53,9 +50,8 @@ def _csrtodok(csr):
 
 def add(csr1, csr2, K):
     """
-    Adds two Sparse Matrices which are represeneted
-    in CSR format using _merge_rowadd.
-    The result is returned in CSR format.
+    Adds two Sparse Matrices which are represeneted in CSR format
+    using _merge_rowadd. The result is returned in CSR format.
 
     Examples
     ========
@@ -90,9 +86,9 @@ def add(csr1, csr2, K):
 
 def sub(csr1, csr2, K):
     """
-    Subtracts two Sparse Matrices which are represeneted
-    in CSR format using _merge_rowadd and neg.
-    The result is returned in CSR format.
+    Subtracts two Sparse Matrices which are represeneted in CSR
+    format using _merge_rowadd and neg. The result is
+    returned in CSR format.
 
     Examples
     ========
@@ -115,9 +111,8 @@ def sub(csr1, csr2, K):
 
 def _merge_rowadd(row1, row2, K):
     """
-    Helper function of add and sub. The "merge" in the
-    function name emphasis the fact that it's working
-    is similar to merge sort.
+    Helper function of add and sub. The "merge" in the function name
+    emphasis the fact that it's working is similar to merge sort.
 
     """
     a1, ja1 = row1
@@ -147,9 +142,8 @@ def _merge_rowadd(row1, row2, K):
 
 def neg(csr, K):
     """
-    Negates the elements of a Sparse Matrix given in
-    CSR format.
-    The result is returned in CSR format.
+    Negates the elements of a Sparse Matrix given in CSR format. The
+    result is returned in CSR format.
 
     Examples
     ========
@@ -174,10 +168,9 @@ def neg(csr, K):
 
 def mulspvec(csr, vec, K):
     """
-    Performs the Sparse Matrix-Vector calculation.
-    The vector is assumed to be dense matrix in list
-    of lists format. The sparse matrix is represented
-    in CSR format.
+    Performs the Sparse Matrix-Vector calculation. The vector is assumed to be
+    dense matrix in list of lists format. The sparse matrix is represented in
+    CSR format.
 
     The result is returned in DOK
     format.
@@ -213,8 +206,7 @@ def mulspvec(csr, vec, K):
 
 def mulspsp(dok1, dok2, K):
     """
-    Performs the Sparse Matrix-Sparse Matrix calculation
-    using _mulrowcol.
+    Performs the Sparse Matrix-Sparse Matrix calculation using _mulrowcol.
     Both matrices are represented in DOK format.
 
     The result is returned in DOK format.
@@ -248,9 +240,8 @@ def mulspsp(dok1, dok2, K):
 
 def _mulrowcol(row, col, K):
     """
-    Helper function of mulspsp. Multiplies a row
-    and a column. The row and column is represented
-    in DOK format.
+    Helper function of mulspsp. Multiplies a row and a column.
+    The row and column is represented in DOK format.
 
     """
     smat1, smat2 = row._smat, col._smat
@@ -265,9 +256,8 @@ def _mulrowcol(row, col, K):
 
 def _binsearch(element, array, beg, end):
     """
-    An implementation of binary search.
-    It is expected to be used as follows
-    for an element i and list v--
+    An implementation of binary search. It is expected to be
+    used as follows for an element i and list v--
     _binsearch(i, v, 0, len(v) - 1).
 
     """
