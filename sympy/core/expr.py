@@ -451,11 +451,11 @@ class Expr(Basic, EvalfMixin):
         True
         >>> Sum(x, (x, 1, 10)).is_constant()
         True
-        >>> Sum(x, (x, 1, n)).is_constant()  # doctest: +SKIP
+        >>> Sum(x, (x, 1, n)).is_constant()
         False
         >>> Sum(x, (x, 1, n)).is_constant(y)
         True
-        >>> Sum(x, (x, 1, n)).is_constant(n) # doctest: +SKIP
+        >>> Sum(x, (x, 1, n)).is_constant(n)
         False
         >>> Sum(x, (x, 1, n)).is_constant(x)
         True
