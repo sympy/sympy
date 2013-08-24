@@ -2264,7 +2264,6 @@ def test_sympy__physics__quantum__piab__PIABKet():
     from sympy.physics.quantum.piab import PIABKet
     assert _test_args(PIABKet('K'))
 
-
 def test_sympy__physics__quantum__qexpr__QExpr():
     from sympy.physics.quantum.qexpr import QExpr
     assert _test_args(QExpr(0))

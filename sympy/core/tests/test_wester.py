@@ -7,7 +7,7 @@ tested system.
 """
 
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
-    binomial, rf, pi, gamma, igcd, factorint, nsimplify, radsimp, combsimp,
+    binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
@@ -106,11 +106,11 @@ def test_C13():
 
 
 def test_C14():
-    assert nsimplify(sqrt(2*sqrt(3) + 4)) == 1 + sqrt(3)
+    assert sqrtdenest(sqrt(2*sqrt(3) + 4)) == 1 + sqrt(3)
 
 
 def test_C15():
-    test = nsimplify(sqrt(14 + 3*sqrt(3 + 2*sqrt(5 - 12*sqrt(3 - 2*sqrt(2))))))
+    test = sqrtdenest(sqrt(14 + 3*sqrt(3 + 2*sqrt(5 - 12*sqrt(3 - 2*sqrt(2))))))
     good = sqrt(2) + 3
     assert test == good
 
@@ -122,33 +122,35 @@ def test_C16():
 
 
 def test_C17():
-    test = nsimplify((sqrt(3) + sqrt(2)) / (sqrt(3) - sqrt(2)))
+    test = radsimp((sqrt(3) + sqrt(2)) / (sqrt(3) - sqrt(2)))
     good = 5 + 2*sqrt(6)
     assert test == good
 
 
 def test_C18():
-    assert nsimplify(sqrt(-2 + sqrt(-5)) * sqrt(-2 - sqrt(-5))) == 3
+    assert simplify((sqrt(-2 + sqrt(-5)) * sqrt(-2 - sqrt(-5))).expand(complex=True)) == 3
 
 
 @XFAIL
 def test_C19():
-    assert radsimp(nsimplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
+    assert radsimp(simplify((90 + 35*sqrt(7)) ** R(1, 3))) == 3 + sqrt(7)
 
 
+@XFAIL
 def test_C20():
     inside = (135 + 78*sqrt(3))
-    test = nsimplify((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
+    test = simplify((inside**R(2, 3) + 3) * sqrt(3) / inside**R(1, 3))
     assert test == 12
 
 
+@XFAIL
 def test_C21():
-    assert nsimplify((41 + 29*sqrt(2)) ** R(1, 5)) == 1 + sqrt(2)
+    assert simplify((41 + 29*sqrt(2)) ** R(1, 5)) == 1 + sqrt(2)
 
 
 @XFAIL
 def test_C22():
-    test = nsimplify(((6 - 4*sqrt(2))*log(3 - 2*sqrt(2)) + (3 - 2*sqrt(2))*log(17
+    test = simplify(((6 - 4*sqrt(2))*log(3 - 2*sqrt(2)) + (3 - 2*sqrt(2))*log(17
         - 12*sqrt(2)) + 32 - 24*sqrt(2)) / (48*sqrt(2) - 72))
     good = sqrt(2)/3 - log(sqrt(2) - 1)/3
     assert test == good
@@ -765,13 +767,11 @@ def test_M1():
     assert Equality(x, 2)/2 + Equality(1, 1) == Equality(x/2 + 1, 2)
 
 
-@XFAIL
 def test_M2():
     # The roots of this equation should all be real. Note that this doesn't test
     # that they are correct.
     sol = solve(3*x**3 - 18*x**2 + 33*x - 19, x)
-    for i in sol:
-        assert im(i) == 0
+    assert all(expand(x, complex=True).is_real for x in sol)
 
 
 @XFAIL
