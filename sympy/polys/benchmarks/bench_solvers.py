@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
-from sympy.polys.rings import vring
-from sympy.polys.fields import vfield
+from sympy.polys.rings import ring
+from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.solvers import solve_lin_sys
 
@@ -16,7 +16,7 @@ from sympy.polys.solvers import solve_lin_sys
 
 # Benchmark R_165: shows how fast are arithmetics in QQ.
 
-R_165 = vring("uk_:165", QQ)
+R_165, uk_0, uk_1, uk_2, uk_3, uk_4, uk_5, uk_6, uk_7, uk_8, uk_9, uk_10, uk_11, uk_12, uk_13, uk_14, uk_15, uk_16, uk_17, uk_18, uk_19, uk_20, uk_21, uk_22, uk_23, uk_24, uk_25, uk_26, uk_27, uk_28, uk_29, uk_30, uk_31, uk_32, uk_33, uk_34, uk_35, uk_36, uk_37, uk_38, uk_39, uk_40, uk_41, uk_42, uk_43, uk_44, uk_45, uk_46, uk_47, uk_48, uk_49, uk_50, uk_51, uk_52, uk_53, uk_54, uk_55, uk_56, uk_57, uk_58, uk_59, uk_60, uk_61, uk_62, uk_63, uk_64, uk_65, uk_66, uk_67, uk_68, uk_69, uk_70, uk_71, uk_72, uk_73, uk_74, uk_75, uk_76, uk_77, uk_78, uk_79, uk_80, uk_81, uk_82, uk_83, uk_84, uk_85, uk_86, uk_87, uk_88, uk_89, uk_90, uk_91, uk_92, uk_93, uk_94, uk_95, uk_96, uk_97, uk_98, uk_99, uk_100, uk_101, uk_102, uk_103, uk_104, uk_105, uk_106, uk_107, uk_108, uk_109, uk_110, uk_111, uk_112, uk_113, uk_114, uk_115, uk_116, uk_117, uk_118, uk_119, uk_120, uk_121, uk_122, uk_123, uk_124, uk_125, uk_126, uk_127, uk_128, uk_129, uk_130, uk_131, uk_132, uk_133, uk_134, uk_135, uk_136, uk_137, uk_138, uk_139, uk_140, uk_141, uk_142, uk_143, uk_144, uk_145, uk_146, uk_147, uk_148, uk_149, uk_150, uk_151, uk_152, uk_153, uk_154, uk_155, uk_156, uk_157, uk_158, uk_159, uk_160, uk_161, uk_162, uk_163, uk_164 = ring("uk_:165", QQ)
 
 def eqs_165x165():
     return [
@@ -260,8 +260,8 @@ def time_to_expr_eqs_165x165():
     assert [ R_165.from_expr(eq.as_expr()) for eq in eqs ] == eqs
 
 # Benchmark R_49: shows how fast are arithmetics in rational function fields.
-
-R_49 = vring("k1:50", vfield("a,b,c", ZZ))
+F_abc, a, b, c = field("a,b,c", ZZ)
+R_49, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22, k23, k24, k25, k26, k27, k28, k29, k30, k31, k32, k33, k34, k35, k36, k37, k38, k39, k40, k41, k42, k43, k44, k45, k46, k47, k48, k49 = ring("k1:50", F_abc)
 
 def eqs_189x49():
     return [
@@ -490,7 +490,8 @@ def time_to_expr_eqs_189x49():
 
 # Benchmark R_8: shows how fast polynomial GCDs are computed.
 
-R_8 = vring("x:8", vfield("a_(1:5)(1:5)", ZZ))
+F_a5_5, a_11, a_12, a_13, a_14, a_21, a_22, a_23, a_24, a_31, a_32, a_33, a_34, a_41, a_42, a_43, a_44 = field("a_(1:5)(1:5)", ZZ)
+R_8, x0, x1, x2, x3, x4, x5, x6, x7 = ring("x:8", F_a5_5)
 
 def eqs_10x8():
     return [

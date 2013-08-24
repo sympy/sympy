@@ -2,11 +2,11 @@
 
 from __future__ import print_function, division
 
-from sympy.polys.rings import vring
+from sympy.polys.rings import ring
 from sympy.polys.domains import QQ
 from sympy.polys.groebnertools import groebner
 
-R = vring("x1:13", QQ)
+R, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = ring("x1:13", QQ)
 
 V = R.gens
 E = [(x1, x2), (x2, x3), (x1, x4), (x1, x6), (x1, x12), (x2, x5), (x2, x7), (x3, x8),
