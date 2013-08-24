@@ -2661,8 +2661,6 @@ class Expr(Basic, EvalfMixin):
         """
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
-        If skip_log is true, log(x) is treated as an independent symbol.
-        (This is needed for the gruntz algorithm.)
         """
         from sympy.series.gruntz import calculate_series
         from sympy import cancel
