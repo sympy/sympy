@@ -2657,14 +2657,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.series.limits import limit
         return limit(self, x, xlim, dir)
 
-    def compute_leading_term(self, x, skip_abs=False, logx=None):
+    def compute_leading_term(self, x, logx=None):
         """
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
-        If skip_abs is true, the absolute term is assumed to be zero.
-        (This is necessary because sometimes it cannot be simplified
-        to zero without a lot of work, but is still known to be zero.
-        See log._eval_nseries for an example.)
         If skip_log is true, log(x) is treated as an independent symbol.
         (This is needed for the gruntz algorithm.)
         """
@@ -2674,12 +2670,10 @@ class Expr(Basic, EvalfMixin):
             return self
         if logx is None:
             d = C.Dummy('logx')
-            s = calculate_series(self, x, skip_abs, d).subs(d, C.log(x))
+            s = calculate_series(self, x, d).subs(d, C.log(x))
         else:
-            s = calculate_series(self, x, skip_abs, logx)
+            s = calculate_series(self, x, logx)
         s = cancel(s)
-        if skip_abs:
-            s = expand_mul(s).as_independent(x)[1]
         return s.as_leading_term(x)
 
     @cacheit
