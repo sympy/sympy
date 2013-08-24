@@ -40,24 +40,24 @@ matrix:
     - python: "pypy"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
-      sudo apt-get update;
-      sudo apt-get install libgmp-dev;
-      pip install "gmpy==1.16";
+      time sudo apt-get update;
+      time sudo apt-get install libgmp-dev;
+      time pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-      sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern;
-      pip install "sphinx==1.1.3";
+      time sudo apt-get install --no-install-recommends graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra lmodern;
+      time pip install "sphinx==1.1.3";
     fi
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
-      pip install "numpy==1.7.1";
-      pip install "matplotlib==1.2.1";
+      time pip install "numpy==1.7.1";
+      time pip install "matplotlib==1.2.1";
     fi
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       pip install --no-deps https://github.com/Theano/Theano/archive/master.zip;
     fi
 install:
-  - python setup.py install
+  - time python setup.py install
 script:
-  - bin/test_travis.sh
+  - time bin/test_travis.sh
 notifications:
   email: false
