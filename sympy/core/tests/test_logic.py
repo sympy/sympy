@@ -13,40 +13,29 @@ def test_fuzzy_not():
 
 
 def test_fuzzy_and():
-    assert fuzzy_and(*[T, T]) == T
-    assert fuzzy_and(*[T, F]) == F
-    assert fuzzy_and(*[T, U]) == U
-    assert fuzzy_and(*[F, F]) == F
-    assert fuzzy_and(*[F, U]) == F
-    assert fuzzy_and(*[U, U]) == U
     assert fuzzy_and([T, T]) == T
     assert fuzzy_and([T, F]) == F
     assert fuzzy_and([T, U]) == U
     assert fuzzy_and([F, F]) == F
     assert fuzzy_and([F, U]) == F
     assert fuzzy_and([U, U]) == U
-    assert [fuzzy_and(w) for w in [U, T, F]] == [U, T, F]
-    raises(ValueError, lambda: fuzzy_and([]))
-    raises(ValueError, lambda: fuzzy_and())
+    assert [fuzzy_and([w]) for w in [U, T, F]] == [U, T, F]
+    assert fuzzy_and([T, F, U]) == F
+    assert fuzzy_and([]) == T
+    raises(TypeError, lambda: fuzzy_and())
 
 
 def test_fuzzy_or():
-    assert fuzzy_or(*[T, T]) == T
-    assert fuzzy_or(*[T, F]) == T
-    assert fuzzy_or(*[T, U]) == T
-    assert fuzzy_or(*[F, F]) == F
-    assert fuzzy_or(*[F, U]) == U
-    assert fuzzy_or(*[U, U]) == U
     assert fuzzy_or([T, T]) == T
     assert fuzzy_or([T, F]) == T
     assert fuzzy_or([T, U]) == T
     assert fuzzy_or([F, F]) == F
     assert fuzzy_or([F, U]) == U
     assert fuzzy_or([U, U]) == U
-    assert [fuzzy_or(w) for w in [U, T, F]] == [U, T, F]
-    assert fuzzy_or(T, F, U) == T
-    raises(ValueError, lambda: fuzzy_or([]))
-    raises(ValueError, lambda: fuzzy_or())
+    assert [fuzzy_or([w]) for w in [U, T, F]] == [U, T, F]
+    assert fuzzy_or([T, F, U]) == T
+    assert fuzzy_or([]) == F
+    raises(TypeError, lambda: fuzzy_or())
 
 
 def test_logic_cmp():
