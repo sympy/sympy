@@ -145,7 +145,7 @@ def test_classify_ode():
         '1st_linear', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'lie_group',
+        'lie_group', '1st_power_series',
         'nth_linear_constant_coeff_homogeneous',
         'separable_Integral',
         '1st_linear_Integral',
@@ -159,7 +159,7 @@ def test_classify_ode():
     assert a == ('1st_linear',
         'Bernoulli',
         'almost_linear',
-        'lie_group',
+        'lie_group', '1st_power_series',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral',
@@ -179,13 +179,14 @@ def test_classify_ode():
     k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) + 2*f(x)/(k*f(x) +
         k*x*f(x)) + x*f(x).diff(x)/(k*f(x) + k*x*f(x)) + z, f(x)) == \
-        ('separable', '1st_exact', 'lie_group', 'separable_Integral', '1st_exact_Integral')
+        ('separable', '1st_exact', 'lie_group', '1st_power_series',
+         'separable_Integral', '1st_exact_Integral')
     # preprocessing
     ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', 'lie_group',
+        'separable_reduced', 'lie_group', '1st_power_series',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
@@ -1274,6 +1275,7 @@ def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear', 'lie_group',
+        '1st_power_series',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral', 'almost_linear_Integral',
@@ -1284,7 +1286,8 @@ def test_1686():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', 'lie_group', '1st_exact_Integral',
+        'separable_reduced', 'lie_group',
+        '1st_power_series','1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         'separable_reduced_Integral')
@@ -1720,6 +1723,7 @@ def test_kamke():
 
 
 def test_series():
+    C0 = Symbol("C0")
     eq = f(x).diff(x) - f(x)
     assert dsolve(eq, hint='1st_power_series') == Eq(f(x), C0*x**4/S(24) +
         C0*x**3/S(6) + C0*x**2/S(2) + C0*x + C0)

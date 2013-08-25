@@ -236,9 +236,9 @@ from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
-    expand, expand_mul)
+    expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational, NaN
+from sympy.core.numbers import Rational, NaN, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
@@ -283,8 +283,8 @@ allhints = (
     "almost_linear",
     "linear_coefficients",
     "separable_reduced",
-    "1st_power_series",
     "lie_group",
+    "1st_power_series",
     "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
@@ -521,7 +521,14 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             else:
                 retdict[hint] = rv
         func = hints[hint]['func']
-        retdict['best'] = min(list(retdict.values()), key=lambda x:
+        
+        if '1st_power_series' in retdict:  # Remove power series for best hint
+            temp = retdict.copy()
+            temp.pop('1st_power_series')
+            solvalues = temp.values()
+        else:
+            solvalues = retdict.values()
+        retdict['best'] = min(list(solvalues), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
         if given_hint == 'best':
             return retdict['best']
@@ -677,7 +684,8 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     ('separable', '1st_linear', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
-    'lie_group', 'nth_linear_constant_coeff_homogeneous',
+    'lie_group', '1st_power_series',
+    'nth_linear_constant_coeff_homogeneous',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
@@ -733,8 +741,45 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     c2 = Wild('c2', exclude=[x, f(x), df])
     d2 = Wild('d2', exclude=[x, f(x), df])
     r3 = {'xi': xi, 'eta': eta}  # Used for the lie_group hint
-
+    boundary = {}  # Used to extract initial conditions
+    C0 = Symbol("C0")
     eq = expand(eq)
+
+    # Preprocessing to get the initial conditions out
+    if ics is not None:
+        terms = ics.get('terms')  # For power series solutions
+        if terms:
+            ics.pop('terms')
+
+        for funcarg in ics:
+            # Separating derivatives
+            if isinstance(funcarg, Subs):
+                deriv = funcarg.expr
+                old = funcarg.variables[0]
+                new = funcarg.point[0]
+                if isinstance(deriv, Derivative) and isinstance(deriv.args[0],
+                    AppliedUndef) and deriv.args[0].func == f and old == x and not new.has(x):
+                    dorder = ode_order(deriv, x)
+                    temp = 'f' + str(dorder)
+                    boundary.update({temp: new, temp + 'val': ics[funcarg]})
+                else:
+                    raise ValueError("Enter valid boundary conditions for Derivatives")
+
+
+            # Separating functions
+            elif isinstance(funcarg, AppliedUndef):
+                if funcarg.func == f and len(funcarg.args) == 1 and \
+                    not funcarg.args[0].has(x):
+                    boundary.update({'f0': funcarg.args[0], 'f0val': ics[funcarg]})
+                else:
+                    raise ValueError("Enter valid boundary conditions for Function")
+
+            else:
+                raise ValueError("Enter boundary conditions of the form ics "
+                    " = {f(point}: value, f(point).diff(point, order).subs(arg, point) "
+                    ":value")
+
+        boundary.update({'terms': terms})
 
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -798,36 +843,27 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             r['y'] = y
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
-            rseries = r.copy()
 
             # FIRST ORDER POWER SERIES WHICH NEEDS INITIAL CONDITIONS
             # TODO: Hint first order series should match only if d/e is analytic.
+            # For now, only d/e and (d/e).diff(arg) is checked for existence at
+            # at a given point.
             # This is currently done internally in ode_1st_power_series.
-            # If initial condition is specified pass it to ode_1st_power_series
-            # by means of a dict with keys as point and value.
-            if ics is not None:
-                if ics.get('terms'):
-                    terms = ics.pop('terms')
-                funcset = [funcarg.atoms(AppliedUndef) for funcarg in ics]
-                for tryfunc in funcset:
-                    if len(tryfunc) != 1:
-                        raise ValueError("Key value of ics should be either function value"
-                            " at a point or value of the derivative at a point")
-                    else: 
-                       tfunc = tryfunc.pop()
-                       if tfunc.func != f:
-                           raise ValueError("Function present in the differential equation"
-                               " and the initial conditions should be same")
-                       else:
-                           constargs = tfunc.args
-                           if len(constargs) == 1:
-                               constant = constargs[0]
-                               if not constant.has(x):
-                                   rseries.update({'point': constant, 'value': ics[funcarg],
-                                       'terms': terms})
-                                   break
+            point = boundary.get('f0', 0)
+            value = boundary.get('f0val', C0)
+            check = cancel(r[d]/r[e])
+            check1 = check.subs({x: point, y: value})
+            if not check1.has(oo) and not check1.has(zoo) and \
+                not check1.has(NaN):
+                check2 = (check1.diff(x)).subs({x: point, y: value})
+                if not check2.has(oo) and not check2.has(zoo) and \
+                    not check2.has(NaN):
+                    rseries = boundary.copy()
+                    rseries['f0'] = point
+                    rseries['f0val'] = value
+                    rseries.update(r)
+                    matching_hints["1st_power_series"] = rseries
 
-            matching_hints["1st_power_series"] = rseries
             r3.update(r)
             ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
             # dP/dy == dQ/dx
@@ -3119,6 +3155,18 @@ def ode_1st_power_series(eq, func, order, match):
     1. F_1 = `h(x, y)`
     2. F_n+1 = \frac{\partial F_n}{\partial x} + \frac{\partial F_n}{\partial y}F_1
 
+    Examples
+    ========
+    >>> from sympy import Function, Derivative, pprint, exp
+    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = exp(x)*(f(x).diff(x)) - f(x)
+    >>> pprint(dsolve(eq, hint='1st_power_series'))
+               5       4       3
+           C0*x    C0*x    C0*x
+    f(x) = ----- + ----- - ----- + C0*x + C0
+             60      24      6
 
     References
     ==========
@@ -3127,14 +3175,13 @@ def ode_1st_power_series(eq, func, order, match):
       differential equations, p.p 17, 18
 
     """
-
     x = func.args[0]
     y = match['y']
     f = func.func
     h = -match[match['d']]/match[match['e']]
     C0 = Symbol("C0")
-    point = match.get('point', 0)
-    value = match.get('value', C0)
+    point = match.get('f0')
+    value = match.get('f0val')
     terms = match.get('terms', 5)
 
     # Initialisation
@@ -3146,8 +3193,13 @@ def ode_1st_power_series(eq, func, order, match):
 
     # First term
     F = h
+
+    if not h:
+        return Eq(f(x), C0)
     hc = h.subs({x: point, y: value})
-    if hc.has(oo) or hc.has(NaN):  # Derivative does not exist, not analytic
+
+    # Derivative does not exist, not analytic
+    if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
         return Eq(f(x), oo)
     elif hc:
         series += hc*(x - point)
