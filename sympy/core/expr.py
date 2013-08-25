@@ -2502,11 +2502,11 @@ class Expr(Basic, EvalfMixin):
                     else:
                         raise ValueError('Could not calculate %s terms for %s'
                                          % (str(n), self))
-                    s1 += C.Order(x**n)
+                    s1 += C.Order(x**n, x)
                 o = s1.getO()
                 s1 = s1.removeO()
             else:
-                o = C.Order(x**n)
+                o = C.Order(x**n, x)
                 if (s1 + o).removeO() == s1:
                     o = S.Zero
 
@@ -2526,7 +2526,7 @@ class Expr(Basic, EvalfMixin):
                     # by increasing order until all the
                     # terms have been returned
                     yielded = 0
-                    o = C.Order(si)*x
+                    o = C.Order(si, x)*x
                     ndid = 0
                     ndo = len(si.args)
                     while 1:
