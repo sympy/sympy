@@ -705,13 +705,13 @@ class Add(Expr, AssocOp):
         else:
             plain = self.func(*[s for s, _ in self.extract_leading_order(x)])
             rv = factor_terms(plain, fraction=False)
-            rv_fraction = factor_terms(rv, fraction=True)
+            rv_simplify = rv.simplify()
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
-            if x not in rv_fraction.free_symbols:
-                if rv_fraction.is_zero and plain.is_zero is not True:
+            if x not in rv_simplify.free_symbols:
+                if rv_simplify.is_zero and plain.is_zero is not True:
                     return (self - plain)._eval_as_leading_term(x)
-                return rv_fraction
+                return rv_simplify
             return rv
 
     def _eval_adjoint(self):
