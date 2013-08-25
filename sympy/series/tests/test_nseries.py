@@ -118,6 +118,12 @@ def test_series1():
     assert x.nseries(x, 0, 2) == x
 
 
+@XFAIL
+def test_series1_failing():
+    assert x.nseries(x, 0, 0) == O(1, x)
+    assert x.nseries(x, 0, 1) == O(x, x)
+
+
 def test_seriesbug1():
     assert (1/x).nseries(x, 0, 3) == 1/x
     assert (x + 1/x).nseries(x, 0, 3) == x + 1/x
