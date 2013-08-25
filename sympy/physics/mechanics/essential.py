@@ -2,12 +2,12 @@ from __future__ import print_function, division
 
 __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
-           'MechanicsLatexPrinter']
+           'MechanicsLatexPrinter', 'CoordinateSym', 'time']
 
 from sympy import (
     Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
     expand, zeros, Derivative, Function, symbols, Add,
-    solve, S, ImmutableMatrix as Matrix)
+    solve, S, simplify ImmutableMatrix as Matrix)
 from sympy.core import C
 from sympy.core.compatibility import reduce, u, string_types
 from sympy.core.function import UndefinedFunction
@@ -476,6 +476,18 @@ class Dyadic(object):
     cross = __xor__
 
 
+class CoordinateSym(Symbol):
+    """
+    Class to represent the coordinate symbols associated wrt a Reference
+    Frame
+    """
+
+    def __new__(cls, name, system):
+        obj = super(CoordinateSym, cls).__new__(cls, name)
+        obj.system = system
+        return obj
+
+
 class ReferenceFrame(object):
     """A reference frame in classical mechanics.
 
@@ -490,7 +502,7 @@ class ReferenceFrame(object):
 
     """
 
-    def __init__(self, name, indices=None, latexs=None):
+    def __init__(self, name, variables=None, indices=None, latexs=None):
         """ReferenceFrame initialization method.
 
         A ReferenceFrame has a set of orthonormal basis vectors, along with
@@ -579,6 +591,7 @@ class ReferenceFrame(object):
             self.latex_vecs = latexs
         self.name = name
         self._dcm_dict = {}
+        self._vars_mapping = {}
         self._ang_vel_dict = {}
         self._ang_acc_dict = {}
         self._dlist = [self._dcm_dict, self._ang_vel_dict, self._ang_acc_dict]
@@ -586,11 +599,29 @@ class ReferenceFrame(object):
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
+        #Associate coordinate symbols wrt this frame
+        if variables is not None:
+            if not isinstance(variables, (tuple, list)):
+                raise TypeError('Supply the variable names as a list')
+            if len(variables) != 3:
+                raise ValueError('Supply 3 variable names')
+            for i in variables:
+                if not isinstance(i, (str, unicode)):
+                    raise TypeError('Variable names must be strings')
+        else:
+            variables = [name + '_x', name + '_y', name + '_z']
+        self.varlist = []
+        for varname in variables:
+            self.varlist.append(CoordinateSym(varname, self))
+        self.varlist = tuple(self.varlist)
 
     def __getitem__(self, ind):
         """Returns basis vector for the provided index (index being an str)"""
-        if not isinstance(ind, string_types):
-            raise TypeError('Supply a valid str for the index')
+        if not isinstance(ind, (str, unicode)):
+            if ind < 3:
+                return self.varlist[ind]
+            else:
+                raise ValueError("Invalid index provided")
         if self.indices[0] == ind:
             return self.x
         if self.indices[1] == ind:
@@ -640,6 +671,45 @@ class ReferenceFrame(object):
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
         w3 = trigsimp(expand(angvelmat[3]), recursive=True)
         return -Vector([(Matrix([w1, w2, w3]), self)])
+
+    def var_dict(self, otherframe, simplify_mapping=False):
+        """
+        Returns a dictionary which expresses the variables of this frame
+        in terms of the variables of otherframe.
+
+        If simplify_mapping is True, returns a simplified version of the mapped
+        values. Else, returns them without simplification.
+
+        Simplification may take time.
+
+        Parameters
+        ==========
+
+        otherframe : ReferenceFrame
+            The other frame to map this variables to
+
+        simplify_mapping : bool
+            boolean value indicating whether the mapped values have to be simplified
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, dynamicsymbols
+        >>> A = ReferenceFrame('A')
+        >>> q = dynamicsymbols('q')
+        >>> B = A.orientnew('B', 'Axis', [q, A.z])
+        >>> A.var_dict(B)
+        {A_x: B_x*cos(q(t)) - B_y*sin(q(t)), A_y: B_x*sin(q(t)) + B_y*cos(q(t)), A_z: B_z}
+        
+        """
+        
+        vars_matrix = self.dcm(otherframe) * Matrix(otherframe.varlist)
+        mapping = {}
+        for i, x in self:
+            mapping[self.varlist[i]] = vars_matrix[i]
+            if simplify_mapping:
+                mapping[self.varlist[i]] = simplify(mapping[self.varlist[i]])
+        return mapping
 
     def ang_acc_in(self, otherframe):
         """Returns the angular acceleration Vector of the ReferenceFrame.
@@ -920,8 +990,8 @@ class ReferenceFrame(object):
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
 
-    def orientnew(self, newname, rot_type, amounts, rot_order='', indices=None,
-            latexs=None):
+    def orientnew(self, newname, rot_type, amounts, rot_order='', variables=None,
+                  indices=None, latexs=None):
         """Creates a new ReferenceFrame oriented with respect to this Frame.
 
         See ReferenceFrame.orient() for acceptable rotation types, amounts,
@@ -955,7 +1025,7 @@ class ReferenceFrame(object):
 
         """
 
-        newframe = ReferenceFrame(newname, indices, latexs)
+        newframe = ReferenceFrame(newname, variables, indices, latexs)
         newframe.orient(self, rot_type, amounts, rot_order)
         return newframe
 
@@ -1028,6 +1098,137 @@ class ReferenceFrame(object):
         _check_frame(otherframe)
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
+
+    def express(self, field, variables=False):
+        """
+        Re-express a vector/scalar function in this frame
+
+        If variables is True, then the coordinate variables present
+        in the vector field expression are also substituted in terms of
+        the base scalars of this frame
+
+        Parameters
+        ==========
+
+        field : Vector/sympifyable
+            The vector/scalar field to express in this frame
+
+        variables : boolean
+            Boolean to specify whether to substitute base scalars
+            in vector expression. If field is scalar, this parameter
+            is not considered
+
+        Examples
+        ========
+        
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> R0 = ReferenceFrame('R0')
+        >>> R1 = ReferenceFrame('R1')
+        >>> from sympy import Symbol
+        >>> q = Symbol('q')
+        >>> R1.orient(R0, 'Axis', [q, R0.z])
+        >>> R0.express(4*R1.x + 5*R1.z)
+        4*cos(q)*R0.x + 4*sin(q)*R0.y + 5*R0.z
+            
+        """
+        
+        if field == 0:
+            return 0
+        if isinstance(field, Vector):
+            if variables:
+                frame_list = [x[-1] for x in field.args]
+                subs_dict = {}
+                for frame in frame_list:
+                    subs_dict.update(frame.var_dict(self))
+                field = field.subs(subs_dict).express(self)
+                return self.express(field)
+            else:
+                _check_frame(otherframe)
+                outvec = Vector([])
+                for i, v in enumerate(field.args):
+                    if v[1] != otherframe:
+                        temp = otherframe.dcm(v[1]) * v[0]
+                        if Vector.simp is True:
+                            temp = temp.applyfunc(lambda x: \
+                                                  trigsimp(x, method='fu'))
+                        outvec += Vector([(temp, otherframe)])
+                    else:
+                        outvec += Vector([v])
+                return outvec
+        else:
+            frame_set = set([])
+            field = sympify(field)
+            for x in field.atoms():
+                if isinstance(x, CoordinateSym):
+                    if x.system not in frame_set and x.system != self:
+                        frame_set.add(x.system)
+            subs_dict = {}
+            for frame in frame_set:
+                subs_dict.update(frame.var_dict(self))
+            return field.subs(subs_dict)
+
+    def dt(self, expr, order=1):
+        """
+        Calculate the time derivative of a field function in this frame.
+
+        References
+        ==========
+
+        http://en.wikipedia.org/wiki/
+        Rotating_reference_frame#Time_derivatives_in_the_two_frames
+
+        Parameters
+        ==========
+
+        expr : Vector/sympifyable 
+            The field whose time derivative is to be calculated
+
+        order : integer
+            The order of the derivative to be calculated
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
+        >>> from sympy import Symbol
+        >>> q1 = Symbol('q1')
+        >>> u1 = dynamicsymbols('u1')
+        >>> N = ReferenceFrame('N')
+        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
+        >>> v = u1 * N.x
+        >>> A.set_ang_vel(N, 10*A.x)
+        >>> A.x.dt(N) == 0
+        True
+        >>> v.dt(N)
+        u1'*N.x
+        
+        """
+
+        t = dynamicsymbols._t
+        if order == 0:
+            return expr
+        if order%1 != 0 or order < 0:
+            raise ValueError("Unsupported value of order entered")
+        if isinstance(expr, Vector):
+            frame_dict = {}
+            diff_dir = {}
+            for x in expr.args:
+                frame_dict[x[1]] = 0
+                diff_dir[x[1]] = 0
+                for i, y in enumerate(x[1]):
+                    frame_dict[x[1]] += x[0][i] * y
+                    diff_dir[x[1]] += diff(x[1].express(x[0][i]), t) * y
+            #Process each constituent separately, and add to get result
+            outvect = 0
+            for frame in frame_dict:
+                if frame == self:
+                    outvect += diff_dir[frame]
+                else:
+                    outvect += diff_dir[frame] + \
+                          frame.ang_vel_in(self).cross(frame_dict[frame])
+            return self.dt(outvect, order-1)
+        else:
+            return diff(self.express(expr), t, order)
 
     @property
     def x(self):
@@ -1520,6 +1721,14 @@ class Vector(object):
                     outvec += Vector([(d, otherframe)]).express(v[1])
         return outvec
 
+    def express(self, otherframe, variables=False):
+        """
+        Express this Vector in another frame
+
+        Call's ReferenceFrame's express method
+        """
+        return otherframe.express(self, variables)
+
     def doit(self, **hints):
         """Calls .doit() on each term in the Vector"""
         ov = S(0)
@@ -1533,75 +1742,9 @@ class Vector(object):
         Returns a Vector which is the time derivative of the self Vector, taken
         in frame otherframe.
 
-        Parameters
-        ==========
-
-        otherframe : ReferenceFrame
-            The ReferenceFrame that the partial derivative is taken in.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
-        >>> from sympy import Symbol
-        >>> q1 = Symbol('q1')
-        >>> u1 = dynamicsymbols('u1')
-        >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
-        >>> v = u1 * N.x
-        >>> A.set_ang_vel(N, 10*A.x)
-        >>> A.x.dt(N) == 0
-        True
-        >>> v.dt(N)
-        u1'*N.x
-
+        Calls ReferenceFrame' express method
         """
-
-        outvec = S(0)
-        _check_frame(otherframe)
-        for i, v in enumerate(self.args):
-            if v[1] == otherframe:
-                outvec += Vector([(v[0].diff(dynamicsymbols._t), otherframe)])
-            else:
-                outvec += (Vector([v]).dt(v[1]) +
-                    (v[1].ang_vel_in(otherframe) ^ Vector([v])))
-        return outvec
-
-    def express(self, otherframe):
-        """Returns a vector, expressed in the other frame.
-
-        A new Vector is returned, equalivalent to this Vector, but its
-        components are all defined in only the otherframe.
-
-        Parameters
-        ==========
-
-        otherframe : ReferenceFrame
-            The frame for this Vector to be described in
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame, Vector, dynamicsymbols
-        >>> q1 = dynamicsymbols('q1')
-        >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', [q1, N.y])
-        >>> A.x.express(N)
-        cos(q1)*N.x - sin(q1)*N.z
-
-        """
-
-        _check_frame(otherframe)
-        outvec = Vector([])
-        for i, v in enumerate(self.args):
-            if v[1] != otherframe:
-                temp = otherframe.dcm(v[1]) * v[0]
-                if Vector.simp is True:
-                    temp = temp.applyfunc(lambda x: trigsimp(x, method='fu'))
-                outvec += Vector([(temp, otherframe)])
-            else:
-                outvec += Vector([v])
-        return outvec
+        return otherframe.dt(self)
 
     def simplify(self):
         """Returns a simplified Vector."""
@@ -1934,5 +2077,5 @@ def dynamicsymbols(names, level=0):
     else:
         return reduce(diff, [t]*level, esses(t))
 
-dynamicsymbols._t = Symbol('t')
+time = dynamicsymbols._t = Symbol('t')
 dynamicsymbols._str = '\''
