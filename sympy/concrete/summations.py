@@ -370,16 +370,25 @@ class Sum(Expr):
         if m:
             if b.is_Integer and a.is_Integer:
                 m = min(m, b - a + 1)
-            for k in range(m):
-                term = f.subs(i, a + k)
-                if eps and term:
+            if not eps:
+                for k in range(m):
+                    s += f.subs(i, a + k)
+            else:
+                term = f.subs(i, a)
+                if term:
                     test = abs(term.evalf(3)) < eps
-                    if not isinstance(test, bool):
+                    if isinstance(test, bool):
+                        if test is True:
+                            return s, abs(term)
+                    else:
                         # a symbolic Relational class, can't go further
                         return term, S.Zero
-                    if test is True:
-                        return s, abs(term)
                 s += term
+                for k in range(1, m):
+                    term = f.subs(i, a + k)
+                    if abs(term.evalf(3)) < eps:
+                        return s, abs(term)
+                    s += term
             if b - a + 1 == m:
                 return s, S.Zero
             a += m
