@@ -79,16 +79,15 @@ def _degree_bound_univariate(f, g):
     gamma = f.ring.domain.gcd(f.LC, g.LC)
     p = 1
 
-    while True:
+    p = nextprime(p)
+    while gamma % p == 0:
         p = nextprime(p)
-        while gamma % p == 0:
-            p = nextprime(p)
 
-        fp = f.trunc_ground(p)
-        gp = g.trunc_ground(p)
-        hp = _gf_gcd(fp, gp, p)
-        deghp = hp.degree()
-        return deghp
+    fp = f.trunc_ground(p)
+    gp = g.trunc_ground(p)
+    hp = _gf_gcd(fp, gp, p)
+    deghp = hp.degree()
+    return deghp
 
 
 def _chinese_remainder_reconstruction_univariate(hp, hq, p, q):
@@ -509,31 +508,30 @@ def _degree_bound_bivariate(f, g):
     badprimes = gamma1 * gamma2
     p = 1
 
-    while True:
+    p = nextprime(p)
+    while badprimes % p == 0:
         p = nextprime(p)
-        while badprimes % p == 0:
-            p = nextprime(p)
 
-        fp = f.trunc_ground(p)
-        gp = g.trunc_ground(p)
-        contfp, fp = _primitive(fp, p)
-        contgp, gp = _primitive(gp, p)
-        conthp = _gf_gcd(contfp, contgp, p) # polynomial in Z_p[y]
-        ycontbound = conthp.degree()
+    fp = f.trunc_ground(p)
+    gp = g.trunc_ground(p)
+    contfp, fp = _primitive(fp, p)
+    contgp, gp = _primitive(gp, p)
+    conthp = _gf_gcd(contfp, contgp, p) # polynomial in Z_p[y]
+    ycontbound = conthp.degree()
 
-        # polynomial in Z_p[y]
-        delta = _gf_gcd(_LC(fp), _LC(gp), p)
+    # polynomial in Z_p[y]
+    delta = _gf_gcd(_LC(fp), _LC(gp), p)
 
-        for a in xrange(p):
-            if not delta.evaluate(0, a) % p:
-                continue
-            fpa = fp.evaluate(1, a).trunc_ground(p)
-            gpa = gp.evaluate(1, a).trunc_ground(p)
-            hpa = _gf_gcd(fpa, gpa, p)
-            xbound = hpa.degree()
-            return xbound, ycontbound
+    for a in xrange(p):
+        if not delta.evaluate(0, a) % p:
+            continue
+        fpa = fp.evaluate(1, a).trunc_ground(p)
+        gpa = gp.evaluate(1, a).trunc_ground(p)
+        hpa = _gf_gcd(fpa, gpa, p)
+        xbound = hpa.degree()
+        return xbound, ycontbound
 
-        return min(fp.degree(), gp.degree()), ycontbound
+    return min(fp.degree(), gp.degree()), ycontbound
 
 
 def _chinese_remainder_reconstruction_multivariate(hp, hq, p, q):

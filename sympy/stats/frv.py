@@ -193,6 +193,9 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
 
     __call__ = pdf
 
+    def __contains__(self, other):
+        return other in self.set
+
 
 #=============================================
 #=========  Probability Space  ===============

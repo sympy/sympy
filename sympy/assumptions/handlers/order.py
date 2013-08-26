@@ -43,12 +43,16 @@ class AskNegativeHandler(CommonHandler):
         """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
+        nonpos = 0
         for arg in expr.args:
-            if not ask(Q.negative(arg), assumptions):
-                break
+            if ask(Q.negative(arg), assumptions) is not True:
+                if ask(Q.positive(arg), assumptions) is False:
+                    nonpos += 1
+                else:
+                    break
         else:
-            # if all argument's are negative
-            return True
+            if nonpos < len(expr.args):
+                return True
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -77,7 +81,8 @@ class AskNegativeHandler(CommonHandler):
             return AskNegativeHandler._number(expr, assumptions)
         if ask(Q.real(expr.base), assumptions):
             if ask(Q.positive(expr.base), assumptions):
-                return False
+                if ask(Q.real(expr.exp), assumptions):
+                    return False
             if ask(Q.even(expr.exp), assumptions):
                 return False
             if ask(Q.odd(expr.exp), assumptions):
@@ -165,19 +170,24 @@ class AskPositiveHandler(CommonHandler):
     def Add(expr, assumptions):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
+        nonneg = 0
         for arg in expr.args:
             if ask(Q.positive(arg), assumptions) is not True:
-                break
+                if ask(Q.negative(arg), assumptions) is False:
+                    nonneg += 1
+                else:
+                    break
         else:
-            # if all argument's are positive
-            return True
+            if nonneg < len(expr.args):
+                return True
 
     @staticmethod
     def Pow(expr, assumptions):
         if expr.is_number:
             return expr.evalf() > 0
         if ask(Q.positive(expr.base), assumptions):
-            return True
+            if ask(Q.real(expr.exp), assumptions):
+                return True
         if ask(Q.negative(expr.base), assumptions):
             if ask(Q.even(expr.exp), assumptions):
                 return True

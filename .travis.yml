@@ -1,7 +1,7 @@
 language: python
 env:
   - TEST_DOCTESTS="true"
-  - TEST_DOCTESTS="false"
+  -
 python:
   - 2.6
   - 2.7
@@ -19,7 +19,6 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="false"
     - python: 3.3
       env:
         - TEST_GMPY="true"
@@ -29,9 +28,18 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
-        - TEST_DOCTESTS="false"
     - python: 2.7
       env: TEST_SPHINX="true"
+    - python: 2.7
+      env: TEST_SLOW="true"
+    - python: 3.3
+      env: TEST_SLOW="true"
+    - python: 2.7
+      env:
+        - TEST_THEANO="true"
+    - python: 3.3
+      env:
+        - TEST_THEANO="true"
   allow_failures:
     - python: "pypy"
 before_install:
@@ -47,6 +55,9 @@ before_install:
   - if [[ "${TEST_MATPLOTLIB}" == "true" ]]; then
       pip install "numpy==1.7.1";
       pip install "matplotlib==1.2.1";
+    fi
+  - if [[ "${TEST_THEANO}" == "true" ]]; then
+      pip install --no-deps https://github.com/Theano/Theano/archive/master.zip;
     fi
 install:
   - python setup.py install

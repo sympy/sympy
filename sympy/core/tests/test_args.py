@@ -26,7 +26,8 @@ def test_all_classes_are_tested():
     modules = {}
 
     # Ignore sympy.statistics import warning
-    warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
+    warnings.filterwarnings("ignore", message="sympy.statistics has been deprecated since SymPy 0.7.2",
+        category=SymPyDeprecationWarning)
 
     for root, dirs, files in os.walk(sympy_path):
         module = root.replace(prefix, "").replace(os.sep, ".")
@@ -72,7 +73,8 @@ def test_all_classes_are_tested():
             if test not in ns:
                 failed.append(module + '.' + name)
 
-    warnings.filterwarnings("default", category=SymPyDeprecationWarning)
+    # reset all SymPyDeprecationWarning into errors
+    warnings.simplefilter("error", category=SymPyDeprecationWarning)
 
     assert not failed, "Missing classes: %s.  Please add tests for these to sympy/core/tests/test_args.py." % ", ".join(failed)
 
@@ -468,11 +470,11 @@ def test_sympy__sets__fancysets__Reals():
     assert _test_args(Reals())
 
 
-def test_sympy__sets__fancysets__TransformationSet():
-    from sympy.sets.fancysets import TransformationSet
+def test_sympy__sets__fancysets__ImageSet():
+    from sympy.sets.fancysets import ImageSet
     from sympy import S, Lambda, Symbol
     x = Symbol('x')
-    assert _test_args(TransformationSet(Lambda(x, x**2), S.Naturals))
+    assert _test_args(ImageSet(Lambda(x, x**2), S.Naturals))
 
 
 def test_sympy__sets__fancysets__Range():
@@ -1488,7 +1490,7 @@ def test_sympy__functions__special__polynomials__chebyshevt():
 
 def test_sympy__functions__special__polynomials__chebyshevt_root():
     from sympy.functions.special.polynomials import chebyshevt_root
-    assert _test_args(chebyshevt_root(x, 2))
+    assert _test_args(chebyshevt_root(3, 2))
 
 
 def test_sympy__functions__special__polynomials__chebyshevu():
@@ -1498,7 +1500,7 @@ def test_sympy__functions__special__polynomials__chebyshevu():
 
 def test_sympy__functions__special__polynomials__chebyshevu_root():
     from sympy.functions.special.polynomials import chebyshevu_root
-    assert _test_args(chebyshevu_root(x, 2))
+    assert _test_args(chebyshevu_root(3, 2))
 
 
 def test_sympy__functions__special__polynomials__hermite():
@@ -1674,6 +1676,32 @@ def test_sympy__liealgebras__type_a__TypeA():
 def test_sympy__liealgebras__type_b__TypeB():
     from sympy.liealgebras.type_b import TypeB
     assert _test_args(TypeB(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_c__TypeC():
+    from sympy.liealgebras.type_c import TypeC
+    assert _test_args(TypeC(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_d__TypeD():
+    from sympy.liealgebras.type_d import TypeD
+    assert _test_args(TypeD(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_e__TypeE():
+    from sympy.liealgebras.type_e import TypeE
+    assert _test_args(TypeE(6))
+
+@XFAIL
+def test_sympy__liealgebras__type_f__TypeF():
+    from sympy.liealgebras.type_f import TypeF
+    assert _test_args(TypeF(4))
+
+@XFAIL
+def test_sympy__liealgebras__type_g__TypeG():
+    from sympy.liealgebras.type_g import TypeG
+    assert _test_args(TypeG(2))
+
 
 def test_sympy__logic__boolalg__And():
     from sympy.logic.boolalg import And
@@ -2235,7 +2263,6 @@ def test_sympy__physics__quantum__piab__PIABHamiltonian():
 def test_sympy__physics__quantum__piab__PIABKet():
     from sympy.physics.quantum.piab import PIABKet
     assert _test_args(PIABKet('K'))
-
 
 def test_sympy__physics__quantum__qexpr__QExpr():
     from sympy.physics.quantum.qexpr import QExpr

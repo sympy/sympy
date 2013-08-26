@@ -1373,7 +1373,7 @@ class PrettyPrinter(Printer):
         return self._print_seq(u.args, None, None, union_delimiter,
              parenthesize=lambda set: set.is_ProductSet or set.is_Intersection)
 
-    def _print_TransformationSet(self, ts):
+    def _print_ImageSet(self, ts):
         if self._use_unicode:
             inn = u("\u220a")
         else:
@@ -1815,7 +1815,7 @@ def pretty_print(expr, **settings):
         the expression to print
     wrap_line : bool, optional
         line wrapping enabled/disabled, defaults to True
-    num_columns : bool, optional
+    num_columns : int or None, optional
         number of columns before line breaking (default to None which reads
         the terminal width), useful when using SymPy without terminal.
     use_unicode : bool or None, optional

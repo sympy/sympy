@@ -27,6 +27,20 @@ if not sympy.doctest():
 EOF
         cd ..
         bin/doctest doc/
+    elif [[ "${TEST_SLOW}" == "true" ]]; then
+        cat << EOF | python
+import sympy
+if not sympy.test(slow=True, timeout=180):
+    # Travis times out if no activity is seen for 10 minutes. It also times
+    # out if the whole tests run for more than 50 minutes.
+    raise Exception('Tests failed')
+EOF
+    elif [[ "${TEST_THEANO}" == "true" ]]; then
+        cat << EOF | python
+import sympy
+if not sympy.test('*theano*'):
+    raise Exception('Tests failed')
+EOF
     else
         cat << EOF | python
 import sympy

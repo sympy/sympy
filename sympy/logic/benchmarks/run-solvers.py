@@ -23,8 +23,8 @@ for test in INPUT:
         assert satisfiable(theory, algorithm=alg)
         end = time.time()
         results[test][alg] = end - start
-        print("Test %d in time %.2f seconds for algorithm %s." % ()
-            test, end - start, alg)
+        print("Test %d in time %.2f seconds for algorithm %s." %
+            (test, end - start, alg))
 
 print("problem," + ','.join(ALGORITHMS))
 

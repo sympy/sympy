@@ -568,6 +568,7 @@ class Function(Application, Expr):
         if not self.args[argindex - 1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
+            arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
                 self.subs(self.args[argindex - 1], arg_dummy),
                 arg_dummy), arg_dummy, self.args[argindex - 1])
@@ -600,17 +601,6 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
-    @classmethod
-    def taylor_term(cls, n, x, *previous_terms):
-        """General method for the taylor term.
-
-        This method is slow, because it differentiates n-times. Subclasses can
-        redefine it to make it faster by using the "previous_terms".
-        """
-        x = sympify(x)
-        _x = Dummy('x')
-        return cls(_x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
-
 
 class AppliedUndef(Function):
     """
@@ -623,6 +613,9 @@ class AppliedUndef(Function):
         result.nargs = len(args)
         return result
 
+    def _eval_as_leading_term(self, x):
+        return self
+
 
 class UndefinedFunction(FunctionClass):
     """
@@ -633,6 +626,8 @@ class UndefinedFunction(FunctionClass):
         ret.__module__ = None
         return ret
 
+UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
+                                         (s.class_key() == o.class_key()))
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -991,6 +986,7 @@ class Derivative(Expr):
             else:
                 if not is_symbol:
                     new_v = C.Dummy('xi_%i' % i)
+                    new_v.dummy_index = hash(v)
                     expr = expr.subs(v, new_v)
                     old_v = v
                     v = new_v

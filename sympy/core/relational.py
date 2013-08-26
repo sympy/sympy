@@ -222,6 +222,11 @@ class Relational(Boolean, Expr, EvalfMixin):
         return self.__class__(self.lhs.simplify(ratio=ratio),
                               self.rhs.simplify(ratio=ratio))
 
+    def __nonzero__(self):
+        raise TypeError("symbolic boolean expression has no truth value.")
+
+    __bool__ = __nonzero__
+
 
 class Equality(Relational):
 
@@ -239,11 +244,6 @@ class Equality(Relational):
     def _eval_relation_doit(cls, lhs, rhs):
         return Eq(lhs, rhs)
 
-    def __nonzero__(self):
-        return self.lhs.compare(self.rhs) == 0
-
-    __bool__ = __nonzero__
-
 
 class Unequality(Relational):
 
@@ -258,11 +258,6 @@ class Unequality(Relational):
     @classmethod
     def _eval_relation_doit(cls, lhs, rhs):
         return Ne(lhs, rhs)
-
-    def __nonzero__(self):
-        return self.lhs.compare(self.rhs) != 0
-
-    __bool__ = __nonzero__
 
 
 class _Greater(Relational):
@@ -472,9 +467,10 @@ class GreaterThan(_Greater):
     The other gotcha is with chained inequalities.  Occasionally, one may be
     tempted to write statements like:
 
-    >>> e = x < y < z  # silent error!  Where did ``x`` go?
-    >>> e #doctest: +SKIP
-    y < z
+    >>> e = x < y < z
+    Traceback (most recent call last):
+    ...
+    TypeError: symbolic boolean expression has no truth value.
 
     Due to an implementation detail or decision of Python [1]_, there is no way
     for SymPy to reliably create that as a chained inequality.  To create a
@@ -509,8 +505,9 @@ class GreaterThan(_Greater):
        evaluated once and the comparison can short-circuit.  For example, ``1
        > 2 > 3`` is evaluated by Python as ``(1 > 2) and (2 > 3)``.  The
        ``and`` operator coerces each side into a bool, returning the object
-       itself when it short-circuits.  Currently, the bool of the --Than
-       operators will give True or False arbitrarily.  Thus, if we were to
+       itself when it short-circuits.  The bool of the --Than operators
+       will raise TypeError on purpose, because SymPy cannot determine the
+       mathematical ordering of symbolic expressions.  Thus, if we were to
        compute ``x > y > z``, with ``x``, ``y``, and ``z`` being Symbols,
        Python converts the statement (roughly) into these steps:
 
@@ -518,14 +515,11 @@ class GreaterThan(_Greater):
         (2) (x > y) and (y > z)
         (3) (GreaterThanObject) and (y > z)
         (4) (GreaterThanObject.__nonzero__()) and (y > z)
-        (5) (True) and (y > z)
-        (6) (y > z)
-        (7) LessThanObject
+        (5) TypeError
 
        Because of the "and" added at step 2, the statement gets turned into a
-       weak ternary statement.  If the first object evalutes __nonzero__ as
-       True, then the second object, (y > z) is returned.  If the first object
-       evaluates __nonzero__ as False (step 5), then (x > y) is returned.
+       weak ternary statement, and the first object's __nonzero__ method will
+       raise TypeError.  Thus, creating a chained inequality is not possible.
 
            In Python, there is no way to override the ``and`` operator, or to
            control how it short circuits, so it is impossible to make something
@@ -550,11 +544,6 @@ class GreaterThan(_Greater):
     def _eval_relation(cls, lhs, rhs):
         return lhs >= rhs
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) >= 0
-
-    __bool__ = __nonzero__
-
 
 class LessThan(_Less):
     __doc__ = GreaterThan.__doc__
@@ -565,11 +554,6 @@ class LessThan(_Less):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs <= rhs
-
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) <= 0
-
-    __bool__ = __nonzero__
 
 
 class StrictGreaterThan(_Greater):
@@ -582,11 +566,6 @@ class StrictGreaterThan(_Greater):
     def _eval_relation(cls, lhs, rhs):
         return lhs > rhs
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) > 0
-
-    __bool__ = __nonzero__
-
 
 class StrictLessThan(_Less):
     __doc__ = GreaterThan.__doc__
@@ -598,10 +577,6 @@ class StrictLessThan(_Less):
     def _eval_relation(cls, lhs, rhs):
         return lhs < rhs
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) < 0
-
-    __bool__ = __nonzero__
 
 # A class-specific (not object-specific) data item used for a minor speedup.  It
 # is defined here, rather than directly in the class, because the classes that
