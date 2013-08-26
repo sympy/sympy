@@ -3,7 +3,6 @@ import itertools
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
     Matrix, S, cos, sin, Eq, Function, Tuple, RootOf)
 from sympy.simplify.cse_opts import sub_pre, sub_post
-from sympy.simplify.cse_main import main_optimizations
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
@@ -169,12 +168,12 @@ def test_powers():
 
 
 def test_issues_1399():
-    assert cse(w/(x - y) + z/(y - x), optimizations=main_optimizations) == \
+    assert cse(w/(x - y) + z/(y - x), optimizations='basic') == \
         ([], [(w - z)/(x - y)])
 
 
 def test_issue_921():
-    assert cse(x**5 + x**4 + x**3 + x**2, optimizations=main_optimizations) \
+    assert cse(x**5 + x**4 + x**3 + x**2, optimizations='basic') \
         == ([(x0, x**2)], [x0*(x**3 + x + x0 + 1)])
 
 
@@ -184,7 +183,7 @@ def test_issue_1104():
 
 def test_issue_3164():
     e = Eq(x*(-x + 1) + x*(x - 1), 0)
-    assert cse(e, optimizations=main_optimizations) == ([], [True])
+    assert cse(e, optimizations='basic') == ([], [True])
 
 
 def test_dont_cse_tuples():

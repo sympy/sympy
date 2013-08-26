@@ -1,6 +1,5 @@
 from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
     cos, sin, Mul, Pow, cse, O)
-from sympy.simplify.cse_main import main_optimizations
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.core.function import (
     expand_power_base, expand_multinomial)
@@ -134,7 +133,7 @@ def test_expand_frac():
 
 def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
-    assert cse((eq).expand(complex=True), optimizations=main_optimizations) \
+    assert cse((eq).expand(complex=True), optimizations='basic') \
         == S(''' ([(x0, re(x)), (x1, im(x)), (x2, x0**2 + x1**2), (x3,
         atan2(x1, x0)/2), (x4, sin(x3)), (x5, atan2(0, x2)/4), (x6, sin(x5)),
         (x7, x4*x6), (x8, cos(x3)), (x9, x6*x8), (x10, cos(x5)), (x11,
