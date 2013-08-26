@@ -11,7 +11,7 @@ from sympy.ntheory import isprime, n_order, is_primitive_root, \
     primerange, primepi, prime, pollard_rho, perfect_power, multiplicity, \
     trailing, divisor_count, primorial, pollard_pm1, \
     sqrt_mod, primitive_root, quadratic_residues, is_nthpow_residue, \
-    nthroot_mod
+    nthroot_mod, sqrt_mod_iter
 
 from sympy.ntheory.residue_ntheory import _primitive_root_prime_iter
 from sympy.ntheory.factor_ import smoothness, smoothness_p
@@ -448,23 +448,37 @@ def test_residue():
     assert [len(quadratic_residues(i)) for i in range(1, 20)] == \
       [1, 2, 2, 2, 3, 4, 4, 3, 4, 6, 6, 4, 7, 8, 6, 4, 9, 8, 10]
 
-    assert sqrt_mod(6, 2, all_roots=True) == [0]
-    assert sqrt_mod(3, 13) == 4
+    assert list(sqrt_mod_iter(6, 2)) == [0]
+    assert sqrt_mod(3, 13) == 9
 
     for p in range(3, 100):
         d = defaultdict(list)
         for i in range(p):
             d[pow(i, 2, p)].append(i)
         for i in range(1, p):
-            if d[i]:
-                assert d[i] == sqrt_mod(i, p, all_roots=True, limit=1000)
+            it = sqrt_mod_iter(i, p)
+            v = []
+            try:
+                for j in range(1000):
+                    v.append(next(it))
+            except StopIteration:
+                pass
+            if v:
+                v = sorted(v)
+                assert d[i] == v
             else:
-                assert sqrt_mod(i, p, all_roots=True) is None
+                assert not d[i]
 
     for a, p in [(26214400, 32768000000), (26214400, 16384000000),
         (262144, 1048576), (87169610025, 163443018796875),
         (22315420166400, 167365651248000000)]:
         assert pow(sqrt_mod(a, p), 2, p) == a
+
+    n = 30
+    a, p = 5**2*3**n*2**n, 5**6*3**(n+1)*2**(n+2)
+    it = sqrt_mod_iter(a, p)
+    for i in range(10):
+        assert pow(next(it), 2, p) == a
 
     assert is_nthpow_residue(2, 1, 5)
     assert not is_nthpow_residue(2, 2, 5)
