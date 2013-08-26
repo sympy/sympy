@@ -449,7 +449,8 @@ def test_residue():
       [1, 2, 2, 2, 3, 4, 4, 3, 4, 6, 6, 4, 7, 8, 6, 4, 9, 8, 10]
 
     assert list(sqrt_mod_iter(6, 2)) == [0]
-    assert sqrt_mod(3, 13) == 9
+    assert sqrt_mod(3, 13) == 4
+    assert sqrt_mod(345, 690) == 345
 
     for p in range(3, 100):
         d = defaultdict(list)

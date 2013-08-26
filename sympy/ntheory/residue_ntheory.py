@@ -201,7 +201,14 @@ def _sqrt_mod_tonelli_shanks(a, p):
 
 def sqrt_mod(a, p):
     """
-    find some solutions to ``x**2 = a mod p``
+    find a root of ``x**2 = a mod p``
+
+    Notes
+    =====
+
+    If there is no root it is returned None; else the returned root
+    is less or equal to ``p // 2``.
+    If is returned ``p // 2`` only if it is the only root.
 
     Examples
     ========
@@ -211,7 +218,19 @@ def sqrt_mod(a, p):
     21
     """
     try:
-        return next(sqrt_mod_iter(a, p))
+        r = next(sqrt_mod_iter(a, p))
+        if r > p // 2:
+            return p - r
+        elif r < p // 2:
+            return r
+        else:
+            try:
+                r = next(sqrt_mod_iter(a, p))
+                if r > p // 2:
+                    return p - r
+            except StopIteration:
+                pass
+            return r
     except StopIteration:
         return None
 
@@ -633,7 +652,7 @@ def nthroot_mod(a, n, p, all_roots=False):
 
     >>> from sympy.ntheory.residue_ntheory import nthroot_mod
     >>> nthroot_mod(11, 4, 19)
-    11
+    8
     >>> nthroot_mod(11, 4, 19, True)
     [8, 11]
     >>> nthroot_mod(68, 3, 109)
