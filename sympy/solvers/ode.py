@@ -283,8 +283,8 @@ allhints = (
     "almost_linear",
     "linear_coefficients",
     "separable_reduced",
-    "lie_group",
     "1st_power_series",
+    "lie_group",
     "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
@@ -684,7 +684,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     ('separable', '1st_linear', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
-    'lie_group', '1st_power_series',
+    '1st_power_series', 'lie_group',
     'nth_linear_constant_coeff_homogeneous',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
@@ -5061,16 +5061,17 @@ def lie_heuristic_linear(match, comp=False):
 
     sollist = coeffdict.values()
     soldict = solve(sollist, symlist)
-    if isinstance(soldict, list):
-        soldict = soldict[0]
-    subval = soldict.values()
+    if soldict:
+        if isinstance(soldict, list):
+            soldict = soldict[0]
+        subval = soldict.values()
 
-    if any(t for t in subval):
-        onedict = dict(zip(symlist, [1]*6))
-        xival = C0*x + C1*func + C2
-        etaval = C3*x + C4*func + C5
-        xival = xival.subs(soldict)
-        etaval = etaval.subs(soldict)
-        xival = xival.subs(onedict)
-        etaval = etaval.subs(onedict)
-        return [{xi: xival, eta: etaval}]
+        if any(t for t in subval):
+            onedict = dict(zip(symlist, [1]*6))
+            xival = C0*x + C1*func + C2
+            etaval = C3*x + C4*func + C5
+            xival = xival.subs(soldict)
+            etaval = etaval.subs(soldict)
+            xival = xival.subs(onedict)
+            etaval = etaval.subs(onedict)
+            return [{xi: xival, eta: etaval}]
