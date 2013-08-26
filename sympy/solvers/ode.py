@@ -3163,10 +3163,10 @@ def ode_1st_power_series(eq, func, order, match):
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
     >>> pprint(dsolve(eq, hint='1st_power_series'))
-               5       4       3
-           C0*x    C0*x    C0*x
-    f(x) = ----- + ----- - ----- + C0*x + C0
-             60      24      6
+                           3       4       5
+                       C0*x    C0*x    C0*x     / 6\
+    f(x) = C0 + C0*x - ----- + ----- + ----- + O\x /
+                         6       24      60
 
     References
     ==========
@@ -3205,13 +3205,18 @@ def ode_1st_power_series(eq, func, order, match):
         series += hc*(x - point)
         tcounter += 1
 
-    while tcounter < terms:
+    while tcounter < terms + 1:
         Fnew = F.diff(x) + F.diff(y)*h
         Fnewc = Fnew.subs({x: point, y: value})
+        # Same logic as above
         if Fnewc.has(oo) or Fnewc.has(NaN):
             return Eq(f(x), oo)
         elif Fnewc:
-            series += Fnewc*((x - point)**factcount)/factorial(factcount)
+            if tcounter < terms:
+                series += Fnewc*((x - point)**factcount)/factorial(factcount)
+            # In order to return order term
+            else:
+                series += Order(x**factcount) 
             tcounter += 1
         factcount += 1
         F = Fnew
