@@ -351,7 +351,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, 
+def dsolve(eq, func=None, hint="default", simplify=True,
     ics= None, xi=None, eta=None, **kwargs):
     r"""
     Solves any (supported) kind of ordinary differential equation.
@@ -521,7 +521,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             else:
                 retdict[hint] = rv
         func = hints[hint]['func']
-        
+
         if '1st_power_series' in retdict:  # Remove power series for best hint
             temp = retdict.copy()
             temp.pop('1st_power_series')
@@ -3163,10 +3163,10 @@ def ode_1st_power_series(eq, func, order, match):
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
     >>> pprint(dsolve(eq, hint='1st_power_series'))
-                           3       4       5
-                       C0*x    C0*x    C0*x     / 6\
-    f(x) = C0 + C0*x - ----- + ----- + ----- + O\x /
-                         6       24      60
+                           3
+                       C0*x     / 4\
+    f(x) = C0 + C0*x - ----- + O\x /
+                         6
 
     References
     ==========
@@ -3182,7 +3182,7 @@ def ode_1st_power_series(eq, func, order, match):
     C0 = Symbol("C0")
     point = match.get('f0')
     value = match.get('f0val')
-    terms = match.get('terms', 5)
+    terms = match.get('terms', 3)
 
     # Initialisation
     tcounter = 0  # Tracking number of terms
@@ -3216,7 +3216,7 @@ def ode_1st_power_series(eq, func, order, match):
                 series += Fnewc*((x - point)**factcount)/factorial(factcount)
             # In order to return order term
             else:
-                series += Order(x**factcount) 
+                series += Order(x**factcount)
             tcounter += 1
         factcount += 1
         F = Fnew

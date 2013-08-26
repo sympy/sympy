@@ -1725,11 +1725,11 @@ def test_kamke():
 def test_series():
     C0 = Symbol("C0")
     eq = f(x).diff(x) - f(x)
-    assert dsolve(eq, hint='1st_power_series') == Eq(f(x), C0*x**4/S(24) +
-        C0*x**3/S(6) + C0*x**2/S(2) + C0*x + C0 + O(x**5))
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
+        C0*x**2/S(2) + C0*x + C0 + O(x**3))
     eq = f(x).diff(x) - x*f(x)
-    assert dsolve(eq, hint='1st_power_series') == Eq(f(x), C0*x**8/S(384) +
-        C0*x**6/S(48) + C0*x**4/S(8) + C0*x**2/S(2) + C0 + O(x**10))
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
+        C0*x**4/S(8) + C0*x**2/S(2) + C0 + O(x**6))
     eq = f(x).diff(x) - sin(x*f(x))
     assert dsolve(eq, hint='1st_power_series', ics={f(2):2, 'terms':3}) == Eq(
         f(x), (x - 2)**2*(2*cos(4) + 2*sin(4)*cos(4))/S(2) + (x - 2)*sin(4) +
