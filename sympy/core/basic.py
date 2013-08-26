@@ -71,14 +71,6 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Not = False
     is_Matrix = False
 
-    @property
-    @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
-    def is_Real(self):  # pragma: no cover
-        """Deprecated alias for ``is_Float``"""
-        # When this is removed, remove the piece of code disabling the warning
-        # from test_pickling.py
-        return self.is_Float
-
     def __new__(cls, *args):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
