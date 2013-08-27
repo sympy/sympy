@@ -49,7 +49,7 @@ class TypeA(Standard_Cartan):
         Given a root system Q, there is a subset of the
         roots such that an element of Q is called a
         simple root if it cannot be written as the sum
-        of two elements in Q.   If we let D denote the
+        of two elements in Q.  If we let D denote the
         set of simple roots, then it is clear that every
         element of Q can be written as a linear combination
         of elements of D with all coefficients non-negative.
