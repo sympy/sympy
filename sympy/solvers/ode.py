@@ -3186,24 +3186,29 @@ def ode_1st_power_series(eq, func, order, match):
 
     # Initialisation
     tcounter = 0  # Tracking number of terms
-    factcount = 2
     series = value
     if series:
         tcounter += 1
 
     # First term
     F = h
-
     if not h:
         return Eq(f(x), C0)
-    hc = h.subs({x: point, y: value})
 
-    # Derivative does not exist, not analytic
-    if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
-        return Eq(f(x), oo)
-    elif hc:
-        series += hc*(x - point)
-        tcounter += 1
+    # This is done so that if the number of terms given is one
+    # and that term is already the constant, no other increment
+    # is done since we just need the Order term
+    if (terms > 1 or (terms == 1 and not tcounter)):
+        hc = h.subs({x: point, y: value})
+        if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
+            # Derivative does not exist, not analytic
+            return Eq(f(x), oo)
+        elif hc:
+            series += hc*(x - point)
+            tcounter += 1
+        factcount = 2
+    else:
+        factcount = 1
 
     while tcounter < terms + 1:
         Fnew = F.diff(x) + F.diff(y)*h
@@ -3214,12 +3219,14 @@ def ode_1st_power_series(eq, func, order, match):
         elif Fnewc:
             if tcounter < terms:
                 series += Fnewc*((x - point)**factcount)/factorial(factcount)
-            # In order to return order term
+                tcounter += 1
             else:
-                series += Order(x**factcount)
-            tcounter += 1
+                # Found the Order term
+                break
         factcount += 1
         F = Fnew
+
+    series += Order(x**factcount)
     return Eq(f(x), series)
 
 
