@@ -688,14 +688,14 @@ class Add(Expr, AssocOp):
             return self.as_leading_term(x)
 
         unbounded = [t for t in self.args if t.is_unbounded]
-        if unbounded:
-            return self.func._from_args(unbounded)
 
         self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
         if not self:
             # simple leading term analysis gave us 0 but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
+        elif self is S.NaN:
+            return old.func._from_args(unbounded)
         elif not self.is_Add:
             return self
         else:
