@@ -1,4 +1,4 @@
-from sympy import cos, Matrix, sin, symbols, simplify pi, Function
+from sympy import cos, Matrix, sin, symbols, simplify, pi, Function
 from sympy.abc import x, y, z
 from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols,\
      CoordinateSym, express

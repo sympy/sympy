@@ -591,7 +591,6 @@ class ReferenceFrame(object):
             self.latex_vecs = latexs
         self.name = name
         self._dcm_dict = {}
-        self._vars_mapping = {}
         self._ang_vel_dict = {}
         self._ang_acc_dict = {}
         self._dlist = [self._dcm_dict, self._ang_vel_dict, self._ang_acc_dict]
