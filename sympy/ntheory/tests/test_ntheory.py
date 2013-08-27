@@ -426,6 +426,7 @@ def test_residue():
     assert primitive_root(p) == 11
     assert primitive_root(2*p) == 11
     assert primitive_root(p**2) == 11
+    raises(ValueError, lambda: primitive_root(-3))
 
     assert is_quad_residue(3, 7) is False
     assert is_quad_residue(10, 13) is True
@@ -450,6 +451,7 @@ def test_residue():
 
     assert list(sqrt_mod_iter(6, 2)) == [0]
     assert sqrt_mod(3, 13) == 4
+    assert sqrt_mod(6, 23) == 11
     assert sqrt_mod(345, 690) == 345
 
     for p in range(3, 100):
@@ -458,17 +460,23 @@ def test_residue():
             d[pow(i, 2, p)].append(i)
         for i in range(1, p):
             it = sqrt_mod_iter(i, p)
-            v = []
-            try:
-                for j in range(1000):
-                    v.append(next(it))
-            except StopIteration:
-                pass
+            v = sqrt_mod(i, p, True)
             if v:
                 v = sorted(v)
                 assert d[i] == v
             else:
                 assert not d[i]
+
+    assert sqrt_mod(9, 27, True) == [3, 6, 12, 15, 21, 24]
+    assert sqrt_mod(9, 81, True) == [3, 24, 30, 51, 57, 78]
+    assert sqrt_mod(9, 3**5, True) == [3, 78, 84, 159, 165, 240]
+    assert sqrt_mod(81, 3**4, True) == [0, 9, 18, 27, 36, 45, 54, 63, 72]
+    assert sqrt_mod(81, 3**5, True) == [9, 18, 36, 45, 63, 72, 90, 99, 117,\
+            126, 144, 153, 171, 180, 198, 207, 225, 234]
+    assert sqrt_mod(81, 3**6, True) == [9, 72, 90, 153, 171, 234, 252, 315,\
+            333, 396, 414, 477, 495, 558, 576, 639, 657, 720]
+    assert sqrt_mod(81, 3**7, True) == [9, 234, 252, 477, 495, 720, 738, 963,\
+            981, 1206, 1224, 1449, 1467, 1692, 1710, 1935, 1953, 2178]
 
     for a, p in [(26214400, 32768000000), (26214400, 16384000000),
         (262144, 1048576), (87169610025, 163443018796875),

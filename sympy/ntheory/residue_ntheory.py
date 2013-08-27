@@ -5,7 +5,6 @@ from sympy.core.compatibility import as_int, xrange
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient
 from random import randint
-from itertools import product
 
 def n_order(a, n):
     """Returns the order of ``a`` modulo ``n``.
@@ -99,7 +98,7 @@ def primitive_root(p):
     """
     p = as_int(p)
     if p < 1:
-        raise Valuerror('p is required to be positive')
+        raise ValueError('p is required to be positive')
     if p <= 2:
         return 1
     f = factorint(p)
@@ -199,16 +198,26 @@ def _sqrt_mod_tonelli_shanks(a, p):
     x = pow(a, (t + 1)//2, p)*pow(D, m//2, p) % p
     return x
 
-def sqrt_mod(a, p):
+def sqrt_mod(a, p, all_roots=False):
     """
     find a root of ``x**2 = a mod p``
+
+    Parameters
+    ==========
+
+    a : integer
+    p : positive integer
+    all_roots : if True the list of roots is returned or None
 
     Notes
     =====
 
     If there is no root it is returned None; else the returned root
-    is less or equal to ``p // 2``.
-    If is returned ``p // 2`` only if it is the only root.
+    is less or equal to ``p // 2``; in general is not the smallest one.
+    It is returned ``p // 2`` only if it is the only root.
+
+    Use ``all_roots`` only when it is expected that all the roots fit
+    in memory; otherwise use ``sqrt_mod_iter``.
 
     Examples
     ========
@@ -216,16 +225,21 @@ def sqrt_mod(a, p):
     >>> from sympy.ntheory import sqrt_mod
     >>> sqrt_mod(11, 43)
     21
+    >>> sqrt_mod(17, 32, True)
+    [7, 9, 23, 25]
     """
+    if all_roots:
+        return sorted(list(sqrt_mod_iter(a, p)))
     try:
-        r = next(sqrt_mod_iter(a, p))
+        it = sqrt_mod_iter(a, p)
+        r = next(it)
         if r > p // 2:
             return p - r
         elif r < p // 2:
             return r
         else:
             try:
-                r = next(sqrt_mod_iter(a, p))
+                r = next(it)
                 if r > p // 2:
                     return p - r
             except StopIteration:
@@ -284,7 +298,7 @@ def sqrt_mod_iter(a, p):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.ntheory.modular import crt, crt1, crt2
+    from sympy.ntheory.modular import crt1, crt2
     a, p = as_int(a), as_int(p)
     if isprime(p):
         a = a % p
@@ -342,13 +356,14 @@ def _sqrt_mod_prime_power(a, p, k):
     [21, 22]
     """
     from sympy.core.numbers import igcdex
+    from sympy.polys.domains import ZZ
 
     pk = p**k
     a = a % pk
 
     if k == 1:
         if p == 2:
-            return [a]
+            return [ZZ(a)]
         if not is_quad_residue(a, p):
             return None
 
@@ -366,7 +381,9 @@ def _sqrt_mod_prime_power(a, p, k):
         else:
             res = _sqrt_mod_tonelli_shanks(a, p)
 
-        return [res, p - res]
+        # ``_sqrt_mod_tonelli_shanks(a, p)`` is not deterministic;
+        # sort to get always the same result
+        return sorted([ZZ(res), ZZ(p - res)])
 
     if k > 1:
         f = factorint(a)
@@ -383,7 +400,7 @@ def _sqrt_mod_prime_power(a, p, k):
             # according to Ref.[2] for k > 2 there are two solutions
             # (mod 2**k-1), that is four solutions (mod 2**k), which can be
             # obtained from the roots of x**2 = 0 (mod 8)
-            rv = [1, 3, 5, 7]
+            rv = [ZZ(1), ZZ(3), ZZ(5), ZZ(7)]
             # hensel lift them to solutions of x**2 = 0 (mod 2**k)
             # if r**2 - a = 0 mod 2**nx but not mod 2**(nx+1)
             # then r + 2**(nx - 1) is a root mod 2**(nx+1)
@@ -660,13 +677,7 @@ def nthroot_mod(a, n, p, all_roots=False):
     """
     from sympy.core.numbers import igcdex
     if n == 2:
-        if not all_roots:
-              return sqrt_mod(a, p)
-        else:
-            v = list(sqrt_mod_iter(a, p))
-            if not v:
-                return None
-            return sorted(v)
+        return sqrt_mod(a, p , all_roots)
     f = totient(p)
     # see Hackman "Elementary Number Theory" (2009), page 76
     if pow(a, f // igcd(f, n), p) != 1:
@@ -699,13 +710,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         else:
             res = a
     elif pa == 2:
-        if not all_roots:
-              return sqrt_mod(a, p)
-        else:
-            v = list(sqrt_mod_iter(a, p))
-            if not v:
-                return None
-            return sorted(v)
+        return sqrt_mod(a, p , all_roots)
     else:
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
