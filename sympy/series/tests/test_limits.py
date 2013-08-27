@@ -407,3 +407,8 @@ def test_issue_2073():
     assert limit(expr.subs(c, m), n, oo) == 1
     assert limit(expr.subs(c, p), n, oo).simplify() == \
         (2**(p + 1) + r - 1)/(r + 1)**(p + 1)
+
+
+def test_issue_3989():
+    a = Symbol('a')
+    assert limit(sqrt(x/(x + a)), x, oo) == 1
