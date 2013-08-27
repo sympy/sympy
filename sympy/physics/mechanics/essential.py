@@ -7,7 +7,7 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
 from sympy import (
     Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
     expand, zeros, Derivative, Function, symbols, Add,
-    solve, S, simplify ImmutableMatrix as Matrix)
+    solve, S, simplify, ImmutableMatrix as Matrix)
 from sympy.core import C
 from sympy.core.compatibility import reduce, u, string_types
 from sympy.core.function import UndefinedFunction
@@ -705,7 +705,7 @@ class ReferenceFrame(object):
         
         vars_matrix = self.dcm(otherframe) * Matrix(otherframe.varlist)
         mapping = {}
-        for i, x in self:
+        for i, x in enumerate(self):
             mapping[self.varlist[i]] = vars_matrix[i]
             if simplify_mapping:
                 mapping[self.varlist[i]] = simplify(mapping[self.varlist[i]])
@@ -1143,15 +1143,14 @@ class ReferenceFrame(object):
                 field = field.subs(subs_dict).express(self)
                 return self.express(field)
             else:
-                _check_frame(otherframe)
                 outvec = Vector([])
                 for i, v in enumerate(field.args):
-                    if v[1] != otherframe:
-                        temp = otherframe.dcm(v[1]) * v[0]
+                    if v[1] != self:
+                        temp = self.dcm(v[1]) * v[0]
                         if Vector.simp is True:
                             temp = temp.applyfunc(lambda x: \
                                                   trigsimp(x, method='fu'))
-                        outvec += Vector([(temp, otherframe)])
+                        outvec += Vector([(temp, self)])
                     else:
                         outvec += Vector([v])
                 return outvec

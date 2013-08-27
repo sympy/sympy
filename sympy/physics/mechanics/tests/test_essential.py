@@ -1,6 +1,7 @@
-from sympy import cos, Matrix, sin, symbols, pi, Function
+from sympy import cos, Matrix, sin, symbols, simplify pi, Function
 from sympy.abc import x, y, z
-from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
+from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols,\
+     CoordinateSym, express
 from sympy.physics.mechanics.essential import MechanicsLatexPrinter
 
 Vector.simp = True
@@ -41,6 +42,41 @@ def test_dyadic():
     assert d1.express(B, A) == (cos(q)) * (B.x | A.x) + (-sin(q)) * (B.y | A.x)
     assert d1.express(A, B) == (cos(q)) * (A.x | B.x) + (-sin(q)) * (A.x | B.y)
     assert d1.dt(B) == (-qd) * (A.y | A.x) + (-qd) * (A.x | A.y)
+
+
+def test_coordinate_vars():
+    """Tests the coordinate variables functionality"""
+    q = dynamicsymbols('q')
+    qd = dynamicsymbols('q', 1)
+    assert isinstance(A[0], CoordinateSym) and isinstance(A[0], CoordinateSym) \
+           and isinstance(A[0], CoordinateSym)
+    assert A.var_dict(A) == {A[0] : A[0], A[1] : A[1], A[2] : A[2]}
+    B = A.orientnew('B', 'Axis', [q, A.z])
+    assert A.dt(B[0]) == -A[0]*sin(q)*qd + A[1]*cos(q)*qd
+    assert A.dt(B[1]) == -A[0]*cos(q)*qd - A[1]sin(q)*qd
+    assert A.dt(B[2]) == 0
+    assert express(B[0], A) == A[0]*cos(q) + A[1]*sin(q)
+    assert express(B[1], A) == -A[0]*sin(q) + A[1]*cos(q)
+    assert express(B[2], A) == A[2]
+    assert B.dt(A[0]*A.x + A[1]*A.y + A[2]*A.z) == A[1]*qd*A.x - A[0]*qd*A.y
+    assert A.dt(B[0]*B.x + B[1]*B.y + B[2]*B.z) == - B[1]*qd*B.x + B[0]*qd*B.y
+    assert A.express(B[0]*B[1]*B[2]) == \
+           A[2]*(-A[0]*sin(q) + A[1]*cos(q))*(A[0]*cos(q) + A[1]*sin(q))
+    assert simplify(A.dt(B[0]*B[1]*B[2])) == \
+           A[2]*(-A[0]**2*cos(2*q) - 2*A[0]*A[1]*sin(2*q) + A[1]**2*cos(2*q))*qd
+    assert A.express(B[0]*B.x + B[1]*B.y + B[2]*B.z) == \
+           (B[0]*cos(q) - B[1]*sin(q))*A.x + B[0]*sin(q) + \
+           B[1]*cos(q))*A.y + B[2]*A.z
+    assert A.express(B[0]*B.x + B[1]*B.y + B[2]*B.z, variables = True) == \
+           A[0]*A.x + A[1]*A.y + A[2]*A.z
+    assert B.express(A[0]*A.x + A[1]*A.y + A[2]*A.z) == \
+           (A[0]*cos(q) + A[1]*sin(q))*B.x + \
+           (-A[0]*sin(q) + A[1]*cos(q))*B.y + A[2]*B.z
+    assert B.express(A[0]*A.x + A[1]*A.y + A[2]*A.z, variables = True) == \
+           B[0]*B.x + B[1]*B.y + B[2]*B.z
+    N = B.orientnew('N', 'Axis', [-q, B.z])
+    assert N.var_dict(A, simplify_mapping=True) == \
+           {N[0]: A[0], N[2]: A[2], N[1]: A[1]}
 
 
 def test_ang_vel():
@@ -186,11 +222,12 @@ def test_Vector_diffs():
     v2 = q3 * B.x + v1
     v3 = v1.dt(B)
     v4 = v2.dt(B)
+    v5 = q1*A.x + q2*A.y + q3*A.z
 
-    assert v1.dt(N) == q2d * A.x + q2 * q3d * A.y + q3d * N.y
-    assert v1.dt(A) == q2d * A.x + q3 * q3d * N.x + q3d * N.y
-    assert v1.dt(B) == (q2d * A.x + q3 * q3d * N.x + q3d * N.y - q3 * cos(q3) *
-                        q2d * N.z)
+    assert v1.dt(N) == N.dt(v1) == q2d * A.x + q2 * q3d * A.y + q3d * N.y
+    assert v1.dt(A) == A.dt(v1) == q2d * A.x + q3 * q3d * N.x + q3d * N.y
+    assert v1.dt(B) == B.dt(v1) == (q2d * A.x + q3 * q3d * N.x + q3d *
+                                    N.y - q3 * cos(q3) * q2d * N.z)
     assert v2.dt(N) == (q2d * A.x + (q2 + q3) * q3d * A.y + q3d * B.x + q3d *
                         N.y)
     assert v2.dt(A) == q2d * A.x + q3d * B.x + q3 * q3d * N.x + q3d * N.y
@@ -218,6 +255,9 @@ def test_Vector_diffs():
                         (2 * q3d**2 + q3 * q3dd) * N.x + (q3dd - q3 * q3d**2) *
                         N.y + (2 * q3 * sin(q3) * q2d * q3d - 2 * cos(q3) *
                         q2d * q3d - q3 * cos(q3) * q2dd) * N.z)
+    assert B.dt(v5) == v5.dt(B) == q1d*A.x + (q3*q2d + q2d)*A.y + (-q2*q2d + q3d)*A.z
+    assert A.dt(v5) == v5.dt(A) == q1d*A.x + q2d*A.y + q3d*A.z
+    assert N.dt(v5) == v5.dt(N) == (-q2*q3d + q1d)*A.x + (q1*q3d + q2d)*A.y + q3d*A.z
     assert v3.diff(q1d, N) == 0
     assert v3.diff(q2d, N) == A.x - q3 * cos(q3) * N.z
     assert v3.diff(q3d, N) == q3 * N.x + N.y
