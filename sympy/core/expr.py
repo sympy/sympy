@@ -2463,7 +2463,7 @@ class Expr(Basic, EvalfMixin):
 
         if x.is_positive is x.is_negative is None:
             # replace x with an x that has a positive assumption
-            xpos = C.Dummy('x', positive=True)
+            xpos = C.Dummy('x', positive=True, bounded=True)
             rv = self.subs(x, xpos).series(xpos, x0, n, dir)
             if n is None:
                 return (s.subs(xpos, x) for s in rv)
