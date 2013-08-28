@@ -394,17 +394,18 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     optimizations : list of (callable, callable) pairs
         The (preprocessor, postprocessor) pairs of external optimization
         functions. Optionally 'basic' can be passed for a set of predefined
-        basic optimizations (used by default in old implementation). No
-        external optimizations are performed by default.
+        basic optimizations. Such 'basic' optimizations were used by default
+        in old implementation, however they can be really slow on larger
+        expressions. Now, no pre or post optimizations are made by default.
     postprocess : a function which accepts the two return values of cse and
         returns the desired form of output from cse, e.g. if you want the
         replacements reversed the function might be the following lambda:
         lambda r, e: return reversed(r), e
     order : string, 'none' or 'canonical'
         The order by which Mul and Add arguments are processed. If set to
-        'none', ordering will be faster but dependent on expressions hashes,
-        thus machine dependent and variable. If set to 'canonical', arguments
-        will be canonically orderer. For large expressions where speed is a
+        'canonical', arguments will be canonically ordered. If set to 'none',
+        ordering will be faster but dependent on expressions hashes, thus
+        machine dependent and variable. For large expressions where speed is a
         concern, use the setting order='none'.
 
     Returns
