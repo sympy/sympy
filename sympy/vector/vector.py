@@ -398,7 +398,8 @@ class BaseScalar(AtomicExpr):
         self.name = name
         self.position = S(position)
         self._assumptions = StdFactKB(assumptions)
-        self._args = (self.coord_sys, self.position)
+        # self._args = (self.coord_sys, self.position)
+        self._args = ()
 
     def __str__(self, printer=None):
         return self.coord_sys.name + "." + self.name
@@ -730,18 +731,26 @@ class CoordSys(Basic):
         newframe.position = newframe_pos.factor()
         return newframe
 
-    def _change_coord_sys(self, coord_sys_class, name=None):
+    def _change_coord_sys(self, coord_sys_class, name=None, flag=False):
         if not name:
             name = "coord_sys_" + str(Dummy._count)
             Dummy._count += 1
         CoordSysClass = coord_sys_class
-        ret_coord_sys = CoordSysClass(name=name, position=self.position,
+        if flag:
+            ret_coord_sys = CoordSysClass(name=name, position=self.position,
                                     orient_type=self.orient_type,
                                     orient_amount=self.orient_amount,
                                     rot_order=self.rot_order,
                                     parent=self.parent,
                                     basis_vectors=self._basis_names,
                                     coordinates=self._coord_names)
+        else:
+            ret_coord_sys = CoordSysClass(name=name, position=self.position,
+                                    orient_type=self.orient_type,
+                                    orient_amount=self.orient_amount,
+                                    rot_order=self.rot_order,
+                                    parent=self.parent)
+
         return ret_coord_sys
 
     @staticmethod
@@ -1038,7 +1047,6 @@ class CoordSysSph(CoordSys):
         subs_dict = { r: sqrt(x**2 + y**2 + z**2),
                       theta: atan(sqrt(x**2 + y**2)/z),
                       phi: atan(y/x) }
-
         Ar = Ar.subs(subs_dict)
         At = At.subs(subs_dict)
         Ap = Ap.subs(subs_dict)
@@ -1288,7 +1296,8 @@ class BaseVector(Vector, Symbol):
         assumptions = {}
         assumptions['commutative'] = is_commutative
         self._assumptions = StdFactKB(assumptions)
-        self._args = (self.coord_sys, self.position)
+        #self._args = (self.coord_sys, self.position)
+        self._args = ()
 
     def separate(self):
         # We just have a Vector - just return it
@@ -1412,7 +1421,7 @@ class VectAdd(Add, Vector):
         for c in coord_list:
             coord_sys_dict[c] = [[],[]]
 
-        for arg in vect.args:
+        for arg in vect._all_args:
             # arg is either BaseVector or VectMul
             if isinstance(arg, BaseVector):
                 coord_sys_dict[arg.coord_sys] = [[], [arg]]
@@ -1441,7 +1450,7 @@ class VectAdd(Add, Vector):
     def factor(self):
         # self can contain BaseVector or VectMul
         factor_dict = {}
-        for arg in self.args:
+        for arg in self._all_args:
             scalar = arg.scalar
             vector = arg.vector
 
@@ -1494,7 +1503,7 @@ class VectAdd(Add, Vector):
 
         # Fix this to accomodate n-dmesions
         r = [S.Zero] * 3
-        for arg in vect.args:
+        for arg in vect._allargs:
             if isinstance(arg, BaseVector):
                # Component corresponding to it will be unity
                r[int(arg.position) - 1] = S.One
@@ -1538,7 +1547,7 @@ class VectAdd(Add, Vector):
         # VectAdd can contain either BaseVectors or VectMuls
         # TODO : This method works but can be improved.
         ret_str = ''
-        for arg in self.args:
+        for arg in self._all_args:
             # arg must be BaseVector or VectMul
             assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
             ret_str += " + " + repr(arg)
@@ -1667,7 +1676,7 @@ class VectMul(Mul, Vector):
             ret = ZeroVector
             vector = vector.expand()
             # Now, vect.args should be either BaseVector or VectMul
-            for arg in vector.args:
+            for arg in vector._all_args:
                 ret = ret +  (arg * scalar).expand()
             return ret
 
@@ -1909,7 +1918,6 @@ def express(vect, coord_sys):
     coord_sys: Instance of subclasses of CoordSys
     Express a vector in a given coordinate system.
     """
-    import ipdb;ipdb.set_trace()
     coord_list = _all_coordinate_systems(vect)
     subs_dict = {}
 
@@ -1921,7 +1929,7 @@ def express(vect, coord_sys):
 
     coord_sys_t = coord_sys._change_coord_sys(CoordSysRect, 'coord_sys_t')
     vect = vect.expand()
-
+    import ipdb;ipdb.set_trace()
     # First express everything in rect coordinates
     for arg in vect._all_args:
         # arg is necessarily a VectMul or a BaseVector
@@ -1957,7 +1965,7 @@ def express(vect, coord_sys):
 
     # First phase complete
     # Now, we find subs for base vectors and substitute it in
-    for arg in vect.args:
+    for arg in vect._all_args:
         assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
         vector = arg.vector
         subs_dict[vector] = CoordSys._convert_base_vect_rect(vector,
@@ -1969,7 +1977,7 @@ def express(vect, coord_sys):
     vect = vect.expand()
 
     # Now we need to find the subs_dict for each BaseScalar
-    for arg in vect.args:
+    for arg in vect._all_args:
         assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
         scalar = arg.scalar
 
@@ -1992,7 +2000,7 @@ def express(vect, coord_sys):
     subs_dict = {}
     vect = vect.expand()
 
-    for arg in vect.args:
+    for arg in vect._all_args:
         # arg is necessarily a VectMul or a BaseVector
         assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
         scalar = arg.scalar
