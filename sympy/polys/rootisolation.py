@@ -71,12 +71,12 @@ def dup_sturm(f, K):
     return sturm[:-1]
 
 def dup_root_upper_bound(f, K):
-    """Compute the LMQ upper bound for `f`'s positive roots, 
+    """Compute the LMQ upper bound for `f`'s positive roots,
        which was developed by Akritas-Strzebonski-Vigklas.
        
        Reference:
        ==========
-       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the      
+       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
            Values of the Positive Roots of Polynomials"  
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009. 
     """
@@ -118,7 +118,7 @@ def dup_root_lower_bound(f, K):
        
        Reference:
        ==========
-       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the      
+       Alkiviadis G. Akritas: "Linear and Quadratic Complexity Bounds on the
            Values of the Positive Roots of Polynomials"  
            Journal of Universal Computer Science, Vol. 15, No. 3, 523-537, 2009. 
     """
@@ -486,8 +486,8 @@ def _isolate_zero(f, K, inf, sup, basis=False, sqf=False):
     return [], f
 
 def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, blackbox=False):
-    """Isolate real roots of a square-free polynomial using the Vincent-Akritas-Strzebonski (VAS) CF approach. 
-    
+    """Isolate real roots of a square-free polynomial using the Vincent-Akritas-Strzebonski (VAS) CF approach.
+
        References:
        ===========
        1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods. 
