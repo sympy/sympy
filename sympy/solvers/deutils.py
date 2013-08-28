@@ -181,6 +181,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     type = kwargs.get('type', None)
     xi = kwargs.get('xi')
     eta = kwargs.get('eta')
+    point = kwargs.get('point', 0)
     if type == 'ode':
         from sympy.solvers.ode import classify_ode, allhints
         classifier = classify_ode
@@ -197,7 +198,8 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
     # being called more than it needs to be by passing its results through
     # recursive calls.
     if kwargs.get('classify', True):
-        hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta, prep=prep)
+        hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
+        point=point, prep=prep)
 
     else:
         # Here is what all this means:
@@ -230,7 +232,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
         return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
-                      prep=prep, classify=False, order=hints['order'],
+                      prep=prep, point=point, classify=False, order=hints['order'],
                       match=hints[hints['default']], xi=xi, eta=eta, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
@@ -241,14 +243,12 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, **kwargs):
                 if i.endswith('_Integral'):
                     gethints.remove(i[:-len('_Integral')])
             # special cases
-            if "1st_homogeneous_coeff_best" in gethints:
-                gethints.remove("1st_homogeneous_coeff_best")
-            if "1st_power_series" in gethints:
-                gethints.remove("1st_power_series")
-            if "lie_group" in gethints:
-                gethints.remove("lie_group")
+            for k in ["1st_homogeneous_coeff_best", "1st_power_series",
+                "lie_group", "2nd_power_series_ordinary"]:
+                if k in gethints:
+                    gethints.remove(k)
         for i in gethints:
-            sol = _desolve(eq, func, ics=ics, hint=i, simplify=simplify, prep=prep,
+            sol = _desolve(eq, func, ics=ics, hint=i, point=point, simplify=simplify, prep=prep,
                 classify=False, order=hints['order'], match=hints[i], type=type)
             retdict[i] = sol
         retdict['all'] = True

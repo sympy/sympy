@@ -128,6 +128,15 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_lie_group
 
+:obj:`1st_power_series`
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.1st_power_series
+
+:obj:`2nd_power_series_ordinary`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.2nd_power_series_ordinary
+
+
 Lie heuristics
 --------------
 These functions are intended for internal use of the Lie Group Solver.
