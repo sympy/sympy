@@ -63,9 +63,9 @@ before_install:
       pip install --no-deps https://github.com/Theano/Theano/archive/master.zip;
     fi
   - if [[ "${TEST_SAGE}" == "true" ]]; then
-      apt-add-repository -y ppa:aims/sagemath;
-      apt-get update;
-      apt-get install sagemath-upstream-binary;
+      sudo apt-add-repository -y ppa:aims/sagemath;
+      sudo apt-get update;
+      sudo apt-get install sagemath-upstream-binary;
     fi
 install:
   - if [[ "${TEST_SAGE}" != "true" ]]; then
