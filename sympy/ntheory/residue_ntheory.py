@@ -281,7 +281,7 @@ def _product(*iters):
         yield tuple(cur_val)
 
 
-def sqrt_mod_iter(a, p):
+def sqrt_mod_iter(a, p, domain=int):
     """
     iterate over solutions to ``x**2 = a mod p``
 
@@ -290,6 +290,7 @@ def sqrt_mod_iter(a, p):
 
     a : integer
     p : positive integer
+    domain : integer domain, ``int``, ``ZZ`` or ``Integer``
 
     Examples
     ========
@@ -299,6 +300,7 @@ def sqrt_mod_iter(a, p):
     [21, 22]
     """
     from sympy.ntheory.modular import crt1, crt2
+    from sympy.polys.domains import ZZ
     a, p = as_int(a), as_int(p)
     if isprime(p):
         a = a % p
@@ -307,8 +309,12 @@ def sqrt_mod_iter(a, p):
         else:
             res = _sqrt_mod_prime_power(a, p, 1)
         if res:
-            for x in res:
-                yield x
+            if domain is ZZ:
+                for x in res:
+                    yield x
+            else:
+                for x in res:
+                    yield domain(x)
     else:
         f = factorint(p)
         v = []
@@ -325,9 +331,14 @@ def sqrt_mod_iter(a, p):
             v.append(rx)
             pv.append(px**ex)
         mm, e, s = crt1(pv)
-        for vx in _product(*v):
-            r = crt2(pv, vx, mm, e, s)[0]
-            yield r
+        if domain is ZZ:
+            for vx in _product(*v):
+                r = crt2(pv, vx, mm, e, s)[0]
+                yield r
+        else:
+            for vx in _product(*v):
+                r = crt2(pv, vx, mm, e, s)[0]
+                yield domain(r)
 
 
 def _sqrt_mod_prime_power(a, p, k):

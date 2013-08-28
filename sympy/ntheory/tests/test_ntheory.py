@@ -20,6 +20,8 @@ from sympy.ntheory.primetest import _mr_safe_helper, mr
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.ntheory.modular import crt, crt1, crt2, solve_congruence
 
+from sympy.polys.domains import ZZ
+
 from sympy.utilities.pytest import raises
 from sympy.utilities.iterables import capture
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
@@ -488,6 +490,9 @@ def test_residue():
     it = sqrt_mod_iter(a, p)
     for i in range(10):
         assert pow(next(it), 2, p) == a
+    assert type(next(sqrt_mod_iter(9, 27))) is int
+    assert type(next(sqrt_mod_iter(9, 27, ZZ))) is type(ZZ(1))
+    assert type(next(sqrt_mod_iter(1, 7, ZZ))) is type(ZZ(1))
 
     assert is_nthpow_residue(2, 1, 5)
     assert not is_nthpow_residue(2, 2, 5)
