@@ -429,7 +429,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
 
     if optimizations is None:
         optimizations = list()
-    elif optimizations is 'basic':
+    elif optimizations == 'basic':
         optimizations = basic_optimizations
 
     # Handle the case if just one expression was passed.
