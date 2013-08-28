@@ -7,15 +7,31 @@ GammaMatrix4D = tensorhead("G", [Lorentz], [[1]], 2)
 
 
 def kahane_simplify(expression):
-    """
+    r"""
     This function cancels contracted elements in an expression of four
     dimensional gamma matrices, resulting in an expression equal to the given
     one, without the contracted gamma matrices.
 
+    Algorithm
+    =========
+
+    The idea behind the algorithm is to use some well-known identities,
+    i.e., for contractions enclosing an even number of `\gamma` matrices
+
+    `\gamma^\mu \gamma_{a_1} \cdots \gamma_{a_{2N}} \gamma_\mu = 2 (\gamma_{a_{2N}} \gamma_{a_1} \cdots \gamma_{a_{2N-1}} + \gamma_{a_{2N-1}} \cdots \gamma_{a_1} \gamma_{a_{2N}} )`
+
+    for an odd number of `\gamma` matrices
+
+    `\gamma^\mu \gamma_{a_1} \cdots \gamma_{a_{2N+1}} \gamma_\mu = -2 \gamma_{a_{2N+1}} \gamma_{a_{2N}} \cdots \gamma_{a_{1}}`
+
+    Instead of repeatedly applying these identities to cancel out all contracted indices,
+    it is possible to recognize the links that would result from such an operation,
+    the problem is thus reduced to a simple rearrangement of free gamma matrices.
+
     Examples
     ========
 
-    >>> from sympy.tensor.gamma_matrices import Lorentz, GammaMatrix4D as G, kahane_simplify
+    >>> from sympy.physics.hep.gamma_matrices import Lorentz, GammaMatrix4D as G, kahane_simplify
     >>> from sympy.tensor.tensor import tensor_indices, tensorhead
     >>> i0, i1, i2 = tensor_indices('i0:3', Lorentz)
     >>> kahane_simplify(G(i0)*G(-i0))
@@ -69,7 +85,7 @@ def kahane_simplify(expression):
     # All values in `links` are integers, negative numbers are used in the case
     # where it is necessary to insert gamma matrices between free indices, in
     # order to make Kahane's algorithm work (see paper).
-    links = {}
+    links = dict()
     for i in range(first_dum_pos, total_number):
         links[i] = []
 
@@ -226,9 +242,10 @@ def kahane_simplify(expression):
     # (no free indices), it contributes to `resulting_expr` by a factor of two.
     # The multiplication by two is a result of the
     # factor {gamma^0, gamma^0} = 2 I, as it appears in Kahane's paper.
-    # Note: curly brackets are meant as in the paper, not as an anticommutator!
+    # Note: curly brackets are meant as in the paper, as a generalized
+    # multi-element anticommutator!
 
-    while len(links.keys()) > 0:
+    while links:
         connected_components += 1
         pointer = min(links.keys())
         previous_pointer = pointer
@@ -253,7 +270,9 @@ def kahane_simplify(expression):
             if pointer >= first_dum_pos and free_pos[pointer] is not None:
                 prepend_indices.insert(0, free_pos[pointer])
 
-        # if `prepend_indices` is void, ...
+        # if `prepend_indices` is void, it means there are no free indices
+        # in the loop (and it can be shown that there must be a virtual index),
+        # loops of virtual indices only contribute by a factor of two:
         if len(prepend_indices) == 0:
             resulting_expr *= 2
         # otherwise, add the free indices in `prepend_indices` to

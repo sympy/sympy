@@ -1,6 +1,6 @@
 from sympy.tensor.tensor import tensor_indices, TensorIndexType, tensorhead, TensorManager
-from sympy.tensor.gamma_matrices import GammaMatrix4D as G
-from sympy.tensor.gamma_matrices import kahane_simplify, Lorentz
+from sympy.physics.hep.gamma_matrices import GammaMatrix4D as G
+from sympy.physics.hep.gamma_matrices import kahane_simplify, Lorentz
 
 
 def test_kahane_algorithm():
@@ -143,5 +143,3 @@ def test_kahane_algorithm():
     t = 224*G(m0)*G(m1)*G(-m2)*G(m3)
     st = kahane_simplify(t)
     assert st == t
-
-test_kahane_algorithm()
