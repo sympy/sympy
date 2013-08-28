@@ -339,7 +339,15 @@ def test_integrate_hyperexponential_returns_piecewise():
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
         (x**3/3, Eq(a**6, 0)),
         ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, True)), 0, True)
-
+    DE = DifferentialExtension(x**y + z, y)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((y,
+        Eq(log(x), 0)), (exp(log(x)*y)/log(x), True)), z, True)
+    DE = DifferentialExtension(x**y + z + x**(2*y), y)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((2*y,
+        Eq(2*log(x)**2, 0)), ((exp(2*log(x)*y)*log(x) +
+            2*exp(log(x)*y)*log(x))/(2*log(x)**2), True)), z, True)
+    # TODO: Add a test where two different parts of the extension use a
+    # Piecewise, like y**x + z**x.
 
 def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
