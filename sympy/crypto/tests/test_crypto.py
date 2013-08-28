@@ -8,7 +8,8 @@ from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       decipher_kid_rsa, kid_rsa_private_key, kid_rsa_public_key,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
       lfsr_connection_polynomial, lfsr_autocorrelation, lfsr_sequence,
-      encode_morse, decode_morse)
+      encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
+      encipher_elgamal, decipher_elgamal)
 from sympy.matrices import Matrix
 from sympy.polys.domains import FF
 from sympy.utilities.pytest import raises
@@ -238,3 +239,9 @@ def test_lfsr_connection_polynomial():
     assert lfsr_connection_polynomial(s) == x**2 + 1
     s = lfsr_sequence([F(1), F(1)], [F(0), F(1)], 5)
     assert lfsr_connection_polynomial(s) == x**2 + x + 1
+
+def test_elgamal():
+    dk = elgamal_private_key(20)
+    ek = elgamal_public_key(dk)
+    m = 12345
+    assert m == decipher_elgamal(encipher_elgamal(m, ek), dk)

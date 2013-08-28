@@ -4,7 +4,11 @@ Classical ciphers and LFSRs
 
 from __future__ import print_function
 
+from random import randrange
+
+from sympy import nextprime
 from sympy.core import Rational, S, Symbol
+from sympy.core.numbers import igcdex
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, totient
 from sympy.polys.domains import FF
@@ -1447,3 +1451,52 @@ def lfsr_connection_polynomial(s):
     dC = Poly(C).degree()
     coeffsC = [C.subs(x, 0)] + [C.coeff(x**i) for i in range(1, dC + 1)]
     return sum([coeffsC[i] % p*x**i for i in range(dC + 1) if coeffsC[i] is not None])
+
+
+#################### ElGamal  #############################
+
+
+def __primitive_root(p):
+    for i in range(2, p):
+        a = i * i % p
+        for j in range(1, (p - 1) // 2):
+            if a == 1:
+                break
+            a = a * i % p
+        else:
+            return i
+
+
+def elgamal_public_key(prk):
+    '''Return three number tuple as public key.
+
+    Use private key to generate public key
+    '''
+    return prk[0], prk[1], pow(prk[1], prk[2], prk[0])
+
+
+def elgamal_private_key(digit=10):
+    '''Return three number tuple as private key.
+
+    It generate private key prime > 2 ** digit,
+    find primitive root g mod prime,
+    and a random number r between 2 and prime.
+    '''
+    p = nextprime(2**digit)
+    return p, __primitive_root(p), randrange(2, p)
+
+
+def decipher_elgamal(ct, prk):
+    '''Decrypt message with private key
+    '''
+    u = igcdex(ct[0] ** prk[2], prk[0])[0]
+    return u * ct[1] % prk[0]
+
+
+def encipher_elgamal(m, puk):
+    '''Encrypt message with public key
+    '''
+    if m > puk[0]:
+        ValueError('Message {} should be less than prime {}'.format(m, puk[0]))
+    r = randrange(2, puk[0])
+    return pow(puk[1], r, puk[0]), m * pow(puk[2], r, puk[0]) % puk[0]
