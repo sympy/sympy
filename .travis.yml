@@ -40,7 +40,8 @@ matrix:
     - python: 3.3
       env:
         - TEST_THEANO="true"
-    - env:
+    - python: 3.3 # Dummy value
+      env:
         - TEST_SAGE="true"
   allow_failures:
     - python: "pypy"
