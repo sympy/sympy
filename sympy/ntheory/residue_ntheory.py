@@ -259,11 +259,12 @@ def _product(*iters):
     in memory. See http://bugs.python.org/issue10109
 
     Author: Fernando Sumudu
+    with small changes
     """
     import itertools
     inf_iters = tuple(itertools.cycle(enumerate(it)) for it in iters)
     num_iters = len(inf_iters)
-    cur_val = [None for _ in xrange(num_iters)]
+    cur_val = [None]*num_iters
 
     first_v = True
     while True:
@@ -278,7 +279,7 @@ def _product(*iters):
             else:
                 break
 
-        yield tuple(cur_val)
+        yield cur_val
 
 
 def sqrt_mod_iter(a, p, domain=int):
