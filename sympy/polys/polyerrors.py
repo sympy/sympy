@@ -69,6 +69,9 @@ class OperationNotSupported(BasePolynomialError):
 class HeuristicGCDFailed(BasePolynomialError):
     pass
 
+class ModularGCDFailed(BasePolynomialError):
+    pass
+
 @public
 class HomomorphismFailed(BasePolynomialError):
     pass

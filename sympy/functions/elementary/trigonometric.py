@@ -1850,7 +1850,7 @@ class atan2(Function):
     def _eval_evalf(self, prec):
         y, x = self.args
         if x.is_real and y.is_real:
-            super(self, evalf)
+            super(atan2, self)._eval_evalf(prec)
 
     def _sage_(self):
         import sage.all as sage

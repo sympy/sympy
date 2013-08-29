@@ -200,48 +200,6 @@ def test_Wild_properties():
                 assert d is None
 
 
-def test_symbols_each_char():
-    import warnings
-    # each_char is deprecated and emits a warning.
-
-    w = Symbol('w')
-    x = Symbol('x')
-    y = Symbol('y')
-    z = Symbol('z')
-
-    # First, test the warning (SymPyDeprecationWarning should already raises during tests)
-    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=True))
-    raises(SymPyDeprecationWarning, lambda: symbols('xyz', each_char=False))
-    # now test the actual output
-    warnings.simplefilter("ignore", SymPyDeprecationWarning)
-    assert symbols(['wx', 'yz'], each_char=True) == [(w, x), (y, z)]
-    assert all(w.is_Function for w in flatten(
-        symbols(['wx', 'yz'], each_char=True, cls=Function)))
-    assert symbols('xyz', each_char=True) == (x, y, z)
-    assert symbols('x,', each_char=True) == (x,)
-    assert symbols('x y z', each_char=True) == symbols(
-        'x,y,z', each_char=True) == (x, y, z)
-    assert symbols('xyz', each_char=False) == Symbol('xyz')
-    a, b = symbols('x y', each_char=False, real=True)
-    assert a.is_real and b.is_real
-    assert 'each_char' not in a.assumptions0
-
-    assert symbols('x0:0', each_char=False) == ()
-    assert symbols('x0:1', each_char=False) == (Symbol('x0'),)
-    assert symbols(
-        'x0:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
-    assert symbols('x:0', each_char=False) == ()
-    assert symbols('x:1', each_char=False) == (Symbol('x0'),)
-    assert symbols(
-        'x:3', each_char=False) == (Symbol('x0'), Symbol('x1'), Symbol('x2'))
-    assert symbols('x1:1', each_char=False) == ()
-    assert symbols('x1:2', each_char=False) == (Symbol('x1'),)
-    assert symbols('x1:3', each_char=False) == (Symbol('x1'), Symbol('x2'))
-
-    # Keep testing reasonably thread safe, so reset the warning
-    warnings.simplefilter("error", SymPyDeprecationWarning)
-
-
 def test_symbols():
     x = Symbol('x')
     y = Symbol('y')
