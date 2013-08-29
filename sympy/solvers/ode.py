@@ -1066,15 +1066,14 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         if r and r[a3] != 0:
             if all([r[key].is_polynomial() for key in r]):
-               point = boundary.get('f0', 0)
+               point = kwargs.get('point', 0)
                check = cancel(r[b3]/r[a3]).subs(x, point)
                if not check.has(oo) and not check.has(NaN) and \
                    not check.has(zoo):
                    check = cancel(r[c3]/r[a3]).subs(x, point)
                    if not check.has(oo) and not check.has(NaN) and \
                        not check.has(zoo):
-                       r.update({'a3': a3, 'b3': b3, 'c3': c3,
-                           'x0': kwargs.get('point', 0)})
+                       r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point})
                        r.update(boundary)
                        matching_hints["2nd_power_series_ordinary"] = r
 
@@ -2726,10 +2725,11 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
-              /  4    2    \        /   2    \
-              | x    x     |        |  x     |
-    f(x) = C0*|--- - -- + 1| + C1*x*|- -- + 1|
-              \576   4     /        \  36    /
+              / 4    2    \        /   2    \
+              |x    x     |        |  x     |
+    f(x) = C0*|-- - -- + 1| + C1*x*|- -- + 1|
+              \24   2     /        \  6     /
+
 
     References
     ==========
@@ -2745,7 +2745,6 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     s = Wild("s")
     k = Wild("k", exclude=[x])
     x0 = match.get('x0')
-
     terms = match.get('terms', 5)
     p = match[match['a3']]
     q = match[match['b3']]
@@ -2827,7 +2826,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     if isinstance(rhs, list):
         rhs = rhs[0]
 
-    # Checking how many values are alreay present
+    # Checking how many values are already present
     tcounter = len([t for t in finaldict.values() if t])
 
     while tcounter < terms - 2:  # Assuming c0 and c1 to be arbitrary
@@ -2848,7 +2847,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
         if finaldict[term]:
             fact = term.args[0]
             series += (finaldict[term].subs([(recurr(0), C0), (recurr(1), C1)])*(
-                x - x0)**fact)/factorial(fact)
+                x - x0)**fact)
     series = collect(expand_mul(series), [C0, C1])
     return Eq(f(x), series)
 

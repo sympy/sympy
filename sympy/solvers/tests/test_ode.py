@@ -1791,8 +1791,28 @@ def test_2nd_power_series_ordinary():
     eq = f(x).diff(x, 2) - x*f(x)
     assert classify_ode(eq) == ('2nd_power_series_ordinary',)
     assert dsolve(eq) == Eq(f(x),
-        C0*(x**6/S(129600) + x**3/S(36) + 1) + C1*x*(x**3/S(288) + 1))
+        C0*(x**6/S(180) + x**3/S(6) + 1) + C1*x*(x**3/S(12) + 1))
     assert dsolve(eq, point=-2) == Eq(f(x),
-        C0*((x + 2)**4/S(144) + (x + 2)**3/S(36) - (x + 2)**2/S(2) + 1)
-        + C1*(x + (x + 2)**4/S(288) - (x + 2)**3/S(18) + 2))
+        C0*((x + 2)**4/S(6) + (x + 2)**3/S(6) - (x + 2)**2 + 1)
+        + C1*(x + (x + 2)**4/S(12) - (x + 2)**3/3 + S(2)))
     assert dsolve(eq, ics={'terms': 2}) == Eq(f(x), C0 + C1*x)
+
+    eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        x**6/S(5) - x**4/S(3) + x**2 + 1) + C1*x)
+
+    eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        x**4/S(8) - x**2/S(2) + 1) + C1*x*(-x**2/S(3) + 1))
+
+    eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        -x**4/S(24) + x**3/S(6) + 1) + C1*x*(x**3/S(24) + x**2/S(6) - x/S(2) + 1))
+
+    eq = f(x).diff(x, 2) + x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        x**6/S(180) - x**3/S(6) + 1) + C1*x*(-x**3/S(12) + 1))
