@@ -7,6 +7,7 @@ from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
 from sympy.utilities import default_sort_key
 from sympy.core.numbers import igcdex
+from sympy.ntheory.residue_ntheory import sqrt_mod
 
 
 def diophantine(eq, param=symbols("t", Integer=True)):
@@ -825,15 +826,13 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
 
                 for f in fs:
                     m = N // f**2
-                    zs = []
+                    zs = sqrt_mod(D, abs(m), True)
 
-                    for i in range(floor(S(abs(m))/2) + 1):
-                        # TODO: efficient algorithm should be used to
-                        # solve z^2 = D (mod m) (Once pernici's PR gets merged)
-                        if (i**2 - D) % abs(m) == 0:
-                            zs.append(i)
-                            if i < S(abs(m))/2 and i != 0:
-                                zs.append(-i)
+                    zs = [i for i in zs if i <= abs(m) // 2 ]
+                    if abs(m) != 2:
+                        zs = zs + [-i for i in zs]
+                        if S.Zero in zs:
+                            zs.remove(S.Zero) # Remove duplicate zero
 
                     for z in zs:
 
@@ -896,10 +895,13 @@ def cornacchia(a, b, m):
     sols = set()
 
     a1 = igcdex(a, m)[0]
-    v = quadratic_congruence(-b*a1, m, True, True)
+    v = sqrt_mod(-b*a1, m, True)
 
     if v is None:
         return None
+
+    if not isinstance(v, list):
+        v = [v]
 
     for t in v:
         if t < m // 2:
@@ -1697,8 +1699,8 @@ def _diop_ternary_quadratic_normal(var, coeff):
     if A < 0 and B < 0:
         return (None, None, None)
 
-    if (quadratic_congruence(-b_2*c_2, a_2) == None or quadratic_congruence(-c_2*a_2, b_2) == None or
-        quadratic_congruence(-a_2*b_2, c_2) == None):
+    if (sqrt_mod(-b_2*c_2, a_2) == None or sqrt_mod(-c_2*a_2, b_2) == None or
+        sqrt_mod(-a_2*b_2, c_2) == None):
         return (None, None, None)
 
     z_0, x_0, y_0 = descent(A, B)
@@ -1872,7 +1874,7 @@ def ldescent(A, B):
     if B == 1:
         return (S.One, 0, S.One)
 
-    r = quadratic_congruence(A, B)
+    r = sqrt_mod(A, B)
 
     Q = (r**2 - A) // B
 
@@ -1892,35 +1894,6 @@ def ldescent(A, B):
         W, X, Y = ldescent(A, B_0)
         return ((-A*X + r*W), (r*X - W), Y*(B_0*d))
     # In this module Descent will always be called with inputs which have solutions.
-
-
-def quadratic_congruence(a, m, full=False, returnall=False):
-    """
-    Solves the quadratic congruence `x^2 \equiv a \ (mod \ m)`. Returns the
-    first solution `i,\ s.t. \ i \geq start`. Return None if solutions do not exist.
-    Currently uses bruteforce. Good enough for `m` sufficiently small.
-
-    TODO: Should use pernici's algorithm when it gets merged into master.
-    """
-    m = abs(m)
-    l = []
-
-    if not full:
-        r = m // 2 + 1 if m%2 == 0 else m // 2 + 2
-    else:
-        r = m
-
-    for i in range(r):
-        if (i**2 - a) % m == 0:
-            if not returnall:
-                return i
-            else:
-                l.append(i)
-
-    if l == [] and not returnall:
-        return None
-    else:
-        return l
 
 
 def descent(A, B):
@@ -1964,7 +1937,7 @@ def descent(A, B):
         x, z, y = descent(-1, A)
         return (A*y, z, x)
 
-    w = quadratic_congruence(A, B)
+    w = sqrt_mod(A, B)
     x_0, z_0 = gaussian_reduce(w, A, B)
 
     t = (x_0**2 - A*z_0**2) // B
