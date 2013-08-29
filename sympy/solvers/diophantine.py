@@ -623,15 +623,12 @@ def _diop_quadratic(var, coeff, t):
 
                 k = 0
                 done = False
-                TU = []
 
-                TU.append((1, 0))
                 T_k = T
                 U_k = U
 
                 while not done:
                     k = k + 1
-                    TU.append((T_k, U_k))
 
                     if (T_k - 1) % L == 0 and U_k % L == 0:
                         done = True
@@ -642,7 +639,7 @@ def _diop_quadratic(var, coeff, t):
                     X = soln[0]
                     Y = soln[1]
 
-                    done = False 
+                    done = False
 
                     for i in range(k):
 
@@ -654,7 +651,7 @@ def _diop_quadratic(var, coeff, t):
 
                         if is_solution_quad(var, coeff, x, y):
                             done = True
-                            
+
 
                             x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ 2
                             y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ (2*sqrt(D))
