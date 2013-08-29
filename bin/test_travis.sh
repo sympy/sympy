@@ -13,6 +13,9 @@ if [[ "${TEST_SPHINX}" == "true" ]]; then
     cd _build/latex
     export LATEXOPTIONS="-interaction=nonstopmode"
     make all
+elif [[ "${TEST_SAGE}" == "true" ]]; then
+    sage -v
+    sage -python bin/test sympy/external/tests/test_sage.py
 else
     # We change directories to make sure that we test the installed version of
     # sympy.

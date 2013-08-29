@@ -40,6 +40,9 @@ matrix:
     - python: 3.3
       env:
         - TEST_THEANO="true"
+    - python: 3.3 # Dummy value
+      env:
+        - TEST_SAGE="true"
   allow_failures:
     - python: "pypy"
 before_install:
@@ -59,8 +62,15 @@ before_install:
   - if [[ "${TEST_THEANO}" == "true" ]]; then
       pip install --no-deps https://github.com/Theano/Theano/archive/master.zip;
     fi
+  - if [[ "${TEST_SAGE}" == "true" ]]; then
+      sudo apt-add-repository -y ppa:aims/sagemath;
+      sudo apt-get update;
+      sudo apt-get install sagemath-upstream-binary;
+    fi
 install:
-  - python setup.py install
+  - if [[ "${TEST_SAGE}" != "true" ]]; then
+      python setup.py install;
+    fi
 script:
   - bin/test_travis.sh
 notifications:
