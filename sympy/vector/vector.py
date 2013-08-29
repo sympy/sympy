@@ -78,7 +78,7 @@ def _diff_scalar(scalar, s):
     s : a BaseScalar
     """
     # Express scalar in rect coord_sys aligned with s.coord_sys
-    c_rect = s.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+    c_rect = s.coord_sys._change_coord_sys(CoordSysRect)
     scalar = _express_scalar(scalar, c_rect)
     return diff(scalar, s)
 
@@ -391,7 +391,7 @@ class BaseScalar(AtomicExpr):
         assumptions['commutative'] = is_commutative
 
         if name is None:
-            name = 'Dummy_' + str(Dummy._count)
+            name = 'BaseSc_' + str(Dummy._count)
             Dummy._count += 1
         super(BaseScalar, self).__init__()
         self.coord_sys = coord_sys
@@ -464,6 +464,8 @@ class BaseScalar(AtomicExpr):
                                    coord_conv[coord_sys.__class__])
         return rv[self.position - ind]
 
+    def _hashable_content(self):
+        return (repr(self),) + tuple(sorted(self.assumptions0.items()))
 
 class CoordSys(Basic):
     """
@@ -556,6 +558,7 @@ class CoordSys(Basic):
                 raise TypeError('Amounts are a list or tuple of length 2')
             theta = amounts[0]
             axis = amounts[1]
+            # TODO : Implement normalize and as_mat methods
             axis = axis.express(self.parent).normalize().as_mat()
             axis = axis.args[0][0]
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
@@ -678,6 +681,7 @@ class CoordSys(Basic):
         to self, i.e.,
         self.xyz = self.dcm(other)*other.xyz
         """
+        #import ipdb;ipdb.set_trace()
         if other == 'global':
             return self._dcm_global
 
@@ -692,8 +696,43 @@ class CoordSys(Basic):
             # common frame. This will require multiplying many matrices.
             # So, we go via the global frame
             r = other.dcm() * self.dcm().T
-            r.applyfunc(lambda i: trigsimp(method='fu'))
+            r.applyfunc(lambda i: trigsimp(i, method='fu'))
             return r
+
+    def _dcm_path(self, other=None):
+        # self -> child, other -> parent
+        # First handle other
+        other_coord_list = [other]
+
+        other_parent = other
+        while 1:
+            other_parent = other.parent
+            if other_parent:
+                other_coord_list.append(p)
+            else:
+                break
+
+        common_ancestor = None
+        self_coord_list = [self]
+        self_parent = self
+        while 1:
+            self_parent = self.parent
+            if self.parent:
+                if self_parent in other_coord_list:
+                    common_ancestor = self_parent
+                else:
+                    self_coord_list.append(self_parent)
+            else:
+                break
+
+        # Construct a list going from other to self
+        new_list = []
+        for c in other_coord_list:
+            new_list.append(c)
+        for c in reversed(self_coord_list):
+            new_list.append(c)
+
+        return new_list, common_ancestor
 
     def orientnew(self, name=None, orient_type=None, orient_amount=None,
                  rot_order=None):
@@ -722,7 +761,7 @@ class CoordSys(Basic):
 
         parent = self
         newframe = copy.copy(self)
-        c_rect = CoordSysRect('c_rect')
+        c_rect = CoordSysRect()
 
         parent_pos = parent.position.express(c_rect)
         newframe_pos = position.express(c_rect)
@@ -1376,7 +1415,7 @@ class BaseVector(Vector, Symbol):
         # return zero. So, we can be certain that  base vector is in some
         # coordinate system
 
-        c_rect = s.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+        c_rect = s.coord_sys._change_coord_sys(CoordSysRect)
         vect = self.express(c_rect)
 
         return vect.diff(s)
@@ -1387,6 +1426,9 @@ class BaseVector(Vector, Symbol):
     __repr__ = __str__
     _sympystr = __str__
     _sympyrepr = __str__
+
+    def _hashable_content(self):
+        return (repr(self),) + tuple(sorted(self.assumptions0.items()))
 
 
 class VectAdd(Add, Vector):
@@ -1940,22 +1982,23 @@ def express(vect, coord_sys):
         # First process the scalar
         if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
-            c_rect = scalar.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+            c_rect = scalar.coord_sys._change_coord_sys(CoordSysRect)
             subs_dict[scalar] = scalar._convert_to_rect(c_rect)
 
         else:
             for arg_scalar in _all_base_scalars(scalar):
                 if not subs_dict.has_key(arg_scalar):
                     c_rect = arg_scalar.coord_sys._change_coord_sys(
-                                                        CoordSysRect, 'c_rect')
+                                                        CoordSysRect)
                     subs_dict[arg_scalar] = arg_scalar._convert_to_rect(c_rect)
         # Now process the vector
         # vector is necessarily BaseVector
         assert isinstance(vector, BaseVector)
 
-        c_rect = vector.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+        c_rect = vector.coord_sys._change_coord_sys(CoordSysRect)
         subs_dict[vector] = vector._convert_to_rect(c_rect)
 
+    import ipdb;ipdb.set_trace()
     # Now performig the substitution, we have changed all involved
     # variables into rectangular coordinates
     vect = vect.subs(subs_dict)
@@ -1968,6 +2011,7 @@ def express(vect, coord_sys):
     for arg in vect._all_args:
         assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
         vector = arg.vector
+        import ipdb;ipdb.set_trace()
         subs_dict[vector] = CoordSys._convert_base_vect_rect(vector,
                                                              coord_sys_t)
     # Now subs in the vectors
@@ -2040,7 +2084,7 @@ def _express_scalar(expr, coord_sys):
     all_base_scalars = _all_base_scalars(expr)
     for arg in all_base_scalars:
         # Convert base scalars to c_rect
-        c_rect = arg.coord_sys._change_coord_sys(CoordSysRect, 'c_rect')
+        c_rect = arg.coord_sys._change_coord_sys(CoordSysRect)
         subs_dict[arg] = arg._convert_to_rect(c_rect)
     expr = expr.subs(subs_dict)
     subs_dict = {}
