@@ -57,6 +57,7 @@ information on each (run ``help(ode)``):
   - 1st order exact differential equations.
   - 1st order linear differential equations.
   - 1st order Bernoulli differential equations.
+  - Lie Group method of solving first order differential equations.
   - 2nd order Liouville differential equations.
   - `n`\th order linear homogeneous differential equation with constant
     coefficients.
@@ -280,6 +281,7 @@ allhints = (
     "almost_linear",
     "linear_coefficients",
     "separable_reduced",
+    "lie_group",
     "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
@@ -305,8 +307,8 @@ lie_heuristics = (
     "abaco2_unique_unknown",
     "abaco2_unique_general",
     "linear",
-    "bivariate",
     "function_sum",
+    "bivariate",
     "chi"
     )
 
@@ -346,7 +348,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, xi=None, eta=None, **kwargs):
     r"""
     Solves any (supported) kind of ordinary differential equation.
 
@@ -381,6 +383,14 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
             It will still integrate with this hint. Note that the solution may
             contain more arbitrary constants than the order of the ODE with
             this option enabled.
+
+        ``xi`` and ``eta`` are the infinitesimal functions of an ordinary
+            differential equation. They are the infinitesimals of the Lie group
+            of point transformations for which the differential equation is
+            invariant. The user can specify values for the infinitesimals. If
+            nothing is specified, ``xi`` and ``eta`` are calculated using
+            :py:meth:`~sympy.solvers.ode.infinitesimals` with the help of various
+            heuristics.
 
     **Hints**
 
@@ -490,7 +500,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
 
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, type='ode', **kwargs)
+        hint=hint, simplify=True, xi=xi, eta=eta, type='ode', **kwargs)
 
     eq = hints.pop('eq', eq)
     all_ = hints.pop('all', False)
@@ -525,7 +535,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         hint = hints['hint']
         return _helper_simplify(eq, hint, hints, simplify)
 
-def _helper_simplify(eq, hint, match, simplify=True):
+def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     r"""
     Helper function of dsolve that calls the respective
     :py:mod:`~sympy.solvers.ode` functions to solve for the ordinary
@@ -540,6 +550,7 @@ def _helper_simplify(eq, hint, match, simplify=True):
     func = r['func']
     order = r['order']
     match = r[hint]
+
     if simplify:
         # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
         # attempt to solve for func, and apply any other hint specific
@@ -662,8 +673,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     ('separable', '1st_linear', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
-    'nth_linear_constant_coeff_homogeneous', 'separable_Integral',
-    '1st_linear_Integral',
+    'lie_group', 'nth_linear_constant_coeff_homogeneous',
+    'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
@@ -685,9 +696,12 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     x = func.args[0]
     f = func.func
     y = Dummy('y')
+    xi = kwargs.get('xi')
+    eta = kwargs.get('eta')
+
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, prep=False)
+            return classify_ode(eq.lhs - eq.rhs, func, xi=xi, eta=eta, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -714,6 +728,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     b2 = Wild('b2', exclude=[x, f(x), df])
     c2 = Wild('c2', exclude=[x, f(x), df])
     d2 = Wild('d2', exclude=[x, f(x), df])
+    r3 = {'xi': xi, 'eta': eta}  # Used for the lie_group hint
 
     eq = expand(eq)
 
@@ -779,7 +794,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r['y'] = y
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
-
+            r3.update(r)
             ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
             # dP/dy == dQ/dx
             try:
@@ -820,6 +835,10 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 # Differentiating the coefficients might fail because of things
                 # like f(2*x).diff(x).  See issue 1525 and issue 1620.
                 pass
+
+        # Any first order ODE can be ideally solved by the Lie Group
+        # method
+        matching_hints["lie_group"] = r3
 
         # This match is used for several cases below; we now collect on
         # f(x) so the matching works.
@@ -939,6 +958,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 r2[e] /= u.diff(f(x))
                 matching_hints["almost_linear"] = r2
                 matching_hints["almost_linear_Integral"] = r2
+
 
     if order == 2:
         # Liouville ODE in the form
@@ -3781,7 +3801,225 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     soltup.append((True, 0))
             return soltup
 
-def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
+def ode_lie_group(eq, func, order, match):
+    r"""
+    This hint implements the Lie group method of solving first order differential
+    equations. The aim is to convert the given differential equation from the
+    given coordinate given system into another coordinate system where it becomes
+    invariant under the one-parameter Lie group of translations. The converted ODE is
+    quadrature and can be solved easily. It makes use of the
+    :py:meth:`sympy.solvers.ode.infinitesimals` function which returns the
+    infinitesimals of the transformation.
+
+    The coordinates `r` and `s` can be found by solving the following Partial
+    Differential Equations.
+
+    .. math :: \xi\frac{\partial r}{\partial x} + \eta\frac{\partial r}{\partial y}
+                  = 0
+
+    .. math :: \xi\frac{\partial s}{\partial x} + \eta\frac{\partial s}{\partial y}
+                  = 1
+
+    The differential equation becomes separable in the new coordinate system
+
+    .. math :: \frac{ds}{dr} = \frac{\frac{\partial s}{\partial x} +
+                 h(x, y)\frac{\partial s}{\partial y}}{
+                 \frac{\partial r}{\partial x} + h(x, y)\frac{\partial r}{\partial y}}
+
+    After finding the solution by integration, it is then converted back to the original
+    coordinate system by subsituting `r` and `s` in terms of `x` and `y` again.
+
+    Examples
+    ========
+
+    >>> from sympy import Function, dsolve, Eq, exp, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
+    ... hint='lie_group'))
+           /      2\    2
+           |     x |  -x
+    f(x) = |C1 + --|*e
+           \     2 /
+
+
+    References
+    ==========
+
+    - Solving differential equations by Symmetry Groups,
+      John Starrett, pp. 1 - pp. 14
+
+    """
+    from sympy.integrals.integrals import integrate
+    from sympy.solvers.pde import pdsolve
+
+    heuristics = lie_heuristics
+    inf = {}
+    f = func.func
+    x = func.args[0]
+    df = func.diff(x)
+    xi = Function("xi")
+    eta = Function("eta")
+    a = Wild('a', exclude = [df])
+    b = Wild('b', exclude = [df])
+    xis = match.pop('xi')
+    etas = match.pop('eta')
+
+    if match:
+        h = -simplify(match[match['d']]/match[match['e']])
+        y = match['y']
+    else:
+        try:
+            sol = solve(eq, df)
+        except NotImplementedError:
+            raise NotImplementedError("Unable to solve the differential equation " +
+                str(eq) + " by the lie group method")
+        else:
+            y = Dummy("y")
+            h = sol[0].subs(func, y)
+
+    if xis is not None and etas is not None:
+        inf = [{xi(x, f(x)): S(xis), eta(x, f(x)): S(etas)}]
+
+        if not checkinfsol(eq, inf, func=f(x), order=1)[0][0]:
+            raise ValueError("The given infinitesimals xi and eta"
+                " are not the infinitesimals to the given equation")
+        else:
+            heuristics = ["user_defined"]
+
+    match = {'h': h, 'y': y}
+
+    # This is done so that if:
+    # a] solve raises a NotImplementedError.
+    # b] any heuristic raises a ValueError
+    # another heuristic can be used.
+    tempsol = []  # Used by solve below
+    for heuristic in heuristics:
+        try:
+            if not inf:
+                inf = infinitesimals(eq, hint=heuristic, func=func, order=1, match=match)
+        except ValueError:
+            continue
+        else:
+            for infsim in inf:
+                xiinf = (infsim[xi(x, func)]).subs(func, y)
+                etainf = (infsim[eta(x, func)]).subs(func, y)
+                # This condition creates recursion while using pdsolve.
+                # Since the first step while solving a PDE of form
+                # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
+                # is to solve the ODE dy/dx = b/a
+                if simplify(etainf/xiinf) == h:
+                    continue
+                rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
+                r = pdsolve(rpde, func=f(x, y)).rhs
+                s = pdsolve(rpde - 1, func=f(x, y)).rhs
+                newcoord = [_lie_group_remove(coord) for coord in [r, s]]
+                r = Dummy("r")
+                s = Dummy("s")
+                C1 = Symbol("C1")
+                rcoord = newcoord[0]
+                scoord = newcoord[-1]
+                try:
+                    sol = solve([r - rcoord, s - scoord], x, y, dict=True)
+                except NotImplementedError:
+                    continue
+                else:
+                    sol = sol[0]
+                    xsub = sol[x]
+                    ysub = sol[y]
+                    num = simplify(scoord.diff(x) + scoord.diff(y)*h)
+                    denom = simplify(rcoord.diff(x) + rcoord.diff(y)*h)
+                    if num and denom:
+                        diffeq = simplify((num/denom).subs([(x, xsub), (y, ysub)]))
+                        sep = separatevars(diffeq, symbols=[r, s], dict=True)
+                        if sep:
+                            # Trying to separate, r and s coordinates
+                            deq = integrate((1/sep[s]), s) + C1 - integrate(sep['coeff']*sep[r], r)
+                            # Substituting and reverting back to original coordinates
+                            deq = deq.subs([(r, rcoord), (s, scoord)])
+                            try:
+                                sdeq = solve(deq, y)
+                            except NotImplementedError:
+                                tempsol.append(deq)
+                            else:
+                                if len(sdeq) == 1:
+                                    return Eq(f(x), sdeq.pop())
+                                else:
+                                    return [Eq(f(x), sol) for sol in sdeq]
+
+
+                    elif denom: # (ds/dr) is zero which means s is constant
+                        return Eq(f(x), solve(scoord - C1, y)[0])
+
+                    elif num: # (dr/ds) is zero which means r is constant
+                        return Eq(f(x), solve(rcoord - C1, y)[0])
+
+    # If nothing works, return solution as it is, without solving for y
+    if tempsol:
+        if len(tempsol) == 1:
+            return Eq(tempsol.pop().subs(y, f(x)), 0)
+        else:
+            return [Eq(sol.subs(y, f(x)), 0) for sol in tempsol]
+
+    raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
+        + " the lie group method")
+
+
+def _lie_group_remove(coords):
+    r"""
+    This function is strictly meant for internal use by the Lie group ODE solving
+    method. It replaces arbitrary functions returned by pdsolve with either 0 or 1 or the
+    args of the arbitrary function.
+
+    The algorithm used is:
+    1] If coords is an instance of an Undefined Function, then the args are returned
+    2] If the arbitrary function is present in an Add object, it is replaced by zero.
+    3] If the arbitrary function is present in an Mul object, it is replaced by one.
+    4] If coords has no Undefined Function, it is returned as it is.
+
+    Examples
+    ========
+    >>> from sympy.solvers.ode import _lie_group_remove
+    >>> from sympy import Function
+    >>> from sympy.abc import x, y
+    >>> F = Function("F")
+    >>> eq = x**2*y
+    >>> _lie_group_remove(eq)
+    x**2*y
+    >>> eq = F(x**2*y)
+    >>> _lie_group_remove(eq)
+    x**2*y
+    >>> eq = y**2*x + F(x**3)
+    >>> _lie_group_remove(eq)
+    x*y**2
+    >>> eq = (F(x**3) + y)*x**4
+    >>> _lie_group_remove(eq)
+    x**4*y
+
+    """
+    if isinstance(coords, AppliedUndef):
+        return coords.args[0]
+    elif coords.is_Add:
+        subfunc = coords.atoms(AppliedUndef)
+        if subfunc:
+            for func in subfunc:
+                coords = coords.subs(func, 0)
+        return coords
+    elif coords.is_Pow:
+        base, expr = coords.as_base_exp()
+        base = _lie_group_remove(base)
+        expr = _lie_group_remove(expr)
+        return base**expr
+    elif coords.is_Mul:
+        mulargs = []
+        coordargs = coords.args
+        for arg in coordargs:
+            if not isinstance(coords, AppliedUndef):
+                mulargs.append(_lie_group_remove(arg))
+        return Mul(*mulargs)
+    return coords
+
+def infinitesimals(eq, func=None, order=None, hint='default', match=None):
     r"""
     The infinitesimal functions of an ordinary differential equation, `\xi(x,y)`
     and `\eta(x,y)`, are the infinitesimals of the Lie group of point transformations
@@ -3866,23 +4104,25 @@ def infinitesimals(eq, func=None, order=None, hint='default', **kwargs):
             # Matching differential equation of the form a*df + b
             a = Wild('a', exclude = [df])
             b = Wild('b', exclude = [df])
-            match = kwargs.get('match',
-                collect(expand(eq), df).match(a*df + b))
-
-            if match:
-                h = -simplify(match[b]/match[a])
+            if match:  # Used by lie_group hint
+                h = match['h']
+                y = match['y']
             else:
-                try:
-                    sol = solve(eq, df)
-                except NotImplementedError:
-                    raise NotImplementedError("Infinitesimals for the "
-                        "first order ODE could not be found")
+                match = collect(expand(eq), df).match(a*df + b)
+                if match:
+                    h = -simplify(match[b]/match[a])
                 else:
-                    h = sol[0]  # Find infinitesimals for one solution
+                    try:
+                        sol = solve(eq, df)
+                    except NotImplementedError:
+                        raise NotImplementedError("Infinitesimals for the "
+                            "first order ODE could not be found")
+                    else:
+                        h = sol[0]  # Find infinitesimals for one solution
+                y = Dummy("y")
+                h = h.subs(func, y)
 
-            y = Dummy("y")
             u = Dummy("u")
-            h = h.subs(func, y)
             hx = h.diff(x)
             hy = h.diff(y)
             hinv = ((1/h).subs([(x, u), (y, x)])).subs(u, y)  # Inverse ODE
@@ -3969,7 +4209,6 @@ def lie_heuristic_abaco1_simple(match, comp=False):
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
-
     hysym = hy.free_symbols
     if y not in hysym:
         try:
@@ -3977,7 +4216,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: 0, eta: fx}
+            inf = {xi: S(0), eta: fx}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -3991,7 +4230,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: 0, eta: fy.subs(y, func)}
+            inf = {xi: S(0), eta: fy.subs(y, func)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -4005,7 +4244,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: fx, eta: 0}
+            inf = {xi: fx, eta: S(0)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -4019,7 +4258,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
         except NotImplementedError:
             pass
         else:
-            inf = {xi: fy.subs(y, func), eta: 0}
+            inf = {xi: fy.subs(y, func), eta: S(0)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -4077,7 +4316,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
         gysyms = gy.free_symbols
         if x not in gysyms:
             gy = exp(integrate(gy, y))
-            inf = {eta: 0, xi: (fx*gy).subs(y, func)}
+            inf = {eta: S(0), xi: (fx*gy).subs(y, func)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -4093,7 +4332,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
             gy = exp(integrate(gy, y))
             etaval = fx*gy
             etaval = (etaval.subs([(x, u1), (y, x)])).subs(u1, y)
-            inf = {eta: etaval.subs(y, func), xi: 0}
+            inf = {eta: etaval.subs(y, func), xi: S(0)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
@@ -4298,7 +4537,7 @@ def lie_heuristic_function_sum(match, comp=False):
     for odefac in [h, hinv]:
         factor = odefac*((1/odefac).diff(x, 2))
         sep = separatevars((1/factor).diff(y), dict=True, symbols=[x, y])
-        if sep and sep['coeff']:
+        if sep and sep['coeff'] and sep[x].has(x) and sep[y].has(y):
             k = Dummy("k")
             try:
                 gy = k*integrate(sep[y], y)
@@ -4327,9 +4566,9 @@ def lie_heuristic_function_sum(match, comp=False):
                     if etaval.is_Mul:
                         etaval = Mul(*[arg for arg in etaval.args if arg.has(x, y)])
                     if odefac == hinv:  # Inverse ODE
-                        inf = {eta: etaval.subs(y, func), xi : 0}
+                        inf = {eta: etaval.subs(y, func), xi : S(0)}
                     else:
-                        inf = {xi: etaval.subs(y, func), eta : 0}
+                        inf = {xi: etaval.subs(y, func), eta : S(0)}
                     if not comp:
                         return [inf]
                     else:
@@ -4519,11 +4758,11 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
             etatry = -1/frac
             pde = etatry.diff(x) + etatry.diff(y)*h - hx - etatry*hy
             if not simplify(pde):
-                return [{xi: 1, eta: etatry.subs(y, func)}]
+                return [{xi: S(1), eta: etatry.subs(y, func)}]
             xitry = -frac
             pde = -xitry.diff(x)*h -xitry.diff(y)*h**2 - xitry*hx -hy
             if not simplify(expand(pde)):
-                return [{xi: xitry.subs(y, func), eta: 1}]
+                return [{xi: xitry.subs(y, func), eta: S(1)}]
 
 
 def lie_heuristic_abaco2_unique_general(match, comp=False):

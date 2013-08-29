@@ -12,7 +12,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, xrange
 
-from sympy.polys import PurePoly, roots, cancel
+from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -308,6 +308,46 @@ class MatrixBase(object):
         if method is not None:
             kwargs['method'] = method
         return self._eval_inverse(**kwargs)
+
+    def inv_mod(self, m):
+        r"""
+        Returns the inverse of the matrix `K` (mod `m`), if it exists.
+
+        Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
+
+        * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
+
+        * Compute `r = 1/\mathrm{det}(K) \pmod m`.
+
+        * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.inv_mod(5)
+        Matrix([
+        [3, 1],
+        [4, 2]])
+        >>> A.inv_mod(3)
+        Matrix([
+        [1, 1],
+        [0, 1]])
+
+        """
+        from sympy.ntheory import totient
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        N = self.cols
+        phi = totient(m)
+        det_K = self.det()
+        if gcd(det_K, m) != 1:
+            raise ValueError('Matrix is not invertible (mod %d)' % m)
+        det_inv = pow(int(det_K), int(phi - 1), int(m))
+        K_adj = self.cofactorMatrix().transpose()
+        K_inv = self.__class__(N, N, [det_inv*K_adj[i, j] % m for i in range(N) for j in range(N)])
+        return K_inv
 
     def transpose(self):
         return self._eval_transpose()

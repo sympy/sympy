@@ -936,7 +936,7 @@ def test_sin_cos_with_infinity():
 @slow
 def test_sincos_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
-    for p in [1, 3, 5, 17, 3*5*17]:
+    for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
             for i in xrange(1, (n + 1)//2 + 1):
@@ -946,14 +946,14 @@ def test_sincos_rewrite_sqrt():
                     c1 = cos(x).rewrite(sqrt)
                     assert not s1.has(cos, sin), "fails for %d*pi/%d" % (i, n)
                     assert not c1.has(cos, sin), "fails for %d*pi/%d" % (i, n)
-                    assert 1e-10 > abs( sin(float(x)) - float(s1) )
-                    assert 1e-10 > abs( cos(float(x)) - float(c1) )
+                    assert 1e-3 > abs(sin(x.evalf(5)) - s1.evalf(2)), "fails for %d*pi/%d" % (i, n)
+                    assert 1e-3 > abs(cos(x.evalf(5)) - c1.evalf(2)), "fails for %d*pi/%d" % (i, n)
 
 
 @slow
 def test_tancot_rewrite_sqrt():
     # equivalent to testing rewrite(pow)
-    for p in [1, 3, 5, 17, 3*5*17]:
+    for p in [1, 3, 5, 17]:
         for t in [1, 8]:
             n = t*p
             for i in xrange(1, (n + 1)//2 + 1):
@@ -962,11 +962,11 @@ def test_tancot_rewrite_sqrt():
                     if  2*i != n and 3*i != 2*n:
                         t1 = tan(x).rewrite(sqrt)
                         assert not t1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
-                        assert 1e-10 > abs( tan(float(x)) - float(t1) )
+                        assert 1e-3 > abs( tan(x.evalf(7)) - t1.evalf(4) ), "fails for %d*pi/%d" % (i, n)
                     if  i != 0 and i != n:
                         c1 = cot(x).rewrite(sqrt)
                         assert not c1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
-                        assert 1e-10 > abs( cot(float(x)) - float(c1) )
+                        assert 1e-3 > abs( cot(x.evalf(7)) - c1.evalf(4) ), "fails for %d*pi/%d" % (i, n)
 
 def test_sec():
     assert sec(x).diff(x) == tan(x)*sec(x)

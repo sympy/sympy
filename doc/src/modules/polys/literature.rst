@@ -77,3 +77,10 @@ a theoretical foundation for implementing polynomials manipulation module.
 
 .. [Atiyah69] M.F. Atiyah, I.G. MacDonald, Introduction to Commutative Algebra,
     Addison-Wesley, 1969
+
+.. [Monagan00] M. Monagan and A. Wittkopf, On the Design and Implementation
+    of Brown’s Algorithm over the Integers and Number Fields, Proceedings of
+    ISSAC 2000, pp. 225-233, ACM, 2000.
+
+.. [Brown71] W.S. Brown, On Euclid's Algorithm and the Computation of
+    Polynomial Greatest Common Divisors, J. ACM 18, 4, pp. 478-504, 1971.

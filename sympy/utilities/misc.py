@@ -2,6 +2,7 @@
 
 from __future__ import print_function, division
 
+import sys
 import os
 from textwrap import fill, dedent
 from sympy.core.compatibility import get_function_name
@@ -93,7 +94,6 @@ def rawlines(s):
         else:
             return "dedent('''\\\n    %s''')" % rv
 
-import sys
 size = getattr(sys, "maxint", None)
 if size is None:  # Python 3 doesn't have maxint
     size = sys.maxsize
@@ -177,9 +177,7 @@ def debug(*args):
     """
     from sympy import SYMPY_DEBUG
     if SYMPY_DEBUG:
-        for a in args:
-            print(a, end="")
-        print()
+        print(*args, file=sys.stderr)
 
 
 def find_executable(executable, path=None):

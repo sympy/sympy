@@ -569,6 +569,18 @@ def test_inverse():
     assert all(type(m.inv(s)) is cls for s in 'CH LDL'.split())
 
 
+def test_matrix_inverse_mod():
+    A = Matrix(2, 1, [1, 0])
+    raises(NonSquareMatrixError, lambda: A.inv_mod(2))
+    A = Matrix(2, 2, [1, 0, 0, 0])
+    raises(ValueError, lambda: A.inv_mod(2))
+    A = Matrix(2, 2, [1, 2, 3, 4])
+    Ai = Matrix(2, 2, [1, 1, 0, 1])
+    assert A.inv_mod(3) == Ai
+    A = Matrix(2, 2, [1, 0, 0, 1])
+    assert A.inv_mod(2) == A
+
+
 def test_util():
     R = Rational
 
