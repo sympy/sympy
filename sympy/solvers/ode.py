@@ -2712,11 +2712,24 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
 
-    since for simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
+    For simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
     it is sufficient that `\frac{Q(x)}{P(x)}` and `\frac{R(x)}{P(x)}` exists at
-    `x0`. A recurrence relation is obtained by substituting `y` as `\sum_{n=0}^\infty x^n`,
-    in the differential equation, and equating the `n`th term. Using this relation
+    `x0`. A recurrence relation is obtained by substituting `y` as `\sum_{n=0}^\infty anx^n`,
+    in the differential equation, and equating the nth term. Using this relation
     various terms can be generated.
+
+
+    Examples
+    ========
+    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy.abc import x, y
+    >>> f = Function("f")
+    >>> eq = f(x).diff(x, 2) + f(x)
+    >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
+              /  4    2    \        /   2    \
+              | x    x     |        |  x     |
+    f(x) = C0*|--- - -- + 1| + C1*x*|- -- + 1|
+              \576   4     /        \  36    /
 
     References
     ==========

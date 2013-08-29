@@ -139,7 +139,7 @@ def test_dsolve_options():
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         ('nth_linear_constant_coeff_homogeneous', 'Liouville',
-            'Liouville_Integral')
+            '2nd_power_series_ordinary' ,'Liouville_Integral')
     assert classify_ode(f(x), f(x)) == ()
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('separable',
         '1st_linear', '1st_homogeneous_coeff_best',
@@ -1795,4 +1795,4 @@ def test_2nd_power_series_ordinary():
     assert dsolve(eq, point=-2) == Eq(f(x),
         C0*((x + 2)**4/S(144) + (x + 2)**3/S(36) - (x + 2)**2/S(2) + 1)
         + C1*(x + (x + 2)**4/S(288) - (x + 2)**3/S(18) + 2))
-    assert dsolve(eq, ics={'terms': 2}) = Eq(f(x), C0 + C1*x)
+    assert dsolve(eq, ics={'terms': 2}) == Eq(f(x), C0 + C1*x)
