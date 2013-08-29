@@ -606,6 +606,7 @@ def _diop_quadratic(var, coeff, t):
 
             if (isinstance(P[0], Integer) and isinstance(P[1], Integer) and isinstance(P[2], Integer)
                 and isinstance(P[3], Integer) and isinstance(Q[0], Integer) and isinstance(Q[1], Integer)):
+
                 for sol in solns_pell:
 
                     r = sol[0]
@@ -622,37 +623,48 @@ def _diop_quadratic(var, coeff, t):
 
                 k = 0
                 done = False
+                TU = []
+
+                TU.append((1, 0))
                 T_k = T
                 U_k = U
 
                 while not done:
                     k = k + 1
+                    TU.append((T_k, U_k))
+
                     if (T_k - 1) % L == 0 and U_k % L == 0:
                         done = True
                     T_k, U_k = T_k*T + D*U_k*U, T_k*U + U_k*T
 
                 for soln in solns_pell:
-                    x_0 = soln[0]
-                    y_0 = soln[1]
 
-                    x_i = x_0
-                    y_i = y_0
+                    X = soln[0]
+                    Y = soln[1]
+
+                    done = False 
 
                     for i in range(k):
 
-                        X = (P*Matrix([x_i, y_i]) + Q)[0]
-                        Y = (P*Matrix([x_i, y_i]) + Q)[1]
+                        X_1 = X*T + D*U*Y
+                        Y_1 = X*U + Y*T
 
-                        if isinstance(X, Integer) and isinstance(Y, Integer):
-                            if is_solution_quad(var, coeff, X, Y):
-                                x_n = S( (x_i + sqrt(D)*y_i)*(T + sqrt(D)*U)**(n*L) + (x_i - sqrt(D)*y_i)*(T - sqrt(D)*U)**(n*L) )/ 2
-                                y_n = S( (x_i + sqrt(D)*y_i)*(T + sqrt(D)*U)**(n*L) - (x_i - sqrt(D)*y_i)*(T - sqrt(D)*U)**(n*L) )/ (2*sqrt(D))
+                        x = (P*Matrix([X_1, Y_1]) + Q)[0]
+                        y = (P*Matrix([X_1, Y_1]) + Q)[1]
 
-                                x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
-                                l.add((x_n, y_n))
+                        if is_solution_quad(var, coeff, x, y):
+                            done = True
+                            
 
-                        x_i = x_i*T + D*U*y_i
-                        y_i = x_i*U + y_i*T
+                            x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ 2
+                            y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ (2*sqrt(D))
+
+                            x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
+                            l.add((x_n, y_n))
+
+                        if done:
+                            break
+
 
     return l
 
