@@ -300,7 +300,7 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.ntheory.modular import crt1, crt2
+    from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
     from sympy.polys.domains import ZZ
     a, p = as_int(a), as_int(p)
     if isprime(p):
@@ -331,14 +331,14 @@ def sqrt_mod_iter(a, p, domain=int):
                     raise StopIteration
             v.append(rx)
             pv.append(px**ex)
-        mm, e, s = crt1(pv)
+        mm, e, s = gf_crt1(pv, ZZ)
         if domain is ZZ:
             for vx in _product(*v):
-                r = crt2(pv, vx, mm, e, s)[0]
+                r = gf_crt2(vx, pv, mm, e, s, ZZ)
                 yield r
         else:
             for vx in _product(*v):
-                r = crt2(pv, vx, mm, e, s)[0]
+                r = gf_crt2(vx, pv, mm, e, s, ZZ)
                 yield domain(r)
 
 
