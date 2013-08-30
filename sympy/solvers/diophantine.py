@@ -271,7 +271,7 @@ def diop_linear(eq, param=symbols("t", Integer=True)):
 
 def _diop_linear(var, coeff, param):
 
-    x = var[0]; y = var[1]
+    x, y = var[:2]
     a = coeff[x]
     b = coeff[y]
 
@@ -459,8 +459,7 @@ def diop_quadratic(eq, param=symbols("t", Integer=True)):
 
 def _diop_quadratic(var, coeff, t):
 
-    x = var[0]
-    y = var[1]
+    x, y = var[:2]
 
     for term in [x**2, y**2, x*y, x, y, Integer(1)]:
         if term not in coeff.keys():
@@ -616,6 +615,8 @@ def _diop_quadratic(var, coeff, t):
                     x_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n + (r - s*sqrt(D))*(T - U*sqrt(D))**n)/2
                     y_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n - (r - s*sqrt(D))*(T - U*sqrt(D))**n)/(2*sqrt(D))
 
+                    x_n = simplify(x_n)
+                    y_n = simplify(y_n)
                     x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
 
                     l.add((x_n, y_n))
@@ -658,6 +659,8 @@ def _diop_quadratic(var, coeff, t):
                             x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ 2
                             y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ (2*sqrt(D))
 
+                            x_n = simplify(x_n)
+                            y_n = simplify(y_n)
                             x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
                             l.add((x_n, y_n))
 
@@ -1245,8 +1248,7 @@ def transformation_to_DN(eq):
 
 def _transformation_to_DN(var, coeff):
 
-    x = var[0]
-    y = var[1]
+    x, y = var[:2]
 
     a = coeff[x**2]
     b = coeff[x*y]
@@ -1351,8 +1353,7 @@ def find_DN(eq):
 
 def _find_DN(var, coeff):
 
-    x = var[0]
-    y = var[1]
+    x, y = var[:2]
     X, Y = symbols("X, Y", integer=True)
     A , B = _transformation_to_DN(var, coeff)
 
@@ -1459,9 +1460,7 @@ def diop_ternary_quadratic(eq):
 
 def _diop_ternary_quadratic(_var, coeff):
 
-    x = _var[0]
-    y = _var[1]
-    z = _var[2]
+    x, y, z = _var[:3]
 
     var = [x]*3
     var[0], var[1], var[2] = _var[0], _var[1], _var[2]
@@ -1608,13 +1607,9 @@ def parametrize_ternary_quadratic(eq):
 
 def _parametrize_ternary_quadratic(solution, _var, coeff):
 
-    x = _var[0]
-    y = _var[1]
-    z = _var[2]
+    x, y, z = _var[:3]
 
-    x_0 = solution[0]
-    y_0 = solution[1]
-    z_0 = solution[2]
+    x_0, y_0, z_0 = solution[:3]
 
     v = [x]*3
     v[0], v[1], v[2] = _var[0], _var[1], _var[2]
@@ -1632,9 +1627,7 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
             y_p, x_p, z_p = _parametrize_ternary_quadratic((y_0, x_0, z_0), v, coeff)
             return x_p, y_p, z_p
 
-    x = v[0]
-    y = v[1]
-    z = v[2]
+    x, y, z = v[:3]
     r, p, q = symbols("r, p, q", Integer=True)
 
     eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
@@ -1684,9 +1677,7 @@ def diop_ternary_quadratic_normal(eq):
 
 def _diop_ternary_quadratic_normal(var, coeff):
 
-    x = var[0]
-    y = var[1]
-    z = var[2]
+    x, y, z = var[:3]
 
     a = coeff[x**2]
     b = coeff[y**2]
@@ -2009,10 +2000,8 @@ def dot(u, v, w, a, b):
     Returns a special dot product of the vectors `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`
     which is defined in order to reduce solution of the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
     """
-    u_1 = u[0]
-    u_2 = u[1]
-    v_1 = v[0]
-    v_2 = v[1]
+    u_1, u_2 = u[:2]
+    v_1, v_2 = v[:2]
     return (w*u_1 + b*u_2)*(w*v_1 + b*v_2) + abs(a)*u_1*v_1
 
 
@@ -2022,8 +2011,7 @@ def norm(u, w, a, b):
     `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}` where `u = (u_{1}, u_{2})`
     and `v = (v_{1}, v_{2})`.
     """
-    u_1 = u[0]
-    u_2 = u[1]
+    u_1, u_2 = u[:2]
     return sqrt(dot((u_1, u_2), (u_1, u_2), w, a, b))
 
 
