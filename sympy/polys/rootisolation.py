@@ -516,7 +516,16 @@ def dup_isolate_real_roots_sqf(f, K, eps=None, inf=None, sup=None, fast=False, b
         return [ RealInterval((a, b), f, K) for (a, b) in roots ]
 
 def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast=False):
-    """Isolate real roots using continued fractions approach. """
+    """Isolate real roots using Vincent-Akritas-Strzebonski (VAS) continued fractions approach.
+
+       References:
+       ===========
+       1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
+       Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+       2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
+       of the Continued Fractions Method Using New Bounds of Positive Roots.
+       Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+    """
     if K.is_QQ:
         (_, f), K = dup_clear_denoms(f, K, convert=True), K.get_ring()
     elif not K.is_ZZ:
@@ -544,7 +553,16 @@ def dup_isolate_real_roots(f, K, eps=None, inf=None, sup=None, basis=False, fast
     return sorted(I_neg + I_zero + I_pos)
 
 def dup_isolate_real_roots_list(polys, K, eps=None, inf=None, sup=None, strict=False, basis=False, fast=False):
-    """Isolate real roots of a list of square-free polynomial using CF approach. """
+    """Isolate real roots of a list of square-free polynomial using Vincent-Akritas-Strzebonski (VAS) CF approach.
+
+       References:
+       ===========
+       1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root Isolation Methods.
+       Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+       2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the Performance
+       of the Continued Fractions Method Using New Bounds of Positive Roots.
+       Nonlinear Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+"""
     if K.is_QQ:
         K, F, polys = K.get_ring(), K, polys[:]
 
