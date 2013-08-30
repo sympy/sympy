@@ -348,6 +348,7 @@ def test_parametrize_ternary_quadratic():
     assert check_solutions(124*x**2 - 30*y**2 - 7729*z**2)
     assert check_solutions(236*x**2 - 225*y**2 - 11*x*y - 13*y*z - 17*x*z)
     assert check_solutions(90*x**2 + 3*y**2 + 5*x*y + 2*z*y + 5*x*z)
+    assert check_solutions(124*x**2 - 30*y**2 - 7729*z**2)
 
 
 def test_no_square_ternary_quadratic():

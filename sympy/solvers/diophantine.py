@@ -1590,7 +1590,7 @@ def parametrize_ternary_quadratic(eq):
     >>> parametrize_ternary_quadratic(3*x**2 + 2*y**2 - z**2 - 2*x*y + 5*y*z - 7*y*z)
     (2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2)
     >>> parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2)
-    (-9890670*p**2 - 2548166281*q**2, 20105220*p**2 + 11346172*p*q - 5179774846*q**2, -22020*p**2 + 40210440*p*q + 5673086*q**2)
+    (-1410*p**2 - 363263*q**2, 2700*p**2 + 30916*p*q - 695610*q**2, -60*p**2 + 5400*p*q + 15458*q**2)
 
     References
     ==========
@@ -1864,7 +1864,7 @@ def ldescent(A, B):
     >>> ldescent(1, 1) # w^2 = x^2 + y^2
     (1, 1, 0)
     >>> ldescent(4, -7) # w^2 = 4x^2 - 7y^2
-    (2, -1, 0)
+    (-3, -2, 1)
 
     This means that `x = -1, y = 0` and `w = 2` is a solution to the equation `w^2 = 4x^2 - 7y^2`
 
@@ -1907,7 +1907,7 @@ def ldescent(A, B):
 
     if B_0 != None:
         W, X, Y = ldescent(A, B_0)
-        return ((-A*X + r*W), (r*X - W), Y*(B_0*d))
+        return simplified((-A*X + r*W), (r*X - W), Y*(B_0*d))
     # In this module Descent will always be called with inputs which have solutions.
 
 
@@ -1961,7 +1961,7 @@ def descent(A, B):
 
     x_1, z_1, y_1 = descent(A, t_1)
 
-    return (x_0*x_1 + A*z_0*z_1, z_0*x_1 + x_0*z_1, t_1*t_2*y_1)
+    return simplified(x_0*x_1 + A*z_0*z_1, z_0*x_1 + x_0*z_1, t_1*t_2*y_1)
 
 
 def gaussian_reduce(w, a, b):
