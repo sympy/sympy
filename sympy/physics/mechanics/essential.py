@@ -7,7 +7,7 @@ __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
 from sympy import (
     Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
     expand, zeros, Derivative, Function, symbols, Add,
-    solve, S, simplify, ImmutableMatrix as Matrix)
+    solve, S, ImmutableMatrix as Matrix)
 from sympy.core import C
 from sympy.core.compatibility import reduce, u, string_types
 from sympy.core.function import UndefinedFunction
@@ -17,6 +17,9 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
+
+#Global mechanics time variable
+time = Symbol('t')
 
 
 class Dyadic(object):
@@ -438,7 +441,7 @@ class Dyadic(object):
         """
 
         _check_frame(frame)
-        t = dynamicsymbols._t
+        t = time
         ol = S(0)
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
@@ -484,7 +487,7 @@ class CoordinateSym(Symbol):
 
     def __new__(cls, name, system):
         obj = super(CoordinateSym, cls).__new__(cls, name)
-        obj.system = system
+        obj._system = system
         return obj
 
 
@@ -664,7 +667,7 @@ class ReferenceFrame(object):
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
         dcm2diff = self.dcm(otherframe)
-        diffed = dcm2diff.diff(dynamicsymbols._t)
+        diffed = dcm2diff.diff(time)
         angvelmat = diffed * dcm2diff.T
         w1 = trigsimp(expand(angvelmat[7]), recursive=True)
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
@@ -705,9 +708,10 @@ class ReferenceFrame(object):
         vars_matrix = self.dcm(otherframe) * Matrix(otherframe.varlist)
         mapping = {}
         for i, x in enumerate(self):
-            mapping[self.varlist[i]] = vars_matrix[i]
-            if simplify_mapping:
-                mapping[self.varlist[i]] = simplify(mapping[self.varlist[i]])
+            if Vector.simp:
+                mapping[self.varlist[i]] = trigsimp(vars_matrix[i], method='fu')
+            else:
+                mapping[self.varlist[i]] = vars_matrix[i]
         return mapping
 
     def ang_acc_in(self, otherframe):
@@ -807,11 +811,16 @@ class ReferenceFrame(object):
         """
 
         _check_frame(otherframe)
-        flist = self._dict_list(otherframe, 0)
-        outdcm = eye(3)
-        for i in range(len(flist) - 1):
-            outdcm = outdcm * flist[i + 1]._dcm_dict[flist[i]]
-        return outdcm
+        if otherframe in self._dcm_dict:
+            return self._dcm_dict[otherframe]
+        else:
+            flist = self._dict_list(otherframe, 0)
+            outdcm = eye(3)
+            for i in range(len(flist) - 1):
+                outdcm = outdcm * flist[i + 1]._dcm_dict[flist[i]]
+            self._dcm_dict[otherframe] = outdcm
+            otherframe._dcm_dict[self] = outdcm.T
+            return outdcm
 
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
@@ -908,7 +917,6 @@ class ReferenceFrame(object):
         if not rot_order in approved_orders:
             raise TypeError('The supplied order is not an approved type')
         parent_orient = []
-
         if rot_type == 'AXIS':
             if not rot_order == '':
                 raise TypeError('Axis orientation takes no rotation order')
@@ -954,10 +962,16 @@ class ReferenceFrame(object):
                     * _rot(a1, amounts[0]))
         else:
             raise NotImplementedError('That is not an implemented rotation')
+        #Reset own dcm dictionary and update those of the frames
+        #wrt whom a dcm was initially calculated
+        frames = self._dcm_dict.keys()
+        for frame in frames:
+            del frame._dcm_dict[self]
+        self._dcm_dict = self._dlist[0] = {}
         self._dcm_dict.update({parent: parent_orient})
         parent._dcm_dict.update({self: parent_orient.T})
         if rot_type == 'QUATERNION':
-            t = dynamicsymbols._t
+            t = time
             q0, q1, q2, q3 = amounts
             q0d = diff(q0, t)
             q1d = diff(q1, t)
@@ -968,7 +982,7 @@ class ReferenceFrame(object):
             w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
-            thetad = (amounts[0]).diff(dynamicsymbols._t)
+            thetad = (amounts[0]).diff(time)
             wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:
@@ -1146,7 +1160,7 @@ class ReferenceFrame(object):
                 for i, v in enumerate(field.args):
                     if v[1] != self:
                         temp = self.dcm(v[1]) * v[0]
-                        if Vector.simp is True:
+                        if Vector.simp:
                             temp = temp.applyfunc(lambda x: \
                                                   trigsimp(x, method='fu'))
                         outvec += Vector([(temp, self)])
@@ -1158,8 +1172,8 @@ class ReferenceFrame(object):
             field = sympify(field)
             for x in field.atoms():
                 if isinstance(x, CoordinateSym):
-                    if x.system not in frame_set and x.system != self:
-                        frame_set.add(x.system)
+                    if x._system not in frame_set and x._system != self:
+                        frame_set.add(x._system)
             subs_dict = {}
             for frame in frame_set:
                 subs_dict.update(frame.var_dict(self))
@@ -1202,7 +1216,7 @@ class ReferenceFrame(object):
         
         """
 
-        t = dynamicsymbols._t
+        t = time
         if order == 0:
             return expr
         if order%1 != 0 or order < 0:
@@ -1335,7 +1349,7 @@ class Vector(object):
                 out += ((v2[0].T)
                         * (v2[1].dcm(v1[1]))
                         * (v1[0]))[0]
-        if Vector.simp is True:
+        if Vector.simp:
             return trigsimp(sympify(out), recursive=True)
         else:
             return sympify(out)
@@ -1721,9 +1735,10 @@ class Vector(object):
 
     def express(self, otherframe, variables=False):
         """
-        Express this Vector in another frame
-
-        Call's ReferenceFrame's express method
+        Returns a Vector equivalent to this one, expressed in otherframe.
+        Uses ReferenceFrame's .express method.
+        
+        Refer the docstring for ReferenceFrame.express
         """
         return otherframe.express(self, variables)
 
@@ -1735,12 +1750,11 @@ class Vector(object):
         return ov
 
     def dt(self, otherframe):
-        """Returns the time derivative of the Vector in a ReferenceFrame.
-
-        Returns a Vector which is the time derivative of the self Vector, taken
+        """Returns a Vector which is the time derivative of the self Vector, taken
         in frame otherframe.
 
         Calls ReferenceFrame' express method
+        Refer the docstring for ReferenceFrame.express
         """
         return otherframe.dt(self)
 
@@ -1785,7 +1799,7 @@ class MechanicsStrPrinter(StrPrinter):
     """String Printer for mechanics. """
 
     def _print_Derivative(self, e):
-        t = dynamicsymbols._t
+        t = time
         if (bool(sum([i == t for i in e.variables])) &
                 isinstance(type(e.args[0]), UndefinedFunction)):
             ol = str(e.args[0].func)
@@ -1796,7 +1810,7 @@ class MechanicsStrPrinter(StrPrinter):
             return StrPrinter().doprint(e)
 
     def _print_Function(self, e):
-        t = dynamicsymbols._t
+        t = time
         if isinstance(type(e), UndefinedFunction):
             return StrPrinter().doprint(e).replace("(%s)" % t, '')
         return e.func.__name__ + "(%s)" % self.stringify(e.args, ", ")
@@ -1807,7 +1821,7 @@ class MechanicsLatexPrinter(LatexPrinter):
 
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
-        t = dynamicsymbols._t
+        t = time
 
         if hasattr(self, '_print_' + func):
             return getattr(self, '_print_' + func)(expr, exp)
@@ -1877,7 +1891,7 @@ class MechanicsLatexPrinter(LatexPrinter):
 
         # check if expr is a dynamicsymbol
         from sympy.core.function import AppliedUndef
-        t = dynamicsymbols._t
+        t = time
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
@@ -1907,7 +1921,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
 
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
-        t = dynamicsymbols._t
+        t = time
         dots = 0
         can_break = True
         syms = list(reversed(deriv.variables))
@@ -1991,7 +2005,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
         return pform
 
     def _print_Function(self, e):
-        t = dynamicsymbols._t
+        t = time
         # XXX works only for applied functions
         func = e.func
         args = e.args
@@ -2068,12 +2082,13 @@ def dynamicsymbols(names, level=0):
     """
 
     esses = symbols(names, cls=Function)
-    t = dynamicsymbols._t
+    t = time
     if hasattr(esses, '__iter__'):
         esses = [reduce(diff, [t]*level, e(t)) for e in esses]
         return esses
     else:
         return reduce(diff, [t]*level, esses(t))
 
-time = dynamicsymbols._t = Symbol('t')
+
+dynamicsymbols._t = time
 dynamicsymbols._str = '\''
