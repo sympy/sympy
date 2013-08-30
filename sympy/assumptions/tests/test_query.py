@@ -1223,6 +1223,13 @@ def test_even():
     assert ask(Q.even(k**x), Q.even(k)) is None
     assert ask(Q.even(n**x), Q.odd(n)) is None
 
+    assert ask(Q.even(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.even(x*x), Q.integer(x)) is None
+    assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.odd(y)) is True
+    assert ask(Q.even(x*(x + y)), Q.integer(x) & Q.even(y)) is None
+    assert ask(Q.even(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.odd(z)) is True
+    assert ask(Q.even(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.even(z)) is None
+
 
 def test_extended_real():
     assert ask(Q.extended_real(x), Q.positive(x)) is True
@@ -1608,6 +1615,13 @@ def test_odd():
 
     assert ask(Q.odd(k**x), Q.even(k)) is None
     assert ask(Q.odd(n**x), Q.odd(n)) is None
+
+    assert ask(Q.odd(x*y), Q.integer(x) & Q.integer(y)) is None
+    assert ask(Q.odd(x*x), Q.integer(x)) is None
+    assert ask(Q.odd(x*(x + y)), Q.integer(x) & Q.odd(y)) is False
+    assert ask(Q.odd(x*(x + y)), Q.integer(x) & Q.even(y)) is None
+    assert ask(Q.odd(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.odd(z)) is False
+    assert ask(Q.odd(x*y*(y + z)), Q.integer(x) & Q.integer(y) & Q.even(z)) is None
 
 
 def test_prime():

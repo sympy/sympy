@@ -1139,7 +1139,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            r = True
+            r, acc = True, 1
             for t in self.args:
                 if not t.is_integer:
                     return None
@@ -1148,8 +1148,11 @@ class Mul(Expr, AssocOp):
                 elif t.is_integer:
                     if r is False:
                         pass
+                    elif acc != 1 and (acc + t).is_odd:
+                        r = False
                     elif t.is_odd is None:
                         r = None
+                acc = t
             return r
 
         # !integer -> !odd
