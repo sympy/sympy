@@ -96,8 +96,8 @@
 		$\displaystyle\lim_{x\to a_+} f(x)$: &\verb|limit(f, x, a, dir='+')|\\
 		$\frac{d}{dx}f(x)$: &\verb|diff(f, x)|\\
 		$\frac{\partial}{\partial x} f(x,y)$: &\verb|diff(f, x)|\\
-		$\int f(x)dx:$& \verb|integrate(f, x)|\\
-		$\int_a^b f(x)dx:$& \verb|integrate(f,(x,a,b))|\\				
+		$\int f(x) \, dx:$& \verb|integrate(f, x)|\\
+		$\int_a^b f(x) \, dx:$& \verb|integrate(f, (x, a, b))|\\
 		Taylor series (at $a$, deg $n$)& \verb|f.series(x,a,n)|\\	
 	\end{tabular}}\end{center}
     \end{minipage}
@@ -228,7 +228,7 @@
 		Calculate the sum $\sum_{n=0}^{\infty} \frac{1}{n^2}$:\\
 		\verb|summation(1/n**2, (n, 0, oo))|\\
 		\\
-		Calculate the integral $\int \cos^3 x dx$:\\
+		Calculate the integral $\int \cos^3 x \, dx$:\\
 		\verb|integrate(cos(x)**3, x)|\\
 		\\
 		Calculate the integral $\int_1^{\infty} \frac{dx}{x^2}$:\\
