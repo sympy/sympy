@@ -512,6 +512,7 @@ Modular GCD
 .. autoclass:: modgcd_univariate
 .. autoclass:: modgcd_bivariate
 .. autoclass:: modgcd_multivariate
+.. autoclass:: func_field_modgcd
 
 Undocumented
 ============
