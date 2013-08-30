@@ -309,7 +309,6 @@ def test_H2():
     assert 4 * 2**n == 2 ** (n + 2)
 
 
-@XFAIL
 def test_H3():
     assert (-1)**(n*(n + 1)) == 1
 
