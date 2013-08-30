@@ -187,7 +187,8 @@ def classify_diop(eq):
     diop_type = None
 
     coeff = dict([reversed(t.as_independent(*var)) for t in eq.args])
-    for v in coeff:
+
+    for v in coeff.keys():
         if not isinstance(coeff[v], Integer):
             raise TypeError("Coefficients should be Integers")
 
@@ -1395,6 +1396,20 @@ def check_param(x, y, a, t):
 
         x_param = x.match(p*t + q)
         y_param = y.match(p*t + q)
+
+        if x_param[p] == 0 or y_param[p] == 0:
+            if x_param[p] == 0:
+                l1, junk = Poly(y).clear_denoms()
+            else:
+                l1 = 1
+
+            if y_param[p] == 0:
+                l2, junk = Poly(x).clear_denoms()
+            else:
+                l2 = 1
+
+            return x*ilcm(l1, l2), y*ilcm(l1, l2)
+
         eq = S(m -x_param[q])/x_param[p] - S(n - y_param[q])/y_param[p]
 
         lcm_denom, junk = Poly(eq).clear_denoms()
