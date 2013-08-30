@@ -485,11 +485,21 @@ def test_residue():
         (22315420166400, 167365651248000000)]:
         assert pow(sqrt_mod(a, p), 2, p) == a
 
-    n = 30
+    n = 70
     a, p = 5**2*3**n*2**n, 5**6*3**(n+1)*2**(n+2)
     it = sqrt_mod_iter(a, p)
     for i in range(10):
         assert pow(next(it), 2, p) == a
+    a, p = 5**2*3**n*2**n, 5**6*3**(n+1)*2**(n+3)
+    it = sqrt_mod_iter(a, p)
+    for i in range(2):
+        assert pow(next(it), 2, p) == a
+    n = 100
+    a, p = 5**2*3**n*2**n, 5**6*3**(n+1)*2**(n+1)
+    it = sqrt_mod_iter(a, p)
+    for i in range(2):
+        assert pow(next(it), 2, p) == a
+
     assert type(next(sqrt_mod_iter(9, 27))) is int
     assert type(next(sqrt_mod_iter(9, 27, ZZ))) is type(ZZ(1))
     assert type(next(sqrt_mod_iter(1, 7, ZZ))) is type(ZZ(1))
