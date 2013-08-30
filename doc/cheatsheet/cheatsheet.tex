@@ -30,7 +30,7 @@
 	\begin{center}\small{\begin{tabular}{l r}
     		%Sympy packages:& \verb|from sympy import some_package |\\
 		Sympy help: & \verb|help(function)|\\
-		Declare symbol:& \verb|x=Symbol('x')|\\ 
+		Declare symbol:& \verb|x = Symbol('x')|\\
 		Substitution:& \verb|expr.subs(old, new)|\\
 		Numerical evaluation:& \verb|expr.evalf()|\\
 		Expanding:& \verb|expr.expand()|\\
@@ -59,9 +59,9 @@
 \node [mybox] (box){%
     \begin{minipage}{0.195\textwidth}
 	\begin{center}\small{\begin{tabular}{l r}
-    		Integers ($\mathbb{Z}$): &\verb|Integer(x)|\\	
-    		Rationals ($\mathbb{Q}$): &\verb|Rational(p,q)|\\	
-    		Reals ($\mathbb{R}$): &\verb|Float(x)|\\	
+    		Integers ($\mathbb{Z}$): &\verb|Integer(x)|\\
+    		Rationals ($\mathbb{Q}$): &\verb|Rational(p, q)|\\
+    		Reals ($\mathbb{R}$): &\verb|Float(x)|\\
     		\\
 	\end{tabular}}\end{center}
     \end{minipage}
@@ -78,7 +78,7 @@
 		Area hyperbolic: &\verb|asinh acosh atanh acoth|\\
 		Exponential: &\verb|exp(x)|\\
 		Square root: &\verb|sqrt(x)|\\
-		Logarithm ($\log_ba$): &\verb|log(a,b)|\\
+		Logarithm ($\log_ba$): &\verb|log(a, b)|\\
 		Natural logarithm: &\verb|log(a)|\\
 		Gamma ($\Gamma(x)$): &\verb|gamma(x)|\\
 		Absolute value: &\verb|abs(x)|\\
@@ -91,14 +91,14 @@
 \node [mybox] (box){%
     \begin{minipage}{0.3\textwidth}
 	\begin{center}\small{\begin{tabular}{l r}
-		$\displaystyle\lim_{x\to a} f(x)$: &\verb|limit(f, x, a)|\\	
+		$\displaystyle\lim_{x\to a} f(x)$: &\verb|limit(f, x, a)|\\
 		$\displaystyle\lim_{x\to a_-} f(x)$: &\verb|limit(f, x, a, dir='-')|\\
 		$\displaystyle\lim_{x\to a_+} f(x)$: &\verb|limit(f, x, a, dir='+')|\\
 		$\frac{d}{dx}f(x)$: &\verb|diff(f, x)|\\
 		$\frac{\partial}{\partial x} f(x,y)$: &\verb|diff(f, x)|\\
 		$\int f(x) \, dx:$& \verb|integrate(f, x)|\\
 		$\int_a^b f(x) \, dx:$& \verb|integrate(f, (x, a, b))|\\
-		Taylor series (at $a$, deg $n$)& \verb|f.series(x,a,n)|\\	
+		Taylor series (at $a$, deg $n$)& \verb|f.series(x, a, n)|\\
 	\end{tabular}}\end{center}
     \end{minipage}
 };
@@ -109,7 +109,7 @@
     \begin{minipage}{0.3\textwidth}
 	\begin{center}\small{\begin{tabular}{l r}
 		Equation $f(x)=0$: &\verb|solve(f, x)|\\
-		System of equations: &\verb|solve([f,g],[x,y])|\\
+		System of equations: &\verb|solve([f, g], [x, y])|\\
 		Differential equation: &\verb|dsolve(equation, f(x))|\\
 	\end{tabular}}\end{center}
     \end{minipage}
@@ -120,12 +120,12 @@
 \node [mybox] (box){%
     \begin{minipage}{0.3\textwidth}
 	\begin{center}\small{\begin{tabular}{l r}
-		Points: & \verb|a = Point(xcoord,ycoord)|\\
+		Points: & \verb|a = Point(xcoord, ycoord)|\\
 		Lines: &\verb|l = Line(pointA, pointB)|\\
 		Circles: &\verb|c = Circle(center, radius)|\\
-		Triangles: &\verb|t = Triangle(a,b,c)|\\
+		Triangles: &\verb|t = Triangle(a, b, c)|\\
 		Area: &\verb|object.area|\\
-		Intersection: &\verb|intersection(a,b)|\\
+		Intersection: &\verb|intersection(a, b)|\\
 		Checking tangency: &\verb|c.is_tangent(l)|\\
 	\end{tabular}}\end{center}
     \end{minipage}
@@ -137,7 +137,7 @@
     \begin{minipage}{0.3\textwidth}
 	\begin{center}\small{\begin{tabular}{l r}
 		Plot: &\verb|Plot(f, [a, b])|\\
-		Zoom: $+/-$: &\verb|R/F or PgUp/PgDn or Numpad +/-|\\ 
+		Zoom: $+/-$: &\verb|R/F or PgUp/PgDn or Numpad +/-|\\
 		Rotate X,Y axis: &\verb|Arrow Keys or WASD|\\
 		Rotate Z axis: &\verb| Q and E or Numpad 7 and 9|\\
 		View XY: &\verb|F1|\\
@@ -204,7 +204,7 @@
 		\verb|((x + y)**2 * (x - y) * (x**2 + y)).expand()|\\
 		\\
 		Simplify $\displaystyle\frac{1}{x} + \frac{x\sin x -1}{x^2-1}$:\\
-		\verb|simplify((1/x)+(x * sin(x) - 1)/(x**2 - 1))|\\
+		\verb|simplify((1/x) + (x * sin(x) - 1)/(x**2 - 1))|\\
 		\\
 		Check if line passing through points $(0,1)$ and $(1,1)$\\
 		is tangent to circle with center at $(5,5)$ and radius $3$:\\
@@ -238,9 +238,7 @@
 		\verb|(1/(1 - 2*x)).series(x, 0, 10)|\\
 		\\
 		Solve the differential equation $f^{''}(x)+9f(x)=1$:\\
-		\verb|dsolve(f(x).diff(x,x) + 9*f(x) - 1, f(x))|\\
-		
-			
+		\verb|dsolve(f(x).diff(x, x) + 9*f(x) - 1, f(x))|\\
 	}
     \end{minipage}
 };
