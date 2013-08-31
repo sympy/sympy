@@ -1767,6 +1767,10 @@ def _diop_ternary_quadratic_normal(var, coeff):
     a = coeff[x**2]
     b = coeff[y**2]
     c = coeff[z**2]
+
+    if a*b*c == 0:
+        raise ValueError("Try factoring out you equation or using diophantine()")
+
     g = igcd(a, igcd(b, c))
 
     a = a // g

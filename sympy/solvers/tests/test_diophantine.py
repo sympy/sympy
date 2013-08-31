@@ -334,7 +334,7 @@ def test_diop_ternary_quadratic():
     assert check_solutions(x**2 + 3*y**2 + z**2 - x*y - 17*y*z)
     assert check_solutions(x**2 + 3*y**2 + z**2 - x*y - 16*y*z + 12*x*z)
     assert check_solutions(x**2 + 3*y**2 + z**2 - 13*x*y - 16*y*z + 12*x*z)
-
+    assert check_solutions(x*y - 7*y*z + 13*x*z)
 
 def test_pairwise_prime():
 
