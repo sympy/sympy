@@ -2939,7 +2939,7 @@ class Poly(Expr):
 
     def intervals(f, all=False, eps=None, inf=None, sup=None, fast=False, sqf=False):
         """
-        Compute isolating intervals for roots of ``f``. 
+        Compute isolating intervals for roots of ``f``.
 
         For real roots the Vincent-Akritas-Strzebonski (VAS) continued fractions method is used.
 
