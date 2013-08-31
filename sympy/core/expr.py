@@ -2326,6 +2326,8 @@ class Expr(Basic, EvalfMixin):
         1 - x**2/2 + x**4/24 + O(x**6)
         >>> cos(x).series(n=4)
         1 - x**2/2 + O(x**4)
+        >>> cos(x).series(x, x0=1, n=2)
+        cos(1) - (x - 1)*sin(1) + O((x - 1)**2, (x, 1))
         >>> e = cos(x + exp(y))
         >>> e.series(y, n=2)
         cos(x + 1) - y*sin(x + 1) + O(y**2)
