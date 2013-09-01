@@ -214,16 +214,21 @@ def kahane_simplify(expression):
     pointer = first_dum_pos
     previous_pointer = 0
     while True:
-        try: next_ones = links.pop(pointer)
-        except KeyError: break
+        if pointer in links:
+            next_ones = links.pop(pointer)
+        else:
+            break
 
-        try: next_ones.remove(previous_pointer)
-        except ValueError: pass
+        if previous_pointer in next_ones:
+            if len(next_ones) > 1:
+                next_ones.remove(previous_pointer)
 
         previous_pointer = pointer
 
-        try: pointer = next_ones[0]
-        except IndexError: break
+        if next_ones:
+            pointer = next_ones[0]
+        else:
+            break
 
         if pointer == previous_pointer:
             break
@@ -254,18 +259,21 @@ def kahane_simplify(expression):
         # ignored.
         prepend_indices = []
         while True:
-            try: next_ones = links.pop(pointer)
-            except KeyError: break
+            if pointer in links:
+                next_ones = links.pop(pointer)
+            else:
+                break
 
-            try:
+            if previous_pointer in next_ones:
                 if len(next_ones) > 1:
                     next_ones.remove(previous_pointer)
-            except ValueError: pass
 
             previous_pointer = pointer
 
-            try: pointer = next_ones[0]
-            except IndexError: pass
+            if next_ones:
+                pointer = next_ones[0]
+            else:
+                break
 
             if pointer >= first_dum_pos and free_pos[pointer] is not None:
                 prepend_indices.insert(0, free_pos[pointer])
