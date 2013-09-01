@@ -220,8 +220,7 @@ def kahane_simplify(expression):
             break
 
         if previous_pointer in next_ones:
-            if len(next_ones) > 1:
-                next_ones.remove(previous_pointer)
+            next_ones.remove(previous_pointer)
 
         previous_pointer = pointer
 
@@ -272,8 +271,6 @@ def kahane_simplify(expression):
 
             if next_ones:
                 pointer = next_ones[0]
-            else:
-                break
 
             if pointer >= first_dum_pos and free_pos[pointer] is not None:
                 prepend_indices.insert(0, free_pos[pointer])
