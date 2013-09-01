@@ -1463,7 +1463,7 @@ def elgamal_private_key(digit=10):
     Elgamal encryption is based on mathmatical problem
     Discrete Logarithm Problem (DLP). For example,
 
-    a ** b = c (mod p)
+    `a^{b} \equiv c \pmod p`
 
     In general, if a and b are known, c is easily
     calculated. If b is unknown, it is hard to use
@@ -1488,8 +1488,12 @@ def elgamal_private_key(digit=10):
     ========
 
     >>> from sympy.crypto.crypto import elgamal_private_key
-    >>> elgamal_private_key()                     # doctest: +SKIP
-    (1031, 14, 636)
+    >>> from sympy.ntheory import is_primitive_root, isprime
+    >>> a, b, _ = elgamal_private_key()
+    >>> isprime(a)
+    True
+    >>> is_primitive_root(b, a)
+    True
 
     """
     p = nextprime(2**digit)
@@ -1514,7 +1518,7 @@ def elgamal_public_key(prk):
     ========
 
     >>> from sympy.crypto.crypto import elgamal_public_key
-    >>> elgamal_public_key((1031,14,636))
+    >>> elgamal_public_key((1031, 14, 636))
     (1031, 14, 212)
 
     """
@@ -1566,7 +1570,7 @@ def decipher_elgamal(ct, prk):
     `prk = (p, r, d)`
 
     According to extended Eucliden theorem,
-    `u * c1 ^ d + p * n = 1`
+    `u c1^{d} + p * n = 1`
 
     ``u`` is inverse of `c1 ^ d (mod p)`
 

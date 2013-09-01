@@ -11,6 +11,7 @@ from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
       encipher_elgamal, decipher_elgamal)
 from sympy.matrices import Matrix
+from sympy.ntheory import isprime, is_primitive_root
 from sympy.polys.domains import FF
 from sympy.utilities.pytest import raises
 
@@ -239,6 +240,12 @@ def test_lfsr_connection_polynomial():
     assert lfsr_connection_polynomial(s) == x**2 + 1
     s = lfsr_sequence([F(1), F(1)], [F(0), F(1)], 5)
     assert lfsr_connection_polynomial(s) == x**2 + x + 1
+
+def test_elgamal_private_key():
+    a, b, _ = elgamal_private_key(digit=100)
+    assert isprime(a)
+    assert is_primitive_root(b, a)
+    assert len(bin(a)) >= 102
 
 def test_elgamal():
     dk = elgamal_private_key(20)
