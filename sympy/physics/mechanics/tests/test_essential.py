@@ -1,7 +1,7 @@
 from sympy import cos, Matrix, sin, symbols, simplify, pi, Function
 from sympy.abc import x, y, z
-from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols,\
-     CoordinateSym, express
+from sympy.physics.mechanics import Vector, ReferenceFrame, dot, \
+     dynamicsymbols, CoordinateSym, express
 from sympy.physics.mechanics.essential import MechanicsLatexPrinter
 
 Vector.simp = True
@@ -50,7 +50,7 @@ def test_coordinate_vars():
     qd = dynamicsymbols('q', 1)
     assert isinstance(A[0], CoordinateSym) and isinstance(A[0], CoordinateSym) \
            and isinstance(A[0], CoordinateSym)
-    assert A.var_dict(A) == {A[0] : A[0], A[1] : A[1], A[2] : A[2]}
+    assert A.variable_map(A) == {A[0] : A[0], A[1] : A[1], A[2] : A[2]}
     B = A.orientnew('B', 'Axis', [q, A.z])
     assert A.dt(B[0]) == -A[0]*sin(q)*qd + A[1]*cos(q)*qd
     assert A.dt(B[1]) == -A[0]*cos(q)*qd - A[1]*sin(q)*qd
@@ -75,8 +75,7 @@ def test_coordinate_vars():
     assert B.express(A[0]*A.x + A[1]*A.y + A[2]*A.z, variables = True) == \
            B[0]*B.x + B[1]*B.y + B[2]*B.z
     N = B.orientnew('N', 'Axis', [-q, B.z])
-    assert N.var_dict(A, simplify_mapping=True) == \
-           {N[0]: A[0], N[2]: A[2], N[1]: A[1]}
+    assert N.variable_map(A) == {N[0]: A[0], N[2]: A[2], N[1]: A[1]}
 
 
 def test_ang_vel():

@@ -483,11 +483,27 @@ class CoordinateSym(Symbol):
     """
     Class to represent the coordinate symbols associated wrt a Reference
     Frame
-    """
 
-    def __new__(cls, name, system):
+    Users should not instantiate this class. Instances of this class must
+    only be accessed through the corresponding frame as 'frame[index]'
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> A = ReferenceFrame('A')
+    >>> A[1]
+    A_y
+    >>> type(A[0])
+    <class 'sympy.physics.mechanics.essential.CoordinateSym'>
+
+    Refer Symbol documentation for more information-
+    """
+    __doc__ += Symbol.__doc__
+
+    def __new__(cls, name, frame):
         obj = super(CoordinateSym, cls).__new__(cls, name)
-        obj._system = system
+        obj._frame = frame
         return obj
 
 
@@ -593,6 +609,7 @@ class ReferenceFrame(object):
                     raise TypeError('Latex entries must be strings')
             self.latex_vecs = latexs
         self.name = name
+        self._var_dict = {}
         self._dcm_dict = {}
         self._ang_vel_dict = {}
         self._ang_acc_dict = {}
@@ -604,7 +621,7 @@ class ReferenceFrame(object):
         #Associate coordinate symbols wrt this frame
         if variables is not None:
             if not isinstance(variables, (tuple, list)):
-                raise TypeError('Supply the variable names as a list')
+                raise TypeError('Supply the variable names as a list/tuple')
             if len(variables) != 3:
                 raise ValueError('Supply 3 variable names')
             for i in variables:
@@ -612,10 +629,7 @@ class ReferenceFrame(object):
                     raise TypeError('Variable names must be strings')
         else:
             variables = [name + '_x', name + '_y', name + '_z']
-        self.varlist = []
-        for varname in variables:
-            self.varlist.append(CoordinateSym(varname, self))
-        self.varlist = tuple(self.varlist)
+        self.varlist = tuple(symbols(variables, cls=CoordinateSym, frame=self))
 
     def __getitem__(self, ind):
         """Returns basis vector for the provided index (index being an str)"""
@@ -674,12 +688,12 @@ class ReferenceFrame(object):
         w3 = trigsimp(expand(angvelmat[3]), recursive=True)
         return -Vector([(Matrix([w1, w2, w3]), self)])
 
-    def var_dict(self, otherframe, simplify_mapping=False):
+    def variable_map(self, otherframe):
         """
         Returns a dictionary which expresses the variables of this frame
         in terms of the variables of otherframe.
 
-        If simplify_mapping is True, returns a simplified version of the mapped
+        If Vector.simp is True, returns a simplified version of the mapped
         values. Else, returns them without simplification.
 
         Simplification may take time.
@@ -690,9 +704,6 @@ class ReferenceFrame(object):
         otherframe : ReferenceFrame
             The other frame to map this variables to
 
-        simplify_mapping : bool
-            boolean value indicating whether the mapped values have to be simplified
-
         Examples
         ========
 
@@ -700,19 +711,23 @@ class ReferenceFrame(object):
         >>> A = ReferenceFrame('A')
         >>> q = dynamicsymbols('q')
         >>> B = A.orientnew('B', 'Axis', [q, A.z])
-        >>> A.var_dict(B)
+        >>> A.variable_map(B)
         {A_x: B_x*cos(q(t)) - B_y*sin(q(t)), A_y: B_x*sin(q(t)) + B_y*cos(q(t)), A_z: B_z}
         
         """
-        
-        vars_matrix = self.dcm(otherframe) * Matrix(otherframe.varlist)
-        mapping = {}
-        for i, x in enumerate(self):
-            if Vector.simp:
-                mapping[self.varlist[i]] = trigsimp(vars_matrix[i], method='fu')
-            else:
-                mapping[self.varlist[i]] = vars_matrix[i]
-        return mapping
+
+        if (otherframe, Vector.simp) in self._var_dict:
+            return self._var_dict[(otherframe, Vector.simp)]
+        else:
+            vars_matrix = self.dcm(otherframe) * Matrix(otherframe.varlist)
+            mapping = {}
+            for i, x in enumerate(self):
+                if Vector.simp:
+                    mapping[self.varlist[i]] = trigsimp(vars_matrix[i], method='fu')
+                else:
+                    mapping[self.varlist[i]] = vars_matrix[i]
+            self._var_dict[(otherframe, Vector.simp)] = mapping
+            return mapping
 
     def ang_acc_in(self, otherframe):
         """Returns the angular acceleration Vector of the ReferenceFrame.
@@ -968,8 +983,8 @@ class ReferenceFrame(object):
         for frame in frames:
             del frame._dcm_dict[self]
         self._dcm_dict = self._dlist[0] = {}
-        self._dcm_dict.update({parent: parent_orient})
-        parent._dcm_dict.update({self: parent_orient.T})
+        self._dcm_dict.update({parent: parent_orient.T})
+        parent._dcm_dict.update({self: parent_orient})
         if rot_type == 'QUATERNION':
             t = time
             q0, q1, q2, q3 = amounts
@@ -1002,6 +1017,7 @@ class ReferenceFrame(object):
                 wvec = self._w_diff_dcm(parent)
         self._ang_vel_dict.update({parent: wvec})
         parent._ang_vel_dict.update({self: -wvec})
+        self._var_dict = {}
 
     def orientnew(self, newname, rot_type, amounts, rot_order='', variables=None,
                   indices=None, latexs=None):
@@ -1152,21 +1168,21 @@ class ReferenceFrame(object):
                 frame_list = [x[-1] for x in field.args]
                 subs_dict = {}
                 for frame in frame_list:
-                    subs_dict.update(frame.var_dict(self))
-                field = field.subs(subs_dict).express(self)
-                return self.express(field)
-            else:
-                outvec = Vector([])
-                for i, v in enumerate(field.args):
-                    if v[1] != self:
-                        temp = self.dcm(v[1]) * v[0]
-                        if Vector.simp:
-                            temp = temp.applyfunc(lambda x: \
-                                                  trigsimp(x, method='fu'))
-                        outvec += Vector([(temp, self)])
-                    else:
-                        outvec += Vector([v])
-                return outvec
+                    subs_dict.update(frame.variable_map(self))
+                field = field.subs(subs_dict)
+            
+            outvec = Vector([])
+            for i, v in enumerate(field.args):
+                if v[1] != self:
+                    temp = self.dcm(v[1]) * v[0]
+                    if Vector.simp:
+                        temp = temp.applyfunc(lambda x: \
+                                              trigsimp(x, method='fu'))
+                    outvec += Vector([(temp, self)])
+                else:
+                    outvec += Vector([v])
+            return outvec
+        
         else:
             frame_set = set([])
             field = sympify(field)
@@ -1176,7 +1192,7 @@ class ReferenceFrame(object):
                         frame_set.add(x._system)
             subs_dict = {}
             for frame in frame_set:
-                subs_dict.update(frame.var_dict(self))
+                subs_dict.update(frame.variable_map(self))
             return field.subs(subs_dict)
 
     def dt(self, expr, order=1):
