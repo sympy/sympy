@@ -277,16 +277,16 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
             namespace.update({str(term): term})
 
     # check if being used for numerical translations
+    numerical_outs = ["math", "mpmath", "numpy"]
     dummify = False
-    if not module_provided:
-        if ((modules[1] == "numpy") or (modules[1] == "math") or
-                                        (modules[1] == "mpmath")):
+    try:
+        if namespaces[1].__name__ in numerical_outs:
             dummify = True
-    else:
-        if isinstance(module_provided, str):
-            if ((modules == "numpy") or (modules == "math") or
-                                        (modules == "mpmath")):
-                dummify = True
+    except AttributeError:
+        if namespaces[1] in numerical_outs:
+            dummify = True
+    except:
+        pass
 
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
