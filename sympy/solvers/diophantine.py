@@ -516,11 +516,14 @@ def _diop_quadratic(var, coeff, t):
 
     elif B**2 - 4*A*C == 0:
 
-        if A == 0 and C == 0:
-            g == 1
-        else:
-            g = igcd(A, C)
+        if A == 0:
+            s = set()
+            s1 = _diop_quadratic([var[1], var[0]], coeff, t)
+            for x_0, y_0 in s1:
+                s.add((y_0, x_0))
+            return s
 
+        g = igcd(A, C)
         g = abs(g) * sign(A)
         a = A // g
         b = B // g

@@ -72,6 +72,7 @@ def test_quadratic_parabolic_case():
     assert diop_solve(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1) == set([(t,-t - 1)])
     assert diop_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1) == \
         set([(-4*t**2, -4*t**2 + 4*t - 1),(-4*t**2 + 4*t -1, -4*t**2 + 8*t - 4)])
+    assert check_solutions(y**2 - 41*x + 40)
 
 
 def test_quadratic_perfect_square():
@@ -335,6 +336,7 @@ def test_diop_ternary_quadratic():
     assert check_solutions(x**2 + 3*y**2 + z**2 - x*y - 16*y*z + 12*x*z)
     assert check_solutions(x**2 + 3*y**2 + z**2 - 13*x*y - 16*y*z + 12*x*z)
     assert check_solutions(x*y - 7*y*z + 13*x*z)
+
 
 def test_pairwise_prime():
 
