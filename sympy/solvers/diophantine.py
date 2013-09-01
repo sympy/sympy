@@ -534,7 +534,6 @@ def _diop_quadratic(var, coeff, t):
         if e*sqrt(c)*D - sqrt(a)*E == 0:
             z = symbols("z", real=True)
             roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
-            print("hi")
             for root in roots:
                 if isinstance(root, Integer):
                     l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
