@@ -521,7 +521,7 @@ class ReferenceFrame(object):
 
     """
 
-    def __init__(self, name, variables=None, indices=None, latexs=None):
+    def __init__(self, name, variables=None,  indices=None, latexs=None):
         """ReferenceFrame initialization method.
 
         A ReferenceFrame has a set of orthonormal basis vectors, along with
@@ -546,7 +546,7 @@ class ReferenceFrame(object):
         >>> N = ReferenceFrame('N')
         >>> N.x
         N.x
-        >>> O = ReferenceFrame('O', ('1', '2', '3'))
+        >>> O = ReferenceFrame('O', indices=('1', '2', '3'))
         >>> O.x
         O['1']
         >>> O['1']
