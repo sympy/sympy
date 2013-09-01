@@ -517,37 +517,36 @@ def _diop_quadratic(var, coeff, t):
     elif B**2 - 4*A*C == 0:
 
         if A == 0:
-            s = set([])
-            s1 = _diop_quadratic([var[1], var[0]], coeff, t)
-            for x_0, y_0 in s1:
-                s.add((y_0, x_0))
-            return s
+            s = _diop_quadratic([y, x], coeff, t)
+            for soln in s:
+                l.add((soln[1], soln[0]))
 
-        g = igcd(A, C)
-        g = abs(g) * sign(A)
-        a = A // g
-        b = B // g
-        c = C // g
-        e = sign(B/A)
+        else:
+            g = igcd(A, C)
+            g = abs(g) * sign(A)
+            a = A // g
+            b = B // g
+            c = C // g
+            e = sign(B/A)
 
 
-        if e*sqrt(c)*D - sqrt(a)*E == 0:
-            z = symbols("z", real=True)
-            roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
-            for root in roots:
-                if isinstance(root, Integer):
-                    l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
+            if e*sqrt(c)*D - sqrt(a)*E == 0:
+                z = symbols("z", real=True)
+                roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
+                for root in roots:
+                    if isinstance(root, Integer):
+                        l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
 
-        elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
-            solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
-                - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // (e*sqrt(c)*D - sqrt(a)*E)
+            elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
+                solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
+                    - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-            solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
-                + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
+                solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
+                    + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-            for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
-                if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
-                    l.add((solve_x(z0), solve_y(z0)))
+                for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
+                    if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
+                        l.add((solve_x(z0), solve_y(z0)))
 
     # (4) Method used when B**2 - 4*A*C is a square, is descibed in p. 6 of the below paper
     # by John P. Robertson.
