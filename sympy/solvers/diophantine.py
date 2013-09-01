@@ -517,7 +517,7 @@ def _diop_quadratic(var, coeff, t):
     elif B**2 - 4*A*C == 0:
 
         if A == 0:
-            s = set()
+            s = set([])
             s1 = _diop_quadratic([var[1], var[0]], coeff, t)
             for x_0, y_0 in s1:
                 s.add((y_0, x_0))
