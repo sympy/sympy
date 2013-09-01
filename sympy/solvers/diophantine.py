@@ -516,32 +516,37 @@ def _diop_quadratic(var, coeff, t):
 
     elif B**2 - 4*A*C == 0:
 
-        g = igcd(A, C)
-        g = abs(g) * sign(A)
-        a = A // g
-        b = B // g
-        c = C // g
-        e = sign(B/A)
+        if A == 0:
+            s = _diop_quadratic([y, x], coeff, t)
+            for soln in s:
+                l.add((soln[1], soln[0]))
+
+        else:
+            g = igcd(A, C)
+            g = abs(g) * sign(A)
+            a = A // g
+            b = B // g
+            c = C // g
+            e = sign(B/A)
 
 
-        if e*sqrt(c)*D - sqrt(a)*E == 0:
-            z = symbols("z", real=True)
-            roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
+            if e*sqrt(c)*D - sqrt(a)*E == 0:
+                z = symbols("z", real=True)
+                roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
+                for root in roots:
+                    if isinstance(root, Integer):
+                        l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
 
-            for root in roots:
-                if isinstance(root, Integer):
-                    l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
+            elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
+                solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
+                    - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-        elif isinstance(e*sqrt(c)*D - sqrt(a)*E, Integer):
-            solve_x = lambda u: e*sqrt(c)*g*(sqrt(a)*E - e*sqrt(c)*D)*t**2 - (E + 2*e*sqrt(c)*g*u)*t\
-                - (e*sqrt(c)*g*u**2 + E*u + e*sqrt(c)*F) // (e*sqrt(c)*D - sqrt(a)*E)
+                solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
+                    + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-            solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
-                + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
-
-            for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
-                if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
-                    l.add((solve_x(z0), solve_y(z0)))
+                for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
+                    if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
+                        l.add((solve_x(z0), solve_y(z0)))
 
     # (4) Method used when B**2 - 4*A*C is a square, is descibed in p. 6 of the below paper
     # by John P. Robertson.
@@ -1559,6 +1564,91 @@ def _diop_ternary_quadratic(_var, coeff):
     return simplified(x_0, y_0, z_0)
 
 
+def transformation_to_normal(eq):
+    """
+    Transform the general ternary quadratic equation `eq` to the ternary quadratic
+    normal form, i.e to the form `ax^2 + by^2 + cz^2 = 0`. Returns the transfromation
+    Matrix which is a 3X3 Matrix. This is not used in solving ternary quadratics.
+    Only implemented for the sake of completeness.
+    """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "ternary_quadratic":
+        return _transformation_to_normal(var, coeff)
+
+
+def _transformation_to_normal(var, coeff):
+
+    _var = [var[0]]*3
+    _var[1], _var[2] = var[1], var[2]
+
+    x, y, z = var[:3]
+
+    if coeff[x**2] == 0:
+        # If the coefficient of x is zero change the variables
+        if coeff[y**2] == 0:
+            _var[0], _var[2] = var[2], var[0]
+            T = _transformation_to_normal(_var, coeff)
+            T.row_swap(0, 2)
+            T.col_swap(0, 2)
+            return T
+
+        else:
+            _var[0], _var[1] = var[1], var[0]
+            T = _transformation_to_normal(_var, coeff)
+            T.row_swap(0, 1)
+            T.col_swap(0, 1)
+            return T
+
+    else:
+        # Apply the transformation x --> X - (B*Y + C*Z)/(2*A)
+        if coeff[x*y] != 0 or coeff[x*z] != 0:
+            A = coeff[x**2]
+            B = coeff[x*y]
+            C = coeff[x*z]
+            D = coeff[y**2]
+            E = coeff[y*z]
+            F = coeff[z**2]
+
+            _coeff = dict()
+
+            _coeff[x**2] = 4*A**2
+            _coeff[y**2] = 4*A*D - B**2
+            _coeff[z**2] = 4*A*F - C**2
+            _coeff[y*z] = 4*A*E - 2*B*C
+            _coeff[x*y] = 0
+            _coeff[x*z] = 0
+
+            T_0 = _transformation_to_normal(_var, _coeff)
+            return Matrix(3, 3, [1, S(-B)/(2*A), S(-C)/(2*A), 0, 1, 0, 0, 0, 1]) * T_0
+
+        elif coeff[y*z] != 0:
+            if coeff[y**2] == 0:
+                if coeff[z**2] == 0:
+                    # Equations of the form A*x**2 + E*yz = 0.
+                    # Apply transformation y -> Y + Z ans z -> Y - Z
+                    return Matrix(3, 3, [1, 0, 0, 0, 1, 1, 0, 1, -1])
+
+                else:
+                    # Ax**2 + E*y*z + F*z**2  = 0
+                    _var[0], _var[2] = var[2], var[0]
+                    T = _transformtion_to_normal(_var, coeff)
+                    T.row_swap(0, 2)
+                    T.col_swap(0, 2)
+                    return T
+
+            else:
+                # A*x**2 + D*y**2 + E*y*z + F*z**2 = 0, F may be zero
+                _var[0], _var[1] = var[1], var[0]
+                T = _transformation_to_normal(_var, coeff)
+                T.row_swap(0, 1)
+                T.col_swap(0, 1)
+                return T
+
+        else:
+            return Matrix(3, 3, [1, 0, 0, 0, 1, 0, 0, 0, 1])
+
+
 def simplified(x, y, z):
     """
     Simplify the solution `(x, y, z)`.
@@ -1682,6 +1772,10 @@ def _diop_ternary_quadratic_normal(var, coeff):
     a = coeff[x**2]
     b = coeff[y**2]
     c = coeff[z**2]
+
+    if a*b*c == 0:
+        raise ValueError("Try factoring out you equation or using diophantine()")
+
     g = igcd(a, igcd(b, c))
 
     a = a // g

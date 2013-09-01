@@ -1,12 +1,12 @@
 from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, transformation_to_DN, find_DN, equivalent,
     parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
-    ldescent, classify_diop, diophantine)
+    ldescent, classify_diop, diophantine, transformation_to_normal)
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities import default_sort_key
 
-x, y, z, w, t, X, Y = symbols("x, y, z, w, t, X, Y", Integer=True)
+x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", Integer=True)
 
 
 def test_linear():
@@ -72,6 +72,7 @@ def test_quadratic_parabolic_case():
     assert diop_solve(x**2 + 2*x*y + y**2 + 2*x + 2*y + 1) == set([(t,-t - 1)])
     assert diop_solve(x**2 - 2*x*y + y**2 + 2*x + 2*y + 1) == \
         set([(-4*t**2, -4*t**2 + 4*t - 1),(-4*t**2 + 4*t -1, -4*t**2 + 8*t - 4)])
+    assert check_solutions(y**2 - 41*x + 40)
 
 
 def test_quadratic_perfect_square():
@@ -213,7 +214,7 @@ def test_length():
     assert length(-40, 5, 23) == 4
 
 
-def is_transformation_ok(eq):
+def is_pell_transformation_ok(eq):
     """
     Test whether X*Y, X, or Y terms are present in the equation
     after transforming the equation using the transformation returned
@@ -244,14 +245,14 @@ def is_transformation_ok(eq):
 
 def test_transformation_to_pell():
 
-    assert is_transformation_ok(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y - 14)
-    assert is_transformation_ok(-17*x**2 + 19*x*y - 7*y**2 - 5*x - 13*y - 23)
-    assert is_transformation_ok(x**2 - y**2 + 17)
-    assert is_transformation_ok(-x**2 + 7*y**2 - 23)
-    assert is_transformation_ok(25*x**2 - 45*x*y + 5*y**2 - 5*x - 10*y + 5)
-    assert is_transformation_ok(190*x**2 + 30*x*y + y**2 - 3*y - 170*x - 130)
-    assert is_transformation_ok(x**2 - 2*x*y -190*y**2 - 7*y - 23*x - 89)
-    assert is_transformation_ok(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950)
+    assert is_pell_transformation_ok(-13*x**2 - 7*x*y + y**2 + 2*x - 2*y - 14)
+    assert is_pell_transformation_ok(-17*x**2 + 19*x*y - 7*y**2 - 5*x - 13*y - 23)
+    assert is_pell_transformation_ok(x**2 - y**2 + 17)
+    assert is_pell_transformation_ok(-x**2 + 7*y**2 - 23)
+    assert is_pell_transformation_ok(25*x**2 - 45*x*y + 5*y**2 - 5*x - 10*y + 5)
+    assert is_pell_transformation_ok(190*x**2 + 30*x*y + y**2 - 3*y - 170*x - 130)
+    assert is_pell_transformation_ok(x**2 - 2*x*y -190*y**2 - 7*y - 23*x - 89)
+    assert is_pell_transformation_ok(15*x**2 - 9*x*y + 14*y**2 - 23*x - 14*y - 4950)
 
 
 def test_find_DN():
@@ -291,6 +292,31 @@ def test_diop_ternary_quadratic_normal():
     assert check_solutions(124*x**2 - 30*y**2 - 7729*z**2)
 
 
+def is_normal_transformation_ok(eq):
+
+    A = transformation_to_normal(eq)
+    X, Y, Z = A*Matrix([x, y, z])
+    simplified = simplify(Subs(eq, (x, y, z), (X, Y, Z)).doit())
+
+    coeff = dict([reversed(t.as_independent(*[X, Y, Z])) for t in simplified.args])
+    for term in [X*Y, Y*Z, X*Z]:
+        if term in coeff.keys():
+            return False
+
+    return True
+
+
+def test_transformation_to_normal():
+
+    assert is_normal_transformation_ok(x**2 + 3*y**2 + z**2 - 13*x*y - 16*y*z + 12*x*z)
+    assert is_normal_transformation_ok(x**2 + 3*y**2 - 100*z**2)
+    assert is_normal_transformation_ok(x**2 + 23*y*z)
+    assert is_normal_transformation_ok(3*y**2 - 100*z**2 - 12*x*y)
+    assert is_normal_transformation_ok(x**2 + 23*x*y - 34*y*z + 12*x*z)
+    assert is_normal_transformation_ok(z**2 + 34*x*y - 23*y*z + x*z)
+    assert is_normal_transformation_ok(x**2 + y**2 + z**2 - x*y - y*z - x*z)
+
+
 def test_diop_ternary_quadratic():
     # Commented out test cases should be uncommented after
     # the bug with factor_list() gets merged.
@@ -309,6 +335,7 @@ def test_diop_ternary_quadratic():
     assert check_solutions(x**2 + 3*y**2 + z**2 - x*y - 17*y*z)
     assert check_solutions(x**2 + 3*y**2 + z**2 - x*y - 16*y*z + 12*x*z)
     assert check_solutions(x**2 + 3*y**2 + z**2 - 13*x*y - 16*y*z + 12*x*z)
+    assert check_solutions(x*y - 7*y*z + 13*x*z)
 
 
 def test_pairwise_prime():
