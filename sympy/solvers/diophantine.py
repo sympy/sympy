@@ -516,7 +516,11 @@ def _diop_quadratic(var, coeff, t):
 
     elif B**2 - 4*A*C == 0:
 
-        g = igcd(A, C)
+        if A == 0 and C == 0:
+            g == 1
+        else:
+            g = igcd(A, C)
+
         g = abs(g) * sign(A)
         a = A // g
         b = B // g
@@ -527,7 +531,7 @@ def _diop_quadratic(var, coeff, t):
         if e*sqrt(c)*D - sqrt(a)*E == 0:
             z = symbols("z", real=True)
             roots = solve(sqrt(a)*g*z**2 + D*z + sqrt(a)*F)
-
+            print("hi")
             for root in roots:
                 if isinstance(root, Integer):
                     l.add((diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[0], diop_solve(sqrt(a)*x + e*sqrt(c)*y - root)[1]))
