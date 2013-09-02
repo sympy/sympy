@@ -453,6 +453,7 @@ def test_residue():
 
     assert list(sqrt_mod_iter(6, 2)) == [0]
     assert sqrt_mod(3, 13) == 4
+    assert sqrt_mod(3, -13) == 4
     assert sqrt_mod(6, 23) == 11
     assert sqrt_mod(345, 690) == 345
 
