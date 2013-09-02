@@ -1,10 +1,16 @@
 from sympy.polys.rings import ring
-from sympy.polys.domains import ZZ
+from sympy.polys.domains import ZZ, QQ, AlgebraicField
 from sympy.polys.modulargcd import (
     modgcd_univariate,
     modgcd_bivariate,
     _chinese_remainder_reconstruction_multivariate,
-    modgcd_multivariate)
+    modgcd_multivariate,
+    _to_ZZ_poly,
+    _to_ANP_poly,
+    func_field_modgcd,
+    _func_field_modgcd_m)
+from sympy import sqrt
+
 
 def test_modgcd_univariate_integers():
     R, x = ring("x", ZZ)
@@ -134,6 +140,17 @@ def test_chinese_remainder():
     assert hpq.trunc_ground(p) == hp
     assert hpq.trunc_ground(q) == hq
 
+    T, z = ring("z", R)
+    p, q = 3, 7
+
+    hp = (x*y + 1)*z**2 + x
+    hq = (x**2 - 3*y)*z + 2
+
+    hpq = _chinese_remainder_reconstruction_multivariate(hp, hq, p, q)
+
+    assert hpq.trunc_ground(p) == hp
+    assert hpq.trunc_ground(q) == hq
+
 
 def test_modgcd_multivariate_integers():
     R, x, y = ring("x,y", ZZ)
@@ -230,3 +247,79 @@ def test_modgcd_multivariate_integers():
     H, cff, cfg = modgcd_multivariate(f, g)
 
     assert H == h and H*cff == f and H*cfg == g
+
+
+def test_to_ZZ_ANP_poly():
+    A = AlgebraicField(QQ, sqrt(2))
+    R, x = ring("x", A)
+    f = x*(sqrt(2) + 1)
+
+    T, x_, z_ = ring("x_, z_", ZZ)
+    f_ = x_*z_ + x_
+
+    assert _to_ZZ_poly(f, T) == f_
+    assert _to_ANP_poly(f_, R) == f
+
+    R, x, t, s = ring("x, t, s", A)
+    f = x*t**2 + x*s + sqrt(2)
+
+    D, t_, s_ = ring("t_, s_", ZZ)
+    T, x_, z_ = ring("x_, z_", D)
+    f_ = (t_**2 + s_)*x_ + z_
+
+    assert _to_ZZ_poly(f, T) == f_
+    assert _to_ANP_poly(f_, R) == f
+
+
+def test_modgcd_algebraic_field():
+    A = AlgebraicField(QQ, sqrt(2))
+    R, x = ring("x", A)
+    one = A.one
+
+    f, g = 2*x, R(2)
+    assert func_field_modgcd(f, g) == (one, f, g)
+
+    f, g = 2*x, R(sqrt(2))
+    assert func_field_modgcd(f, g) == (one, f, g)
+
+    f, g = 2*x + 2, 6*x**2 - 6
+    assert func_field_modgcd(f, g) == (x + 1, R(2), 6*x - 6)
+
+    R, x, y = ring("x, y", A)
+
+    f, g = x + sqrt(2)*y, x + y
+    assert func_field_modgcd(f, g) == (one, f, g)
+
+    f, g = x*y + sqrt(2)*y**2, R(sqrt(2))*y
+    assert func_field_modgcd(f, g) == (y, x + sqrt(2)*y, R(sqrt(2)))
+
+    f, g = x**2 + 2*sqrt(2)*x*y + 2*y**2, x + sqrt(2)*y
+    assert func_field_modgcd(f, g) == (g, g, one)
+
+    A = AlgebraicField(QQ, sqrt(2), sqrt(3))
+    R, x, y, z = ring("x, y, z", A)
+
+    h = x**2*y**7 + sqrt(6)/21*z
+    f, g = h*(27*y**3 + 1), h*(y + x)
+    assert func_field_modgcd(f, g) == (h, 27*y**3+1, y+x)
+
+    h = x**13*y**3 + 1/2*x**10 + 1/sqrt(2)
+    f, g = h*(x + 1), h*sqrt(2)/sqrt(3)
+    assert func_field_modgcd(f, g) == (h, x + 1, R(sqrt(2)/sqrt(3)))
+
+    A = AlgebraicField(QQ, sqrt(2)**(-1)*sqrt(3))
+    R, x = ring("x", A)
+
+    f, g = x + 1, x - 1
+    assert func_field_modgcd(f, g) == (A.one, f, g)
+
+
+# when func_field_modgcd suppors function fields, this test can be changed
+def test_modgcd_func_field():
+    D, t = ring("t", ZZ)
+    R, x, z = ring("x, z", D)
+
+    minpoly = (z**2*t**2 + z**2*t - 1).drop(0)
+    f, g = x + 1, x - 1
+
+    assert _func_field_modgcd_m(f, g, minpoly) == R.one
