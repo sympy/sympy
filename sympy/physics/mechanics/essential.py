@@ -828,14 +828,13 @@ class ReferenceFrame(object):
         _check_frame(otherframe)
         if otherframe in self._dcm_dict:
             return self._dcm_dict[otherframe]
-        else:
-            flist = self._dict_list(otherframe, 0)
-            outdcm = eye(3)
-            for i in range(len(flist) - 1):
-                outdcm = outdcm * flist[i].dcm(flist[i+1])
-            self._dcm_dict[otherframe] = outdcm
-            otherframe._dcm_dict[self] = outdcm.T
-            return outdcm
+        flist = self._dict_list(otherframe, 0)
+        outdcm = eye(3)
+        for i in range(len(flist) - 1):
+            outdcm = outdcm * flist[i]._dcm_dict[flist[i+1]]
+        self._dcm_dict[otherframe] = outdcm
+        otherframe._dcm_dict[self] = outdcm.T
+        return outdcm
 
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
