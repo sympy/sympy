@@ -832,7 +832,7 @@ class ReferenceFrame(object):
             flist = self._dict_list(otherframe, 0)
             outdcm = eye(3)
             for i in range(len(flist) - 1):
-                outdcm = outdcm * flist[i + 1]._dcm_dict[flist[i]]
+                outdcm = outdcm * flist[i].dcm(flist[i+1])
             self._dcm_dict[otherframe] = outdcm
             otherframe._dcm_dict[self] = outdcm.T
             return outdcm
@@ -977,8 +977,8 @@ class ReferenceFrame(object):
                     * _rot(a1, amounts[0]))
         else:
             raise NotImplementedError('That is not an implemented rotation')
-        #Reset own dcm dictionary and update those of the frames
-        #wrt whom a dcm was initially calculated
+        #Reset the _dcm_dict of this frame, and remove it from the _dcm_dicts
+        #of the frames it is linked to
         frames = self._dcm_dict.keys()
         for frame in frames:
             del frame._dcm_dict[self]
@@ -1188,8 +1188,8 @@ class ReferenceFrame(object):
             field = sympify(field)
             for x in field.atoms():
                 if isinstance(x, CoordinateSym):
-                    if x._system not in frame_set and x._system != self:
-                        frame_set.add(x._system)
+                    if x._frame not in frame_set and x._frame != self:
+                        frame_set.add(x._frame)
             subs_dict = {}
             for frame in frame_set:
                 subs_dict.update(frame.variable_map(self))
