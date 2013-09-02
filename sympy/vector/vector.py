@@ -460,6 +460,10 @@ class BaseScalar(AtomicExpr):
             raise ValueError("coord_sys doesn't have same position and \
                               orientaion as coordinate system of self")
 
+        # Check whether coord_sys.__class__ is same as self's coordinate
+        # system
+        if type(self.coord_sys) == type(coord_sys):
+            return coord_sys.base_scalars[self.position - 1]
         rv = CoordSys._pos_to_rect(self.coord_sys.base_scalars,
                                    coord_conv[coord_sys.__class__])
         return rv[self.position - ind]
@@ -1404,8 +1408,8 @@ class BaseVector(Vector, Symbol):
             raise ValueError("coord_sys doesn't have same position and \
                               orientaion as coordinate system of self")
 
-        if isinstance(self.coord_sys, CoordSysRect):
-            return coord_sys.base_scalars[self.position - 1]
+        if type(self.coord_sys) == type(coord_sys):
+            return coord_sys.base_vectors[self.position - 1]
         rv = self.coord_sys._convert_to_rect(self, coord_sys)
         return rv
 
@@ -2012,6 +2016,7 @@ def express(vect, coord_sys):
     subs_dict = {}
 
     vect = vect.expand()
+    import ipdb;ipdb.set_trace()
     ######## Get rid of this #######
     cs = vect.coord_sys
     vect = cs.x * coord_sys_t.e_x + cs.y * coord_sys_t.e_y
@@ -2021,7 +2026,6 @@ def express(vect, coord_sys):
     for arg in vect._all_args:
         assert isinstance(arg, BaseVector) or isinstance(arg, VectMul)
         vector = arg.vector
-        import ipdb;ipdb.set_trace()
         subs_dict[vector] = CoordSys._convert_base_vect_rect(vector,
                                                              coord_sys_t)
     # Now subs in the vectors
@@ -2050,6 +2054,7 @@ def express(vect, coord_sys):
     # variables into rectangular coordinates
     vect = vect.subs(subs_dict)
 
+    import ipdb;ipdb.set_trace()
     # Now we need to convert back from coord_sys_t to coord_sys
     subs_dict = {}
     vect = vect.expand()
@@ -2076,12 +2081,12 @@ def express(vect, coord_sys):
         assert isinstance(vector, BaseVector)
         subs_dict[vector] = vector._convert_to_rect(coord_sys)
 
-        # Now performig the substitution, we have changed all involved
-        # variables into rectangular coordinates
-        vect = vect.subs(subs_dict)
-        subs_dict = {}
+    # Now performig the substitution, we have changed all involved
+    # variables into rectangular coordinates
+    vect = vect.subs(subs_dict)
+    subs_dict = {}
 
-        return vect.factor()
+    return vect.factor()
 
 def _express_scalar(expr, coord_sys):
     """
