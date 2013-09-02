@@ -231,6 +231,7 @@ def sqrt_mod(a, p, all_roots=False):
     if all_roots:
         return sorted(list(sqrt_mod_iter(a, p)))
     try:
+        p = abs(as_int(p))
         it = sqrt_mod_iter(a, p)
         r = next(it)
         if r > p // 2:
@@ -302,7 +303,7 @@ def sqrt_mod_iter(a, p, domain=int):
     """
     from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
     from sympy.polys.domains import ZZ
-    a, p = as_int(a), as_int(p)
+    a, p = as_int(a), abs(as_int(p))
     if isprime(p):
         a = a % p
         if a == 0:
