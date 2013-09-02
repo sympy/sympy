@@ -966,14 +966,19 @@ class CoordSys(Basic):
         # call express on them without causing a recursion error.
         csA = coord_sys._change_coord_sys(CoordSysRect, 'csA')
         csB = sclr.coord_sys._change_coord_sys(CoordSysRect, 'csB')
+        # TODO : Get this next line working when express starts working
+        # Until then, temporary measures in place
+        """
         rel_pos_vect = coord_sys.position.express(csA) - \
                        sclr.coord_sys.position.express(csB)
         rel_pos_vect_comp = rel_pos_vect.expand().factor().components
-
+        """
+        # The said measure
+        rel_pos_vect_comp = [0, 0, 0]
         res = []
 
         for i, comp in enumerate(rel_pos_vect_comp):
-            res.append(mat_components + comp)
+            res.append(S(mat_components[i] + comp))
 
         return res[sclr.position - 1]
 
@@ -1399,6 +1404,8 @@ class BaseVector(Vector, Symbol):
             raise ValueError("coord_sys doesn't have same position and \
                               orientaion as coordinate system of self")
 
+        if isinstance(self.coord_sys, CoordSysRect):
+            return coord_sys.base_scalars[self.position - 1]
         rv = self.coord_sys._convert_to_rect(self, coord_sys)
         return rv
 
@@ -2005,7 +2012,10 @@ def express(vect, coord_sys):
     subs_dict = {}
 
     vect = vect.expand()
-
+    ######## Get rid of this #######
+    cs = vect.coord_sys
+    vect = cs.x * coord_sys_t.e_x + cs.y * coord_sys_t.e_y
+    ################################
     # First phase complete
     # Now, we find subs for base vectors and substitute it in
     for arg in vect._all_args:
@@ -2026,7 +2036,7 @@ def express(vect, coord_sys):
         scalar = arg.scalar
 
         # Process the scalar
-        if isinstance(scalar, BaseVector):
+        if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
             subs_dict[scalar] = CoordSys._convert_base_sclr_rect(scalar,
                                                             coord_sys_t)
