@@ -1949,7 +1949,7 @@ def ldescent(A, B):
     >>> ldescent(1, 1) # w^2 = x^2 + y^2
     (1, 1, 0)
     >>> ldescent(4, -7) # w^2 = 4x^2 - 7y^2
-    (-3, -2, 1)
+    (2, -1, 0)
 
     This means that `x = -1, y = 0` and `w = 2` is a solution to the equation `w^2 = 4x^2 - 7y^2`
 

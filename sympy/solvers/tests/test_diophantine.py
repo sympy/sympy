@@ -91,6 +91,9 @@ def test_quadratic_perfect_square():
         set([(-Integer(1), -Integer(9)), (-Integer(6), -Integer(9)), (Integer(0), -Integer(1)), (Integer(1), -Integer(1))])
     assert diop_solve(- 4*x*y - 4*y**2 - 3*y- 5*x - 10) == \
         set([(-Integer(2), Integer(0)), (-Integer(11), -Integer(1)), (-Integer(5), Integer(5))])
+    assert diop_solve(x**2 - y**2 - 2*x - 2*y) == set([(t, -t), (-t, -t - 2)])
+    assert diop_solve(x**2 - 9*y**2 - 2*x - 6*y) == set([(-3*t + 2, -t), (3*t, -t)])
+    assert diop_solve(4*x**2 - 9*y**2 - 4*x - 12*y - 3) == set([(-3*t - 3, -2*t - 3), (3*t + 1, -2*t - 1)])
 
 
 def test_quadratic_non_perfect_square():
@@ -111,13 +114,6 @@ def test_quadratic_non_perfect_slow():
     assert check_solutions(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7)
     assert check_solutions(-4 - x + 4*x**2 - y - 3*x*y - 4*y**2)
     assert check_solutions(1 + 2*x + 2*x**2 + 2*y + x*y - 2*y**2)
-
-
-@XFAIL
-def test_quadratic_bugs():
-    assert diop_solve(x**2 - y**2 - 2*x - 2*y) == set([(t, -t), (-t, -t - 2)])
-    assert diop_solve(x**2 - 9*y**2 - 2*x - 6*y) == set([(-3*t + 2, -t), (3*t, -t)])
-    assert diop_solve(4*x**2 - 9*y**2 - 4*x - 12*y - 3) == set([(-3*t - 3, -2*t - 3), (3*t + 1, -2*t - 1)])
 
 
 def test_DN():
