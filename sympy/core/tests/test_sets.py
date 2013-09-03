@@ -533,3 +533,12 @@ def test_image_Intersection():
 def test_image_EmptySet():
     x = Symbol('x', real=True)
     assert imageset(x, 2*x, S.EmptySet) == S.EmptySet
+
+def test_issue_1318():
+    assert Eq(Interval(-2,5,False,False), Interval(-2,5,False,False))
+    assert Eq(Pow(Interval(-2,5,False,False),2), Interval(0,25,False,False))
+    assert Eq(Interval(-2,5,False,False)^2, Interval(0,25,False,False))
+    assert Eq(S.One/Interval(-2,5,False,False), Union(Interval(S.NegativeInfinity, -S.One/2, False, False), Interval(S.One/5, S.Infinity, False, False)))
+    assert Eq(abs(Union(Interval(S.NegativeInfinity, -S.One/2, False, False), Interval(S.One/5, S.Infinity, False, False))), Interval(S.One/5, S.Infinity, False, False))
+    assert solve(Eq(3*x+2,Interval(-2,5,False,False)),x) == [Interval(-4/3, S.One, False, False)]
+    assert Eq(Limit(sin(S.One/x), x, 0), Interval(-S.One, S.One, False, False))
