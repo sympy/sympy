@@ -549,7 +549,7 @@ def test_issue_3460():
     e = -log(-12*sqrt(2) + 17)/24 - log(-2*sqrt(2) + 3)/12 + sqrt(2)/3
     # XXX modify cse so x1 is eliminated and x0 = -sqrt(2)?
     assert cse(e) == (
-        [(x0, sqrt(2)), (x1, -x0)], [x0/3 - log(2*x1 + 3)/12 - log(12*x1 + 17)/24])
+        [(x0, sqrt(2))], [x0/3 - log(-12*x0 + 17)/24 - log(-2*x0 + 3)/12])
 
 
 def test_issue_2162():
