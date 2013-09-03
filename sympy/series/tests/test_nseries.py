@@ -238,12 +238,8 @@ def test_expbug4():
     assert exp(
         log(sin(2*x)/x)*(1 + x)).series(x, 0, 2) == 2 + 2*x*log(2) + O(x**2)
 
-
-@XFAIL
-def test_expbug4_failing():
-    x = Symbol("x", real=True)
-    assert exp(log(2) + O(x)).nseries(x, 0, 2) == 2 + O(x**2, x)
-    assert ((2 + O(x))**(1 + x)).nseries(x, 0, 2) == 2 + O(x**2, x)
+    assert exp(log(2) + O(x)).nseries(x, 0, 2) == 2 + O(x)
+    assert ((2 + O(x))**(1 + x)).nseries(x, 0, 2) == 2 + O(x)
 
 
 def test_logbug4():
@@ -253,10 +249,7 @@ def test_logbug4():
 def test_expbug5():
     assert exp(log(1 + x)/x).nseries(x, n=3) == exp(1) + -exp(1)*x/2 + O(x**2)
 
-
-@XFAIL
-def test_expbug5_failing():
-    assert exp(O(x)).nseries(x, 0, 2) == 1 + O(x**2, x)
+    assert exp(O(x)).nseries(x, 0, 2) == 1 + O(x)
 
 
 def test_sinsinbug():
