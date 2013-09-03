@@ -61,7 +61,7 @@ information on each (run ``help(ode)``):
   - Lie Group method of solving first order differential equations.
   - 2nd order Liouville differential equations.
   - Power series solutions for second order differential equations
-    at ordinary points.
+    at ordinary and regular singular points.
   - `n`\th order linear homogeneous differential equation with constant
     coefficients.
   - `n`\th order linear inhomogeneous differential equation with constant
@@ -251,6 +251,7 @@ from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
+from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
 from sympy.simplify.simplify import _mexpand
@@ -293,6 +294,7 @@ allhints = (
     "nth_linear_constant_coeff_variation_of_parameters",
     "Liouville",
     "2nd_power_series_ordinary",
+    "2nd_power_series_regular",
     "separable_Integral",
     "1st_exact_Integral",
     "1st_linear_Integral",
@@ -754,9 +756,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     # Preprocessing to get the initial conditions out
     if ics is not None:
-        terms = ics.get('terms')  # For power series solutions
+        terms = ics.get('n')  # For power series solutions
         if terms:
-            ics.pop('terms')
+            ics.pop('n')
 
         for funcarg in ics:
             # Separating derivatives
@@ -1064,18 +1066,38 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
         deq = a3*(f(x).diff(x, 2)) + b3*df + c3*f(x)
         r = collect(reduced_eq,
             [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
+        ordinary = False
         if r and r[a3] != 0:
             if all([r[key].is_polynomial() for key in r]):
-               point = kwargs.get('point', 0)
-               check = cancel(r[b3]/r[a3]).subs(x, point)
-               if not check.has(oo) and not check.has(NaN) and \
-                   not check.has(zoo):
-                   check = cancel(r[c3]/r[a3]).subs(x, point)
-                   if not check.has(oo) and not check.has(NaN) and \
-                       not check.has(zoo):
-                       r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point})
-                       r.update(boundary)
-                       matching_hints["2nd_power_series_ordinary"] = r
+                p = cancel(r[b3]/r[a3])  # Used below
+                q = cancel(r[c3]/r[a3])  # Used below
+                point = kwargs.get('point', 0)
+                check = p.subs(x, point)
+                if not check.has(oo) and not check.has(NaN) and \
+                    not check.has(zoo) and not check.has(-oo):
+                    check = q.subs(x, point)
+                    if not check.has(oo) and not check.has(NaN) and \
+                        not check.has(zoo) and not check.has(-oo):
+                        ordinary = True
+                        r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point})
+                        r.update(boundary)
+                        matching_hints["2nd_power_series_ordinary"] = r
+
+                # Checking if the differential equation has a regular singular point
+                # at x0. It has a regular singular point at x0, if (b3/a3)*(x - x0)
+                # and (c3/a3)*((x - x0)**2) are analytic at x0.
+                if not ordinary:
+                    p = cancel((x - point)*p)
+                    check = p.subs(x, point)
+                    if not check.has(oo) and not check.has(NaN) and \
+                        not check.has(zoo) and not check.has(-oo):
+                        q = cancel(((x - point)**2)*q)
+                        check = q.subs(x, point)
+                        if not check.has(oo) and not check.has(NaN) and \
+                            not check.has(zoo) and not check.has(-oo):
+                            coeff_dict = {'p': p, 'q': q, 'x0': point}
+                            coeff_dict.update(boundary)
+                            matching_hints["2nd_power_series_regular"] = coeff_dict
 
 
     if order > 0:
@@ -2851,6 +2873,169 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     series = collect(expand_mul(series), [C0, C1])
     return Eq(f(x), series)
 
+
+
+def ode_2nd_power_series_regular(eq, func, order, match):
+    r"""
+    Gives a power series solution to a second order homogeneous differential
+    equation with polynomial coefficients at a regular point. A homogenous
+    differential equation is of the form
+
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+
+    A point is said to regular singular at `x0` if `\frac{(x - x0)Q(x)}{P(x)}`
+    and `\frac{(x - x0)^{2}R(x)}{P(x)}` are analytic at `x0`. For simplicity
+    `P(x)`, `Q(x)` and `R(x)` are assumed to be polynomials. The algorithm for
+    finding the power series solutions is:
+
+    1.  Try expressing `(x - x0)P(x)` and `((x - x0)^{2})Q(x)` as power series
+        solutions about x0. Find `p0` and `q0` which are the constants of the
+        power series expansions.
+    2.  Solve the indicial equation `f(m) = m(m - 1) + m*p0 + q0`, to obtain the
+        roots `m1` and `m2` of the indicial equation.
+    3.  If `m1 - m2` is a non integer there exists two series solutions. If
+        `m1 = m2`, there exists only one solution. If `m1 - m2` is an integer,
+        then the existence of one solution is confirmed. The other solution may
+        or may not exist.
+
+    The power series solution is of the form `x^{m}\sum_{n=0}^\infty anx^n`. The
+    coefficients are determined by the following recurrence relation.
+    `an = -\frac{\sum{k=0}^n-1 q_{n-k} + (m + k)p_{n-k}}{f(m + n)}`. For the case
+    in which `m1 - m2` is an integer, it can be seen from the recurrence relation
+    that for the lower root `m`, when `n` equals the difference of both the
+    roots, the denominator becomes zero. So if the numerator is not equal to zero,
+    a second series solution exists.
+
+
+    References
+    ==========
+    - George E. Simmons, "Differential Equations with Applications and
+      Historical Notes", p.p 176 - 184
+
+    """
+    x = func.args[0]
+    f = func.func
+    C0, C1 = symbols("C0 C1")
+    n = Dummy("n")
+    m = Dummy("m")  # for solving the indicial equation
+    s = Wild("s")
+    k = Wild("k", exclude=[x])
+    x0 = match.get('x0')
+    terms = match.get('terms', 5)
+    p = match['p']
+    q = match['q']
+
+    # Generating the indicial equation
+    indicial = []
+    for term in [p, q]:
+        if not term.has(x):
+            indicial.append(term)
+        else:
+            term = series(term, n=1, x0=x0)
+            if isinstance(term, Order):
+                indicial.append(S(0))
+            else:
+                for arg in term.args:
+                    if not arg.has(x):
+                        indicial.append(arg)
+                        break
+
+    p0, q0 = indicial
+    sollist = solve(m*(m - 1) + m*p0 + q0, m)
+    if sollist and isinstance(sollist, list) and all(
+        [sol.is_real for sol in sollist]):
+        serdict1 = {}
+        serdict2 = {}
+        if len(sollist) == 1:
+            # Only one series solution exists in this case.
+            m1 = m2 = sollist.pop()
+            if terms-m1-1 <= 0:
+              return Eq(f(x), Order(terms))
+            serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
+
+        else:
+            m1 = sollist[0]
+            m2 = sollist[1]
+            if m1 < m2:
+                m1, m2 = m2, m1
+            # Irrespective of whether m1 - m2 is an integer or not, one
+            # Frobenius series solution exists.
+            serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
+            if not (m1 - m2).is_integer:
+                # Second frobenius series solution exists.
+                serdict2 = _frobenius(terms-m2-1, m2, p0, q0, p, q, x0, x, C1)
+            else:
+                # Check if second frobenius series solution exists.
+                serdict2 = _frobenius(terms-m2-1, m2, p0, q0, p, q, x0, x, C1, check=m1)
+
+        if serdict1:
+            finalseries1 = C0
+            for key in serdict1:
+                power = int(key.name[1:])
+                finalseries1 += serdict1[key]*x**power
+            finalseries1 = x**m1*finalseries1
+            finalseries2 = S(0)
+            if serdict2:
+                for key in serdict2:
+                    power = int(key.name[1:])
+                    finalseries2 += serdict2[key]*x**power
+                finalseries2 += C1
+                finalseries2 = x**m2*finalseries2
+            return Eq(f(x), collect(finalseries1 + finalseries2,
+                [C0, C1]) + Order(x**terms))
+
+def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
+    r"""
+    Returns a dict with keys as coefficients and values as their values in terms of C0
+    """
+
+    # In cases where m1 - m2 is not an integer
+    m2 = check
+
+    d = Dummy("d")
+    numsyms = numbered_symbols("C", start=0)
+    numsyms = [numsyms.next() for i in range(n + 1)]
+    C0 = Symbol("C0")
+    serlist = []
+    for ser in [p, q]:
+        # Order term not present
+        if ser.is_polynomial(x) and Poly(ser, x).degree() <= n:
+            if x0:
+                ser = ser.subs(x, x + x0)
+            dict_ = Poly(ser, x).as_dict()
+        # Order term present
+        else:
+            tseries = series(ser, x=x0, n=n+1)
+            # Removing order
+            dict_ = Poly(list(ordered(tseries.args))[: -1], x).as_dict()
+        # Fill in with zeros, if coefficients are zero.
+        for i in range(n + 1):
+            if (i, ) not in dict_:
+                dict_[(i,)] = S(0)
+        serlist.append(dict_)
+
+    pseries = serlist[0]
+    qseries = serlist[1]
+    indicial = d*(d - 1) + d*p0 + q0
+    frobdict = {}
+    for i in range(1, n + 1):
+        num = c*(m*pseries[(i,)] + qseries[(i,)])
+        for j in range(1, i):
+            sym = Symbol("C" + str(j))
+            num += frobdict[sym]*((m + j)*pseries[(i - j,)] + qseries[(i - j,)])
+
+        # Checking for cases when m1 - m2 is an integer. If num equals zero
+        # then a second Frobenius series solution cannot be found. If num is not zero
+        # then set constant as zero and proceed.
+        if m2 is not None and i == m2 - m:
+            if num:
+                return False
+            else:
+                frobdict[numsyms[i]] = S(0)
+        else:
+            frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
+
+    return frobdict
 
 def _nth_linear_match(eq, func, order):
     r"""
