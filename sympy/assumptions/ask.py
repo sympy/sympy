@@ -31,6 +31,10 @@ class Q:
     real = Predicate('real')
     odd = Predicate('odd')
     is_true = Predicate('is_true')
+    nonpositive = Predicate('nonpositive')
+    nonnegative = Predicate('nonnegative')
+    zero = Predicate('zero')
+
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
     singular = Predicate('singular')
@@ -232,7 +236,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """
     The contents of this file are the return value of
     ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
-    edit this file.
+    edit this file.  Instead, run ./bin/ask_update.py.
     """
 
     from sympy.logic.boolalg import And, Not, Or
@@ -280,6 +284,9 @@ _handlers = [
     ("rational",          "sets.AskRationalHandler"),
     ("negative",          "order.AskNegativeHandler"),
     ("nonzero",           "order.AskNonZeroHandler"),
+    ("nonpositive",       "order.AskNonPositiveHandler"),
+    ("nonnegative",       "order.AskNonNegativeHandler"),
+    ("zero",              "order.AskZeroHandler"),
     ("positive",          "order.AskPositiveHandler"),
     ("prime",             "ntheory.AskPrimeHandler"),
     ("real",              "sets.AskRealHandler"),
@@ -325,6 +332,9 @@ known_facts = And(
     Equivalent(Q.real, Q.rational | Q.irrational),
     Implies(Q.nonzero, Q.real),
     Equivalent(Q.nonzero, Q.positive | Q.negative),
+    Equivalent(Q.nonpositive, ~Q.positive & Q.real),
+    Equivalent(Q.nonnegative, ~Q.negative & Q.real),
+    Equivalent(Q.zero, Q.real & ~Q.nonzero),
 
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),

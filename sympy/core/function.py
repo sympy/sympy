@@ -416,7 +416,7 @@ class Function(Application, Expr):
         return Add(*l)
 
     def _eval_is_commutative(self):
-        return fuzzy_and(a.is_commutative for a in self.args)
+        return fuzzy_and(*(a.is_commutative for a in self.args))
 
     def as_base_exp(self):
         """
