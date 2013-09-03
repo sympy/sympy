@@ -10,3 +10,5 @@ def test_type_B():
     assert c.simple_root(3) == [0, 0, 1]
     assert c.basis() == 3
     assert c.lie_algebra() == "so(6)"
+    diag = "0---0=>=0\n1   2   3"
+    assert c.dynkin_diagram() == diag

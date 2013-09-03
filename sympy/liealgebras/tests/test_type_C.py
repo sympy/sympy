@@ -12,3 +12,5 @@ def test_type_C():
     assert c.lie_algebra() == "sp(8)"
     t = CartanType(['C', 3])
     assert t.dimension() == 3
+    diag = "0---0---0=<=0\n1   2   3   4"
+    assert c.dynkin_diagram() == diag
