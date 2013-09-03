@@ -1872,11 +1872,15 @@ class MechanicsPrettyPrinter(PrettyPrinter):
         return pform
 
 
+def _raise_type_error(other, type_str):
+    raise TypeError("Expected an instance of %s, instead received object "
+            "'%s' of type %s." % (type_str, other, type(other)))
+
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):
         other = sympify(other)
         if other != S(0):
-            raise TypeError('A Dyadic must be supplied')
+            _raise_type_error(other, "Dyadic")
         else:
             other = Dyadic([])
     return other
@@ -1884,14 +1888,14 @@ def _check_dyadic(other):
 
 def _check_frame(other):
     if not isinstance(other, ReferenceFrame):
-        raise TypeError('A ReferenceFrame must be supplied')
+        _raise_type_error(other, "ReferenceFrame")
 
 
 def _check_vector(other):
     if not isinstance(other, Vector):
         other = sympify(other)
         if other != S(0):
-            raise TypeError('A Vector must be supplied')
+            _raise_type_error(other, "Vector")
         else:
             other = Vector([])
     return other
