@@ -61,7 +61,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
         var_t, jnk, eq_type = classify_diop(base)
         solution = diop_solve(base, param)
 
-        if eq_type in ["univariable", "linear", "ternary_quadratic"]:
+        if eq_type in ["univariable", "linear", "homogeneous_ternary_quadratic"]:
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
@@ -134,18 +134,18 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     var, coeff, eq_type = classify_diop(eq)
 
     if eq_type == "linear":
-        return diop_linear(var, coeff, param)
+        return _diop_linear(var, coeff, param)
 
     elif eq_type == "binary_quadratic":
-        return diop_quadratic(var, coeff, param)
+        return _diop_quadratic(var, coeff, param)
 
-    elif eq_type == "ternary_quadratic":
+    elif eq_type == "homogeneous_ternary_quadratic":
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
         return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
 
     elif eq_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
-    
+
     elif eq_type == "univariable":
         return solve(eq)
 
@@ -207,18 +207,23 @@ def classify_diop(eq):
                     coeff[term] = Integer(0)
 
     elif Poly(eq).total_degree() == 2 and len(var) == 3 and Integer(1) not in coeff.keys():
-        diop_type = "ternary_quadratic"
+        for v in var:
+            if v in coeff.keys():
+                diop_type = "inhomogeneous_ternary_quadratic"
+                break
+        else:
+            diop_type = "homogeneous_ternary_quadratic"
 
-        x = var[0]
-        y = var[1]
-        z = var[2]
+            x = var[0]
+            y = var[1]
+            z = var[2]
 
-        for term in [x**2, y**2, z**2, x*y, y*z, x*z]:
-            if term not in coeff.keys():
-                coeff[term] = Integer(0)
+            for term in [x**2, y**2, z**2, x*y, y*z, x*z]:
+                if term not in coeff.keys():
+                    coeff[term] = Integer(0)
 
-    elif Poly(eq).degree() == 2 and len(var) >= 3:
-        
+    elif Poly(eq).degree() == 2 and len(var) > 3:
+
         for v in var:
             if v in coeff.keys():
                 diop_type = "inhomogeneous_general_quadratic"
@@ -229,7 +234,7 @@ def classify_diop(eq):
                 constant_term = True
             else:
                 constant_term = False
-            
+
             non_square_terms = False
             for v in var:
                 for u in var:
@@ -245,11 +250,11 @@ def classify_diop(eq):
                 diop_type = "homogeneous_general_quadratic"
             else:
                 coeff_sign_sum = 0
-            
+
                 for v in var:
                     if not isinstance(sqrt(abs(Integer(coeff[v**2]))), Integer):
                         break
-                    coeff_sign_sum = coeff_sign_sum + sign(coeff[v**2]) 
+                    coeff_sign_sum = coeff_sign_sum + sign(coeff[v**2])
                 else:
                     if abs(coeff_sign_sum) == len(var) - 2 and Integer(1) not in coeff.keys():
                         diop_type = "general_pythagorean"
@@ -260,7 +265,7 @@ def classify_diop(eq):
         return var, coeff, diop_type
     else:
         raise NotImplementedError("Still not implemented")
-        
+
 
 def diop_linear(eq, param=symbols("t", Integer=True)):
     """
@@ -1496,7 +1501,7 @@ def diop_ternary_quadratic(eq):
     """
     var, coeff, diop_type = classify_diop(eq)
 
-    if diop_type == "ternary_quadratic":
+    if diop_type == "homogeneous_ternary_quadratic":
         return _diop_ternary_quadratic(var, coeff)
 
 
@@ -1610,7 +1615,7 @@ def transformation_to_normal(eq):
     """
     var, coeff, diop_type = classify_diop(eq)
 
-    if diop_type == "ternary_quadratic":
+    if diop_type == "homogeneous_ternary_quadratic":
         return _transformation_to_normal(var, coeff)
 
 
@@ -1727,7 +1732,7 @@ def parametrize_ternary_quadratic(eq):
     """
     var, coeff, diop_type = classify_diop(eq)
 
-    if diop_type == "ternary_quadratic":
+    if diop_type == "homogeneous_ternary_quadratic":
         x_0, y_0, z_0 = _diop_ternary_quadratic(var, coeff)
         return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)
 
@@ -1798,7 +1803,7 @@ def diop_ternary_quadratic_normal(eq):
     """
     var, coeff, diop_type = classify_diop(eq)
 
-    if diop_type == "ternary_quadratic":
+    if diop_type == "homogeneous_ternary_quadratic":
         return _diop_ternary_quadratic_normal(var, coeff)
 
 
