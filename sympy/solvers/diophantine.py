@@ -2180,3 +2180,51 @@ def holzer(x_0, y_0, z_0, a, b, c):
         x_0, y_0, z_0 = x, y, z
 
     return x_0, y_0, z_0
+
+def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
+    """
+    """
+    var, coeff, diop_type  = classify_diop(eq)
+
+    if diop_type == "general_pythagorean":
+        return _diop_general_pythagorean(var, coeff, param)
+
+
+def _diop_general_pythagorean(var, coeff, t):
+
+    if sign(coeff[var[0]**2]) + sign(coeff[var[1]**2]) + sign(coeff[var[2]**2]) < 0:
+        for key in coeff.keys():
+            coeff[key] = coeff[key] * -1
+
+    n = len(var)
+    index = 0
+
+    for i, v in enumerate(var):
+        if sign(coeff[v**2]) == -1:
+            index = i
+
+    m = symbols(str(t) + "1:" + str(n), Integer=True)
+    l = []
+    ith = 0
+
+    for m_i in m:
+        ith = ith + m_i**2
+
+    l.append(ith - 2*m[n - 2]**2)
+
+    for i in range(n - 2):
+        l.append(2*m[i]*m[n-2])
+
+    sol = l[:index] + [ith] + l[index:]
+
+    lcm = 1
+    for i, v in enumerate(var):
+        if i == index or (index > 0 and i == 0) or (index == 0 and i == 1):
+            lcm = ilcm(lcm, sqrt(abs(coeff[v**2])))
+        else:
+            lcm = ilcm(lcm, sqrt(coeff[v**2]) if sqrt(coeff[v**2]) % 2 else sqrt(coeff[v**2]) // 2)
+
+    for i, v in enumerate(var):
+        sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2]))
+
+    return tuple(sol)
