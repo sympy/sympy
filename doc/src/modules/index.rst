@@ -43,6 +43,7 @@ access any SymPy module, or use this contens:
    solvers/ode.rst
    solvers/pde.rst
    solvers/solvers.rst
+   solvers/diophantine.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst
