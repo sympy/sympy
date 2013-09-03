@@ -1604,7 +1604,7 @@ class TensMul(TensExpr):
             ipos2, cpos2, ind2 = free_dict2[name]
             cpos2 += nc1
             if ind1._is_up == ind2._is_up:
-                raise ValueError('wrong index contruction %s' % ind1)
+                raise ValueError('wrong index construction %s' % ind1)
             if ind1._is_up:
                 new_dummy = (ipos1, ipos2, cpos1, cpos2)
             else:
