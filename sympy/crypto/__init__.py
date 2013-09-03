@@ -7,4 +7,5 @@ from sympy.crypto.crypto import (alphabet_of_cipher, cycle_list,
       decipher_kid_rsa, kid_rsa_private_key, kid_rsa_public_key,
       decipher_rsa, rsa_private_key, rsa_public_key, encipher_rsa,
       lfsr_connection_polynomial, lfsr_autocorrelation, lfsr_sequence,
-      encode_morse, decode_morse)
+      encode_morse, decode_morse, elgamal_private_key, elgamal_public_key,
+      decipher_elgamal, encipher_elgamal)
