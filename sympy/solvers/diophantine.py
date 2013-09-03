@@ -196,8 +196,7 @@ def classify_diop(eq):
         diop_type = "linear"
     elif Poly(eq).total_degree() == 2 and len(var) == 2:
         diop_type = "binary_quadratic"
-        x = var[0]
-        y = var[1]
+        x, y = var[:2]
 
         if isinstance(eq, Mul):
             coeff = {x**2: 0, x*y: eq.args[0], y**2: 0, x: 0, y: 0, Integer(1): 0}
@@ -214,9 +213,7 @@ def classify_diop(eq):
         else:
             diop_type = "homogeneous_ternary_quadratic"
 
-            x = var[0]
-            y = var[1]
-            z = var[2]
+            x, y, z = var[:3]
 
             for term in [x**2, y**2, z**2, x*y, y*z, x*z]:
                 if term not in coeff.keys():
@@ -724,8 +721,7 @@ def is_solution_quad(var, coeff, u, v):
     with the variable list ``var`` and coefficient dictionary ``coeff``. Not intended
     for normal users.
     """
-    x = var[0]
-    y = var[1]
+    x, y = var[:2]
 
     eq = x**2*coeff[x**2] + x*y*coeff[x*y] + y**2*coeff[y**2] + x*coeff[x] + y*coeff[y] + coeff[Integer(1)]
 
@@ -2194,7 +2190,7 @@ def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
         ``diop_general_pythagorean(eq, param)`` -> where ``eq`` is a general pythagorean equation
         which is assumed to be zero and ``param`` is the base parameter used to construct other
         parameters by subscripting.
-
+        
     Examples
     ========
 
@@ -2206,46 +2202,46 @@ def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
     (10*m1**2  + 10*m2**2  + 10*m3**2 - 10*m4**2, 15*m1**2  + 15*m2**2  + 15*m3**2  + 15*m4**2, 15*m1*m4, 12*m2*m4, 60*m3*m4)
     """
     var, coeff, diop_type  = classify_diop(eq)
-
+    
     if diop_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
 
 
 def _diop_general_pythagorean(var, coeff, t):
-
+    
     if sign(coeff[var[0]**2]) + sign(coeff[var[1]**2]) + sign(coeff[var[2]**2]) < 0:
         for key in coeff.keys():
             coeff[key] = coeff[key] * -1
-
+    
     n = len(var)
     index = 0
-
+    
     for i, v in enumerate(var):
         if sign(coeff[v**2]) == -1:
             index = i
-
+            
     m = symbols(str(t) + "1:" + str(n), Integer=True)
     l = []
     ith = 0
-
+    
     for m_i in m:
         ith = ith + m_i**2
-
+    
     l.append(ith - 2*m[n - 2]**2)
-
+    
     for i in range(n - 2):
         l.append(2*m[i]*m[n-2])
-
+    
     sol = l[:index] + [ith] + l[index:]
-
+    
     lcm = 1
     for i, v in enumerate(var):
         if i == index or (index > 0 and i == 0) or (index == 0 and i == 1):
             lcm = ilcm(lcm, sqrt(abs(coeff[v**2])))
         else:
             lcm = ilcm(lcm, sqrt(coeff[v**2]) if sqrt(coeff[v**2]) % 2 else sqrt(coeff[v**2]) // 2)
-
+    
     for i, v in enumerate(var):
-        sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2]))
-
+        sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2])) 
+    
     return tuple(sol)
