@@ -1036,7 +1036,7 @@ def dup_to_dict(f, K=None, zero=False):
 
     n, result = len(f) - 1, {}
 
-    for k in xrange(0, n):
+    for k in xrange(0, n + 1):
         if f[n - k]:
             result[(k,)] = f[n - k]
 
@@ -1061,7 +1061,7 @@ def dup_to_raw_dict(f, K=None, zero=False):
 
     n, result = len(f) - 1, {}
 
-    for k in xrange(0, n):
+    for k in xrange(0, n + 1):
         if f[n - k]:
             result[k] = f[n - k]
 
