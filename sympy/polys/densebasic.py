@@ -3,6 +3,7 @@
 from __future__ import print_function, division
 
 from sympy.core import igcd
+from sympy import oo
 
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key
@@ -137,6 +138,8 @@ def dup_degree(f):
     """
     Return the leading degree of ``f`` in ``K[x]``.
 
+    Note that the degree of 0 is negative infinity (the SymPy object -oo).
+
     Examples
     ========
 
@@ -149,12 +152,16 @@ def dup_degree(f):
     3
 
     """
+    if not f:
+        return -oo
     return len(f) - 1
 
 
 def dmp_degree(f, u):
     """
     Return the leading degree of ``f`` in ``x_0`` in ``K[X]``.
+
+    Note that the degree of 0 is negative infinity (the SymPy object -oo).
 
     Examples
     ========
@@ -163,7 +170,7 @@ def dmp_degree(f, u):
     >>> from sympy.polys.densebasic import dmp_degree
 
     >>> dmp_degree([[[]]], 2)
-    -1
+    -oo
 
     >>> f = ZZ.map([[2], [1, 2, 3]])
 
@@ -172,7 +179,7 @@ def dmp_degree(f, u):
 
     """
     if dmp_zero_p(f, u):
-        return -1
+        return -oo
     else:
         return len(f) - 1
 
@@ -240,7 +247,7 @@ def dmp_degree_list(f, u):
     (1, 2)
 
     """
-    degs = [-1]*(u + 1)
+    degs = [-oo]*(u + 1)
     _rec_degree_list(f, u, 0, degs)
     return tuple(degs)
 
@@ -1027,9 +1034,9 @@ def dup_to_dict(f, K=None, zero=False):
     if not f and zero:
         return {(0,): K.zero}
 
-    n, result = dup_degree(f), {}
+    n, result = len(f) - 1, {}
 
-    for k in xrange(0, n + 1):
+    for k in xrange(0, n):
         if f[n - k]:
             result[(k,)] = f[n - k]
 
@@ -1052,9 +1059,9 @@ def dup_to_raw_dict(f, K=None, zero=False):
     if not f and zero:
         return {0: K.zero}
 
-    n, result = dup_degree(f), {}
+    n, result = len(f) - 1, {}
 
-    for k in xrange(0, n + 1):
+    for k in xrange(0, n):
         if f[n - k]:
             result[k] = f[n - k]
 
@@ -1083,6 +1090,9 @@ def dmp_to_dict(f, u, K=None, zero=False):
         return {(0,)*(u + 1): K.zero}
 
     n, v, result = dmp_degree(f, u), u - 1, {}
+
+    if n == -oo:
+        n = -1
 
     for k in xrange(0, n + 1):
         h = dmp_to_dict(f[n - k], v)

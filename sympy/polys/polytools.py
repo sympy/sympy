@@ -1687,6 +1687,8 @@ class Poly(Expr):
         """
         Returns degree of ``f`` in ``x_j``.
 
+        The degree of 0 is negative infinity.
+
         Examples
         ========
 
@@ -1697,6 +1699,8 @@ class Poly(Expr):
         2
         >>> Poly(x**2 + y*x + y, x, y).degree(y)
         1
+        >>> Poly(0, x).degree()
+        -oo
 
         """
         j = f._gen_to_level(gen)
@@ -4051,6 +4055,8 @@ def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
 
+    The degree of 0 is negative infinity.
+
     Examples
     ========
 
@@ -4061,6 +4067,8 @@ def degree(f, *gens, **args):
     2
     >>> degree(x**2 + y*x + 1, gen=y)
     1
+    >>> degree(0, x)
+    -oo
 
     """
     options.allowed_flags(args, ['gen', 'polys'])
@@ -4070,7 +4078,7 @@ def degree(f, *gens, **args):
     except PolificationFailed as exc:
         raise ComputationFailed('degree', 1, exc)
 
-    return Integer(F.degree(opt.gen))
+    return sympify(F.degree(opt.gen))
 
 
 @public
