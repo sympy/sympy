@@ -142,7 +142,8 @@ def _import(module, reload="False"):
         namespace[sympyname] = namespace[translation]
 
 
-def lambdify(args, expr, modules=None, printer=None, use_imps=True):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True,
+             dummify=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -156,6 +157,13 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
      - dictionaries that map names of sympy functions to arbitrary functions
      - lists that contain a mix of the arguments above, with higher priority
        given to entries appearing first.
+
+    The default behavior is to substitute all arguments in the provided
+    expression with dummy symbols. This allows for applied functions (e.g.
+    f(t)) to be supplied as arguments. Call the function with dummify=False if
+    dummy substitution is unwanted.
+    If you want to view the lambdified function or provide "sympy" as the
+    module, you should probably set dummify=False.
 
     Usage
     =====
@@ -275,18 +283,6 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
         syms = expr.atoms(Symbol)
         for term in syms:
             namespace.update({str(term): term})
-
-    # check if being used for numerical translations
-    numerical_outs = ["math", "mpmath", "numpy"]
-    dummify = False
-    try:
-        if namespaces[1].__name__ in numerical_outs:
-            dummify = True
-    except AttributeError:
-        if namespaces[1] in numerical_outs:
-            dummify = True
-    except:
-        pass
 
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
