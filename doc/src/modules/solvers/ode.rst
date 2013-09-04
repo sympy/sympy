@@ -136,6 +136,9 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_2nd_power_series_ordinary
 
+:obj:`2nd_power_series_regular`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_power_series_regular
 
 Lie heuristics
 --------------

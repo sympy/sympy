@@ -357,7 +357,7 @@ def sub_func_doit(eq, func, new):
 
 
 def dsolve(eq, func=None, hint="default", simplify=True,
-    ics= None, xi=None, eta=None, point=0, **kwargs):
+    ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
     Solves any (supported) kind of ordinary differential equation.
 
@@ -501,16 +501,13 @@ def dsolve(eq, func=None, hint="default", simplify=True,
     >>> dsolve(eq, hint='almost_linear')
     [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
     f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
-    >>> dsolve(eq, hint='best')
-    f(x) == C1/(C2*x - 1)
-
     """
     given_hint = hint  # hint given by the user
 
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
         hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
-        point=point, **kwargs)
+        x0=x0, n=n, **kwargs)
 
     eq = hints.pop('eq', eq)
     all_ = hints.pop('all', False)
@@ -528,13 +525,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
                 retdict[hint] = rv
         func = hints[hint]['func']
 
-        if '1st_power_series' in retdict:  # Remove power series for best hint
-            temp = retdict.copy()
-            temp.pop('1st_power_series')
-            solvalues = temp.values()
-        else:
-            solvalues = retdict.values()
-        retdict['best'] = min(list(solvalues), key=lambda x:
+        retdict['best'] = min(list(retdict.values()), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
         if given_hint == 'best':
             return retdict['best']
@@ -716,10 +707,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     y = Dummy('y')
     xi = kwargs.get('xi')
     eta = kwargs.get('eta')
+    terms = kwargs.get('n')
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, ics=ics, xi=xi, eta=eta, prep=False)
+            return classify_ode(eq.lhs - eq.rhs, func, ics=ics, xi=xi,
+                n=terms, eta=eta, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -756,10 +749,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     # Preprocessing to get the initial conditions out
     if ics is not None:
-        terms = ics.get('n')  # For power series solutions
-        if terms:
-            ics.pop('n')
-
         for funcarg in ics:
             # Separating derivatives
             if isinstance(funcarg, Subs):
@@ -787,8 +776,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                 raise ValueError("Enter boundary conditions of the form ics "
                     " = {f(point}: value, f(point).diff(point, order).subs(arg, point) "
                     ":value")
-
-        boundary.update({'terms': terms})
 
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -863,14 +850,12 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             check = cancel(r[d]/r[e])
             check1 = check.subs({x: point, y: value})
             if not check1.has(oo) and not check1.has(zoo) and \
-                not check1.has(NaN):
+                not check1.has(NaN) and not check1.has(-oo):
                 check2 = (check1.diff(x)).subs({x: point, y: value})
                 if not check2.has(oo) and not check2.has(zoo) and \
-                    not check2.has(NaN):
-                    rseries = boundary.copy()
-                    rseries['f0'] = point
-                    rseries['f0val'] = value
-                    rseries.update(r)
+                    not check2.has(NaN) and not check2.has(-oo):
+                    rseries = r.copy()
+                    rseries.update({'terms': terms, 'f0': point, 'f0val': value})
                     matching_hints["1st_power_series"] = rseries
 
             r3.update(r)
@@ -1071,7 +1056,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
             if all([r[key].is_polynomial() for key in r]):
                 p = cancel(r[b3]/r[a3])  # Used below
                 q = cancel(r[c3]/r[a3])  # Used below
-                point = kwargs.get('point', 0)
+                point = kwargs.get('x0', 0)
                 check = p.subs(x, point)
                 if not check.has(oo) and not check.has(NaN) and \
                     not check.has(zoo) and not check.has(-oo):
@@ -1079,8 +1064,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                     if not check.has(oo) and not check.has(NaN) and \
                         not check.has(zoo) and not check.has(-oo):
                         ordinary = True
-                        r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point})
-                        r.update(boundary)
+                        r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
                         matching_hints["2nd_power_series_ordinary"] = r
 
                 # Checking if the differential equation has a regular singular point
@@ -1095,8 +1079,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
                         check = q.subs(x, point)
                         if not check.has(oo) and not check.has(NaN) and \
                             not check.has(zoo) and not check.has(-oo):
-                            coeff_dict = {'p': p, 'q': q, 'x0': point}
-                            coeff_dict.update(boundary)
+                            coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                             matching_hints["2nd_power_series_regular"] = coeff_dict
 
 
@@ -2747,10 +2730,10 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     >>> f = Function("f")
     >>> eq = f(x).diff(x, 2) + f(x)
     >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
-              / 4    2    \        /   2    \
-              |x    x     |        |  x     |
-    f(x) = C0*|-- - -- + 1| + C1*x*|- -- + 1|
-              \24   2     /        \  6     /
+                /   2    \      / 4    2    \
+                |  x     |      |x    x     |    / 6\
+    f(x) = C1*x*|- -- + 1| + C0*|-- - -- + 1| + O\x /
+                \  6     /      \24   2     /
 
 
     References
@@ -2851,16 +2834,12 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     # Checking how many values are already present
     tcounter = len([t for t in finaldict.values() if t])
 
-    while tcounter < terms - 2:  # Assuming c0 and c1 to be arbitrary
+    for count in range(tcounter, terms - 3):  # Assuming c0 and c1 to be arbitrary
+    #while tcounter < terms - 2:  # Assuming c0 and c1 to be arbitrary
         check = rhs.subs(n, startiter)
         nlhs = lhs.subs(n, startiter)
-        if check:
-            nrhs = check.subs(finaldict)
-            finaldict[nlhs] = nrhs
-            if nrhs:
-                tcounter += 1
-        else:
-            finaldict[nlhs] = S(0)
+        nrhs = check.subs(finaldict)
+        finaldict[nlhs] = nrhs
         startiter += 1
 
     # Post processing
@@ -2870,7 +2849,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
             fact = term.args[0]
             series += (finaldict[term].subs([(recurr(0), C0), (recurr(1), C1)])*(
                 x - x0)**fact)
-    series = collect(expand_mul(series), [C0, C1])
+    series = collect(expand_mul(series), [C0, C1]) + Order(x**terms)
     return Eq(f(x), series)
 
 
@@ -2878,13 +2857,13 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
 def ode_2nd_power_series_regular(eq, func, order, match):
     r"""
     Gives a power series solution to a second order homogeneous differential
-    equation with polynomial coefficients at a regular point. A homogenous
-    differential equation is of the form
+    equation with polynomial coefficients at a regular point. A second order
+    homogenous differential equation is of the form
 
     .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
 
-    A point is said to regular singular at `x0` if `\frac{(x - x0)Q(x)}{P(x)}`
-    and `\frac{(x - x0)^{2}R(x)}{P(x)}` are analytic at `x0`. For simplicity
+    A point is said to regular singular at `x0` if `x - x0\frac{Q(x)}{P(x)}`
+    and `(x - x0)^{2}\frac{R(x)}{P(x)}` are analytic at `x0`. For simplicity
     `P(x)`, `Q(x)` and `R(x)` are assumed to be polynomials. The algorithm for
     finding the power series solutions is:
 
@@ -2900,11 +2879,26 @@ def ode_2nd_power_series_regular(eq, func, order, match):
 
     The power series solution is of the form `x^{m}\sum_{n=0}^\infty anx^n`. The
     coefficients are determined by the following recurrence relation.
-    `an = -\frac{\sum{k=0}^n-1 q_{n-k} + (m + k)p_{n-k}}{f(m + n)}`. For the case
+    `an = -\frac{\sum_{k=0}^{n-1} q_{n-k} + (m + k)p_{n-k}}{f(m + n)}`. For the case
     in which `m1 - m2` is an integer, it can be seen from the recurrence relation
     that for the lower root `m`, when `n` equals the difference of both the
     roots, the denominator becomes zero. So if the numerator is not equal to zero,
     a second series solution exists.
+
+
+    Examples
+    ========
+    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy.abc import x, y
+    >>> f = Function("f")
+    >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
+    >>> pprint(dsolve(eq))
+              /    6    4    2    \
+              |   x    x    x     |
+           C1*|- --- + -- - -- + 1|      /  4    2    \
+              \  720   24   2     /      | x    x     |    / 6\
+    f(x) = ------------------------ + C0*|--- - -- + 1| + O\x /
+                      x                  \120   6     /
 
 
     References
@@ -2972,15 +2966,15 @@ def ode_2nd_power_series_regular(eq, func, order, match):
             finalseries1 = C0
             for key in serdict1:
                 power = int(key.name[1:])
-                finalseries1 += serdict1[key]*x**power
-            finalseries1 = x**m1*finalseries1
+                finalseries1 += serdict1[key]*(x - x0)**power
+            finalseries1 = (x - x0)**m1*finalseries1
             finalseries2 = S(0)
             if serdict2:
                 for key in serdict2:
                     power = int(key.name[1:])
-                    finalseries2 += serdict2[key]*x**power
+                    finalseries2 += serdict2[key]*(x - x0)**power
                 finalseries2 += C1
-                finalseries2 = x**m2*finalseries2
+                finalseries2 = (x - x0)**m2*finalseries2
             return Eq(f(x), collect(finalseries1 + finalseries2,
                 [C0, C1]) + Order(x**terms))
 
@@ -2994,7 +2988,7 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     d = Dummy("d")
     numsyms = numbered_symbols("C", start=0)
-    numsyms = [numsyms.next() for i in range(n + 1)]
+    numsyms = [next(numsyms) for i in range(n + 1)]
     C0 = Symbol("C0")
     serlist = []
     for ser in [p, q]:
@@ -3526,10 +3520,11 @@ def ode_1st_power_series(eq, func, order, match):
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
     >>> pprint(dsolve(eq, hint='1st_power_series'))
-                           3
-                       C0*x     / 4\
-    f(x) = C0 + C0*x - ----- + O\x /
-                         6
+                           3       4       5
+                       C0*x    C0*x    C0*x     / 6\
+    f(x) = C0 + C0*x - ----- + ----- + ----- + O\x /
+                         6       24      60
+
 
     References
     ==========
@@ -3545,51 +3540,32 @@ def ode_1st_power_series(eq, func, order, match):
     C0 = Symbol("C0")
     point = match.get('f0')
     value = match.get('f0val')
-    terms = match.get('terms', 3)
-
-    # Initialisation
-    tcounter = 0  # Tracking number of terms
-    series = value
-    if series:
-        tcounter += 1
+    terms = match.get('terms')
 
     # First term
     F = h
     if not h:
-        return Eq(f(x), C0)
+        return Eq(f(x), value)
 
-    # This is done so that if the number of terms given is one
-    # and that term is already the constant, no other increment
-    # is done since we just need the Order term
-    if (terms > 1 or (terms == 1 and not tcounter)):
+    # Initialisation
+    series = value
+    if terms > 1:
         hc = h.subs({x: point, y: value})
         if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
             # Derivative does not exist, not analytic
             return Eq(f(x), oo)
         elif hc:
             series += hc*(x - point)
-            tcounter += 1
-        factcount = 2
-    else:
-        factcount = 1
 
-    while tcounter < terms + 1:
+    for factcount in range(2, terms):
         Fnew = F.diff(x) + F.diff(y)*h
         Fnewc = Fnew.subs({x: point, y: value})
         # Same logic as above
-        if Fnewc.has(oo) or Fnewc.has(NaN):
+        if Fnewc.has(oo) or Fnewc.has(NaN) or Fnewc.has(-oo) or Fnewc.has(zoo):
             return Eq(f(x), oo)
-        elif Fnewc:
-            if tcounter < terms:
-                series += Fnewc*((x - point)**factcount)/factorial(factcount)
-                tcounter += 1
-            else:
-                # Found the Order term
-                break
-        factcount += 1
+        series += Fnewc*((x - point)**factcount)/factorial(factcount)
         F = Fnew
-
-    series += Order(x**factcount)
+    series += Order(x**terms)
     return Eq(f(x), series)
 
 
@@ -5435,7 +5411,6 @@ def lie_heuristic_linear(match, comp=False):
         if isinstance(soldict, list):
             soldict = soldict[0]
         subval = soldict.values()
-
         if any(t for t in subval):
             onedict = dict(zip(symlist, [1]*6))
             xival = C0*x + C1*func + C2
