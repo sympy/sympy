@@ -46,11 +46,15 @@ def test_dyadic():
 
 def test_coordinate_vars():
     """Tests the coordinate variables functionality"""
+    assert CoordinateSym('Ax', A, 0) == A[0]
+    assert CoordinateSym('Ax', A, 1) == A[1]
+    assert CoordinateSym('Ax', A, 2) == A[2]
     q = dynamicsymbols('q')
     qd = dynamicsymbols('q', 1)
-    assert isinstance(A[0], CoordinateSym) and isinstance(A[0], CoordinateSym) \
-           and isinstance(A[0], CoordinateSym)
-    assert A.variable_map(A) == {A[0] : A[0], A[1] : A[1], A[2] : A[2]}
+    assert isinstance(A[0], CoordinateSym) and \
+           isinstance(A[0], CoordinateSym) and \
+           isinstance(A[0], CoordinateSym)
+    assert A.variable_map(A) == {A[0]:A[0], A[1]:A[1], A[2]:A[2]}
     B = A.orientnew('B', 'Axis', [q, A.z])
     assert A.dt(B[0]) == -A[0]*sin(q)*qd + A[1]*cos(q)*qd
     assert A.dt(B[1]) == -A[0]*cos(q)*qd - A[1]*sin(q)*qd
@@ -63,16 +67,17 @@ def test_coordinate_vars():
     assert A.express(B[0]*B[1]*B[2]) == \
            A[2]*(-A[0]*sin(q) + A[1]*cos(q))*(A[0]*cos(q) + A[1]*sin(q))
     assert simplify(A.dt(B[0]*B[1]*B[2])) == \
-           A[2]*(-A[0]**2*cos(2*q) - 2*A[0]*A[1]*sin(2*q) + A[1]**2*cos(2*q))*qd
+           A[2]*(-A[0]**2*cos(2*q) - 2*A[0]*A[1]*sin(2*q) + \
+                 A[1]**2*cos(2*q))*qd
     assert A.express(B[0]*B.x + B[1]*B.y + B[2]*B.z) == \
            (B[0]*cos(q) - B[1]*sin(q))*A.x + (B[0]*sin(q) + \
            B[1]*cos(q))*A.y + B[2]*A.z
-    assert A.express(B[0]*B.x + B[1]*B.y + B[2]*B.z, variables = True) == \
+    assert A.express(B[0]*B.x + B[1]*B.y + B[2]*B.z, variables=True) == \
            A[0]*A.x + A[1]*A.y + A[2]*A.z
     assert B.express(A[0]*A.x + A[1]*A.y + A[2]*A.z) == \
            (A[0]*cos(q) + A[1]*sin(q))*B.x + \
            (-A[0]*sin(q) + A[1]*cos(q))*B.y + A[2]*B.z
-    assert B.express(A[0]*A.x + A[1]*A.y + A[2]*A.z, variables = True) == \
+    assert B.express(A[0]*A.x + A[1]*A.y + A[2]*A.z, variables=True) == \
            B[0]*B.x + B[1]*B.y + B[2]*B.z
     N = B.orientnew('N', 'Axis', [-q, B.z])
     assert N.variable_map(A) == {N[0]: A[0], N[2]: A[2], N[1]: A[1]}

@@ -39,9 +39,9 @@ class Dyadic(object):
         """
         Just like Vector's init, you shouldn't call this.
 
-        Stores a Dyadic as a list of lists; the inner list has the measure number
-        and the two unit vectors; the outerlist holds each unique unit vector
-        pair.
+        Stores a Dyadic as a list of lists; the inner list has the measure
+        number and the two unit vectors; the outerlist holds each unique
+        unit vector pair.
 
         """
 
@@ -380,8 +380,8 @@ class Dyadic(object):
 
         The first frame is the list side expression, the second frame is the
         right side; if Dyadic is in form A.x|B.y, you can express it in two
-        different frames. If no second frame is given, the Dyadic is expressed in
-        only one frame.
+        different frames. If no second frame is given, the Dyadic is
+        expressed in only one frame.
 
         Parameters
         ==========
@@ -415,7 +415,7 @@ class Dyadic(object):
 
     def doit(self, **hints):
         """Calls .doit() on each term in the Dyadic"""
-        return sum([Dyadic( [ (v[0].doit(**hints), v[1], v[2]) ]) for
+        return sum([Dyadic([(v[0].doit(**hints), v[1], v[2])]) for
                     v in self.args])
 
     def dt(self, frame):
@@ -472,7 +472,7 @@ class Dyadic(object):
 
         """
 
-        return sum([ Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
+        return sum([Dyadic([(v[0].subs(*args, **kwargs), v[1], v[2])])
                      for v in self.args])
 
     dot = __and__
@@ -501,10 +501,26 @@ class CoordinateSym(Symbol):
     """
     __doc__ += Symbol.__doc__
 
-    def __new__(cls, name, frame):
+    def __new__(cls, name, frame, index):
         obj = super(CoordinateSym, cls).__new__(cls, name)
+        _check_frame(frame)
         obj._frame = frame
+        if index > 2:
+            raise ValueError("Value of index cannot be greater than 2")
+        obj._index = index
         return obj
+
+    def __eq__(self, other):
+        #Check if the other object is a CoordinateSym of the same frame
+        #and same index
+        if isinstance(other, CoordinateSym):
+            if other._frame == self._frame and \
+               other._index == self._index:
+                return True
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class ReferenceFrame(object):
@@ -625,15 +641,22 @@ class ReferenceFrame(object):
             if len(variables) != 3:
                 raise ValueError('Supply 3 variable names')
             for i in variables:
-                if not isinstance(i, (str, unicode)):
+                if not isinstance(i, string_types):
                     raise TypeError('Variable names must be strings')
         else:
             variables = [name + '_x', name + '_y', name + '_z']
-        self.varlist = tuple(symbols(variables, cls=CoordinateSym, frame=self))
+        self.varlist = (CoordinateSym(variables[0], self, 0), \
+                        CoordinateSym(variables[1], self, 1), \
+                        CoordinateSym(variables[2], self, 2))
 
     def __getitem__(self, ind):
-        """Returns basis vector for the provided index (index being an str)"""
-        if not isinstance(ind, (str, unicode)):
+        """
+        Returns basis vector for the provided index, if the index is a string.
+
+        If the index is a number, returns the coordinate variable correspon-
+        -ding to that index.
+        """
+        if not isinstance(ind, str):
             if ind < 3:
                 return self.varlist[ind]
             else:
@@ -713,9 +736,10 @@ class ReferenceFrame(object):
         >>> B = A.orientnew('B', 'Axis', [q, A.z])
         >>> A.variable_map(B)
         {A_x: B_x*cos(q(t)) - B_y*sin(q(t)), A_y: B_x*sin(q(t)) + B_y*cos(q(t)), A_z: B_z}
-        
+
         """
 
+        _check_frame(otherframe)
         if (otherframe, Vector.simp) in self._var_dict:
             return self._var_dict[(otherframe, Vector.simp)]
         else:
@@ -826,12 +850,15 @@ class ReferenceFrame(object):
         """
 
         _check_frame(otherframe)
+        #Check if the dcm wrt that frame has already been calculated
         if otherframe in self._dcm_dict:
             return self._dcm_dict[otherframe]
         flist = self._dict_list(otherframe, 0)
         outdcm = eye(3)
         for i in range(len(flist) - 1):
-            outdcm = outdcm * flist[i]._dcm_dict[flist[i+1]]
+            outdcm = outdcm * flist[i]._dcm_dict[flist[i + 1]]
+        #After calculation, store the dcm in dcm list for faster
+        #future retrieval
         self._dcm_dict[otherframe] = outdcm
         otherframe._dcm_dict[self] = outdcm.T
         return outdcm
@@ -955,7 +982,7 @@ class ReferenceFrame(object):
             q0, q1, q2, q3 = amounts
             parent_orient = (Matrix([[q0 ** 2 + q1 ** 2 - q2 ** 2 - q3 **
                 2, 2 * (q1 * q2 - q0 * q3), 2 * (q0 * q2 + q1 * q3)],
-                [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 **2 - q3 ** 2,
+                [2 * (q1 * q2 + q0 * q3), q0 ** 2 - q1 ** 2 + q2 ** 2 - q3 ** 2,
                 2 * (q2 * q3 - q0 * q1)], [2 * (q1 * q3 - q0 * q2), 2 * (q0 *
                 q1 + q2 * q3), q0 ** 2 - q1 ** 2 - q2 ** 2 + q3 ** 2]]))
         elif rot_type == 'BODY':
@@ -1148,7 +1175,7 @@ class ReferenceFrame(object):
 
         Examples
         ========
-        
+
         >>> from sympy.physics.mechanics import ReferenceFrame
         >>> R0 = ReferenceFrame('R0')
         >>> R1 = ReferenceFrame('R1')
@@ -1157,19 +1184,22 @@ class ReferenceFrame(object):
         >>> R1.orient(R0, 'Axis', [q, R0.z])
         >>> R0.express(4*R1.x + 5*R1.z)
         4*cos(q)*R0.x + 4*sin(q)*R0.y + 5*R0.z
-            
+
         """
-        
+
         if field == 0:
             return 0
         if isinstance(field, Vector):
+            #Given field is a Vector
             if variables:
+                #If variables attribute is True, substitute
+                #the coordinate variables in the Vector
                 frame_list = [x[-1] for x in field.args]
                 subs_dict = {}
                 for frame in frame_list:
                     subs_dict.update(frame.variable_map(self))
                 field = field.subs(subs_dict)
-            
+            #Re-express to other frame
             outvec = Vector([])
             for i, v in enumerate(field.args):
                 if v[1] != self:
@@ -1181,14 +1211,15 @@ class ReferenceFrame(object):
                 else:
                     outvec += Vector([v])
             return outvec
-        
+
         else:
+            #Given field is a scalar
             frame_set = set([])
             field = sympify(field)
+            #Subsitute all the coordinate variables
             for x in field.atoms():
-                if isinstance(x, CoordinateSym):
-                    if x._frame not in frame_set and x._frame != self:
-                        frame_set.add(x._frame)
+                if isinstance(x, CoordinateSym)and x._frame != self:
+                    frame_set.add(x._frame)
             subs_dict = {}
             for frame in frame_set:
                 subs_dict.update(frame.variable_map(self))
@@ -1207,7 +1238,7 @@ class ReferenceFrame(object):
         Parameters
         ==========
 
-        expr : Vector/sympifyable 
+        expr : Vector/sympifyable
             The field whose time derivative is to be calculated
 
         order : integer
@@ -1228,7 +1259,7 @@ class ReferenceFrame(object):
         True
         >>> v.dt(N)
         u1'*N.x
-        
+
         """
 
         t = time
@@ -1752,7 +1783,6 @@ class Vector(object):
         """
         Returns a Vector equivalent to this one, expressed in otherframe.
         Uses ReferenceFrame's .express method.
-        
         Refer the docstring for ReferenceFrame.express
         """
         return otherframe.express(self, variables)
@@ -1854,7 +1884,7 @@ class MechanicsLatexPrinter(LatexPrinter):
                 sup += r"^{%s}" % self._print(exp)
             return r"%s" % (name + sup + sub)
         else:
-            args = [ str(self._print(arg)) for arg in expr.args ]
+            args = [str(self._print(arg)) for arg in expr.args]
             # How inverse trig functions should be displayed, formats are:
             # abbreviated: asin, full: arcsin, power: sin^-1
             inv_trig_style = self._settings['inv_trig_style']
