@@ -270,6 +270,7 @@ def test_dmp_nth():
 
 
 def test_dmp_ground_nth():
+    assert dmp_ground_nth([[]], (0, 0), 1, ZZ) == 0
     assert dmp_ground_nth([[1], [2], [3]], (0, 0), 1, ZZ) == 3
     assert dmp_ground_nth([[1], [2], [3]], (1, 0), 1, ZZ) == 2
     assert dmp_ground_nth([[1], [2], [3]], (2, 0), 1, ZZ) == 1

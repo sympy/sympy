@@ -687,7 +687,10 @@ def dmp_ground_nth(f, N, u, K):
         elif n >= len(f):
             return K.zero
         else:
-            f, v = f[dmp_degree(f, v) - n], v - 1
+            d = dmp_degree(f, v)
+            if d == -oo:
+                d = -1
+            f, v = f[d - n], v - 1
 
     return f
 
