@@ -2339,12 +2339,12 @@ def sum_of_four_squares(n):
     if n % 8 == 3:
         l = l if l % 2 else l - 1
 
-        i = l
-        while i > -1:
+        #i = l
+        for i in xrange(l, -1, -2):
             if isprime((n - i**2) // 2):
                 x = i
                 break
-            i = i -2
+            #i = i -2
             
         sols = cornacchia(1, 1, (n - x**2) // 2)
         y, z = sols.pop()
@@ -2352,12 +2352,12 @@ def sum_of_four_squares(n):
     
     l = l - 1 if l % 2 else l
     
-    i = l
-    while i > -1:
+    #i = l
+    for i in xrange(l, -1, -2):
         if isprime(n - i**2):
             x = i
             break
-        i = i - 2
+     #   i = i - 2
         
     sols = cornacchia(1, 1, n - x**2)
     y, z = sols.pop()
