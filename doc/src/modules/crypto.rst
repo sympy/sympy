@@ -12,6 +12,7 @@ Included in this module are both block ciphers and stream ciphers.
  * RSA
  * Kid RSA
  * linear feedback shift registers (a stream cipher)
+ * ElGamal encryption
 
 .. module:: sympy.crypto.crypto
 
@@ -74,3 +75,11 @@ Included in this module are both block ciphers and stream ciphers.
 .. autofunction:: lfsr_autocorrelation
 
 .. autofunction:: lfsr_connection_polynomial
+
+.. autofunction:: elgamal_public_key
+
+.. autofunction:: elgamal_private_key
+
+.. autofunction:: encipher_elgamal
+
+.. autofunction:: decipher_elgamal

@@ -76,7 +76,6 @@ class AskPrimeHandler(CommonHandler):
 
 
 class AskCompositeHandler(CommonHandler):
-
     @staticmethod
     def Basic(expr, assumptions):
         _positive = ask(Q.positive(expr), assumptions)
@@ -94,7 +93,6 @@ class AskCompositeHandler(CommonHandler):
 
 
 class AskEvenHandler(CommonHandler):
-
     @staticmethod
     def _number(expr, assumptions):
         # helper method

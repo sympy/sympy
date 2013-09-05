@@ -451,11 +451,11 @@ class Expr(Basic, EvalfMixin):
         True
         >>> Sum(x, (x, 1, 10)).is_constant()
         True
-        >>> Sum(x, (x, 1, n)).is_constant()  # doctest: +SKIP
+        >>> Sum(x, (x, 1, n)).is_constant()
         False
         >>> Sum(x, (x, 1, n)).is_constant(y)
         True
-        >>> Sum(x, (x, 1, n)).is_constant(n) # doctest: +SKIP
+        >>> Sum(x, (x, 1, n)).is_constant(n)
         False
         >>> Sum(x, (x, 1, n)).is_constant(x)
         True
@@ -2446,8 +2446,7 @@ class Expr(Basic, EvalfMixin):
             s = self.subs(x, 1/x).series(x, n=n, dir=dir)
             if n is None:
                 return (si.subs(x, 1/x) for si in s)
-            # don't include the order term since it will eat the larger terms
-            return s.removeO().subs(x, 1/x)
+            return s.subs(x, 1/x)
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
