@@ -438,7 +438,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def add(self, *objs):
         """
-        Add a seqence of polynomials or containers of polynomials.
+        Add a sequence of polynomials or containers of polynomials.
 
         Example
         -------
@@ -464,7 +464,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def mul(self, *objs):
         """
-        Multiply a seqence of polynomials or containers of polynomials.
+        Multiply a sequence of polynomials or containers of polynomials.
 
         Example
         -------
