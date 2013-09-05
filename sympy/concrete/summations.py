@@ -698,6 +698,10 @@ def eval_sum_hyper(f, i_a_b):
 
     i, a, b = i_a_b
 
+    if (b - a).is_Integer:
+        # We are never going to do better than doing the sum in the obvious way
+        return None
+
     old_sum = Sum(f, (i, a, b))
 
     if b != S.Infinity:
