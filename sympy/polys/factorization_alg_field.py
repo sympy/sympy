@@ -507,7 +507,7 @@ def _factor(f):
         lcfactors_.append((l_, exp)) # polyomials over QQ, allthough coeffs are in ZZ
 
     f_ = f_.mul_ground(D_)
-    b = zring.dmp_zz_mignotte_bound(f_)
+    b = zring.dmp_zz_mignotte_bound(f_)*abs(D)
     p = nextprime(b)
 
     N = 0
