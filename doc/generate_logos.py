@@ -3,12 +3,11 @@
 """
 This script create logos of different formats from the source "sympy.svg"
 
-
 Requirements:
     rsvg-convert    - for converting to *.png format (librsvg2-bin deb package)
     imagemagick     - for converting to *.ico favicon format
-
 """
+
 from optparse import OptionParser
 import xml.dom.minidom
 import os.path
@@ -141,7 +140,7 @@ def convert_to_png(fn_source, output_dir, sizes):
         else:
             fn_svg = get_svg_filename_from_versionkey(fn_source, ver)
             fn_svg = os.path.join(output_dir, fn_svg)
-        
+
         basename = os.path.basename(fn_svg)
         name, ext = os.path.splitext(basename)
         for size in sizes:
@@ -165,7 +164,7 @@ def convert_to_ico(fn_source, output_dir, sizes):
     # firstly prepare *.png files, which will be embeded
     # into the *.ico files.
     convert_to_png(fn_source, output_dir, sizes)
-    
+
     svgs = list(versions)
     svgs.insert(0, '')
     for ver in svgs:
@@ -187,7 +186,7 @@ def convert_to_ico(fn_source, output_dir, sizes):
         # convert them to *.ico
         fn_out = "%s-favicon.ico" % name
         fn_out = os.path.join(output_dir, fn_out)
-        
+
         cmd = "convert %s %s" % (" ".join(pngs), fn_out)
 
         p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
@@ -215,12 +214,12 @@ def get_svg_filename_from_versionkey(fn_source, ver):
     name, ext = os.path.splitext(basename)
     prefix = svg_sizes[ver]["prefix"]
     fn_out = "%s-%s.svg" % (name, prefix)
-    return fn_out 
+    return fn_out
 
 def searchElementById(node, Id, tagname):
     """
     Search element by id in the all childs and descendant of node.
-    
+
     id is lower case, not ID which is usually used for gelElementById
     """
     nodes = node.getElementsByTagName(tagname)
