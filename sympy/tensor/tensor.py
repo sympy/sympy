@@ -42,6 +42,27 @@ class TIDS(object):
     """
     Tensor internal data structure. This contains internal data about
     components of a tensor expression, its free and dummy indices.
+
+    To create a `TIDS` object via the standard constructor, the required
+    arguments are
+
+    ``components``  `TensorHead` objects representing the components
+                    of the tensor expression.
+
+    ``free``        Free indices in their internal representation.
+
+    ``dum``         Dummy indices in their internal representation.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+    >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
+    >>> TIDS([T], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
+    TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
+
     """
 
     def __init__(self, components, free, dum):
@@ -278,7 +299,7 @@ class TIDS(object):
 
     def perm2tensor(self, g, canon_bp=False):
         """
-        Returns the tensor corresponding to the permutation ``g``
+        Returns a `TIDS` instance corresponding to the permutation ``g``
 
         ``g``  permutation corrisponding to the tensor in the representation
         used in canonicalization
