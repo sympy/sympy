@@ -412,12 +412,12 @@ def _hensel_lift(f, H, LC, A, minpoly, p):
             if evalpoints:
                 lc = lc.evaluate(evalpoints)
             lc = _trunc(lc, minpoly, p).set_ring(Hring)
-            H[i] = h.set_ring(Hring) + (lc - h.LC)*x**h.degree()
+            H[i] = h.set_ring(Hring) + (lc - h.ring.dmp_LC(h).set_ring(Hring))*x**h.degree()
 
         m = Hring.gens[j] - a
         M = Hring.one
 
-        c = s - ring.mul(H)
+        c = _trunc(s - ring.mul(H), minpoly, p)
 
         dj = s.degree(j)
 
