@@ -182,11 +182,11 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
             omega = (omega * d) // djA
 
         if omega == 1:
-            return f_, lcs, U_
+            return f, lcs, U_
         else:
             lcs = [lc.mul_ground(omega) for lc in lcs]
             U_ = [u.mul_ground(omega) for u in U_]
-            f_ = f.mul_ground(omega**(n-1))
+            f = f.mul_ground(omega**(n - 1))
 
     return f, lcs, U_
 
