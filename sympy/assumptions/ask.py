@@ -64,7 +64,7 @@ def _extract_facts(expr, symbol):
     if isinstance(expr, bool):
         return
     if not expr.has(symbol):
-        return None
+        return
     if isinstance(expr, AppliedPredicate):
         if expr.arg == symbol:
             return expr.func
@@ -72,8 +72,10 @@ def _extract_facts(expr, symbol):
             return
     args = [_extract_facts(arg, symbol) for arg in expr.args]
     if isinstance(expr, And):
-        return expr.func(*[x for x in args if x is not None])
-    if all(arg != None for arg in args):
+        args = [x for x in args if x is not None]
+        if args:
+            return expr.func(*args)
+    if args and all(x != None for x in args):
         return expr.func(*args)
 
 
@@ -122,9 +124,11 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         key, expr = Q.is_true, sympify(proposition)
 
     assumptions = And(assumptions, And(*context))
+    assumptions = to_cnf(assumptions)
+
     local_facts = _extract_facts(assumptions, expr)
 
-    if local_facts is not None and satisfiable(And(local_facts, known_facts_cnf)) is False:
+    if local_facts and satisfiable(And(local_facts, known_facts_cnf)) is False:
         raise ValueError("inconsistent assumptions %s" % assumptions)
 
     # direct resolution method, no logic
@@ -135,7 +139,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if assumptions is True:
         return
 
-    if local_facts in (None, True):
+    if local_facts is None:
         return
 
     # See if there's a straight-forward conclusion we can make for the inference
