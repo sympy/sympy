@@ -66,7 +66,7 @@ class TIDS(object):
     """
 
     def __init__(self, components, free, dum):
-        self._components = components
+        self.components = components
         self.free = free
         self.dum = dum
         self._ext_rank = len(self.free) + 2*len(self.dum)
@@ -173,7 +173,7 @@ class TIDS(object):
 
         free_names = set(free_dict1.keys()) & set(free_dict2.keys())
         # find the new `free` and `dum`
-        nc1 = len(f._components)
+        nc1 = len(f.components)
         dum2 = [(i1, i2, c1 + nc1, c2 + nc1) for i1, i2, c1, c2 in g.dum]
         free1 = [(ind, i, c) for ind, i, c in f.free if ind.name not in free_names]
         free2 = [(ind, i, c + nc1) for ind, i, c in g.free if ind.name not in free_names]
@@ -190,13 +190,13 @@ class TIDS(object):
             else:
                 new_dummy = (ipos2, ipos1, cpos2, cpos1)
             dum.append(new_dummy)
-        return TIDS(f._components + g._components, free, dum)
+        return TIDS(f.components + g.components, free, dum)
 
     def __mul__(self, other):
         return self.mul(self, other)
 
     def __str__(self):
-        return "TIDS({0}, {1}, {2})".format(self._components, self.free, self.dum)
+        return "TIDS({0}, {1}, {2})".format(self.components, self.free, self.dum)
 
     def sorted_components(self):
         """
@@ -206,7 +206,7 @@ class TIDS(object):
         of the component tensors.
         """
         from sympy.combinatorics.permutations import _af_invert
-        cv = list(zip(self._components, range(len(self._components))))
+        cv = list(zip(self.components, range(len(self.components))))
         sign = 1
         n = len(cv) - 1
         for i in range(n):
@@ -245,7 +245,7 @@ class TIDS(object):
         g = [None]*n + [n, n+1]
         pos = 0
         vpos = []
-        components = self._components
+        components = self.components
         for t in components:
             vpos.append(pos)
             pos += t._rank
@@ -308,7 +308,7 @@ class TIDS(object):
         corresponding to the canonical form of the tensor
         """
         vpos = []
-        components = self._components
+        components = self.components
         pos = 0
         for t in components:
             vpos.append(pos)
@@ -1581,7 +1581,7 @@ class TensMul(TensExpr):
     def __new__(cls, coeff, tids, **kw_args):
         obj = Basic.__new__(cls)
         obj._types = []
-        for t in tids._components:
+        for t in tids.components:
             obj._types.extend(t._types)
         obj._tids = tids
         obj._ext_rank = len(obj._tids.free) + 2*len(obj._tids.dum)
@@ -1600,7 +1600,7 @@ class TensMul(TensExpr):
 
     @property
     def components(self):
-        return self._tids._components[:]
+        return self._tids.components[:]
 
     @property
     def free(self):

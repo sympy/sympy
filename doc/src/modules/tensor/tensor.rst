@@ -5,6 +5,9 @@ Tensor
 
 .. module:: sympy.tensor.tensor
 
+.. autoclass:: TIDS
+   :members:
+
 .. autoclass:: _TensorManager
    :members:
 
