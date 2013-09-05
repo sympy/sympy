@@ -66,10 +66,13 @@ def diophantine(eq, param=symbols("t", Integer=True)):
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type in ["binary_quadratic", "univariable"]:
+        elif eq_type in ["binary_quadratic"]:
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
+
+        elif eq_type == "univariable":
+            sols = solution
 
     return sols
 
@@ -91,7 +94,7 @@ def merge_solution(var, var_t, solution):
     count1 = 0
     count2 = 0
 
-    if not (None in solution):
+    if None not in solution:
 
         for v in var:
             if v in var_t:
