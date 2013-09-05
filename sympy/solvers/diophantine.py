@@ -1,7 +1,8 @@
 from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
-    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor_list, perfect_power)
+    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor_list, perfect_power,
+    isprime)
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
@@ -61,11 +62,11 @@ def diophantine(eq, param=symbols("t", Integer=True)):
         var_t, jnk, eq_type = classify_diop(base)
         solution = diop_solve(base, param)
 
-        if eq_type in ["univariable", "linear", "homogeneous_ternary_quadratic"]:
+        if eq_type in ["linear", "homogeneous_ternary_quadratic", "general_pythagorean"]:
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type in ["binary_quadratic"]:
+        elif eq_type in ["binary_quadratic", "univariable"]:
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
@@ -90,7 +91,7 @@ def merge_solution(var, var_t, solution):
     count1 = 0
     count2 = 0
 
-    if None not in solution:
+    if not (None in solution):
 
         for v in var:
             if v in var_t:
@@ -147,7 +148,14 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
         return _diop_general_pythagorean(var, coeff, param)
 
     elif eq_type == "univariable":
-        return solve(eq)
+        l = solve(eq)
+        s = set([])
+        
+        for soln in l:
+            if isinstance(soln, Integer):
+                s.add(soln)
+
+        return s
 
 
 def classify_diop(eq):
@@ -583,7 +591,7 @@ def _diop_quadratic(var, coeff, t):
                 solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
                     + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-                for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
+                for z0 in xrange(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
                     if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
                         l.add((solve_x(z0), solve_y(z0)))
 
@@ -688,7 +696,7 @@ def _diop_quadratic(var, coeff, t):
 
                     done = False
 
-                    for i in range(k):
+                    for i in xrange(k):
 
                         X_1 = X*T + D*U*Y
                         Y_1 = X*U + Y*T
@@ -810,7 +818,7 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
             else:
                 sol = []
 
-                for y in range(floor(sign(N)*(N - 1)/(2*r)) + 1):
+                for y in xrange(floor(sign(N)*(N - 1)/(2*r)) + 1):
                     if isinstance(sqrt(D*y**2 + N), Integer):
                         sol.append((sqrt(D*y**2 + N), y))
 
@@ -939,7 +947,7 @@ def cornacchia(a, b, m):
     .. [2] Solving the diophantine equation ax**2 + by**2 = m by Cornacchia's method,
            [online], Available: http://www.numbertheory.org/php/cornacchia.html
     """
-    sols = set()
+    sols = set([])
 
     a1 = igcdex(a, m)[0]
     v = sqrt_mod(-b*a1, m, True)
@@ -1108,7 +1116,7 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
                 return [(S.Zero, S.Zero)]
 
 
-    for y in range(L1, L2):
+    for y in xrange(L1, L2):
         if isinstance(sqrt(N + D*y**2), Integer):
             x = sqrt(N + D*y**2)
             sol.append((x, y))
@@ -1426,7 +1434,7 @@ def check_param(x, y, a, t):
     q = Wild("q", exclude=[k])
     ok = False
 
-    for i in range(a):
+    for i in xrange(a):
 
         z_x = simplify(Subs(x, t, a*k + i).doit()).match(p*k + q)
         z_y = simplify(Subs(y, t, a*k + i).doit()).match(p*k + q)
@@ -2177,11 +2185,12 @@ def holzer(x_0, y_0, z_0, a, b, c):
 
     return x_0, y_0, z_0
 
+
 def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
     """
     Solves the general pythagorean equation,
     a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
-    Returns a tuple wich contains a parametrize solution to the equation, sorted in the same order
+    Returns a tuple which contains a parametrized solution to the equation, sorted in the same order
     as the input variables.
 
     Usage
@@ -2229,7 +2238,7 @@ def _diop_general_pythagorean(var, coeff, t):
     
     l.append(ith - 2*m[n - 2]**2)
     
-    for i in range(n - 2):
+    for i in xrange(n - 2):
         l.append(2*m[i]*m[n-2])
     
     sol = l[:index] + [ith] + l[index:]
@@ -2245,3 +2254,108 @@ def _diop_general_pythagorean(var, coeff, t):
         sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2])) 
     
     return tuple(sol)
+
+
+def diop_general_sum_of_squares(eq):
+    """
+    Returns a solution to the equation `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - k = 0`
+    Here `k \geq 0` otherwise `None` is returned. In general, returns a tuple containing the solutions
+    for `x_{1}, x_{2}, . . . x_{n}`sorted in the same order as the variables. Here only a single solution
+    is returned.
+
+    Usage
+    =====
+
+        ``general_sum_of_squares(eq)`` -> Here ``eq`` is an expression which is assumed to be zero.
+        Also, ``eq`` should be in the form, `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - k = 0`
+
+    Examples
+    ========
+
+    
+    """
+    var, coeff, diop_type = classify_diop(eq)
+
+    if diop_type == "general_sum_of_squares":
+        return _diop_general_sum_of_squares(var, coeff)
+    
+
+def _diop_general_sum_of_squares(var, coeff):
+    """
+    """
+    print("Nothing")
+
+    
+def sum_of_four_squares(n):
+    """
+    Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
+
+    Usage
+    =====
+
+        ``sum_of_four_squares(n)`` -> Here ``n`` is a non-negative integer.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import sum_of_four_squares
+    >>> sum_of_four_squares(3456)
+    
+    """
+    special = {0:(0, 0, 0), 1:(1, 0, 0), 2:(1, 1, 0), 3:(1, 1, 1), 10: (1, 3, 0), 34: (3, 3, 4), 58:(3, 7, 0),
+        85:(6, 7, 0), 130:(3, 11, 0), 214:(3, 6, 13), 226:(8, 9, 9), 370:(8, 9, 15),
+        526:(6, 7, 21), 706:(15, 15, 16), 730:(1, 27, 0), 1414:(6, 17, 33), 1906:(13, 21, 36),
+        2986: (21, 32, 39), 9634: (56, 57, 57)}
+    
+    v = 0
+    
+    while n % 4 == 0:
+        v = v + 1
+        n = n // 4
+    
+    if n % 8 == 7:
+        d = 2
+        n = n - 4
+    elif n % 8 == 6 or n % 8 == 2:
+        d = 1
+        n = n - 1
+    else:
+        d = 0
+
+    if n in special.keys():
+        x, y, z = special[n]
+        return (2**v*d, 2**v*x, 2**v*y, 2**v*z)
+
+    l = int(sqrt(n))
+    
+    if n == l**2:
+        return (2**v*d, 2**v*l, 0, 0)
+    
+    x = None
+    
+    if n % 8 == 3:
+        l = l if l % 2 else l - 1
+
+        i = l
+        while i > -1:
+            if isprime((n - i**2) // 2):
+                x = i
+                break
+            i = i -2
+            
+        sols = cornacchia(1, 1, (n - x**2) // 2)
+        y, z = sols.pop()
+        return (2**v*d, 2**v*x, 2**v*(y + z), 2**v*abs(y - z))
+    
+    l = l - 1 if l % 2 else l
+    
+    i = l
+    while i > -1:
+        if isprime(n - i**2):
+            x = i
+            break
+        i = i - 2
+        
+    sols = cornacchia(1, 1, n - x**2)
+    y, z = sols.pop()
+    return (2**v*d, 2**v*x, 2**v*y, 2**v*z)

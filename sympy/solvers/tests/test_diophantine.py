@@ -1,6 +1,6 @@
 from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, transformation_to_DN, find_DN, equivalent,
     parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
-    ldescent, classify_diop, diophantine, transformation_to_normal, diop_general_pythagorean)
+    ldescent, classify_diop, diophantine, transformation_to_normal, diop_general_pythagorean, sum_of_four_squares)
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
 from sympy.utilities.pytest import XFAIL, slow
@@ -109,6 +109,7 @@ def test_quadratic_non_perfect_square():
 
 @slow
 def test_quadratic_non_perfect_slow():
+    
     assert check_solutions(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23)
     assert check_solutions(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15)
     assert check_solutions(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7)
@@ -412,6 +413,7 @@ def test_diophantine():
     # But this can be solved by factroing out y.
     # No need to use methods for ternary quadratic equations.
     #assert check_solutions(y**2 - 7*x*y + 4*y*z)
+    assert check_solutions(x**2 - 2*x + 1)
 
 
 def test_general_pythagorean():
@@ -425,6 +427,16 @@ def test_general_pythagorean():
     assert check_solutions(9*a**2 - 16*d**2 + 4*b**2 + 4*c**2)
     assert check_solutions(-e**2 + 9*a**2 + 4*b**2 + 4*c**2 + 25*d**2)
     assert check_solutions(16*a**2 - b**2 + 9*c**2 + d**2 + 25*e**2)
+
+
+def test_sum_of_four_squares():
+
+    from random import randint
+    
+    for i in range(10):
+        n = randint(1, 100000000000000)
+        a, b, c, d = sum_of_four_squares(n)
+        assert a**2 + b**2 + c**2 + d**2 == n
 
 
 def check_solutions(eq):
