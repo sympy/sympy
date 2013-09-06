@@ -464,8 +464,60 @@ class BaseScalar(AtomicExpr):
         # system
         if type(self.coord_sys) == type(coord_sys):
             return coord_sys.base_scalars[self.position - 1]
-        rv = CoordSys._pos_to_rect(self.coord_sys.base_scalars,
-                                   coord_conv[coord_sys.__class__])
+        rv = CoordSys._pos_to_rect(coord_sys.base_scalars,
+                                   coord_conv[self.coord_sys.__class__])
+        return rv[self.position - ind]
+
+    def _convert_to_sph(self, coord_sys, ind=1):
+        """
+        coord_sys: An instance of subclass of CoordSys class
+        Takes a BaseScalar and converts it to combination of BaseScalars
+        in coord_sys.
+        """
+        # First check that both coordinate systems have same position and
+        # orientation
+        flag = False
+        if self.coord_sys.position != coord_sys.position:
+            flag = True
+        if self.coord_sys._dcm_global != coord_sys._dcm_global:
+            flag = True
+
+        if flag:
+            raise ValueError("coord_sys doesn't have same position and \
+                              orientaion as coordinate system of self")
+
+        # Check whether coord_sys.__class__ is same as self's coordinate
+        # system
+        if type(self.coord_sys) == type(coord_sys):
+            return coord_sys.base_scalars[self.position - 1]
+        rv = CoordSys._pos_to_sph(coord_sys.base_scalars,
+                                   coord_conv[self.coord_sys.__class__])
+        return rv[self.position - ind]
+
+    def _convert_to_cyl(self, coord_sys, ind=1):
+        """
+        coord_sys: An instance of subclass of CoordSys class
+        Takes a BaseScalar and converts it to combination of BaseScalars
+        in coord_sys.
+        """
+        # First check that both coordinate systems have same position and
+        # orientation
+        flag = False
+        if self.coord_sys.position != coord_sys.position:
+            flag = True
+        if self.coord_sys._dcm_global != coord_sys._dcm_global:
+            flag = True
+
+        if flag:
+            raise ValueError("coord_sys doesn't have same position and \
+                              orientaion as coordinate system of self")
+
+        # Check whether coord_sys.__class__ is same as self's coordinate
+        # system
+        if type(self.coord_sys) == type(coord_sys):
+            return coord_sys.base_scalars[self.position - 1]
+        rv = CoordSys._pos_to_cyl(coord_sys.base_scalars,
+                                   coord_conv[self.coord_sys.__class__])
         return rv[self.position - ind]
 
     def _hashable_content(self):
@@ -799,44 +851,48 @@ class CoordSys(Basic):
     @staticmethod
     def _pos_to_rect(coord, conv_from):
         if conv_from == 'cyl':
-            x = coord[0] * cos(coord[1])
-            y = coord[0] * sin(coord[1])
-            z = coord[2]
-            return (x, y, z)
-
-        if conv_from == 'sph':
-            x = coord[0] * sin(coord[1]) * cos(coord[2])
-            y = coord[0] * sin(coord[1]) * sin(coord[2])
-            z = coord[0] * cos(coord[1])
-            return (x, y, z)
-
-    @staticmethod
-    def _pos_to_cyl(coord, conv_from):
-        if conv_from == 'rect':
             rho = sqrt(coord[0]**2 + coord[1]**2)
             phi = coord[2]
             z = coord[2]
             return (rho, phi, z)
 
         if conv_from == 'sph':
-            rho = coord[0] * sin(coord[1])
-            phi = coord[2]
-            z = coord[0] * cos(coord[1])
-            return (rho, phi, z)
-
-    @staticmethod
-    def _pos_to_sph(coord, conv_from):
-        if conv_from == 'rect':
             r = sqrt(coord[0]**2 + coord[1]**2 + coord[2]**2)
             theta = atan(sqrt(coord[0]**2 + coord[1]**2)/coord[2])
             phi = atan(coord[1]/coord[0])
             return (r, theta, phi)
 
-        if conv_from == 'cyl':
+
+    @staticmethod
+    def _pos_to_cyl(coord, conv_from):
+        if conv_from == 'rect':
+            x = coord[0] * cos(coord[1])
+            y = coord[0] * sin(coord[1])
+            z = coord[2]
+            return (x, y, z)
+
+
+        if conv_from == 'sph':
             r = sqrt(coord[0]**2 + coord[2]**2)
             theta = atan(coord[0]/coord[2])
             phi = coord[1]
             return (r, theta, phi)
+
+
+    @staticmethod
+    def _pos_to_sph(coord, conv_from):
+        if conv_from == 'rect':
+            x = coord[0] * sin(coord[1]) * cos(coord[2])
+            y = coord[0] * sin(coord[1]) * sin(coord[2])
+            z = coord[0] * cos(coord[1])
+            return (x, y, z)
+
+
+        if conv_from == 'cyl':
+            rho = coord[0] * sin(coord[1])
+            phi = coord[2]
+            z = coord[0] * cos(coord[1])
+            return (rho, phi, z)
 
     """
     @staticmethod
@@ -970,15 +1026,13 @@ class CoordSys(Basic):
         # call express on them without causing a recursion error.
         csA = coord_sys._change_coord_sys(CoordSysRect, 'csA')
         csB = sclr.coord_sys._change_coord_sys(CoordSysRect, 'csB')
-        # TODO : Get this next line working when express starts working
-        # Until then, temporary measures in place
-        """
+        #import ipdb;ipdb.set_trace()
         rel_pos_vect = coord_sys.position.express(csA) - \
                        sclr.coord_sys.position.express(csB)
+        if not rel_pos_vect:
+            rel_pos_vect = ZeroVector
+
         rel_pos_vect_comp = rel_pos_vect.expand().factor().components
-        """
-        # The said measure
-        rel_pos_vect_comp = [0, 0, 0]
         res = []
 
         for i, comp in enumerate(rel_pos_vect_comp):
@@ -1098,15 +1152,17 @@ class CoordSysSph(CoordSys):
         Ar = Ar.subs(subs_dict)
         At = At.subs(subs_dict)
         Ap = Ap.subs(subs_dict)
-        # Rect to Sph conv matrix. So we need to take tranpose.
-        mat =  Matrix([
-                      [sin(theta)*cos(phi), sin(theta)*sin(phi),  cos(theta)],
-                      [cos(theta)*cos(phi), cos(theta)*sin(phi), -sin(theta)],
-                      [          -sin(phi),            cos(phi),           0]
-                     ])
-        mat = mat.T
-        mat = mat.subs(subs_dict)
-        mat.simplify()
+
+        mat = Matrix([
+            [x/sqrt(x**2 + y**2 + z**2),
+             x*z/(sqrt(x**2 + y**2)*sqrt(x**2 + y**2 + z**2)),
+             -y/sqrt(x**2 + y**2)],
+            [y/sqrt(x**2 + y**2 + z**2),
+             y*z/(sqrt(x**2 + y**2)*sqrt(x**2 + y**2 + z**2)),
+             x/sqrt(x**2 + y**2)],
+            [z/sqrt(x**2 + y**2 + z**2),
+             -sqrt(x**2 + y**2)/sqrt(x**2 + y**2 + z**2), 0]])
+
         r = mat*Matrix([ [Ar], [At], [Ap] ])
         res = []
         for i, vect in enumerate(r._mat):
@@ -1411,6 +1467,52 @@ class BaseVector(Vector, Symbol):
         if type(self.coord_sys) == type(coord_sys):
             return coord_sys.base_vectors[self.position - 1]
         rv = self.coord_sys._convert_to_rect(self, coord_sys)
+        return rv
+
+    def _convert_to_sph(self, coord_sys):
+        """
+        coord_sys: an instance of subclass of CoordSys class
+        converts a BaseVector in a given coordinate system into rectangular
+        coordinates.
+        """
+        # First check that both coordinate systems have same position and
+        # orientation
+        flag = False
+        if self.coord_sys.position != coord_sys.position:
+            flag = True
+        if self.coord_sys._dcm_global != coord_sys._dcm_global:
+            flag = True
+
+        if flag:
+            raise ValueError("coord_sys doesn't have same position and \
+                              orientaion as coordinate system of self")
+
+        if type(self.coord_sys) == type(coord_sys):
+            return coord_sys.base_vectors[self.position - 1]
+        rv = self.coord_sys._convert_to_sph(self, coord_sys)
+        return rv
+
+    def _convert_to_cyl(self, coord_sys):
+        """
+        coord_sys: an instance of subclass of CoordSys class
+        converts a BaseVector in a given coordinate system into rectangular
+        coordinates.
+        """
+        # First check that both coordinate systems have same position and
+        # orientation
+        flag = False
+        if self.coord_sys.position != coord_sys.position:
+            flag = True
+        if self.coord_sys._dcm_global != coord_sys._dcm_global:
+            flag = True
+
+        if flag:
+            raise ValueError("coord_sys doesn't have same position and \
+                              orientaion as coordinate system of self")
+
+        if type(self.coord_sys) == type(coord_sys):
+            return coord_sys.base_vectors[self.position - 1]
+        rv = self.coord_sys._convert_to_cyl(self, coord_sys)
         return rv
 
     def diff(self, s):
@@ -1836,6 +1938,27 @@ class VectMul(Mul, Vector):
         ret = ret + _diff_scalar(scalar, s) * vector + vector.diff(s)
         return ret
 
+    @property
+    def func(self):
+        # VectMul(scalar, VectAdd) does not work (see comments in _vect_mul helper).
+        # So, we need to pass it through _vect_mul instead
+        return VectMul._func_vect_mul
+
+    @classmethod
+    def _func_vect_mul(cls, *args):
+        #import ipdb;ipdb.set_trace()
+        # args can contain a large number of scalars but only one vector
+        ret = S.One
+        flag = False
+        for arg in args:
+            if arg.is_Vector:
+                flag = False
+            if not flag:
+                ret = ret * arg
+            else:
+                raise TypeError("Cannot multiply two or more vectors")
+        return ret
+
     def __str__(self, printer=None):
         # VectMul can contain another VectAdd
         # TODO : This method works but can be improved.
@@ -1919,7 +2042,16 @@ class ZeroVectorClass(Zero, Vector):
 
     @property
     def components(self):
-        return (0, 0, 0)
+        return (S.Zero, S.Zero, S.Zero)
+
+    def express(self, coord_sys):
+        return ZeroVector
+
+    def expand(self):
+        return self
+
+    def factor(self):
+        return self
 
 def _vect_add(one, other):
     # We are adding this method to check for cases involving S.Zero
@@ -1950,8 +2082,8 @@ def _vect_mul(one, other):
     elif isinstance(one, VectMul) or isinstance(other, VectMul):
         ret = VectMul(one, other)
     else:
-        # Shouldn't happen
-        raise TypeError
+        # scalar * scalar
+        ret = Mul(one, other)
     return ret
 
 def _vect_div(one, other):
@@ -1982,7 +2114,7 @@ def express(vect, coord_sys):
 
     coord_sys_t = coord_sys._change_coord_sys(CoordSysRect, 'coord_sys_t')
     vect = vect.expand()
-    import ipdb;ipdb.set_trace()
+    coord_sys_dict = _coord_sys_dict(vect)
     # First express everything in rect coordinates
     for arg in vect._all_args:
         # arg is necessarily a VectMul or a BaseVector
@@ -1993,33 +2125,32 @@ def express(vect, coord_sys):
         # First process the scalar
         if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
-            c_rect = scalar.coord_sys._change_coord_sys(CoordSysRect)
+            c_rect = coord_sys_dict[scalar.coord_sys]
             subs_dict[scalar] = scalar._convert_to_rect(c_rect)
 
         else:
             for arg_scalar in _all_base_scalars(scalar):
                 if not subs_dict.has_key(arg_scalar):
-                    c_rect = arg_scalar.coord_sys._change_coord_sys(
-                                                        CoordSysRect)
+                    c_rect = coord_sys_dict[arg_scalar.coord_sys]
                     subs_dict[arg_scalar] = arg_scalar._convert_to_rect(c_rect)
         # Now process the vector
         # vector is necessarily BaseVector
         assert isinstance(vector, BaseVector)
 
-        c_rect = vector.coord_sys._change_coord_sys(CoordSysRect)
+        c_rect = coord_sys_dict[vector.coord_sys]
         subs_dict[vector] = vector._convert_to_rect(c_rect)
 
-    import ipdb;ipdb.set_trace()
     # Now performig the substitution, we have changed all involved
     # variables into rectangular coordinates
     vect = vect.subs(subs_dict)
     subs_dict = {}
 
     vect = vect.expand()
-    import ipdb;ipdb.set_trace()
     ######## Get rid of this #######
+    """
     cs = vect.coord_sys
     vect = cs.x * coord_sys_t.e_x + cs.y * coord_sys_t.e_y
+    """
     ################################
     # First phase complete
     # Now, we find subs for base vectors and substitute it in
@@ -2048,13 +2179,12 @@ def express(vect, coord_sys):
             for arg_scalar in _all_base_scalars(scalar):
                 if not subs_dict.has_key(arg_scalar):
                     subs_dict[arg_scalar] = \
-                        CoordSys._convert_base_sclr_rect(vect, coord_sys_t)
+                        CoordSys._convert_base_sclr_rect(arg_scalar, coord_sys_t)
 
     # Now performig the substitution, we have changed all involved
     # variables into rectangular coordinates
     vect = vect.subs(subs_dict)
 
-    import ipdb;ipdb.set_trace()
     # Now we need to convert back from coord_sys_t to coord_sys
     subs_dict = {}
     vect = vect.expand()
@@ -2065,10 +2195,11 @@ def express(vect, coord_sys):
         scalar = arg.scalar
         vector = arg.vector
 
-        # First process the scalar
+        # First process the scala
+        exec "conv_func = scalar._convert_to_" + coord_conv[type(coord_sys)]
         if isinstance(scalar, BaseScalar):
             # Because BaseScalar.args returns coord_sys as well
-            subs_dict[scalar] = scalar._convert_to_rect(coord_sys)
+            subs_dict[scalar] = conv_func(coord_sys)
 
         else:
             for arg_scalar in _all_base_scalars(scalar):
@@ -2078,8 +2209,9 @@ def express(vect, coord_sys):
 
         # Now process the vector
         # vector is necessarily BaseVector
+        exec "conv_func = vector._convert_to_" + coord_conv[type(coord_sys)]
         assert isinstance(vector, BaseVector)
-        subs_dict[vector] = vector._convert_to_rect(coord_sys)
+        subs_dict[vector] = conv_func(coord_sys)
 
     # Now performig the substitution, we have changed all involved
     # variables into rectangular coordinates
@@ -2122,6 +2254,12 @@ def _express_scalar(expr, coord_sys):
     expr = expr.subs(subs_dict)
     return expr
 
+def _coord_sys_dict(vect):
+    coord_list = _all_coordinate_systems(vect)
+    ret = {}
+    for c in coord_list:
+        ret[c] = c._change_coord_sys(CoordSysRect)
+    return ret
 
 ZeroVector = ZeroVectorClass()
 
