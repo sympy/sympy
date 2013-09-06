@@ -118,14 +118,12 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
     domain = ring.domain
     symbols = f.ring.symbols
     qring = ring.clone(symbols=(symbols[0], symbols[-1]), domain=domain.get_field())
+    gcd = domain.gcd
 
-    omega = domain(D * gamma.rep[0])
-
+    omega = D * gamma
     denominators = [_denominator(u, qring) for u, _ in U]
 
     m = len(denoms)
-
-    gcd = domain.gcd
 
     for i in xrange(m):
         pi = gcd(omega, divisors[i])
@@ -161,25 +159,27 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
         lcs.append(lj)
 
     zring = qring.clone(domain=domain)
-    U_ = [_alpha_to_z(u, qring).clear_denoms()[1].set_ring(zring) for u, _ in U]
+    U_ = [_monic_associate(u, zring) for u, _ in U]
 
     if omega == 1:
         for j in xrange(n):
-            dj = lcs[j]
-            djA = dj.evaluate(zip(dj.ring.gens[:-1], A)).drop(0)
+            lj = lcs[j]
+            ljA = dj.evaluate(zip(lj.ring.gens[:-1], A)) # elements of Z[z]
+            cj = ljA.content()
             lcuj = U_[j].LC
 
-            lcs[j] = dj.mul_ground(lcuj // djA)
+            lcs[j] = lj.mul_ground(lcuj // cj)
     else:
         for j in xrange(n):
-            dj = lcs[j]
-            djA = dj.evaluate(zip(dj.ring.gens[:-1], A)).drop(0)
+            lj = lcs[j]
+            ljA = lj.evaluate(zip(lj.ring.gens[:-1], A)) # elements of Z[z]
+            cj = ljA.content()
             lcuj = U_[j].LC
-            d = gcd(djA, lcuj)
+            d = gcd(cj, lcuj)
 
-            lcs[j] = dj.mul_ground(lcuj // d)
-            U_[j] = U_[j].mul_ground(djA // d)
-            omega = (omega * d) // djA
+            lcs[j] = lj.mul_ground(lcuj // d)
+            U_[j] = U_[j].mul_ground(cj // d)
+            omega = (omega * d) // cj
 
         if omega == 1:
             return f, lcs, U_
@@ -494,17 +494,16 @@ def _factor(f):
     lc = zring.dmp_LC(f_)
     gamma, lcfactors = efactor(_z_to_alpha(lc, lcring)) # over QQ(alpha)[x_1, ..., x_n]
 
-    # TODO: check if the computations of D_ and gamma_ are correct
-    D_ = zring.domain.one
-    gamma_ = gamma # in QQ(alpha)
+    D_ = ground.denom(gamma.rep[0])
+    gamma_ = ground.numer(gamma.rep[0]) # in QQ
     lcfactors_ = []
 
     for l, exp in lcfactors:
         den, l_ = _alpha_to_z(l, lcqring).clear_denoms() # l_ in QQ[x_1, ..., x_n, z], but coeffs in ZZ
         cont, l_ = l_.set_ring(lczring).primitive()
-        D_ *= den
-        gamma_ *= cont
-        lcfactors_.append((l_, exp)) # polyomials over QQ, allthough coeffs are in ZZ
+        D_ *= den**exp
+        gamma_ *= cont**exp
+        lcfactors_.append((l_, exp))
 
     f_ = f_.mul_ground(D_)
     b = zring.dmp_zz_mignotte_bound(f_)*abs(D)
