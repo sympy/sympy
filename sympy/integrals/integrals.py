@@ -1335,8 +1335,8 @@ class Integral(Expr):
 
         return Add(*parts)
 
-    def _eval_lseries(self, x):
-        for term in self.function.lseries(x):
+    def _eval_lseries(self, x, logx):
+        for term in self.function.lseries(x, logx):
             yield integrate(term, *self.limits)
 
     def _eval_nseries(self, x, n, logx):
