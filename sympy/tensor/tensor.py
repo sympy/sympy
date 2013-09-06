@@ -63,6 +63,29 @@ class TIDS(object):
     >>> TIDS([T], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
     TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz)], [(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
 
+    Details
+    =======
+
+    In short, this has created the components, free and dummy indices for
+    the internal representation of a tensor T(m0, m1, -m1, m3).
+
+    Free indices are represented as a list of triplets. The elements of
+    each triplet identify a single free index and are
+
+    1. TensorIndex object
+    2. position inside the component
+    3. component number
+
+    Dummy indices are represented as a list of 4-plets. Each 4-plet stands
+    for couple for contracted indices, their original TensorIndex is not
+    stored as it is no longer required. The four elements of the 4-plet
+    are
+
+    1. position inside the component of the first index.
+    2. position inside the component of the second index.
+    3. component number of the first index.
+    4. component number of the second index.
+
     """
 
     def __init__(self, components, free, dum):
@@ -157,7 +180,6 @@ class TIDS(object):
         free.sort()
         return free, dum
 
-
     @staticmethod
     def mul(f, g):
         """
@@ -166,6 +188,38 @@ class TIDS(object):
         In short, it forms a new TIDS object, joining components and indices,
         checking that abstract indices are compatible, and possibly contracting
         them.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
+        >>> A = tensorhead('A', [Lorentz], [[1]])
+        >>> tids_1 = TIDS.from_indices([T], [m0, m1, -m1, m3])
+        >>> tids_2 = TIDS.from_indices([A], [m2])
+        >>> tids_1 * tids_2
+        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
+            [(m0, 0, 0), (m3, 3, 0), (m2, 0, 1)], [(1, 2, 0, 0)])
+
+        In this case no contraction has been performed.
+
+        >>> tids_3 = TIDS.from_indices([A], [-m3])
+        >>> tids_1 * tids_3
+        TIDS([T(Lorentz,Lorentz,Lorentz,Lorentz), A(Lorentz)],\
+            [(m0, 0, 0)], [(1, 2, 0, 0), (3, 0, 0, 1)])
+
+        Free indices m3 and -m3 are identified as a contracted couple, and are
+        therefore transformed into dummy indices.
+
+        A wrong index construction (for example, trying to contract two
+        contravariant indices or using indices multiple times) would result in
+        an exception:
+
+        >>> tids_4 = TIDS.from_indices([A], [m3])
+        >>> # This raises an exception:
+        >>> # tids_1 * tids_4
         """
         # find out which free indices of f and g are contracted
         free_dict1 = dict([(i.name, (pos, cpos, i)) for i, pos, cpos in f.free])
@@ -184,7 +238,7 @@ class TIDS(object):
             ipos2, cpos2, ind2 = free_dict2[name]
             cpos2 += nc1
             if ind1._is_up == ind2._is_up:
-                raise ValueError('wrong index contruction %s' % ind1)
+                raise ValueError('wrong index construction {0}'.format(ind1))
             if ind1._is_up:
                 new_dummy = (ipos1, ipos2, cpos1, cpos2)
             else:
@@ -1767,9 +1821,9 @@ class TensMul(TensExpr):
         if isinstance(other, TensAdd):
             return TensAdd(*[self*x for x in other.args])
 
-        new_tfdi = self._tids*other._tids
+        new_tids = self._tids*other._tids
         coeff = self._coeff*other._coeff
-        return TensMul(coeff, new_tfdi)
+        return TensMul(coeff, new_tids)
 
     def __rmul__(self, other):
         other = sympify(other)
