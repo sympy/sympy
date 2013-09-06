@@ -1872,15 +1872,18 @@ class MechanicsPrettyPrinter(PrettyPrinter):
         return pform
 
 
-def _raise_type_error(other, type_str):
-    raise TypeError("Expected an instance of %s, instead received object "
-            "'%s' of type %s." % (type_str, other, type(other)))
+class MechanicsTypeError(TypeError):
+
+    def __init__(self, other, type_str):
+        super(MechanicsTypeError, self).__init__("Expected an instance of %s, "
+                "instead received an object '%s' of type %s." % (
+                    type_str, other, type(other)))
 
 def _check_dyadic(other):
     if not isinstance(other, Dyadic):
         other = sympify(other)
         if other != S(0):
-            _raise_type_error(other, "Dyadic")
+            raise MechanicsTypeError(other, "Dyadic")
         else:
             other = Dyadic([])
     return other
@@ -1888,14 +1891,14 @@ def _check_dyadic(other):
 
 def _check_frame(other):
     if not isinstance(other, ReferenceFrame):
-        _raise_type_error(other, "ReferenceFrame")
+        raise MechanicsTypeError(other, "ReferenceFrame")
 
 
 def _check_vector(other):
     if not isinstance(other, Vector):
         other = sympify(other)
         if other != S(0):
-            _raise_type_error(other, "Vector")
+            raise MechanicsTypeError(other, "Vector")
         else:
             other = Vector([])
     return other
