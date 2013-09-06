@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
-           'MechanicsLatexPrinter', 'CoordinateSym', 'time']
+           'MechanicsLatexPrinter', 'CoordinateSym', 'TIME']
 
 from sympy import (
     Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
@@ -19,7 +19,7 @@ from sympy.printing.str import StrPrinter
 from sympy.utilities import group
 
 #Global mechanics time variable
-time = Symbol('t')
+TIME = Symbol('t')
 
 
 class Dyadic(object):
@@ -441,7 +441,7 @@ class Dyadic(object):
         """
 
         _check_frame(frame)
-        t = time
+        t = TIME
         ol = S(0)
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
@@ -504,18 +504,20 @@ class CoordinateSym(Symbol):
     def __new__(cls, name, frame, index):
         obj = super(CoordinateSym, cls).__new__(cls, name)
         _check_frame(frame)
-        obj._frame = frame
         if index > 2:
             raise ValueError("Value of index cannot be greater than 2")
-        obj._index = index
+        obj._id = (frame, index)
         return obj
+
+    @property
+    def frame(self):
+        return self._id[0]
 
     def __eq__(self, other):
         #Check if the other object is a CoordinateSym of the same frame
         #and same index
         if isinstance(other, CoordinateSym):
-            if other._frame == self._frame and \
-               other._index == self._index:
+            if other._id == self._id:
                 return True
         return False
 
@@ -704,7 +706,7 @@ class ReferenceFrame(object):
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
         dcm2diff = self.dcm(otherframe)
-        diffed = dcm2diff.diff(time)
+        diffed = dcm2diff.diff(TIME)
         angvelmat = diffed * dcm2diff.T
         w1 = trigsimp(expand(angvelmat[7]), recursive=True)
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
@@ -1012,7 +1014,7 @@ class ReferenceFrame(object):
         self._dcm_dict.update({parent: parent_orient.T})
         parent._dcm_dict.update({self: parent_orient})
         if rot_type == 'QUATERNION':
-            t = time
+            t = TIME
             q0, q1, q2, q3 = amounts
             q0d = diff(q0, t)
             q1d = diff(q1, t)
@@ -1023,7 +1025,7 @@ class ReferenceFrame(object):
             w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
-            thetad = (amounts[0]).diff(time)
+            thetad = (amounts[0]).diff(TIME)
             wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:
@@ -1218,8 +1220,8 @@ class ReferenceFrame(object):
             field = sympify(field)
             #Subsitute all the coordinate variables
             for x in field.atoms():
-                if isinstance(x, CoordinateSym)and x._frame != self:
-                    frame_set.add(x._frame)
+                if isinstance(x, CoordinateSym)and x.frame != self:
+                    frame_set.add(x.frame)
             subs_dict = {}
             for frame in frame_set:
                 subs_dict.update(frame.variable_map(self))
@@ -1262,7 +1264,7 @@ class ReferenceFrame(object):
 
         """
 
-        t = time
+        t = TIME
         if order == 0:
             return expr
         if order%1 != 0 or order < 0:
@@ -1844,7 +1846,7 @@ class MechanicsStrPrinter(StrPrinter):
     """String Printer for mechanics. """
 
     def _print_Derivative(self, e):
-        t = time
+        t = TIME
         if (bool(sum([i == t for i in e.variables])) &
                 isinstance(type(e.args[0]), UndefinedFunction)):
             ol = str(e.args[0].func)
@@ -1855,7 +1857,7 @@ class MechanicsStrPrinter(StrPrinter):
             return StrPrinter().doprint(e)
 
     def _print_Function(self, e):
-        t = time
+        t = TIME
         if isinstance(type(e), UndefinedFunction):
             return StrPrinter().doprint(e).replace("(%s)" % t, '')
         return e.func.__name__ + "(%s)" % self.stringify(e.args, ", ")
@@ -1866,7 +1868,7 @@ class MechanicsLatexPrinter(LatexPrinter):
 
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
-        t = time
+        t = TIME
 
         if hasattr(self, '_print_' + func):
             return getattr(self, '_print_' + func)(expr, exp)
@@ -1936,7 +1938,7 @@ class MechanicsLatexPrinter(LatexPrinter):
 
         # check if expr is a dynamicsymbol
         from sympy.core.function import AppliedUndef
-        t = time
+        t = TIME
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
@@ -1966,7 +1968,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
 
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
-        t = time
+        t = TIME
         dots = 0
         can_break = True
         syms = list(reversed(deriv.variables))
@@ -2050,7 +2052,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
         return pform
 
     def _print_Function(self, e):
-        t = time
+        t = TIME
         # XXX works only for applied functions
         func = e.func
         args = e.args
@@ -2127,7 +2129,7 @@ def dynamicsymbols(names, level=0):
     """
 
     esses = symbols(names, cls=Function)
-    t = time
+    t = TIME
     if hasattr(esses, '__iter__'):
         esses = [reduce(diff, [t]*level, e(t)) for e in esses]
         return esses
@@ -2135,5 +2137,5 @@ def dynamicsymbols(names, level=0):
         return reduce(diff, [t]*level, esses(t))
 
 
-dynamicsymbols._t = time
+dynamicsymbols._t = TIME
 dynamicsymbols._str = '\''

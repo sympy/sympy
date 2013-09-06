@@ -55,7 +55,12 @@ def test_coordinate_vars():
            isinstance(A[0], CoordinateSym) and \
            isinstance(A[0], CoordinateSym)
     assert A.variable_map(A) == {A[0]:A[0], A[1]:A[1], A[2]:A[2]}
+    assert A[0].frame == A
     B = A.orientnew('B', 'Axis', [q, A.z])
+    assert B.variable_map(A) == {B[2]: A[2], B[1]: -A[0]*sin(q) + A[1]*cos(q),
+                                 B[0]: A[0]*cos(q) + A[1]*sin(q)}
+    assert A.variable_map(B) == {A[0]: B[0]*cos(q) - B[1]*sin(q),
+                                 A[1]: B[0]*sin(q) + B[1]*cos(q), A[2]: B[2]}
     assert A.dt(B[0]) == -A[0]*sin(q)*qd + A[1]*cos(q)*qd
     assert A.dt(B[1]) == -A[0]*cos(q)*qd - A[1]*sin(q)*qd
     assert A.dt(B[2]) == 0
@@ -81,6 +86,14 @@ def test_coordinate_vars():
            B[0]*B.x + B[1]*B.y + B[2]*B.z
     N = B.orientnew('N', 'Axis', [-q, B.z])
     assert N.variable_map(A) == {N[0]: A[0], N[2]: A[2], N[1]: A[1]}
+    C = A.orientnew('C', 'Axis', [q, A.x + A.y + A.z])
+    mapping = A.variable_map(C)
+    assert mapping[A[0]] == 2*C[0]*cos(q)/3 + C[0]/3 - 2*C[1]*sin(q + pi/6)/3 +\
+           C[1]/3 - 2*C[2]*cos(q + pi/3)/3 + C[2]/3
+    assert mapping[A[1]] == -2*C[0]*cos(q + pi/3)/3 + \
+           C[0]/3 + 2*C[1]*cos(q)/3 + C[1]/3 - 2*C[2]*sin(q + pi/6)/3 + C[2]/3
+    assert mapping[A[2]] == -2*C[0]*sin(q + pi/6)/3 + C[0]/3 - \
+           2*C[1]*cos(q + pi/3)/3 + C[1]/3 + 2*C[2]*cos(q)/3 + C[2]/3
 
 
 def test_ang_vel():
