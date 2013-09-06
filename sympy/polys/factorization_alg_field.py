@@ -583,6 +583,7 @@ def _factor(f):
             # what about l_ ?
             pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
             if pfactors is None:
+                p = nextprime(p)
                 f_ = f_.primitive()[1]
                 continue
 
