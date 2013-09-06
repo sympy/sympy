@@ -1,4 +1,5 @@
-from sympy import cos, Matrix, sin, symbols, simplify, pi, Function
+from sympy import cos, Matrix, sin, symbols, simplify, pi, Function, \
+     zeros
 from sympy.abc import x, y, z
 from sympy.physics.mechanics import Vector, ReferenceFrame, dot, \
      dynamicsymbols, CoordinateSym, express
@@ -177,7 +178,7 @@ def test_dcm():
             sin(q3) - sin(q2) * cos(q1) * cos(q3)], [- sin(q3) * cos(q2), sin(q2),
         cos(q2) * cos(q3)]])
     # This is a little touchy.  Is it ok to use simplify in assert?
-    assert D.dcm(C) == Matrix(
+    test_mat = D.dcm(C) - Matrix(
         [[cos(q1) * cos(q3) * cos(q4) - sin(q3) * (- sin(q4) * cos(q2) +
         sin(q1) * sin(q2) * cos(q4)), - sin(q2) * sin(q4) - sin(q1) *
             cos(q2) * cos(q4), sin(q3) * cos(q1) * cos(q4) + cos(q3) * (- sin(q4) *
@@ -187,6 +188,8 @@ def test_dcm():
         sin(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4)), sin(q2) *
                 cos(q4) - sin(q1) * sin(q4) * cos(q2), sin(q3) * sin(q4) * cos(q1) +
                 cos(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4))]])
+    test_mat.expand()
+    assert test_mat == zeros(3, 3)
     assert E.dcm(N) == Matrix(
         [[cos(q2)*cos(q3), sin(q3)*cos(q2), -sin(q2)],
         [sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1), sin(q1)*sin(q2)*sin(q3) +
