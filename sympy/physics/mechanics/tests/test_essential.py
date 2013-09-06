@@ -188,8 +188,7 @@ def test_dcm():
         sin(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4)), sin(q2) *
                 cos(q4) - sin(q1) * sin(q4) * cos(q2), sin(q3) * sin(q4) * cos(q1) +
                 cos(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4))]])
-    test_mat.expand()
-    assert test_mat == zeros(3, 3)
+    assert test_mat.expand() == zeros(3, 3)
     assert E.dcm(N) == Matrix(
         [[cos(q2)*cos(q3), sin(q3)*cos(q2), -sin(q2)],
         [sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1), sin(q1)*sin(q2)*sin(q3) +

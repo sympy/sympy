@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
-           'MechanicsLatexPrinter', 'CoordinateSym', 'TIME']
+           'MechanicsLatexPrinter', 'CoordinateSym']
 
 from sympy import (
     Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
@@ -17,9 +17,6 @@ from sympy.printing.pretty.pretty import PrettyPrinter
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.str import StrPrinter
 from sympy.utilities import group
-
-#Global mechanics time variable
-TIME = Symbol('t')
 
 
 class Dyadic(object):
@@ -441,7 +438,7 @@ class Dyadic(object):
         """
 
         _check_frame(frame)
-        t = TIME
+        t = dynamicsymbols._t
         ol = S(0)
         for i, v in enumerate(self.args):
             ol += (v[0].diff(t) * (v[1] | v[2]))
@@ -706,7 +703,7 @@ class ReferenceFrame(object):
     def _w_diff_dcm(self, otherframe):
         """Angular velocity from time differentiating the DCM. """
         dcm2diff = self.dcm(otherframe)
-        diffed = dcm2diff.diff(TIME)
+        diffed = dcm2diff.diff(dynamicsymbols._t)
         angvelmat = diffed * dcm2diff.T
         w1 = trigsimp(expand(angvelmat[7]), recursive=True)
         w2 = trigsimp(expand(angvelmat[2]), recursive=True)
@@ -1014,7 +1011,7 @@ class ReferenceFrame(object):
         self._dcm_dict.update({parent: parent_orient.T})
         parent._dcm_dict.update({self: parent_orient})
         if rot_type == 'QUATERNION':
-            t = TIME
+            t = dynamicsymbols._t
             q0, q1, q2, q3 = amounts
             q0d = diff(q0, t)
             q1d = diff(q1, t)
@@ -1025,7 +1022,7 @@ class ReferenceFrame(object):
             w3 = 2 * (q3d * q0 + q1d * q2 - q2d * q1 - q0d * q3)
             wvec = Vector([(Matrix([w1, w2, w3]), self)])
         elif rot_type == 'AXIS':
-            thetad = (amounts[0]).diff(TIME)
+            thetad = (amounts[0]).diff(dynamicsymbols._t)
             wvec = thetad * amounts[1].express(parent).normalize()
         else:
             try:
@@ -1264,7 +1261,7 @@ class ReferenceFrame(object):
 
         """
 
-        t = TIME
+        t = dynamicsymbols._t
         if order == 0:
             return expr
         if order%1 != 0 or order < 0:
@@ -1846,7 +1843,7 @@ class MechanicsStrPrinter(StrPrinter):
     """String Printer for mechanics. """
 
     def _print_Derivative(self, e):
-        t = TIME
+        t = dynamicsymbols._t
         if (bool(sum([i == t for i in e.variables])) &
                 isinstance(type(e.args[0]), UndefinedFunction)):
             ol = str(e.args[0].func)
@@ -1857,7 +1854,7 @@ class MechanicsStrPrinter(StrPrinter):
             return StrPrinter().doprint(e)
 
     def _print_Function(self, e):
-        t = TIME
+        t = dynamicsymbols._t
         if isinstance(type(e), UndefinedFunction):
             return StrPrinter().doprint(e).replace("(%s)" % t, '')
         return e.func.__name__ + "(%s)" % self.stringify(e.args, ", ")
@@ -1868,7 +1865,7 @@ class MechanicsLatexPrinter(LatexPrinter):
 
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
-        t = TIME
+        t = dynamicsymbols._t
 
         if hasattr(self, '_print_' + func):
             return getattr(self, '_print_' + func)(expr, exp)
@@ -1938,7 +1935,7 @@ class MechanicsLatexPrinter(LatexPrinter):
 
         # check if expr is a dynamicsymbol
         from sympy.core.function import AppliedUndef
-        t = TIME
+        t = dynamicsymbols._t
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
@@ -1968,7 +1965,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
 
     def _print_Derivative(self, deriv):
         # XXX use U('PARTIAL DIFFERENTIAL') here ?
-        t = TIME
+        t = dynamicsymbols._t
         dots = 0
         can_break = True
         syms = list(reversed(deriv.variables))
@@ -2052,7 +2049,7 @@ class MechanicsPrettyPrinter(PrettyPrinter):
         return pform
 
     def _print_Function(self, e):
-        t = TIME
+        t = dynamicsymbols._t
         # XXX works only for applied functions
         func = e.func
         args = e.args
@@ -2129,7 +2126,7 @@ def dynamicsymbols(names, level=0):
     """
 
     esses = symbols(names, cls=Function)
-    t = TIME
+    t = dynamicsymbols._t
     if hasattr(esses, '__iter__'):
         esses = [reduce(diff, [t]*level, e(t)) for e in esses]
         return esses
@@ -2137,5 +2134,5 @@ def dynamicsymbols(names, level=0):
         return reduce(diff, [t]*level, esses(t))
 
 
-dynamicsymbols._t = TIME
+dynamicsymbols._t = Symbol('t')
 dynamicsymbols._str = '\''
