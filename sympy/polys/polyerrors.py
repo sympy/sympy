@@ -72,6 +72,9 @@ class HeuristicGCDFailed(BasePolynomialError):
 class ModularGCDFailed(BasePolynomialError):
     pass
 
+class UnluckyMinimalPolynomial(BasePolynomialError):
+    pass
+
 class UnluckyLeadingCoefficient(BasePolynomialError):
     pass
 

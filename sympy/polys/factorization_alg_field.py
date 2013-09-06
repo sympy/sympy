@@ -7,7 +7,7 @@ from sympy.ntheory import nextprime
 from sympy.polys.galoistools import gf_sqf_p, gf_irreducible_p
 from sympy.polys.modulargcd import _trunc, _gf_gcdex, _minpoly_from_dense, _euclidean_algorithm
 from sympy.polys.polyclasses import ANP
-from sympy.polys.polyerrors import UnluckyLeadingCoefficient
+from sympy.polys.polyerrors import UnluckyLeadingCoefficient, UnluckyMinimalPolynomial
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.rings import PolyRing
 
@@ -516,6 +516,7 @@ def _factor(f):
     N = 0
     history = set([])
     tries = 5 # how big should this be?
+    k = 0
 
     while True:
         for _ in xrange(tries):
@@ -575,6 +576,9 @@ def _factor(f):
 
             while not _test_prime(fA, minpoly, p, zring.domain):
                 p = nextprime(p)
+                k += 1
+                if k > 7:
+                    raise UnluckyMinimalPolynomial
 
             # what about l_ ?
             pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
@@ -622,7 +626,10 @@ def efactor(f):
         lc, sqflist = f.sqf_list()
         factors = []
         for g, exp in sqflist:
-            lcg, gfactors = _factor(g)
+            try:
+                lcg, gfactors = _factor(g)
+            except UnluckyMinimalPolynomial:
+                return ring.dmp_ext_factor(f)
             lc *= lcg
             factors = factors + [(gi, exp) for gi in gfactors]
 
