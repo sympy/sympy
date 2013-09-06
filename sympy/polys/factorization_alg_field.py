@@ -7,6 +7,7 @@ from sympy.ntheory import nextprime
 from sympy.polys.galoistools import gf_sqf_p, gf_irreducible_p
 from sympy.polys.modulargcd import _trunc, _gf_gcdex, _minpoly_from_dense, _euclidean_algorithm
 from sympy.polys.polyclasses import ANP
+from sympy.polys.polyerrors import UnluckyLeadingCoefficient
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.rings import PolyRing
 
@@ -208,6 +209,9 @@ def _test_evaluation_points(f, gamma, lcfactors, D, A):
     for l, _ in lcfactors:
         lA = l.evaluate(zip(l.ring.gens, A)) # in Q(alpha)
         denoms.append(_denominator(lA**(-1), qring))
+
+    if any(denoms.count(denom) > 1 for denom in denoms):
+        raise UnluckyLeadingCoefficient
 
     divisors = _distinct_prime_divisors(denoms, ring.domain)
 
@@ -522,29 +526,32 @@ def _factor(f):
             else:
                 continue
 
-            result = _test_evaluation_points(f_, _alpha_to_z(gamma, qring), lcfactors, D, A)
+            try:
+                result = _test_evaluation_points(f_, gamma.rep[0], lcfactors, D, A)
+            except UnluckyLeadingCoefficient:
+                # TODO: check interval
+                C = [random.randint(1, 3*(N + 1)) for _ in xrange(n - 1)]
+                gens = zring.gens
+                x = gens[0]
+
+                for i, ci in zip(xrange(1, n + 1), C):
+                    xi = gens[i]
+                    f_ = f_.compose(xi, x + xi.mul_ground(ci))
+
+                lc, factors = _factor(_z_to_alpha(f_, ring))
+                gens = factors[0].ring.gens
+                x = gens[0]
+
+                for i, ci in zip(xrange(1, n + 1), C):
+                    xi = gens[i]
+                    factors = [g.compose(xi, (xi - x).quo_ground(ci)) for g in factors]
+
+                return (lc, factors)
+
             if result is None:
                 continue
             else:
                 fA, denoms, divisors = result
-
-            if any(denoms.count(denom) > 1 for denom in denoms):
-                # TODO: check interval
-                C = [random.randint(1, 3*(N + 1)) for _ in xrange(n - 1)]
-                x = zring.gens[0]
-
-                for i, ci in zip(xrange(1, n + 1), C):
-                    xi = zring.gens[i]
-                    f_ = f_.compose(xi, x + xi.mul_ground(ci))
-
-                # TODO: check if this is still squarefree
-                lc, factors = _factor(_z_to_alpha(f_, ring))
-
-                for i, ci in zip(xrange(1, n + 1), C):
-                    xi = zring.gens[i]
-                    factors = [g.compose(xi, (xi - x).quo_ground(ci)) for g in factors]
-
-                return (lc, factors)
 
             omega_, fAfactors = _z_to_alpha(fA, ring.drop(*ring.gens[1:])).factor_list() # factorization in Q(alpha)[x_0]
             if len(fAfactors) == 1:
