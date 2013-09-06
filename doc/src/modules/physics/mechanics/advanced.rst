@@ -124,6 +124,12 @@ printing derivatives. ::
   >>> q1 = dynamicsymbols('q1')
   >>> q1
   q1(t)
+  >>> dynamicsymbols._t = symbols('T')
+  >>> q2 = dynamicsymbols('q2')
+  >>> q2
+  q2(T)
+  >>> q1
+  q1(t)
   >>> q1d = dynamicsymbols('q1', 1)
   >>> mprint(q1d)
   q1'
