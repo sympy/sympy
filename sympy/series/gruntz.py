@@ -450,18 +450,13 @@ def calculate_series(e, x, logx=None):
     """
     from sympy.core.exprtools import factor_terms
 
-    n = 1
-    while 1:
-        series = e.nseries(x, n=n, logx=logx)
-        if not series.has(Order):
-            # The series expansion is locally exact.
-            return series
+    for t in e.series(x, n=None, logx=logx):
+        t = factor_terms(t, fraction=True)
 
-        series = series.removeO()
-        series = factor_terms(series, fraction=True)
-        if series:
-            return series
-        n *= 2
+        if t:
+            break
+
+    return t
 
 
 @debug
