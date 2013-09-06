@@ -4,12 +4,11 @@ from sympy import Dummy
 import random
 
 from sympy.ntheory import nextprime
-from sympy.polys.galoistools import gf_sqf_p, gf_irreducible_p
+from sympy.polys.galoistools import gf_irreducible_p
 from sympy.polys.modulargcd import _trunc, _gf_gcdex, _minpoly_from_dense, _euclidean_algorithm
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import UnluckyLeadingCoefficient, UnluckyMinimalPolynomial
 from sympy.polys.polyutils import _sort_factors
-from sympy.polys.rings import PolyRing
 
 
 # TODO
