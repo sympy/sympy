@@ -141,23 +141,6 @@ class TIDS(object):
 
         return tids
 
-        # these are the index positions, if there were only one component:
-#        one_free, one_dum = TIDS.free_dum_from_indices(*indices)
-#        free = []
-#        dum = []
-#
-#        counter = -1
-#        for i, comp in enumerate(components):
-#            for j in range(comp.rank):
-#                counter += 1
-#                for k in one_free:
-#                    if counter == k[1]:
-#                        free.append((k[0], ))
-#
-#        free.sort(key=lambda x: x[0].name)
-#        dum.sort()
-#        return TIDS(components, free, dum)
-
     def to_indices(self):
         """
         Get a list of indices, creating new tensor indices to complete dummy indices.
@@ -1734,6 +1717,8 @@ class TensMul(TensExpr):
             tids = args[0]
             components = tids.components
             indices = tids.to_indices()
+        else:
+            raise TypeError("wrong construction")
 
         for i in indices:
             assert isinstance(i, TensorIndex)
