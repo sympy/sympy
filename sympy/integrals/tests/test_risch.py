@@ -381,10 +381,10 @@ def test_integrate_primitive():
 
 def test_integrate_hypertangent_polynomial():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
-    assert integrate_hypertangent_polynomial(Poly(t**2 + x*t + 1, t), Poly(1, t), DE) == \
+    assert integrate_hypertangent_polynomial(Poly(t**2 + x*t + 1, t), DE) == \
         (Poly(t, t), Poly(x/2, t))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(a*(t**2 + 1), t)]})
-    assert integrate_hypertangent_polynomial(Poly(t**5, t), Poly(1, t), DE) == \
+    assert integrate_hypertangent_polynomial(Poly(t**5, t), DE) == \
         (Poly(1/(4*a)*t**4 - 1/(2*a)*t**2, t), Poly(1/(2*a), t))
 
 
@@ -436,7 +436,14 @@ def test_integrate_hypertangent():
         'E_K': [], 'E_args': [], 'L_K': [], 'T_K': [], 'L_args': [], 'E_args' : [],
         'T_args': [x/2], 'Tfuncs': [Lambda(x, tan(x/2))]})
     assert integrate_hypertangent(Poly(t, t), Poly(t**2*x - x, t), DE) == (0, False)
-    assert integrate_hypertangent(Poly(x*t**2 - 1, t), Poly(t, t), DE, z) == (-2*log(tan(x/2)), True)
+    assert integrate_hypertangent(Poly(x*t**2 - 1, t), Poly(t, t), DE, z) == \
+        (-2*log(tan(x/2)), False)
+    # cos(x)/(1-cos(4*x))
+    assert (integrate_hypertangent(Poly(-t**6 - 3*t**4 - 3*t**2 - 1, t),
+        Poly(32*t**4 - 32*t**2, t), DE) ==
+        # 1/8*(-csc(x) - log(cos(x/2) - sin(x/2)) + log(cos(x/2) + sin(x/2)))
+        (-log(tan(x/2) - 1)/8 + log(tan(x/2) + 1)/8 - tan(x/2)/16 -
+            1/(16*tan(x/2)), True))
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1/x, t1), Poly((t2**2 + 1)/x, t2)],
         'Tfuncs':[log, Lambda(x, tan(log(x)))], 'L_K':[1], 'L_args':[x], 'E_K':[],
         'E_args':[], 'T_K':[2], 'T_args':[t1]})
