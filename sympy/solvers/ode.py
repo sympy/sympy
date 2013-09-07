@@ -2982,7 +2982,7 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     r"""
     Returns a dict with keys as coefficients and values as their values in terms of C0
     """
-
+    n = int(n)
     # In cases where m1 - m2 is not an integer
     m2 = check
 
