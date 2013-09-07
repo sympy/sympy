@@ -1,6 +1,7 @@
 from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, transformation_to_DN, find_DN, equivalent,
     parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
-    ldescent, classify_diop, diophantine, transformation_to_normal, diop_general_pythagorean, sum_of_four_squares)
+    ldescent, classify_diop, diophantine, transformation_to_normal, diop_general_pythagorean, sum_of_four_squares, sum_of_three_squares,
+    prime_as_sum_of_two_squares, partition)
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
 from sympy.utilities.pytest import XFAIL, slow
@@ -109,7 +110,7 @@ def test_quadratic_non_perfect_square():
 
 @slow
 def test_quadratic_non_perfect_slow():
-    
+
     assert check_solutions(8*x**2 + 10*x*y - 2*y**2 - 32*x - 13*y - 23)
     assert check_solutions(5*x**2 - 13*x*y + y**2 - 4*x - 4*y - 15)
     assert check_solutions(-3*x**2 - 2*x*y + 7*y**2 - 5*x - 7)
@@ -429,10 +430,71 @@ def test_general_pythagorean():
     assert check_solutions(16*a**2 - b**2 + 9*c**2 + d**2 + 25*e**2)
 
 
+def test_diop_general_sum_of_squares():
+
+    from sympy.abc import a, b, c, d, e, f, g, h, i
+
+    assert check_solutions(a**2 + b**2 + c**2 - 5)
+    assert check_solutions(a**2 + b**2 + c**2 - 57)
+    assert check_solutions(a**2 + b**2 + c**2 - 349560695)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 - 304)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 - 23345)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 - 23345494)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 + e**2 - 1344545)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 - 6933949)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 + g**2 - 753934)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 + g**2 + h**2 - 5)
+    assert check_solutions(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 + g**2 + h**2 + i**2 - 693940)
+
+
+def test_partition():
+
+    tests = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    for test in tests:
+        f = partition(test)
+        while True:
+            try:
+                l = next(f)
+            except StopIteration:
+                break
+
+    tests_k = [8, 10]
+
+    for test in tests_k:
+        for k in range(8):
+            f = partition(test, k)
+
+            while True:
+                try:
+                    l = next(f)
+                    assert len(l) == k
+                except StopIteration:
+                    break
+
+
+def test_prime_as_sum_of_two_squares():
+
+    for i in [5, 13, 17, 29, 37, 41, 2341, 3557, 34841, 64601]:
+        a, b = prime_as_sum_of_two_squares(i)
+        assert a**2 + b**2 == i
+
+
+def test_sum_of_three_squares():
+
+    for i in [0, 1, 2, 34, 123, 34304595905, 34304595905394941, 343045959052344,
+              800, 801, 802, 803, 804, 805, 806]:
+        a, b, c = sum_of_three_squares(i)
+        assert a**2 + b**2 + c**2 == i
+
+    assert sum_of_three_squares(7) == (None, None, None)
+    assert sum_of_three_squares((4**5)*15) == (None, None, None)
+
+
 def test_sum_of_four_squares():
 
     from random import randint
-    
+
     for i in range(10):
         n = randint(1, 100000000000000)
         a, b, c, d = sum_of_four_squares(n)

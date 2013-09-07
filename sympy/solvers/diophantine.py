@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor_list, perfect_power,
-    isprime)
+    isprime, nextprime)
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
@@ -66,7 +66,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
             if merge_solution(var, var_t, solution) != ():
                 sols.add(merge_solution(var, var_t, solution))
 
-        elif eq_type in ["binary_quadratic"]:
+        elif eq_type in ["binary_quadratic",  "general_sum_of_squares"]:
             for sol in solution:
                 if merge_solution(var, var_t, sol) != ():
                     sols.add(merge_solution(var, var_t, sol))
@@ -153,12 +153,14 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     elif eq_type == "univariable":
         l = solve(eq)
         s = set([])
-        
+
         for soln in l:
             if isinstance(soln, Integer):
                 s.add(soln)
 
         return s
+    elif eq_type == "general_sum_of_squares":
+        return _diop_general_sum_of_squares(var, coeff)
 
 
 def classify_diop(eq):
@@ -230,7 +232,7 @@ def classify_diop(eq):
                 if term not in coeff.keys():
                     coeff[term] = Integer(0)
 
-    elif Poly(eq).degree() == 2 and len(var) > 3:
+    elif Poly(eq).degree() == 2 and len(var) >= 3:
 
         for v in var:
             if v in coeff.keys():
@@ -238,24 +240,33 @@ def classify_diop(eq):
                 break
 
         else:
-            if Integer(1) not in coeff.keys():
+            if Integer(1) in coeff.keys():
                 constant_term = True
             else:
                 constant_term = False
 
-            non_square_terms = False
+            non_square_degree_2_terms = False
             for v in var:
                 for u in var:
                     if u != v and u*v in coeff.keys():
-                        non_square_terms = True
+                        non_square_degree_2_terms = True
                         break
-                if non_square_terms:
+                if non_square_degree_2_terms:
                     break
 
-            if constant_term and non_square_terms:
+            if constant_term and non_square_degree_2_terms:
                 diop_type = "inhomogeneous_general_quadratic"
-            elif not constant_term and non_square_terms:
+
+            elif constant_term and not non_square_degree_2_terms:
+                for v in var:
+                    if coeff[v**2] != 1:
+                        break
+                else:
+                    diop_type = "general_sum_of_squares"
+
+            elif not constant_term and non_square_degree_2_terms:
                 diop_type = "homogeneous_general_quadratic"
+
             else:
                 coeff_sign_sum = 0
 
@@ -264,10 +275,9 @@ def classify_diop(eq):
                         break
                     coeff_sign_sum = coeff_sign_sum + sign(coeff[v**2])
                 else:
-                    if abs(coeff_sign_sum) == len(var) - 2 and Integer(1) not in coeff.keys():
+                    if abs(coeff_sign_sum) == len(var) - 2 and not constant_term:
                         diop_type = "general_pythagorean"
-                    if coeff_sign_sum == len(var) and Integer(1) in coeff.keys():
-                        diop_type = "general_sum_of_squares"
+
 
     if diop_type is not None:
         return var, coeff, diop_type
@@ -2202,7 +2212,7 @@ def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
         ``diop_general_pythagorean(eq, param)`` -> where ``eq`` is a general pythagorean equation
         which is assumed to be zero and ``param`` is the base parameter used to construct other
         parameters by subscripting.
-        
+
     Examples
     ========
 
@@ -2214,84 +2224,330 @@ def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
     (10*m1**2  + 10*m2**2  + 10*m3**2 - 10*m4**2, 15*m1**2  + 15*m2**2  + 15*m3**2  + 15*m4**2, 15*m1*m4, 12*m2*m4, 60*m3*m4)
     """
     var, coeff, diop_type  = classify_diop(eq)
-    
+
     if diop_type == "general_pythagorean":
         return _diop_general_pythagorean(var, coeff, param)
 
 
 def _diop_general_pythagorean(var, coeff, t):
-    
+
     if sign(coeff[var[0]**2]) + sign(coeff[var[1]**2]) + sign(coeff[var[2]**2]) < 0:
         for key in coeff.keys():
             coeff[key] = coeff[key] * -1
-    
+
     n = len(var)
     index = 0
-    
+
     for i, v in enumerate(var):
         if sign(coeff[v**2]) == -1:
             index = i
-            
+
     m = symbols(str(t) + "1:" + str(n), Integer=True)
     l = []
     ith = 0
-    
+
     for m_i in m:
         ith = ith + m_i**2
-    
+
     l.append(ith - 2*m[n - 2]**2)
-    
+
     for i in xrange(n - 2):
         l.append(2*m[i]*m[n-2])
-    
+
     sol = l[:index] + [ith] + l[index:]
-    
+
     lcm = 1
     for i, v in enumerate(var):
         if i == index or (index > 0 and i == 0) or (index == 0 and i == 1):
             lcm = ilcm(lcm, sqrt(abs(coeff[v**2])))
         else:
             lcm = ilcm(lcm, sqrt(coeff[v**2]) if sqrt(coeff[v**2]) % 2 else sqrt(coeff[v**2]) // 2)
-    
+
     for i, v in enumerate(var):
-        sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2])) 
-    
+        sol[i] = (lcm*sol[i]) / sqrt(abs(coeff[v**2]))
+
     return tuple(sol)
 
 
-def diop_general_sum_of_squares(eq):
+def diop_general_sum_of_squares(eq, limit=1):
     """
-    Returns a solution to the equation `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - k = 0`
-    Here `k \geq 0` otherwise `None` is returned. In general, returns a tuple containing the solutions
-    for `x_{1}, x_{2}, . . . x_{n}`sorted in the same order as the variables. Here only a single solution
-    is returned.
+    Returns a set of solution to the equation `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`.
+    Returns at most ``limit`` number of solutions. Currently there is no way to set ``limit``
+    using higher level API's like ``diophantine()`` or ``diop_solve()`` but that will be fixed
+    soon.
 
     Usage
     =====
 
-        ``general_sum_of_squares(eq)`` -> Here ``eq`` is an expression which is assumed to be zero.
-        Also, ``eq`` should be in the form, `a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - k = 0`
+        ``general_sum_of_squares(eq, limit)`` -> Here ``eq`` is an expression which is assumed to be zero.
+        Also, ``eq`` should be in the , form, `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`
+
+    Details
+    =======
+
+    When `n = 3` if `k = 4^a(8m + 7)` for some `a, m \in Z` then there will be no solutions.
+    Refer [1] for more details.
 
     Examples
     ========
 
-    
+    >>> from sympy.solvers.diophantine import diop_general_sum_of_squares
+    >>> from sympy.abc import a, b, c, d, e, f
+    >>> diop_general_sum_of_squares(a**2 + b**2 + c**2 + d**2 + e**2 - 2345)
+    set([(0, 48, 5, 4, 0)])
+
+    Reference
+    =========
+
+    .. [1] Representing an Integer as a sum of three squares, [online],
+        Available: http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
     var, coeff, diop_type = classify_diop(eq)
 
     if diop_type == "general_sum_of_squares":
-        return _diop_general_sum_of_squares(var, coeff)
-    
+        return _diop_general_sum_of_squares(var, coeff, limit)
 
-def _diop_general_sum_of_squares(var, coeff):
-    """
-    """
-    print("Nothing")
 
-    
+def _diop_general_sum_of_squares(var, coeff, limit=1):
+
+    n = len(var)
+    k = -int(coeff[Integer(1)])
+    s = set([])
+
+    if k < 0:
+        return set([])
+
+    if n == 3:
+        s.add(sum_of_three_squares(k))
+    elif n == 4:
+        s.add(sum_of_four_squares(k))
+    else:
+
+        m = n // 4
+        f = partition(k, m)
+
+        for j in xrange(limit):
+
+            soln = []
+            try:
+                l = next(f)
+            except StopIteration:
+                break
+
+            for n_i in l:
+                a, b, c, d = sum_of_four_squares(n_i)
+                soln = soln + [a, b, c, d]
+
+            soln = soln + [0] * (n % 4)
+
+            s.add(tuple(soln))
+
+    return s
+
+
+## Functions below this comment can be more suitably grouped under an Additive number theory module
+## rather than the Diophantine equation module.
+
+
+def partition(n, k=None):
+    """
+    Returns a generator that can be used to generate partitions of an integer `n`. A partition
+    of `n` is a set of positive integers which add upto `n`. For example, partitions of 3 are
+    3 , 1 + 2, 1 + 1+ 1. A partition is returned as a list. If ``k`` equals None, then all possible
+    partitions are returned irrespective of their size, otherwise only the partitions of size ``k``
+    are returned. If there are no partions of `n` with size `k` then an empty list is returned. When
+    the partitions are over, the last `next()` call throws the ``StopIteration`` exception, so always
+    use this function inside a try - except block.
+
+    Details
+    =======
+
+        ``partition(n, k)`` -> Here ``n`` is a non-negative integer and ``k`` is the size of the
+        partition.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import partition
+    >>> f = partition(5)
+    >>> next(f)
+    [1, 1, 1, 1, 1]
+    >>> next(f)
+    [1, 1, 1, 2]
+    >>> g = partition(5, 3)
+    >>> next(g)
+    [3, 1, 1]
+    >>> next(g)
+    [2, 2, 1]
+
+    Reference
+    =========
+
+    .. [1] Generating Integer Partitions, [online],
+        Available: http://homepages.ed.ac.uk/jkellehe/partitions.php
+    """
+    if k is not None:
+        if k > n or k < 1:
+            yield []
+
+        else:
+            a = [1 for i in xrange(k)]
+            a[0] = n - k + 1
+            yield a
+
+            i = 1
+            while a[0] >= n // k + 1:
+                j = 0
+
+                while j < i and j + 1 < k:
+                    a[j] = a[j] - 1
+                    a[j + 1] = a[j + 1] + 1
+                    yield a
+                    j = j + 1
+
+                i = i + 1
+
+    else:
+        a = [0 for i in xrange(n + 1)]
+        l = 1
+        y = n - 1
+
+        while l != 0:
+            x = a[l - 1] + 1
+            l -= 1
+
+            while 2*x <= y:
+                a[l] = x
+                y -= x
+                l += 1
+
+            m = l + 1
+            while x <= y:
+                a[l] = x
+                a[m] = y
+                yield a[:l + 2]
+                x += 1
+                y -= 1
+
+            a[l] = x + y
+            y = x + y - 1
+            yield a[:l + 1]
+
+
+def prime_as_sum_of_two_squares(p):
+    """
+    Represent a prime `p` which is congruent to 1 mod 4, as a sum of two squares.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import prime_as_sum_of_two_squares
+    >>> prime_as_sum_of_two_squares(5)
+    (2, 1)
+
+    Reference
+    =========
+
+    .. [1] Representing a number as a sum of four squares, [online],
+        Available: http://www.schorn.ch/howto.html
+    """
+    if p % 8 == 5:
+        b = 2
+    else:
+        b = 3
+
+        while pow(b, (p - 1) // 2, p) == 1:
+            b = nextprime(b)
+
+    b = pow(b, (p - 1) // 4, p)
+    a = p
+
+    while b**2 > p:
+        a, b = b, a % b
+
+    return (b, a % b)
+
+
+def sum_of_three_squares(n):
+    """
+    Returns a 3-tuple `(a, b, c)` such that `a^2 + b^2 + c^2 = n` and `a, b, c \geq 0`.
+    Returns (None, None, None) if `n = 4^a(8m + 7)` for some `a, m \in Z`. See[1] for
+    more details.
+
+    Usage
+    =====
+
+        ``sum_of_three_squares(n)`` -> Here ``n`` is a non-negative integer.
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.diophantine import sum_of_three_squares
+    >>> sum_of_three_squares(44542)
+    (207, 37, 18)
+
+    References
+    ==========
+
+    .. [1] Representing a number as a sum of three squares, [online],
+        Available: http://www.schorn.ch/howto.html
+    """
+    special = {1:(1, 0, 0), 2:(1, 1, 0), 3:(1, 1, 1), 10: (1, 3, 0), 34: (3, 3, 4), 58:(3, 7, 0),
+        85:(6, 7, 0), 130:(3, 11, 0), 214:(3, 6, 13), 226:(8, 9, 9), 370:(8, 9, 15),
+        526:(6, 7, 21), 706:(15, 15, 16), 730:(1, 27, 0), 1414:(6, 17, 33), 1906:(13, 21, 36),
+        2986: (21, 32, 39), 9634: (56, 57, 57)}
+
+    v = 0
+
+    if n == 0:
+        return (0, 0, 0)
+
+    while n % 4 == 0:
+        v = v + 1
+        n = n // 4
+
+    if n % 8 == 7:
+        return (None, None, None)
+
+    if n in special.keys():
+        x, y, z = special[n]
+        return (2**v*x, 2**v*y, 2**v*z)
+
+    l = int(sqrt(n))
+
+    if n == l**2:
+        return (2**v*l, 0, 0)
+
+    x = None
+
+    if n % 8 == 3:
+        l = l if l % 2 else l - 1
+
+        for i in xrange(l, -1, -2):
+            if isprime((n - i**2) // 2):
+                x = i
+                break
+
+        y, z = prime_as_sum_of_two_squares((n - x**2) // 2)
+        return (2**v*x, 2**v*(y + z), 2**v*abs(y - z))
+
+    if n % 8 == 2 or n % 8 == 6:
+        l = l if l % 2 else l - 1
+    else:
+        l = l - 1 if l % 2 else l
+
+    for i in xrange(l, -1, -2):
+        if isprime(n - i**2):
+            x = i
+            break
+
+    y, z = prime_as_sum_of_two_squares(n - x**2)
+    return (2**v*x, 2**v*y, 2**v*z)
+
+
 def sum_of_four_squares(n):
     """
-    Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n`.
+    Returns a 4-tuple `(a, b, c, d)` such that `a^2 + b^2 + c^2 + d^2 = n` and `a, b, c, d \geq 0`.
 
     Usage
     =====
@@ -2303,19 +2559,24 @@ def sum_of_four_squares(n):
 
     >>> from sympy.solvers.diophantine import sum_of_four_squares
     >>> sum_of_four_squares(3456)
-    
+    (8, 48, 32, 8)
+    >>> sum_of_four_squares(1294585930293)
+    (0, 1137796, 2161, 1234)
+
+    References
+    ==========
+
+    .. [1] Representing a number as a sum of four squares, [online],
+        Available: http://www.schorn.ch/howto.html
     """
-    special = {0:(0, 0, 0), 1:(1, 0, 0), 2:(1, 1, 0), 3:(1, 1, 1), 10: (1, 3, 0), 34: (3, 3, 4), 58:(3, 7, 0),
-        85:(6, 7, 0), 130:(3, 11, 0), 214:(3, 6, 13), 226:(8, 9, 9), 370:(8, 9, 15),
-        526:(6, 7, 21), 706:(15, 15, 16), 730:(1, 27, 0), 1414:(6, 17, 33), 1906:(13, 21, 36),
-        2986: (21, 32, 39), 9634: (56, 57, 57)}
-    
+    if n == 0:
+        return (0, 0, 0, 0)
+
     v = 0
-    
     while n % 4 == 0:
         v = v + 1
         n = n // 4
-    
+
     if n % 8 == 7:
         d = 2
         n = n - 4
@@ -2325,40 +2586,6 @@ def sum_of_four_squares(n):
     else:
         d = 0
 
-    if n in special.keys():
-        x, y, z = special[n]
-        return (2**v*d, 2**v*x, 2**v*y, 2**v*z)
+    x, y, z = sum_of_three_squares(n)
 
-    l = int(sqrt(n))
-    
-    if n == l**2:
-        return (2**v*d, 2**v*l, 0, 0)
-    
-    x = None
-    
-    if n % 8 == 3:
-        l = l if l % 2 else l - 1
-
-        #i = l
-        for i in xrange(l, -1, -2):
-            if isprime((n - i**2) // 2):
-                x = i
-                break
-            #i = i -2
-            
-        sols = cornacchia(1, 1, (n - x**2) // 2)
-        y, z = sols.pop()
-        return (2**v*d, 2**v*x, 2**v*(y + z), 2**v*abs(y - z))
-    
-    l = l - 1 if l % 2 else l
-    
-    #i = l
-    for i in xrange(l, -1, -2):
-        if isprime(n - i**2):
-            x = i
-            break
-     #   i = i - 2
-        
-    sols = cornacchia(1, 1, n - x**2)
-    y, z = sols.pop()
     return (2**v*d, 2**v*x, 2**v*y, 2**v*z)
