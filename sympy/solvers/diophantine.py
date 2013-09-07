@@ -2171,7 +2171,7 @@ def norm(u, w, a, b):
 def holzer(x_0, y_0, z_0, a, b, c):
     """
     Simplify the solution `(x_{0}, y_{0}, z_{0})` of the equation `ax^2 + by^2 = cz^2`
-    with `a, b, c > 0` and `z_{0}^2 \geq \mid ab \mid` to a new reduced solution such that
+    with `a, b, c > 0` and `z_{0}^2 \geq \mid ab \mid` to a new reduced solution `(x, y, z)` such that
     `z^2 \leq \mid ab \mid`.
     """
     while z_0 > sqrt(a*b):
@@ -2201,8 +2201,7 @@ def holzer(x_0, y_0, z_0, a, b, c):
 
 def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
     """
-    Solves the general pythagorean equation,
-    a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
+    Solves the general pythagorean equation,`a_{1}^2x_{1}^2 + a_{2}^2x_{2}^2 + . . . + a_{n}^2x_{n}^2 - a_{n + 1}^2x_{n + 1}^2 = 0`.
     Returns a tuple which contains a parametrized solution to the equation, sorted in the same order
     as the input variables.
 
