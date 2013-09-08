@@ -494,7 +494,6 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True, bounded=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
 
 
