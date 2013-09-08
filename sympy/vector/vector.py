@@ -116,8 +116,8 @@ def dot(vect_a, vect_b, coord_sys=None):
     # We don't have a coord_sys so, proceed to return the output in all
     # the base scalars
 
-    vect_a = vect_a.factor()
-    vect_b = vect_b.factor()
+    vect_a = vect_a.factor_vect()
+    vect_b = vect_b.factor_vect()
 
     # Decompose the vectors
     vect_a_dec = []
@@ -132,7 +132,7 @@ def dot(vect_a, vect_b, coord_sys=None):
 
     for i in vect_a_dec:
         for j in vect_b_dec:
-            ret = ret + i[0] * j[0] + dot(i[1], j[1], i[1].coord_sys)
+            ret = ret + i[0] * j[0] * dot(i[1], j[1], i[1].coord_sys)
 
     ret = ret.simplify()
     return ret
@@ -169,7 +169,7 @@ def grad(expr, coord_sys=None):
         ret = ret + l * base_vectors[i]
     return ret
 
-def cross(vect_a, vect_b, coord_sys):
+def cross(vect_a, vect_b, coord_sys=None):
     """
     Cross product of two vectors
     vect_a, vect_b : instances with is_Vector == True
@@ -192,8 +192,8 @@ def cross(vect_a, vect_b, coord_sys):
 
     ret = ZeroVector
 
-    vect_a = vect_a.factor()
-    vect_b = vect_b.factor()
+    vect_a = vect_a.factor_vect()
+    vect_b = vect_b.factor_vect()
 
     vect_a_dec = []
     for arg in vect_a._all_args:
@@ -207,9 +207,9 @@ def cross(vect_a, vect_b, coord_sys):
 
     for i in vect_a_dec:
         for j in vect_b_dec:
-            ret = ret + i[0] * j[0] + cross(i[1], j[1], i[1].coord_sys)
+            ret = ret + i[0] * j[0] * cross(i[1], j[1], i[1].coord_sys)
 
-    ret = ret.expand().factor()
+    ret = ret.expand().factor_vect()
     return ret
 
 def _cross_same(vect_a, vect_b):
@@ -260,10 +260,10 @@ def div(vect, coord_sys=None):
     ret = S.Zero
 
     for i, index in enumerate(indices):
-        ret = ret + diff(vect_comp[i] * h_list[index[0]] * h_list[index[1]]).factor()
+        ret = ret + diff(vect_comp[i] * h_list[index[0]] * h_list[index[1]]).factor_vect()
     ret = (1/(h_list[0] * h_list[1] * h_list[2])) * ret
 
-    return ret.factor()
+    return ret.factor_vect()
 
 
 def curl(vect, coord_sys):
@@ -294,8 +294,8 @@ def curl(vect, coord_sys):
         diff_2 = h[index[1]] * comp[index[1]]
         l = ((diff(diff_1, bs[index[1]]) - diff(diff_2, bs[index[0]])) *
             (h[i] * bv[i]))
-        ret = ret + l.expand().factor()
-    return ret.factor()
+        ret = ret + l.expand().factor_vect()
+    return ret.factor_vect()
 
 def laplacian(expr, coord_sys=None):
     """
@@ -823,7 +823,7 @@ class CoordSys(Basic):
         newframe_pos = position.express(c_rect)
         newframe_pos = parent_pos + newframe_pos
 
-        newframe.position = newframe_pos.factor()
+        newframe.position = newframe_pos.factor_vect()
         return newframe
 
     def _change_coord_sys(self, coord_sys_class, name=None, flag=False):
@@ -1032,7 +1032,7 @@ class CoordSys(Basic):
         if not rel_pos_vect:
             rel_pos_vect = ZeroVector
 
-        rel_pos_vect_comp = rel_pos_vect.expand().factor().components
+        rel_pos_vect_comp = rel_pos_vect.expand().factor_vect().components
         res = []
 
         for i, comp in enumerate(rel_pos_vect_comp):
@@ -1377,6 +1377,35 @@ class Vector(AtomicExpr):
         else:
             raise IndexError
 
+    def simplify(self):
+        """
+        Simplify the vector.
+        """
+        ret = ZeroVector
+        vect = self.expand().factor_vect()
+        for arg in vect._all_args:
+            scalar = arg.scalar
+            vector = arg.vector
+            scalar = scalar.simplify()
+            ret = ret + (scalar * vector)
+        return ret
+
+    def normalize(self):
+        """
+        Normalize the vector. Returns vector/magnitude of vector.
+        """
+        return self/sqrt(dot(self, self))
+
+    def as_mat(self):
+        """
+        Returns the components of vector in matrix form.
+        Returns a column matrix.
+        The vector should be entirely in one coordinate system.
+        """
+        coord_list = _all_coordinate_systems(self)
+        if len(coord_list) > 1:
+            raise ValueError("Vector must be in a single coordinate system")
+        return Matrix([self.components])
 
 class BaseVector(Vector, Symbol):
     # __new__ required because it the __new__ of super class takes coord_sys,
@@ -1415,7 +1444,7 @@ class BaseVector(Vector, Symbol):
     def expand(self):
         return self
 
-    def factor(self):
+    def factor_vect(self):
         return self
 
     @property
@@ -1602,7 +1631,7 @@ class VectAdd(Add, Vector):
             res = res + arg.expand()
         return res
 
-    def factor(self):
+    def factor_vect(self):
         # self can contain BaseVector or VectMul
         factor_dict = {}
         for arg in self._all_args:
@@ -1624,7 +1653,7 @@ class VectAdd(Add, Vector):
 
     @property
     def vector(self):
-        vect = self.expand().factor()
+        vect = self.expand().factor_vect()
         if not isinstance(vect, VectAdd):
             return vect.vector
         else:
@@ -1635,7 +1664,7 @@ class VectAdd(Add, Vector):
         # First we expand
         vect = self.expand()
         # Now we factor the base vectors
-        vect = vect.factor()
+        vect = vect.factor_vect()
         # Now, we have either a BaseVector, VectMul or VectAdd
         if not isinstance(vect, VectAdd):
             return vect.scalar
@@ -1652,13 +1681,13 @@ class VectAdd(Add, Vector):
             raise TypeError("The vector isn't in a single coordinate system.\
                              Cannot compute components")
 
-        vect = self.expand()
+        vect = self.expand().factor_vect()
         if not isinstance(vect, VectAdd):
             return vect.components
 
         # Fix this to accomodate n-dmesions
         r = [S.Zero] * 3
-        for arg in vect._allargs:
+        for arg in vect._all_args:
             if isinstance(arg, BaseVector):
                # Component corresponding to it will be unity
                r[int(arg.position) - 1] = S.One
@@ -1835,7 +1864,7 @@ class VectMul(Mul, Vector):
                 ret = ret +  (arg * scalar).expand()
             return ret
 
-    def factor(self):
+    def factor_vect(self):
         # This is of type scalar * BaseVector and scalar * VectAdd
         scalar = self.scalar
         vector = self.vector
@@ -1843,7 +1872,7 @@ class VectMul(Mul, Vector):
             # Just factor out the scalar and return
             return VectMul(scalar.factor(), vector)
         elif isinstance(vector, VectAdd):
-            return VectMul(scalar.factor(), vector.factor())
+            return VectMul(scalar.factor(), vector.factor_vect())
         else:
             # Shouldn't happen
             raise ValueError
@@ -1894,7 +1923,7 @@ class VectMul(Mul, Vector):
         v = vector
         if isinstance(v, VectAdd):
             # vector is a VectAdd.
-            v = v.factor()
+            v = v.factor_vect()
             # We get either scalar1 * BaseVector or scalar1 * VectAdd as result
             # In second case, we just raise an error
             # In the first case, we get the scalar part from it and multiply
@@ -1912,7 +1941,7 @@ class VectMul(Mul, Vector):
 
     @property
     def components(self):
-        vect = self.expand()
+        vect = self.expand().factor_vect()
         if not isinstance(vect, VectMul):
             return vect.components
 
@@ -2050,7 +2079,7 @@ class ZeroVectorClass(Zero, Vector):
     def expand(self):
         return self
 
-    def factor(self):
+    def factor_vect(self):
         return self
 
 def _vect_add(one, other):
@@ -2090,13 +2119,14 @@ def _vect_div(one, other):
     if one.is_Vector and other.is_Vector:
         raise TypeError("Cannot divide two vectors")
     if not one.is_Vector and not other.is_Vector:
-        raise TypeError("At least one argument should be a vector")
-    # Now we know that either one or other is a vector. Remaining is scalar
-    if one.is_Vector:
-        return VectMul(one, Pow(other, S.NegativeOne))
+        # This shouldn't happen unless _vect_div is called directly
+        return Mul(one, Pow(other, S.NegativeOne))
+    # We cannot have scalar/vector
+    if other.is_Vector:
+        raise ValueError("Cannot divide by vector")
     else:
-        raise TypeError("Cannot divide by vector")
-
+        # Now we know that either one is a vector. Remaining is scalar
+        return _vect_mul(one, Pow(other, S.NegativeOne))
 
 def express(vect, coord_sys):
     """
@@ -2111,7 +2141,6 @@ def express(vect, coord_sys):
 
     if len(coord_list) == 1 and vect.coord_sys == coord_sys:
         return vect
-
     coord_sys_t = coord_sys._change_coord_sys(CoordSysRect, 'coord_sys_t')
     vect = vect.expand()
     coord_sys_dict = _coord_sys_dict(vect)
@@ -2195,22 +2224,24 @@ def express(vect, coord_sys):
         scalar = arg.scalar
         vector = arg.vector
 
-        # First process the scala
-        exec "conv_func = scalar._convert_to_" + coord_conv[type(coord_sys)]
+        # First process the scalar
         if isinstance(scalar, BaseScalar):
+            exec "conv_func = scalar._convert_to_" + coord_conv[type(coord_sys)]
             # Because BaseScalar.args returns coord_sys as well
             subs_dict[scalar] = conv_func(coord_sys)
 
         else:
             for arg_scalar in _all_base_scalars(scalar):
                 if not subs_dict.has_key(arg_scalar):
+                    exec "conv_func = arg_scalar._convert_to_" + \
+                        coord_conv[type(coord_sys)]
                     subs_dict[arg_scalar] = \
-                                        arg_scalar._convert_to_rect(coord_sys)
+                                            arg_scalar._convert_to_rect(coord_sys)
 
         # Now process the vector
         # vector is necessarily BaseVector
-        exec "conv_func = vector._convert_to_" + coord_conv[type(coord_sys)]
         assert isinstance(vector, BaseVector)
+        exec "conv_func = vector._convert_to_" + coord_conv[type(coord_sys)]
         subs_dict[vector] = conv_func(coord_sys)
 
     # Now performig the substitution, we have changed all involved
@@ -2218,7 +2249,7 @@ def express(vect, coord_sys):
     vect = vect.subs(subs_dict)
     subs_dict = {}
 
-    return vect.factor()
+    return vect.factor_vect()
 
 def _express_scalar(expr, coord_sys):
     """
