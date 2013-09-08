@@ -1,5 +1,8 @@
+from __future__ import print_function, division
+
 from sympy.ntheory import isprime
 from sympy.combinatorics.permutations import Permutation, _af_invert, _af_rmul
+from sympy.core.compatibility import xrange
 
 rmul = Permutation.rmul
 _af_new = Permutation._af_new
@@ -172,7 +175,7 @@ def _distribute_gens_by_base(base, gens):
         for k in xrange(j + 1):
             stabs[k].append(gen)
     for i in range(max_stab_index + 1, base_len):
-        stabs[i].append(_af_new(range(degree)))
+        stabs[i].append(_af_new(list(range(degree))))
     return stabs
 
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
@@ -240,8 +243,8 @@ def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
         if basic_orbits is None:
             base_len = len(base)
             basic_orbits = [None]*base_len
-            for i in xrange(base_len):
-                basic_orbits[i] = transversals[i].keys()
+            for i in range(base_len):
+                basic_orbits[i] = list(transversals[i].keys())
     return transversals, basic_orbits, strong_gens_distr
 
 
@@ -296,7 +299,7 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
         transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
                                  base[i], pairs=True))
         if transversals_only is False:
-            basic_orbits[i] = transversals[i].keys()
+            basic_orbits[i] = list(transversals[i].keys())
     if transversals_only:
         return transversals
     else:

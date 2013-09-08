@@ -65,8 +65,8 @@ Integers
 .. autoclass:: Integers 
    :members:
 
-TransformationSet
-^^^^^^^^^^^^^^^^^
-.. autoclass:: TransformationSet 
+ImageSet
+^^^^^^^^
+.. autoclass:: ImageSet
    :members:
 

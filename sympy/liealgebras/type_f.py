@@ -1,4 +1,4 @@
-from sympy.core import Set, Dict, Tuple
+from sympy.core import Set, Dict, Tuple, Rational
 from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 
@@ -66,7 +66,7 @@ class TypeF(Standard_Cartan):
             root[3] = 1
             return root
         if i == 4:
-            root = [-0.5]*4
+            root = [Rational(-1, 2)]*4
             return root
 
     def positive_roots(self):
@@ -104,18 +104,18 @@ class TypeF(Standard_Cartan):
             posroots[k] = root
 
         k += 1
-        root = [1/2]*n
+        root = [Rational(1, 2)]*n
         posroots[k] = root
         for i in range(1, 4):
             k += 1
-            root = [1/2]*n
-            root[i] = -1/2
+            root = [Rational(1, 2)]*n
+            root[i] = Rational(-1, 2)
             posroots[k] = root
 
-        posroots[k+1] = [1/2, 1/2, -1/2, -1/2]
-        posroots[k+2] = [1/2, -1/2, 1/2, -1/2]
-        posroots[k+3] = [1/2, -1/2, -1/2, 1/2]
-        posroots[k+4] = [1/2, -1/2, -1/2, -1/2]
+        posroots[k+1] = [Rational(1, 2), Rational(1, 2), Rational(-1, 2), Rational(-1, 2)]
+        posroots[k+2] = [Rational(1, 2), Rational(-1, 2), Rational(1, 2), Rational(-1, 2)]
+        posroots[k+3] = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
+        posroots[k+4] = [Rational(1, 2), Rational(-1, 2), Rational(-1, 2), Rational(-1, 2)]
 
         return posroots
 

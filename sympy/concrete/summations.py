@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.add import Add
 from sympy.core.basic import C
 from sympy.core.containers import Tuple
@@ -11,6 +13,7 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+from sympy.core.compatibility import xrange
 
 
 class Sum(Expr):
@@ -240,7 +243,7 @@ class Sum(Expr):
         for n, limit in enumerate(self.limits):
             i, a, b = limit
             dif = b - a
-            if dif.is_integer and dif < 0:
+            if dif.is_integer and (dif < 0) is True:
                 a, b = b + 1, a - 1
                 f = -f
 
@@ -331,7 +334,7 @@ class Sum(Expr):
             >>> s
             -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
-            >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
+            >>> print(sstr((s.evalf(), e.evalf()), full_prec=True))
             (1.26629073187415, 0.0175000000000000)
 
         The endpoints may be symbolic:
@@ -358,7 +361,7 @@ class Sum(Expr):
         f = self.function
         assert len(self.limits) == 1
         i, a, b = self.limits[0]
-        if a > b:
+        if (a > b) is True:
             a, b = b + 1, a - 1
             f = -f
         s = S.Zero
@@ -690,8 +693,10 @@ def _eval_sum_hyper(f, i, a):
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
 
-def eval_sum_hyper(f, (i, a, b)):
+def eval_sum_hyper(f, i_a_b):
     from sympy.logic.boolalg import And
+
+    i, a, b = i_a_b
 
     old_sum = Sum(f, (i, a, b))
 

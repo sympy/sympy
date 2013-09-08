@@ -11,6 +11,7 @@ from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, \
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
+from sympy.core.compatibility import reduce
 from sympy import sqrt, pi
 
 def test_PolyRing___init__():

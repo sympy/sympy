@@ -77,3 +77,21 @@ a theoretical foundation for implementing polynomials manipulation module.
 
 .. [Atiyah69] M.F. Atiyah, I.G. MacDonald, Introduction to Commutative Algebra,
     Addison-Wesley, 1969
+
+.. [Monagan00] M. Monagan and A. Wittkopf, On the Design and Implementation
+    of Brown’s Algorithm over the Integers and Number Fields, Proceedings of
+    ISSAC 2000, pp. 225-233, ACM, 2000.
+
+.. [Brown71] W.S. Brown, On Euclid's Algorithm and the Computation of
+    Polynomial Greatest Common Divisors, J. ACM 18, 4, pp. 478-504, 1971.
+
+.. [Hoeij04] M. van Hoeij and M. Monagan, Algorithms for polynomial GCD
+    computation over algebraic function fields, Proceedings of ISSAC 2004,
+    pp. 297-304, ACM, 2004.
+
+.. [Wang81] P.S. Wang, A p-adic algorithm for univariate partial fractions,
+    Proceedings of SYMSAC 1981, pp. 212-217, ACM, 1981.
+
+.. [Hoeij02] M. van Hoeij and M. Monagan, A modular GCD algorithm over
+    number fields presented with multiple extensions, Proceedings of ISSAC
+    2002, pp. 109-116, ACM, 2002

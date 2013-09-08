@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy import expand
 from sympy import diff
 from sympy import Sum

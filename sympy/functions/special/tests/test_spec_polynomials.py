@@ -75,7 +75,7 @@ def test_gegenbauer():
         gamma(a + n/2)/(gamma(a)*gamma(-n/2 + S(1)/2)*gamma(n + 1))
     assert gegenbauer(n, a, 1) == gamma(2*a + n)/(gamma(2*a)*gamma(n + 1))
 
-    assert gegenbauer(n, a, -1) == zoo
+    assert gegenbauer(n, Rational(3, 4), -1) == zoo
 
     m = Symbol("m", positive=True)
     assert gegenbauer(m, a, oo) == oo*RisingFactorial(a, m)

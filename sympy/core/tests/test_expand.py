@@ -133,12 +133,12 @@ def test_expand_frac():
 
 def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
-    assert cse((eq).expand(complex=True)) == S('''
-        ([(x0, re(x)), (x1, im(x)), (x2, sin(atan2(x1, x0)/2)), (x3,
-        cos(atan2(x1, x0)/2)), (x4, x0**2 + x1**2), (x5, sin(atan2(0, x4)/4)),
-        (x6, cos(atan2(0, x4)/4)), (x7, x2*x5), (x8, x3*x5), (x9, x2*x6),
-        (x10, x3*x6)], [sqrt(2)*(-x10 + I*x10 + x7 - I*x7 + x8 + I*x8 + x9 +
-        I*x9)/(8*pi**(3/2)*x4**(1/4))])''')
+    assert cse((eq).expand(complex=True), optimizations='basic') \
+        == S(''' ([(x0, re(x)), (x1, im(x)), (x2, x0**2 + x1**2), (x3,
+        atan2(x1, x0)/2), (x4, sin(x3)), (x5, atan2(0, x2)/4), (x6, sin(x5)),
+        (x7, x4*x6), (x8, cos(x3)), (x9, x6*x8), (x10, cos(x5)), (x11,
+        x10*x4), (x12, x10*x8)], [sqrt(2)*(x11 + I*x11 - x12 + I*x12 + x7 -
+        I*x7 + x9 + I*x9)/(8*pi**(3/2)*x2**(1/4))])''')
 
 
 def test_expand_power_base():

@@ -8,6 +8,8 @@ ode_order
 _desolve
 
 """
+from __future__ import print_function, division
+
 from sympy.core.function import Function, Derivative, AppliedUndef
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Wild
@@ -62,7 +64,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     >>> _preprocess(eq, g(x))
     (Derivative(f(x), x) + Derivative(g(x), x), g(x))
     >>> try: _preprocess(eq)
-    ... except ValueError: print "A ValueError was raised."
+    ... except ValueError: print("A ValueError was raised.")
     A ValueError was raised.
 
     """
@@ -177,6 +179,8 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # or partial differential equation. Accordingly corresponding
     # changes are made in the function.
     type = kwargs.get('type', None)
+    xi = kwargs.get('xi')
+    eta = kwargs.get('eta')
     if type == 'ode':
         from sympy.solvers.ode import classify_ode, allhints
         classifier = classify_ode
@@ -193,7 +197,7 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # being called more than it needs to be by passing its results through
     # recursive calls.
     if kwargs.get('classify', True):
-        hints = classifier(eq, func, dict=True, prep=prep)
+        hints = classifier(eq, func, dict=True, xi=xi, eta=eta, prep=prep)
 
     else:
         # Here is what all this means:
@@ -227,7 +231,7 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     if hint == 'default':
         return _desolve(eq, func, hint=hints['default'], simplify=simplify,
                       prep=prep, classify=False, order=hints['order'],
-                      match=hints[hints['default']], type=type)
+                      match=hints[hints['default']], xi=xi, eta=eta, type=type)
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         failedhints = {}
@@ -236,9 +240,11 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
             for i in hints:
                 if i.endswith('_Integral'):
                     gethints.remove(i[:-len('_Integral')])
-            # special case
+            # special cases
             if "1st_homogeneous_coeff_best" in gethints:
                 gethints.remove("1st_homogeneous_coeff_best")
+            if "lie_group" in gethints:
+                gethints.remove("lie_group")
         for i in gethints:
             sol = _desolve(eq, func, hint=i, simplify=simplify, prep=prep,
                 classify=False, order=hints['order'], match=hints[i], type=type)

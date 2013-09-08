@@ -1,5 +1,6 @@
 from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
+from sympy.core.compatibility import get_function_name
 from functools import partial
 
 def test_null_safe():
@@ -49,14 +50,14 @@ def test_do_one():
     assert rl(5) == 4
 
 def test_debug():
-    import StringIO
-    file = StringIO.StringIO()
+    from sympy.core.compatibility import StringIO
+    file = StringIO()
     rl = debug(posdec, file)
     rl(5)
     log = file.getvalue()
     file.close()
 
-    assert posdec.func_name in log
+    assert get_function_name(posdec) in log
     assert '5' in log
     assert '4' in log
 

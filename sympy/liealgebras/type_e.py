@@ -1,4 +1,4 @@
-from sympy.core import Set, Dict, Tuple
+from sympy.core import Set, Dict, Tuple, Rational
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 
@@ -105,7 +105,8 @@ class TypeE(Standard_Cartan):
                     root[i] = 1
                     posroots[k] = root
 
-            root = [0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5]
+            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
+                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
             for a in range(0, 2):
                 for b in range(0, 2):
                     for c in range(0, 2):
@@ -114,15 +115,15 @@ class TypeE(Standard_Cartan):
                                 if (a + b + c + d + e)%2 == 0:
                                     k += 1
                                     if a == 1:
-                                        root[0] = -0.5
+                                        root[0] = Rational(-1, 2)
                                     if b == 1:
-                                        root[1] = -0.5
+                                        root[1] = Rational(-1, 2)
                                     if c == 1:
-                                        root[2] = -0.5
+                                        root[2] = Rational(-1, 2)
                                     if d == 1:
-                                        root[3] = -0.5
+                                        root[3] = Rational(-1, 2)
                                     if e == 1:
-                                        root[4] = -0.5
+                                        root[4] = Rational(-1, 2)
                                     posroots[k] = root
 
             return posroots
@@ -141,7 +142,8 @@ class TypeE(Standard_Cartan):
 
             k += 1
             posroots[k] = [0, 0, 0, 0, 0, 1, 1, 0]
-            root = [0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5]
+            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
+                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
             for a in range(0, 2):
                 for b in range(0, 2):
                     for c in range(0, 2):
@@ -151,17 +153,17 @@ class TypeE(Standard_Cartan):
                                     if (a + b + c + d + e + f)%2 == 0:
                                         k += 1
                                         if a == 1:
-                                            root[0] = -0.5
+                                            root[0] = Rational(-1, 2)
                                         if b == 1:
-                                            root[1] = -0.5
+                                            root[1] = Rational(-1, 2)
                                         if c == 1:
-                                            root[2] = -0.5
+                                            root[2] = Rational(-1, 2)
                                         if d == 1:
-                                            root[3] = -0.5
+                                            root[3] = Rational(-1, 2)
                                         if e == 1:
-                                            root[4] = -0.5
+                                            root[4] = Rational(-1, 2)
                                         if f == 1:
-                                            root[5] = 0.5
+                                            root[5] = Rational(1, 2)
                                         posroots[k] = root
 
             return posroots
@@ -178,7 +180,8 @@ class TypeE(Standard_Cartan):
                     root[i] = 1
                     posroots[k] = root
 
-            root = [0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5]
+            root = [Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2), Rational(1, 2),
+                    Rational(-1, 2), Rational(-1, 2), Rational(1, 2)]
             for a in range(0, 2):
                 for b in range(0, 2):
                     for c in range(0, 2):
@@ -189,19 +192,19 @@ class TypeE(Standard_Cartan):
                                         if (a + b + c + d + e + f + g)%2 == 0:
                                             k += 1
                                             if a == 1:
-                                                root[0] = -0.5
+                                                root[0] = Rational(-1, 2)
                                             if b == 1:
-                                                root[1] = -0.5
+                                                root[1] = Rational(-1, 2)
                                             if c == 1:
-                                                root[2] = -0.5
+                                                root[2] = Rational(-1, 2)
                                             if d == 1:
-                                                root[3] = -0.5
+                                                root[3] = Rational(-1, 2)
                                             if e == 1:
-                                                root[4] = -0.5
+                                                root[4] = Rational(-1, 2)
                                             if f == 1:
-                                                root[5] = 0.5
+                                                root[5] = Rational(1, 2)
                                             if g == 1:
-                                                root[6] = 0.5
+                                                root[6] = Rational(1, 2)
                                             posroots[k] = root
 
             return posroots

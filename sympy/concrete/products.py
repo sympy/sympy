@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core.containers import Tuple
 from sympy.core.core import C
 from sympy.core.expr import Expr
@@ -7,6 +9,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+from sympy.core.compatibility import xrange
 
 
 class Product(Expr):

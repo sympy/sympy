@@ -1,7 +1,7 @@
 """
 The contents of this file are the return value of
 ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
-edit this file.
+edit this file.  Instead, run ./bin/ask_update.py.
 """
 
 from sympy.logic.boolalg import And, Not, Or
@@ -34,8 +34,11 @@ known_facts_cnf = And(
     Or(Not(Q.orthogonal), Q.positive_definite),
     Or(Not(Q.integer), Q.rational),
     Or(Not(Q.irrational), Q.real),
+    Or(Not(Q.nonnegative), Q.real),
+    Or(Not(Q.nonpositive), Q.real),
     Or(Not(Q.nonzero), Q.real),
     Or(Not(Q.rational), Q.real),
+    Or(Not(Q.zero), Q.real),
     Or(Not(Q.integer_elements), Q.real_elements),
     Or(Not(Q.invertible), Q.square),
     Or(Not(Q.normal), Q.square),
@@ -52,12 +55,18 @@ known_facts_cnf = And(
     Or(Not(Q.imaginary), Not(Q.real)),
     Or(Not(Q.invertible), Not(Q.singular)),
     Or(Not(Q.irrational), Not(Q.rational)),
+    Or(Not(Q.negative), Not(Q.nonnegative)),
     Or(Not(Q.negative), Not(Q.positive)),
+    Or(Not(Q.nonpositive), Not(Q.positive)),
+    Or(Not(Q.nonzero), Not(Q.zero)),
     Or(Not(Q.integer), Q.even, Q.odd),
     Or(Not(Q.extended_real), Q.infinity, Q.real),
     Or(Not(Q.real), Q.irrational, Q.rational),
     Or(Not(Q.triangular), Q.lower_triangular, Q.upper_triangular),
+    Or(Not(Q.real), Q.negative, Q.nonnegative),
     Or(Not(Q.nonzero), Q.negative, Q.positive),
+    Or(Not(Q.real), Q.nonpositive, Q.positive),
+    Or(Not(Q.real), Q.nonzero, Q.zero),
     Or(Not(Q.lower_triangular), Not(Q.upper_triangular), Q.diagonal),
     Or(Not(Q.fullrank), Not(Q.square), Q.invertible),
     Or(Not(Q.real), Not(Q.unitary), Q.orthogonal),
@@ -66,6 +75,8 @@ known_facts_cnf = And(
 
 # -{ Known facts in compressed sets }-
 known_facts_dict = {
+    Q.nonpositive: set([Q.nonpositive, Q.real, Q.complex, Q.extended_real,
+        Q.hermitian]),
     Q.orthogonal: set([Q.orthogonal, Q.normal, Q.invertible, Q.fullrank,
         Q.positive_definite, Q.unitary, Q.square]),
     Q.invertible: set([Q.fullrank, Q.invertible, Q.square]),
@@ -106,16 +117,20 @@ known_facts_dict = {
     Q.complex: set([Q.complex]),
     Q.lower_triangular: set([Q.triangular, Q.lower_triangular]),
     Q.positive: set([Q.complex, Q.positive, Q.nonzero, Q.hermitian,
-        Q.real, Q.extended_real]),
+        Q.real, Q.extended_real, Q.nonnegative]),
     Q.composite: set([Q.composite]),
+    Q.zero: set([Q.nonpositive, Q.complex, Q.hermitian, Q.zero, Q.real,
+        Q.extended_real, Q.nonnegative]),
     Q.triangular: set([Q.triangular]),
     Q.prime: set([Q.complex, Q.positive, Q.real, Q.hermitian, Q.prime,
         Q.rational, Q.extended_real, Q.nonzero, Q.integer,
-        Q.algebraic]),
-    Q.negative: set([Q.complex, Q.nonzero, Q.hermitian, Q.real,
-        Q.negative, Q.extended_real]),
+        Q.nonnegative, Q.algebraic]),
+    Q.negative: set([Q.nonpositive, Q.complex, Q.nonzero, Q.hermitian,
+        Q.real, Q.negative, Q.extended_real]),
     Q.unitary: set([Q.normal, Q.square, Q.fullrank, Q.invertible,
         Q.unitary]),
+    Q.nonnegative: set([Q.nonnegative, Q.real, Q.complex, Q.extended_real,
+        Q.hermitian]),
     Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real,
         Q.hermitian]),
     Q.unit_triangular: set([Q.triangular, Q.unit_triangular]),

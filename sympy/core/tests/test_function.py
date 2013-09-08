@@ -535,7 +535,6 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-@XFAIL
 def test_issue_1612():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)

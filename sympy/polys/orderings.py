@@ -1,5 +1,7 @@
 """Definitions of monomial orderings. """
 
+from __future__ import print_function, division
+
 __all__ = ["lex", "grlex", "grevlex", "ilex", "igrlex", "igrevlex"]
 
 from sympy.core import Symbol

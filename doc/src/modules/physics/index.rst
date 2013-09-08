@@ -21,5 +21,6 @@ Contents
     secondquant.rst
     wigner.rst
     units.rst
+    hep/index.rst
     mechanics/index.rst
     quantum/index.rst

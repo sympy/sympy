@@ -8,7 +8,8 @@ ODE
 User Functions
 --------------
 These are functions that are imported into the global namespace with ``from
-sympy import *``.  They are intended for user use.
+sympy import *``.  These functions (unlike `Hint Functions`_, below) are
+intended for use by ordinary users of SymPy.
 
 :func:`dsolve`
 ^^^^^^^^^^^^^^
@@ -36,9 +37,12 @@ sympy import *``.  They are intended for user use.
 
 Hint Functions
 --------------
-These functions are intended for internal use by :py:meth:`dsolve` and others.
-Nonetheless, they contain useful information in their docstrings on the various
-ODE solving methods.
+These functions are intended for internal use by
+:py:meth:`~sympy.solvers.ode.dsolve` and others.  Unlike `User Functions`_,
+above, these are not intended for every-day use by ordinary SymPy users.
+Instead, functions such as :py:meth:`~sympy.solvers.ode.dsolve` should be used.
+Nonetheless, these functions contain useful information in their docstrings on
+the various ODE solving methods. For this reason, they are documented here.
 
 :obj:`allhints`
 ^^^^^^^^^^^^^^^
@@ -120,6 +124,10 @@ ODE solving methods.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
+:obj:`lie_group`
+^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_lie_group
+
 Lie heuristics
 --------------
 These functions are intended for internal use of the Lie Group Solver.
@@ -141,6 +149,26 @@ implemented for the various heuristics.
 :obj:`chi`
 ^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.lie_heuristic_chi
+
+:obj:`abaco2_similar`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_similar
+
+:obj:`function_sum`
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_function_sum
+
+:obj:`abaco2_unique_unknown`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_unique_unknown
+
+:obj:`abaco2_unique_general`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_unique_general
+
+:obj:`linear`
+^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_linear
 
 Information on the ode module
 -----------------------------

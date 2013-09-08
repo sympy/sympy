@@ -1,5 +1,7 @@
 """Algorithms for partial fraction decomposition of rational functions. """
 
+from __future__ import print_function, division
+
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyoptions import allowed_flags, set_defaults
@@ -8,6 +10,7 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Expr
 from sympy.core.basic import preorder_traversal
 from sympy.utilities import numbered_symbols, take, xthreaded, public
+from sympy.core.compatibility import xrange
 
 @xthreaded
 @public
@@ -83,7 +86,7 @@ def apart(f, x=None, full=False, **options):
         else:
             reps = []
             pot = preorder_traversal(f)
-            pot.next()
+            next(pot)
             for e in pot:
                 try:
                     reps.append((e, apart(e, x=x, full=full, **_options)))
@@ -383,7 +386,7 @@ def apart_list_full_decomposition(P, Q, dummygen):
             B, g = Q.half_gcdex(D)
             b = (P * B.quo(g)).rem(D)
 
-            Dw = D.subs(x, dummygen.next())
+            Dw = D.subs(x, next(dummygen))
             numer = Lambda(a, b.as_expr().subs(x, a))
             denom = Lambda(a, (x - a))
             exponent = n-j

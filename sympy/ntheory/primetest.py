@@ -3,6 +3,9 @@ Primality testing
 
 """
 
+from __future__ import print_function, division
+from sympy.core.compatibility import xrange
+
 # pseudoprimes that will pass through last mr_safe test
 _pseudos = set([
             669094855201,
@@ -53,6 +56,9 @@ def _test(n, base, s, t):
             b = pow(b, 2, n)
             if b == n - 1:
                 return True
+            # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
+            if b == 1:
+                return False
     return False
 
 
@@ -84,7 +90,7 @@ def mr(n, bases):
     n = int(n)
     if n < 2:
         return False
-    # remove powers of 2 from n = t * 2**s
+    # remove powers of 2 from n = t * 2**s + 1
     s = trailing(n - 1)
     t = n >> s
     for base in bases:
@@ -232,9 +238,9 @@ def _mr_safe_helper(_s):
 
     e.g.
     >>> from sympy.ntheory.primetest import _mr_safe_helper
-    >>> print _mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])")
+    >>> print(_mr_safe_helper("if n < 170584961: return mr(n, [350, 3958281543])"))
      # [350, 3958281543] stot = 1 clear [2, 3, 5, 7, 29, 67, 679067]
-    >>> print _mr_safe_helper('return mr(n, [2, 379215, 457083754])')
+    >>> print(_mr_safe_helper('return mr(n, [2, 379215, 457083754])'))
      # [2, 379215, 457083754] stot = 1 clear [2, 3, 5, 53, 228541877]
     """
 
