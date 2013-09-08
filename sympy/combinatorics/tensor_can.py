@@ -915,7 +915,7 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     """
     s = 2 if signed else 0
     n1 = gens1[0].size - s
-    base = base1[:]
+    base = list(base1)
     base += [x + n1 for x in base2]
     gens1 = [h._array_form for h in gens1]
     gens2 = [h._array_form for h in gens2]
@@ -1133,6 +1133,7 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
         else:
             a.extend([nr + 1, nr])
         res_gens.append(_af_new(a))
+    res_base = list(res_base)
     # each base is ordered; order the union of the two bases
     for i in base_comm:
         if i not in res_base:

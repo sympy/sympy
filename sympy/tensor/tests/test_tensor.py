@@ -5,8 +5,9 @@ from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
   tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
-  TensorManager, TensExpr)
+  TensorManager, TensExpr, TIDS)
 from sympy.utilities.pytest import raises
+from sympy.core.containers import Tuple
 
 #################### Tests from tensor_can.py #######################
 
@@ -467,7 +468,7 @@ def test_tensorsymmetry():
     sym1 = TensorSymmetry(get_symmetric_group_sgs(2, 1))
     assert sym == sym1
     sym2 = tensorsymmetry()
-    assert sym2.base == [] and sym2.generators == [Permutation(1)]
+    assert sym2.base == Tuple() and sym2.generators == Tuple(Permutation(1))
     raises(NotImplementedError, lambda: tensorsymmetry([2, 1]))
 
 def test_TensorType():
@@ -476,7 +477,7 @@ def test_TensorType():
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     assert A.typ == TensorType([Lorentz]*2, sym)
     assert A.types == [Lorentz]
-    typ =  TensorType([Lorentz]*2, sym)
+    typ = TensorType([Lorentz]*2, sym)
     assert str(typ) == "TensorType(['Lorentz', 'Lorentz'])"
     raises(ValueError, lambda: typ(2))
 
@@ -543,7 +544,7 @@ def test_add1():
     t1 = p(d0) + 2*q(d0)
     t3 = t1*t2
     assert str(t3) == '4*p(L_0)*q(-L_0) + 4*q(L_0)*q(-L_0) + p(L_0)*p(-L_0)'
-    t1 =  p(d0) - 2*q(d0)
+    t1 = p(d0) - 2*q(d0)
     assert str(t1) == '-2*q(d0) + p(d0)'
     t2 = p(-d0) + 2*q(-d0)
     t3 = t1*t2
@@ -573,7 +574,7 @@ def test_add1():
     assert (t + t1).equals(2)
     t2 = 1 + A(a, -a)
     assert t1 != t2
-    assert t2 != TensMul(0, [],[],[])
+    assert t2 != TensMul.from_data(0, [], [], [])
     t = p(i) + q(i)
     raises(ValueError, lambda: t(i, j))
 
@@ -582,11 +583,11 @@ def test_add2():
     m, n, p, q = tensor_indices('m,n,p,q', Lorentz)
     R = tensorhead('R', [Lorentz]*4, [[2, 2]])
     A = tensorhead('A', [Lorentz]*3, [[3]])
-    t1 = 2*R(m,n,p,q) - R(m,q,n,p) + R(m,p,n,q)
-    t2 = t1*A(-n,-p,-q)
+    t1 = 2*R(m, n, p, q) - R(m, q, n, p) + R(m, p, n, q)
+    t2 = t1*A(-n, -p, -q)
     assert t2 == 0
     t1 = S(2)/3*R(m,n,p,q) - S(1)/3*R(m,q,n,p) + S(1)/3*R(m,p,n,q)
-    t2 = t1*A(-n,-p,-q)
+    t2 = t1*A(-n, -p, -q)
     assert t2 == 0
     t = A(m, -m, n) + A(n, p, -p)
     assert t == 0
@@ -596,7 +597,7 @@ def test_mul():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     sym = tensorsymmetry([1]*2)
-    t = TensMul(S.One, [],[],[])
+    t = TensMul.from_data(S.One, [], [], [])
     assert str(t) == '1'
     A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
     t = (1 + x)*A(a, b)
@@ -612,17 +613,17 @@ def test_mul():
     t1 = tensor_mul(*t.split())
     assert t == t(-b, d)
     assert t == t1
-    assert tensor_mul(*[]) == TensMul(S.One, [],[],[])
+    assert tensor_mul(*[]) == TensMul.from_data(S.One, [], [], [])
 
-    t = TensMul(1, [], [], [])
+    t = TensMul.from_data(1, [], [], [])
     zsym = tensorsymmetry()
-    typ =  TensorType([], zsym)
+    typ = TensorType([], zsym)
     C = typ('C')
     assert str(C()) == 'C'
     assert str(t) == '1'
     assert t.split()[0] == t
-    raises(ValueError, lambda: TensMul.from_indices(a, a))
-    raises(ValueError, lambda: TensMul.from_indices(-a, -a))
+    raises(ValueError, lambda: TIDS.free_dum_from_indices(a, a))
+    raises(ValueError, lambda: TIDS.free_dum_from_indices(-a, -a))
     raises(ValueError, lambda: A(a, b)*A(a, c))
     t = A(a, b)*A(-a, c)
     raises(ValueError, lambda: t(a, b, c))
@@ -632,7 +633,7 @@ def test_substitute_indices():
     i, j, k, l, m, n, p, q = tensor_indices('i,j,k,l,m,n,p,q', Lorentz)
     A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
     t = A(i, k)*B(-k, -j)
-    t1 = t.substitute_indices((i,j), (j, k))
+    t1 = t.substitute_indices((i, j), (j, k))
     t1a = A(j, l)*B(-l, -k)
     assert t1 == t1a
 
@@ -651,12 +652,12 @@ def test_substitute_indices():
 
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    m0,m1,m2,m3 = tensor_indices('m:4', Lorentz)
+    m0, m1, m2, m3 = tensor_indices('m:4', Lorentz)
     symr = tensorsymmetry([2, 2])
     R = tensorhead('R', [Lorentz]*4, [[2, 2]])
-    t = R(m0,m2,m1,m3)
+    t = R(m0, m2, m1, m3)
     t1 = riemann_cyclic_replace(t)
-    t1a =  -S.One/3*R(m0, m3, m2, m1) + S.One/3*R(m0, m1, m2, m3) + Rational(2,3)*R(m0, m2, m1, m3)
+    t1a = -S.One/3*R(m0, m3, m2, m1) + S.One/3*R(m0, m1, m2, m3) + Rational(2, 3)*R(m0, m2, m1, m3)
     assert t1 == t1a
 
 def test_riemann_cyclic():
@@ -732,7 +733,7 @@ def test_contract_metric1():
     t1 = A(a,b)*g(-a,-b)
     t2 = t1.contract_metric(g)
     assert t2 == A(a, -a)
-    assert not t2._free
+    assert not t2.free
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     g = Lorentz.metric
@@ -1072,9 +1073,52 @@ def test_hash():
     g = Lorentz.metric
 
     p, q = tensorhead('p q', [Lorentz], [[1]])
+    p_type = p.args[1]
     t1 = p(a)*q(b)
     t2 = p(a)*p(b)
     assert hash(t1) != hash(t2)
     t3 = p(a)*p(b) + g(a,b)
     t4 = p(a)*p(b) - g(a,b)
     assert hash(t3) != hash(t4)
+
+    assert a.func(*a.args) == a
+    assert Lorentz.func(*Lorentz.args) == Lorentz
+    assert g.func(*g.args) == g
+    assert p.func(*p.args) == p
+    assert p_type.func(*p_type.args) == p_type
+    assert p(a).func(*(p(a)).args) == p(a)
+    assert t1.func(*t1.args) == t1
+    assert t2.func(*t2.args) == t2
+    assert t3.func(*t3.args) == t3
+    assert t4.func(*t4.args) == t4
+
+    assert hash(a.func(*a.args)) == hash(a)
+    assert hash(Lorentz.func(*Lorentz.args)) == hash(Lorentz)
+    assert hash(g.func(*g.args)) == hash(g)
+    assert hash(p.func(*p.args)) == hash(p)
+    assert hash(p_type.func(*p_type.args)) == hash(p_type)
+    assert hash(p(a).func(*(p(a)).args)) == hash(p(a))
+    assert hash(t1.func(*t1.args)) == hash(t1)
+    assert hash(t2.func(*t2.args)) == hash(t2)
+    assert hash(t3.func(*t3.args)) == hash(t3)
+    assert hash(t4.func(*t4.args)) == hash(t4)
+
+    def check_all(obj):
+        return all([isinstance(_, Basic) for _ in obj.args])
+
+    assert check_all(a)
+    assert check_all(Lorentz)
+    assert check_all(g)
+    assert check_all(p)
+    assert check_all(p_type)
+    assert check_all(p(a))
+    assert check_all(t1)
+    assert check_all(t2)
+    assert check_all(t3)
+    assert check_all(t4)
+
+    tsymmetry = tensorsymmetry([2], [1], [1, 1, 1])
+
+    assert tsymmetry.func(*tsymmetry.args) == tsymmetry
+    assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
+    assert check_all(tsymmetry)

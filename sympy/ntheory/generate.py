@@ -358,7 +358,7 @@ def primerange(a, b):
 
         If the range exists in the default sieve, the values will
         be returned from there; otherwise values will be returned
-        but will not modifiy the sieve.
+        but will not modify the sieve.
 
         Notes
         =====

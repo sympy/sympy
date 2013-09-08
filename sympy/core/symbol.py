@@ -366,16 +366,6 @@ def symbols(names, **args):
 
     """
     result = []
-    if 'each_char' in args:
-        if args['each_char']:
-            value = "Tip: ' '.join(s) will transform a string s = 'xyz' to 'x y z'."
-        else:
-            value = ""
-        SymPyDeprecationWarning(
-            feature="each_char in the options to symbols() and var()",
-            useinstead="spaces or commas between symbol names",
-            issue=1919, deprecated_since_version="0.7.0", value=value
-        ).warn()
 
     if isinstance(names, string_types):
         marker = 0
@@ -409,9 +399,6 @@ def symbols(names, **args):
         # split on spaces
         for i in range(len(names) - 1, -1, -1):
             names[i: i + 1] = names[i].split()
-
-        if args.pop('each_char', False) and not as_seq and len(names) == 1:
-            return symbols(tuple(names[0]), **args)
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)

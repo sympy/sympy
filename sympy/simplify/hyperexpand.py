@@ -1922,7 +1922,7 @@ def hyperexpand_special(ap, bq, z):
     z_ = z
     z = unpolarify(z)
     if z == 0:
-        return S.Zero
+        return S.One
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -1955,6 +1955,10 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
+
+    if z is S.Zero:
+        return S.One
+
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'

@@ -2264,6 +2264,7 @@ def test_sympy__physics__quantum__piab__PIABKet():
     from sympy.physics.quantum.piab import PIABKet
     assert _test_args(PIABKet('K'))
 
+
 def test_sympy__physics__quantum__qexpr__QExpr():
     from sympy.physics.quantum.qexpr import QExpr
     assert _test_args(QExpr(0))
@@ -2757,26 +2758,25 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
 
-@XFAIL
+
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
     from sympy import Symbol
     assert _test_args(TensorIndexType('Lorentz', metric=False))
 
-@XFAIL
+
 def test_sympy__tensor__tensor__TensorSymmetry():
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
     assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
 
 
-@XFAIL
 def test_sympy__tensor__tensor__TensorType():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorType
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     assert _test_args(TensorType([Lorentz], sym))
 
-@XFAIL
+
 def test_sympy__tensor__tensor__TensorHead():
     from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, TensorHead
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -2784,7 +2784,7 @@ def test_sympy__tensor__tensor__TensorHead():
     S1 = TensorType([Lorentz], sym)
     assert _test_args(TensorHead('p', S1, 0))
 
-@XFAIL
+
 def test_sympy__tensor__tensor__TensorIndex():
     from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -2808,14 +2808,14 @@ def test_sympy__tensor__tensor__TensAdd():
 
 def test_sympy__tensor__tensor__TensMul():
     from sympy.core import S
-    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul, TIDS
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b = tensor_indices('a,b', Lorentz)
     sym = TensorSymmetry(get_symmetric_group_sgs(1))
     S1 = TensorType([Lorentz], sym)
     p = S1('p')
-    free, dum =  TensMul.from_indices(a)
-    assert _test_args(TensMul(S.One, [p], free, dum))
+    free, dum = TIDS.free_dum_from_indices(a)
+    assert _test_args(TensMul.from_data(S.One, [p], free, dum))
 
 
 

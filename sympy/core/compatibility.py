@@ -16,7 +16,7 @@ Python 2 and Python 3 compatible imports
 String and Unicode compatible changes:
     * `unicode()` removed in Python 3, defined as `str()`
     * `u()` escapes unicode sequences in Python 2 (e.g. u('\u2020'))
-    * `u_decode()` decodes utf-8 fomrmatted unicode strings
+    * `u_decode()` decodes utf-8 formatted unicode strings
     * `string_types` gives str in Python 3, unicode and str in Python 2,
       equivalent to basestring
 
@@ -133,7 +133,40 @@ else:
     xrange = xrange
 
 def with_metaclass(meta, *bases):
-    """Create a base class with a metaclass."""
+    """
+    Create a base class with a metaclass.
+
+    For example, if you have the metaclass
+
+    >>> class Meta(type):
+    ...     pass
+
+    Use this as the metaclass by doing
+
+    >>> from sympy.core.compatibility import with_metaclass
+    >>> class MyClass(with_metaclass(Meta, object)):
+    ...     pass
+
+    This is equivalent to the Python 2::
+
+        class MyClass(object):
+            __metaclass__ = Meta
+
+    or Python 3::
+
+        class MyClass(object, metaclass=Meta):
+            pass
+
+    That is, the first argument is the metaclass, and the remaining arguments
+    are the base classes. Note that if the base class is just ``object``, you
+    may omit it.
+
+    >>> MyClass.__mro__
+    (<class 'MyClass'>, <... 'object'>)
+    >>> type(MyClass)
+    <class 'Meta'>
+
+    """
     class metaclass(meta):
         __call__ = type.__call__
         __init__ = type.__init__
@@ -263,7 +296,10 @@ def cmp_to_key(mycmp):
             return mycmp(self.obj, other.obj) != 0
     return K
 
-
+try:
+    from itertools import zip_longest
+except ImportError: # <= Python 2.7
+    from itertools import izip_longest as zip_longest
 try:
     from itertools import combinations_with_replacement
 except ImportError:  # <= Python 2.6

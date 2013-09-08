@@ -114,3 +114,13 @@ class TypeD(Standard_Cartan):
 
         n = self.n
         return "so(" + str(2*n) + ")"
+
+    def dynkin_diagram(self):
+        n = self.n
+        diag = " "*4*(n-3) + str(n-1) + "\n"
+        diag += " "*4*(n-3) + "0\n"
+        diag += " "*4*(n-3) +"|\n"
+        diag += " "*4*(n-3) + "|\n"
+        diag += "---".join("0" for i in range(1,n)) + "\n"
+        diag += "   ".join(str(i) for i in range(1, n-1)) + "   "+str(n)
+        return diag

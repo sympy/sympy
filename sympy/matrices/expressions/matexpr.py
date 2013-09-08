@@ -289,6 +289,7 @@ class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
+    _diff_wrt = True
 
 
 class MatrixSymbol(MatrixExpr):

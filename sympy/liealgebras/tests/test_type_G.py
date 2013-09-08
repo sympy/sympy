@@ -9,3 +9,5 @@ def test_type_G():
     assert c.basis() == 14
     assert c.roots() == 12
     assert c.dimension() == 3
+    diag = "0≡<≡0\n1   2"
+    assert diag == c.dynkin_diagram()

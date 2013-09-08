@@ -111,3 +111,9 @@ class TypeB(Standard_Cartan):
 
         n = self.n
         return "so(" + str(2*n) + ")"
+
+    def dynkin_diagram(self):
+        n = self.n
+        diag = "---".join("0" for i in range (1, n)) + "=>=0\n"
+        diag += "   ".join(str(i) for i in range (1, n+1))
+        return diag
