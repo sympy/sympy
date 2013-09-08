@@ -629,7 +629,7 @@ class ReferenceFrame(object):
         self.name = name
         self._var_dict = {}
         #The _dcm_dict dictionary will only store the dcms of parent-child
-        #relarionships. The _dcm_cache dictionary will work as the dcm
+        #relationships. The _dcm_cache dictionary will work as the dcm
         #cache.
         self._dcm_dict = {}
         self._dcm_cache = {}
