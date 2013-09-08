@@ -576,6 +576,8 @@ class CoordSys(Basic):
         else:
             self.position = ZeroVector
 
+        # _dcm_parent stores matrix to go from self -> parent
+        # _dcm_global stores matrix to go from global -> self
         self._dcm_global = eye(3)
         self._dcm_parent = eye(3)
 
@@ -586,7 +588,7 @@ class CoordSys(Basic):
         if orient_type:
             self._check_orient_raise(orient_type, orient_amount, rot_order)
             if parent:
-                self._dcm_parent = self._dcm_parent_func(orient_type,
+                self._dcm_parent = self._dcm_parent_method(orient_type,
                                                          orient_amount,
                                                          rot_order)
 
@@ -608,15 +610,14 @@ class CoordSys(Basic):
     def _dcm_parent_method(self, orient_type, amounts, rot_order=''):
         orient_type = orient_type.capitalize()
         if orient_type == 'Axis':
-            if not rot_order == '':
+            if rot_order:
                 raise TypeError('Axis orientation takes no rotation order')
             if not (isinstance(amounts, (list, tuple)) & (len(amounts) == 2)):
                 raise TypeError('Amounts are a list or tuple of length 2')
             theta = amounts[0]
             axis = amounts[1]
             # TODO : Implement normalize and as_mat methods
-            axis = axis.express(self.parent).normalize().as_mat()
-            axis = axis.args[0][0]
+            axis = axis.express(self.parent).normalize().as_mat().T
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                     Matrix([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]],
                         [-axis[1], axis[0], 0]]) * sin(theta) + axis * axis.T)
@@ -638,10 +639,10 @@ class CoordSys(Basic):
         orient_type = orient_type.capitalize()
         if self.parent:
             # Parent given therefore the given angle is wrt parent.
-            # DCM(global<-parent)*DCM(parent<-self) == DCM(global <- self)
+            # Go from self -> parent -> global
             parent = self.parent
             r = parent.dcm().T * parent.dcm(self)
-            return r
+            return r.T
         else:
             # Parent not set. So, directly initialize the dcm wrt global
             # Using sympy.physics.mechanics logic here.
@@ -655,9 +656,9 @@ class CoordSys(Basic):
                 theta = amounts[0]
                 axis = amounts[1]
                 # TODO : No such method. Do it via express.
-                axis = axis.in_global()
+                c_rect = CoordSysRect # Dummy coord_sys for expressing axis
+                axis = axis.express(c_rect)
                 axis = axis.normalize().as_mat()
-                axis = axis.args[0][0]
                 global_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                         Matrix([[0, -axis[2], axis[1]],
                                 [axis[2], 0, -axis[0]],
@@ -701,6 +702,8 @@ class CoordSys(Basic):
             if rot_order:
                 raise ValueError("orient_axis works only with 'Body' \
                                 type orientaion")
+            if not is_const_vect(orient_amount[1]):
+                raise ValueError("Orient axis needs to be constant vector")
 
         elif orient_type == 'Body':
             if len(orient_amount) != 3:
@@ -737,20 +740,19 @@ class CoordSys(Basic):
         to self, i.e.,
         self.xyz = self.dcm(other)*other.xyz
         """
-        #import ipdb;ipdb.set_trace()
         if other == 'global':
             return self._dcm_global
 
         # First check self and other are parent/child frames
         if self.parent == other:
-            return self._dcm_parent
-        elif other.parent == self:
             return self._dcm_parent.T
-        # TODO : Implement path A->B->C->D rather than A->global->D
+        elif other.parent == self:
+            return other._dcm_parent
         else:
             # Now we can either traverse the frames to find the nearest
             # common frame. This will require multiplying many matrices.
             # So, we go via the global frame
+            # TODO : Implement path A->B->C->D rather than A->global->D
             r = other.dcm() * self.dcm().T
             r.applyfunc(lambda i: trigsimp(i, method='fu'))
             return r
@@ -894,45 +896,6 @@ class CoordSys(Basic):
             z = coord[0] * cos(coord[1])
             return (rho, phi, z)
 
-    """
-    @staticmethod
-    def _pos_at(sclr, base_vector, new_coord_sys):
-        old_coord_sys = sclr.coord_sys
-        pos_new = new_coord_sys.position.components
-
-        return slar -
-
-        # Determine shifting relations
-        # pos1 ->x, y, z and pos2 ->X, Y, Z
-        # We need to go from pos1 to pos2
-        if old_coord_sys.dim > 3 or new_coord_sys.dim > 3:
-            raise NotImplementedError
-        x0, y0, z0 = old_coord_sys.base_scalars
-        X, Y, Z = new_coord_sys.base_scalars
-
-        # These are same mathematically
-        ex0, ey0, ez0 = old_coord_sys.base_scalars
-        eX, eY, eZ = new_coord_sys.base_scalars
-
-        x = X + (pos_old[0] - pos_new[0])
-        y = Y + (pos_old[1] - pos_new[1])
-        z = Z + (pos_old[2] - pos_new[2])
-
-        # 3. Convert vect to rectangular coordinates
-        dummy_system_rect = CoordSysRect('DummyRect')
-        vect = vect._convert_to_rect(vect, dummy_system_rect)
-        # 4. Subs for x, y, z in terms of X, Y, Z in vect
-        subs_dict = { x0: x,
-                      y0: y,
-                      z0: z,
-                      ex0: eX,
-                      ey0: eY,
-                      ez0: eZ }
-        vect = vect.subs(subs_dict)
-        # Now we have the vector field in the new coordinates - just
-        # that it is in rectangular system.
-        return vect
-    """
 
     @staticmethod
     def _orient_along(vect, coord_sys):
