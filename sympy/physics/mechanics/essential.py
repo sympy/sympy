@@ -628,7 +628,11 @@ class ReferenceFrame(object):
             self.latex_vecs = latexs
         self.name = name
         self._var_dict = {}
+        #The _dcm_dict dictionary will only store the dcms of parent-child
+        #relarionships. The _dcm_cache dictionary will work as the dcm
+        #cache.
         self._dcm_dict = {}
+        self._dcm_cache = {}
         self._ang_vel_dict = {}
         self._ang_acc_dict = {}
         self._dlist = [self._dcm_dict, self._ang_vel_dict, self._ang_acc_dict]
@@ -853,16 +857,16 @@ class ReferenceFrame(object):
 
         _check_frame(otherframe)
         #Check if the dcm wrt that frame has already been calculated
-        if otherframe in self._dcm_dict:
-            return self._dcm_dict[otherframe]
+        if otherframe in self._dcm_cache:
+            return self._dcm_cache[otherframe]
         flist = self._dict_list(otherframe, 0)
         outdcm = eye(3)
         for i in range(len(flist) - 1):
             outdcm = outdcm * flist[i]._dcm_dict[flist[i + 1]]
-        #After calculation, store the dcm in dcm list for faster
+        #After calculation, store the dcm in dcm cache for faster
         #future retrieval
-        self._dcm_dict[otherframe] = outdcm
-        otherframe._dcm_dict[self] = outdcm.T
+        self._dcm_cache[otherframe] = outdcm
+        otherframe._dcm_cache[self] = outdcm.T
         return outdcm
 
     def orient(self, parent, rot_type, amounts, rot_order=''):
@@ -1005,14 +1009,22 @@ class ReferenceFrame(object):
                     * _rot(a1, amounts[0]))
         else:
             raise NotImplementedError('That is not an implemented rotation')
-        #Reset the _dcm_dict of this frame, and remove it from the _dcm_dicts
-        #of the frames it is linked to
-        frames = self._dcm_dict.keys()
+        #Reset the _dcm_cache of this frame, and remove it from the _dcm_caches
+        #of the frames it is linked to. Also remove it from the _dcm_dict of
+        #its parent
+        frames = self._dcm_cache.keys()
         for frame in frames:
-            del frame._dcm_dict[self]
+            if frame in self._dcm_dict:
+                del frame._dcm_dict[self]
+            del frame._dcm_cache[self]
+        #Add the dcm relationship to _dcm_dict
         self._dcm_dict = self._dlist[0] = {}
         self._dcm_dict.update({parent: parent_orient.T})
         parent._dcm_dict.update({self: parent_orient})
+        #Also update the dcm cache after resetting it
+        self._dcm_cache = {}
+        self._dcm_cache.update({parent: parent_orient.T})
+        parent._dcm_cache.update({self: parent_orient})
         if rot_type == 'QUATERNION':
             t = dynamicsymbols._t
             q0, q1, q2, q3 = amounts
@@ -1270,23 +1282,14 @@ class ReferenceFrame(object):
         if order%1 != 0 or order < 0:
             raise ValueError("Unsupported value of order entered")
         if isinstance(expr, Vector):
-            frame_dict = {}
-            diff_dir = {}
-            for x in expr.args:
-                frame_dict[x[1]] = 0
-                diff_dir[x[1]] = 0
-                for i, y in enumerate(x[1]):
-                    frame_dict[x[1]] += x[0][i] * y
-                    diff_dir[x[1]] += diff(x[1].express(x[0][i]), t) * y
-            #Process each constituent separately, and add to get result
-            outvect = 0
-            for frame in frame_dict:
-                if frame == self:
-                    outvect += diff_dir[frame]
+            outvec = S(0)
+            for i, v in enumerate(expr.args):
+                if v[1] == self:
+                    outvec += Vector([(self.express(v[0]).diff(t), self)])
                 else:
-                    outvect += diff_dir[frame] + \
-                          frame.ang_vel_in(self).cross(frame_dict[frame])
-            return self.dt(outvect, order-1)
+                    outvec += v[1].dt(Vector([v])) + \
+                              (v[1].ang_vel_in(self) ^ Vector([v]))
+            return outvec
         else:
             return diff(self.express(expr), t, order)
 
