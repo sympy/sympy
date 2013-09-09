@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
     Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor_list, perfect_power,
-    isprime, nextprime)
+    isprime, nextprime, integer_nthroot)
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
@@ -2592,3 +2592,71 @@ def sum_of_four_squares(n):
     x, y, z = sum_of_three_squares(n)
 
     return (2**v*d, 2**v*x, 2**v*y, 2**v*z)
+
+
+def power_representation(n, p, k, zeros=True):
+    """
+    Returns a generator for finding k-tuples `(n_{1}, n_{2}, . . . n_{k})` such that
+    `n = n_{1}^p + n_{2}^p + . . . n_{k}^p`. Here `n` is a non-negative integer.
+    StopIteration exception is raised after all the solutions are generated, so should
+    always be used within a try-catch block.
+
+    Usage
+    =====
+
+        ``power_representation(n, k, p)`` -> Represent number ``n`` as a sum of ``k``
+        ``p``th powers.
+
+    Examples
+    ========
+
+    >>> from sympy.diophantine.solvers import power_representation
+    >>> f = power_representation(234, 4, 2) # Represent 234 as a sum of four squares.
+    >>> next(f)
+    >>> next(f)
+    """
+    if p < 1 or k < 1 or n < 0:
+        raise ValueError("Expected: n >= 0 and k >= 1 and p >= 1")
+    
+    if p == 1:
+        for p in partition(n, k):
+            yield p
+            
+        if zeros:
+            for i in range(1, k):
+                for p in partition(n, k - i):
+                    yield p + (0) * i
+            
+    elif k == 1:
+        if perfect_power(n):
+            yield [perfect_power(n)[0]]
+        else:
+            yield tuple()
+            
+    elif n == 0:
+        if zeros:
+            yield (0)*k
+        else:
+            yield tuple()
+            
+    else:
+        l = []
+        a = integer_nthroot(n, p)[0]
+        lower = 0 if zeros else 1
+        
+        for t in pow_rep(a, k, n, [], p, lower):
+            yield t
+
+        
+def pow_rep(n_i, k, n_remaining, terms, p, lower): 
+
+    if k == 0 and n_remaining == 0:
+        yield tuple(terms)
+    else:
+        if n_i >= lower and k > 0 and n_remaining >= 0:
+            if n_i**p <= n_remaining:
+                for t in pow_rep(n_i, k - 1, n_remaining - n_i**p, terms + [n_i], p, lower):
+                    yield t
+                    
+            for t in pow_rep(n_i - 1, k, n_remaining, terms, p, lower):
+                yield t

@@ -501,6 +501,28 @@ def test_sum_of_four_squares():
         assert a**2 + b**2 + c**2 + d**2 == n
 
 
+def test_power_representation():
+
+    tests = [(2, 1, 5), (3, 2, 6), (23, 3, 6), (1729, 3, 2)]
+
+    for test in tests:
+        n, p, k = test
+        f = partition(n, p, k)
+
+        while True:
+            try:
+                l = next(f)
+                assert len(l) == k
+                
+                chk_sum = 0
+                for l_i in l:
+                    chk_sum = chk_sum + l_i**p
+                assert chk_sum == n
+                
+            except StopIteration:
+                break
+
+
 def check_solutions(eq):
     """
     Determines whether solutions returned by diophantine() satisfy the original
