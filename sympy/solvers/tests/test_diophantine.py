@@ -503,7 +503,8 @@ def test_sum_of_four_squares():
 
 def test_power_representation():
 
-    tests = [(1729, 3, 2)]
+    tests = [(1729, 3, 2), (234, 2, 4), (2, 1, 2), (3, 1, 3), (5, 2, 2), (12352, 2, 4),
+             (32760, 2, 3)]
 
     for test in tests:
         n, p, k = test
