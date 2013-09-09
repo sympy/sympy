@@ -1,7 +1,7 @@
 from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, transformation_to_DN, find_DN, equivalent,
     parametrize_ternary_quadratic, square_factor, pairwise_prime, diop_ternary_quadratic, diop_ternary_quadratic_normal, descent,
     ldescent, classify_diop, diophantine, transformation_to_normal, diop_general_pythagorean, sum_of_four_squares, sum_of_three_squares,
-    prime_as_sum_of_two_squares, partition)
+    prime_as_sum_of_two_squares, partition, power_representation)
 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
 from sympy.utilities.pytest import XFAIL, slow
@@ -503,22 +503,22 @@ def test_sum_of_four_squares():
 
 def test_power_representation():
 
-    tests = [(2, 1, 5), (3, 2, 6), (23, 3, 6), (1729, 3, 2)]
+    tests = [(1729, 3, 2)]
 
     for test in tests:
         n, p, k = test
-        f = partition(n, p, k)
+        f = power_representation(n, p, k)
 
         while True:
             try:
                 l = next(f)
                 assert len(l) == k
-                
+
                 chk_sum = 0
                 for l_i in l:
                     chk_sum = chk_sum + l_i**p
                 assert chk_sum == n
-                
+
             except StopIteration:
                 break
 

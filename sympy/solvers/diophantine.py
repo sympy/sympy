@@ -2374,14 +2374,14 @@ def partition(n, k=None):
     >>> from sympy.solvers.diophantine import partition
     >>> f = partition(5)
     >>> next(f)
-    [1, 1, 1, 1, 1]
+    (1, 1, 1, 1, 1)
     >>> next(f)
-    [1, 1, 1, 2]
+    (1, 1, 1, 2)
     >>> g = partition(5, 3)
     >>> next(g)
-    [3, 1, 1]
+    (3, 1, 1)
     >>> next(g)
-    [2, 2, 1]
+    (2, 2, 1)
 
     Reference
     =========
@@ -2391,12 +2391,12 @@ def partition(n, k=None):
     """
     if k is not None:
         if k > n or k < 1:
-            yield []
+            yield tuple()
 
         else:
             a = [1 for i in range(k)]
             a[0] = n - k + 1
-            yield a
+            yield tuple(a)
 
             i = 1
             while a[0] >= n // k + 1:
@@ -2405,7 +2405,7 @@ def partition(n, k=None):
                 while j < i and j + 1 < k:
                     a[j] = a[j] - 1
                     a[j + 1] = a[j + 1] + 1
-                    yield a
+                    yield tuple(a)
                     j = j + 1
 
                 i = i + 1
@@ -2428,13 +2428,13 @@ def partition(n, k=None):
             while x <= y:
                 a[l] = x
                 a[m] = y
-                yield a[:l + 2]
+                yield tuple(a[:l + 2])
                 x += 1
                 y -= 1
 
             a[l] = x + y
             y = x + y - 1
-            yield a[:l + 1]
+            yield tuple(a[:l + 1])
 
 
 def prime_as_sum_of_two_squares(p):
@@ -2594,7 +2594,7 @@ def sum_of_four_squares(n):
     return (2**v*d, 2**v*x, 2**v*y, 2**v*z)
 
 
-def power_representation(n, p, k, zeros=True):
+def power_representation(n, p, k):
     """
     Returns a generator for finding k-tuples `(n_{1}, n_{2}, . . . n_{k})` such that
     `n = n_{1}^p + n_{2}^p + . . . n_{k}^p`. Here `n` is a non-negative integer.
@@ -2610,53 +2610,43 @@ def power_representation(n, p, k, zeros=True):
     Examples
     ========
 
-    >>> from sympy.diophantine.solvers import power_representation
-    >>> f = power_representation(234, 4, 2) # Represent 234 as a sum of four squares.
+    >>> from sympy.solvers.diophantine import power_representation
+    >>> f = power_representation(1729, 3, 2) # Represent 1729 as a sum of two cubes.
     >>> next(f)
+    (12, 1)
     >>> next(f)
+    (10, 9)
     """
-    if p < 1 or k < 1 or n < 0:
-        raise ValueError("Expected: n >= 0 and k >= 1 and p >= 1")
-    
-    if p == 1:
-        for p in partition(n, k):
-            yield p
-            
-        if zeros:
-            for i in range(1, k):
-                for p in partition(n, k - i):
-                    yield p + (0) * i
-            
-    elif k == 1:
+    if p < 1 or k < 1 or n < 1:
+        raise ValueError("Expected: n > 0 and k >= 1 and p >= 1")
+
+    if k == 1:
         if perfect_power(n):
             yield [perfect_power(n)[0]]
         else:
             yield tuple()
-            
-    elif n == 0:
-        if zeros:
-            yield (0)*k
-        else:
-            yield tuple()
-            
+
+    elif p == 1:
+        for t in partition(n, k):
+            yield t
+
     else:
         l = []
         a = integer_nthroot(n, p)[0]
-        lower = 0 if zeros else 1
-        
-        for t in pow_rep(a, k, n, [], p, lower):
+
+        for t in pow_rep_recursive(a, k, n, [], p):
             yield t
 
-        
-def pow_rep(n_i, k, n_remaining, terms, p, lower): 
+
+def pow_rep_recursive(n_i, k, n_remaining, terms, p):
 
     if k == 0 and n_remaining == 0:
         yield tuple(terms)
     else:
-        if n_i >= lower and k > 0 and n_remaining >= 0:
+        if n_i >= 1 and k > 0 and n_remaining >= 0:
             if n_i**p <= n_remaining:
-                for t in pow_rep(n_i, k - 1, n_remaining - n_i**p, terms + [n_i], p, lower):
+                for t in pow_rep_recursive(n_i, k - 1, n_remaining - n_i**p, terms + [n_i], p):
                     yield t
-                    
-            for t in pow_rep(n_i - 1, k, n_remaining, terms, p, lower):
+
+            for t in pow_rep_recursive(n_i - 1, k, n_remaining, terms, p):
                 yield t
