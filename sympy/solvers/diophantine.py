@@ -2283,7 +2283,8 @@ def diop_general_sum_of_squares(eq, limit=1):
     =====
 
         ``general_sum_of_squares(eq, limit)`` -> Here ``eq`` is an expression which is assumed to be zero.
-        Also, ``eq`` should be in the , form, `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`
+        Also, ``eq`` should be in the , form, `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`. At most ``limit``
+        number of solutions are returned.
 
     Details
     =======
@@ -2352,21 +2353,23 @@ def _diop_general_sum_of_squares(var, coeff, limit=1):
 ## rather than the Diophantine equation module.
 
 
-def partition(n, k=None):
+def partition(n, k=None, zeros=False):
     """
     Returns a generator that can be used to generate partitions of an integer `n`. A partition
     of `n` is a set of positive integers which add upto `n`. For example, partitions of 3 are
     3 , 1 + 2, 1 + 1+ 1. A partition is returned as a list. If ``k`` equals None, then all possible
     partitions are returned irrespective of their size, otherwise only the partitions of size ``k``
-    are returned. If there are no partions of `n` with size `k` then an empty list is returned. When
-    the partitions are over, the last `next()` call throws the ``StopIteration`` exception, so always
+    are returned. If there are no partions of `n` with size `k` then an empty list is returned. If
+    the ``zero`` parameter is True then a suitable number of zeros are added to the end of every
+    partition of size less than ``k``. ``zero`` parameter is considered only if ``k`` is not None.
+    When the partitions are over, the last `next()` call throws the ``StopIteration`` exception, so always
     use this function inside a try - except block.
 
     Details
     =======
 
-        ``partition(n, k)`` -> Here ``n`` is a non-negative integer and ``k`` is the size of the
-        partition.
+        ``partition(n, k)`` -> Here ``n`` is a positive integer and ``k`` is the size of the
+        partition which is also positive integer.
 
     Examples
     ========
@@ -2389,9 +2392,20 @@ def partition(n, k=None):
     .. [1] Generating Integer Partitions, [online],
         Available: http://homepages.ed.ac.uk/jkellehe/partitions.php
     """
+    if n < 1:
+        yield tuple()
+
     if k is not None:
-        if k > n or k < 1:
+        if k < 1:
             yield tuple()
+
+        elif k > n:
+            if zeros:
+                for i in range(1, n):
+                    for t in partition(n, i):
+                        yield (t,) + (0,) * (k - i)
+            else:
+                yield tuple()
 
         else:
             a = [1 for i in range(k)]
@@ -2594,7 +2608,7 @@ def sum_of_four_squares(n):
     return (2**v*d, 2**v*x, 2**v*y, 2**v*z)
 
 
-def power_representation(n, p, k):
+def power_representation(n, p, k, zeros=False):
     """
     Returns a generator for finding k-tuples `(n_{1}, n_{2}, . . . n_{k})` such that
     `n = n_{1}^p + n_{2}^p + . . . n_{k}^p`. Here `n` is a non-negative integer.
@@ -2604,8 +2618,8 @@ def power_representation(n, p, k):
     Usage
     =====
 
-        ``power_representation(n, k, p)`` -> Represent number ``n`` as a sum of ``k``
-        ``p``th powers.
+        ``power_representation(n, p, k, zeros)`` -> Represent number ``n`` as a sum of ``k``
+        ``p``th powers. If ``zeros`` is true, then the solutions will contain zeros.
 
     Examples
     ========
@@ -2627,7 +2641,7 @@ def power_representation(n, p, k):
             yield tuple()
 
     elif p == 1:
-        for t in partition(n, k):
+        for t in partition(n, k, zeros):
             yield t
 
     else:
@@ -2635,7 +2649,12 @@ def power_representation(n, p, k):
         a = integer_nthroot(n, p)[0]
 
         for t in pow_rep_recursive(a, k, n, [], p):
-            yield t
+                yield t
+
+        if zeros:
+            for i in range(2, k):
+                for t in pow_rep_recursive(a, i, n, [], p):
+                    yield t + (0,) * (n - i)
 
 
 def pow_rep_recursive(n_i, k, n_remaining, terms, p):
