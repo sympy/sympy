@@ -1,6 +1,6 @@
 from functools import reduce
 import random
-from sympy import ZZ, QQ
+from sympy import QQ
 from sympy.abc import x, y
 from sympy.core.numbers import igcdex, ilcm
 from sympy.core.relational import Eq
@@ -22,7 +22,7 @@ class EllipticCurve():
     def __add__(self, other):
         p1 = self._point
         if p1[2] == 0:
-            return p2
+            return other
         p2 = other
         if p2[2] == 0:
             return p1
@@ -37,11 +37,16 @@ class EllipticCurve():
             slope = (3 * x1**2 + self._coeff[0]) / (2 * y1)
         x3 = slope**2 - x1 - x2
         y3 = -y1 - slope * (x3 - x1)
-        return int(x3), int(y3), 1
+        return x3, y3, 1
 
-    def __call__(self, x, y):
-        self._point = (x, y)
+    def __call__(self, x, y, z=1):
+        self._point = (x, y, z)
         return self
+
+    def __contains__(self, point):
+        if len(point) == 3 and point[2] == 0:
+            return True
+        return self._eq.subs({x:point[0], y:point[1]})
 
     def __mul__(self, other):
         if other < 1:
