@@ -5,8 +5,6 @@ from sympy.core.containers import Tuple
 import collections
 
 
-# Lorentz = TensorIndexType("Lorentz", dim=4, dummy_fmt="L")
-
 class _LorentzContainer(object):
     """
     Helper to collect Lorentz indices in various dimensions.
@@ -26,17 +24,11 @@ class _LorentzContainer(object):
 
 
 class GammaMatrixHead(TensorHead):
-    """
-    Class to wrap a `TensorHead` for gamma matrices.
+    r"""
+    Class to wrap a ``TensorHead`` for gamma matrices.
 
-    `dim`       dimension of the gamma matrix.
-    `eps_dim`   correction for dimensional regularization, use None if not needed.
-
-    Warning
-    =======
-
-    Unless you are doing something special, you don't need to use this class,
-    use `GammaMatrix` instead.
+    ``dim``       dimension of the gamma matrix.
+    ``eps_dim``   correction for dimensional regularization, use None if not needed.
 
     Examples
     ========
@@ -47,6 +39,22 @@ class GammaMatrixHead(TensorHead):
     >>> i = tensor_indices('i', G.Lorentz)
     >>> G(i)
     gamma(i)
+
+    Note that there is already an instance of GammaMatrixHead in four dimensions:
+    GammaMatrix, which is simply declare as
+
+    ``GammaMatrix = GammaMatrixHead()``
+
+    >>> from sympy.physics.hep.gamma_matrices import GammaMatrix
+    >>> from sympy.tensor.tensor import tensor_indices
+    >>> i = tensor_indices('i', GammaMatrix.Lorentz)
+    >>> GammaMatrix(i)
+    gamma(i)
+
+    To access the metric tensor
+
+    >>> GammaMatrix.Lorentz.metric
+    metric(Lorentz,Lorentz)
 
     """
     _gmhd = dict()
@@ -66,11 +74,11 @@ class GammaMatrixHead(TensorHead):
     @staticmethod
     def extract_type_tens(expression):
         """
-        Extract from a `TensExpr` all elements of this type.
+        Extract from a ``TensExpr`` all elements of this type.
 
         Returns two tensor expressions:
 
-        * the first contains all `TensorHead` of this type.
+        * the first contains all ``TensorHead`` of this type.
         * the second contains all remaining.
         """
         sp = expression.split()
@@ -105,16 +113,23 @@ class GammaMatrixHead(TensorHead):
         tadd = TensAdd.from_TIDS_list([new_coeff]*len(contracted_tidses), contracted_tidses)
         return tadd
 
-    @staticmethod
-    def trace_tens(expression):
+    def trace_tens(self, expression):
         """
-        Evaluate the trace of gamma matrix strings inside a `TensExpr`.
+        Evaluate the trace of gamma matrix strings inside a ``TensExpr``.
         """
         tadd = GammaMatrix.simplify_tens(expression)
+
+        Lorentz = self.Lorentz
+        D = Lorentz.dim
 
         for i in tadd.args:
             if len(i.dum) > 0:
                 raise ValueError("expression contains dummy indices")
+
+        if not tadd.rank:
+            # if rank of simplified expression is zero, return the dimension:
+            assert len(tadd.args) == 1
+            return D * tadd.args[0].coeff
 
         # Recurrence function to transform
         def even_trace_recursion(t):
@@ -197,6 +212,7 @@ class GammaMatrixHead(TensorHead):
         -2*gamma(i1)
 
         If there are no contractions, the same expression is returned
+
         >>> tc = 3*G(i0)*G(i1)
         >>> sc = G.kahane_simplify(tc.coeff, tc._tids)
         >>> sc

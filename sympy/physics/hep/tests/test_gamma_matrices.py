@@ -184,7 +184,7 @@ def test_gamma_matrix_class():
     execute_gamma_simplify_tests_for_function(simplify, D=4)
 
 def test_gamma_matrix_trace():
-    gamma_trace = GammaMatrixHead.trace_tens
+    gamma_trace = G.trace_tens
     g = G.Lorentz.metric
 
     m0, m1, m2, m3, m4, m5, m6 = tensor_indices('m0:7', G.Lorentz)
@@ -192,6 +192,23 @@ def test_gamma_matrix_trace():
 
     # working in D=4 dimensions
     D = 4
+
+    # traces of odd number of gamma matrices are zero:
+    t = G(m0)
+    t1 = gamma_trace(t)
+    assert t1 == 0
+
+    t = G(m0)*G(m1)*G(m2)
+    t1 = gamma_trace(t)
+    assert t1 == 0
+
+    t = G(m0)*G(m1)*G(-m0)
+    t1 = gamma_trace(t)
+    assert t1 == 0
+
+    t = G(m0)*G(m1)*G(m2)*G(m3)*G(m4)
+    t1 = gamma_trace(t)
+    assert t1 == 0
 
     # traces without internal contractions:
     t = G(m0)*G(m1)
@@ -211,6 +228,14 @@ def test_gamma_matrix_trace():
     assert t2 == D*gamma_trace(G(m1)*G(m2)*G(m3)*G(m4))
 
     # traces of expressions with internal contractions:
+    t = G(m0)*G(-m0)
+    t1 = gamma_trace(t)
+    assert t1 == 4*D
+
+    t = G(m0)*G(m1)*G(-m0)*G(-m1)
+    t1 = gamma_trace(t)
+    assert t1 == 8*D - 4*D**2
+
     t = G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(-m0)
     t1 = gamma_trace(t)
     t2 = (-4*D)*g(m1, m3)*g(m2, m4) + (4*D)*g(m1, m2)*g(m3, m4) + \
@@ -236,10 +261,12 @@ def test_gamma_matrix_trace():
 
     t = G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(m5)*G(-m0)*G(-m1)*G(-m2)*G(-m3)*G(-m4)*G(-m5)
     t1 = gamma_trace(t)
-#    t1 = t1.expand_coeff()
+    assert t1 == -4*D**6 + 120*D**5 - 1040*D**4 + 3360*D**3 - 4480*D**2 + 2048*D
 
-################  SERIOUS PROBLEM: THIS ASSERT FAILS  ################
-#    assert t1 == -4*D**6 + 120*D**5 - 1040*D**4 + 3360*D**3 - 4480*D**2 + 2048*D
+    t = G(m0)*G(m1)*G(n1)*G(m2)*G(n2)*G(m3)*G(m4)*G(-n2)*G(-n1)*G(-m0)*G(-m1)*G(-m2)*G(-m3)*G(-m4)
+    t1 = gamma_trace(t)
+    tresu = -7168*D + 16768*D**2 - 14400*D**3 + 5920*D**4 - 1232*D**5 + 120*D**6 - 4*D**7
+    assert t1 == tresu
 
     # checked with Mathematica
     # In[1]:= <<Tracer.m
@@ -252,3 +279,20 @@ def test_gamma_matrix_trace():
     c2 = -4*D**5 + 88*D**4 - 560*D**3 + 1440*D**2 - 1600*D + 640
     assert t1 == c1*g(n1, n4)*g(n2, n3) + c2*g(n1, n2)*g(n3, n4) + \
             (-c1)*g(n1, n3)*g(n2, n4)
+
+def test_simple_trace_cases_symbolic_dim():
+    from sympy import symbols
+    D = symbols('D')
+    G = GammaMatrixHead(dim=D)
+
+    m0, m1, m2, m3 = tensor_indices('m0:4', G.Lorentz)
+    g = G.Lorentz.metric
+
+    t = G(m0)*G(m1)
+    t1 = G.trace_tens(t)
+    assert t1 == 4 * G.Lorentz.metric(m0, m1)
+
+    t = G(m0)*G(m1)*G(m2)*G(m3)
+    t1 = G.trace_tens(t)
+    t2 = -4*g(m0, m2)*g(m1, m3) + 4*g(m0, m1)*g(m2, m3) + 4*g(m0, m3)*g(m1, m2)
+    assert t1 == t2
