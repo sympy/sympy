@@ -320,6 +320,14 @@ def test_canonicalize1():
     tc = t.canon_bp()
     assert str(tc) == '-f(F_0, F_1, F_2)*f(-F_0, F_3, F_4)*A(L_0, -F_1)*A(-L_0, -F_3)*A(L_1, -F_2)*A(-L_1, -F_4)'
 
+def test_bug_correction_tensor_indices():
+    # to make sure that tensor_indices does not return a list if creating
+    # only one index:
+    from sympy.tensor.tensor import tensor_indices, TensorIndexType, TensorIndex
+    A = TensorIndexType("A")
+    i = tensor_indices('i', A)
+    assert not isinstance(i, (tuple, list))
+    assert isinstance(i, TensorIndex)
 
 def test_riemann_invariants():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -577,6 +585,34 @@ def test_add1():
     assert t2 != TensMul.from_data(0, [], [], [])
     t = p(i) + q(i)
     raises(ValueError, lambda: t(i, j))
+
+
+def test_special_eq_ne():
+    # test special equality cases:
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a,b,d0,d1,i,j,k = tensor_indices('a,b,d0,d1,i,j,k', Lorentz)
+    # A, B symmetric
+    A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+    p, q, r = tensorhead('p,q,r', [Lorentz], [[1]])
+
+    t = 0*A(a, b)
+    assert t == 0
+    assert t == S.Zero
+
+    assert p(i) != A(a, b)
+    assert A(a, -a) != A(a, b)
+    assert 0*(A(a, b) + B(a, b)) == 0
+    assert 0*(A(a, b) + B(a, b)) == S.Zero
+
+    assert 3*(A(a, b) - A(a, b)) == S.Zero
+
+    assert p(i) + q(i) != A(a, b)
+    assert p(i) + q(i) != A(a, b) + B(a, b)
+
+    assert p(i) - p(i) == 0
+    assert p(i) - p(i) == S.Zero
+
+    assert A(a, b) == A(b, a)
 
 def test_add2():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
