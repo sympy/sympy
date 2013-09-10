@@ -9,10 +9,7 @@ from sympy.ntheory.modular import solve_congruence
 from sympy.utilities import default_sort_key
 from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
-
-import sys
-if sys.version_info < (3,):
-    range = xrange
+from sympy.core.compatibility import xrange
 
 
 def diophantine(eq, param=symbols("t", Integer=True)):
@@ -126,7 +123,7 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     Usage
     =====
 
-    ``diop_solve(eq, t)``: Solve diophantine equation, ``eq`` using ``t`
+    ``diop_solve(eq, t)``: Solve diophantine equation, ``eq`` using ``t``
     as a parameter if needed.
 
     Details
@@ -626,7 +623,7 @@ def _diop_quadratic(var, coeff, t):
                 solve_y = lambda u: sqrt(a)*g*(e*sqrt(c)*D - sqrt(a)*E)*t**2 + (D + 2*sqrt(a)*g*u)*t \
                     + (sqrt(a)*g*u**2 + D*u + sqrt(a)*F) // (e*sqrt(c)*D - sqrt(a)*E)
 
-                for z0 in range(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
+                for z0 in xrange(0, abs(e*sqrt(c)*D - sqrt(a)*E)):
                     if divisible(sqrt(a)*g*z0**2 + D*z0 + sqrt(a)*F, e*sqrt(c)*D - sqrt(a)*E):
                         l.add((solve_x(z0), solve_y(z0)))
 
@@ -731,7 +728,7 @@ def _diop_quadratic(var, coeff, t):
 
                     done = False
 
-                    for i in range(k):
+                    for i in xrange(k):
 
                         X_1 = X*T + D*U*Y
                         Y_1 = X*U + Y*T
@@ -855,7 +852,7 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
             else:
                 sol = []
 
-                for y in range(floor(sign(N)*(N - 1)/(2*r)) + 1):
+                for y in xrange(floor(sign(N)*(N - 1)/(2*r)) + 1):
                     if isinstance(sqrt(D*y**2 + N), Integer):
                         sol.append((sqrt(D*y**2 + N), y))
 
@@ -1158,7 +1155,7 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
                 return [(S.Zero, S.Zero)]
 
 
-    for y in range(L1, L2):
+    for y in xrange(L1, L2):
         if isinstance(sqrt(N + D*y**2), Integer):
             x = sqrt(N + D*y**2)
             sol.append((x, y))
@@ -1481,7 +1478,7 @@ def check_param(x, y, a, t):
     q = Wild("q", exclude=[k])
     ok = False
 
-    for i in range(a):
+    for i in xrange(a):
 
         z_x = simplify(Subs(x, t, a*k + i).doit()).match(p*k + q)
         z_y = simplify(Subs(y, t, a*k + i).doit()).match(p*k + q)
@@ -2297,7 +2294,7 @@ def _diop_general_pythagorean(var, coeff, t):
 
     l.append(ith - 2*m[n - 2]**2)
 
-    for i in range(n - 2):
+    for i in xrange(n - 2):
         l.append(2*m[i]*m[n-2])
 
     sol = l[:index] + [ith] + l[index:]
@@ -2375,7 +2372,7 @@ def _diop_general_sum_of_squares(var, coeff, limit=1):
         m = n // 4
         f = partition(k, m, True)
 
-        for j in range(limit):
+        for j in xrange(limit):
 
             soln = []
             try:
@@ -2449,14 +2446,14 @@ def partition(n, k=None, zeros=False):
 
         elif k > n:
             if zeros:
-                for i in range(1, n):
+                for i in xrange(1, n):
                     for t in partition(n, i):
                         yield (t,) + (0,) * (k - i)
             else:
                 yield tuple()
 
         else:
-            a = [1 for i in range(k)]
+            a = [1 for i in xrange(k)]
             a[0] = n - k + 1
 
             yield tuple(a)
@@ -2476,12 +2473,12 @@ def partition(n, k=None, zeros=False):
                 i = i + 1
 
             if zeros:
-                for m in range(1, k):
+                for m in xrange(1, k):
                     for a in partition(n, m):
                         yield tuple(a) + (0,) * (k - m)
 
     else:
-        a = [0 for i in range(n + 1)]
+        a = [0 for i in xrange(n + 1)]
         l = 1
         y = n - 1
 
@@ -2597,7 +2594,7 @@ def sum_of_three_squares(n):
     if n % 8 == 3:
         l = l if l % 2 else l - 1
 
-        for i in range(l, -1, -2):
+        for i in xrange(l, -1, -2):
             if isprime((n - i**2) // 2):
                 x = i
                 break
@@ -2610,7 +2607,7 @@ def sum_of_three_squares(n):
     else:
         l = l - 1 if l % 2 else l
 
-    for i in range(l, -1, -2):
+    for i in xrange(l, -1, -2):
         if isprime(n - i**2):
             x = i
             break
@@ -2714,7 +2711,7 @@ def power_representation(n, p, k, zeros=False):
                 yield t
 
         if zeros:
-            for i in range(2, k):
+            for i in xrange(2, k):
                 for t in pow_rep_recursive(a, i, n, [], p):
                     yield t + (0,) * (k - i)
 
