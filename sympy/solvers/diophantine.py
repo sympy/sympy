@@ -119,7 +119,8 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     Usage
     =====
 
-        diop_solve(eq, t) -> Solve diophantine equation, eq.
+        ``diop_solve(eq, t)`` -> Solve diophantine equation, ``eq`` using ``t`
+        as a parameter if needed.
 
     Details
     =======
@@ -178,7 +179,7 @@ def classify_diop(eq):
     Usage
     =====
 
-        classify_diop(eq) -> Return variables, coefficients and type in order.
+        ``classify_diop(eq)`` -> Return variables, coefficients and type of the ``eq``.
 
     Details
     =======
@@ -2410,7 +2411,12 @@ def partition(n, k=None, zeros=False):
         else:
             a = [1 for i in range(k)]
             a[0] = n - k + 1
-            yield tuple(a)
+
+            if zeros:
+                length = k - len(a) if k - len(a) > 0 else 0
+                yield tuple(a) + (0,) * length
+            else:
+                yield tuple(a)
 
             i = 1
             while a[0] >= n // k + 1:
@@ -2419,7 +2425,13 @@ def partition(n, k=None, zeros=False):
                 while j < i and j + 1 < k:
                     a[j] = a[j] - 1
                     a[j + 1] = a[j + 1] + 1
-                    yield tuple(a)
+
+                    if zeros:
+                        length = k - len(a) if k - len(a) > 0 else 0
+                        yield tuple(a) + (0,) * length
+                    else:
+                        yield tuple(a)
+
                     j = j + 1
 
                 i = i + 1
