@@ -282,12 +282,7 @@ def test_bicycle():
 
     # Actual eigenvalue comparison
     for i in range(6):
-        # Pull out eigenvalues, put in a list
-        e_valsA = list(A.subs(v, i).eigenvals(rational=False).keys())
-        e_valsR = list(Res.subs(v, i).eigenvals(rational=False).keys())
-        # sort the list
-        e_valsA.sort()
-        e_valsR.sort()
-        # numerically compare eigenvalues
-        for i in range(4):
-            assert abs(e_valsA[i] - e_valsR[i]) < 1e-12
+        eps = 1.e-12
+        error = Res.subs(v, i) - A.subs(v, i)
+        to_test = error.applyfunc(lambda x: x < eps)
+        assert min(to_test)
