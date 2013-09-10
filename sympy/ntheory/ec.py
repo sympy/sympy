@@ -6,6 +6,16 @@ from sympy.polys.domains import FiniteField, RationalField
 
 
 class EllipticCurve():
+    """
+    Examples
+    ========
+
+    References
+    ==========
+
+    [1] J. Silverman "A Friendly Introduction to Number Theory" Third Edition
+
+    """
 
     def __init__(self, a4, a6, a1=0, a2=0, a3=0, domain=QQ):
         self._coeff = [a4, a6, a1, a2, a3]
