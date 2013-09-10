@@ -369,6 +369,13 @@ def test_evalf_euler_maclaurin():
               50) == '0.69314793056000780941723211364567656807940638436025'
 
 
+def test_evalf_symbolic():
+    f, g = symbols('f g', cls=Function)
+    # issue 3229
+    expr = Sum(f(x), (x, 1, 3)) + Sum(g(x), (x, 1, 3))
+    assert expr.evalf() == expr
+
+
 def test_simple_products():
     assert Product(S.NaN, (x, 1, 3)) is S.NaN
     assert product(S.NaN, (x, 1, 3)) is S.NaN
@@ -631,7 +638,7 @@ def test_issue_3174():
 
 def test_issue_3175():
     assert Sum(x, (x, 1, 0)).doit() == 0
-    assert NS(Sum(x, (x, 1, 0))) == '0.e-122'
+    assert NS(Sum(x, (x, 1, 0))) == '0'
     assert Sum(n, (n, 10, 5)).doit() == -30
     assert NS(Sum(n, (n, 10, 5))) == '-30.0000000000000'
 
