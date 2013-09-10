@@ -4,6 +4,7 @@ from sympy.core.relational import Eq
 from .residue_ntheory import sqrt_mod
 from sympy.polys.domains import FiniteField, RationalField
 
+
 class EllipticCurve():
 
     def __init__(self, a4, a6, a1=0, a2=0, a3=0, domain=QQ):
@@ -47,7 +48,7 @@ class EllipticCurve():
     def __contains__(self, point):
         if self.characteristic == 0 and len(point) == 3 and point[2] == 0:
             return True
-        return self._eq.subs({x:point[0], y:point[1]})
+        return self._eq.subs({x: point[0], y: point[1]})
 
     def __mul__(self, other):
         if other < 1:
@@ -67,15 +68,30 @@ class EllipticCurve():
         return 'E({}): y**2 = x**3 + {}x + {}'.format(self._domain, *self._coeff)
 
     def points(self):
+        """
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import FF
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e2 = EllipticCurve(1, 0, domain=FF(2))
+        >>> e2.points()
+        [(0, 0), (1, 0)]
+
+        """
         if self._points is not None:
             return self._points
         char = self.characteristic
         if char > 1:
             self._points = []
-            for i in range(1, char + 1):
+            for i in range(char):
                 y = sqrt_mod(i**3 + self._coeff[0]*i + self._coeff[1], char)
                 if y is not None:
-                    self._points.extend([(i, y), (i, char - y)])
+                    self._points.append((i, y,))
+                    if y != 0:
+                        self._points.append((i, char - y,))
+            return self._points
         raise NotImplementedError("Still not implemented")
 
     @property
@@ -88,6 +104,18 @@ class EllipticCurve():
 
     @property
     def order(self):
+        """
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import FF
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e2=EllipticCurve(1, 0, domain=FF(19))
+        >>> e2.order
+        19
+
+        """
         if self.characteristic == 0:
             raise NotImplementedError("Still not implemented")
         return len(self.points())
