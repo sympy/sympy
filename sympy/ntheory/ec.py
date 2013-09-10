@@ -1,10 +1,7 @@
-from functools import reduce
-import random
 from sympy import QQ
 from sympy.abc import x, y
-from sympy.core.numbers import igcdex, ilcm
 from sympy.core.relational import Eq
-from sympy.core.sympify import sympify
+from .residue_ntheory import sqrt_mod
 from sympy.polys.domains import FiniteField, RationalField
 
 class EllipticCurve():
@@ -16,8 +13,12 @@ class EllipticCurve():
         self._eq = Eq(y**2 + a1*x*y + a3*y, x**3 + a2*x**2 + a4*x + a6)
         if isinstance(self._domain, FiniteField):
             self._char = self._domain.mod
+            self._rank = 0
         elif isinstance(self._domain, RationalField):
             self._char = 0
+            self._rank = None
+        self._point = None
+        self._points = None
 
     def __add__(self, other):
         p1 = self._point
@@ -44,7 +45,7 @@ class EllipticCurve():
         return self
 
     def __contains__(self, point):
-        if len(point) == 3 and point[2] == 0:
+        if self.characteristic == 0 and len(point) == 3 and point[2] == 0:
             return True
         return self._eq.subs({x:point[0], y:point[1]})
 
@@ -63,7 +64,19 @@ class EllipticCurve():
         return r
 
     def __repr__(self):
-        return self._eq.__repr__()
+        return 'E({}): y**2 = x**3 + {}x + {}'.format(self._domain, *self._coeff)
+
+    def points(self):
+        if self._points is not None:
+            return self._points
+        char = self.characteristic
+        if char > 1:
+            self._points = []
+            for i in range(1, char + 1):
+                y = sqrt_mod(i**3 + self._coeff[0]*i + self._coeff[1], char)
+                if y is not None:
+                    self._points.extend([(i, y), (i, char - y)])
+        raise NotImplementedError("Still not implemented")
 
     @property
     def characteristic(self):
@@ -72,3 +85,15 @@ class EllipticCurve():
     @property
     def discriminent(self):
         return self._discrim
+
+    @property
+    def order(self):
+        if self.characteristic == 0:
+            raise NotImplementedError("Still not implemented")
+        return len(self.points())
+
+    @property
+    def rank(self):
+        if self._rank is not None:
+            return self._rank
+        raise NotImplementedError("Still not implemented")
