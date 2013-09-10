@@ -723,3 +723,6 @@ def test_reverse_order():
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
     assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), y, x) == \
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+def test_issue_3998():
+    assert sum(x**n/n for n in range(1, 401)) == summation(x**n/n, (n, 1, 400))
