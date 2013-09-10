@@ -25,14 +25,14 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     Usage
     =====
 
-        ``diophantine(eq, t)`` -> Solve the diophantine equation ``eq``.
-        ``t`` is the parameter to be used by ``diop_solve()``.
+    ``diophantine(eq, t)``: Solve the diophantine equation ``eq``.
+    ``t`` is the parameter to be used by ``diop_solve()``.
 
     Details
     =======
 
-        ``eq`` should be an expression which is assumed to be zero.
-        ``t`` is a parameter to be used in the solution.
+    ``eq`` should be an expression which is assumed to be zero.
+    ``t`` is a parameter to be used in the solution.
 
     Examples
     ========
@@ -119,14 +119,14 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     Usage
     =====
 
-        ``diop_solve(eq, t)`` -> Solve diophantine equation, ``eq`` using ``t`
-        as a parameter if needed.
+    ``diop_solve(eq, t)``: Solve diophantine equation, ``eq`` using ``t`
+    as a parameter if needed.
 
     Details
     =======
 
-        ``eq`` should be an expression which is assumed to be zero.
-        ``t`` is a parameter to be used in the solution.
+    ``eq`` should be an expression which is assumed to be zero.
+    ``t`` is a parameter to be used in the solution.
 
     Examples
     ========
@@ -179,12 +179,12 @@ def classify_diop(eq):
     Usage
     =====
 
-        ``classify_diop(eq)`` -> Return variables, coefficients and type of the ``eq``.
+    ``classify_diop(eq)``: Return variables, coefficients and type of the ``eq``.
 
     Details
     =======
 
-        ``eq`` should be an expression which is assumed to be zero.
+    ``eq`` should be an expression which is assumed to be zero.
 
     Examples
     ========
@@ -299,15 +299,15 @@ def diop_linear(eq, param=symbols("t", Integer=True)):
     Usage
     =====
 
-        ``diop_linear(eq)`` -> Returns a tuple containing solutions to the diophantine
-        equation ``eq``. Values in the tuple is arranged in the same order as the sorted
-        variables.
+    ``diop_linear(eq)``: Returns a tuple containing solutions to the diophantine
+    equation ``eq``. Values in the tuple is arranged in the same order as the sorted
+    variables.
 
     Details
     =======
 
-        ``eq`` is a linear diophantine equation which is assumed to be zero.
-        ``param`` is the parameter to be used in the solution.
+    ``eq`` is a linear diophantine equation which is assumed to be zero.
+    ``param`` is the parameter to be used in the solution.
 
     Examples
     ========
@@ -385,16 +385,16 @@ def base_solution_linear(c, a, b, t=None):
     Usage
     =====
 
-        ``base_solution_linear(c, a, b, t)`` -> ``a``, ``b``, ``c`` are coefficients
-        in `ax + by = c` and ``t`` is the parameter to be used in the solution.
+    ``base_solution_linear(c, a, b, t)``: ``a``, ``b``, ``c`` are coefficients
+    in `ax + by = c` and ``t`` is the parameter to be used in the solution.
 
     Details
     =======
 
-        ``c`` is the constant term in `ax + by = c`
-        ``a`` is the integer coefficient of x in `ax + by = c`
-        ``b`` is the integer coefficient of y in `ax + by = c`
-        ``t`` is the parameter to be used in the solution
+    ``c`` is the constant term in `ax + by = c`
+    ``a`` is the integer coefficient of x in `ax + by = c`
+    ``b`` is the integer coefficient of y in `ax + by = c`
+    ``t`` is the parameter to be used in the solution
 
 
     Examples
@@ -444,13 +444,13 @@ def extended_euclid(a, b):
     Usage
     =====
 
-        ``extended_euclid(a, b)`` -> returns `x`, `y` and `gcd(a, b)`.
+    ``extended_euclid(a, b)``: returns `x`, `y` and `gcd(a, b)`.
 
     Details
     =======
 
-        ``a`` Any instance of Integer
-        ``b`` Any instance of Integer
+    ``a`` Any instance of Integer
+    `b`` Any instance of Integer
 
     Examples
     ========
@@ -486,14 +486,14 @@ def diop_quadratic(eq, param=symbols("t", Integer=True)):
     Usage
     =====
 
-        ``diop_quadratic(eq, param)`` -> ``eq`` is a quadratic binary diophantine
-        equation. ``param`` is used to indicate the parameter to be used in the solution.
+    ``diop_quadratic(eq, param)``: ``eq`` is a quadratic binary diophantine
+    equation. ``param`` is used to indicate the parameter to be used in the solution.
 
     Details
     =======
 
-        ``eq`` should be an expression which is assumed to be zero.
-        ``param`` is a parameter to be used in the solution.
+    ``eq`` should be an expression which is assumed to be zero.
+    ``param`` is a parameter to be used in the solution.
 
     Examples
     ========
@@ -545,7 +545,7 @@ def _diop_quadratic(var, coeff, t):
     E = E // d
     F = F // d
 
-    # (1) Linear case: A = B = C = 0 -> considered under linear diophantine equations
+    # (1) Linear case: A = B = C = 0 ==> considered under linear diophantine equations
 
     # (2) Simple-Hyperbolic case:A = C = 0, B != 0
     # In this case equation can be converted to (Bx + E)(By + D) = DE - BF
@@ -766,15 +766,15 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
     Usage
     =====
 
-        ``diop_DN(D, N, t)`` -> D and N are integers as in `x^2 - Dy^2 = N` and ``t`` is
-        the parameter to be used in the solutions.
+    ``diop_DN(D, N, t)``: D and N are integers as in `x^2 - Dy^2 = N` and ``t`` is
+    the parameter to be used in the solutions.
 
     Details
     =======
 
-        ``D`` corresponds to the D in the equation
-        ``N`` corresponds to the N in the equation
-        ``t`` parameter to be used in the solutions
+    ``D`` corresponds to the D in the equation
+    ``N`` corresponds to the N in the equation
+    ``t`` parameter to be used in the solutions
 
     Examples
     ========
@@ -1009,16 +1009,16 @@ def PQa(P_0, Q_0, D):
     Usage
     =====
 
-        ``PQa(P_0, Q_0, D)`` -> ``P_0``, ``Q_0`` and ``D`` are integers corresponding to
-        the continued fraction `\\frac{P_{0} + \sqrt{D}}{Q_{0}}`. Also it's assumed that
-        `P_{0}^2 == D mod(|Q_{0}|)` and `D` is square free.
+    ``PQa(P_0, Q_0, D)``: ``P_0``, ``Q_0`` and ``D`` are integers corresponding to
+    the continued fraction `\\frac{P_{0} + \sqrt{D}}{Q_{0}}`. Also it's assumed that
+    `P_{0}^2 == D mod(|Q_{0}|)` and `D` is square free.
 
     Details
     =======
 
-        ``P_{0}`` corresponds to the P in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-        ``D`` corresponds to the D in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-        ``Q_{0}`` corresponds to the Q in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``P_{0}`` corresponds to the P in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``D`` corresponds to the D in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``Q_{0}`` corresponds to the Q in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
 
     Examples
     ========
@@ -1074,15 +1074,15 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
     Usage
     =====
 
-        ``diop_bf_DN(D, N, t)`` -> ``D`` and ``N`` are coefficients in `x^2 - Dy^2 = N` and
-        ``t`` is the parameter to be used in the solutions.
+    ``diop_bf_DN(D, N, t)``: ``D`` and ``N`` are coefficients in `x^2 - Dy^2 = N` and
+    ``t`` is the parameter to be used in the solutions.
 
     Details
     =======
 
-        ``D`` corresponds to the D in the equation
-        ``N`` corresponds to the N in the equation
-        ``t`` parameter to be used in the solutions
+    ``D`` corresponds to the D in the equation
+    ``N`` corresponds to the N in the equation
+    ``t`` parameter to be used in the solutions
 
     Examples
     ========
@@ -1156,8 +1156,8 @@ def equivalent(u, v, r, s, D, N):
     Usage
     =====
 
-        ``equivalent(u, v, r, s, D, N)`` -> `(u, v)` and `(r, s)` are two solutions of the
-        equation `x^2 - Dy^2 = N` and all parameters involved are integers.
+    ``equivalent(u, v, r, s, D, N)``: `(u, v)` and `(r, s)` are two solutions of the
+    equation `x^2 - Dy^2 = N` and all parameters involved are integers.
 
     Examples
     ========
@@ -1189,15 +1189,15 @@ def length(P, Q, D):
     Usage
     =====
 
-        ``length(P, Q, D)`` -> ``P``, ``Q`` and ``D`` are integers corresponding to the
-        continued fraction `\\frac{P + \sqrt{D}}{Q}`.
+    ``length(P, Q, D)``: ``P``, ``Q`` and ``D`` are integers corresponding to the
+    continued fraction `\\frac{P + \sqrt{D}}{Q}`.
 
     Details
     =======
 
-        ``P`` corresponds to the P in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-        ``D`` corresponds to the D in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-        ``Q`` corresponds to the Q in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``P`` corresponds to the P in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``D`` corresponds to the D in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``Q`` corresponds to the Q in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
 
     Examples
     ========
@@ -1251,7 +1251,7 @@ def transformation_to_DN(eq):
     Usage
     =====
 
-        ``transformation_to_DN(eq)`` -> where ``eq`` is the quadratic to be transformed.
+    ``transformation_to_DN(eq)``: where ``eq`` is the quadratic to be transformed.
 
     Examples
     ========
@@ -1390,7 +1390,7 @@ def find_DN(eq):
     Usage
     =====
 
-        ``find_DN(eq)`` -> where ``eq`` is the quadratic to be transformed.
+    ``find_DN(eq)``: where ``eq`` is the quadratic to be transformed.
 
     Examples
     ========
@@ -1499,13 +1499,13 @@ def diop_ternary_quadratic(eq):
     Usage
     =====
 
-        ``diop_ternary_quadratic(eq)`` -> Return a tuple containing an basic solution to ``eq``.
+    ``diop_ternary_quadratic(eq)``: Return a tuple containing an basic solution to ``eq``.
 
     Details
     =======
 
-        ``eq`` should be an homogeneous expression of degree two in three variables
-        and it is assumed to be zero.
+    ``eq`` should be an homogeneous expression of degree two in three variables
+    and it is assumed to be zero.
 
     Examples
     ========
@@ -1808,8 +1808,8 @@ def diop_ternary_quadratic_normal(eq):
     Usage
     =====
 
-        ``diop_ternary_quadratic_normal(eq)`` -> where ``eq`` is an equation of the form
-        `ax^2 + by^2 + cz^2 = 0`.
+    ``diop_ternary_quadratic_normal(eq)``: where ``eq`` is an equation of the form
+    `ax^2 + by^2 + cz^2 = 0`.
 
     Examples
     ========
@@ -2213,9 +2213,9 @@ def diop_general_pythagorean(eq, param=symbols("m", Integer=True)):
     Usage
     =====
 
-        ``diop_general_pythagorean(eq, param)`` -> where ``eq`` is a general pythagorean equation
-        which is assumed to be zero and ``param`` is the base parameter used to construct other
-        parameters by subscripting.
+    ``diop_general_pythagorean(eq, param)``: where ``eq`` is a general pythagorean equation
+    which is assumed to be zero and ``param`` is the base parameter used to construct other
+    parameters by subscripting.
 
     Examples
     ========
@@ -2283,9 +2283,9 @@ def diop_general_sum_of_squares(eq, limit=1):
     Usage
     =====
 
-        ``general_sum_of_squares(eq, limit)`` -> Here ``eq`` is an expression which is assumed to be zero.
-        Also, ``eq`` should be in the , form, `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`. At most ``limit``
-        number of solutions are returned.
+    ``general_sum_of_squares(eq, limit)``: Here ``eq`` is an expression which is assumed to be zero.
+    Also, ``eq`` should be in the , form, `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`. At most ``limit``
+    number of solutions are returned.
 
     Details
     =======
@@ -2329,7 +2329,7 @@ def _diop_general_sum_of_squares(var, coeff, limit=1):
     else:
 
         m = n // 4
-        f = partition(k, m)
+        f = partition(k, m, True)
 
         for j in range(limit):
 
@@ -2369,8 +2369,8 @@ def partition(n, k=None, zeros=False):
     Details
     =======
 
-        ``partition(n, k)`` -> Here ``n`` is a positive integer and ``k`` is the size of the
-        partition which is also positive integer.
+    ``partition(n, k)``: Here ``n`` is a positive integer and ``k`` is the size of the
+    partition which is also positive integer.
 
     Examples
     ========
@@ -2412,11 +2412,7 @@ def partition(n, k=None, zeros=False):
             a = [1 for i in range(k)]
             a[0] = n - k + 1
 
-            if zeros:
-                length = k - len(a) if k - len(a) > 0 else 0
-                yield tuple(a) + (0,) * length
-            else:
-                yield tuple(a)
+            yield tuple(a)
 
             i = 1
             while a[0] >= n // k + 1:
@@ -2426,15 +2422,16 @@ def partition(n, k=None, zeros=False):
                     a[j] = a[j] - 1
                     a[j + 1] = a[j + 1] + 1
 
-                    if zeros:
-                        length = k - len(a) if k - len(a) > 0 else 0
-                        yield tuple(a) + (0,) * length
-                    else:
-                        yield tuple(a)
+                    yield tuple(a)
 
                     j = j + 1
 
                 i = i + 1
+
+            if zeros:
+                for m in range(1, k):
+                    for a in partition(n, m):
+                        yield tuple(a) + (0,) * (k - m)
 
     else:
         a = [0 for i in range(n + 1)]
@@ -2506,7 +2503,7 @@ def sum_of_three_squares(n):
     Usage
     =====
 
-        ``sum_of_three_squares(n)`` -> Here ``n`` is a non-negative integer.
+    ``sum_of_three_squares(n)``: Here ``n`` is a non-negative integer.
 
     Examples
     ========
@@ -2581,7 +2578,7 @@ def sum_of_four_squares(n):
     Usage
     =====
 
-        ``sum_of_four_squares(n)`` -> Here ``n`` is a non-negative integer.
+    ``sum_of_four_squares(n)``: Here ``n`` is a non-negative integer.
 
     Examples
     ========
@@ -2630,8 +2627,8 @@ def power_representation(n, p, k, zeros=False):
     Usage
     =====
 
-        ``power_representation(n, p, k, zeros)`` -> Represent number ``n`` as a sum of ``k``
-        ``p``th powers. If ``zeros`` is true, then the solutions will contain zeros.
+    ``power_representation(n, p, k, zeros)``: Represent number ``n`` as a sum of ``k``
+    ``p``th powers. If ``zeros`` is true, then the solutions will contain zeros.
 
     Examples
     ========
