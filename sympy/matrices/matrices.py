@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 import collections
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic, C, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
@@ -1135,6 +1135,27 @@ class MatrixBase(object):
             return self.applyfunc(lambda i: i.evalf(prec, **options))
 
     n = evalf
+
+    def atoms(self, *types):
+        """Returns the atoms that form the current object.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy.matrices import Matrix
+        >>> Matrix([[x]])
+        Matrix([[x]])
+        >>> _.atoms()
+        set([x])
+        """
+
+        if types:
+            types = tuple(
+                [t if isinstance(t, type) else type(t) for t in types])
+        else:
+            types = (Atom,)
+        result = set()
+        for i in self:
+            result.update( i.atoms(*types) )
+        return result
 
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
