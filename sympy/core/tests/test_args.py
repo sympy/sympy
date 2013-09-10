@@ -1974,6 +1974,11 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
 
+def test_sympy__physics__mechanics__essential__CoordinateSym():
+    from sympy.physics.mechanics import CoordinateSym
+    from sympy.physics.mechanics import ReferenceFrame
+    assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
+
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
     assert _test_args(BeamParameter(530e-9, 1, w=1e-3))
