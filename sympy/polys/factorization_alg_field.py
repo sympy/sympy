@@ -92,10 +92,9 @@ def _distinct_prime_divisors(A, domain):
     return divisors
 
 
-def _denominator(f, qring):
-    f = _alpha_to_z(f, qring)
+def _denominator(f):
 
-    ring = qring.domain.get_ring()
+    ring = f.ring.domain.get_ring()
     lcm = ring.lcm
     den = ring.one
 
@@ -120,8 +119,10 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
     qring = ring.clone(symbols=(symbols[0], symbols[-1]), domain=domain.get_field())
     gcd = domain.gcd
 
+    U = [_alpha_to_z(u, qring) for u, _ in U]
+    denominators = [_denominator(u) for u in U]
+
     omega = D * gamma
-    denominators = [_denominator(u, qring) for u, _ in U]
 
     m = len(denoms)
 
@@ -153,42 +154,33 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
     if any(sum([e[j][i] for j in xrange(n)]) != lcfactors[i][1] for i in xrange(m)):
         return None
 
+    lcring = ring.drop(0)
     lcs = []
     for j in xrange(n):
-        lj = ring.drop(0).mul([lcfactors[i][0]**e[j][i] for i in xrange(m)])
+        lj = lcring.mul([lcfactors[i][0]**e[j][i] for i in xrange(m)])
         lcs.append(lj)
 
     zring = qring.clone(domain=domain)
-    U_ = [_monic_associate(u, zring) for u, _ in U]
 
-    if omega == 1:
-        for j in xrange(n):
-            lj = lcs[j]
-            ljA = dj.evaluate(zip(lj.ring.gens[:-1], A)) # elements of Z[z]
-            cj = ljA.content()
-            lcuj = U_[j].LC
+    for j in xrange(n):
+        lj = lcs[j]
+        dj = denominators[j]
+        ljA = lj.evaluate(zip(lcring.gens, A))
 
-            lcs[j] = lj.mul_ground(lcuj // cj)
-    else:
-        for j in xrange(n):
-            lj = lcs[j]
-            ljA = lj.evaluate(zip(lj.ring.gens[:-1], A)) # elements of Z[z]
-            cj = ljA.content()
-            lcuj = U_[j].LC
-            d = gcd(cj, lcuj)
-
-            lcs[j] = lj.mul_ground(lcuj // d)
-            U_[j] = U_[j].mul_ground(cj // d)
-            omega = (omega * d) // cj
+        lcs[j] = lj.mul_ground(dj)
+        U[j] = U[j].mul_ground(dj).set_ring(zring) * ljA.set_ring(zring)
 
         if omega == 1:
-            return f, lcs, U_
+            f = f.mul_ground(dj)
         else:
-            lcs = [lc.mul_ground(omega) for lc in lcs]
-            U_ = [u.mul_ground(omega) for u in U_]
-            f = f.mul_ground(omega**(n - 1))
+            d = gcd(omega, dj)
+            f = f.mul_ground(dj // d)
 
-    return f, lcs, U_
+    if omega != 1:
+        lcs[0] = lcs[0].mul_ground(omega)
+        U[0] = U[0].mul_ground(omega)
+
+    return f, lcs, U
 
 
 def _test_evaluation_points(f, gamma, lcfactors, D, A):
@@ -207,7 +199,7 @@ def _test_evaluation_points(f, gamma, lcfactors, D, A):
     denoms = []
     for l, _ in lcfactors:
         lA = l.evaluate(zip(l.ring.gens, A)) # in Q(alpha)
-        denoms.append(_denominator(lA**(-1), qring))
+        denoms.append(_denominator(_alpha_to_z(lA**(-1), qring)))
 
     if any(denoms.count(denom) > 1 for denom in denoms):
         raise UnluckyLeadingCoefficient
@@ -567,9 +559,7 @@ def _factor(f):
             prod = ground.one
             for lc in lcs:
                 prod *= lc.LC
-            q = ground(prod, f_.LC)
-            delta = ground.numer(q)
-            l_ = ground.denom(q)
+            delta = ground.numer(ground(prod, f_.LC))
 
             f_ = f_.mul_ground(delta)
 
@@ -579,7 +569,6 @@ def _factor(f):
                 if k > 7:
                     raise UnluckyMinimalPolynomial
 
-            # what about l_ ?
             pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
             if pfactors is None:
                 p = nextprime(p)
