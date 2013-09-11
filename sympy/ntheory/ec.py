@@ -128,6 +128,7 @@ class EllipticCurve():
     @property
     def order(self):
         """
+        Number of points in Finite field.
 
         Examples
         ========
@@ -145,6 +146,11 @@ class EllipticCurve():
 
     @property
     def rank(self):
+        """
+        Number of independent points of infinite order.
+
+        For Finite field, it must be 0.
+        """
         if self._rank is not None:
             return self._rank
         raise NotImplementedError("Still not implemented")
