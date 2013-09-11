@@ -1168,6 +1168,7 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
+    @cacheit
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
         from sympy.ntheory.factor_ import multiplicity

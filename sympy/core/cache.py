@@ -78,14 +78,11 @@ def cacheit(func):
     functions, just wrapped into one now.
     """
 
+    func._cache_it_cache = func_cache_it_cache = {}
+    CACHE.append((func, func_cache_it_cache))
     @wraps(func)
     def wrapper(*args, **kw_args):
         if cacheit._use_cache == 'yes':
-            try:
-                func_cache_it_cache = func._cache_it_cache
-            except:
-                func._cache_it_cache = func_cache_it_cache = {}
-                CACHE.append((func, func_cache_it_cache))
             k = [(x, type(x)) for x in args]
             if kw_args:
                 keys = sorted(kw_args)

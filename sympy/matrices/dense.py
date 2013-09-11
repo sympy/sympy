@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import random
 
 from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.function import count_ops
 from sympy.core.decorators import call_highest_priority
@@ -434,6 +435,7 @@ class DenseMatrix(MatrixBase):
         """
         return self._new(rhs.rows, rhs.cols, lambda i, j: rhs[i, j] / self[i, i])
 
+    @cacheit
     def applyfunc(self, f):
         """Apply a function to each element of the matrix.
 

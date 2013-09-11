@@ -312,6 +312,7 @@ class KanesMethod(object):
             ml1 = B[:, p:o]
             self._Ars = - self._mat_inv_mul(ml1, mr1)
 
+    @user_cacheit
     def _partial_velocity(self, vlist, ulist, frame):
         """Returns the list of partial velocities, replacing qdot's in the
         velocity list if necessary.
@@ -321,6 +322,7 @@ class KanesMethod(object):
         v = [vel.subs(self._qdot_u_map) for vel in vlist]
         return partial_velocity(v, ulist, frame)
 
+    @user_cacheit
     def kindiffdict(self):
         """Returns the qdot's in a dictionary. """
         if self._qdot_u_map is None:

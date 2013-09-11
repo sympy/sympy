@@ -753,6 +753,7 @@ class Basic(with_metaclass(ManagedProperties)):
         """
         return S.One, self
 
+    @user_cacheit
     @cacheit
     def subs(self, *args, **kwargs):
         """

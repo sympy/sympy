@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import collections
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C, Atom
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
@@ -1157,6 +1158,8 @@ class MatrixBase(object):
             result.update( i.atoms(*types) )
         return result
 
+    @user_cacheit
+    @cacheit
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
 

@@ -582,6 +582,7 @@ class Add(Expr, AssocOp):
         elif not neg and not nonpos:
             return False
 
+    @cacheit
     def _eval_subs(self, old, new):
         if not old.is_Add:
             return None
