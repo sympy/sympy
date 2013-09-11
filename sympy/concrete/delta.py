@@ -1,10 +1,12 @@
 from __future__ import print_function, division
 
 from sympy.core import Add, Interval, Mul, S, Dummy, symbols
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.compatibility import default_sort_key
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
 
 
+@cacheit
 def _expand_delta(expr, index):
     """
     Expand the first Add containing a simple KroneckerDelta.
@@ -24,6 +26,7 @@ def _expand_delta(expr, index):
     return func(*terms)
 
 
+@cacheit
 def _extract_delta(expr, index):
     """
     Extract a simple KroneckerDelta from the expression.
@@ -71,6 +74,7 @@ def _extract_delta(expr, index):
     return (delta, expr.func(*terms))
 
 
+@cacheit
 def _has_simple_delta(expr, index):
     """
     Returns True if ``expr`` is an expression that contains a KroneckerDelta
@@ -87,6 +91,7 @@ def _has_simple_delta(expr, index):
     return False
 
 
+@cacheit
 def _is_simple_delta(delta, index):
     """
     Returns True if ``delta`` is a KroneckerDelta and is nonzero for a single
@@ -99,6 +104,7 @@ def _is_simple_delta(delta, index):
     return False
 
 
+@cacheit
 def _remove_multiple_delta(expr):
     """
     Evaluate products of KroneckerDelta's.
@@ -129,6 +135,7 @@ def _remove_multiple_delta(expr):
     return expr
 
 
+@cacheit
 def _simplify_delta(expr):
     """
     Rewrite a KroneckerDelta's indices in its simplest form.
@@ -144,7 +151,8 @@ def _simplify_delta(expr):
             pass
     return expr
 
-
+@user_cacheit
+@cacheit
 def deltaproduct(f, limit):
     """
     Handle products containing a KroneckerDelta.
@@ -207,6 +215,8 @@ def deltaproduct(f, limit):
         S.One*_simplify_delta(KroneckerDelta(limit[2], limit[1] - 1))
 
 
+@user_cacheit
+@cacheit
 def deltasummation(f, limit, no_piecewise=False):
     """
     Handle summations containing a KroneckerDelta.
