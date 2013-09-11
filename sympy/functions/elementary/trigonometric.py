@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core.add import Add
-from sympy.core.basic import C, sympify, cacheit
+from sympy.core.basic import C, sympify, cacheit, user_cacheit
 from sympy.core.singleton import S
 from sympy.core.numbers import igcdex
 from sympy.core.function import Function, ArgumentIndexError
@@ -21,6 +21,7 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    @cacheit
     def _eval_is_rational(self):
         s = self.func(*self.args)
         if s.func == self.func:
@@ -30,6 +31,7 @@ class TrigonometricFunction(Function):
             return s.is_rational
 
 
+@cacheit
 def _peeloff_pi(arg):
     """
     Split ARG into two parts, a "rest" and a multiple of pi/2.
@@ -60,7 +62,7 @@ def _peeloff_pi(arg):
     m2 = K*S.Pi - m1
     return arg - m2, m2
 
-
+@cacheit
 def _pi_coeff(arg, cycles=1):
     """
     When arg is a Number times pi (e.g. 3*pi/2) then return the Number
@@ -178,6 +180,7 @@ class sin(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    @cacheit
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -249,6 +252,7 @@ class sin(TrigonometricFunction):
             return 1 / (sqrt(1 + 1 / x**2) * x)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -409,6 +413,7 @@ class cos(TrigonometricFunction):
             raise ArgumentIndexError(self, argindex)
 
     @classmethod
+    @cacheit
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -513,6 +518,7 @@ class cos(TrigonometricFunction):
             return 1 / sqrt(1 + 1 / x**2)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
@@ -791,6 +797,7 @@ class tan(TrigonometricFunction):
         return atan
 
     @classmethod
+    @cacheit
     def eval(cls, arg):
         if arg.is_Number:
             if arg is S.NaN:
@@ -858,6 +865,7 @@ class tan(TrigonometricFunction):
             return 1 / x
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -1073,6 +1081,7 @@ class cot(TrigonometricFunction):
             return x / sqrt(1 - x**2)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
@@ -1285,6 +1294,7 @@ class asin(Function):
             return S.ImaginaryUnit * C.asinh(i_coeff)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -1406,6 +1416,7 @@ class acos(Function):
                 return cst_table[arg]
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
@@ -1541,6 +1552,7 @@ class atan(Function):
             return S.ImaginaryUnit * C.atanh(i_coeff)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -1651,6 +1663,7 @@ class acot(Function):
             return -S.ImaginaryUnit * C.acoth(i_coeff)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:

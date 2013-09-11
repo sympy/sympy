@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, cacheit
+from sympy.core import S, C, sympify, cacheit, user_cacheit
 from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
 
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -94,6 +94,7 @@ class sinh(HyperbolicFunction):
                 return 1/(sqrt(x - 1) * sqrt(x + 1))
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         """
@@ -245,6 +246,7 @@ class cosh(HyperbolicFunction):
                 return x/(sqrt(x - 1) * sqrt(x + 1))
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 1:
@@ -400,6 +402,7 @@ class tanh(HyperbolicFunction):
                 return 1/arg.args[0]
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -529,6 +532,7 @@ class coth(HyperbolicFunction):
                 return arg.args[0]
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
@@ -641,6 +645,7 @@ class asinh(Function):
                     return -cls(-arg)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -755,6 +760,7 @@ class acosh(Function):
                 return -cls(-arg)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:
@@ -842,6 +848,7 @@ class atanh(Function):
                     return -cls(-arg)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
@@ -915,6 +922,7 @@ class acoth(Function):
                     return -cls(-arg)
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         if n == 0:

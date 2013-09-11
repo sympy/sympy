@@ -234,6 +234,7 @@ from collections import defaultdict
 from itertools import islice
 
 from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms, gcd_terms
@@ -356,6 +357,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
+@user_cacheit
 def dsolve(eq, func=None, hint="default", simplify=True,
     ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
@@ -543,6 +545,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         hint = hints['hint']
         return _helper_simplify(eq, hint, hints, simplify)
 
+@cacheit
 def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
     r"""
     Helper function of dsolve that calls the respective

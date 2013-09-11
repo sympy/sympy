@@ -2814,6 +2814,7 @@ class Expr(Basic, EvalfMixin):
 
         return (expr, hit)
 
+    @user_cacheit
     @cacheit
     def expand(self, deep=True, modulus=None, power_base=True, power_exp=True,
             mul=True, log=True, multinomial=True, basic=True, **hints):

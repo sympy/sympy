@@ -78,7 +78,7 @@ def cacheit(func):
     functions, just wrapped into one now.
     """
 
-    func._cache_it_cache = func_cache_it_cache = {}
+    func_cache_it_cache = {}
     CACHE.append((func, func_cache_it_cache))
     @wraps(func)
     def wrapper(*args, **kw_args):

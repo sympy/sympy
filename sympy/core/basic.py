@@ -75,7 +75,6 @@ class Basic(with_metaclass(ManagedProperties)):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
-
         obj._args = args  # all items in args must be Basic objects
         return obj
 
@@ -555,8 +554,7 @@ class Basic(with_metaclass(ManagedProperties)):
 
         Any other method that uses bound variables should implement a symbols
         method."""
-        union = set.union
-        return reduce(union, [arg.free_symbols for arg in self.args], set())
+        return reduce(set.union, [arg.free_symbols for arg in self.args], set())
 
     @property
     def canonical_variables(self):
