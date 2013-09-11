@@ -60,13 +60,14 @@ def user_cacheit(func):
             user_cacheit._use_cache = 'yes'
         else:
             cache_flag = False
-
-        calc_me = func(*args, **kw_args)
-
-        if cache_flag is True:
-            clear_cache()
-            user_cacheit._use_cache = 'no'
-        return calc_me
+        #ensure cache is cleared even if exception came up
+        try:
+            calc_me = func(*args, **kw_args)
+            return calc_me
+        finally:
+            if cache_flag is True:
+                clear_cache()
+                user_cacheit._use_cache = 'no'
     return wrapper
 user_cacheit._use_cache = 'no'
 
@@ -104,57 +105,3 @@ def cacheit(func):
             raise ValueError('Bad cacheing setting')
         return r
     return wrapper
-"""
-
-    if cacheit._use_cache == 'yes':
-        func._cache_it_cache = func_cache_it_cache = {}
-        CACHE.append((func, func_cache_it_cache))
-
-        @wraps(func)
-        def wrapper(*args, **kw_args):
-            ""
-            Assemble the args and kw_args to compute the hash.
-            ""
-            import sys
-            sys.stdout.write(str(cacheit._use_cache))
-            k = [(x, type(x)) for x in args]
-            if kw_args:
-                keys = sorted(kw_args)
-                k.extend([(x, kw_args[x], type(kw_args[x])) for x in keys])
-            k = tuple(k)
-
-            try:
-                return func_cache_it_cache[k]
-            except (KeyError, TypeError):
-                pass
-            r = func(*args, **kw_args)
-            try:
-                func_cache_it_cache[k] = r
-            except TypeError: # k is unhashable
-                # Note, collections.Hashable is not smart enough to be used here.
-                pass
-            return r
-        return wrapper
-    elif cacheit._use_cache == 'debug':
-        #cacheit + code to check cache consistency
-        cfunc = __cacheit(func)
-
-        @wraps(func)
-        def wrapper(*args, **kw_args):
-            # always call function itself and compare it with cached version
-            r1 = func(*args, **kw_args)
-            r2 = cfunc(*args, **kw_args)
-
-            hash(r1), hash(r2)
-            assert r1 == r2
-
-            return r1
-        return wrapper
-    elif cacheit._use_cache == 'no':
-        return func
-        import sys
-        sys.stdout.write(str(cacheit._use_cache))
-    else:
-        raise RuntimeError(
-            'unrecognized value for SYMPY_USE_CACHE: %s' % use_cache)
-"""
