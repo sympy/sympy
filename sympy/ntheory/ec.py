@@ -7,6 +7,9 @@ from sympy.polys.domains import FiniteField, RationalField
 
 class EllipticCurve():
     """
+
+    `y^{2} + a_{1} x y + a_{3} y = x^{3} + a_{2} x^{2} + a_{4} x + a_{6}`
+
     Examples
     ========
 
@@ -14,13 +17,19 @@ class EllipticCurve():
     ==========
 
     [1] J. Silverman "A Friendly Introduction to Number Theory" Third Edition
+    [2] http://mathworld.wolfram.com/EllipticDiscriminant.html
 
     """
 
     def __init__(self, a4, a6, a1=0, a2=0, a3=0, domain=QQ):
         self._coeff = [a4, a6, a1, a2, a3]
         self._domain = domain
-        self._discrim = int(self._domain(-16)*(4*a4**3+27*a6**2))
+        # Calculate discriminant
+        b2 = a1**2 + 4 * a2
+        b4 = 2 * a4 + a1 * a3
+        b6 = a3**2 + 4 * a6
+        b8 = a1**2 * a6 + 4 * a2 * a6 - a1 * a3 * a4 + a2 * a3**2 - a4**2
+        self._discrim = int(self._domain(-b2**2 * b8 - 8 * b4**3 - 27 * b6**2 + 9 * b2 * b4 * b6))
         self._eq = Eq(y**2 + a1*x*y + a3*y, x**3 + a2*x**2 + a4*x + a6)
         if isinstance(self._domain, FiniteField):
             self._char = self._domain.mod
@@ -75,7 +84,7 @@ class EllipticCurve():
         return r
 
     def __repr__(self):
-        return 'E({}): y**2 = x**3 + {}x + {}'.format(self._domain, *self._coeff)
+        return 'E({}): {}'.format(self._domain, self._eq)
 
     def points(self):
         """
@@ -111,6 +120,10 @@ class EllipticCurve():
     @property
     def discriminent(self):
         return self._discrim
+
+    @property
+    def is_singular(self):
+        return self.discriminent == 0
 
     @property
     def order(self):
