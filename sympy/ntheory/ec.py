@@ -3,6 +3,7 @@ from sympy.abc import x, y
 from sympy.core.relational import Eq
 from .residue_ntheory import sqrt_mod
 from sympy.polys.domains import FiniteField, RationalField
+from sympy.solvers.solvers import solve
 
 
 class EllipticCurve():
@@ -37,14 +38,18 @@ class EllipticCurve():
         elif isinstance(self._domain, RationalField):
             self._char = 0
             self._rank = None
-        self._point = None
-        self._points = None
 
-    def __add__(self, other):
-        p1 = self._point
+    def __contains__(self, point):
+        if self.characteristic == 0 and len(point) == 3 and point[2] == 0:
+            return True
+        return self._eq.subs({x: point[0], y: point[1]})
+
+    def __repr__(self):
+        return 'E({}): {}'.format(self._domain, self._eq)
+
+    def add(self, p1, p2):
         if p1[2] == 0:
-            return other
-        p2 = other
+            return p2
         if p2[2] == 0:
             return p1
         x1 = self._domain(p1[0])
@@ -60,31 +65,16 @@ class EllipticCurve():
         y3 = -y1 - slope * (x3 - x1)
         return x3, y3, 1
 
-    def __call__(self, x, y, z=1):
-        self._point = (x, y, z)
-        return self
-
-    def __contains__(self, point):
-        if self.characteristic == 0 and len(point) == 3 and point[2] == 0:
-            return True
-        return self._eq.subs({x: point[0], y: point[1]})
-
-    def __mul__(self, other):
-        if other < 1:
-            return self._point
+    def mul(self, p, n):
+        if n < 1:
+            return p
         r = (0, 1, 0)
-        p = self._point
-        while other:
-            if other & 1:
-                self._point = r
-                r = self.__add__(p)
-            other >>= 1
-            self._point = p
-            p = self.__add__(p)
+        while n:
+            if n & 1:
+                r = self.add(p, r)
+            n >>= 1
+            p = self.add(p, p)
         return r
-
-    def __repr__(self):
-        return 'E({}): {}'.format(self._domain, self._eq)
 
     def points(self):
         """
@@ -95,23 +85,38 @@ class EllipticCurve():
         >>> from sympy.polys.domains import FF
         >>> from sympy.ntheory.ec import EllipticCurve
         >>> e2 = EllipticCurve(1, 0, domain=FF(2))
-        >>> e2.points()
+        >>> list(e2.points())
         [(0, 0), (1, 0)]
 
         """
-        if self._points is not None:
-            return self._points
         char = self.characteristic
         if char > 1:
-            self._points = []
             for i in range(char):
                 y = sqrt_mod(i**3 + self._coeff[0]*i + self._coeff[1], char)
                 if y is not None:
-                    self._points.append((i, y,))
+                    yield i, y
                     if y != 0:
-                        self._points.append((i, char - y,))
-            return self._points
-        raise NotImplementedError("Still not implemented")
+                        yield i, char - y
+        else:
+            raise NotImplementedError("Still not implemented")
+
+    def torsion_list(self):
+        """
+        Return torsion points of Elliptic curve E(Q).
+
+        According to Nagell-Lutz theorem, torsion point p(x, y)
+        x and y are integers, either y = 0 or y**2 is divisor
+        of discriminent. According to Mazur's theorem, there are
+        at most 15 points in torsion collection.
+
+        """
+        if self.characteristic > 0:
+            raise ValueError("No torsion point for Finite Field.")
+        l = []
+        for x in solve(self._eq.subs(y, 0)):
+            if x.is_rational:
+                l.append((x, 0,))
+        return l
 
     @property
     def characteristic(self):
@@ -142,7 +147,7 @@ class EllipticCurve():
         """
         if self.characteristic == 0:
             raise NotImplementedError("Still not implemented")
-        return len(self.points())
+        return len(list(self.points()))
 
     @property
     def rank(self):
