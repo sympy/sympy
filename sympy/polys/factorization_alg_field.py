@@ -468,10 +468,6 @@ def _factor(f):
     ground = ring.domain.domain
     n = ring.ngens
 
-    if n == 1:
-        lc, factors = f.factor_list()
-        return (lc, [g for g, _ in factors])
-
     z = Dummy('z')
     qring = ring.clone(symbols=ring.symbols + (z,), domain=ground)
     lcqring = qring.drop(0)
