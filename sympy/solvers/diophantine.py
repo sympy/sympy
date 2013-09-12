@@ -290,6 +290,14 @@ def classify_diop(eq):
                     if abs(coeff_sign_sum) == len(var) - 2 and not constant_term:
                         diop_type = "general_pythagorean"
 
+    elif Poly(eq).total_degree() == 3 and len(var) == 2:
+
+        x, y = var[:2]
+        diop_type = "cubic_thue"
+
+        for term in [x**3, x**2*y, x*y**2, y**3, Integer(1)]:
+            if term not in coeff.keys():
+                coeff[term] == Integer(0)
 
     if diop_type is not None:
         return var, coeff, diop_type
@@ -2323,9 +2331,9 @@ def diop_general_sum_of_squares(eq, limit=1):
     Usage
     =====
 
-    ``general_sum_of_squares(eq, limit)``: Here ``eq`` is an expression which is
+    ``general_sum_of_squares(eq, limit)`` : Here ``eq`` is an expression which is
     assumed to be zero. Also, ``eq`` should be in the form,
-    `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`. At most ``limit``number of
+    `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 - k = 0`. At most ``limit`` number of
     solutions are returned.
 
     Details
