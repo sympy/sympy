@@ -72,9 +72,10 @@ def test_coordinate_vars():
     assert A.dt(B[0]*B.x + B[1]*B.y + B[2]*B.z) == - B[1]*qd*B.x + B[0]*qd*B.y
     assert A.express(B[0]*B[1]*B[2]) == \
            A[2]*(-A[0]*sin(q) + A[1]*cos(q))*(A[0]*cos(q) + A[1]*sin(q))
-    assert simplify(A.dt(B[0]*B[1]*B[2])) == \
-           A[2]*(-A[0]**2*cos(2*q) - 2*A[0]*A[1]*sin(2*q) + \
-                 A[1]**2*cos(2*q))*qd
+    assert (A.dt(B[0]*B[1]*B[2]) -
+            (A[2]*(-A[0]**2*cos(2*q) -
+             2*A[0]*A[1]*sin(2*q) +
+             A[1]**2*cos(2*q))*qd)).trigsimp() == 0
     assert A.express(B[0]*B.x + B[1]*B.y + B[2]*B.z) == \
            (B[0]*cos(q) - B[1]*sin(q))*A.x + (B[0]*sin(q) + \
            B[1]*cos(q))*A.y + B[2]*A.z
