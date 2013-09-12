@@ -418,6 +418,9 @@ class Function(Application, Expr):
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 
+    def _eval_is_complex(self):
+        return fuzzy_and(a.is_complex for a in self.args)
+
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).
@@ -568,6 +571,7 @@ class Function(Application, Expr):
         if not self.args[argindex - 1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
+            arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
                 self.subs(self.args[argindex - 1], arg_dummy),
                 arg_dummy), arg_dummy, self.args[argindex - 1])
@@ -625,6 +629,8 @@ class UndefinedFunction(FunctionClass):
         ret.__module__ = None
         return ret
 
+UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
+                                         (s.class_key() == o.class_key()))
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -983,6 +989,7 @@ class Derivative(Expr):
             else:
                 if not is_symbol:
                     new_v = C.Dummy('xi_%i' % i)
+                    new_v.dummy_index = hash(v)
                     expr = expr.subs(v, new_v)
                     old_v = v
                     v = new_v

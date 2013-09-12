@@ -1,6 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        factor)
+        factor, cancel)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
         given, independent, dependent, where, FiniteRV, pspace, cdf,
@@ -194,13 +194,12 @@ def test_binomial_symbolic():
     X = Binomial('X', n, p)
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
-    assert factor(simplify(skewness(X))) == factor((1-2*p)/sqrt(n*p*(1-p)))
+    assert cancel((skewness(X) - (1-2*p)/sqrt(n*p*(1-p)))) == 0
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
-    assert simplify(E(Y)) == simplify(n*(H*p + T*(1 - p)))
-
+    assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):

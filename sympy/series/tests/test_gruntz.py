@@ -415,6 +415,10 @@ def test_issue3744():
     assert gruntz(r, x, 1).simplify() == n/2
 
 
+def test_issue1091():
+    assert gruntz(x - gamma(1/x), x, oo) == S.EulerGamma
+
+
 @XFAIL
 def test_issue_2073():
     n = Symbol('n')

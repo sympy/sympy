@@ -48,13 +48,11 @@ dot.__doc__ += Vector.dot.__doc__
 
 
 def express(vec, frame, frame2=None):
-    """Express convenience wrapper for Vector.express(): \n"""
-    if not isinstance(vec, (Vector, Dyadic)):
-        raise TypeError('Can only express Vectors')
-    if isinstance(vec, Vector):
-        return vec.express(frame)
-    else:
+    """Express convenience wrapper"""
+    if isinstance(vec, Dyadic):
         return vec.express(frame, frame2)
+    else:
+        return frame.express(vec)
 
 express.__doc__ += Vector.express.__doc__
 

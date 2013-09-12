@@ -919,12 +919,6 @@ converter[float] = converter[decimal.Decimal] = Float
 RealNumber = Float
 
 
-@deprecated(useinstead="Float", issue=1721, deprecated_since_version="0.7.0")
-def Real(*args, **kwargs):  # pragma: no cover
-    """Deprecated alias for the Float constructor."""
-    return Float(*args, **kwargs)
-
-
 class Rational(Number):
     """Represents integers and rational numbers (p/q) of any size.
 
