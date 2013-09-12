@@ -3,6 +3,7 @@ from __future__ import print_function, division
 __all__ = ['Point']
 
 from sympy.physics.mechanics.essential import _check_frame, _check_vector
+from sympy.physics.mechanics.essential import Vector
 
 
 class Point(object):
@@ -77,7 +78,8 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Vector, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)
@@ -179,7 +181,7 @@ class Point(object):
             if self._vel_dict[frame] != 0:
                 return (self._vel_dict[frame]).dt(frame)
             else:
-                return 0
+                return Vector(0)
         return self._acc_dict[frame]
 
     def locatenew(self, name, value):
@@ -205,6 +207,8 @@ class Point(object):
 
         if not isinstance(name, str):
             raise TypeError('Must supply a valid name')
+        if value == 0:
+            value = Vector(0)
         value = _check_vector(value)
         p = Point(name)
         p.set_pos(self, value)
@@ -233,7 +237,7 @@ class Point(object):
 
         """
 
-        outvec = 0
+        outvec = Vector(0)
         plist = self._pdict_list(otherpoint, 0)
         for i in range(len(plist) - 1):
             outvec += plist[i]._pos_dict[plist[i + 1]]
@@ -262,6 +266,8 @@ class Point(object):
 
         """
 
+        if value == 0:
+            value = Vector(0)
         value = _check_vector(value)
         _check_frame(frame)
         self._acc_dict.update({frame: value})
@@ -290,6 +296,8 @@ class Point(object):
 
         """
 
+        if value == 0:
+            value = Vector(0)
         value = _check_vector(value)
         self._check_point(otherpoint)
         self._pos_dict.update({otherpoint: value})
@@ -318,6 +326,8 @@ class Point(object):
 
         """
 
+        if value == 0:
+            value = Vector(0)
         value = _check_vector(value)
         _check_frame(frame)
         self._vel_dict.update({frame: value})
@@ -345,7 +355,8 @@ class Point(object):
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import Point, ReferenceFrame, dynamicsymbols
+        >>> from sympy.physics.mechanics import Point, ReferenceFrame
+        >>> from sympy.physics.mechanics import Vector, dynamicsymbols
         >>> q = dynamicsymbols('q')
         >>> q2 = dynamicsymbols('q2')
         >>> qd = dynamicsymbols('q', 1)

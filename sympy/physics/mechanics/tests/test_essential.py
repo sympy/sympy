@@ -1,9 +1,9 @@
-from sympy import cos, Matrix, sin, symbols, simplify, pi, Function, \
-     zeros
+from sympy import cos, Matrix, sin, symbols, pi, S, Function, zeros
 from sympy.abc import x, y, z
-from sympy.physics.mechanics import Vector, ReferenceFrame, dot, \
-     dynamicsymbols, CoordinateSym, express
+from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
+from sympy.physics.mechanics import Dyadic, CoordinateSym, express
 from sympy.physics.mechanics.essential import MechanicsLatexPrinter
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
 A = ReferenceFrame('A')
@@ -72,9 +72,10 @@ def test_coordinate_vars():
     assert A.dt(B[0]*B.x + B[1]*B.y + B[2]*B.z) == - B[1]*qd*B.x + B[0]*qd*B.y
     assert A.express(B[0]*B[1]*B[2]) == \
            A[2]*(-A[0]*sin(q) + A[1]*cos(q))*(A[0]*cos(q) + A[1]*sin(q))
-    assert simplify(A.dt(B[0]*B[1]*B[2])) == \
-           A[2]*(-A[0]**2*cos(2*q) - 2*A[0]*A[1]*sin(2*q) + \
-                 A[1]**2*cos(2*q))*qd
+    assert (A.dt(B[0]*B[1]*B[2]) -
+            (A[2]*(-A[0]**2*cos(2*q) -
+             2*A[0]*A[1]*sin(2*q) +
+             A[1]**2*cos(2*q))*qd)).trigsimp() == 0
     assert A.express(B[0]*B.x + B[1]*B.y + B[2]*B.z) == \
            (B[0]*cos(q) - B[1]*sin(q))*A.x + (B[0]*sin(q) + \
            B[1]*cos(q))*A.y + B[2]*A.z
@@ -345,3 +346,73 @@ def test_dyadic_simplify():
 def test_latex_printer():
     r = Function('r')('t')
     assert MechanicsLatexPrinter().doprint(r**2) == "r^{2}"
+
+
+def test_output_type():
+    A = ReferenceFrame('A')
+    v = A.x + A.y
+    d = v | v
+    zerov = Vector(0)
+    zerod = Dyadic(0)
+
+    # dot products
+    assert isinstance(d & d, Dyadic)
+    assert isinstance(d & zerod, Dyadic)
+    assert isinstance(zerod & d, Dyadic)
+    assert isinstance(d & v, Vector)
+    assert isinstance(v & d, Vector)
+    assert isinstance(d & zerov, Vector)
+    assert isinstance(zerov & d, Vector)
+    raises(TypeError, lambda: d & S(0))
+    raises(TypeError, lambda: S(0) & d)
+    raises(TypeError, lambda: d & 0)
+    raises(TypeError, lambda: 0 & d)
+    assert not isinstance(v & v, (Vector, Dyadic))
+    assert not isinstance(v & zerov, (Vector, Dyadic))
+    assert not isinstance(zerov & v, (Vector, Dyadic))
+    raises(TypeError, lambda: v & S(0))
+    raises(TypeError, lambda: S(0) & v)
+    raises(TypeError, lambda: v & 0)
+    raises(TypeError, lambda: 0 & v)
+
+    # cross products
+    raises(TypeError, lambda: d ^ d)
+    raises(TypeError, lambda: d ^ zerod)
+    raises(TypeError, lambda: zerod ^ d)
+    assert isinstance(d ^ v, Dyadic)
+    assert isinstance(v ^ d, Dyadic)
+    assert isinstance(d ^ zerov, Dyadic)
+    assert isinstance(zerov ^ d, Dyadic)
+    assert isinstance(zerov ^ d, Dyadic)
+    raises(TypeError, lambda: d ^ S(0))
+    raises(TypeError, lambda: S(0) ^ d)
+    raises(TypeError, lambda: d ^ 0)
+    raises(TypeError, lambda: 0 ^ d)
+    assert isinstance(v ^ v, Vector)
+    assert isinstance(v ^ zerov, Vector)
+    assert isinstance(zerov ^ v, Vector)
+    raises(TypeError, lambda: v ^ S(0))
+    raises(TypeError, lambda: S(0) ^ v)
+    raises(TypeError, lambda: v ^ 0)
+    raises(TypeError, lambda: 0 ^ v)
+
+    # outer products
+    raises(TypeError, lambda: d | d)
+    raises(TypeError, lambda: d | zerod)
+    raises(TypeError, lambda: zerod | d)
+    raises(TypeError, lambda: d | v)
+    raises(TypeError, lambda: v | d)
+    raises(TypeError, lambda: d | zerov)
+    raises(TypeError, lambda: zerov | d)
+    raises(TypeError, lambda: zerov | d)
+    raises(TypeError, lambda: d | S(0))
+    raises(TypeError, lambda: S(0) | d)
+    raises(TypeError, lambda: d | 0)
+    raises(TypeError, lambda: 0 | d)
+    assert isinstance(v | v, Dyadic)
+    assert isinstance(v | zerov, Dyadic)
+    assert isinstance(zerov | v, Dyadic)
+    raises(TypeError, lambda: v | S(0))
+    raises(TypeError, lambda: S(0) | v)
+    raises(TypeError, lambda: v | 0)
+    raises(TypeError, lambda: 0 | v)

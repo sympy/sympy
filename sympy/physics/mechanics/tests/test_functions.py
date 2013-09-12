@@ -1,12 +1,13 @@
-from sympy import symbols, sin, cos, sqrt, pi
-from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
-                                     ReferenceFrame, inertia, Point,
-                                     kinematic_equations, Vector,
-                                     inertia_of_point_mass, partial_velocity,
-                                     outer, Particle,
-                                     RigidBody, angular_momentum,
-                                     linear_momentum, kinetic_energy,
+from sympy import S, sin, cos, pi, sqrt, symbols
+from sympy.physics.mechanics import (Dyadic, Particle, Point, ReferenceFrame,
+                                     RigidBody, Vector)
+from sympy.physics.mechanics import (angular_momentum, cross, dot,
+                                     dynamicsymbols, express, inertia,
+                                     inertia_of_point_mass,
+                                     kinematic_equations, kinetic_energy,
+                                     linear_momentum, outer, partial_velocity,
                                      potential_energy)
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -90,6 +91,78 @@ def test_cross_different_frames():
     assert cross(C.x, A.x) == -sin(q3)*C.y
     assert cross(C.y, A.x) == sin(q3)*C.x - cos(q3)*C.z
     assert cross(C.z, A.x) == cos(q3)*C.y
+
+def test_operator_match():
+    """Test that the output of dot, cross, outer functions match
+    operator behavior.
+    """
+    A = ReferenceFrame('A')
+    v = A.x + A.y
+    d = v | v
+    zerov = Vector(0)
+    zerod = Dyadic(0)
+
+    # dot products
+    assert d & d == dot(d, d)
+    assert d & zerod == dot(d, zerod)
+    assert zerod & d == dot(zerod, d)
+    assert d & v == dot(d, v)
+    assert v & d == dot(v, d)
+    assert d & zerov == dot(d, zerov)
+    assert zerov & d == dot(zerov, d)
+    raises(TypeError, lambda: dot(d, S(0)))
+    raises(TypeError, lambda: dot(S(0), d))
+    raises(TypeError, lambda: dot(d, 0))
+    raises(TypeError, lambda: dot(0, d))
+    assert v & v == dot(v, v)
+    assert v & zerov == dot(v, zerov)
+    assert zerov & v == dot(zerov, v)
+    raises(TypeError, lambda: dot(v, S(0)))
+    raises(TypeError, lambda: dot(S(0), v))
+    raises(TypeError, lambda: dot(v, 0))
+    raises(TypeError, lambda: dot(0, v))
+
+    # cross products
+    raises(TypeError, lambda: cross(d, d))
+    raises(TypeError, lambda: cross(d, zerod))
+    raises(TypeError, lambda: cross(zerod, d))
+    assert d ^ v == cross(d, v)
+    assert v ^ d == cross(v, d)
+    assert d ^ zerov == cross(d, zerov)
+    assert zerov ^ d == cross(zerov, d)
+    assert zerov ^ d == cross(zerov, d)
+    raises(TypeError, lambda: cross(d, S(0)))
+    raises(TypeError, lambda: cross(S(0), d))
+    raises(TypeError, lambda: cross(d, 0))
+    raises(TypeError, lambda: cross(0, d))
+    assert v ^ v == cross(v, v)
+    assert v ^ zerov == cross(v, zerov)
+    assert zerov ^ v == cross(zerov, v)
+    raises(TypeError, lambda: cross(v, S(0)))
+    raises(TypeError, lambda: cross(S(0), v))
+    raises(TypeError, lambda: cross(v, 0))
+    raises(TypeError, lambda: cross(0, v))
+
+    # outer products
+    raises(TypeError, lambda: outer(d, d))
+    raises(TypeError, lambda: outer(d, zerod))
+    raises(TypeError, lambda: outer(zerod, d))
+    raises(TypeError, lambda: outer(d, v))
+    raises(TypeError, lambda: outer(v, d))
+    raises(TypeError, lambda: outer(d, zerov))
+    raises(TypeError, lambda: outer(zerov, d))
+    raises(TypeError, lambda: outer(zerov, d))
+    raises(TypeError, lambda: outer(d, S(0)))
+    raises(TypeError, lambda: outer(S(0), d))
+    raises(TypeError, lambda: outer(d, 0))
+    raises(TypeError, lambda: outer(0, d))
+    assert v | v == outer(v, v)
+    assert v | zerov == outer(v, zerov)
+    assert zerov | v == outer(zerov, v)
+    raises(TypeError, lambda: outer(v, S(0)))
+    raises(TypeError, lambda: outer(S(0), v))
+    raises(TypeError, lambda: outer(v, 0))
+    raises(TypeError, lambda: outer(0, v))
 
 
 def test_express():
