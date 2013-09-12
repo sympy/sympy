@@ -48,9 +48,20 @@ class EllipticCurve():
         return 'E({}): {}'.format(self._domain, self._eq)
 
     def add(self, p1, p2):
-        if p1[2] == 0:
+        """
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e1 = EllipticCurve(-17, 16)
+        >>> e1.add((0, -4), (1, 0))
+        (15, -56, 1)
+
+        """
+        if len(p1) == 3 and p1[2] == 0:
             return p2
-        if p2[2] == 0:
+        if len(p2) == 3 and p2[2] == 0:
             return p1
         x1 = self._domain(p1[0])
         y1 = self._domain(p1[1])
@@ -63,7 +74,7 @@ class EllipticCurve():
             slope = (3 * x1**2 + self._coeff[0]) / (2 * y1)
         x3 = slope**2 - x1 - x2
         y3 = -y1 - slope * (x3 - x1)
-        return x3, y3, 1
+        return self._domain.to_sympy(x3), self._domain.to_sympy(y3), 1
 
     def mul(self, p, n):
         if n < 1:
