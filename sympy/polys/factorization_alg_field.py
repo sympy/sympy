@@ -538,6 +538,7 @@ def _test_prime(fA, minpoly, p, domain):
 def _factor(f):
     ring = f.ring # Q(alpha)[x_0, ..., x_{n-1}]
     lcring = ring.drop(0)
+    uniring = ring.drop(*ring.gens[1:])
     ground = ring.domain.domain
     n = ring.ngens
 
@@ -614,7 +615,7 @@ def _factor(f):
             else:
                 fA, denoms, divisors = result
 
-            _, fAfactors = _z_to_alpha(fA, ring.drop(*ring.gens[1:])).factor_list()
+            _, fAfactors = uniring.dup_ext_factor(_z_to_alpha(fA, uniring))
             if len(fAfactors) == 1:
                 g = _z_to_alpha(f_, ring)
                 return (f.LC, [g.monic()])
@@ -674,7 +675,7 @@ def efactor(f):
     n = ring.ngens
 
     if n == 1:
-        return f.factor_list()
+        return ring.dup_ext_factor(f)
     else:
         cont, f = ring.dmp_primitive(f)
         if not cont.is_one:
