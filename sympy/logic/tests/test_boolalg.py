@@ -1,4 +1,4 @@
-from sympy import symbols, sympify, Dummy, simplify
+from sympy import symbols, sympify, Dummy, simplify, Equality
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
@@ -172,6 +172,11 @@ def test_simplification():
     assert simplify_logic(Implies(A, B)) == Or(Not(A), B)
     assert simplify_logic(Equivalent(A, B)) == \
            Or(And(A, B), And(Not(A), Not(B)))
+    assert simplify(And(Equality(A, 2), C)) == And(Equality(A, 2), C)
+    assert simplify(And(Equality(A, B), C)) == And(Equality(A, B), C)
+    assert simplify(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) == (
+           And(Equality(A, 3), Or(B, C)))
+    assert simplify(And(A, x**2-x)) == And(A, x*(x-1))
 
     # check input
     ans = SOPform('xy', [[1, 0]])
