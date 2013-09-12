@@ -67,12 +67,12 @@ def _z_to_alpha(f, ring):
     return f_
 
 
-def _distinct_prime_divisors(A, domain):
+def _distinct_prime_divisors(S, domain):
     gcd = domain.gcd
     divisors = []
 
-    for i, a in enumerate(A):
-        divisors.append(a)
+    for i, s in enumerate(S):
+        divisors.append(s)
 
         for j in xrange(i-1):
             g = gcd(divisors[i], divisors[j])
@@ -614,7 +614,7 @@ def _factor(f):
             else:
                 fA, denoms, divisors = result
 
-            omega_, fAfactors = _z_to_alpha(fA, ring.drop(*ring.gens[1:])).factor_list() # factorization in Q(alpha)[x_0]
+            _, fAfactors = _z_to_alpha(fA, ring.drop(*ring.gens[1:])).factor_list()
             if len(fAfactors) == 1:
                 g = _z_to_alpha(f_, ring)
                 return (f.LC, [g.monic()])
