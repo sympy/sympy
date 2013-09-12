@@ -186,7 +186,7 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
     return f, lcs, U
 
 
-def _test_evaluation_points(f, gamma, lcfactors, D, A):
+def _test_evaluation_points(f, gamma, lcfactors, A, D):
     ring = f.ring
     qring = ring.clone(domain=ring.domain.get_field())
 
@@ -588,7 +588,7 @@ def _factor(f):
                 continue
 
             try:
-                result = _test_evaluation_points(f_, groundring.convert(gamma), lcfactors, D, A)
+                result = _test_evaluation_points(f_, groundring.convert(gamma), lcfactors, A, D)
             except UnluckyLeadingCoefficient:
                 # TODO: check interval
                 C = [random.randint(1, 3*(N + 1)) for _ in xrange(n - 1)]
