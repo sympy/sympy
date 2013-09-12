@@ -13,6 +13,7 @@ from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key, xrange
 
 from sympy.polys import PurePoly, roots, cancel, gcd
+from sympy.polys.domains import ZZ
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -2619,7 +2620,7 @@ class MatrixBase(object):
         return self.adjugate() / d
 
     def rref(self, simplified=False, iszerofunc=_iszero,
-            simplify=False):
+            simplify=False, modulus=None):
         """Return reduced row-echelon form of matrix and indices of pivot vars.
 
         To simplify elements before finding nonzero pivots set simplify=True
@@ -2647,6 +2648,14 @@ class MatrixBase(object):
             simplify = simplify or True
         simpfunc = simplify if isinstance(
             simplify, FunctionType) else _simplify
+        if modulus:
+            if iszerofunc == _iszero:
+                iszerofunc = lambda x : not x % modulus
+            scalefunc = lambda x, _: (x * ZZ.invert(scale, modulus)) % modulus
+            elimfunc = lambda x, y: (x - scale*y) % modulus
+        else:
+            scalefunc = lambda x, _: x / scale
+            elimfunc = lambda x, y: x - scale*y
         # pivot: index of next row to contain a pivot
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
@@ -2666,12 +2675,12 @@ class MatrixBase(object):
                     continue
                 r.row_swap(pivot, k)
             scale = r[pivot, i]
-            r.row_op(pivot, lambda x, _: x / scale)
+            r.row_op(pivot, scalefunc)
             for j in xrange(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
-                r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
+                r.zip_row_op(j, pivot, elimfunc)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist

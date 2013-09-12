@@ -16,6 +16,12 @@ def test_efactor():
 
     assert efactor(f) == (A.one, [(f1, 1), (f2, 1)])
 
+    f1 = x + 2**10*y
+    f2 = x**2 + sqrt(2)*y
+    f = f1 * f2
+
+    assert efactor(f) == (A.one, [(f1, 1), (f2, 1)])
+
     A = AlgebraicField(QQ, sqrt(3))
     R, x, y, z = ring('x, y, z', A)
 

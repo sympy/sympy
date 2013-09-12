@@ -19,15 +19,18 @@ def eqs_to_matrix(eqs, ring):
 
     return M
 
-def solve_lin_sys(eqs, ring):
+def solve_lin_sys(eqs, ring, modulus=None):
     """Solve a system of linear equations. """
-    assert ring.domain.has_Field
+    assert ring.domain.has_Field or modulus
 
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)
 
     # solve by row-reduction
-    echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
+    if modulus:
+        echelon, pivots = matrix.rref(simplify=lambda x: x, modulus=modulus)
+    else:
+        echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions
     xs = ring.gens
@@ -43,4 +46,7 @@ def solve_lin_sys(eqs, ring):
             vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[ring.one]])
             sols[xs[p]] = (echelon[i, p+1:]*vect)[0]
 
+        if modulus:
+            for k, v in sols.items():
+                sols[k] = v.trunc_ground(modulus)
         return sols

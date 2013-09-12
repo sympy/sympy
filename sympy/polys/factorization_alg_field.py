@@ -4,11 +4,14 @@ from sympy import Dummy
 import random
 
 from sympy.ntheory import nextprime
+from sympy.integrals.heurisch import _symbols
 from sympy.polys.galoistools import gf_irreducible_p
 from sympy.polys.modulargcd import _trunc, _gf_gcdex, _minpoly_from_dense, _euclidean_algorithm
 from sympy.polys.polyclasses import ANP
 from sympy.polys.polyerrors import UnluckyLeadingCoefficient, UnluckyMinimalPolynomial
 from sympy.polys.polyutils import _sort_factors
+from sympy.polys.rings import PolyRing
+from sympy.polys.solvers import solve_lin_sys
 
 
 # TODO
@@ -214,17 +217,87 @@ def _test_evaluation_points(f, gamma, lcfactors, D, A):
     return fA, denoms, divisors
 
 
-# TODO!
-def _padic_lift(f, pfactors, l, p, B, lcs, minpoly):
+def _subs_ground(f, A):
+    f_ = f.ring.zero
+
+    for monom, coeff in f.iterterms():
+        if coeff.subs(A):
+            f_[monom] = coeff.subs(A)
+
+    return f_
+
+
+def _choose_particular_solution(solution, ring):
+    domain = ring.domain
+    gens = list(ring.gens)
+    sol = {}
+
+    for k, v in solution.items():
+        sol[k] = v.coeff(1)
+        gens.remove(k)
+
+    for k in gens:
+        sol[k] = domain.zero
+
+    return sol
+
+
+def _padic_lift(f, pfactors, lcs, B, minpoly, p):
     ring = f.ring
+    domain = ring.domain
     LC = ring.dmp_LC
-    x = ring.gens[0]
 
-    h = [g + (l - LC(g))*x**g.degree() for g, l in zip(pfactors, lcs)]
+    coeffs = []
+    for i, g in enumerate(pfactors):
+        coeffs += _symbols('c%i' % i, len(g))
 
-    e = f - ring.mul(h).mul_ground(l) # mod minpoly
+    coeffring = PolyRing(coeffs, domain)
+    ring_ = ring.clone(domain=coeffring)
+
+    S = []
+    k = 0
+    for g in pfactors:
+        s = ring_.zero
+        t = len(g)
+        for i, monom in zip(xrange(k, k+t), g.itermonoms()):
+            s[monom] = coeffring.gens[i]
+        S.append(s)
+        k += t
+
+    m = minpoly.set_ring(ring_)
+    f = f.set_ring(ring_)
+    x = ring_.gens[0]
+    H = [g.set_ring(ring_) + (li - LC(g)).set_ring(ring_)*x**g.degree() for
+            g, li in zip(pfactors, lcs)]
+
+    prod = ring_.mul(H)
+    e = (f - prod).rem(m)
 
     P = p
+    while e and P < 2*B:
+        poly = e // P
+
+        for s, h in zip(S, H):
+            poly -= prod.quo(h)*s
+
+        poly = _trunc(poly, m, P)
+
+        solution = solve_lin_sys(poly.coeffs(), coeffring, modulus=P)
+        if solution is None:
+            return None
+
+        solution = _choose_particular_solution(solution, coeffring)
+        subs = solution.items()
+
+        H = [h + _subs_ground(s, subs).mul_ground(P) for h, s in zip(H, S)]
+        P = P**2
+        prod = ring_.mul(H)
+        e = (f - prod).rem(m)
+
+    if e == 0:
+        return [h.set_ring(ring) for h in H]
+    else:
+        return None
 
 
 def _div(f, g, minpoly, p):
@@ -433,7 +506,7 @@ def _hensel_lift(f, H, LC, A, minpoly, p):
                 c = _trunc(s - ring.mul(H), minpoly, p)
 
     prod = ring.mul(H)
-    if prod.rem(minpoly.set_ring(Hring)) != f:
+    if _trunc(prod, minpoly, p) != f.trunc_ground(p):
         return None
     else:
         return H
@@ -479,8 +552,8 @@ def _factor(f):
     f_ = _monic_associate(f, zring)
     D = minpoly.resultant(minpoly.diff(0))
 
-#    # heuristic bound for p-adic lift
-#    B = f_.max_norm()
+    # heuristic bound for p-adic lift
+    B = f_.max_norm()
 
     lc = zring.dmp_LC(f_)
     gamma, lcfactors = efactor(_z_to_alpha(lc, lcring)) # over QQ(alpha)[x_1, ..., x_n]
@@ -497,13 +570,11 @@ def _factor(f):
         lcfactors_.append((l_, exp))
 
     f_ = f_.mul_ground(D_)
-    b = zring.dmp_zz_mignotte_bound(f_)*abs(D)
-    p = nextprime(b)
+    p = 2
 
     N = 0
     history = set([])
     tries = 5 # how big should this be?
-    k = 0
 
     while True:
         for _ in xrange(tries):
@@ -559,10 +630,11 @@ def _factor(f):
 
             f_ = f_.mul_ground(delta)
 
+            k = 0
             while not _test_prime(fA, minpoly, p, zring.domain):
                 p = nextprime(p)
                 k += 1
-                if k > 7:
+                if k > 10:
                     raise UnluckyMinimalPolynomial
 
             pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
@@ -571,12 +643,14 @@ def _factor(f):
                 f_ = f_.primitive()[1]
                 continue
 
-#            factors = _padic_lift(f_, pfactors, l_, p, B, lcs, minpoly)
-#            if factors is None:
-#                B *= B
-#                continue
+            factors = _padic_lift(f_, pfactors, lcs, B, minpoly, p)
+            if factors is None:
+                p = nextprime(p)
+                f_ = f_.primitive()[1]
+                B *= B
+                continue
 
-            return (f.LC, [_z_to_alpha(g.primitive()[1], ring).monic() for g in pfactors])
+            return (f.LC, [_z_to_alpha(g.primitive()[1], ring).monic() for g in factors])
 
         N += 1
 
