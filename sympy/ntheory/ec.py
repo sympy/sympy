@@ -1,6 +1,7 @@
 from sympy import QQ
 from sympy.abc import x, y
 from sympy.core.relational import Eq
+from .factor_ import divisors
 from .residue_ntheory import sqrt_mod
 from sympy.polys.domains import FiniteField, RationalField
 from sympy.solvers.solvers import solve
@@ -19,11 +20,11 @@ class EllipticCurve():
 
     [1] J. Silverman "A Friendly Introduction to Number Theory" Third Edition
     [2] http://mathworld.wolfram.com/EllipticDiscriminant.html
+    [3] G. Hardy, E. Wright "An Introduction to the Theory of Numbers" Sixth Edition
 
     """
 
     def __init__(self, a4, a6, a1=0, a2=0, a3=0, domain=QQ):
-        self._coeff = [a4, a6, a1, a2, a3]
         self._domain = domain
         # Calculate discriminant
         b2 = a1**2 + 4 * a2
@@ -33,9 +34,12 @@ class EllipticCurve():
         self._discrim = int(self._domain(-b2**2 * b8 - 8 * b4**3 - 27 * b6**2 + 9 * b2 * b4 * b6))
         self._eq = Eq(y**2 + a1*x*y + a3*y, x**3 + a2*x**2 + a4*x + a6)
         if isinstance(self._domain, FiniteField):
-            self._char = self._domain.mod
+            i = self._domain.mod
+            self._coeff = [a4 % i, a6 % i, a1 % i, a2 % i, a3 % i]
+            self._char = i
             self._rank = 0
         elif isinstance(self._domain, RationalField):
+            self._coeff = [a4, a6, a1, a2, a3]
             self._char = 0
             self._rank = None
 
@@ -103,7 +107,7 @@ class EllipticCurve():
         char = self.characteristic
         if char > 1:
             for i in range(char):
-                y = sqrt_mod(i**3 + self._coeff[0]*i + self._coeff[1], char)
+                y = sqrt_mod(i**3 + self._coeff[3]*i**2 + self._coeff[0]*i + self._coeff[1], char)
                 if y is not None:
                     yield i, y
                     if y != 0:
@@ -120,6 +124,14 @@ class EllipticCurve():
         of discriminent. According to Mazur's theorem, there are
         at most 15 points in torsion collection.
 
+        Examples
+        ========
+
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e2 = EllipticCurve(-43, 166)
+        >>> sorted(e2.torsion_list())
+        [(-5, -16), (-5, 16), (3, -8), (3, 8), (11, -32), (11, 32)]
+
         """
         if self.characteristic > 0:
             raise ValueError("No torsion point for Finite Field.")
@@ -127,6 +139,12 @@ class EllipticCurve():
         for x in solve(self._eq.subs(y, 0)):
             if x.is_rational:
                 l.append((x, 0,))
+        for i in divisors(self.discriminent, generator=True):
+            j = int(i**.5)
+            if j**2 == i:
+                for x in solve(self._eq.subs(y, j)):
+                    if x.is_rational:
+                        l.extend([(x, j,), (x, -j,)])
         return l
 
     @property
@@ -151,7 +169,7 @@ class EllipticCurve():
 
         >>> from sympy.polys.domains import FF
         >>> from sympy.ntheory.ec import EllipticCurve
-        >>> e2=EllipticCurve(1, 0, domain=FF(19))
+        >>> e2 = EllipticCurve(1, 0, domain=FF(19))
         >>> e2.order
         19
 
