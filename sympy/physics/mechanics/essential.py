@@ -1293,7 +1293,7 @@ class ReferenceFrame(object):
         if order%1 != 0 or order < 0:
             raise ValueError("Unsupported value of order entered")
         if isinstance(expr, Vector):
-            outvec = S(0)
+            outvec = Vector(0)
             for i, v in enumerate(expr.args):
                 if v[1] == self:
                     outvec += Vector([(self.express(v[0]).diff(t), self)])
