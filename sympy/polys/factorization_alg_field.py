@@ -545,7 +545,8 @@ def _factor(f):
     qring = ring.clone(symbols=ring.symbols + (z,), domain=ground)
     lcqring = qring.drop(0)
 
-    zring = qring.clone(domain=ground.get_ring())
+    groundring = ground.get_ring()
+    zring = qring.clone(domain=groundring)
     lczring = zring.drop(0)
 
     minpoly = _minpoly_from_dense(ring.domain.mod, zring.drop(*zring.gens[:-1]))
@@ -558,8 +559,9 @@ def _factor(f):
     lc = zring.dmp_LC(f_)
     gamma, lcfactors = efactor(_z_to_alpha(lc, lcring)) # over QQ(alpha)[x_1, ..., x_n]
 
-    D_ = ground.denom(gamma.rep[0])
-    gamma_ = ground.numer(gamma.rep[0]) # in QQ
+    gamma = ground.convert(gamma)
+    D_ = ground.denom(gamma)
+    gamma_ = ground.numer(gamma)
     lcfactors_ = []
 
     for l, exp in lcfactors:
@@ -586,7 +588,7 @@ def _factor(f):
                 continue
 
             try:
-                result = _test_evaluation_points(f_, gamma.rep[0], lcfactors, D, A)
+                result = _test_evaluation_points(f_, groundring.convert(gamma), lcfactors, D, A)
             except UnluckyLeadingCoefficient:
                 # TODO: check interval
                 C = [random.randint(1, 3*(N + 1)) for _ in xrange(n - 1)]
@@ -623,7 +625,7 @@ def _factor(f):
             else:
                 f_, lcs, fAfactors_ = result
 
-            prod = ground.one
+            prod = groundring.one
             for lc in lcs:
                 prod *= lc.LC
             delta = ground.numer(ground(prod, f_.LC))

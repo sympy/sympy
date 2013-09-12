@@ -1,6 +1,6 @@
 from sympy.polys.factorization_alg_field import efactor
 from sympy.polys.domains import AlgebraicField, QQ
-from sympy import sqrt, I, ring
+from sympy import sqrt, I, ring, S
 from sympy.utilities.pytest import slow
 
 def test_efactor():
@@ -26,7 +26,7 @@ def test_efactor():
     R, x, y, z = ring('x, y, z', A)
 
     f1 = z + 1
-    f2 = A([QQ(3, 4)])*x*y**2 + sqrt(3)
+    f2 = S(3)/4*x*y**2 + sqrt(3)
     f3 = sqrt(3)*y*x**2 + 2*y + z
     f = f1 * f2**2 * f3
 
@@ -46,7 +46,7 @@ def test_efactor():
 
     assert efactor(f) == (A.one, [(f1, 1), (f2, 1), (f3, 1)])
 
-    lc = -A([2])
+    lc = -A(2)
     f1 = x*(y - 3*I) + lc**(-1)
     f2 = x*(y + I) + 1
     f3 = x*(y + 2) + 1
@@ -72,7 +72,7 @@ def test_efactor():
 
     assert efactor(f) == (A.one, [(f1, 1), (f2, 1), (f3, 1), (f4, 1)])
 
-    a = QQ(1, 2)*sqrt(2)*(1 + I)
+    a = S(1)/2*sqrt(2)*(1 + I)
     A = AlgebraicField(QQ, a)
     R, x, y = ring('x, y', A)
 
@@ -88,7 +88,7 @@ def test_efactor():
 
 @slow
 def test_efactor_wang():
-    a = QQ(1, 4)*(-1 + sqrt(5)) - I*sqrt(QQ(1, 8)*(sqrt(5) + 5))
+    a = S(1)/4*(-1 + sqrt(5)) - I*sqrt(S(1)/8*(sqrt(5) + 5))
     A = AlgebraicField(QQ, a)
     R, x, y, z = ring('x, y, z', A)
 
