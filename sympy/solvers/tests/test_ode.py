@@ -139,13 +139,13 @@ def test_dsolve_options():
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
         ('nth_linear_constant_coeff_homogeneous', 'Liouville',
-            'Liouville_Integral')
+            '2nd_power_series_ordinary' ,'Liouville_Integral')
     assert classify_ode(f(x), f(x)) == ()
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('separable',
         '1st_linear', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'lie_group',
+        '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_homogeneous',
         'separable_Integral',
         '1st_linear_Integral',
@@ -159,7 +159,7 @@ def test_classify_ode():
     assert a == ('1st_linear',
         'Bernoulli',
         'almost_linear',
-        'lie_group',
+        '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral',
@@ -179,13 +179,14 @@ def test_classify_ode():
     k = Symbol('k')
     assert classify_ode(f(x).diff(x)/(k*f(x) + k*x*f(x)) + 2*f(x)/(k*f(x) +
         k*x*f(x)) + x*f(x).diff(x)/(k*f(x) + k*x*f(x)) + z, f(x)) == \
-        ('separable', '1st_exact', 'lie_group', 'separable_Integral', '1st_exact_Integral')
+        ('separable', '1st_exact', '1st_power_series', 'lie_group',
+         'separable_Integral', '1st_exact_Integral')
     # preprocessing
     ans = ('separable', '1st_exact', '1st_linear', 'Bernoulli',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', 'lie_group',
+        'separable_reduced', '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
@@ -1273,7 +1274,8 @@ def test_unexpanded_Liouville_ODE():
 def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear', 'lie_group',
+    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
+        '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         '1st_linear_Integral', 'almost_linear_Integral',
@@ -1284,7 +1286,8 @@ def test_1686():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        'separable_reduced', 'lie_group', '1st_exact_Integral',
+        'separable_reduced', '1st_power_series',
+        'lie_group', '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         'separable_reduced_Integral')
@@ -1719,6 +1722,21 @@ def test_kamke():
     assert checkinfsol(eq, i)[0]
 
 
+def test_series():
+    C0 = Symbol("C0")
+    eq = f(x).diff(x) - f(x)
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
+        C0 + C0*x + C0*x**2/S(2) + C0*x**3/S(6) + C0*x**4/S(24) +
+        C0*x**5/S(120) + O(x**6))
+    eq = f(x).diff(x) - x*f(x)
+    assert dsolve(eq, hint='1st_power_series') == Eq(f(x),
+        C0*x**4/S(8) + C0*x**2/S(2) + C0 + O(x**6))
+    eq = f(x).diff(x) - sin(x*f(x))
+    assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == Eq(
+        f(x), (x - 2)**2*(2*cos(4) + 2*sin(4)*cos(4))/S(2) + (x - 2)*sin(4) +
+        2 + O(x**3))
+
+
 def test_lie_group():
     C1 = Symbol("C1")
     a, b, c = symbols("a b c")
@@ -1767,3 +1785,62 @@ def test_user_infinitesimals():
 def test_issue_3982():
     eq = x*(f(x).diff(x)) + 1 - f(x)**2
     assert dsolve(eq) == Eq(f(x), (C2 + x**2)/(C1 - x**2))
+
+
+def test_2nd_power_series_ordinary():
+    C0, C1 = symbols("C0 C1")
+    eq = f(x).diff(x, 2) - x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x),
+        C0*(x**3/S(6) + 1) + C1*x*(x**3/S(12) + 1) + O(x**6))
+    assert dsolve(eq, x0=-2) == Eq(f(x),
+        C0*((x + 2)**4/S(6) + (x + 2)**3/S(6) - (x + 2)**2 + 1)
+        + C1*(x + (x + 2)**4/S(12) - (x + 2)**3/3 + S(2))
+        + O(x**6))
+    assert dsolve(eq, n=2) == Eq(f(x), C1*x + C0 + O(x**2))
+
+    eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(-x**4/S(3) + x**2 + 1) + C1*x
+        + O(x**6))
+
+    eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        x**4/S(8) - x**2/S(2) + 1) + C1*x*(-x**2/S(3) + 1) + O(x**6))
+
+    eq = f(x).diff(x, 2) + f(x).diff(x) - x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq) == Eq(f(x), C0*(
+        -x**4/S(24) + x**3/S(6) + 1) + C1*x*(x**3/S(24) + x**2/S(6) - x/S(2)
+        + 1) + O(x**6))
+
+    eq = f(x).diff(x, 2) + x*f(x)
+    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert dsolve(eq, n=7) == Eq(f(x), C0*(
+        x**6/S(180) - x**3/S(6) + 1) + C1*x*(-x**3/S(12) + 1) + O(x**7))
+
+
+def test_2nd_power_series_ordinary():
+    C0, C1 = symbols("C0 C1")
+    eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
+    assert dsolve(eq) == Eq(f(x), C0*x**2*(-16*x**3/S(9) +
+        4*x**2 - 4*x + 1) + O(x**6))
+
+    eq = 4*x**2*(f(x).diff(x, 2)) -8*x**2*(f(x).diff(x)) + (4*x**2 +
+        1)*f(x)
+    assert dsolve(eq) == Eq(f(x), C0*sqrt(x)*(
+        x**4/S(24) + x**3/S(6) + x**2/S(2) + x + 1) + O(x**6))
+
+    eq = x**2*(f(x).diff(x, 2)) - x**2*(f(x).diff(x)) + (
+        x**2 - 2)*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*(-x**6/S(720) - 3*x**5/S(80) - x**4/S(8) +
+        x**2/S(2) + x/S(2) + 1)/x + C0*x**2*(-x**3/S(60) + x**2/S(20) + x/S(2) + 1)
+        + O(x**6))
+
+    eq = x**2*(f(x).diff(x, 2)) + x*(f(x).diff(x)) + (x**2 - 1/S(4))*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*(x**4/S(24) - x**2/S(2) + 1)/sqrt(x) +
+        C0*sqrt(x)*(x**4/S(120) - x**2/S(6) + 1) + O(x**6))
+
+    eq = x*(f(x).diff(x, 2)) - f(x).diff(x) + 4*x**3*f(x)
+    assert dsolve(eq) == Eq(f(x), C1*(-x**4/S(2) + 1) + C0*x**2 + O(x**6))

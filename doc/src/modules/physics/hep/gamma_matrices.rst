@@ -3,4 +3,8 @@ High energy physics
 
 .. module:: sympy.physics.hep.gamma_matrices
 
-.. autofunction:: sympy.physics.hep.gamma_matrices.kahane_simplify
+.. autoclass:: sympy.physics.hep.gamma_matrices._LorentzContainer
+    :members:
+
+.. autoclass:: sympy.physics.hep.gamma_matrices.GammaMatrixHead
+    :members:

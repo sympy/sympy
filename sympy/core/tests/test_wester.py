@@ -13,7 +13,8 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine)
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
+    elliptic_e, elliptic_f, powsimp)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -304,9 +305,8 @@ def test_H1():
     assert powdenest(2*2**n) == simplify(2**(n + 1))
 
 
-@XFAIL
 def test_H2():
-    assert 4 * 2**n == 2 ** (n + 2)
+    assert powsimp(4 * 2**n) == 2**(n + 2)
 
 
 def test_H3():
@@ -440,9 +440,10 @@ def test_H23():
     assert factor(f, modulus=65537) == g
 
 
-@XFAIL
 def test_H24():
-    raise NotImplementedError("factor x**4 - 3*x**2 + 1, GoldenRatio")
+    phi = AlgebraicNumber(S.GoldenRatio.expand(func=True), alias='phi')
+    assert factor(x**4 - 3*x**2 + 1, extension=phi) == \
+        (x - phi)*(x + 1 - phi)*(x - 1 + phi)*(x + phi)
 
 
 @slow
@@ -574,9 +575,8 @@ def test_J1():
     assert bernoulli(16) == R(-3617, 510)
 
 
-@XFAIL
 def test_J2():
-    raise NotImplementedError("diff(E(phi,k), k) == (E(phi,k) - F(phi,k)) / k; F() and E() are elliptic integrals of the 1st and 2nd kind, respectively")
+    assert diff(elliptic_e(x, y**2), y) == (elliptic_e(x, y**2) - elliptic_f(x, y**2))/y
 
 
 @XFAIL

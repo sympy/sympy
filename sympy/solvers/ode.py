@@ -57,8 +57,11 @@ information on each (run ``help(ode)``):
   - 1st order exact differential equations.
   - 1st order linear differential equations.
   - 1st order Bernoulli differential equations.
+  - Power series solutions for first order differential equations.
   - Lie Group method of solving first order differential equations.
   - 2nd order Liouville differential equations.
+  - Power series solutions for second order differential equations
+    at ordinary and regular singular points.
   - `n`\th order linear homogeneous differential equation with constant
     coefficients.
   - `n`\th order linear inhomogeneous differential equation with constant
@@ -235,18 +238,20 @@ from sympy.core.compatibility import ordered, iterable, is_sequence, xrange
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
-    expand, expand_mul)
+    expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import Rational, NaN
+from sympy.core.numbers import Rational, NaN, zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign, Piecewise
+from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.polys.polytools import cancel, degree, div
 from sympy.series import Order
+from sympy.series.series import series
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
 from sympy.simplify.simplify import _mexpand
@@ -281,12 +286,15 @@ allhints = (
     "almost_linear",
     "linear_coefficients",
     "separable_reduced",
+    "1st_power_series",
     "lie_group",
     "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
     "Liouville",
+    "2nd_power_series_ordinary",
+    "2nd_power_series_regular",
     "separable_Integral",
     "1st_exact_Integral",
     "1st_linear_Integral",
@@ -348,7 +356,8 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, xi=None, eta=None, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True,
+    ics= None, xi=None, eta=None, x0=0, n=6, **kwargs):
     r"""
     Solves any (supported) kind of ordinary differential equation.
 
@@ -492,15 +501,13 @@ def dsolve(eq, func=None, hint="default", simplify=True, xi=None, eta=None, **kw
     >>> dsolve(eq, hint='almost_linear')
     [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
     f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
-    >>> dsolve(eq, hint='best')
-    f(x) == C1/(C2*x - 1)
-
     """
     given_hint = hint  # hint given by the user
 
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
-        hint=hint, simplify=True, xi=xi, eta=eta, type='ode', **kwargs)
+        hint=hint, simplify=True, xi=xi, eta=eta, type='ode', ics=ics,
+        x0=x0, n=n, **kwargs)
 
     eq = hints.pop('eq', eq)
     all_ = hints.pop('all', False)
@@ -517,6 +524,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, xi=None, eta=None, **kw
             else:
                 retdict[hint] = rv
         func = hints[hint]['func']
+
         retdict['best'] = min(list(retdict.values()), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
         if given_hint == 'best':
@@ -564,7 +572,7 @@ def _helper_simplify(eq, hint, match, simplify=True, **kwargs):
             func, order, hint)
         return rv
 
-def classify_ode(eq, func=None, dict=False, **kwargs):
+def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
     r"""
     Returns a tuple of possible :py:meth:`~sympy.solvers.ode.dsolve`
     classifications for an ODE.
@@ -673,7 +681,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     ('separable', '1st_linear', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
-    'lie_group', 'nth_linear_constant_coeff_homogeneous',
+    '1st_power_series', 'lie_group',
+    'nth_linear_constant_coeff_homogeneous',
     'separable_Integral', '1st_linear_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
@@ -698,10 +707,12 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     y = Dummy('y')
     xi = kwargs.get('xi')
     eta = kwargs.get('eta')
+    terms = kwargs.get('n')
 
     if isinstance(eq, Equality):
         if eq.rhs != 0:
-            return classify_ode(eq.lhs - eq.rhs, func, xi=xi, eta=eta, prep=False)
+            return classify_ode(eq.lhs - eq.rhs, func, ics=ics, xi=xi,
+                n=terms, eta=eta, prep=False)
         eq = eq.lhs
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -728,9 +739,43 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     b2 = Wild('b2', exclude=[x, f(x), df])
     c2 = Wild('c2', exclude=[x, f(x), df])
     d2 = Wild('d2', exclude=[x, f(x), df])
+    a3 = Wild('a3', exclude=[f(x), df, f(x).diff(x, 2)])
+    b3 = Wild('b3', exclude=[f(x), df, f(x).diff(x, 2)])
+    c3 = Wild('c3', exclude=[f(x), df, f(x).diff(x, 2)])
     r3 = {'xi': xi, 'eta': eta}  # Used for the lie_group hint
-
+    boundary = {}  # Used to extract initial conditions
+    C0 = Symbol("C0")
     eq = expand(eq)
+
+    # Preprocessing to get the initial conditions out
+    if ics is not None:
+        for funcarg in ics:
+            # Separating derivatives
+            if isinstance(funcarg, Subs):
+                deriv = funcarg.expr
+                old = funcarg.variables[0]
+                new = funcarg.point[0]
+                if isinstance(deriv, Derivative) and isinstance(deriv.args[0],
+                    AppliedUndef) and deriv.args[0].func == f and old == x and not new.has(x):
+                    dorder = ode_order(deriv, x)
+                    temp = 'f' + str(dorder)
+                    boundary.update({temp: new, temp + 'val': ics[funcarg]})
+                else:
+                    raise ValueError("Enter valid boundary conditions for Derivatives")
+
+
+            # Separating functions
+            elif isinstance(funcarg, AppliedUndef):
+                if funcarg.func == f and len(funcarg.args) == 1 and \
+                    not funcarg.args[0].has(x):
+                    boundary.update({'f0': funcarg.args[0], 'f0val': ics[funcarg]})
+                else:
+                    raise ValueError("Enter valid boundary conditions for Function")
+
+            else:
+                raise ValueError("Enter boundary conditions of the form ics "
+                    " = {f(point}: value, f(point).diff(point, order).subs(arg, point) "
+                    ":value")
 
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -794,6 +839,25 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r['y'] = y
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
+
+            # FIRST ORDER POWER SERIES WHICH NEEDS INITIAL CONDITIONS
+            # TODO: Hint first order series should match only if d/e is analytic.
+            # For now, only d/e and (d/e).diff(arg) is checked for existence at
+            # at a given point.
+            # This is currently done internally in ode_1st_power_series.
+            point = boundary.get('f0', 0)
+            value = boundary.get('f0val', C0)
+            check = cancel(r[d]/r[e])
+            check1 = check.subs({x: point, y: value})
+            if not check1.has(oo) and not check1.has(zoo) and \
+                not check1.has(NaN) and not check1.has(-oo):
+                check2 = (check1.diff(x)).subs({x: point, y: value})
+                if not check2.has(oo) and not check2.has(zoo) and \
+                    not check2.has(NaN) and not check2.has(-oo):
+                    rseries = r.copy()
+                    rseries.update({'terms': terms, 'f0': point, 'f0val': value})
+                    matching_hints["1st_power_series"] = rseries
+
             r3.update(r)
             ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
             # dP/dy == dQ/dx
@@ -960,7 +1024,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 matching_hints["almost_linear_Integral"] = r2
 
 
-    if order == 2:
+    elif order == 2:
         # Liouville ODE in the form
         # f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
         # See Goldstein and Braun, "Advanced Methods for the Solution of
@@ -978,6 +1042,46 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 r = {'g': g, 'h': h, 'y': y}
                 matching_hints["Liouville"] = r
                 matching_hints["Liouville_Integral"] = r
+
+        # Homogeneous second order differential equation of the form
+        # a3*f(x).diff(x, 2) + b3*f(x).diff(x) + c3, where
+        # for simplicity, a3, b3 and c3 are assumed to be polynomials.
+        # It has a definite power series solution at point x0 if, b3/a3 and c3/a3
+        # are analytic at x0.
+        deq = a3*(f(x).diff(x, 2)) + b3*df + c3*f(x)
+        r = collect(reduced_eq,
+            [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
+        ordinary = False
+        if r and r[a3] != 0:
+            if all([r[key].is_polynomial() for key in r]):
+                p = cancel(r[b3]/r[a3])  # Used below
+                q = cancel(r[c3]/r[a3])  # Used below
+                point = kwargs.get('x0', 0)
+                check = p.subs(x, point)
+                if not check.has(oo) and not check.has(NaN) and \
+                    not check.has(zoo) and not check.has(-oo):
+                    check = q.subs(x, point)
+                    if not check.has(oo) and not check.has(NaN) and \
+                        not check.has(zoo) and not check.has(-oo):
+                        ordinary = True
+                        r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
+                        matching_hints["2nd_power_series_ordinary"] = r
+
+                # Checking if the differential equation has a regular singular point
+                # at x0. It has a regular singular point at x0, if (b3/a3)*(x - x0)
+                # and (c3/a3)*((x - x0)**2) are analytic at x0.
+                if not ordinary:
+                    p = cancel((x - point)*p)
+                    check = p.subs(x, point)
+                    if not check.has(oo) and not check.has(NaN) and \
+                        not check.has(zoo) and not check.has(-oo):
+                        q = cancel(((x - point)**2)*q)
+                        check = q.subs(x, point)
+                        if not check.has(oo) and not check.has(NaN) and \
+                            not check.has(zoo) and not check.has(-oo):
+                            coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
+                            matching_hints["2nd_power_series_regular"] = coeff_dict
+
 
     if order > 0:
         # nth order linear ODE
@@ -2604,6 +2708,329 @@ def ode_Liouville(eq, func, order, match):
     return sol
 
 
+def ode_2nd_power_series_ordinary(eq, func, order, match):
+    r"""
+    Gives a power series solution to a second order homogeneous differential
+    equation with polynomial coefficients at an ordinary point. A homogenous
+    differential equation is of the form
+
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+
+    For simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
+    it is sufficient that `\frac{Q(x)}{P(x)}` and `\frac{R(x)}{P(x)}` exists at
+    `x0`. A recurrence relation is obtained by substituting `y` as `\sum_{n=0}^\infty anx^n`,
+    in the differential equation, and equating the nth term. Using this relation
+    various terms can be generated.
+
+
+    Examples
+    ========
+    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy.abc import x, y
+    >>> f = Function("f")
+    >>> eq = f(x).diff(x, 2) + f(x)
+    >>> pprint(dsolve(eq, hint='2nd_power_series_ordinary'))
+                /   2    \      / 4    2    \
+                |  x     |      |x    x     |    / 6\
+    f(x) = C1*x*|- -- + 1| + C0*|-- - -- + 1| + O\x /
+                \  6     /      \24   2     /
+
+
+    References
+    ==========
+    - http://tutorial.math.lamar.edu/Classes/DE/SeriesSolutions.aspx
+    - George E. Simmons, "Differential Equations with Applications and
+      Historical Notes", p.p 176 - 184
+
+    """
+    x = func.args[0]
+    f = func.func
+    C0, C1 = symbols("C0 C1")
+    n = Dummy("n")
+    s = Wild("s")
+    k = Wild("k", exclude=[x])
+    x0 = match.get('x0')
+    terms = match.get('terms', 5)
+    p = match[match['a3']]
+    q = match[match['b3']]
+    r = match[match['c3']]
+    seriesdict = {}
+    recurr = Function("r")
+
+    # Generating the recurrence relation which works this way
+    # a] For the second order term the summation begins at n = 2. The coefficient
+    # p is multiplied with an*(n - 1)*(n - 2)*x**n-2 and a substitution is made such that
+    # the exponent of x becomes n.
+    # For example, if p is x, then the second degree recurrence term is
+    # an*(n - 1)*(n - 2)*x**n-1, substituting (n - 1) as n, it transforms to
+    # an+1*n*(n - 1)*x**n.
+    # A similar process is done with the first order and zeroth order term.
+
+    coefflist = [(recurr(n), r), (n*recurr(n), q), (n*(n - 1)*recurr(n), p)]
+    for index, coeff in enumerate(coefflist):
+        if coeff[1]:
+            f2 = powsimp(expand((coeff[1]*(x - x0)**(n - index)).subs(x, x + x0)))
+            if f2.is_Add:
+                addargs = f2.args
+            else:
+                addargs = [f2]
+            for arg in addargs:
+                powm = arg.match(s*x**k)
+                term = coeff[0]*powm[s]
+                if not powm[k].is_Symbol:
+                    term = term.subs(n, n - powm[k].as_independent(n)[0])
+                startind = powm[k].subs(n, index)
+                # Seeing if the startterm can be reduced further.
+                # If it vanishes for n lesser than startind, it is
+                # equal to summation from n.
+                if startind:
+                    for i in reversed(range(startind)):
+                        if not term.subs(n, i):
+                            seriesdict[term] = i
+                        else:
+                            seriesdict[term] = i + 1
+                            break
+                else:
+                    seriesdict[term] = S(0)
+
+    # Stripping of terms so that the sum starts with the same number.
+    teq = S(0)
+    suminit = seriesdict.values()
+    rkeys = seriesdict.keys()
+    req = Add(*rkeys)
+    if any(suminit):
+        maxval = max(suminit)
+        for term in seriesdict:
+            val = seriesdict[term]
+            if val != maxval:
+                for i in range(val, maxval):
+                    teq += term.subs(n, val)
+
+    finaldict = {}
+    if teq:
+        fargs = teq.atoms(AppliedUndef)
+        if len(fargs) == 1:
+            finaldict[fargs.pop()] = 0
+        else:
+            maxf = max(fargs, key = lambda x: x.args[0])
+            sol = solve(teq, maxf)
+            if isinstance(sol, list):
+                sol = sol[0]
+            finaldict[maxf] = sol
+
+    # Finding the recurrence relation in terms of the largest term.
+    fargs = req.atoms(AppliedUndef)
+    maxf = max(fargs, key = lambda x: x.args[0])
+    minf = min(fargs, key = lambda x: x.args[0])
+    if minf.args[0].is_Symbol:
+        startiter = 0
+    else:
+        startiter = -minf.args[0].as_independent(n)[0]
+    lhs = maxf
+    rhs =  solve(req, maxf)
+    if isinstance(rhs, list):
+        rhs = rhs[0]
+
+    # Checking how many values are already present
+    tcounter = len([t for t in finaldict.values() if t])
+
+    for count in range(tcounter, terms - 3):  # Assuming c0 and c1 to be arbitrary
+    #while tcounter < terms - 2:  # Assuming c0 and c1 to be arbitrary
+        check = rhs.subs(n, startiter)
+        nlhs = lhs.subs(n, startiter)
+        nrhs = check.subs(finaldict)
+        finaldict[nlhs] = nrhs
+        startiter += 1
+
+    # Post processing
+    series = C0 + C1*(x - x0)
+    for term in finaldict:
+        if finaldict[term]:
+            fact = term.args[0]
+            series += (finaldict[term].subs([(recurr(0), C0), (recurr(1), C1)])*(
+                x - x0)**fact)
+    series = collect(expand_mul(series), [C0, C1]) + Order(x**terms)
+    return Eq(f(x), series)
+
+
+
+def ode_2nd_power_series_regular(eq, func, order, match):
+    r"""
+    Gives a power series solution to a second order homogeneous differential
+    equation with polynomial coefficients at a regular point. A second order
+    homogenous differential equation is of the form
+
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+
+    A point is said to regular singular at `x0` if `x - x0\frac{Q(x)}{P(x)}`
+    and `(x - x0)^{2}\frac{R(x)}{P(x)}` are analytic at `x0`. For simplicity
+    `P(x)`, `Q(x)` and `R(x)` are assumed to be polynomials. The algorithm for
+    finding the power series solutions is:
+
+    1.  Try expressing `(x - x0)P(x)` and `((x - x0)^{2})Q(x)` as power series
+        solutions about x0. Find `p0` and `q0` which are the constants of the
+        power series expansions.
+    2.  Solve the indicial equation `f(m) = m(m - 1) + m*p0 + q0`, to obtain the
+        roots `m1` and `m2` of the indicial equation.
+    3.  If `m1 - m2` is a non integer there exists two series solutions. If
+        `m1 = m2`, there exists only one solution. If `m1 - m2` is an integer,
+        then the existence of one solution is confirmed. The other solution may
+        or may not exist.
+
+    The power series solution is of the form `x^{m}\sum_{n=0}^\infty anx^n`. The
+    coefficients are determined by the following recurrence relation.
+    `an = -\frac{\sum_{k=0}^{n-1} q_{n-k} + (m + k)p_{n-k}}{f(m + n)}`. For the case
+    in which `m1 - m2` is an integer, it can be seen from the recurrence relation
+    that for the lower root `m`, when `n` equals the difference of both the
+    roots, the denominator becomes zero. So if the numerator is not equal to zero,
+    a second series solution exists.
+
+
+    Examples
+    ========
+    >>> from sympy import dsolve, Function, pprint
+    >>> from sympy.abc import x, y
+    >>> f = Function("f")
+    >>> eq = x*(f(x).diff(x, 2)) + 2*(f(x).diff(x)) + x*f(x)
+    >>> pprint(dsolve(eq))
+              /    6    4    2    \
+              |   x    x    x     |
+           C1*|- --- + -- - -- + 1|      /  4    2    \
+              \  720   24   2     /      | x    x     |    / 6\
+    f(x) = ------------------------ + C0*|--- - -- + 1| + O\x /
+                      x                  \120   6     /
+
+
+    References
+    ==========
+    - George E. Simmons, "Differential Equations with Applications and
+      Historical Notes", p.p 176 - 184
+
+    """
+    x = func.args[0]
+    f = func.func
+    C0, C1 = symbols("C0 C1")
+    n = Dummy("n")
+    m = Dummy("m")  # for solving the indicial equation
+    s = Wild("s")
+    k = Wild("k", exclude=[x])
+    x0 = match.get('x0')
+    terms = match.get('terms', 5)
+    p = match['p']
+    q = match['q']
+
+    # Generating the indicial equation
+    indicial = []
+    for term in [p, q]:
+        if not term.has(x):
+            indicial.append(term)
+        else:
+            term = series(term, n=1, x0=x0)
+            if isinstance(term, Order):
+                indicial.append(S(0))
+            else:
+                for arg in term.args:
+                    if not arg.has(x):
+                        indicial.append(arg)
+                        break
+
+    p0, q0 = indicial
+    sollist = solve(m*(m - 1) + m*p0 + q0, m)
+    if sollist and isinstance(sollist, list) and all(
+        [sol.is_real for sol in sollist]):
+        serdict1 = {}
+        serdict2 = {}
+        if len(sollist) == 1:
+            # Only one series solution exists in this case.
+            m1 = m2 = sollist.pop()
+            if terms-m1-1 <= 0:
+              return Eq(f(x), Order(terms))
+            serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
+
+        else:
+            m1 = sollist[0]
+            m2 = sollist[1]
+            if m1 < m2:
+                m1, m2 = m2, m1
+            # Irrespective of whether m1 - m2 is an integer or not, one
+            # Frobenius series solution exists.
+            serdict1 = _frobenius(terms-m1-1, m1, p0, q0, p, q, x0, x, C0)
+            if not (m1 - m2).is_integer:
+                # Second frobenius series solution exists.
+                serdict2 = _frobenius(terms-m2-1, m2, p0, q0, p, q, x0, x, C1)
+            else:
+                # Check if second frobenius series solution exists.
+                serdict2 = _frobenius(terms-m2-1, m2, p0, q0, p, q, x0, x, C1, check=m1)
+
+        if serdict1:
+            finalseries1 = C0
+            for key in serdict1:
+                power = int(key.name[1:])
+                finalseries1 += serdict1[key]*(x - x0)**power
+            finalseries1 = (x - x0)**m1*finalseries1
+            finalseries2 = S(0)
+            if serdict2:
+                for key in serdict2:
+                    power = int(key.name[1:])
+                    finalseries2 += serdict2[key]*(x - x0)**power
+                finalseries2 += C1
+                finalseries2 = (x - x0)**m2*finalseries2
+            return Eq(f(x), collect(finalseries1 + finalseries2,
+                [C0, C1]) + Order(x**terms))
+
+def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
+    r"""
+    Returns a dict with keys as coefficients and values as their values in terms of C0
+    """
+    n = int(n)
+    # In cases where m1 - m2 is not an integer
+    m2 = check
+
+    d = Dummy("d")
+    numsyms = numbered_symbols("C", start=0)
+    numsyms = [next(numsyms) for i in range(n + 1)]
+    C0 = Symbol("C0")
+    serlist = []
+    for ser in [p, q]:
+        # Order term not present
+        if ser.is_polynomial(x) and Poly(ser, x).degree() <= n:
+            if x0:
+                ser = ser.subs(x, x + x0)
+            dict_ = Poly(ser, x).as_dict()
+        # Order term present
+        else:
+            tseries = series(ser, x=x0, n=n+1)
+            # Removing order
+            dict_ = Poly(list(ordered(tseries.args))[: -1], x).as_dict()
+        # Fill in with zeros, if coefficients are zero.
+        for i in range(n + 1):
+            if (i, ) not in dict_:
+                dict_[(i,)] = S(0)
+        serlist.append(dict_)
+
+    pseries = serlist[0]
+    qseries = serlist[1]
+    indicial = d*(d - 1) + d*p0 + q0
+    frobdict = {}
+    for i in range(1, n + 1):
+        num = c*(m*pseries[(i,)] + qseries[(i,)])
+        for j in range(1, i):
+            sym = Symbol("C" + str(j))
+            num += frobdict[sym]*((m + j)*pseries[(i - j,)] + qseries[(i - j,)])
+
+        # Checking for cases when m1 - m2 is an integer. If num equals zero
+        # then a second Frobenius series solution cannot be found. If num is not zero
+        # then set constant as zero and proceed.
+        if m2 is not None and i == m2 - m:
+            if num:
+                return False
+            else:
+                frobdict[numsyms[i]] = S(0)
+        else:
+            frobdict[numsyms[i]] = -num/(indicial.subs(d, m+i))
+
+    return frobdict
+
 def _nth_linear_match(eq, func, order):
     r"""
     Matches a differential equation to the linear form:
@@ -3065,6 +3492,82 @@ def ode_separable_reduced(eq, func, order, match):
     m2 = {y: ycoeff, x: 1, 'coeff': 1}
     r = {'m1': m1, 'm2': m2, 'y': y, 'hint': x**match['power']*f(x)}
     return ode_separable(eq, func, order, r)
+
+
+def ode_1st_power_series(eq, func, order, match):
+    r"""
+    The power series solution is a method which gives the Taylor series expansion
+    to the solution of a differential equation.
+
+    For a first order differential equation `\frac{dy}{dx} = h(x, y)`, a power
+    series solution exists at a point `x = x0` if `h(x, y)` is analytic at `x0`.
+    The solution is given by
+
+    .. math:: f(x0) + \sum_{n = 1}^{\infty} \frac{f^n(x)(x0)(x - x0)^n}{n!}
+
+
+    The following algorithm is followed, till the required number of terms are
+    generated.
+
+    1. F_1 = `h(x, y)`
+    2. F_n+1 = \frac{\partial F_n}{\partial x} + \frac{\partial F_n}{\partial y}F_1
+
+    Examples
+    ========
+    >>> from sympy import Function, Derivative, pprint, exp
+    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = exp(x)*(f(x).diff(x)) - f(x)
+    >>> pprint(dsolve(eq, hint='1st_power_series'))
+                           3       4       5
+                       C0*x    C0*x    C0*x     / 6\
+    f(x) = C0 + C0*x - ----- + ----- + ----- + O\x /
+                         6       24      60
+
+
+    References
+    ==========
+
+    - Travis W. Walker, Analytic power series technique for solving first-order
+      differential equations, p.p 17, 18
+
+    """
+    x = func.args[0]
+    y = match['y']
+    f = func.func
+    h = -match[match['d']]/match[match['e']]
+    C0 = Symbol("C0")
+    point = match.get('f0')
+    value = match.get('f0val')
+    terms = match.get('terms')
+
+    # First term
+    F = h
+    if not h:
+        return Eq(f(x), value)
+
+    # Initialisation
+    series = value
+    if terms > 1:
+        hc = h.subs({x: point, y: value})
+        if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
+            # Derivative does not exist, not analytic
+            return Eq(f(x), oo)
+        elif hc:
+            series += hc*(x - point)
+
+    for factcount in range(2, terms):
+        Fnew = F.diff(x) + F.diff(y)*h
+        Fnewc = Fnew.subs({x: point, y: value})
+        # Same logic as above
+        if Fnewc.has(oo) or Fnewc.has(NaN) or Fnewc.has(-oo) or Fnewc.has(zoo):
+            return Eq(f(x), oo)
+        series += Fnewc*((x - point)**factcount)/factorial(factcount)
+        F = Fnew
+    series += Order(x**terms)
+    return Eq(f(x), series)
+
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
         returns='sol'):
@@ -4904,16 +5407,16 @@ def lie_heuristic_linear(match, comp=False):
 
     sollist = coeffdict.values()
     soldict = solve(sollist, symlist)
-    if isinstance(soldict, list):
-        soldict = soldict[0]
-    subval = soldict.values()
-
-    if any(t for t in subval):
-        onedict = dict(zip(symlist, [1]*6))
-        xival = C0*x + C1*func + C2
-        etaval = C3*x + C4*func + C5
-        xival = xival.subs(soldict)
-        etaval = etaval.subs(soldict)
-        xival = xival.subs(onedict)
-        etaval = etaval.subs(onedict)
-        return [{xi: xival, eta: etaval}]
+    if soldict:
+        if isinstance(soldict, list):
+            soldict = soldict[0]
+        subval = soldict.values()
+        if any(t for t in subval):
+            onedict = dict(zip(symlist, [1]*6))
+            xival = C0*x + C1*func + C2
+            etaval = C3*x + C4*func + C5
+            xival = xival.subs(soldict)
+            etaval = etaval.subs(soldict)
+            xival = xival.subs(onedict)
+            etaval = etaval.subs(onedict)
+            return [{xi: xival, eta: etaval}]
