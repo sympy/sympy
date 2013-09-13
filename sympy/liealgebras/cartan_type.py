@@ -67,7 +67,7 @@ class Standard_Cartan(Basic):
         """
         return self.n
 
-    def type(self):
+    def series(self):
         """
         Returns the type of the Lie algebra
         """
