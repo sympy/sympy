@@ -954,12 +954,14 @@ def _find_predicates(expr):
     return set.union(*(_find_predicates(i) for i in expr.args))
 
 
-def simplify_logic(expr):
+def simplify_logic(expr, simplify=True):
     """
     This function simplifies a boolean function to its
     simplified version in SOP or POS form. The return type is an
     Or or And object in SymPy. The input can be a string or a boolean
-    expression.
+    expression.  The optional parameter simplify indicates whether to
+    recursively simplify any non-boolean-functions contained within the
+    input.
 
     Examples
     ========
@@ -986,8 +988,9 @@ def simplify_logic(expr):
         t = list(t)
         if expr.subs(list(zip(variables, t))) == True:
             truthtable.append(t)
-    from sympy.simplify.simplify import simplify
-    variables = [simplify(v) for v in variables]
+    if simplify:
+        from sympy.simplify.simplify import simplify
+        variables = [simplify(v) for v in variables]
     if (len(truthtable) >= (2 ** (len(variables) - 1))):
         return SOPform(variables, truthtable)
     else:
