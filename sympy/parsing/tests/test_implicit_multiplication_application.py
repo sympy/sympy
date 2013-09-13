@@ -20,7 +20,11 @@ def test_implicit_multiplication():
         '3sin(x)': '3*sin(x)',
         '(x+1)(x+2)': '(x+1)*(x+2)',
         '(5 x**2)sin(x)': '(5*x**2)*sin(x)',
-        '2 sin(x) cos(x)': '2*sin(x)*cos(x)'
+        '2 sin(x) cos(x)': '2*sin(x)*cos(x)',
+        'pi x': 'pi*x',
+        'x pi': 'x*pi',
+        'E x': 'E*x',
+        'EulerGamma y': 'EulerGamma*y'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (split_symbols,

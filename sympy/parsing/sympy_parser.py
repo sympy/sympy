@@ -209,7 +209,7 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (isinstance(tok, AppliedFunction) and
-                isinstance(nextTok, AppliedFunction)):
+            isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
         elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
@@ -230,7 +230,13 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
         elif (isinstance(tok, AppliedFunction) and nextTok[0] == NAME):
             # Applied function followed by implicitly applied function
             result.append((OP, '*'))
-    result.append(tokens[-1])
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              isinstance(nextTok, AppliedFunction)):
+            # Constant followed by function
+            result.append((OP, '*'))
+    if tokens:
+        result.append(tokens[-1])
     return result
 
 
@@ -279,7 +285,8 @@ def _implicit_application(tokens, local_dict, global_dict):
             result.append((OP, ')'))
             appendParen -= 1
 
-    result.append(tokens[-1])
+    if tokens:
+        result.append(tokens[-1])
 
     if appendParen:
         result.extend([(OP, ')')] * appendParen)
@@ -328,7 +335,8 @@ def function_exponentiation(tokens, local_dict, global_dict):
                 exponent = []
                 continue
         result.append(tok)
-    result.append(tokens[-1])
+    if tokens:
+        result.append(tokens[-1])
     if exponent:
         result.extend(exponent)
     return result
