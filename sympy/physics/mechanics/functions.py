@@ -489,14 +489,14 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
     if condition != 0:
         condition = frame.express(condition)
     #Special case of vectdiff == 0
-    if vectdiff == 0:
+    if vectdiff == Vector([]):
         return [0, 0, condition]
     #Express vectdiff completely in condition's frame to give vectdiff1
     vectdiff1 = frame.express(vectdiff)
     #Find derivative of vectdiff
     vectdiff2 = frame.dt(vectdiff)
     #Integrate and use boundary condition
-    vectdiff0 = 0
+    vectdiff0 = Vector([])
     for dim in frame:
         function1 = vectdiff1.dot(dim)
         vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
@@ -505,7 +505,7 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
     return [vectdiff2, vectdiff, vectdiff0]
 
 
-def get_motion_pos(position=0, frame=None):
+def get_motion_pos(position=Vector([]), frame=None):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the position vector as a function of
@@ -527,23 +527,33 @@ def get_motion_pos(position=0, frame=None):
     Examples
     ========
 
+    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_pos, dynamicsymbols
+    >>> R = ReferenceFrame('R')
+    >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
+    >>> v = v1*R.x + v2*R.y + v3*R.z
+    >>> get_motion_pos(v, R)
+    [v1''*R.x + v2''*R.y + v3''*R.z, v1'*R.x + v2'*R.y + v3'*R.z, v1*R.x + v2*R.y + v3*R.z]
+
     """
 
-    _check_frame(frame)
-    if position != 0:
-        _check_vector(position)
+    if frame is None:
+        raise ValueError("No frame specified")
     else:
-        return [0, 0, 0]
+        _check_frame(frame)
+    _check_vector(position)
     vel = frame.dt(position)
     acc = frame.dt(vel)
     return [acc, vel, position]
 
 
-def get_motion_vel(velocity=0, position=0, timevalue=0, frame=None):
+def get_motion_vel(velocity=Vector([]), position=Vector([]), timevalue=Vector([]),
+                   frame=None):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the velocity and a boundary
     condition(position vector at time = timevalue).
+    If any of the parameters are not specified, they are automatically taken to
+    be zero vectors.
 
     Returns a list of vectors as - [acceleration, velocity, position]
 
@@ -568,9 +578,20 @@ def get_motion_vel(velocity=0, position=0, timevalue=0, frame=None):
     Examples
     ========
 
+    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_vel
+    >>> from sympy import symbols
+    >>> R = ReferenceFrame('R')
+    >>> a, b, c = symbols('a b c')
+    >>> v = a*R.x + b*R.y + c*R.z
+    >>> get_motion_vel(v, frame=R)
+    [0, a*R.x + b*R.y + c*R.z, a*t*R.x + b*t*R.y + c*t*R.z]
+
     """
 
-    _check_frame(frame)
+    if frame is None:
+        raise ValueError("No frame specified")
+    else:
+        _check_frame(frame)
     _check_vector(velocity)
     _check_vector(position)
     timevalue = sympify(timevalue)
@@ -578,14 +599,17 @@ def get_motion_vel(velocity=0, position=0, timevalue=0, frame=None):
                                         timevalue, frame)
 
 
-def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0,
-                   timevalue2=0, frame=None):
+def get_motion_acc(acceleration=Vector([]), velocity=Vector([]),
+                   position=Vector([]), timevalue1=Vector([]),
+                   timevalue2=Vector([]), frame=None):
     """
     Calculates the three motion parameters - position, velocity and
     acceleration as vectorial functions of time given the acceleration and
     two boundary conditions-
     velocity vector at time = timevalue1 and position vector at
     time = timevalue2.
+    If any of the parameters are not specified, they are automatically taken to
+    be zero vectors.
 
     Returns a list of [acceleration, velocity, position]
 
@@ -611,9 +635,23 @@ def get_motion_acc(acceleration=0, velocity=0, position=0, timevalue1=0,
     Examples
     ========
 
+    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_acc
+    >>> from sympy import symbols
+    >>> R = ReferenceFrame('R')
+    >>> a, b, c = symbols('a b c')
+    >>> v = a*R.x + b*R.y + c*R.z
+    >>> parameters = get_motion_acc(v, frame=R)
+    >>> parameters[1]
+    a*t*R.x + b*t*R.y + c*t*R.z
+    >>> parameters[2]
+    a*t**2/2*R.x + b*t**2/2*R.y + c*t**2/2*R.z
+    
     """
 
-    _check_frame(frame)
+    if frame is None:
+        raise ValueError("No frame specified")
+    else:
+        _check_frame(frame)
     _check_vector(acceleration)
     _check_vector(velocity)
     _check_vector(position)
