@@ -986,7 +986,7 @@ def simplify_logic(expr, simplify=True):
     truthtable = []
     for t in product([0, 1], repeat=len(variables)):
         t = list(t)
-        if expr.subs(list(zip(variables, t))) == True:
+        if expr.xreplace(dict(zip(variables, t))) == True:
             truthtable.append(t)
     if simplify:
         from sympy.simplify.simplify import simplify

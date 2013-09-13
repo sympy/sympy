@@ -173,6 +173,7 @@ def test_simplification():
     assert simplify_logic(Equivalent(A, B)) == \
            Or(And(A, B), And(Not(A), Not(B)))
     assert simplify_logic(And(Equality(A, 2), C)) == And(Equality(A, 2), C)
+    assert simplify_logic(And(Equality(A, 2), A)) == And(Equality(A, 2), A)
     assert simplify_logic(And(Equality(A, B), C)) == And(Equality(A, B), C)
     assert simplify_logic(Or(And(Equality(A, 3), B), And(Equality(A, 3), C))) \
            == And(Equality(A, 3), Or(B, C))
