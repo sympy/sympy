@@ -472,8 +472,8 @@ def _integrate_boundary(expr, var, valueofvar, value):
 
     CoI = Symbol('CoI')
     expr = integrate(expr, var) + CoI
-    n = expr.subs({CoI : solve(expr.subs({var : valueofvar}) -\
-                               value.subs({var : valueofvar}), CoI)[0]})
+    n = expr.subs({CoI: solve(expr.subs({var: valueofvar}) -\
+                               value.subs({var: valueofvar}), CoI)[0]})
     return n
 
 
@@ -645,7 +645,7 @@ def get_motion_acc(acceleration=Vector([]), velocity=Vector([]),
     a*t*R.x + b*t*R.y + c*t*R.z
     >>> parameters[2]
     a*t**2/2*R.x + b*t**2/2*R.y + c*t**2/2*R.z
-    
+
     """
 
     if frame is None:
