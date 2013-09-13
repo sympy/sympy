@@ -389,8 +389,8 @@ def test_subs_issue910():
 
 
 def test_functions_subs():
-    x, y = map(Symbol, 'xy')
-    f, g = map(Function, 'fg')
+    x, y = symbols('x y')
+    f, g = symbols('f g', cls=Function)
     l = Lambda((x, y), sin(x) + y)
     assert (g(y, x) + cos(x)).subs(g, l) == sin(y) + x + cos(x)
     assert (f(x)**2).subs(f, sin) == sin(x)**2
@@ -413,8 +413,8 @@ def test_derivative_subs():
                Derivative(f(x, y), y))[1][0].has(Derivative)
 
 def test_derivative_subs2():
-    x, y, z = map(Symbol, 'xyz')
-    f, g = map(Function, 'fg')
+    x, y, z = symbols('x y z')
+    f, g = symbols('f g', cls=Function)
     assert Derivative(f, x, y).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, y, x).subs(Derivative(f, x, y), g) == g
     assert Derivative(f, x, y).subs(Derivative(f, x), g) == Derivative(g, y)
