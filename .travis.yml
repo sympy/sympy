@@ -1,7 +1,8 @@
 language: python
 env:
   - TEST_DOCTESTS="true"
-  -
+  - TEST_RANGE="'sympy/assumptions', 'sympy/benchmarks', 'sympy/calculus', 'sympy/categories', 'sympy/combinatorics', 'sympy/concrete', 'sympy/core', 'sympy/crypto', 'sympy/diffgeom', 'sympy/external', 'sympy/functions', 'sympy/galgebra', 'sympy/geometry', 'sympy/integrals', 'sympy/interactive', 'sympy/liealgebras', 'sympy/logic', 'sympy/matrices', 'sympy/mpmath'"
+  - TEST_RANGE="'sympy/ntheory', 'sympy/parsing', 'sympy/physics', 'sympy/plotting', 'sympy/polys', 'sympy/printing', 'sympy/rules', 'sympy/series', 'sympy/sets', 'sympy/simplify', 'sympy/solvers', 'sympy/statistics', 'sympy/stats', 'sympy/strategies', 'sympy/tensor', 'sympy/unify', 'sympy/utilities'"
 python:
   - 2.6
   - 2.7
@@ -19,6 +20,12 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
+        - TEST_RANGE="'sympy/assumptions', 'sympy/benchmarks', 'sympy/calculus', 'sympy/categories', 'sympy/combinatorics', 'sympy/concrete', 'sympy/core', 'sympy/crypto', 'sympy/diffgeom', 'sympy/external', 'sympy/functions', 'sympy/galgebra', 'sympy/geometry', 'sympy/integrals', 'sympy/interactive', 'sympy/liealgebras', 'sympy/logic', 'sympy/matrices', 'sympy/mpmath'"
+    - python: 2.7
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - TEST_RANGE="'sympy/ntheory', 'sympy/parsing', 'sympy/physics', 'sympy/plotting', 'sympy/polys', 'sympy/printing', 'sympy/rules', 'sympy/series', 'sympy/sets', 'sympy/simplify', 'sympy/solvers', 'sympy/statistics', 'sympy/stats', 'sympy/strategies', 'sympy/tensor', 'sympy/unify', 'sympy/utilities'"
     - python: 3.3
       env:
         - TEST_GMPY="true"
@@ -28,12 +35,30 @@ matrix:
       env:
         - TEST_GMPY="true"
         - TEST_MATPLOTLIB="true"
+        - TEST_RANGE="'sympy/assumptions', 'sympy/benchmarks', 'sympy/calculus', 'sympy/categories', 'sympy/combinatorics', 'sympy/concrete', 'sympy/core', 'sympy/crypto', 'sympy/diffgeom', 'sympy/external', 'sympy/functions', 'sympy/galgebra', 'sympy/geometry', 'sympy/integrals', 'sympy/interactive', 'sympy/liealgebras', 'sympy/logic', 'sympy/matrices', 'sympy/mpmath'"
+    - python: 3.3
+      env:
+        - TEST_GMPY="true"
+        - TEST_MATPLOTLIB="true"
+        - TEST_RANGE="'sympy/ntheory', 'sympy/parsing', 'sympy/physics', 'sympy/plotting', 'sympy/polys', 'sympy/printing', 'sympy/rules', 'sympy/series', 'sympy/sets', 'sympy/simplify', 'sympy/solvers', 'sympy/statistics', 'sympy/stats', 'sympy/strategies', 'sympy/tensor', 'sympy/unify', 'sympy/utilities'"
     - python: 2.7
       env: TEST_SPHINX="true"
     - python: 2.7
-      env: TEST_SLOW="true"
+      env:
+        - TEST_SLOW="true"
+        - TEST_RANGE="'sympy/assumptions', 'sympy/benchmarks', 'sympy/calculus', 'sympy/categories', 'sympy/combinatorics', 'sympy/concrete', 'sympy/core', 'sympy/crypto', 'sympy/diffgeom', 'sympy/external', 'sympy/functions', 'sympy/galgebra', 'sympy/geometry', 'sympy/integrals', 'sympy/interactive', 'sympy/liealgebras', 'sympy/logic', 'sympy/matrices', 'sympy/mpmath'"
+    - python: 2.7
+      env:
+        - TEST_SLOW="true"
+        - TEST_RANGE="'sympy/ntheory', 'sympy/parsing', 'sympy/physics', 'sympy/plotting', 'sympy/polys', 'sympy/printing', 'sympy/rules', 'sympy/series', 'sympy/sets', 'sympy/simplify', 'sympy/solvers', 'sympy/statistics', 'sympy/stats', 'sympy/strategies', 'sympy/tensor', 'sympy/unify', 'sympy/utilities'"
     - python: 3.3
-      env: TEST_SLOW="true"
+      env:
+        - TEST_SLOW="true"
+        - TEST_RANGE="'sympy/assumptions', 'sympy/benchmarks', 'sympy/calculus', 'sympy/categories', 'sympy/combinatorics', 'sympy/concrete', 'sympy/core', 'sympy/crypto', 'sympy/diffgeom', 'sympy/external', 'sympy/functions', 'sympy/galgebra', 'sympy/geometry', 'sympy/integrals', 'sympy/interactive', 'sympy/liealgebras', 'sympy/logic', 'sympy/matrices', 'sympy/mpmath'"
+    - python: 3.3
+      env:
+        - TEST_SLOW="true"
+        - TEST_RANGE="'sympy/ntheory', 'sympy/parsing', 'sympy/physics', 'sympy/plotting', 'sympy/polys', 'sympy/printing', 'sympy/rules', 'sympy/series', 'sympy/sets', 'sympy/simplify', 'sympy/solvers', 'sympy/statistics', 'sympy/stats', 'sympy/strategies', 'sympy/tensor', 'sympy/unify', 'sympy/utilities'"
     - python: 2.7
       env:
         - TEST_THEANO="true"
