@@ -1129,4 +1129,3 @@ def test_O2():
 @XFAIL
 def test_O3():
         raise NotImplementedError("cross/dot product for vectors with undetermined dimensions not supported")
-    
