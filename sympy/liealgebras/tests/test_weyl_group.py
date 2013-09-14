@@ -26,11 +26,12 @@ def test_weyl_group():
     f = WeylGroup("G2")
     assert f.element_order('r1*r2*r1*r2') == 3
     assert f.element_order('r2*r1*r1*r2') == 1
+
     assert f.matrix_form('r1*r2*r1*r2') == Matrix([[0, 1, 0], [0, 0, 1], [1, 0, 0]])
     g = WeylGroup("F4")
     assert g.matrix_form('r2*r3') == Matrix([[1, 0, 0, 0], [0, 1, 0, 0],
         [0, 0, 0, -1], [0, 0, 1, 0]])
-    
+
     assert g.element_order('r2*r3') == 4
     h = WeylGroup("E6")
     assert h.group_order() == 51840
