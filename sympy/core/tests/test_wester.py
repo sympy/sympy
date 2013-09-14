@@ -26,6 +26,7 @@ from sympy.assumptions import assuming
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
+from sympy.matrices import Matrix
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -1084,3 +1085,48 @@ def test_N10():
 
 def test_N11():
     assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
+
+
+@XFAIL
+def test_solve_inequality2():
+    assert solve(abs(x) < 3, assume=Q.real(x))  == And(-3 < x, x < 3) 
+
+def test_solve_inequality_worakround():
+    assert solve(abs(x) < 3, assume=Q.real(x))  == And(Lt(-3,x),Lt(x,3))    
+
+@XFAIL
+def test_N12():   
+    assert solve(sqrt(x)<2, assume=Q.real(x)) == And(Le(0,x),Le(x,4)) 
+
+@XFAIL
+def test_N13():      
+    assert solve(sin(x)<2, assume=Q.real(x)) == []
+
+@XFAIL
+def test_N14():      
+    assert solve(sin(x)<1, assume=Q.real(x)) # == [x<>pi/2]
+
+@XFAIL
+def test_N15():      
+    assert solve(sin(x)<1, assume=Q.real(x)) # == [x<>pi/2]
+
+@XFAIL
+def test_N16():
+    r, t = symbols('r t', real=True)  
+    assert solve(abs(2*r*(cos(t)-1)+1,x)<=1)
+
+@XFAIL
+def test_N17():
+    assert solve(x+y>0, x-y<0)  
+
+def test_O1():
+    M = Matrix((1 + I, -2, 3*I)) 
+    assert sqrt(expand(M.dot(M.H))) == sqrt(15)
+        
+def test_O2():
+    assert Matrix((2,2,-3)).cross(Matrix((1,3,1))) == Matrix([[11, -5, 4]])
+
+@XFAIL
+def test_O3():
+        raise NotImplementedError("cross/dot product for vectors with undetermined dimensions not supported")
+    
