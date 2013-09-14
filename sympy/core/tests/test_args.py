@@ -1662,6 +1662,11 @@ def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     assert _test_args(Standard_Cartan("A", 2))
 
 @XFAIL
+def test_sympy__Liealgebras__weyl_group__WeylGroup():
+    from sympy.liealgebras.weyl_group import WeylGroup
+    assert _test_args(WeylGroup("B4"))
+
+@XFAIL
 def test_sympy__liealgebras__type_a__TypeA():
     from sympy.liealgebras.type_a import TypeA
     assert _test_args(TypeA(2))

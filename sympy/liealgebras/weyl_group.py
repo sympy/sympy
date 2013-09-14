@@ -159,7 +159,7 @@ class WeylGroup(Basic):
         if self.cartan_type.series == "G":
             elts = list(weylelt)
             reflections = elts[1::3]
-            m = self.delete_doubles(weylelt)
+            m = self.delete_doubles(reflections)
             while self.delete_doubles(m) != m:
                 m = self.delete_doubles(m)
                 reflections = m
