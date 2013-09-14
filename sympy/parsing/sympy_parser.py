@@ -232,8 +232,19 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
             result.append((OP, '*'))
         elif (tok[0] == NAME and
               not _token_callable(tok, local_dict, global_dict) and
-              isinstance(nextTok, AppliedFunction)):
-            # Constant followed by function
+              nextTok[0] == OP and nextTok[1] == '('):
+            # Constant followed by parenthesis
+            result.append((OP, '*'))
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              nextTok[0] == NAME and
+              not _token_callable(nextTok, local_dict, global_dict)):
+            # Constant followed by constant
+            result.append((OP, '*'))
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              (isinstance(nextTok, AppliedFunction) or nextTok[0] == NAME)):
+            # Constant followed by (implicitly applied) function
             result.append((OP, '*'))
     if tokens:
         result.append(tokens[-1])
