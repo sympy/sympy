@@ -38,16 +38,14 @@ def _token_splittable(token):
 def _token_callable(token, local_dict, global_dict, nextToken=None):
     """
     Predicate for whether a token name represents a callable function.
+
+    Essentially wraps ``callable``, but looks up the token name in the
+    locals and globals.
     """
     func = local_dict.get(token[1])
     if not func:
         func = global_dict.get(token[1])
-    is_Function = getattr(func, 'is_Function', False)
-    if (is_Function or
-        (callable(func) and not hasattr(func, 'is_Function')) or
-            isinstance(nextToken, AppliedFunction)):
-        return True
-    return False
+    return callable(func)
 
 
 def _add_factorial_tokens(name, result):
@@ -178,7 +176,7 @@ def _apply_functions(tokens, local_dict, global_dict):
             symbol = tok
             result.append(tok)
         elif isinstance(tok, ParenthesisGroup):
-            if symbol:
+            if symbol and _token_callable(symbol, local_dict, global_dict):
                 result[-1] = AppliedFunction(symbol, tok)
                 symbol = None
             else:

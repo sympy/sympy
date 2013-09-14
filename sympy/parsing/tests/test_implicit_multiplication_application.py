@@ -24,7 +24,11 @@ def test_implicit_multiplication():
         'pi x': 'pi*x',
         'x pi': 'x*pi',
         'E x': 'E*x',
-        'EulerGamma y': 'EulerGamma*y'
+        'EulerGamma y': 'EulerGamma*y',
+        'E pi': 'E*pi',
+        'pi (x + 2)': 'pi*(x+2)',
+        '(x + 2) pi': '(x+2)*pi',
+        'pi sin(x)': 'pi*sin(x)',
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (split_symbols,
@@ -153,7 +157,8 @@ def test_all_implicit_steps():
         'tan 3x': 'tan(3*x)',
         'sin^2(3*E^(x))': 'sin(3*E**(x))**2',
         'sin**2(E^(3x))': 'sin(E**(3*x))**2',
-        'sin^2 (3x*E^(x))': 'sin(3*x*E^x)**2'
+        'sin^2 (3x*E^(x))': 'sin(3*x*E^x)**2',
+        'pi sin x': 'pi*sin(x)',
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_multiplication_application,)
