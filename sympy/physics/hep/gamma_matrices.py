@@ -5,6 +5,9 @@ from sympy.core.containers import Tuple
 import collections
 
 
+DiracSpinor = TensorIndexType('DiracSpinor', dim=4, dummy_fmt="S")
+
+
 class _LorentzContainer(object):
     """
     Helper to collect Lorentz indices in various dimensions.
@@ -38,7 +41,7 @@ class GammaMatrixHead(TensorHead):
     >>> G = GammaMatrixHead()
     >>> i = tensor_indices('i', G.Lorentz)
     >>> G(i)
-    gamma(i)
+    gamma(i, auto_left, auto_right)
 
     Note that there is already an instance of GammaMatrixHead in four dimensions:
     GammaMatrix, which is simply declare as
@@ -49,7 +52,7 @@ class GammaMatrixHead(TensorHead):
     >>> from sympy.tensor.tensor import tensor_indices
     >>> i = tensor_indices('i', GammaMatrix.Lorentz)
     >>> GammaMatrix(i)
-    gamma(i)
+    gamma(i, auto_left, auto_right)
 
     To access the metric tensor
 
@@ -66,7 +69,7 @@ class GammaMatrixHead(TensorHead):
 
         lorentz = _LorentzContainer(*key)
 
-        gmh = TensorHead.__new__(cls, "gamma", TensorType(Tuple(lorentz), tensorsymmetry([1])), comm=2)
+        gmh = TensorHead.__new__(cls, "gamma", TensorType(Tuple(lorentz, DiracSpinor, DiracSpinor), tensorsymmetry([1]*3)), comm=2, matrix_behavior=True)
         GammaMatrixHead._gmhd[key] = gmh
         gmh.Lorentz = lorentz
         return gmh
@@ -97,7 +100,6 @@ class GammaMatrixHead(TensorHead):
     def simplify_this_type(expression):
         extracted_expr, residual_expr = GammaMatrixHead.extract_type_tens(expression)
         res_expr = GammaMatrixHead.simplify_tens(extracted_expr)
-#        return coeff*new_coeff*residual_expr*TensAdd(*[TensMul.from_TIDS(1, ti) for ti in new_tidses])
         return res_expr * residual_expr
 
     @staticmethod
@@ -108,9 +110,8 @@ class GammaMatrixHead(TensorHead):
         coeff = expression.coeff
         tids = expression._tids
 
-        new_coeff, contracted_tidses = GammaMatrixHead.kahane_simplify(coeff, tids)
+        tadd = GammaMatrixHead.kahane_simplify(coeff, tids)
 
-        tadd = TensAdd.from_TIDS_list([new_coeff]*len(contracted_tidses), contracted_tidses)
         return tadd
 
     def trace_tens(self, expression):
@@ -122,9 +123,13 @@ class GammaMatrixHead(TensorHead):
         Lorentz = self.Lorentz
         D = Lorentz.dim
 
+        if not isinstance(tadd, TensAdd):
+            tadd = TensAdd(tadd)
+
         for i in tadd.args:
-            if len(i.dum) > 0:
-                raise ValueError("expression contains dummy indices")
+            for j in i.dum:
+                if (not j[0]) or (not j[1]):
+                    raise ValueError("expression contains dummy indices")
 
         if not tadd.rank:
             # if rank of simplified expression is zero, return the dimension:
@@ -134,25 +139,29 @@ class GammaMatrixHead(TensorHead):
         # Recurrence function to transform
         def even_trace_recursion(t):
             assert isinstance(t, TensMul)
+            lorentz_indices = []
+            for j in t.split():
+                if not isinstance(j.components[0], GammaMatrixHead):
+                    continue
+                lorentz_indices += [i[0] for i in j.free if i[0]._tensortype == Lorentz]
 
-            if t.rank == 0:
+            if len(lorentz_indices) == 0:
                 return t
-            elif t.rank == 2:
-                free1, free2 = t.free
-                return t.coeff * 4 * GammaMatrix.Lorentz.metric(free1[0], free2[0])
+            elif len(lorentz_indices) == 2:
+                return t.coeff * 4 * GammaMatrix.Lorentz.metric(lorentz_indices[0], lorentz_indices[1])
 
             a = t.split()
             for i in a:
                 assert isinstance(i.components[0], GammaMatrixHead)
-            ind1 = t.free[0][0]
+            ind1 = lorentz_indices[0]
             r_list = []
             metric_list = []
             sign = 1
             for k in range(1, len(a)):
-                ind2 = t.free[k][0]
+                ind2 = lorentz_indices[k]
                 aa1 = a[1:k] + a[k+1:]
                 r_list.append(sign*tensor_mul(*aa1))
-                metric_list.append(GammaMatrix.Lorentz.metric(ind1, ind2))
+                metric_list.append(Lorentz.metric(ind1, ind2))
                 sign *= -1
             p_list = [j*even_trace_recursion(i) for i, j in zip(r_list, metric_list)]
             return t.coeff * TensAdd(*p_list)
@@ -201,24 +210,18 @@ class GammaMatrixHead(TensorHead):
         >>> ta = G(i0)*G(-i0)
         >>> sa = G.kahane_simplify(ta.coeff, ta._tids)
         >>> sa
-        (4, [TIDS([], [], [])])
-        >>> TensAdd.from_TIDS_list(sa[0], sa[1])
         4
         >>> tb = G(i0)*G(i1)*G(-i0)
         >>> sb = G.kahane_simplify(tb.coeff, tb._tids)
         >>> sb
-        (-2, [TIDS([gamma(Lorentz)], [(i1, 0, 0)], [])])
-        >>> TensAdd.from_TIDS_list(sb[0], sb[1])
-        -2*gamma(i1)
+        -2*gamma(i1, auto_left, auto_right)
 
         If there are no contractions, the same expression is returned
 
         >>> tc = 3*G(i0)*G(i1)
         >>> sc = G.kahane_simplify(tc.coeff, tc._tids)
         >>> sc
-        (3, [TIDS([gamma(Lorentz), gamma(Lorentz)], [(i0, 0, 0), (i1, 0, 1)], [])])
-        >>> TensAdd.from_TIDS_list(sc[0], sc[1])
-        3*gamma(i0)*gamma(i1)
+        3*gamma(i0, auto_left, S_0)*gamma(i1, -S_0, auto_right)
 
         References
         ==========
@@ -226,12 +229,12 @@ class GammaMatrixHead(TensorHead):
         [1] Algorithm for Reducing Contracted Products of gamma Matrices, Joseph Kahane, Journal of Mathematical Physics, Vol. 9, No. 10, October 1968.
         """
 
-        free = tids.free[:]
-        dum = sorted(tids.dum)
+        free = [_ for _ in tids.free if _[1] == 0]
+        dum = sorted([_ for _ in tids.dum if _[0] == 0 and _[1] == 0])
 
         if len(dum) == 0:
             # no contractions in `expression`, just return it.
-            return coeff, [tids]
+            return TensMul.from_TIDS(coeff, tids)
 
         # find the `first_dum_pos`, i.e. the position of the first contracted
         # gamma matrix, Kahane's algorithm as described in his paper requires the
@@ -480,8 +483,14 @@ class GammaMatrixHead(TensorHead):
         for i in range(0, first_dum_pos):
             [ri.insert(0, free_pos[i]) for ri in resulting_indices]
 
-        resulting_tids = [TIDS([GammaMatrix]*len(ri), [(ti, 0, i) for i, ti in enumerate(ri)], []) for ri in resulting_indices]
-        return resulting_coeff, resulting_tids
+        resulting_expr = S.Zero
+        for i in resulting_indices:
+            temp_expr = S.One
+            for j in i:
+                temp_expr *= GammaMatrix(j)
+            resulting_expr += temp_expr
+
+        return resulting_coeff * resulting_expr
 
 
 GammaMatrix = GammaMatrixHead()

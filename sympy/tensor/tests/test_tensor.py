@@ -1158,3 +1158,59 @@ def test_hash():
     assert tsymmetry.func(*tsymmetry.args) == tsymmetry
     assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
     assert check_all(tsymmetry)
+
+def test_hidden_indices_for_matrix_multiplication():
+    L = TensorIndexType('Lorentz')
+    S = TensorIndexType('Matind')
+
+    m0, m1, m2 = tensor_indices('m0:3', L)
+    s0, s1, s2 = tensor_indices('s0:3', S)
+
+    A = tensorhead('A', [L, S, S], [[1]*3], matrix_behavior=True)
+    B = tensorhead('B', [L, S], [[1]*2], matrix_behavior=True)
+    D = tensorhead('D', [L, L, S, S], [[1]*4], matrix_behavior=True)
+    E = tensorhead('E', [L, L, L, L], [[1]*4], matrix_behavior=True)
+
+    assert (A(m0)) == A(m0, S.auto_left, S.auto_right)
+    assert (B(-m1)) == B(-m1, S.auto_left)
+
+    A0 = A(m0)
+    B0 = B(-m0)
+    B1 = B(m1)
+
+    assert (B1*A0*B0) == B(m1, s0)*A(m0, -s0, s1)*B(-m0, -s1)
+    assert (B0*A0) == B(-m0, s0)*A(m0, -s0, S.auto_right)
+    assert (A0*B0) == A(m0, S.auto_left, s0)*B(-m0, -s0)
+
+    C = tensorhead('C', [L, L], [[1]*2])
+
+    assert (C(True, True)) == C(L.auto_left, L.auto_right)
+
+    assert (A(m0)*C(m1, -m0)) == A(m2, S.auto_left, S.auto_right)*C(m1, -m2)
+
+    assert (C(True, True)*C(True, True)) == C(L.auto_left, m0)*C(-m0, L.auto_right)
+
+    assert A(m0) == A(m0)
+    assert B(-m1) == B(-m1)
+
+    assert A(m0) - A(m0) == 0
+    ts1 = A(m0)*A(m1) + A(m1)*A(m0)
+    ts2 = A(m1)*A(m0) + A(m0)*A(m1)
+    assert ts1 == ts2
+    assert A(m0)*A(m1) + A(m1)*A(m0) == A(m1)*A(m0) + A(m0)*A(m1)
+
+    assert A(m0) == (2*A(m0))/2
+    assert A(m0) == -(-A(m0))
+    assert 2*A(m0) - 3*A(m0) == -A(m0)
+    assert 2*D(m0, m1) - 5*D(m1, m0) == -5*D(m1, m0) + 2*D(m0, m1)
+
+    D0 = D(True, True, True, True)
+    Aa = A(True, True, True)
+
+    assert D0 * Aa == D(L.auto_left, m0, S.auto_left, s0)*A(-m0, -s0, S.auto_right)
+    assert D(m0, m1) == D(m0, m1, S.auto_left, S.auto_right)
+
+    raises(ValueError, lambda: C(True))
+    raises(ValueError, lambda: C())
+
+    raises(ValueError, lambda: E(True, True, True, True))

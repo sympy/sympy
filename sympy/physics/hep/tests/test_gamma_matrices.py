@@ -161,8 +161,8 @@ def test_kahane_algorithm():
     # Wrap this function to convert to and from TIDS:
 
     def tfunc(e):
-        coeff, list_new_tids = GammaMatrixHead.kahane_simplify(e.coeff, e._tids)
-        return TensAdd(*[TensMul.from_TIDS(coeff, ti) for ti in list_new_tids])
+        return GammaMatrixHead.kahane_simplify(e.coeff, e._tids)
+#        return TensAdd(*[TensMul.from_TIDS(coeff, ti) for ti in list_new_tids])
 
     execute_gamma_simplify_tests_for_function(tfunc, D=4)
 
