@@ -85,11 +85,11 @@ def real_imag(ba, bd, gen):
     not_imag = [value if key[0] % 2 == 1 else 0 for key, value in bd_i.items()]
     imag = Poly(sum(r for r in not_real), gen)
     real = Poly(sum(r for r in not_imag), gen)
-    bd_real = bd_real - imag*sqrt(-1) + real
-    bd_imag = bd_imag - real*sqrt(-1) + imag
+    bd_r = bd_real - imag*sqrt(-1) - real
+    bd_i = bd_imag - real*sqrt(-1) + imag
     # Separates the imaginary and real part
     # and rewrites a new denom which is real
-    bd = (bd_real*bd_real + bd_imag*bd_imag).as_poly(gen)
+    bd = (bd_r*bd_r + bd_i*bd_i).as_poly(gen)
 
     # Separates the real and imag
     # on the basis of the power of the variable
@@ -99,18 +99,16 @@ def real_imag(ba, bd, gen):
     num_imag = [value if key[0] % 4 == 1 else -value if key[0] % 4 == 3 else 0 for key, value in ba.items()]
     ba_real = Poly(sum(r for r in num_real), gen)
     ba_imag = Poly(sum(r for r in num_imag), gen)
-    ba = (ba_real*bd_real + ba_imag*bd_imag, ba_imag*bd_real - ba_real*bd_imag)
-
-    # Checks for the imaginary cofficients in the numerator
-    ba_r, ba_i = ba[0].as_poly(sqrt(-1)).as_dict(), ba[1].as_poly(sqrt(-1)).as_dict()
+    ba_r, ba_i = ba_real.as_poly(sqrt(-1)).as_dict(), ba_imag.as_poly(sqrt(-1)).as_dict()
     not_real = [value if key[0] % 2 == 1 else 0 for key, value in ba_r.items()]
     not_imag = [value if key[0] % 2 == 1 else 0 for key, value in ba_i.items()]
     imag = Poly(sum(r for r in not_real), gen)
     real = Poly(sum(r for r in not_imag), gen)
     # Separates the imaginary and real part
     # In the numerator
-    ba_r, ba_i = (ba[0] - imag*sqrt(-1) - Poly(real, gen), ba[1] - Poly(real*sqrt(-1), gen) - Poly(imag, gen))
-    return (ba_r, ba_i, bd)
+    ba_r, ba_i = (ba_real - imag*sqrt(-1) - Poly(real, gen), ba_imag - Poly(real*sqrt(-1), gen) + Poly(imag, gen))
+    ba_real, ba_imag = (ba_r*bd_r + ba_i*bd_i, ba_i*bd_r - ba_r*bd_i)
+    return (ba_real, ba_imag, bd)
 
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
