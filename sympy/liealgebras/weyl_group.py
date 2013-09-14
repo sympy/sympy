@@ -83,6 +83,11 @@ class WeylGroup(Basic):
             return 12
 
     def group_name(self):
+        """
+        This method returns some general information about the Weyl group for
+        a given Lie algebra.  It returns the name of the group and the elements
+        it acts on, if relevant.
+        """
         n = self.cartan_type.rank()
         if self.cartan_type.series == "A":
             return "S"+str(n+1) + ": the symmetric group acting on " + str(n+1) + " elements."
@@ -109,36 +114,52 @@ class WeylGroup(Basic):
         if self.cartan_type.series == "G":
             return "D6, the dihedral group of order 12, and symmetry group of the hexagon."
 
-    def element_order(self, reflection):
+    def element_order(self, weylelt):
+        """
+        This method returns the order of a given Weyl group element, which should
+        be specified by the user in the form of products of the generating 
+        reflections, i.e. of the form r1*r2 etc.
+
+        For types A-F, this method current works by taking the matrix form of
+        the specified element, and then finding what power of the matrix is the
+        identity.  It then returns this power.
+
+        Example
+        ========
+        >>> from sympy.liealgebras.weyl_group import WeylGroup
+        >>> b = WeylGroup("B4")
+        >>> b.element_order('r1*r4*r2')
+        4
+        """
         n = self.cartan_type.rank()
         if self.cartan_type.series == "A":
-            a = self.matrix_form(reflection)
+            a = self.matrix_form(weylelt)
             order = 1
             while a != eye(n+1):
-                a *= self.matrix_form(reflection)
+                a *= self.matrix_form(weylelt)
                 order += 1
             return order
 
         if self.cartan_type.series == "D":
-            a = self.matrix_form(reflection)
+            a = self.matrix_form(weylelt)
             order = 1
             while a != eye(n):
-                a *= self.matrix_form(reflection)
+                a *= self.matrix_form(weylelt)
                 order += 1
             return order
         
         if self.cartan_type.series == "E":
-            a = self.matrix_form(reflection)
+            a = self.matrix_form(weylelt)
             order = 1
             while a != eye(8):
-                a *= self.matrix_form(reflection)
+                a *= self.matrix_form(weylelt)
                 order += 1
             return order
 
         if self.cartan_type.series == "G":
-            elts = list(reflection)
+            elts = list(weylelt)
             reflections = elts[1::3]
-            m = self.delete_doubles(reflections)
+            m = self.delete_doubles(weylelt)
             while self.delete_doubles(m) != m:
                 m = self.delete_doubles(m)
                 reflections = m
@@ -159,25 +180,27 @@ class WeylGroup(Basic):
 
 
         if self.cartan_type.series == 'F':
-            a = self.matrix_form(reflection)
+            a = self.matrix_form(weylelt)
             order = 1
             while a != eye(4):
-                a *= self.matrix_form(reflection)
+                a *= self.matrix_form(weylelt)
                 order += 1
             return order
 
         
         if self.cartan_type.series == "B" or self.cartan_type.series == "C":
-            a = self.matrix_form(reflection)
+            a = self.matrix_form(weylelt)
             order = 1
             while a != eye(n):
-                a *= self.matrix_form(reflection)
+                a *= self.matrix_form(weylelt)
                 order += 1
             return order
     
     def delete_doubles(self, reflections):
         """
-        This is a helper method for determining the order of an element in the Weyl group of G2
+        This is a helper method for determining the order of an element in the
+        Weyl group of G2.  It takes a Weyl element and if repeated simple reflections
+        in it, it deletes them.
         """
         counter = 0
         copy = list(reflections)
@@ -192,8 +215,28 @@ class WeylGroup(Basic):
         return copy
 
 
-    def matrix_form(self, reflection):
-        elts = list(reflection)
+    def matrix_form(self, weylelt):
+        """
+        This method takes input from the user in the form of products of the
+        generating reflections, and returns the matrix corresponding to the
+        element of the Weyl group.  Since each element of the Weyl group is
+        a reflection of some type, there is a corresponding matrix representation.
+        This method uses the standard representation for all the generating 
+        reflections.
+
+        Example
+        =======
+        >>> from sympy.liealgebras.weyl_group import WeylGroup
+        >>> f = WeylGroup("F4")
+        >>> f.matrix_form('r2*r3')
+        Matrix([
+        [1, 0, 0,  0],
+        [0, 1, 0,  0],
+        [0, 0, 0, -1],
+        [0, 0, 1,  0]])
+
+        """
+        elts = list(weylelt)
         reflections = elts[1::3]
         n = self.cartan_type.rank()
         if self.cartan_type.series == 'A':
