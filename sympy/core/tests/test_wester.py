@@ -1088,14 +1088,6 @@ def test_N10():
 def test_N11():
     assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
 
-
-@XFAIL
-def test_solve_inequality2():
-    assert solve(abs(x) < 3, assume=Q.real(x))  == And(-3 < x, x < 3) 
-
-def test_solve_inequality_worakround():
-    assert solve(abs(x) < 3, assume=Q.real(x))  == And(Lt(-3,x),Lt(x,3))    
-
 @XFAIL
 def test_N12():   
     assert solve(sqrt(x)<2, assume=Q.real(x)) == And(Le(0,x),Le(x,4)) 
