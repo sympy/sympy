@@ -1089,34 +1089,34 @@ def test_N11():
     assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
 
 @XFAIL
-def test_N12():   
-    assert solve(sqrt(x)<2, assume=Q.real(x)) == And(Le(0,x),Le(x,4)) 
+def test_N12():
+    assert solve(sqrt(x)<2, assume=Q.real(x)) == And(Le(0,x),Le(x,4))
 
 @XFAIL
-def test_N13():      
+def test_N13():
     assert solve(sin(x)<2, assume=Q.real(x)) == []
 
 @XFAIL
-def test_N14():      
+def test_N14():
     assert solve(sin(x)<1, assume=Q.real(x)) # == [x<>pi/2]
 
 @XFAIL
-def test_N15():      
+def test_N15():
     assert solve(sin(x)<1, assume=Q.real(x)) # == [x<>pi/2]
 
 @XFAIL
 def test_N16():
-    r, t = symbols('r t', real=True)  
+    r, t = symbols('r t', real=True)
     assert solve(abs(2*r*(cos(t)-1)+1,x)<=1)
 
 @XFAIL
 def test_N17():
-    assert solve(x+y>0, x-y<0)  
+    assert solve(x+y>0, x-y<0)
 
 def test_O1():
-    M = Matrix((1 + I, -2, 3*I)) 
+    M = Matrix((1 + I, -2, 3*I))
     assert sqrt(expand(M.dot(M.H))) == sqrt(15)
-        
+
 def test_O2():
     assert Matrix((2,2,-3)).cross(Matrix((1,3,1))) == Matrix([[11, -5, 4]])
 
@@ -1133,7 +1133,7 @@ def test_O4():
     assert cu|ey == (x*z*(2*y**2*z - 1))*ex + (2*y*z*(x**2*y - z**2))*ez
     assert cu|ez == -x*y*ex + (2*y*z*(-x**2*y + z**2))*ey
     #assert cu == (x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez + (2*y*z*(-x**2*y + z**2))*ey^ez
-    
+
 @XFAIL
 @slow
 def test_O5():
@@ -1141,7 +1141,7 @@ def test_O5():
     f = MV('f','vector',fct=True)
     g = MV('g','vector',fct=True)
     assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
-    
+
 #O8-O9 MISSING!!
 def test_O10():
     L = [Matrix([2,3,5]), Matrix([3,6,2]), Matrix([8,3,6])]
@@ -1164,7 +1164,7 @@ def test_P1():
 def test_P2():
     M = Matrix([[1,2,3],[4,5,6],[7,8,9]])
     M.row_del(1)
-    M.col_del(2) 
+    M.col_del(2)
     assert M == Matrix([
                     [1, 2],
                     [7, 8]])
@@ -1176,7 +1176,7 @@ def test_P4():
 
 @XFAIL
 def test_P5():
-    M = Matrix([[7,11],[3,8]])    
+    M = Matrix([[7,11],[3,8]])
     assert  M % 2 == Matrix([ # Raises exception % not supported for matrixes
                         [1, 1],
                         [1, 0]])
