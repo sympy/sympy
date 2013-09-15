@@ -389,6 +389,13 @@ def test(*paths, **kwargs):
 
     >>> sympy.test(tb='no')    # doctest: +SKIP
 
+    The ``split`` option can be passed to split the test run into parts. The
+    split currently only splits the test files, though this may change in the
+    future. ``split`` should be a string of the form 'a/b', which will run
+    part ``a`` of ``b``. For instance, to run the first half of the test suite:
+
+    >>> sympy.test(split='1/2')  # doctest: +SKIP
+
     You can disable running the tests in a separate subprocess using
     ``subprocess=False``.  This is done to support seeding hash randomization,
     which is enabled by default in the Python versions where it is supported.
@@ -455,6 +462,7 @@ def _test(*paths, **kwargs):
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
     enhance_asserts = kwargs.get("enhance_asserts", False)
+    split = kwargs.get('split', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
         force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
@@ -471,7 +479,7 @@ def _test(*paths, **kwargs):
     test_files = t.get_test_files('sympy')
 
     if len(paths) == 0:
-        t._testfiles.extend(test_files)
+        matched = test_files
     else:
         paths = convert_to_native_paths(paths)
         matched = []
@@ -481,7 +489,11 @@ def _test(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
-        t._testfiles.extend(matched)
+
+    if split:
+        matched = split_list(matched, split)
+
+    t._testfiles.extend(matched)
 
     return int(not t.test(sort=sort, timeout=timeout,
         slow=slow, enhance_asserts=enhance_asserts))
@@ -522,8 +534,18 @@ def doctest(*paths, **kwargs):
 
     >>> sympy.doctest("polynomial") # doctest: +SKIP
 
+    The ``split`` option can be passed to split the test run into parts. The
+    split currently only splits the test files, though this may change in the
+    future. ``split`` should be a string of the form 'a/b', which will run
+    part ``a`` of ``b``. Note that the regular doctests and the Sphinx
+    doctests are split independently. For instance, to run the first half of
+    the test suite:
+
+    >>> sympy.doctest(split='1/2')  # doctest: +SKIP
+
     The ``subprocess`` and ``verbose`` options are the same as with the function
     ``test()``.  See the docstring of that function for more information.
+
     """
     subprocess = kwargs.pop("subprocess", True)
     if subprocess:
@@ -547,6 +569,7 @@ def _doctest(*paths, **kwargs):
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
+    split  = kwargs.get('split', None)
     blacklist.extend([
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
@@ -621,7 +644,7 @@ def _doctest(*paths, **kwargs):
     not_blacklisted = [f for f in test_files
                        if not any(b in f for b in blacklist)]
     if len(paths) == 0:
-        t._testfiles.extend(not_blacklisted)
+        matched = not_blacklisted
     else:
         # take only what was requested...but not blacklisted items
         # and allow for partial match anywhere or fnmatch of name
@@ -633,7 +656,11 @@ def _doctest(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
-        t._testfiles.extend(matched)
+
+    if split:
+        matched = split_list(matched, split)
+
+    t._testfiles.extend(matched)
 
     # run the tests and record the result for this *py portion of the tests
     if t._testfiles:
@@ -669,6 +696,9 @@ def _doctest(*paths, **kwargs):
                 if p in f or fnmatch(basename, p):
                     matched.append(f)
                     break
+
+    if split:
+        matched = split_list(matched, split)
 
     setup_pprint()
     first_report = True
@@ -720,6 +750,33 @@ def _doctest(*paths, **kwargs):
 
     return int(failed)
 
+sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
+
+def split_list(l, split):
+    """
+    Splits a list into part a of b
+
+    split should be a string of the form 'a/b'. For instance, '1/3' would give
+    the split one of three.
+
+    If the length of the list is not divisible by the number of splits, the
+    last split will have more items.
+
+    >>> from sympy.utilities.runtests import split_list
+    >>> a = list(range(10))
+    >>> split_list(a, '1/3')
+    [0, 1, 2]
+    >>> split_list(a, '2/3')
+    [3, 4, 5]
+    >>> split_list(a, '3/3')
+    [6, 7, 8, 9]
+    """
+    m = sp.match(split)
+    if not m:
+        raise ValueError("split must be a string of the form a/b where a and b are ints")
+    i, t = map(int, m.groups())
+    return l[(i - 1)*len(l)//t:i*len(l)//t]
+
 
 from collections import namedtuple
 SymPyTestResults = namedtuple('TestResults', 'failed attempted')
@@ -729,6 +786,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,
              extraglobs=None, raise_on_error=False,
              parser=pdoctest.DocTestParser(), encoding=None):
+
     """
     Test examples in the given file.  Return (#failures, #tests).
 
