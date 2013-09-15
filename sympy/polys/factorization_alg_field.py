@@ -282,9 +282,18 @@ def _padic_lift(f, pfactors, lcs, B, minpoly, p):
 
         poly = _trunc(poly, m, P)
 
-        solution = solve_lin_sys(poly.coeffs(), coeffring, modulus=P)
+        iszerofunc = lambda x: not (x % p)
+        scalefunc = lambda x, _, scale: (x * domain.invert(scale, P)) % P
+        elimfunc = lambda x, y, scale: (x - scale*y) % P
+
+        solution = solve_lin_sys(poly.coeffs(), coeffring, iszerofunc=iszerofunc,
+            scalefunc=scalefunc, elimfunc=elimfunc)
+
         if solution is None:
             return None
+        else:
+            for k, v in solution.items():
+                solution[k] = v.trunc_ground(P)
 
         solution = _choose_particular_solution(solution, coeffring)
         subs = solution.items()

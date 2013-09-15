@@ -19,18 +19,32 @@ def eqs_to_matrix(eqs, ring):
 
     return M
 
-def solve_lin_sys(eqs, ring, modulus=None):
-    """Solve a system of linear equations. """
-    assert ring.domain.has_Field or modulus
+def solve_lin_sys(eqs, ring, iszerofunc=lambda x: not x, scalefunc=None, elimfunc=None):
+    """
+    Solve a system of linear equations over a field.
 
+    The optional arguments ``iszerofunc``, ``scalefunc`` and ``elimfunc``
+    can to be used to specify dfferent operations than the ones given by
+    ``ring``. ``iszerofunc`` will be used to decide if a domain element is
+    zero, ``scalefunc`` will be used to scale the row of the current pivot
+    element and ``elimfunc`` will be used in the elimination step.
+
+    For example, a linear system of integer equations can be solved over
+    `\mathbb Z_p` by defining those functions as:
+
+        iszerofunc = lambda x: not (x % p)
+        scalefunc = lambda x, _, scale: (x * invert(scale, p)) % p
+        elimfunc = lambda x, y, scale: (x - scale*y) % p
+
+    Note that ``scalefunc`` and ``elimfunc`` have to take three arguments,
+    where the third one has to be named ``scale``.
+
+    """
     # transform from equations to matrix form
     matrix = eqs_to_matrix(eqs, ring)
 
     # solve by row-reduction
-    if modulus:
-        echelon, pivots = matrix.rref(simplify=lambda x: x, modulus=modulus)
-    else:
-        echelon, pivots = matrix.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
+    echelon, pivots = matrix.rref(iszerofunc=iszerofunc, scalefunc=scalefunc, elimfunc=elimfunc)
 
     # construct the returnable form of the solutions
     xs = ring.gens
@@ -46,7 +60,4 @@ def solve_lin_sys(eqs, ring, modulus=None):
             vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[ring.one]])
             sols[xs[p]] = (echelon[i, p+1:]*vect)[0]
 
-        if modulus:
-            for k, v in sols.items():
-                sols[k] = v.trunc_ground(modulus)
         return sols
