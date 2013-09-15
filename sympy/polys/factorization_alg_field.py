@@ -8,7 +8,7 @@ from sympy.integrals.heurisch import _symbols
 from sympy.polys.galoistools import gf_irreducible_p
 from sympy.polys.modulargcd import _trunc, _gf_gcdex, _minpoly_from_dense, _euclidean_algorithm
 from sympy.polys.polyclasses import ANP
-from sympy.polys.polyerrors import UnluckyLeadingCoefficient, UnluckyMinimalPolynomial
+from sympy.polys.polyerrors import UnluckyLeadingCoefficient
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
@@ -316,7 +316,6 @@ def _div(f, g, minpoly, p):
     deg = g.degree(0)
     lcinv, _, gcd = _gf_gcdex(ring.dmp_LC(g), minpoly, p)
 
-#    minpoly mod p should be irreducible at this point
     if not gcd == 1:
         return None
 
@@ -345,7 +344,11 @@ def _extended_euclidean_algorithm(f, g, minpoly, p):
     t0, t1 = one, zero
 
     while g:
-        quo, rem = _div(f, g, minpoly, p)
+        result = _div(f, g, minpoly, p)
+        if result is None:
+            return None
+        else:
+            quo, rem = result
         f, g = g, rem
         s0, s1 = s1 - quo*s0, s0
         t0, t1 = t1 - quo*t0, t0
@@ -359,7 +362,11 @@ def _extended_euclidean_algorithm(f, g, minpoly, p):
 def _diophantine_univariate(F, m, minpoly, p):
     if len(F) == 2:
         f, g = F
-        s, t, _ = _extended_euclidean_algorithm(g, f, minpoly, p)
+        result = _extended_euclidean_algorithm(g, f, minpoly, p)
+        if result is None:
+            return None
+        else:
+            s, t, _ = result
 
         s = s.mul_monom((m, 0))
         t = t.mul_monom((m, 0))
@@ -382,7 +389,11 @@ def _diophantine_univariate(F, m, minpoly, p):
         S, T = [], [ring.one]
 
         for f, g in zip(F, G):
-            t, s = _diophantine([g, f], T[-1], [], 0, minpoly, p)
+            result = _diophantine([g, f], T[-1], [], 0, minpoly, p)
+            if result is None:
+                return None
+            else:
+                t, s = result
             T.append(t)
             S.append(s)
 
@@ -406,6 +417,8 @@ def _diophantine(F, c, A, d, minpoly, p):
 
         for (exp,), coeff in c.drop_to_ground(1).iterterms():
             T = _diophantine_univariate(F, exp, minpoly, p)
+            if T is None:
+                return None
 
             for j, (s, t) in enumerate(zip(S, T)):
                 S[j] = _trunc(s + t*coeff.set_ring(ring), minpoly, p)
@@ -423,7 +436,10 @@ def _diophantine(F, c, A, d, minpoly, p):
         C = c.evaluate(n, a)
 
         S = _diophantine(G, C, A, d, minpoly, p)
-        S = [s.set_ring(ring) for s in S]
+        if S is None:
+            return None
+        else:
+            S = [s.set_ring(ring) for s in S]
 
         for s, b in zip(S, B):
             c = c - s*b
@@ -443,6 +459,8 @@ def _diophantine(F, c, A, d, minpoly, p):
             if C:
                 C = C.quo_ground(ring.domain.factorial(k + 1))
                 T = _diophantine(G, C, A, d, minpoly, p)
+                if T is None:
+                    return None
 
                 for i, t in enumerate(T):
                     T[i] = t.set_ring(ring) * M
@@ -508,6 +526,8 @@ def _hensel_lift(f, H, LC, A, minpoly, p):
             if C:
                 C = C.quo_ground(ring.domain.factorial(k + 1)) # coeff of (x_{j-1} - a_{j-1})^(k + 1) in c
                 T = _diophantine(G, C, I, d, minpoly, p)
+                if T is None:
+                    return None
 
                 for i, (h, t) in enumerate(zip(H, T)):
                     H[i] = _trunc(h + t.set_ring(Hring)*M, minpoly, p)
@@ -538,8 +558,7 @@ def _test_prime(fA, minpoly, p, domain):
         return False
     if not _sqf_p(fA, minpoly, p):
         return False
-    if not gf_irreducible_p(minpoly.to_dense(), p, domain):
-        return False
+
     return True
 
 
@@ -645,12 +664,8 @@ def _factor(f, save):
 
             f_ = f_.mul_ground(delta)
 
-            k = 0
             while not _test_prime(fA, minpoly, p, zring.domain):
                 p = nextprime(p)
-                k += 1
-                if k > 10:
-                    raise UnluckyMinimalPolynomial
 
             pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
             if pfactors is None:
@@ -700,10 +715,7 @@ def efactor(f, save=False):
         lc, sqflist = f.sqf_list()
         factors = []
         for g, exp in sqflist:
-            try:
-                lcg, gfactors = _factor(g, save)
-            except UnluckyMinimalPolynomial:
-                return ring.dmp_ext_factor(f)
+            lcg, gfactors = _factor(g, save)
             lc *= lcg
             factors = factors + [(gi, exp) for gi in gfactors]
 
