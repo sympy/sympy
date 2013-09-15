@@ -20,7 +20,9 @@ from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
-from sympy.mpmath import mpi, mpc
+from sympy.mpmath import mpi, mpc, inf
+from sympy.matrices import Matrix, GramSchmidt
+from sympy.galgebra.ga import MV
 from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
 from sympy.polys.rings import vring
@@ -1129,3 +1131,85 @@ def test_O2():
 @XFAIL
 def test_O3():
         raise NotImplementedError("cross/dot product for vectors with undetermined dimensions not supported")
+
+
+def test_O4():
+    (ex,ey,ez,grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x,y,z))
+    F=ex*(x*y*z)+ey*((x*y*z)**2)+ez*((y**2)*(z**3))
+    cu=grad^F
+    assert cu|ex == (x*z*(-2*y**2*z + 1))*ey + x*y*ez
+    assert cu|ey == (x*z*(2*y**2*z - 1))*ex + (2*y*z*(x**2*y - z**2))*ez
+    assert cu|ez == -x*y*ex + (2*y*z*(-x**2*y + z**2))*ey
+    #assert cu == (x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez + (2*y*z*(-x**2*y + z**2))*ey^ez
+    
+@XFAIL
+@slow
+def test_O5():
+    (ex,ey,ez,grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x,y,z))
+    f = MV('f','vector',fct=True)
+    g = MV('g','vector',fct=True)
+    assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
+    
+#O8-O9 MISSING!!
+def test_O10():
+    L = [Matrix([2,3,5]), Matrix([3,6,2]), Matrix([8,3,6])]
+    assert GramSchmidt(L) == [Matrix([
+                                [2],
+                                [3],
+                                [5]]), Matrix([
+                                [ 23/19],
+                                [ 63/19],
+                                [-47/19]]), Matrix([
+                                [ 1692/353],
+                                [-1551/706],
+                                [ -423/706]])]
+
+@XFAIL
+def test_P1():
+    raise NotImplementedError("Matrix property/function to extract Nth diagnoal not implemented")
+
+
+def test_P2():
+    M = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+    M.row_del(1)
+    M.col_del(2) 
+    assert M == Matrix([
+                    [1, 2],
+                    [7, 8]])
+#P3 skipped, unclear
+
+@XFAIL
+def test_P4():
+    raise NotImplementedError("Block matrix diagonalization not supported")
+
+@XFAIL
+def test_P5():
+    M = Matrix([[7,11],[3,8]])    
+    assert  M % 2 == Matrix([ # Raises exception % not supported for matrixes
+                        [1, 1],
+                        [1, 0]])
+
+def test_P5_workaround():
+    M = Matrix([[7,11],[3,8]])
+    assert  M.applyfunc(lambda i:i%2) == Matrix([
+                                            [1, 1],
+                                            [1, 0]])
+def test_P6():
+    M = Matrix([[cos(x),sin(x)],[-sin(x),cos(x)]])
+    assert  M.diff(x,2) == Matrix([
+        [-cos(x), -sin(x)],
+        [ sin(x), -cos(x)]])
+
+def test_P7():
+    M = Matrix([[x,y]])*(z*Matrix([
+                    [1,3,5],
+                    [2,4,6]])+Matrix([
+                        [7,-9,11],
+                        [-8,10,-12]]))
+    assert M == Matrix([
+        [x*(z + 7) + y*(2*z - 8), x*(3*z - 9) + y*(4*z + 10), x*(5*z + 11) + y*(6*z - 12)]])
+
+@XFAIL
+def test_P8():
+    M=Matrix([[1,-2*I],[-3*I,4]])
+    assert M.norm(ord=inf) == 7 # Matrix.norm(ord=inf) not implemented
