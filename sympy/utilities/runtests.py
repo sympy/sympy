@@ -98,7 +98,6 @@ def convert_to_native_paths(lst):
                 if rv[pos + 1] != '\\':
                     rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
         newlst.append(sys_normcase(rv))
-    newlst.sort()
     return newlst
 
 
@@ -1117,7 +1116,7 @@ class SymPyTests(object):
         for path, folders, files in os.walk(dir):
             g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
 
-        return [sys_normcase(gi) for gi in g]
+        return sorted([sys_normcase(gi) for gi in g])
 
 
 class SymPyDocTests(object):
