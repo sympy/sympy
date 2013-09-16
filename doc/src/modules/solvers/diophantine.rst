@@ -106,6 +106,30 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.holzer
 
+:func:`diop_general_pythagorean`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diop_general_pythagorean
+
+:func:`diop_general_sum_of_squares`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diop_general_sum_of_squares
+
+:func:`partition`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.partition
+
+:func:`prime_as_sum_of_two_squares`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
+
+:func:`sum_of_three_squares`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.sum_of_three_squares
+
+:func:`sum_of_four_squares`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.sum_of_four_squares
+
 Internal Functions
 ------------------
 These functions are intended for the internal use in Diophantine module.
