@@ -39,24 +39,24 @@ parser.add_option("--source-svg", type="string", dest="source_svg",
     help="File name of the source *.svg file [default: %default]",
     default=default_source_svg)
 
-parser.add_option("-1", "--svg", action="store_true", dest="generate_svg",
+parser.add_option("--svg", action="store_true", dest="generate_svg",
     help="Generate *.svg versions without tails and without text 'SymPy' [default: %default]",
     default=False)
 
-parser.add_option("-2", "--png", action="store_true", dest="generate_png",
+parser.add_option("--png", action="store_true", dest="generate_png",
     help="Generate *.png versions [default: %default]",
     default=False)
 
-parser.add_option("-3", "--ico", action="store_true", dest="generate_ico",
+parser.add_option("--ico", action="store_true", dest="generate_ico",
     help="Generate *.ico versions [default: %default]",
     default=False)
 
-parser.add_option("-4", "--clear", action="store_true", dest="clear",
+parser.add_option("--clear", action="store_true", dest="clear",
     help="Remove temporary files [default: %default]",
     default=False)
 
 parser.add_option("-a", "--all", action="store_true", dest="generate_all",
-    help="Shorthand for '-1 -2 -3 -4' options [default: %default]",
+    help="Shorthand for '--svg --png --ico --clear' options [default: %default]",
     default=True)
 
 parser.add_option("-s", "--sizes", type="string", dest="sizes",
