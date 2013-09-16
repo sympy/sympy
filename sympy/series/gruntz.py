@@ -448,10 +448,10 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.core.exprtools import factor_terms
+    from sympy.polys import cancel
 
     for t in e.series(x, n=None, logx=logx):
-        t = factor_terms(t, fraction=True)
+        t = cancel(t)
 
         if t:
             break
