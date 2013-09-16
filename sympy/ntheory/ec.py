@@ -33,14 +33,14 @@ class EllipticCurve():
         b8 = a1**2 * a6 + 4 * a2 * a6 - a1 * a3 * a4 + a2 * a3**2 - a4**2
         self._discrim = int(self._domain(-b2**2 * b8 - 8 * b4**3 - 27 * b6**2 + 9 * b2 * b4 * b6))
         self._eq = Eq(y**2 + a1*x*y + a3*y, x**3 + a2*x**2 + a4*x + a6)
+        self._a1 = self._domain(a1)
+        self._a2 = self._domain(a2)
+        self._a3 = self._domain(a3)
+        self._a4 = self._domain(a4)
+        self._a6 = self._domain(a6)
         if isinstance(self._domain, FiniteField):
-            i = self._domain.mod
-            self._coeff = [a4 % i, a6 % i, a1 % i, a2 % i, a3 % i]
-            self._char = i
             self._rank = 0
         elif isinstance(self._domain, RationalField):
-            self._coeff = [a4, a6, a1, a2, a3]
-            self._char = 0
             self._rank = None
 
     def __contains__(self, point):
@@ -68,15 +68,13 @@ class EllipticCurve():
         if len(p2) == 3 and p2[2] == 0:
             return p1
         x1, y1 = p1[:2]
-        if to_sympy:
-            x1 = self._domain(x1)
         x2, y2 = p2[:2]
         if x1 != x2:
             slope = (y1 - y2) / (x1 - x2)
         else:
             if (y1 + y2) == 0:
                 return 0, 1, 0
-            slope = (3 * x1**2 + self._coeff[0]) / (2 * y1)
+            slope = (3 * x1**2 + self._a4) / (2 * y1)
         x3 = slope**2 - x1 - x2
         y3 = -y1 - slope * (x3 - x1)
         if to_sympy:
@@ -98,14 +96,11 @@ class EllipticCurve():
         if n < 1:
             return p
         r = (0, 1, 0)
-        q = list(p)
-        q[0] = self._domain.convert(p[0])
-        q[1] = self._domain.convert(p[1])
         while n:
             if n & 1:
-                r = self.add(r, q, to_sympy=False)
+                r = self.add(r, p, to_sympy=False)
             n >>= 1
-            q = self.add(q, q, to_sympy=False)
+            p = self.add(p, p, to_sympy=False)
         return self._domain.to_sympy(r[0]), self._domain.to_sympy(r[1]), r[2]
 
     def points(self):
@@ -124,7 +119,7 @@ class EllipticCurve():
         char = self.characteristic
         if char > 1:
             for i in range(char):
-                y = sqrt_mod(i**3 + self._coeff[3]*i**2 + self._coeff[0]*i + self._coeff[1], char)
+                y = sqrt_mod(i**3 + self._a2*i**2 + self._a4*i + self._a6, char)
                 if y is not None:
                     yield i, y
                     if y != 0:
@@ -166,7 +161,7 @@ class EllipticCurve():
 
     @property
     def characteristic(self):
-        return self._char
+        return self._domain.characteristic()
 
     @property
     def discriminent(self):
