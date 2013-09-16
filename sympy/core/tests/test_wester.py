@@ -22,6 +22,8 @@ from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc, inf
 from sympy.matrices import Matrix, GramSchmidt
+from sympy.matrices.expressions.blockmatrix import (BlockMatrix, block_collapse)
+from sympy.matrices.expressions import (MatrixSymbol, ZeroMatrix)
 from sympy.galgebra.ga import MV
 from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
@@ -1205,3 +1207,23 @@ def test_P7():
 def test_P8():
     M=Matrix([[1,-2*I],[-3*I,4]])
     assert M.norm(ord=inf) == 7 # Matrix.norm(ord=inf) not implemented
+
+#P9 skipped, not understood
+@XFAIL # conugate(f(4-5*i)) is not simplified to f(4+5*I)
+def test_P10():
+    M=Matrix([[1,2+3*I],[f(4-5*i),6]])
+    assert M.H == Matrix([[1,f(4+5*I)],[2+3*I,6]])
+
+@XFAIL
+def test_P11():
+    raise NotImplementedError("Matrix([[x,y],[1,x*y]]).inv() not simplifying an extracting common factor")
+
+def __remove_whitespaces(s):
+    return s.replace(' ','').replace('\n','').replace('\t','')
+
+def test_P12():
+    A11 = MatrixSymbol('A11',n,n)
+    A12 = MatrixSymbol('A12',n,n)
+    A22 = MatrixSymbol('A22',n,n)
+    B = BlockMatrix([[A11,A12],[ZeroMatrix(n,n),A22]])
+    assert __remove_whitespaces(str(block_collapse(B.I)))  == 'Matrix([[A11^-1,(-1)*A11^-1*A12*A22^-1],[0,A22^-1]])'
