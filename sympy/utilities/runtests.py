@@ -98,6 +98,7 @@ def convert_to_native_paths(lst):
                 if rv[pos + 1] != '\\':
                     rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
         newlst.append(sys_normcase(rv))
+    newlst.sort()
     return newlst
 
 
