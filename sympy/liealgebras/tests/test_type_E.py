@@ -15,3 +15,5 @@ def test_type_E():
     diag += "---".join("0" for i in range(1, 6))+"\n"
     diag += "1   " + "   ".join(str(i) for i in range(3, 7))
     assert c.dynkin_diagram() == diag
+    posroots = c.positive_roots()
+    assert posroots[8] == [1, 0, 0, 0, 1, 0, 0, 0]

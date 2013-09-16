@@ -49,7 +49,6 @@ def test_simple_3():
 
 def test_simple_4():
     assert Order(x)**2 == Order(x**2)
-    assert Order(x**3)**-2 == Order(x**-6)
 
 
 def test_simple_5():
@@ -184,7 +183,6 @@ def test_multivar_3():
 
 
 def test_issue369():
-    x = Symbol('x')
     y = Symbol('y', negative=True)
     z = Symbol('z', complex=True)
 
@@ -267,7 +265,6 @@ def test_leading_term():
 
 
 def test_eval():
-    y = Symbol('y')
     assert Order(x).subs(Order(x), 1) == 1
     assert Order(x).subs(x, y) == Order(y)
     assert Order(x).subs(y, x) == Order(x)
@@ -289,12 +286,12 @@ def test_issue_1180():
     assert O(1, a, b) + O(a + b, a, b) == O(1, a, b)
 
 
-@XFAIL
 def test_issue_1756():
-    x = Symbol('x')
-    f = Function('f')
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
+    assert 1/O(x, x, oo) != O(1/x, x, oo)
+
+    f = Function('f')
     assert 1/O(f(x)) != O(1/x)
 
 
@@ -313,7 +310,6 @@ def test_order_conjugate_transpose():
 
 def test_order_noncommutative():
     A = Symbol('A', commutative=False)
-    x = Symbol('x')
     assert Order(A + A*x, x) == Order(1, x)
     assert (A + A*x)*Order(x) == Order(x)
     assert (A*x)*Order(x) == Order(x**2, x)
@@ -350,7 +346,6 @@ def test_order_at_infinity():
     assert Order(x, x, oo) + exp(1/x) == exp(1/x) + Order(x, x, oo)
 
     assert Order(x, x, oo)**2 == Order(x**2, x, oo)
-    assert Order(x**3, x, oo)**-2 == Order(x**-6, x, oo)
 
     assert Order(x, x, oo) + Order(x**2, x, oo) == Order(x**2, x, oo)
     assert Order(x, x, oo) + Order(x**-2, x, oo) == Order(x, x, oo)

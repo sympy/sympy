@@ -7,6 +7,7 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.pytest import raises
+from sympy.core.compatibility import xrange
 
 
 def test_printmethod():

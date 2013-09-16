@@ -1,15 +1,17 @@
+from __future__ import print_function, division
+
 from math import log as _log
 
-from sympify import _sympify
-from cache import cacheit
-from core import C
-from singleton import S
-from expr import Expr
+from .sympify import _sympify
+from .cache import cacheit
+from .core import C
+from .singleton import S
+from .expr import Expr
 
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
 from sympy.core.logic import fuzzy_bool
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, xrange
 
 from sympy.mpmath.libmp import sqrtrem as mpmath_sqrtrem
 from sympy.utilities.iterables import sift
@@ -151,7 +153,7 @@ class Pow(Expr):
                 e.is_real is False and smallarg is False):
             return -self.func(b, e*other)
         if (other.is_integer or
-            e.is_real and (b_nneg or abs(e) < 1) or
+            e.is_real and (b_nneg or (abs(e) < 1) is True) or
             e.is_real is False and smallarg is True or
                 b.is_polar):
             return self.func(b, e*other)
@@ -201,6 +203,8 @@ class Pow(Expr):
         if not c1 and e.is_nonnegative:  # rat**nonneg
             return False
         if c1 and c2:  # int**int
+            if b is S.NegativeOne:
+                return True
             if e.is_nonnegative or e.is_positive:
                 return True
             if self.exp.is_negative:
@@ -258,6 +262,8 @@ class Pow(Expr):
             if self.exp.is_positive:
                 return self.base.is_odd
             elif self.exp.is_nonnegative and self.base.is_odd:
+                return True
+            elif self.base is S.NegativeOne:
                 return True
 
     def _eval_is_bounded(self):
@@ -687,7 +693,7 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if exp < 0 and base.is_number and base.is_real is False:
+        if (exp < 0) is True and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
             return self.func(base, exp).expand()
@@ -700,7 +706,7 @@ class Pow(Expr):
         if self.base.has(*syms):
             return self.base._eval_is_polynomial(syms) and \
                 self.exp.is_Integer and \
-                self.exp >= 0
+                (self.exp >= 0) is True
         else:
             return True
 
@@ -816,19 +822,39 @@ class Pow(Expr):
                 # 1/(1 + x) = 1 - x + x**2 - x**3 ...
                 # so we need to rewrite base to the form "1+x"
 
-                b = b._eval_nseries(x, n=n, logx=logx)
+                nuse = n
+                cf = 1
+
+                try:
+                    ord = b.as_leading_term(x)
+                    cf = C.Order(ord, x).getn()
+                    if cf:
+                        nuse = n + 2*cf
+                    else:
+                       cf = 1
+                except NotImplementedError:
+                    pass
+
+                b_orig = b
+                b = b_orig._eval_nseries(x, n=nuse, logx=logx)
                 prefactor = b.as_leading_term(x)
+
+                while prefactor.is_Order:
+                    nuse += 1
+                    b = b_orig._eval_nseries(x, n=nuse, logx=logx)
+                    prefactor = b.as_leading_term(x)
+
                 # express "rest" as: rest = 1 + k*x**l + ... + O(x**n)
                 rest = expand_mul((b - prefactor)/prefactor)
+
                 if rest == 0:
                     # if prefactor == w**4 + x**2*w**4 + 2*x*w**4, we need to
                     # factor the w**4 out using collect:
                     return 1/collect(prefactor, x)
                 if rest.is_Order:
-                    return 1/prefactor + rest/prefactor
+                    return 1/prefactor + rest/prefactor + O(x**n, x)
                 n2 = rest.getn()
                 if n2 is not None:
-                    n = n2
                     # remove the O - powering this is slow
                     if logx is not None:
                         rest = rest.removeO()
@@ -841,8 +867,11 @@ class Pow(Expr):
                 else:
                     raise NotImplementedError()
 
+                if cf < 0:
+                    cf = S.One/abs(cf)
+
                 terms = [1/prefactor]
-                for m in xrange(1, ceiling(n/l)):
+                for m in xrange(1, ceiling(n/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
@@ -850,6 +879,7 @@ class Pow(Expr):
                     else:
                         new_term = expand_mul(new_term, deep=False)
                     terms.append(new_term)
+                terms.append(O(x**n, x))
 
                 # Append O(...), we know the order.
                 if n2 is None or logx is not None:
@@ -860,7 +890,10 @@ class Pow(Expr):
                 # example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
-                denominator = (b**(-e))._eval_nseries(x, n=n, logx=logx)
+                nuse, denominator = n, O(1)
+                while denominator.is_Order:
+                    denominator = (b**(-e))._eval_nseries(x, n=nuse, logx=logx)
+                    nuse += 1
                 if 1/denominator == self:
                     return self
                 # now we have a type 1/f(x), that we know how to expand
@@ -987,11 +1020,11 @@ class Pow(Expr):
             l = []
             g = None
             for i in xrange(n + 2):
-                g = self.taylor_term(i, z, g)
+                g = self._taylor_term(i, z, g)
                 g = g.nseries(x, n=n, logx=logx)
                 l.append(g)
             r = Add(*l)
-        return r*b0**e + order
+        return expand_mul(r*b0**e) + order
 
     def _eval_as_leading_term(self, x):
         if not self.exp.has(x):
@@ -999,10 +1032,7 @@ class Pow(Expr):
         return C.exp(self.exp * C.log(self.base)).as_leading_term(x)
 
     @cacheit
-    def taylor_term(self, n, x, *previous_terms):  # of (1+x)**e
-        if n < 0:
-            return S.Zero
-        x = _sympify(x)
+    def _taylor_term(self, n, x, *previous_terms): # of (1+x)**e
         return C.binomial(self.exp, n) * self.func(x, n)
 
     def _sage_(self):
@@ -1111,7 +1141,7 @@ class Pow(Expr):
 
         return e.equals(0)
 
-from add import Add
-from numbers import Integer
-from mul import Mul, _keep_coeff
-from symbol import Symbol, Dummy, symbols
+from .add import Add
+from .numbers import Integer
+from .mul import Mul, _keep_coeff
+from .symbol import Symbol, Dummy, symbols

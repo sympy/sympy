@@ -10,5 +10,5 @@ SymPyDeprecationWarning(
     issue=3386,
     deprecated_since_version="0.7.2",
 ).warn()
-from distributions import Normal, Uniform
+from .distributions import Normal, Uniform
 del SymPyDeprecationWarning

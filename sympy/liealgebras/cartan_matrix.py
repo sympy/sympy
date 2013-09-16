@@ -1,4 +1,4 @@
-from cartan_type import CartanType
+from .cartan_type import CartanType
 
 def CartanMatrix(ct):
     """

@@ -14,10 +14,13 @@ and returns the antiderivative, and decorate it with
 ``@evaluates(namedtuple_type)``.
 
 """
+from __future__ import print_function, division
+
 from collections import namedtuple
 
 import sympy
 
+from sympy.core.compatibility import reduce
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.simplify import fraction
 from sympy.strategies.core import (switch, identity, do_one, null_safe,

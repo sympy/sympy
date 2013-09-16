@@ -1,5 +1,7 @@
 """Implementation of :class:`ModularInteger` class. """
 
+from __future__ import print_function, division
+
 import operator
 
 from sympy.polys.polyutils import PicklableWithSlots
@@ -164,6 +166,8 @@ class ModularInteger(PicklableWithSlots, DomainElement):
 
     def __nonzero__(self):
         return bool(self.val)
+
+    __bool__ = __nonzero__
 
     @classmethod
     def _invert(cls, value):

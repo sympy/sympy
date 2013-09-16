@@ -1,10 +1,13 @@
 """Bessel type functions"""
 
+from __future__ import print_function, division
+
 from sympy import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError, expand_func
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import re, im
+from sympy.core.compatibility import xrange
 
 # TODO
 # o Airy Ai and Bi functions
@@ -569,7 +572,7 @@ class jn(SphericalBesselBase):
 
     >>> from sympy import Symbol, jn, sin, cos, expand_func
     >>> z = Symbol("z")
-    >>> print jn(0, z).expand(func=True)
+    >>> print(jn(0, z).expand(func=True))
     sin(z)/z
     >>> jn(1, z).expand(func=True) == sin(z)/z**2 - cos(z)/z
     True
@@ -620,7 +623,7 @@ class yn(SphericalBesselBase):
 
     >>> from sympy import Symbol, yn, sin, cos, expand_func
     >>> z = Symbol("z")
-    >>> print expand_func(yn(0, z))
+    >>> print(expand_func(yn(0, z)))
     -cos(z)/z
     >>> expand_func(yn(1, z)) == -cos(z)/z**2-sin(z)/z
     True

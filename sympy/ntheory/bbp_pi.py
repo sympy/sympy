@@ -45,6 +45,8 @@ n = 10**7)
 array (perhaps just a matter of preference).
 
 '''
+from __future__ import print_function, division
+
 import math
 
 

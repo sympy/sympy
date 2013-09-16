@@ -4,12 +4,14 @@ Second quantization operators and states for bosons.
 This follow the formulation of Fetter and Welecka, "Quantum Theory
 of Many-Particle Systems."
 """
+from __future__ import print_function, division
+
 from collections import defaultdict
 
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, xrange
 from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
@@ -918,7 +920,7 @@ class FockState(Expr):
           Element 0 is the state that was occupied first, element i
           is the i'th occupied state.
         """
-        occupations = map(sympify, occupations)
+        occupations = list(map(sympify, occupations))
         obj = Basic.__new__(cls, Tuple(*occupations))
         return obj
 
@@ -994,7 +996,7 @@ class FermionState(FockState):
     fermi_level = 0
 
     def __new__(cls, occupations, fermi_level=0):
-        occupations = map(sympify, occupations)
+        occupations = list(map(sympify, occupations))
         if len(occupations) > 1:
             try:
                 (occupations, sign) = _sort_anticommuting_fermions(
@@ -1936,7 +1938,7 @@ class NO(Expr):
         >>> from textwrap import fill
         >>> from sympy import symbols, Dummy
         >>> p,q = symbols('p,q', cls=Dummy)
-        >>> print fill(str(NO(Fd(p)*F(q)).doit()))
+        >>> print(fill(str(NO(Fd(p)*F(q)).doit())))
         KroneckerDelta(_a, _p)*KroneckerDelta(_a,
         _q)*CreateFermion(_a)*AnnihilateFermion(_a) + KroneckerDelta(_a,
         _p)*KroneckerDelta(_i, _q)*CreateFermion(_a)*AnnihilateFermion(_i) -
@@ -2203,11 +2205,11 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
 
     verified = False
     sign = 0
-    rng = range(len(string1) - 1)
-    rev = range(len(string1) - 3, -1, -1)
+    rng = list(range(len(string1) - 1))
+    rev = list(range(len(string1) - 3, -1, -1))
 
     keys = list(map(key, string1))
-    key_val = dict(zip(keys, string1))
+    key_val = dict(list(zip(keys, string1)))
 
     while not verified:
         verified = True
@@ -2477,14 +2479,14 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         subsdict = {}
         for d in ordered:
             if d.assumptions0.get('below_fermi'):
-                subsdict[d] = i.next()
+                subsdict[d] = next(i)
             elif d.assumptions0.get('above_fermi'):
-                subsdict[d] = a.next()
+                subsdict[d] = next(a)
             else:
-                subsdict[d] = p.next()
+                subsdict[d] = next(p)
         subslist = []
         final_subs = []
-        for k, v in subsdict.iteritems():
+        for k, v in subsdict.items():
             if k == v:
                 continue
             if v in subsdict:
@@ -2584,7 +2586,7 @@ def _get_ordered_dummies(mul, verbose=False):
     args = Mul.make_args(mul)
     fac_dum = dict([ (fac, fac.atoms(Dummy)) for fac in args] )
     fac_repr = dict([ (fac, __kprint(fac)) for fac in args] )
-    all_dums = reduce(set.union, fac_dum.values(), set())
+    all_dums = reduce(set.union, list(fac_dum.values()), set())
     mask = {}
     for d in all_dums:
         if d.assumptions0.get('below_fermi'):
@@ -2609,7 +2611,7 @@ def _get_ordered_dummies(mul, verbose=False):
                     for fac in masked_facs ]
         all_masked = [ fac.replace(dum_repr[d], mask[d])
                        for fac in masked_facs ]
-        masked_facs = dict(zip(dumstruct, masked_facs))
+        masked_facs = dict(list(zip(dumstruct, masked_facs)))
 
         # dummies for which the ordering cannot be determined
         if has_dups(all_masked):
@@ -2617,7 +2619,7 @@ def _get_ordered_dummies(mul, verbose=False):
             return mask[d], tuple(all_masked)  # positions are ambiguous
 
         # sort factors according to fully masked strings
-        keydict = dict(zip(dumstruct, all_masked))
+        keydict = dict(list(zip(dumstruct, all_masked)))
         dumstruct.sort(key=lambda x: keydict[x])
         all_masked.sort()
 
@@ -2648,12 +2650,12 @@ def _get_ordered_dummies(mul, verbose=False):
                         break
                     pos_val.append(facpos)
         return (mask[d], tuple(all_masked), pos_val[0], pos_val[-1])
-    dumkey = dict(zip(all_dums, map(_key, all_dums)))
+    dumkey = dict(list(zip(all_dums, list(map(_key, all_dums)))))
     result = sorted(all_dums, key=lambda x: dumkey[x])
-    if has_dups(dumkey.itervalues()):
+    if has_dups(iter(dumkey.values())):
         # We have ambiguities
         unordered = defaultdict(set)
-        for d, k in dumkey.iteritems():
+        for d, k in dumkey.items():
             unordered[k].add(d)
         for k in [ k for k in unordered if len(unordered[k]) < 2 ]:
             del unordered[k]
@@ -2935,11 +2937,8 @@ class PermutationOperator(Expr):
     is_commutative = True
 
     def __new__(cls, i, j):
-        i, j = map(sympify, (i, j))
-        if (i > j):
-            obj = Basic.__new__(cls, j, i)
-        else:
-            obj = Basic.__new__(cls, i, j)
+        i, j = sorted(map(sympify, (i, j)), key=default_sort_key)
+        obj = Basic.__new__(cls, i, j)
         return obj
 
     def get_permuted(self, expr):
@@ -3016,10 +3015,7 @@ def simplify_index_permutations(expr, permutation_operators):
 
     def _choose_one_to_keep(a, b, ind):
         # we keep the one where indices in ind are in order ind[0] < ind[1]
-        if _get_indices(a, ind) < _get_indices(b, ind):
-            return a
-        else:
-            return b
+        return min(a, b, key=lambda x: default_sort_key(_get_indices(x, ind)))
 
     expr = expr.expand()
     if isinstance(expr, Add):

@@ -1,5 +1,7 @@
 """Trait for implementing domain elements. """
 
+from __future__ import print_function, division
+
 from sympy.utilities import public
 
 @public

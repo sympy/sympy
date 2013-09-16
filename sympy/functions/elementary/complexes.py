@@ -1,4 +1,7 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C
+from sympy.core.compatibility import u
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -415,6 +418,8 @@ class Abs(Function):
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
                 return arg
+            if exponent.is_integer and base is S.NegativeOne:
+                return S.One
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
@@ -591,7 +596,7 @@ class adjoint(Function):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         if printer._use_unicode:
-            pform = pform**prettyForm(u'\u2020')
+            pform = pform**prettyForm(u('\u2020'))
         else:
             pform = pform**prettyForm('+')
         return pform

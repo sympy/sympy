@@ -19,13 +19,12 @@ access any SymPy module, or use this contens:
    core.rst
    combinatorics/index.rst
    ntheory.rst
+   crypto.rst
    concrete.rst
    evalf.rst
    functions/index.rst
-   geometry.rst
    galgebra/index.rst
-   galgebra/GA/GAsympy.rst
-   galgebra/latex_ex/latex_ex.rst
+   geometry.rst
    integrals/integrals.rst
    logic.rst
    matrices/index.rst
@@ -44,6 +43,7 @@ access any SymPy module, or use this contens:
    solvers/ode.rst
    solvers/pde.rst
    solvers/solvers.rst
+   solvers/diophantine.rst
    tensor/index.rst
    utilities/index.rst
    parsing.rst

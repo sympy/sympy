@@ -187,10 +187,13 @@ def test_recognize_log_derivative():
     assert recognize_log_derivative(a, d, DE, z) == True
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert recognize_log_derivative(Poly(t + 1, t), Poly(t + x, t), DE) == True
-    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1), DE) == True
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
-    assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2), DE) == False
-    assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t), DE) == True
+    assert recognize_log_derivative(Poly(2, t), Poly(t**2 - 1, t), DE) == True
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 - 2, x), DE) == False
+    assert recognize_log_derivative(Poly(1, x), Poly(x**2 + x, x), DE) == True
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2 - 2, t), DE) == False
+    assert recognize_log_derivative(Poly(1, t), Poly(t**2 + t, t), DE) == False
 
 
 def test_residue_reduce():
@@ -336,7 +339,15 @@ def test_integrate_hyperexponential_returns_piecewise():
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
         (x**3/3, Eq(a**6, 0)),
         ((x**2*a**5 - 2*x*a**4 + 2*a**3)*exp(a*x)/a**6, True)), 0, True)
-
+    DE = DifferentialExtension(x**y + z, y)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((y,
+        Eq(log(x), 0)), (exp(log(x)*y)/log(x), True)), z, True)
+    DE = DifferentialExtension(x**y + z + x**(2*y), y)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise((2*y,
+        Eq(2*log(x)**2, 0)), ((exp(2*log(x)*y)*log(x) +
+            2*exp(log(x)*y)*log(x))/(2*log(x)**2), True)), z, True)
+    # TODO: Add a test where two different parts of the extension use a
+    # Piecewise, like y**x + z**x.
 
 def test_integrate_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
