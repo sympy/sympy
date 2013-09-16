@@ -464,7 +464,7 @@ def _test(*paths, **kwargs):
     enhance_asserts = kwargs.get("enhance_asserts", False)
     split = kwargs.get('split', None)
     r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
-        force_colors=force_colors)
+        force_colors=force_colors, split=split)
     t = SymPyTests(r, kw, post_mortem, seed)
 
     # Disable warnings for external modules
@@ -635,7 +635,7 @@ def _doctest(*paths, **kwargs):
     import warnings
     warnings.simplefilter("error", SymPyDeprecationWarning)
 
-    r = PyTestReporter(verbose)
+    r = PyTestReporter(verbose, split=split)
     t = SymPyDocTests(r, normal)
 
     test_files = t.get_test_files('sympy')
@@ -1721,7 +1721,7 @@ class PyTestReporter(Reporter):
     """
 
     def __init__(self, verbose=False, tb="short", colors=True,
-                 force_colors=False):
+                 force_colors=False, split=None):
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
@@ -1735,6 +1735,7 @@ class PyTestReporter(Reporter):
         self._exceptions = []
         self._terminal_width = None
         self._default_width = 80
+        self._split = split
 
         # this tracks the x-position of the cursor (useful for positioning
         # things on the screen), without the need for any readline library:
@@ -1950,6 +1951,8 @@ class PyTestReporter(Reporter):
             self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
         else:
             self.write("off\n")
+        if self._split:
+            self.write("split:              %s\n" % self._split)
         self.write('\n')
         self._t_start = clock()
 
