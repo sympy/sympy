@@ -52,6 +52,7 @@ from sympy.polys.domains import FF, ZZ, QQ, EX
 from sympy.polys.rings import ring
 
 from sympy import S, I, sin
+from sympy.core.compatibility import long
 
 from sympy.abc import x
 
@@ -218,7 +219,7 @@ def test_dmp_eval_in():
     assert dmp_eval_in(f_6, 7, 2, 3, ZZ) == dmp_swap(
         dmp_eval(dmp_swap(f_6, 0, 2, 3, ZZ), 7, 3, ZZ), 0, 1, 2, ZZ)
 
-    f = [[[45L]], [[]], [[]], [[-9L], [-1L], [], [3L, 0L, 10L, 0L]]]
+    f = [[[long(45)]], [[]], [[]], [[long(-9)], [-1], [], [long(3), long(0), long(10), long(0)]]]
 
     assert dmp_eval_in(f, -2, 2, 2, ZZ) == \
         [[45], [], [], [-9, -1, 0, -44]]

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
@@ -102,7 +104,7 @@ class Order(Expr):
 
         point = S.Zero
         if symbols:
-            symbols = map(sympify, symbols)
+            symbols = list(map(sympify, symbols))
             if symbols[-1] in (S.Infinity, S.Zero):
                 point = symbols[-1]
                 symbols = symbols[:-1]
@@ -209,7 +211,7 @@ class Order(Expr):
         return self.expr.free_symbols
 
     def _eval_power(b, e):
-        if e.is_Number:
+        if e.is_Number and e.is_nonnegative:
             return b.func(b.expr ** e, *b.args[1:])
         return
 

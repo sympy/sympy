@@ -9,6 +9,8 @@ References
 .. [1] http://en.wikipedia.org/wiki/Pauli_matrices
 """
 
+from __future__ import print_function, division
+
 from sympy import Symbol, I
 
 __all__ = ['evaluate_pauli_product']

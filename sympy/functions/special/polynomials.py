@@ -6,6 +6,8 @@ combinatorial polynomials.
 
 """
 
+from __future__ import print_function, division
+
 from sympy.core.basic import C
 from sympy.core.singleton import S
 from sympy.core import Rational
@@ -350,13 +352,13 @@ class gegenbauer(OrthogonalPolynomial):
         if not n.is_Number:
             # Handle this before the general sign extraction rule
             if x == S.NegativeOne:
-                if C.re(a) > S.Half:
+                if (C.re(a) > S.Half) is True:
                     return S.ComplexInfinity
                 else:
                     # No sec function available yet
                     #return (C.cos(S.Pi*(a+n)) * C.sec(S.Pi*a) * C.gamma(2*a+n) /
                     #            (C.gamma(2*a) * C.gamma(n+1)))
-                    return cls
+                    return None
 
             # Symbolic result C^a_n(x)
             # C^a_n(-x)  --->  (-1)**n * C^a_n(x)
@@ -668,8 +670,9 @@ class chebyshevt_root(Function):
 
     @classmethod
     def eval(cls, n, k):
-        if not 0 <= k < n:
-            raise ValueError("must have 0 <= k < n")
+        if not ((0 <= k) is (k < n) is True):
+            raise ValueError("must have 0 <= k < n, "
+                "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(2*k + 1)/(2*n))
 
 
@@ -708,8 +711,9 @@ class chebyshevu_root(Function):
 
     @classmethod
     def eval(cls, n, k):
-        if not 0 <= k < n:
-            raise ValueError("must have 0 <= k < n")
+        if not ((0 <= k) is (k < n) is True):
+            raise ValueError("must have 0 <= k < n, "
+                "got k = %s and n = %s" % (k, n))
         return C.cos(S.Pi*(k + 1)/(n + 1))
 
 #----------------------------------------------------------------------------

@@ -1,15 +1,16 @@
 """Tools for setting up printing in interactive sessions. """
 
-from cStringIO import StringIO
+from __future__ import print_function, division
 
 from sympy import latex
 from sympy import preview
-
+from sympy.core.compatibility import cStringIO, integer_types, string_types
+from sympy.utilities.misc import debug
 
 def _init_python_printing(stringify_func):
     """Setup printing in Python interactive session. """
-    import __builtin__
     import sys
+    from sympy.core.compatibility import builtins
 
     def _displayhook(arg):
         """Python's pretty-printer display hook.
@@ -20,9 +21,9 @@ def _init_python_printing(stringify_func):
 
         """
         if arg is not None:
-            __builtin__._ = None
-            print stringify_func(arg)
-            __builtin__._ = arg
+            builtins._ = None
+            print(stringify_func(arg))
+            builtins._ = arg
 
     sys.displayhook = _displayhook
 
@@ -50,8 +51,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
     dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
         imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
-    # print "DVIOPTIONS", dvioptions
-    # print "PREAMBLE", preamble
+    debug("init_printing: DVIOPTIONS:", dvioptions)
+    debug("init_printing: PREAMBLE:", preamble)
 
     def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
@@ -61,9 +62,15 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             p.text(IPython.lib.pretty.pretty(arg))
 
     def _preview_wrapper(o):
-        exprbuffer = StringIO()
-        preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
+        exprbuffer = cStringIO()
+        try:
+            preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
                 preamble=preamble, dvioptions=dvioptions)
+        except Exception as e:
+            # IPython swallows exceptions
+            debug("png printing:", "_preview_wrapper exception raised:",
+                repr(e))
+            raise
         return exprbuffer.getvalue()
 
     def _can_print_latex(o):
@@ -76,10 +83,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         if isinstance(o, (list, tuple, set, frozenset)):
             return all(_can_print_latex(i) for i in o)
         elif isinstance(o, dict):
-            return all((isinstance(i, basestring) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
+            return all((isinstance(i, string_types) or _can_print_latex(i)) and _can_print_latex(o[i]) for i in o)
         elif isinstance(o, bool):
             return False
-        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, int, long, float)):
+        elif isinstance(o, (sympy.Basic, sympy.matrices.MatrixBase, float, integer_types)):
             return True
         return False
 
@@ -127,16 +134,16 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             if '\n' in out:
                 print
 
-            print out
+            print(out)
         else:
-            print repr(arg)
+            print(repr(arg))
 
     import IPython
     if IPython.__version__ >= '0.11':
         from sympy.core.basic import Basic
         from sympy.matrices.matrices import MatrixBase
-        printable_types = [Basic, MatrixBase, int, long, float,
-                          tuple, list, set, frozenset, dict]
+        printable_types = [Basic, MatrixBase,  float, tuple, list, set,
+                frozenset, dict] + list(integer_types)
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
@@ -145,22 +152,27 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
 
         png_formatter = ip.display_formatter.formatters['image/png']
         if use_latex in (True, 'png'):
+            debug("init_printing: using png formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)
             png_formatter.enabled = True
         elif use_latex == 'matplotlib':
+            debug("init_printing: using matplotlib formatter")
             for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_matplotlib)
             png_formatter.enabled = True
         else:
+            debug("init_printing: not using any png formatter")
             png_formatter.enabled = False
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         if use_latex in (True, 'mathjax'):
+            debug("init_printing: using mathjax formatter")
             for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
             latex_formatter.enabled = True
         else:
+            debug("init_printing: not using mathjax formatter")
             latex_formatter.enabled = False
     else:
         ip.set_hook('result_display', _result_display)
@@ -277,8 +289,10 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             if not isinstance(ip, (InteractiveConsole, TerminalInteractiveShell)) \
                     and 'ipython-console' not in ''.join(sys.argv):
                 if use_unicode is None:
+                    debug("init_printing: Setting use_unicode to True")
                     use_unicode = True
                 if use_latex is None:
+                    debug("init_printing: Setting use_latex to True")
                     use_latex = True
 
     if not no_global:

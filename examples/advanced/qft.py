@@ -120,16 +120,16 @@ def main():
     d = Symbol("d", real=True)  # d=E+m
 
     xprint('M', M)
-    print "-"*40
+    print("-"*40)
     M = ((M.subs(E, d - m)).expand() * d**2 ).expand()
     xprint('M2', 1/(E + m)**2 * M)
-    print "-"*40
+    print("-"*40)
     x, y = M.as_real_imag()
     xprint('Re(M)', x)
     xprint('Im(M)', y)
     e = x**2 + y**2
     xprint('abs(M)**2', e)
-    print "-"*40
+    print("-"*40)
     xprint('Expand(abs(M)**2)', e.expand())
 
     #print Pauli(1)*Pauli(1)

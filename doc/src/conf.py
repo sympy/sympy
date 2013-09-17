@@ -162,6 +162,7 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+\usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}

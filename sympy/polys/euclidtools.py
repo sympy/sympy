@@ -1,5 +1,7 @@
 """Euclidean algorithms, GCDs, LCMs and polynomial remainder sequences. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_strip, dmp_raise,
     dmp_zero, dmp_one, dmp_ground,
@@ -49,6 +51,8 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyconfig import query
 
 from sympy.ntheory import nextprime
+
+from sympy.core.compatibility import xrange
 
 
 def dup_half_gcdex(f, g, K):

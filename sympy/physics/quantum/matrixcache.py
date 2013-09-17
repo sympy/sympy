@@ -1,5 +1,6 @@
 """A cache for storing small matrices in multiple formats."""
 
+from __future__ import print_function, division
 
 from sympy import Matrix, I, Pow, Rational, exp, pi
 

@@ -24,27 +24,30 @@ There are two types of functions:
     >>> from sympy.abc import x
     >>> f(x)
     f(x)
-    >>> print sympy.srepr(f(x).func)
+    >>> print(sympy.srepr(f(x).func))
     Function('f')
     >>> f(x).args
     (x,)
 
 """
-from add import Add
-from assumptions import ManagedProperties
-from basic import Basic
-from cache import cacheit
-from compatibility import iterable, is_sequence
-from core import BasicMeta, C
-from decorators import _sympifyit
-from expr import Expr, AtomicExpr
-from numbers import Rational, Float
-from rules import Transform
-from singleton import S
-from sympify import sympify
+from __future__ import print_function, division
+
+from .add import Add
+from .assumptions import ManagedProperties
+from .basic import Basic
+from .cache import cacheit
+from .compatibility import iterable, is_sequence
+from .core import BasicMeta, C
+from .decorators import _sympifyit
+from .expr import Expr, AtomicExpr
+from .numbers import Rational, Float
+from .rules import Transform
+from .singleton import S
+from .sympify import sympify
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
+from sympy.core.compatibility import string_types, with_metaclass, xrange
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import uniq
 
@@ -86,29 +89,26 @@ class ArgumentIndexError(ValueError):
                (self.args[1], self.args[0]))
 
 
-class FunctionClass(ManagedProperties):
+class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     """
     Base class for function classes. FunctionClass is a subclass of type.
 
     Use Function('<function name>' [ , signature ]) to create
     undefined function classes.
     """
-    __metaclass__ = BasicMeta
-
     _new = type.__new__
 
     def __repr__(cls):
         return cls.__name__
 
 
-class Application(Basic):
+class Application(with_metaclass(FunctionClass, Basic)):
     """
     Base class for applied functions.
 
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
-    __metaclass__ = FunctionClass
     __slots__ = []
 
     is_Function = True
@@ -117,7 +117,7 @@ class Application(Basic):
 
     @cacheit
     def __new__(cls, *args, **options):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         evaluate = options.pop('evaluate', True)
         if options:
             raise ValueError("Unknown options: %s" % options)
@@ -418,6 +418,9 @@ class Function(Application, Expr):
     def _eval_is_commutative(self):
         return fuzzy_and(a.is_commutative for a in self.args)
 
+    def _eval_is_complex(self):
+        return fuzzy_and(a.is_complex for a in self.args)
+
     def as_base_exp(self):
         """
         Returns the method as the 2-tuple (base, exponent).
@@ -568,6 +571,7 @@ class Function(Application, Expr):
         if not self.args[argindex - 1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
+            arg_dummy.dummy_index = hash(self.args[argindex - 1])
             return Subs(Derivative(
                 self.subs(self.args[argindex - 1], arg_dummy),
                 arg_dummy), arg_dummy, self.args[argindex - 1])
@@ -600,17 +604,6 @@ class Function(Application, Expr):
         else:
             return self.func(*args)
 
-    @classmethod
-    def taylor_term(cls, n, x, *previous_terms):
-        """General method for the taylor term.
-
-        This method is slow, because it differentiates n-times. Subclasses can
-        redefine it to make it faster by using the "previous_terms".
-        """
-        x = sympify(x)
-        _x = Dummy('x')
-        return cls(_x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / C.factorial(n)
-
 
 class AppliedUndef(Function):
     """
@@ -618,10 +611,13 @@ class AppliedUndef(Function):
     function.
     """
     def __new__(cls, *args, **options):
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         result = super(AppliedUndef, cls).__new__(cls, *args, **options)
         result.nargs = len(args)
         return result
+
+    def _eval_as_leading_term(self, x):
+        return self
 
 
 class UndefinedFunction(FunctionClass):
@@ -633,6 +629,8 @@ class UndefinedFunction(FunctionClass):
         ret.__module__ = None
         return ret
 
+UndefinedFunction.__eq__ = lambda s, o: (isinstance(o, s.__class__) and
+                                         (s.class_key() == o.class_key()))
 
 class WildFunction(Function, AtomicExpr):
     """
@@ -991,6 +989,7 @@ class Derivative(Expr):
             else:
                 if not is_symbol:
                     new_v = C.Dummy('xi_%i' % i)
+                    new_v.dummy_index = hash(v)
                     expr = expr.subs(v, new_v)
                     old_v = v
                     v = new_v
@@ -1035,7 +1034,7 @@ class Derivative(Expr):
 
         * Derivative wrt different symbols commute.
         * Derivative wrt different non-symbols commute.
-        * Derivatives wrt symbols and non-symbols dont' commute.
+        * Derivatives wrt symbols and non-symbols don't commute.
 
         Examples
         --------
@@ -1159,7 +1158,36 @@ class Derivative(Expr):
         if old in self.variables and not new.is_Symbol:
             # Issue 1620
             return Subs(self, old, new)
-        return self.func(*map(lambda x: x._subs(old, new), self.args))
+        # If both are Derivatives with the same expr, check if old is
+        # equivalent to self or if old is a subderivative of self.
+        if old.is_Derivative and old.expr == self.args[0]:
+            # Check if canonnical order of variables is equal.
+            old_vars = Derivative._sort_variables(old.variables)
+            self_vars = Derivative._sort_variables(self.args[1:])
+            if old_vars == self_vars:
+                return new
+
+            # Check if olf is a subderivative of self.
+            if len(old_vars) < len(self_vars):
+                self_vars_front = []
+                match = True
+                while old_vars and self_vars and match:
+                    if old_vars[0] == self_vars[0]:
+                        old_vars.pop(0)
+                        self_vars.pop(0)
+                    else:
+                        # If self_v does not match old_v, we need to check if
+                        # the types are the same (symbol vs non-symbol). If
+                        # they are, we can continue checking self_vars for a
+                        # match.
+                        if old_vars[0].is_Symbol != self_vars[0].is_Symbol:
+                            match = False
+                        else:
+                            self_vars_front.append(self_vars.pop(0))
+                if match:
+                    variables = self_vars_front + self_vars
+                    return Derivative(new, *variables)
+        return Derivative(*map(lambda x: x._subs(old, new), self.args))
 
     def _eval_lseries(self, x):
         dx = self.args[1:]
@@ -1250,7 +1278,7 @@ class Lambda(Expr):
         if len(args) != self.nargs:
             raise TypeError('%s takes %d arguments (%d given)' %
                     (self, self.nargs, len(args)))
-        return self.expr.xreplace(dict(zip(self.variables, args)))
+        return self.expr.xreplace(dict(list(zip(self.variables, args))))
 
     def __eq__(self, other):
         if not isinstance(other, Lambda):
@@ -1260,7 +1288,7 @@ class Lambda(Expr):
 
         selfexpr = self.args[1]
         otherexpr = other.args[1]
-        otherexpr = otherexpr.xreplace(dict(zip(other.args[0], self.args[0])))
+        otherexpr = otherexpr.xreplace(dict(list(zip(other.args[0], self.args[0]))))
         return selfexpr == otherexpr
 
     def __ne__(self, other):
@@ -1373,7 +1401,7 @@ class Subs(Expr):
         return self.expr.is_commutative
 
     def doit(self):
-        return self.expr.doit().subs(zip(self.variables, self.point))
+        return self.expr.doit().subs(list(zip(self.variables, self.point)))
 
     def evalf(self, prec=None, **options):
         if prec is None:
@@ -2173,7 +2201,7 @@ def count_ops(expr, visual=False):
 
     elif type(expr) is dict:
         ops = [count_ops(k, visual=visual) +
-               count_ops(v, visual=visual) for k, v in expr.iteritems()]
+               count_ops(v, visual=visual) for k, v in expr.items()]
     elif iterable(expr):
         ops = [count_ops(i, visual=visual) for i in expr]
     elif not isinstance(expr, Basic):
@@ -2216,10 +2244,10 @@ def nfloat(expr, n=15, exponent=False):
     """
     from sympy.core import Pow
 
-    if iterable(expr, exclude=basestring):
+    if iterable(expr, exclude=string_types):
         if isinstance(expr, (dict, Dict)):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
-                               expr.iteritems()])
+                               list(expr.items())])
         return type(expr)([nfloat(a, n, exponent) for a in expr])
     rv = sympify(expr)
 

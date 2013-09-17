@@ -1,5 +1,7 @@
 """Square-free decomposition algorithms and related tools. """
 
+from __future__ import print_function, division
+
 from sympy.polys.densebasic import (
     dup_strip,
     dup_LC, dmp_ground_LC,

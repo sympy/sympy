@@ -14,20 +14,20 @@ def main():
     y = sympy.Symbol('y')
 
     e = 1/sympy.cos(x)
-    print
+    print()
     pprint(e)
-    print '\n'
+    print('\n')
     pprint(e.subs(sympy.cos(x), y))
-    print '\n'
+    print('\n')
     pprint(e.subs(sympy.cos(x), y).subs(y, x**2))
 
     e = 1/sympy.log(x)
     e = e.subs(x, sympy.Float("2.71828"))
-    print '\n'
+    print('\n')
     pprint(e)
-    print '\n'
+    print('\n')
     pprint(e.evalf())
-    print
+    print()
 
 if __name__ == "__main__":
     main()

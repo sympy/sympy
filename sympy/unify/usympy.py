@@ -3,6 +3,7 @@
 See sympy.unify for module level docstring
 See sympy.unify.core for algorithmic docstring """
 
+from __future__ import print_function, division
 
 from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
@@ -80,7 +81,6 @@ def unify(x, y, s=None, variables=(), **kwargs):
     >>> from sympy.unify.usympy import unify
     >>> from sympy import Basic, cos
     >>> from sympy.abc import x, y, z, p, q
-    >>> from sympy.core.compatibility import next
 
     >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
     {x: 2}

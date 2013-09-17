@@ -98,6 +98,10 @@ def test_Min():
     assert Min(0,-x,1-2*x).diff(x) == -Heaviside(x + Min(0, -2*x + 1)) \
         - 2*Heaviside(2*x + Min(0, -x) - 1)
 
+    a, b = Symbol('a', real=True), Symbol('b', real=True)
+    # a and b are both real, Min(a, b) should be real
+    assert Min(a, b).is_real
+
 
 def test_Max():
     from sympy.abc import x, y, z
@@ -144,6 +148,9 @@ def test_Max():
     assert Max(x**2, 1+x, 1).diff(x) == 2*x*Heaviside(x**2 - Max(1,x+1)) \
         + Heaviside(x - Max(1,x**2) + 1)
 
+    a, b = Symbol('a', real=True), Symbol('b', real=True)
+    # a and b are both real, Max(a, b) should be real
+    assert Max(a, b).is_real
 
 def test_root():
     from sympy.abc import x, y, z
