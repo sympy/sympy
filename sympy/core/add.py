@@ -669,10 +669,10 @@ class Add(Expr, AssocOp):
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
         (7, 9)
-	>>> ((1 + I)/(1 - I)).as_real_imag()
-	(0, 1)
-	>>> ((1 + 2*I)*(1 + 3*I)).as_real_imag()
-	(-5, 5)
+        >>> ((1 + I)/(1 - I)).as_real_imag()
+        (0, 1)
+        >>> ((1 + 2*I)*(1 + 3*I)).as_real_imag()
+        (-5, 5)
         """
         from sympy import expand_mul
         self = expand_mul(self)
