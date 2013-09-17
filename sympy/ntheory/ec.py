@@ -9,8 +9,14 @@ from sympy.solvers.solvers import solve
 
 class EllipticCurve():
     """
+    Create the following Elliptic Curve over domain.
 
     `y^{2} + a_{1} x y + a_{3} y = x^{3} + a_{2} x^{2} + a_{4} x + a_{6}`
+
+    The default domain is ``QQ``. If no coefficient ``a1``, ``a2``, ``a3``,
+    it create curve as following form.
+
+    `y^{2} = x^{3} + a_{4} x + a_{6}`
 
     Examples
     ========
@@ -53,6 +59,7 @@ class EllipticCurve():
 
     def add(self, p1, p2, to_sympy=True):
         """
+        Return new point R = p1 + p2 in curve.
 
         Examples
         ========
@@ -83,6 +90,9 @@ class EllipticCurve():
 
     def mul(self, p, n):
         """
+        Return new point R = nP in curve.
+
+        Compute nP using Double-and-Add method.
 
         Examples
         ========
@@ -105,6 +115,7 @@ class EllipticCurve():
 
     def points(self):
         """
+        Return points of curve over Finite Field.
 
         Examples
         ========
@@ -129,7 +140,7 @@ class EllipticCurve():
 
     def torsion_list(self):
         """
-        Return torsion points of Elliptic curve E(Q).
+        Return torsion points of curve over Rational number.
 
         According to Nagell-Lutz theorem, torsion point p(x, y)
         x and y are integers, either y = 0 or y**2 is divisor
@@ -161,14 +172,25 @@ class EllipticCurve():
 
     @property
     def characteristic(self):
+        """
+        Return domain characteristic.
+
+        """
         return self._domain.characteristic()
 
     @property
     def discriminent(self):
+        """
+        Return curve discriminent.
+
+        """
         return self._discrim
 
     @property
     def is_singular(self):
+        """
+        Return True if curve discriminent is equal to zero.
+        """
         return self.discriminent == 0
 
     @property
