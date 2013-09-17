@@ -1021,23 +1021,15 @@ def polynomial_reduce(p, DE):
     monomial over k, return q, r in k[t] such that p = Dq  + r, and
     deg(r) < deg_t(Dt).
     """
-    if p.degree(DE.t) < DE.d.degree(DE.t):
-        return (Poly(0, DE.t), p)
-    m = p.degree(DE.t) - DE.d.degree(DE.t) + 1
-    print(p, m)
-    q0 = Poly(DE.t**m, DE.t).mul(Poly(p.LC()/
-        (m*DE.d.LC()), DE.t))
-    (q, r) = polynomial_reduce(p - derivation(q0, DE), DE)
-    return (q0 + q, r)
-#q = Poly(0, DE.t)
-#   while p.degree(DE.t) >= DE.d.degree(DE.t):
-#       m = p.degree(DE.t) - DE.d.degree(DE.t) + 1
-#       q0 = Poly(DE.t**m, DE.t).mul(Poly(p.LC()/
-#            (m*DE.d.LC()), DE.t))
-#        q += q0
-#        p = p - derivation(q0, DE)
+    q = Poly(0, DE.t)
+    while p.degree(DE.t) >= DE.d.degree(DE.t):
+        m = p.degree(DE.t) - DE.d.degree(DE.t) + 1
+        q0 = Poly(DE.t**m, DE.t).mul(Poly(p.LC()/
+             (m*DE.d.LC()), DE.t))
+        q += q0
+        p = p - derivation(q0, DE)
 
-#    return (q, p)
+    return (q, p)
 
 
 def polynomial_reduce_kt(pa, pd, DE):
@@ -1558,7 +1550,9 @@ def integrate_hypertangent(fa, fd, DE, z=None):
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
     g1, h, r = hermite_reduce(fa, fd, DE)
+    print(g1, h, r)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
+    print("ended here")
     if not b:
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), b)
@@ -1572,7 +1566,7 @@ def integrate_hypertangent(fa, fd, DE, z=None):
           ).subs(s) + residue_reduce_to_basic(g2, DE, z))
     if not b:
         return (ret, b)
-    print(p)
+    print(pa, pd)
     q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
     Dc = derivation(c, DE)
     if Dc == 0:
