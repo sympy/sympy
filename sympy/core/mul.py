@@ -663,8 +663,12 @@ class Mul(Expr, AssocOp):
             return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import expand_mul
         other = []
         coeff = S.One
+        self = expand_mul(self)
+        if self.is_Add:
+            return self.as_real_imag(deep=True)
         for a in self.args:
             if a.is_real or a.is_imaginary:
                 coeff *= a
@@ -686,7 +690,7 @@ class Mul(Expr, AssocOp):
             if coeff.is_real:
                 return (coeff*C.re(m), coeff*C.im(m))
             else:
-                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m))
+                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m)) 
 
     @staticmethod
     def _expandsums(sums):
