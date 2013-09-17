@@ -1,3 +1,103 @@
+"""
+Diophantine equations
+=====================
+
+The word `Diophantine` comes with the name Diophantus, a mathematician lived
+in the great city of Alexandria sometime around 250 AD. Often referred to as
+the `father \ of \ Algebra`, Diophantus in his famous work `Arithmetica` presented
+150 problems that marked the early beginnings of number theory, the field of
+study about integers and their properties. Diophantine equations play a central
+and an important part in number theory.
+
+We call a `Diophantine \ equation` to an equation of the form, `f(x_1, x_2, ... x_n) = 0`
+where `n \geq 2` and `x_1, x_2, . . . x_n` are integer variables. If we can
+find `n` integers `a_1, a_2, ... a_n` such that `x_1 = a_1, x_2 = a_2, ... x_n = a_n`
+satisfies the above equation, we say that the equation is solvable. You can read
+more about Diophantine equations in [1]_ and [2]_.
+
+Currently, following five types of diophantine equations can be solved using
+:py:meth:`~sympy.solvers.diophantine.diophantine` and other helper functions of
+the Diophantine module.
+
+- Linear Diophantine equations: `a_1x_1 + a_2x_2 + ... + a_nx_n = b`.
+- General binary quadratic equation: `ax^2 + bxy + cy^2 + dx + ey + f = 0`
+- Homogeneous ternary quadratic equation: `ax^2 + by^2 + cz^2 + dxy + eyz + fzx = 0`
+- Extended Pythagorean equation: `a_{1}x_{1}^2 + a_{2}x_{2}^2 + . . . + a_{n}x_{n}^2 = a_{n+1}x_{n+1}^2`
+- General sum of squares: `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 = k`
+
+Module structure
+================
+
+This module contains :py:meth:`~sympy.solvers.diophantine.diophantine` and
+helper functions that are needed to solve certain diophantine equations. It's
+structured in the following manner.
+
+- :py:meth:`~sympy.solvers.diophantine.diophantine`
+
+  - :py:meth:`~sympy.solvers.diophantine.diop_solve`
+
+    - :py:meth:`~sympy.solvers.diophantine.classify_diop`
+    - :py:meth:`~sympy.solvers.diophantine.diop_linear`
+    - :py:meth:`~sympy.solvers.diophantine.diop_quadratic`
+    - :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`
+    - :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
+    - :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares`
+
+  - :py:meth:`~sympy.solvers.diophantine.merge_solution`
+
+When an equation is given to :py:meth:`~sympy.solvers.diophantine.diophantine`,
+it factors the equation(if possible) and solves the equation given by each
+factor by calling :py:meth:`~sympy.solvers.diophantine.diop_solve` separately.
+Then all the results are combined using :py:meth:`~sympy.solvers.diophantine.merge_solution`.
+
+:py:meth:`~sympy.solvers.diophantine.diop_solve` internally uses
+:py:meth:`~sympy.solvers.diophantine.classify_diop`
+to find the type of the equation(and some other details) given to it and then
+calls the appropriate solver function based on the type returned. For example,
+if :py:meth:`~sympy.solvers.diophantine.classify_diop` returned `linear` as the
+type of the equation, then :py:meth:`~sympy.solvers.diophantine.diop_solve`
+calls :py:meth:`~sympy.solvers.diophantine.diop_linear` to solve the equation.
+
+Each of the functions, :py:meth:`~sympy.solvers.diophantine.diop_linear`,
+:py:meth:`~sympy.solvers.diophantine.diop_quadratic`,
+:py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`,
+:py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
+and :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares` solves a
+specific type of equations and the type can be easily guessed by their name.
+
+Apart from these functions, there are a considerable number of other functions
+in the `Diophantine \ Module` and all of them are listed under User functions and
+Internal functions.
+
+Tutorial
+========
+
+First, let's import the highest API of the diophantine module.
+
+>>> from sympy.solvers.diophantine import diophantine
+
+Before we start solving the equations, we need to define the variables.
+
+>>> from sympy import symbols
+>>> x, y, z = symbols("x, y, z", Integer=True)
+
+Let's start by solving the most easiest type of Diophantine equations, i.e
+linear Diophantine equations. Let's solve `2x + 3y = 5`. Note that although we
+write the equation given into any of the function in diophantine module need
+to be in the form
+
+>>> diophantine(2*x + 3*y - 5)
+set([(3*t - 5, -2*t + 5)])
+
+
+
+References
+==========
+
+.. [1] Andreescu, Titu. Andrica, Dorin. Cucurezeanu, Ion. An Introduction to Diophantine Equations
+.. [2] Diophantine Equation, Wolfram Mathworld, [online]. Available: http://mathworld.wolfram.com/DiophantineEquation.html
+"""
+
 from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
@@ -11,10 +111,10 @@ from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
 
-__all__ = ["diophantine", "diop_solve", "classify_diop", "diop_linear", "base_solution_linear",
-"diop_quadratic", "diop_DN", "cornacchia", "diop_bf_DN", "transformation_to_DN", "find_DN",
-"diop_ternary_quadratic",  "square_factor", "descent", "diop_general_pythagorean",
-"diop_general_sum_of_squares", "partition", "sum_of_three_squares", "sum_of_four_squares"]
+__all__ = ['diophantine', 'diop_solve', 'classify_diop', 'diop_linear', 'base_solution_linear',
+'diop_quadratic', 'diop_DN', 'cornacchia', 'diop_bf_DN', 'transformation_to_DN', 'find_DN',
+'diop_ternary_quadratic',  'square_factor', 'descent', 'diop_general_pythagorean',
+'diop_general_sum_of_squares', 'partition', 'sum_of_three_squares', 'sum_of_four_squares']
 
 
 def diophantine(eq, param=symbols("t", Integer=True)):

@@ -3,7 +3,10 @@
 Diophantine
 ===========
 
-.. module:: sympy.solvers.diophantine
+Introduction
+------------
+
+.. automodule:: sympy.solvers.diophantine
 
 User Functions
 --------------
@@ -149,4 +152,3 @@ These functions are intended for the internal use in Diophantine module.
 :obj:`reconstruct`
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.reconstruct
-
