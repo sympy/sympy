@@ -37,10 +37,7 @@ def _alpha_to_z(f, ring):
             for i in xrange(n):
                 m = monom + (n-i-1,)
                 if coeff[i]:
-                    if m not in f_:
-                        f_[m] = coeff[i]
-                    else:
-                        f_[m] += coeff[i]
+                    f_[m] = coeff[i]
 
     return f_
 
@@ -48,21 +45,15 @@ def _alpha_to_z(f, ring):
 def _z_to_alpha(f, ring):
     domain = ring.domain
 
-    if f.ring.is_univariate:
-        f_ = domain.zero
-        for (monom,), coeff in f.iterterms():
-            f_ += domain([domain.domain(coeff)] + [0]*monom)
+    f_ = ring.zero
+    for monom, coeff in f.iterterms():
+        m = monom[:-1]
+        c = domain([domain.domain(coeff)] + [0]*monom[-1])
 
-    else:
-        f_ = ring.zero
-        for monom, coeff in f.iterterms():
-            m = monom[:-1]
-            c = domain([domain.domain(coeff)] + [0]*monom[-1])
-
-            if m not in f_:
-                f_[m] = c
-            else:
-                f_[m] += c
+        if m not in f_:
+            f_[m] = c
+        else:
+            f_[m] += c
 
     return f_
 
