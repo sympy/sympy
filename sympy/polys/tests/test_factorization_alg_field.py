@@ -62,13 +62,6 @@ def test_efactor():
 
     assert efactor(f) == (lc, [(f1, 1), (f2, 1), (f3, 1)])
 
-    A = AlgebraicField(QQ, sqrt(8))
-    R, x, y = ring('x, y', A)
-
-    f = (x - sqrt(8)/2)*(x + sqrt(8)/2)
-
-    assert efactor(f) == f.factor_list()
-
     A = AlgebraicField(QQ, sqrt(3))
     R, x, y, z, t = ring('x, y, z, t', A)
 
