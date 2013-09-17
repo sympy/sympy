@@ -30,14 +30,6 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.base_solution_linear
 
-:func:`extended_euclid`
-^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.extended_euclid
-
-:func:`divisible`
-^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.divisible
-
 :func:`diop_quadratic`
 ^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_quadratic
@@ -50,17 +42,9 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.cornacchia
 
-:func:`PQa`
-^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.PQa
-
 :func:`diop_bf_DN`
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_bf_DN
-
-:func:`equivalent`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.equivalent
 
 :func:`transformation_to_DN`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,37 +58,13 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.diop_ternary_quadratic
 
-:func:`simplified`
-^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.simplified
-
-:func:`parametrize_ternary_quadratic`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.parametrize_ternary_quadratic
-
-:func:`diop_ternary_quadratic_normal`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.diop_ternary_quadratic_normal
-
 :func:`square_factor`
 ^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.square_factor
 
-:func:`ldescent`
-^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.ldescent
-
 :func:`descent`
 ^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.descent
-
-:func:`gaussian_reduce`
-^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.gaussian_reduce
-
-:func:`holzer`
-^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.holzer
 
 :func:`diop_general_pythagorean`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -118,10 +78,6 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 ^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.partition
 
-:func:`prime_as_sum_of_two_squares`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
-
 :func:`sum_of_three_squares`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.diophantine.sum_of_three_squares
@@ -133,6 +89,54 @@ sympy import *``. These functions are intended for use by ordinary users of SymP
 Internal Functions
 ------------------
 These functions are intended for the internal use in Diophantine module.
+
+:obj:`merge_solution`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.merge_solution
+
+:obj:`divisible`
+^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.divisible
+
+:obj:`extended_euclid`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.extended_euclid
+
+:obj:`PQa`
+^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.PQa
+
+:obj:`equivalent`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.equivalent
+
+:obj:`simplified`
+^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.simplified
+
+:obj:`parametrize_ternary_quadratic`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.parametrize_ternary_quadratic
+
+:obj:`diop_ternary_quadratic_normal`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.diop_ternary_quadratic_normal
+
+:obj:`ldescent`
+^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.ldescent
+
+:obj:`gaussian_reduce`
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.gaussian_reduce
+
+:obj:`holzer`
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.holzer
+
+:obj:`prime_as_sum_of_two_squares`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.diophantine.prime_as_sum_of_two_squares
 
 :obj:`pairwise_prime`
 ^^^^^^^^^^^^^^^^^^^^^

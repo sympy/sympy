@@ -11,6 +11,11 @@ from sympy.core.numbers import igcdex
 from sympy.ntheory.residue_ntheory import sqrt_mod
 from sympy.core.compatibility import xrange
 
+__all__ = ["diophantine", "diop_solve", "classify_diop", "diop_linear", "base_solution_linear",
+"diop_quadratic", "diop_DN", "cornacchia", "diop_bf_DN", "transformation_to_DN", "find_DN",
+"diop_ternary_quadratic",  "square_factor", "descent", "diop_general_pythagorean",
+"diop_general_sum_of_squares", "partition", "sum_of_three_squares", "sum_of_four_squares"]
+
 
 def diophantine(eq, param=symbols("t", Integer=True)):
     """
@@ -31,7 +36,7 @@ def diophantine(eq, param=symbols("t", Integer=True)):
     =======
 
     ``eq`` should be an expression which is assumed to be zero.
-    ``t`` is a parameter to be used in the solution.
+    ``t`` is the parameter to be used in the solution.
 
     Examples
     ========
@@ -115,10 +120,11 @@ def merge_solution(var, var_t, solution):
 
 def diop_solve(eq, param=symbols("t", Integer=True)):
     """
-    Solves diophantine equation ``eq``.
+    Solves the diophantine equation ``eq``.
 
-    Uses classify_diop() to determine the type of eqaution and calls the
-    appropriate solver function.
+    Similar to ``diophantine()`` but doesn't try to factor ``eq`` as latter
+    does. Uses ``classify_diop()`` to determine the type of the eqaution and
+    calls the appropriate solver function.
 
     Usage
     =====
@@ -143,6 +149,13 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
     (3*t + 4*z - 5, -4*t - 4*z + 5,  z)
     >>> diop_solve(x + 3*y - 4*z + w -6)
     (t, -t - 3*y + 4*z + 6, y, z)
+    >>> diop_solve(x**2 + y**2 - 5)
+    set([(-2, -1), (-2, 1), (2, -1), (2, 1)])
+
+    See Also
+    ========
+
+    diophantine()
     """
     var, coeff, eq_type = classify_diop(eq)
 
@@ -166,8 +179,8 @@ def diop_solve(eq, param=symbols("t", Integer=True)):
         for soln in l:
             if isinstance(soln, Integer):
                 s.add(soln)
-
         return s
+
     elif eq_type == "general_sum_of_squares":
         return _diop_general_sum_of_squares(var, coeff)
 
@@ -179,7 +192,7 @@ def classify_diop(eq):
     Returns a tuple containing the type of the diophantine equation along with
     the variables(free symbols) and their coefficients. Variables are returned
     as a list and coefficients are returned as a dict with the key being the
-    variable name and the constant term is keyed to Integer(1). Type is an
+    respective term and the constant term is keyed to Integer(1). Type is an
     element in the set {"linear", "binary_quadratic", "general_pythagorean",
     "homogeneous_ternary_quadratic", "univariable", "general_sum_of_squares"}
 
@@ -202,6 +215,8 @@ def classify_diop(eq):
     ([x, y], {1: -4, x: 4, y: 6}, 'linear')
     >>> classify_diop(x + 3*y -4*z + 5)
     ([x, y, z], {1: 5, x: 1, y: 3, z: -4}, 'linear')
+    >>> classify_diop(x**2 + y**2 - x*y + x + 5)
+    ([x, y], {1: 5, x: 1, x**2: 1, y: 0, y**2: 1, x*y: -1}, 'binary_quadratic')
     """
     eq = eq.expand(force=True)
     var = list(eq.free_symbols)
@@ -311,7 +326,7 @@ def diop_linear(eq, param=symbols("t", Integer=True)):
 
     A linear diophantine equation is an equation of the form `a_{1}x_{1} +
     a_{2}x_{2} + .. + a_{n}x_{n} = 0` where `a_{1}, a_{2}, ..a_{n}` are
-    constants and `x_{1}, x_{2}, ..x_{n}` are variables.
+    integer constants and `x_{1}, x_{2}, ..x_{n}` are integer variables.
 
     Usage
     =====
@@ -343,7 +358,8 @@ def diop_linear(eq, param=symbols("t", Integer=True)):
     See Also
     ========
 
-    diop_quadratic(), diop_ternary_quadratic()
+    diop_quadratic(), diop_ternary_quadratic(), diop_general_pythagorean(),
+    diop_general_sum_of_squares()
     """
     var, coeff, diop_type = classify_diop(eq)
 
@@ -399,7 +415,8 @@ def base_solution_linear(c, a, b, t=None):
     variables.
 
     Used by ``diop_linear()`` to find the base solution of a linear
-    Diophantine equation.
+    Diophantine equation. If ``t`` is given then the parametrized solution is
+    returned.
 
     Usage
     =====
@@ -410,10 +427,10 @@ def base_solution_linear(c, a, b, t=None):
     Details
     =======
 
-    ``c`` is the constant term in `ax + by = c`
-    ``a`` is the integer coefficient of x in `ax + by = c`
-    ``b`` is the integer coefficient of y in `ax + by = c`
-    ``t`` is the parameter to be used in the solution
+    ``c`` is the constant term in `ax + by = c`.
+    ``a`` is the integer coefficient of x in `ax + by = c`.
+    ``b`` is the integer coefficient of y in `ax + by = c`.
+    ``t`` is the parameter to be used in the solution.
 
 
     Examples
@@ -468,8 +485,8 @@ def extended_euclid(a, b):
     Details
     =======
 
-    ``a`` Any instance of Integer
-    `b`` Any instance of Integer
+    ``a`` Any instance of Integer.
+    `b`` Any instance of Integer.
 
     Examples
     ========
@@ -528,15 +545,16 @@ def diop_quadratic(eq, param=symbols("t", Integer=True)):
     References
     ==========
 
-    ..[1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0,[online],
+    .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0,[online],
           Available: http://www.alpertron.com.ar/METHODS.HTM
-    ..[2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
+    .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
           Available: http://www.jpr2718.org/ax2p.pdf
 
     See Also
     ========
 
-    diop_linear(), diop_ternary_quadratic()
+    diop_linear(), diop_ternary_quadratic(), diop_general_sum_of_squares(),
+    diop_general_pythagorean()
     """
     var, coeff, diop_type = classify_diop(eq)
 
@@ -765,9 +783,9 @@ def _diop_quadratic(var, coeff, t):
 
 def is_solution_quad(var, coeff, u, v):
     """
-    Check whether `(u, v)` is solution to the quadratic binary diophantine equation
-    with the variable list ``var`` and coefficient dictionary ``coeff``. Not intended
-    for normal users.
+    Check whether `(u, v)` is solution to the quadratic binary diophantine
+    equation with the variable list ``var`` and coefficient dictionary ``coeff``.
+    Not intended for use by normal users.
     """
     x, y = var[:2]
 
@@ -782,10 +800,10 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
 
     Mainly concerned in the case `D > 0, D` is not a perfect square, which is
     the same as generalized Pell equation. To solve the generalized Pell equation
-    this function Uses LMM algorithm. Refer [1] for more details on the algorithm.
+    this function Uses LMM algorithm. Refer [1]_ for more details on the algorithm.
     Returns one solution for each class of the solutions. Other solutions of the
     class can be constructed according to the values of ``D`` and ``N``. Returns
-    a list containing the solution tuples` (x, y)`.
+    a list containing the solution tuples `(x, y)`.
 
     Usage
     =====
@@ -796,9 +814,8 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
     Details
     =======
 
-    ``D`` corresponds to the D in the equation
-    ``N`` corresponds to the N in the equation
-    ``t`` parameter to be used in the solutions
+    ``D`` and ``N`` correspond to D and N in the equation.
+    ``t`` is the parameter to be used in the solutions.
 
     Examples
     ========
@@ -823,7 +840,7 @@ def diop_DN(D, N, t=symbols("t", Integer=True)):
     References
     ==========
 
-    ..[1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
+    .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P. Robertson,
           July 31, 2004, Pages 16 - 17. [online], Available: http://www.jpr2718.org/pell.pdf
     """
     if D < 0:
@@ -1030,22 +1047,15 @@ def PQa(P_0, Q_0, D):
     There are six sequences of integers defined related to the continued fraction
     representation of `\\frac{P + \sqrt{D}}{Q}`, namely {`P_{i}`}, {`Q_{i}`},
     {`a_{i}`},{`A_{i}`}, {`B_{i}`}, {`G_{i}`}. ``PQa()`` Returns these values as
-    a 6-tuple in the same order as mentioned above. Refer [1] for more detailed
+    a 6-tuple in the same order as mentioned above. Refer [1]_ for more detailed
     information.
 
     Usage
     =====
 
-    ``PQa(P_0, Q_0, D)``: ``P_0``, ``Q_0`` and ``D`` are integers corresponding to
-    the continued fraction `\\frac{P_{0} + \sqrt{D}}{Q_{0}}`. Also it's assumed that
-    `P_{0}^2 == D mod(|Q_{0}|)` and `D` is square free.
-
-    Details
-    =======
-
-    ``P_{0}`` corresponds to the P in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-    ``D`` corresponds to the D in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-    ``Q_{0}`` corresponds to the Q in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``PQa(P_0, Q_0, D)``: ``P_0``, ``Q_0`` and ``D`` are integers corresponding
+    to `P_{0}`, `Q_{0}` and `D` in the continued fraction `\\frac{P_{0} + \sqrt{D}}{Q_{0}}`.
+    Also it's assumed that `P_{0}^2 == D mod(|Q_{0}|)` and `D` is square free.
 
     Examples
     ========
@@ -1095,10 +1105,10 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
     Uses brute force to solve the equation, `x^2 - Dy^2 = N`.
 
     Mainly concerned with the generalized Pell equation which is the case when
-    `D > 0, D` is not a perfect square. For more information on the case refer [1].
-    Let `t, u` be the minimal positive solution such that `t^2 - Du^2 = 1`
-    (i. e. solutions to the equation `x^2 - Dy^2 = 1`) then this method requires
-    that `\sqrt{\\frac{\mid N \mid (t \pm 1)}{2D}}` is not too large.
+    `D > 0, D` is not a perfect square. For more information on the case refer
+    [1]_. Let `(t, u)` be the minimal positive solution of the equation
+    `x^2 - Dy^2 = 1`. Then this method requires `\sqrt{\\frac{\mid N \mid (t \pm 1)}{2D}}`
+    to be small.
 
     Usage
     =====
@@ -1109,9 +1119,8 @@ def diop_bf_DN(D, N, t=symbols("t", Integer=True)):
     Details
     =======
 
-    ``D`` corresponds to the D in the equation
-    ``N`` corresponds to the N in the equation
-    ``t`` parameter to be used in the solutions
+    ``D`` and ``N`` correspond to D and N in the equation.
+    ``t`` is the parameter to be used in the solutions.
 
     Examples
     ========
@@ -1180,7 +1189,7 @@ def equivalent(u, v, r, s, D, N):
 
     Two solutions `(u, v)` and `(r, s)` to the above equation fall to the same
     equivalence class iff both `(ur - Dvs)` and `(us - vr)` are divisible by `N`.
-    See reference [1]. No test is performed to test whether `(u, v)` and
+    See reference [1]_. No test is performed to test whether `(u, v)` and
     `(r, s)` are actually solutions to the equation. User should take care of
     this.
 
@@ -1228,9 +1237,8 @@ def length(P, Q, D):
     Details
     =======
 
-    ``P`` corresponds to the P in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-    ``D`` corresponds to the D in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
-    ``Q`` corresponds to the Q in the continued fraction, `\\frac{P + \sqrt{D}}{Q}`
+    ``P``, ``D`` and ``Q`` corresponds to P, D and Q in the continued fraction,
+    `\\frac{P + \sqrt{D}}{Q}`.
 
     Examples
     ========
@@ -1276,7 +1284,7 @@ def transformation_to_DN(eq):
     to more easy to deal with `X^2 - DY^2 = N` form.
 
     This is used to solve the general quadratic equation by transforming it to the
-    latter form. Refer [1] for more detailed information on the transformation.
+    latter form. Refer [1]_ for more detailed information on the transformation.
     This function returns a tuple (A, B) where A is a 2 * 2 matrix and B is a
     2 * 1 matrix such that,
 
@@ -1304,8 +1312,8 @@ def transformation_to_DN(eq):
     [-4/13]])
 
     A, B  returned are such that Transpose((x y)) =  A * Transpose((X Y)) + B.
-    Substituting these values for ``x`` and ``y`` and a bit of simplifying work will give
-    an equation of the form `x^2 - Dy^2 = N`.
+    Substituting these values for `x` and `y` and a bit of simplifying work will
+    give an equation of the form `x^2 - Dy^2 = N`.
 
     >>> from sympy.abc import X, Y
     >>> from sympy import Matrix, simplify, Subs
@@ -1417,9 +1425,9 @@ def find_DN(eq):
     This function returns a tuple, `(D, N)` of the simplified form `x^2 - Dy^2 = N`
     corresponding to the general quadratic `ax^2 + bxy + cy^2 + dx + ey + f = 0`.
 
-    Solving the general quadratic is then equivalent to solving the equation `X^2 - DY^2 = N`
-    and transforming the solutions by using the transformation matrices returned by
-    `transformation_to_DN()`.
+    Solving the general quadratic is then equivalent to solving the equation
+    `X^2 - DY^2 = N` and transforming the solutions by using the transformation
+     matrices returned by ``transformation_to_DN()``.
 
     Usage
     =====
@@ -1434,8 +1442,9 @@ def find_DN(eq):
     >>> find_DN(x**2 - 3*x*y - y**2 - 2*y + 1)
     (13, -884)
 
-    Interpretation of the output is that we get `X^2 -13Y^2 = -884` after transforming
-    `x^2 - 3xy - y^2 - 2y + 1` using the transformation returned by transformation_to_DN().
+    Interpretation of the output is that we get `X^2 -13Y^2 = -884` after
+    transforming `x^2 - 3xy - y^2 - 2y + 1` using the transformation returned
+    by ``transformation_to_DN()``.
 
     See Also
     ========
@@ -1514,7 +1523,7 @@ def check_param(x, y, a, t):
 
             return x*ilcm(l1, l2), y*ilcm(l1, l2)
 
-        eq = S(m -x_param[q])/x_param[p] - S(n - y_param[q])/y_param[p]
+        eq = S(m - x_param[q])/x_param[p] - S(n - y_param[q])/y_param[p]
 
         lcm_denom, junk = Poly(eq).clear_denoms()
         eq = eq * lcm_denom
@@ -1534,7 +1543,8 @@ def diop_ternary_quadratic(eq):
     Usage
     =====
 
-    ``diop_ternary_quadratic(eq)``: Return a tuple containing an basic solution to ``eq``.
+    ``diop_ternary_quadratic(eq)``: Return a tuple containing an basic solution
+    to ``eq``.
 
     Details
     =======
@@ -2200,8 +2210,9 @@ def gaussian_reduce(w, a, b):
 
 def dot(u, v, w, a, b):
     """
-    Returns a special dot product of the vectors `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`
-    which is defined in order to reduce solution of the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
+    Returns a special dot product of the vectors `u = (u_{1}, u_{2})` and
+    `v = (v_{1}, v_{2})` which is defined in order to reduce solution of
+    the congruence equation `X^2 - aZ^2 \equiv 0 \ (mod \ b)`.
     """
     u_1, u_2 = u[:2]
     v_1, v_2 = v[:2]
@@ -2210,9 +2221,9 @@ def dot(u, v, w, a, b):
 
 def norm(u, w, a, b):
     """
-    Returns the norm of the vector `u = (u_{1}, u_{2})` under the dot product defined by
-    `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}` where `u = (u_{1}, u_{2})`
-    and `v = (v_{1}, v_{2})`.
+    Returns the norm of the vector `u = (u_{1}, u_{2})` under the dot product
+    defined by `u \cdot v = (wu_{1} + bu_{2})(w*v_{1} + bv_{2}) + |a|*u_{1}*v_{1}`
+    where `u = (u_{1}, u_{2})` and `v = (v_{1}, v_{2})`.
     """
     u_1, u_2 = u[:2]
     return sqrt(dot((u_1, u_2), (u_1, u_2), w, a, b))
@@ -2340,7 +2351,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     =======
 
     When `n = 3` if `k = 4^a(8m + 7)` for some `a, m \in Z` then there will be
-    no solutions. Refer [1] for more details.
+    no solutions. Refer [1]_ for more details.
 
     Examples
     ========
@@ -2550,7 +2561,7 @@ def sum_of_three_squares(n):
     """
     Returns a 3-tuple `(a, b, c)` such that `a^2 + b^2 + c^2 = n` and `a, b, c \geq 0`.
 
-    Returns (None, None, None) if `n = 4^a(8m + 7)` for some `a, m \in Z`. See[1] for
+    Returns (None, None, None) if `n = 4^a(8m + 7)` for some `a, m \in Z`. See [1]_ for
     more details.
 
     Usage
