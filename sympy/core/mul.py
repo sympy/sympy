@@ -690,7 +690,7 @@ class Mul(Expr, AssocOp):
             if coeff.is_real:
                 return (coeff*C.re(m), coeff*C.im(m))
             else:
-                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m)) 
+                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m))
 
     @staticmethod
     def _expandsums(sums):
