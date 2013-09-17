@@ -65,7 +65,7 @@ def _distinct_prime_divisors(S, domain):
     for i, s in enumerate(S):
         divisors.append(s)
 
-        for j in xrange(i-1):
+        for j in xrange(i):
             g = gcd(divisors[i], divisors[j])
             divisors[i] = divisors[i] // g
             divisors[j] = divisors[j] // g
@@ -614,7 +614,7 @@ def _factor(f, save):
                 continue
 
             try:
-                result = _test_evaluation_points(f_, groundring.convert(gamma), lcfactors, A, D)
+                result = _test_evaluation_points(f_, gamma_, lcfactors, A, D)
             except UnluckyLeadingCoefficient:
                 # TODO: check interval
                 C = [random.randint(1, 3*(N + 1)) for _ in xrange(n - 1)]

@@ -1,7 +1,15 @@
-from sympy.polys.factorization_alg_field import efactor
-from sympy.polys.domains import AlgebraicField, QQ
+from sympy.polys.factorization_alg_field import efactor, _distinct_prime_divisors
+from sympy.polys.domains import AlgebraicField, QQ, ZZ
 from sympy import sqrt, I, ring, S
 from sympy.utilities.pytest import slow
+
+def test_distinct_prime_divisors():
+    S = [20, 6, 7]
+    assert _distinct_prime_divisors(S, ZZ) == [5, 3, 7]
+
+    S = [15, 18, 11]
+    assert _distinct_prime_divisors(S, ZZ) == [5, 2, 11]
+
 
 def test_efactor():
     A = AlgebraicField(QQ, sqrt(2))
