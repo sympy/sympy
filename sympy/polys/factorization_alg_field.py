@@ -553,10 +553,12 @@ def _sqf_p(f, minpoly, p):
         return _euclidean_algorithm(f, _trunc(f.diff(0), minpoly, p), minpoly, p) == 1
 
 
-def _test_prime(fA, minpoly, p, domain):
+def _test_prime(fA, D, minpoly, p, domain):
     if fA.LC % p == 0 or minpoly.LC % p == 0:
         return False
     if not _sqf_p(fA, minpoly, p):
+        return False
+    if D % p == 0:
         return False
 
     return True
@@ -580,13 +582,14 @@ def _factor(f, save):
 
     minpoly = _minpoly_from_dense(ring.domain.mod, zring.drop(*zring.gens[:-1]))
     f_ = _monic_associate(f, zring)
+
     if save is True:
         D = minpoly.resultant(minpoly.diff(0))
     else:
         D = groundring.one
 
     # heuristic bound for p-adic lift
-    B = f_.max_norm()
+    B = (f_.max_norm() + 1)*D
 
     lc = zring.dmp_LC(f_)
     gamma, lcfactors = efactor(_z_to_alpha(lc, lcring)) # over QQ(alpha)[x_1, ..., x_n]
@@ -664,7 +667,7 @@ def _factor(f, save):
 
             f_ = f_.mul_ground(delta)
 
-            while not _test_prime(fA, minpoly, p, zring.domain):
+            while not _test_prime(fA, D, minpoly, p, zring.domain):
                 p = nextprime(p)
 
             pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
@@ -691,7 +694,7 @@ def _sort(factors, ring):
 
 
 # output of the form (lc, [(poly1, exp1), ...])
-def efactor(f, save=False):
+def efactor(f, save=True):
     ring = f.ring
 
     assert ring.domain.is_Algebraic
