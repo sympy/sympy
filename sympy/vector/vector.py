@@ -15,10 +15,27 @@ def base_scalars(names, coord_sys, ind=1):
     """
     Creates BaseScalars (coordinates) in a tuple for convenience.
 
-    Takes the names of the BaseScalars, the coordinate system they are
-    defined in, and an initial index.
+    Parameters
+    ==========
+
+    names : string
+        A space separated string of names for base_scalars.
+    coord_sys : CoordSys
+        The coordinate system in which the base scalars are to be creted.
+    ind : integer
+        Index to account for the position of the base scalar.
 
     Not to be used directly.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, base_scalars
+    >>> c0 = CoordSysRect('c')
+    >>> x, y, z = base_scalars('x y z', c0)
+    >>> type(x)
+    sympy.vector.vector.BaseScalar
+
     """
     base_scalar_list = []
     try:
@@ -32,12 +49,29 @@ def base_scalars(names, coord_sys, ind=1):
 
 def vectors(names, coord_sys, ind=1):
     """
-    Creates Vectors in a tuple for convenience.
+    Creates BaseVectors in a tuple for convenience.
 
-    Takes the names of the Vectors, the coordinate system they are defined
-    in, and an initial index.
+    Parameters
+    ==========
+
+    names : string
+        A space separated string of names for base_vectors.
+    coord_sys : CoordSys
+        The coordinate system in which the base vectors are to be creted.
+    ind : integer
+        Index to account for the position of the base vectors.
 
     Not to be used directly.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, base_scalars
+    >>> c0 = CoordSysRect('c')
+    >>> ex, ey, ez = base_vectors('ex ey ez', c0)
+    >>> type(ex)
+    sympy.vector.vector.BaseVector
+
     """
     vector_list = []
     try:
@@ -54,7 +88,22 @@ def vectors(names, coord_sys, ind=1):
 def is_const_vect(vect):
     """
     Check if a vector field is a constant.
-    vect : an object with is_Vector == True.
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector to test.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, is_const_vect
+    >>> c0 = CoordSysRect('c0')
+    >>> v = 5 * c0.x + 7 * c0.y
+    >>> is_const_vect(v)
+    True
+
     """
     # First check if it is a vector at all
     if not vect.is_Vector:
@@ -96,7 +145,30 @@ def _dot_same(vect_a, vect_b):
 
 def dot(vect_a, vect_b, coord_sys=None):
     """
-    Generalized dot product.
+    Generalized dot product of two vectors.
+
+    Parameters
+    ==========
+
+    vect_a : Vector
+        First vector in the dot product.
+    vect_b : Vector
+        Second vector in the dot product.
+    coord_sys : CoordSys
+        A coordinate system to express the result in. If not provided,
+        result will be expressed in all the coordinate systems present.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, CoordSysSph, dot
+    >>> c0 = CoordSysRect('c0')
+    >>> cs = CoordSysSph('cs')
+    >>> v1 = c0.x * c0.e_x + c0.y * c0.e_y + c0.z * c0.e_z
+    >>> v2 = cs.r * cs.e_r
+    >>> dot(v1, v2)
+    cs.r*sqrt(c0.x**2 + c0.y**2 + c0.z**2)
+
     """
     ret = S.Zero
     # Get two lists - each having vectors separated by coordinate system
@@ -139,9 +211,18 @@ def dot(vect_a, vect_b, coord_sys=None):
 
 def grad(expr, coord_sys=None):
     """
-    Calculate the gradient of a vector field
-    expr : a SymPy expression
-    coord_sys : a coord_sys to express the results in
+    Calculate the gradient of a vector field.
+
+    Parameters
+    ==========
+
+    expr : SymPy expression
+        The SymPy expression whose gradient needs to be calculated.
+        Needs to have at least one base scalar for non zero gradient.
+    coord_sys : CoordSys
+        A coordinate system to express the gradient in.
+
+    # TODO : Add examples (once it is tested and works.
     """
     if not _has_base_scalar(expr):
         return ZeroVector
@@ -171,9 +252,29 @@ def grad(expr, coord_sys=None):
 
 def cross(vect_a, vect_b, coord_sys=None):
     """
-    Cross product of two vectors
-    vect_a, vect_b : instances with is_Vector == True
-    coord_sys : an instance of subclass of CoordSys class
+    Generalized cross product of two vectors.
+
+    Parameters
+    ==========
+
+    vect_a : Vector
+        First vector in the cross product.
+    vect_b : Vector
+        Second vector in the cross product.
+    coord_sys : CoordSys
+        A coordinate system to express the result in. If not provided,
+        result will be expressed in all the coordinate systems present.
+
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, CoordSysSph, cross
+    >>> c0 = CoordSysRect('c0')
+    >>> v1 = c0.x * c0.e_y + 2*c0.y * c0.e_z
+    >>> v2 = c0.z * c0.e_x
+    >>> dot(v1, v2)
+    -c0.x*c0.z * c0.e_z + 2*c0.y*c0.z * c0.e_y
+
     """
     ret = ZeroVector
     # Get two lists - each having vectors separated by coordinate system
@@ -214,7 +315,7 @@ def cross(vect_a, vect_b, coord_sys=None):
 
 def _cross_same(vect_a, vect_b):
     """
-    Cross product between two vectors of same coordinate system
+    Cross product between two vectors of same coordinate system.
     """
     coord_a = _all_coordinate_systems(vect_a)
     coord_b = _all_coordinate_systems(vect_b)
@@ -238,8 +339,16 @@ def _cross_same(vect_a, vect_b):
 def div(vect, coord_sys=None):
     """
     Calculate the divergence of a vector field.
-    vect : an object with is_Vector == True
-    coord_sys : an instance of subclass of CoordSys class
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector field to whose diergence is to be calculated.
+    coord_sys : CoordSys
+        The coordinate system to express the results in.
+
+    # TODO : Add examples once testing is done.
     """
     coord_list = _all_coordinate_systems(coord_sys)
     if not coord_sys and len(coord_list) == 1:
@@ -347,7 +456,8 @@ def _all_coordinate_systems(vector):
     vector = vector.expand()
     coord_list = []
     # all_args is a separate method that return only the vector args
-    # arg is either BaseVector or VectMul - becuase we have expanded the vector
+    # arg is either BaseVector or VectMul - becuase we have expanded
+    # the vector
     for arg in vector._all_args:
         if isinstance(arg, BaseVector):
             coord_list.append(arg.coord_sys)
@@ -373,7 +483,7 @@ def _coord_sys_scalar_list(scalar):
 class BaseScalar(AtomicExpr):
     """
     BaseScalar instances are used to express coordinate variables for field.
-    Not to be instantiated by the user.
+    Not to be instantiated by the user directly.
     """
     is_comparable = False
 
@@ -383,6 +493,10 @@ class BaseScalar(AtomicExpr):
         return True
 
     def __init__(self, name, coord_sys, position, **assumptions):
+        """
+        Intialize a BaseScalar.
+        Not to be used directly by the user.
+        """
         if (position not in [1, 2, 3]
             and not isinstance(coord_sys, CoordSysRect)):
             raise ValueError("Position of scalar not specified. \
@@ -414,12 +528,19 @@ class BaseScalar(AtomicExpr):
     @staticmethod
     def coord_rel_rect(base_scalar, coord_sys):
         """
-        base_scalar: A BaseScalar object in CoordSysRect
-        coord_sys: A CoordSys object
-        Returns a relation between the given base_scalar and the
-        given coord_sys
+        Returns a relation between the given base_scalar base scalars
+        in the given coordinate system which must be rectangular.
+
+        Parameters
+        ==========
+
+        base_scalar : BaseScalar
+            A base scalar whose relation is desired.
+        coord_sys : CoordSys
+            The coordinate system to which the relation of base_scalar
+            is desired.
+        # TODO : Where was this method used? If at all, add examples.
         """
-        # TODO : Where was this method used?
         if base_scalar.coord_sys == coord_sys:
             return base_scalar
 
@@ -444,9 +565,10 @@ class BaseScalar(AtomicExpr):
 
     def _convert_to_rect(self, coord_sys, ind=1):
         """
-        coord_sys: An instance of subclass of CoordSys class
         Takes a BaseScalar and converts it to combination of BaseScalars
         in coord_sys.
+
+        coord_sys: An instance of subclass of CoordSys class
         """
         # First check that both coordinate systems have same position and
         # orientation
@@ -470,9 +592,10 @@ class BaseScalar(AtomicExpr):
 
     def _convert_to_sph(self, coord_sys, ind=1):
         """
-        coord_sys: An instance of subclass of CoordSys class
         Takes a BaseScalar and converts it to combination of BaseScalars
         in coord_sys.
+
+        coord_sys: An instance of subclass of CoordSys class
         """
         # First check that both coordinate systems have same position and
         # orientation
@@ -496,9 +619,10 @@ class BaseScalar(AtomicExpr):
 
     def _convert_to_cyl(self, coord_sys, ind=1):
         """
-        coord_sys: An instance of subclass of CoordSys class
         Takes a BaseScalar and converts it to combination of BaseScalars
         in coord_sys.
+
+        coord_sys: An instance of subclass of CoordSys class
         """
         # First check that both coordinate systems have same position and
         # orientation
@@ -540,7 +664,52 @@ class CoordSys(Basic):
             orient_type=None, orient_amount=None, rot_order=None,
             parent=None, basis_vectors=None, coordinates=None
             ):
+        """
+        Special __init___ method for CoordSys class.
 
+        Parameters
+        ==========
+
+        name : string
+            The name of the coordinate system.
+        dim : integer
+            The dimension of the coordinate system. Can take values != 3
+            for only rectangular coordinates.
+        position : Vector
+            The vector position of the coordinate system.
+        orient_type : string
+            The type of orientation to be used.
+            Values:
+            ------
+            'Axis' : Rotate the coordinate system about an axis.
+            'Body' : Rotate the coordinate system about the axes,
+                     one at a time in a specific order.
+             #TODO : Implement two remaining type of orientations.
+        orient_amount : tuple
+             The tuple that tells the amount by which the rotation is to
+             be performed.
+             If orient_type is 'Axis':
+                 tuple if of length 2.
+                 First element is the angle in radians.
+                 Second element (Vector) is the axis of rotation.
+             If orient_type is 'Body':
+                 tuple of length 3.
+                 All elements are angles in radians that will be applied
+                 to the rotation in the specific order (see rot_order below).
+        rot_order : string (length 3)
+             The string to represent rotation order in case of 'Body' type
+             of orientation. Not to be provided for 'Axis' orientation.
+        parent : CoordSys
+             The parent coordinate system of this coordinate system.
+        basis_vectors : string
+             If the default naming of the base vectors is to be changed, this
+             string (space separated names of vectors) should be provided.
+        coordinates : string
+             If the default naming of the base scalars is to be changed, this
+             string (space separated names of scalars) should be provided.
+
+        Not to be initialized directly.
+        """
         if name is None:
             name = 'CoordSys_' + str(Dummy._count)
             Dummy._count += 1
@@ -563,14 +732,14 @@ class CoordSys(Basic):
             # check whether position is a vector
             if not position.is_Vector:
                 raise TypeError("vector expected for position")
-            # TODO : Fix the next line
             if not is_const_vect(position):
                 raise ValueError("Position vector needs to be a constant")
 
             # The position vector needs to be constant, hence, it cannot be in
             # any other coordinate system other than rectangular.
             if parent:
-                self.position = parent.position + position
+                self.position = _vect_add_const(parent.position, position,
+                                                parent.coord_sys)
             else:
                 self.position = position
         else:
@@ -596,11 +765,6 @@ class CoordSys(Basic):
                                                        orient_amount,
                                                        rot_order)
 
-
-    #def __getattr__(self, i):
-    #    return None
-    #    return self._coordinates[int(i[1:]) - 1]
-
     def __str__(self, printer=None):
         return self.name
     __repr__ = __str__
@@ -608,6 +772,9 @@ class CoordSys(Basic):
     _sympyrepr = __str__
 
     def _dcm_parent_method(self, orient_type, amounts, rot_order=''):
+        """
+        Intialize the self._dcm_parent attribute.
+        """
         orient_type = orient_type.capitalize()
         if orient_type == 'Axis':
             if rot_order:
@@ -636,6 +803,9 @@ class CoordSys(Basic):
 
 
     def _dcm_global_method(self, orient_type, amounts, rot_order=''):
+        """
+        Initialize the self._dcm_global attribute.
+        """
         orient_type = orient_type.capitalize()
         if self.parent:
             # Parent given therefore the given angle is wrt parent.
@@ -723,22 +893,43 @@ class CoordSys(Basic):
     @property
     def base_scalars(self):
         """
-        Return a list of base scalars
+        Return a list of base scalars.
         """
         return self._coordinates
 
     @property
     def base_vectors(self):
         """
-        Return a list of base scalars
+        Return a list of base vectors.
         """
         return self._basis
 
     def dcm(self, other='global'):
         """
         Returns the direction cosine matrix for converting from `other`
-        to self, i.e.,
-        self.xyz = self.dcm(other)*other.xyz
+        to `self`, i.e.,
+        self.xyz = self.dcm(other) * other.xyz
+
+        Parameters
+        ==========
+
+        other : CoordSys
+            The coordinate system from which we want the DCM to self.
+
+        Examples
+        ========
+
+        >>> from sympy.vector import CoordSysRect
+        >>> c0 = CoordSysRect('c0')
+        >>> c1 = CoordSysRect
+        >>> cr = CoordSysRect('cr', orient_type='Axis', \
+        orient_amount=(q1, c0.e_z), parent=c0)
+        >>> cr.dcm(c0)
+        Matrix([
+        [ cos(q1), sin(q1), 0],
+        [-sin(q1), cos(q1), 0],
+        [       0,       0, 1]])
+
         """
         if other == 'global':
             return self._dcm_global
@@ -925,7 +1116,7 @@ class CoordSys(Basic):
     @staticmethod
     def _convert_base_vect_rect(vect, coord_sys):
         """
-        vector: An object is_Vector == True
+        vector: An object with is_Vector == True
         coord_sys: A CoordSys object
         returns base vectors in rectangular coordinates converted to another
         set of rectangular coordinates while chaning the orientation
@@ -935,29 +1126,16 @@ class CoordSys(Basic):
 
         Ax0, Ay0, Az0 = vect.components
 
-        # coord_sys  <- vect.coord_sys
-        mat = coord_sys.dcm(vect.coord_sys)
+        mat = vect.coord_sys.dcm(coord_sys)
         mat_components = mat * Matrix([[Ax0], [Ay0], [Az0]])
 
-        # construct the vector to return
+        # construct the vector to return the value
         ret = []
         base_vectors = coord_sys.base_vectors
 
         for i, comp in enumerate(mat_components._mat):
             ret.append(VectMul(comp, base_vectors[i]))
         vect = VectAdd(*ret)
-        """
-        # Now subs out for base scalars
-        subs_dict = {}
-        x0, y0, z0 = vect.coord_sys.base_scalars
-        mat_base_scalars = mat * Matrix([[x0], [y0], [z0]])
-
-        for i, element in enumerate(mat_base_scalars._mat):
-            subs_dict[vect.coord_sys.base_scalars[i]] = element
-
-        # Now subs for the dict
-        vect = vect.subs(subs_dict)
-        """
         return vect
 
     @staticmethod
@@ -981,7 +1159,7 @@ class CoordSys(Basic):
         # A.x, A.y, A.z
         x0, y0, z0 = coord_sys.base_scalars
 
-        mat = coord_sys.dcm(sclr.coord_sys)
+        mat = sclr.coord_sys.dcm(coord_sys)
         mat_components = mat * Matrix([[x0], [y0], [z0]])
         mat_components = mat_components._mat
 
@@ -989,7 +1167,6 @@ class CoordSys(Basic):
         # call express on them without causing a recursion error.
         csA = coord_sys._change_coord_sys(CoordSysRect, 'csA')
         csB = sclr.coord_sys._change_coord_sys(CoordSysRect, 'csB')
-        #import ipdb;ipdb.set_trace()
         rel_pos_vect = coord_sys.position.express(csA) - \
                        sclr.coord_sys.position.express(csB)
         if not rel_pos_vect:
@@ -1454,7 +1631,7 @@ class BaseVector(Vector, Symbol):
 
         if flag:
             raise ValueError("coord_sys doesn't have same position and \
-                              orientaion as coordinate system of self")
+                              orientation as coordinate system of self")
 
         if type(self.coord_sys) == type(coord_sys):
             return coord_sys.base_vectors[self.position - 1]
@@ -1938,7 +2115,6 @@ class VectMul(Mul, Vector):
 
     @classmethod
     def _func_vect_mul(cls, *args):
-        #import ipdb;ipdb.set_trace()
         # args can contain a large number of scalars but only one vector
         ret = S.One
         flag = False
@@ -2091,6 +2267,42 @@ def _vect_div(one, other):
         # Now we know that either one is a vector. Remaining is scalar
         return _vect_mul(one, Pow(other, S.NegativeOne))
 
+def _vect_add_const(one, other, coord_sys):
+    # Constant vectors are different from other vectors in the sense
+    # that they cannot be moved in space. They, thus, need to be handled
+    # differently.
+    assert isinstance(one, CoordSysRect) and isinstance(other, CoordSysRect)
+    if one.coord_sys == other.coord_sys:
+        return _vect_add(one, other).factor_vect()
+
+    """
+    if not coord_sys:
+        else:
+            raise ValueError("No coordinate system provided for the result.")
+    """
+    one = one.express(coord_sys)
+    other = other.express(coord_sys)
+    one_comp = one.components
+    other_comp = other.components
+    ret = [S.Zero] * one.coord_sys.dim
+
+    for i in ret:
+        ret[i] = one_comp[i] + other_comp[i]
+    return to_vector(ret, coord_sys)
+
+def to_vector(components, coord_sys):
+    """
+    Create a vector from given components.
+    components : a tuple/list of components
+    coord_sys : an instance of subclass of CoordSys class. This object
+                will be used get the base vectors for the vector
+    Returns an object with is_Vector == True
+    """
+    ret = ZeroVector
+    for i, comp in enumerate(components):
+        ret = ret + comp * coord_sys.base_vectors[i]
+    return ret
+
 def express(vect, coord_sys):
     """
     coord_sys: Instance of subclasses of CoordSys
@@ -2138,12 +2350,7 @@ def express(vect, coord_sys):
     subs_dict = {}
 
     vect = vect.expand()
-    ######## Get rid of this #######
-    """
-    cs = vect.coord_sys
-    vect = cs.x * coord_sys_t.e_x + cs.y * coord_sys_t.e_y
-    """
-    ################################
+
     # First phase complete
     # Now, we find subs for base vectors and substitute it in
     for arg in vect._all_args:
