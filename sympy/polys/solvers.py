@@ -32,9 +32,9 @@ def solve_lin_sys(eqs, ring, iszerofunc=lambda x: not x, scalefunc=None, elimfun
     For example, a linear system of integer equations can be solved over
     `\mathbb Z_p` by defining those functions as:
 
-        iszerofunc = lambda x: not (x % p)
-        scalefunc = lambda x, _, scale: (x * invert(scale, p)) % p
-        elimfunc = lambda x, y, scale: (x - scale*y) % p
+        |  iszerofunc = lambda x: not (x % p)
+        |  scalefunc = lambda x, _, scale: (x * invert(scale, p)) % p
+        |  elimfunc = lambda x, y, scale: (x - scale*y) % p
 
     Note that ``scalefunc`` and ``elimfunc`` have to take three arguments,
     where the third one has to be named ``scale``.

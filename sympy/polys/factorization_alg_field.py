@@ -22,6 +22,26 @@ from sympy.polys.solvers import solve_lin_sys
 
 
 def _alpha_to_z(f, ring):
+    r"""
+    Change the representation of a polynomial over
+    `\mathbb Q(\alpha)` by replacing the algebraic element `\alpha` by a new
+    variable `z`.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        polynomial in `\mathbb Q(\alpha)[x_0, \ldots, x_n]`
+    ring : PolyRing
+        the polynomial ring `\mathbb Q[x_0, \ldots, x_n, z]`
+
+    Returns
+    =======
+
+    f_ : PolyElement
+        polynomial in `\mathbb Q[x_0, \ldots, x_n, z]`
+
+    """
     if isinstance(f, ANP):
         ring = ring.drop(*ring.gens[:-1])
         f_ = ring.from_dense(f.rep)
@@ -43,6 +63,27 @@ def _alpha_to_z(f, ring):
 
 
 def _z_to_alpha(f, ring):
+    r"""
+    Change the representation of a polynomial in
+    `\mathbb Q[x_0, \ldots, x_n, z]` by replacing the variable `z` by the
+    algebraic element `\alpha` of the given ring
+    `\mathbb Q(\alpha)[x_0, \ldots, x_n]`.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        polynomial in `\mathbb Q[x_0, \ldots, x_n, z]`
+    ring : PolyRing
+        the polynomial ring `\mathbb Q(\alpha)[x_0, \ldots, x_n]`
+
+    Returns
+    =======
+
+    f_ : PolyElement
+        polynomial in `\mathbb Q(\alpha)[x_0, \ldots, x_n]`
+
+    """
     domain = ring.domain
 
     f_ = ring.zero
@@ -59,6 +100,18 @@ def _z_to_alpha(f, ring):
 
 
 def _distinct_prime_divisors(S, domain):
+    r"""
+    Try to find pairwise coprime divisors of all elements of a given list
+    `S` of integers.
+
+    If this fails, ``None`` is returned.
+
+    References
+    ==========
+
+    1. [Javadi09]_
+
+    """
     gcd = domain.gcd
     divisors = []
 
@@ -87,7 +140,12 @@ def _distinct_prime_divisors(S, domain):
 
 
 def _denominator(f):
+    r"""
+    Compute the denominator `\mathrm{den}(f)` of a polynomial `f` over
+    `\mathbb Q`, i.e. the smallest integer such that `\mathrm{den}(f) f` is
+    a polynomial over `\mathbb Z`.
 
+    """
     ring = f.ring.domain.get_ring()
     lcm = ring.lcm
     den = ring.one
@@ -99,6 +157,23 @@ def _denominator(f):
 
 
 def _monic_associate(f, ring):
+    r"""
+    Compute the monic associate of a polynomial `f` over
+    `\mathbb Q(\alpha)`, which is defined as
+
+    .. math ::
+
+        \mathrm{den}\left( \frac 1 {\mathrm{lc}(f)} f \right) \cdot \frac 1 {\mathrm{lc}(f)} f.
+
+    The result is a polynomial in `\mathbb Z[x_0, \ldots, x_n, z]`.
+
+    See also
+    ========
+
+    _denominator
+    _alpha_to_z
+
+    """
     qring = ring.clone(domain=ring.domain.get_field())
     f = _alpha_to_z(f.monic(), qring)
     f_ = f.clear_denoms()[1].set_ring(ring)
@@ -107,6 +182,50 @@ def _monic_associate(f, ring):
 
 
 def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
+    r"""
+    Compute the true leading coefficients in `x_0` of the irreducible
+    factors of a polynomial `f`.
+
+    If this fails, ``None`` is returned.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        squarefree polynomial in `Z[x_0, \ldots, x_n, z]`
+    U : list of PolyElement objects
+        monic univariate factors of `f(x_0, A)` in `\mathbb Q(\alpha)[x_0]`
+    gamma : Integer
+        integer content of `\mathrm{lc}_{x_0}(f)`
+    lcfactors : list of (PolyElement, Integer) objects
+        factorization of `\mathrm{lc}_{x_0}(f)` in
+        `\mathbb Z[x_1, \ldots, x_n, z]`
+    A : list of Integer objects
+        the evaluation point `[a_1, \ldots, a_n]`
+    D : Integer
+        integral multiple of the defect of `\mathbb Q(\alpha)`
+    denoms : list of Integer objects
+        denominators of `\frac 1 {l(A)}` for `l` in ``lcfactors``
+    divisors : list of Integer objects
+        pairwise coprime divisors of all elements of ``denoms``
+
+    Returns
+    =======
+
+    f : PolyElement
+        possibly updated polynomial `f`
+    lcs : list of PolyElement objects
+        true leading coefficients of the irreducible factors of `f`
+    U_ : list of PolyElement objects
+        list of possibly updated monic associates of the univariate factors
+        `U`
+
+    References
+    ==========
+
+    1. [Javadi09]_
+
+    """
     ring = f.ring
     domain = ring.domain
     symbols = f.ring.symbols
@@ -178,10 +297,51 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
 
 
 def _test_evaluation_points(f, gamma, lcfactors, A, D):
+    r"""
+    Test if an evaluation point is suitable for _factor.
+
+    If it is not, ``None`` is returned.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        squarefree polynomial in `\mathbb Z[x_0, \ldots, x_n, z]`
+    gamma : Integer
+        leading coefficient of `f` in `\mathbb Z`
+    lcfactors : list of (PolyElement, Integer) objects
+        factorization of `\mathrm{lc}_{x_0}(f)` in
+        `\mathbb Z[x_1, \ldots, x_n, z]`
+    A : list of Integer objects
+        the evaluation point `[a_1, \ldots, a_n]`
+    D : Integer
+        integral multiple of the defect of `\mathbb Q(\alpha)`
+
+    Returns
+    =======
+
+    fA : PolyElement
+        `f` evaluated at `A`, i.e. `f(x_0, A)`
+    denoms : list of Integer objects
+        the denominators of `\frac 1 {l(A)}` for `l` in ``lcfactors``
+    divisors : list of Integer objects
+        pairwise coprime divisors of all elements of ``denoms``
+
+    References
+    ==========
+
+    1. [Javadi09]_
+
+    See also
+    ========
+
+    _factor
+
+    """
     ring = f.ring
     qring = ring.clone(domain=ring.domain.get_field())
 
-    fA = f.evaluate(zip(ring.gens[1:-1], A))
+    fA = f.evaluate(list(zip(ring.gens[1:-1], A)))
 
     if fA.degree() < f.degree():
         return None
@@ -209,6 +369,11 @@ def _test_evaluation_points(f, gamma, lcfactors, A, D):
 
 
 def _subs_ground(f, A):
+    r"""
+    Substitute variables in the coefficients of a polynomial `f` over a
+    ``PolynomialRing``.
+
+    """
     f_ = f.ring.zero
 
     for monom, coeff in f.iterterms():
@@ -219,6 +384,11 @@ def _subs_ground(f, A):
 
 
 def _choose_particular_solution(solution, ring):
+    r"""
+    Choose a particular solution of the parametrized solution of a linear
+    system.
+
+    """
     domain = ring.domain
     gens = list(ring.gens)
     sol = {}
@@ -234,6 +404,41 @@ def _choose_particular_solution(solution, ring):
 
 
 def _padic_lift(f, pfactors, lcs, B, minpoly, p):
+    r"""
+    Lift the factorization of a polynomial over `\mathbb Z_p[z]/(\mu(z))` to
+    a factorization over `\mathbb Z_{p^m}[z]/(\mu(z))`, where `p^m \geq B`.
+
+    If this fails, ``None`` is returned.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        squarefree polynomial in `\mathbb Z[x_0, \ldots, x_n, z]`
+    pfactors : list of PolyElement objects
+        irreducible factors of `f` modulo `p`
+    lcs : list of PolyElement objects
+        true leading coefficients in `x_0` of the irreducible factors of `f`
+    B : Integer
+        heuristic numerical bound on the size of the largest integer
+        coefficient in the irreducible factors of `f`
+    minpoly : PolyElement
+        minimal polynomial `\mu` of `\alpha` over `\mathbb Q`
+    p : Integer
+        prime number
+
+    Returns
+    =======
+
+    H : list of PolyElement objects
+        factorization of `f` modulo `p^m`, where `p^m \geq B`
+
+    References
+    ==========
+
+    1. [Javadi09]_
+
+    """
     ring = f.ring
     domain = ring.domain
     LC = ring.dmp_LC
@@ -301,6 +506,11 @@ def _padic_lift(f, pfactors, lcs, B, minpoly, p):
 
 
 def _div(f, g, minpoly, p):
+    r"""
+    Division with remainder for univariate polynomials over
+    `\mathbb Z_p[z]/(\mu(z))`.
+
+    """
     ring = f.ring
 
     rem = f
@@ -324,6 +534,14 @@ def _div(f, g, minpoly, p):
 
 
 def _extended_euclidean_algorithm(f, g, minpoly, p):
+    r"""
+    Extended Euclidean Algorithm for univariate polynomials over
+    `\mathbb Z_p[z]/(\mu(z))`.
+
+    Returns `s, t, h`, where `h` is the GCD of `f` and `g` and
+    `sf + tg = h`.
+
+    """
     ring = f.ring
     zero = ring.zero
     one = ring.one
@@ -351,6 +569,16 @@ def _extended_euclidean_algorithm(f, g, minpoly, p):
 
 
 def _diophantine_univariate(F, m, minpoly, p):
+    r"""
+    Solve univariate Diophantine equations of the form
+
+    .. math ::
+
+        \sum_{f \in F} \left( h_f(x) \cdot \prod_{g \in F \setminus \lbrace f \rbrace } g(x) \right) = x^m
+
+    over `\mathbb Z_p[z]/(\mu(z))`.
+
+    """
     if len(F) == 2:
         f, g = F
         result = _extended_euclidean_algorithm(g, f, minpoly, p)
@@ -400,6 +628,10 @@ def _diophantine_univariate(F, m, minpoly, p):
 
 
 def _diophantine(F, c, A, d, minpoly, p):
+    r"""
+    Solve multivariate Diophantine equations over `\mathbb Z_p[z]/(\mu(z))`.
+
+    """
     ring = c.ring
 
     if not A:
@@ -470,6 +702,31 @@ def _diophantine(F, c, A, d, minpoly, p):
 
 
 def _hensel_lift(f, H, LC, A, minpoly, p):
+    r"""
+    Parallel Hensel lifting algorithm over `\mathbb  Z_p[z]/(\mu(z))`.
+
+    Parameters
+    ==========
+
+    f : PolyElement
+        squarefree polynomial in `\mathbb Z[x_0, \ldots, x_n, z]`
+    H : list of PolyElement objects
+        monic univariate factors of `f(x_0, A)` in
+        `\mathbb Z[x_0, z]`
+    LC : list of PolyElement objects
+        true leading coefficients of the irreducible factors of `f`
+    A : list of Integer objects
+        the evaluation point `[a_1, \ldots, a_n]`
+    p : Integer
+        prime number
+
+    Returns
+    =======
+
+    pfactors : list of PolyElement objects
+        irreducible factors of `f` modulo `p`
+
+    """
     ring = f.ring
     n = len(A)
 
@@ -533,6 +790,10 @@ def _hensel_lift(f, H, LC, A, minpoly, p):
 
 
 def _sqf_p(f, minpoly, p):
+    r"""
+    Return ``True`` if `f` is square-free in `\mathbb Z_p[z]/(\mu(z))[x]`.
+
+    """
     ring = f.ring
     lcinv, _, gcd = _gf_gcdex(ring.dmp_LC(f), minpoly, p)
 
@@ -545,6 +806,15 @@ def _sqf_p(f, minpoly, p):
 
 
 def _test_prime(fA, D, minpoly, p, domain):
+    r"""
+    Test if a prime number is suitable for _factor.
+
+    See also
+    ========
+
+    _factor
+
+    """
     if fA.LC % p == 0 or minpoly.LC % p == 0:
         return False
     if not _sqf_p(fA, minpoly, p):
@@ -557,6 +827,16 @@ def _test_prime(fA, D, minpoly, p, domain):
 
 # squarefree f with cont_x0(f) = 1
 def _factor(f, save):
+    r"""
+    Factor a multivariate polynomial `f`, which is squarefree and primitive
+    in `x_0`, in `\mathbb Q(\alpha)[x_0, \ldots, x_n]`.
+
+    References
+    ==========
+
+    1. [Javadi09]_
+
+    """
     ring = f.ring # Q(alpha)[x_0, ..., x_{n-1}]
     lcring = ring.drop(0)
     uniring = ring.drop(*ring.gens[1:])
@@ -680,12 +960,57 @@ def _factor(f, save):
 
 
 def _sort(factors, ring):
+    r"""
+    Sort the irreducible factors of a polynomial.
+
+    """
     densefactors = _sort_factors([(f.to_dense(), exp) for f, exp in factors])
     return [(ring.from_dense(f), exp) for f, exp in densefactors]
 
 
 # output of the form (lc, [(poly1, exp1), ...])
 def efactor(f, save=True):
+    r"""
+    Factor a multivariate polynomial `f` in
+    `\mathbb Q(\alpha)[x_0, \ldots, x_n]`.
+
+    By default, an estimate of the defect of the algebraic field is included
+    in all computations. If ``save`` is set to ``False``, the defect will be
+    treated as one, thus computations are faster. However, if the defect of
+    `\alpha` is larger than one, this may lead to wrong results.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.factorization_alg_field import efactor
+    >>> from sympy.polys import AlgebraicField, ring, QQ
+    >>> from sympy import I, sqrt
+
+    >>> A = AlgebraicField(QQ, I)
+    >>> R, x, y = ring('x, y', A)
+
+    >>> f = x**2 + y**2
+    >>> f1 = x - I*y
+    >>> f2 = x + I*y
+
+    >>> efactor(f) == (A.one, [(f1, 1), (f2, 1)])
+    True
+
+    >>> A = AlgebraicField(QQ, sqrt(2))
+    >>> R, x, y, z = ring('x, y, z', A)
+
+    >>> f = x**2 - 2*sqrt(2)*x*z + 2*z**2
+    >>> f1 = x - sqrt(2)*z
+
+    >>> efactor(f) == (A.one, [(f1, 2)])
+    True
+
+    References
+    ==========
+
+    1. [Javadi09]_
+
+    """
     ring = f.ring
 
     assert ring.domain.is_Algebraic
