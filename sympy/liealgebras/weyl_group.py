@@ -378,7 +378,7 @@ class WeylGroup(Basic):
         ========
         >>> from sympy.liealgebras.weyl_group import WeylGroup
         >>> c = WeylGroup("B3")
-        >>> print c.coxeter_diagram()
+        >>> print(c.coxeter_diagram())
         0---0===0
         1   2   3
         """
