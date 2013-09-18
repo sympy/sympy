@@ -666,9 +666,6 @@ class Mul(Expr, AssocOp):
         from sympy import expand_mul
         other = []
         coeff = S.One
-        self = expand_mul(self)
-        if self.is_Add:
-            return self.as_real_imag(deep=True)
         for a in self.args:
             if a.is_real or a.is_imaginary:
                 coeff *= a
@@ -680,6 +677,8 @@ class Mul(Expr, AssocOp):
                         del other[i]
                         break
                 else:
+                    if any(a.is_Add for a in self.args):
+                        return expand_mul(self, deep=False).as_real_imag()
                     other.append(a)
             else:
                 other.append(a)
