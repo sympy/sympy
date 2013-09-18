@@ -1673,7 +1673,6 @@ def test_sympy__Liealgebras__weyl_group__WeylGroup():
     assert _test_args(WeylGroup("B4"))
 
 @XFAIL
-
 def test_sympy__liealgebras__root_system__RootSystem():
     from sympy.liealgebras.root_system import RootSyStem
     assert _test_args(RootSystem("A2"))
