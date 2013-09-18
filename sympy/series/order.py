@@ -267,10 +267,7 @@ class Order(Expr):
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                try:
-                    l = limit(ratio, s, self.point) != 0
-                except NotImplementedError:
-                    return
+                l = limit(ratio, s, self.point) != 0
                 if r is None:
                     r = l
                 else:
