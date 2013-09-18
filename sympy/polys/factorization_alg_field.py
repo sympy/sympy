@@ -4,6 +4,7 @@ from sympy import Dummy
 import random
 
 from sympy.ntheory import nextprime
+from sympy.core.compatibility import xrange
 from sympy.integrals.heurisch import _symbols
 from sympy.polys.galoistools import gf_irreducible_p
 from sympy.polys.modulargcd import _trunc, _gf_gcdex, _minpoly_from_dense, _euclidean_algorithm
@@ -278,7 +279,7 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
     for j in xrange(n):
         lj = lcs[j]
         dj = denominators[j]
-        ljA = lj.evaluate(zip(lcring.gens, A))
+        ljA = lj.evaluate(list(zip(lcring.gens, A)))
 
         lcs[j] = lj.mul_ground(dj)
         U[j] = U[j].mul_ground(dj).set_ring(zring) * ljA.set_ring(zring)
@@ -352,7 +353,7 @@ def _test_evaluation_points(f, gamma, lcfactors, A, D):
     omega = gamma * D
     denoms = []
     for l, _ in lcfactors:
-        lA = l.evaluate(zip(l.ring.gens, A)) # in Q(alpha)
+        lA = l.evaluate(list(zip(l.ring.gens, A))) # in Q(alpha)
         denoms.append(_denominator(_alpha_to_z(lA**(-1), qring)))
 
     if any(denoms.count(denom) > 1 for denom in denoms):
@@ -492,7 +493,7 @@ def _padic_lift(f, pfactors, lcs, B, minpoly, p):
                 solution[k] = v.trunc_ground(P)
 
         solution = _choose_particular_solution(solution, coeffring)
-        subs = solution.items()
+        subs = list(solution.items())
 
         H = [h + _subs_ground(s, subs).mul_ground(P) for h, s in zip(H, S)]
         P = P**2
@@ -749,7 +750,7 @@ def _hensel_lift(f, H, LC, A, minpoly, p):
             Hring = Hring.drop(j + 1)
 
         x = Hring.gens[0]
-        evalpoints = zip(LC[0].ring.gens[j:-1], J)
+        evalpoints = list(zip(LC[0].ring.gens[j:-1], J))
 
         for i, (h, lc) in enumerate(zip(H, LC)):
             if evalpoints:
