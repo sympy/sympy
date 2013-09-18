@@ -33,11 +33,11 @@ class EllipticCurve():
     def __init__(self, a4, a6, a1=0, a2=0, a3=0, domain=QQ):
         self._domain = domain
         # Calculate discriminant
-        b2 = a1**2 + 4 * a2
-        b4 = 2 * a4 + a1 * a3
-        b6 = a3**2 + 4 * a6
-        b8 = a1**2 * a6 + 4 * a2 * a6 - a1 * a3 * a4 + a2 * a3**2 - a4**2
-        self._discrim = int(self._domain(-b2**2 * b8 - 8 * b4**3 - 27 * b6**2 + 9 * b2 * b4 * b6))
+        self._b2 = a1**2 + 4 * a2
+        self._b4 = 2 * a4 + a1 * a3
+        self._b6 = a3**2 + 4 * a6
+        self._b8 = a1**2 * a6 + 4 * a2 * a6 - a1 * a3 * a4 + a2 * a3**2 - a4**2
+        self._discrim = int(self._domain(-self._b2**2 * self._b8 - 8 * self._b4**3 - 27 * self._b6**2 + 9 * self._b2 * self._b4 * self._b6))
         self._eq = Eq(y**2 + a1*x*y + a3*y, x**3 + a2*x**2 + a4*x + a6)
         self._a1 = self._domain(a1)
         self._a2 = self._domain(a2)
@@ -87,6 +87,28 @@ class EllipticCurve():
         if to_sympy:
             return self._domain.to_sympy(x3), self._domain.to_sympy(y3), 1
         return x3, y3, 1
+
+    def minimal(self):
+        """
+        Return minimal Weierstrass equation Elliptic Curve.
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e1 = EllipticCurve(-10, -20, 0, -1, 1)
+        >>> e1.minimal()
+        E(QQ): y**2 == x**3 - 13392*x - 1080432
+
+        """
+        char = self.characteristic
+        if char == 2:
+            return self
+        if char == 3:
+            return EllipticCurve(self._b4/2, self._b6/4, a2=self._b2/4, domain=self._domain)
+        c4 = self._b2**2 - 24*self._b4
+        c6 = -self._b2**3 + 36*self._b2*self._b4 - 216*self._b6
+        return EllipticCurve(-27*c4, -54*c6, domain=self._domain)
 
     def mul(self, p, n):
         """
@@ -192,6 +214,24 @@ class EllipticCurve():
         Return True if curve discriminent is equal to zero.
         """
         return self.discriminent == 0
+
+    @property
+    def j_invariant(self):
+        """
+        Return curve j-invariant.
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e1 = EllipticCurve(-10, -20, 0, -1, 1)
+        >>> e2 = e1.minimal()
+        >>> e1.j_invariant == e2.j_invariant
+        True
+
+        """
+        c4 = self._b2**2 - 24*self._b4
+        return c4**3 / self.discriminent
 
     @property
     def order(self):
