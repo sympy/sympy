@@ -4,12 +4,16 @@ from sympy.matrices import Matrix
 
 
 class TypeF(Standard_Cartan):
+    """
+    This class contains the information about
+    the E series of simple Lie algebras.
+    ====
+    """
 
     def __new__(cls, n):
-        assert n == 4
         return Standard_Cartan.__new__(cls, "F", 4)
 
-    def dimension(self):
+    def degree(self):
         """
         Returns the dimension of the vector space
         V underlying the Lie algebra
@@ -150,9 +154,11 @@ class TypeF(Standard_Cartan):
             -1, 2, -1, 0, 0, -1, 2])
         return m
 
-    def basis(self):
+    def dimension(self):
         """
-        Returns the number of independent generators of F_4
+        This method returns the dimension of the Lie algebra as a
+        vector space over the underlying field, which is either R or C.
+        Also equal to the number of independent generators of F_4
         """
         return 52
 

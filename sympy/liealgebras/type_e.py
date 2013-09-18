@@ -4,13 +4,17 @@ from sympy.matrices import eye
 
 
 class TypeE(Standard_Cartan):
+    """
+    This class contains the information about
+    the A series of simple Lie algebras.
+    ====
+    """
 
     def __new__(cls, n):
-        assert n >= 6
-        assert n <= 8
+
         return Standard_Cartan.__new__(cls, "E", n)
 
-    def dimension(self):
+    def degree(self):
         """
         Returns the dimension of the vector space
         V underlying the Lie algebra
@@ -261,11 +265,14 @@ class TypeE(Standard_Cartan):
         return m
 
 
-    def basis(self):
+    def dimension(self):
         """
-        Returns the number of independent generators of E_n
-        """
+        This method returns the dimension of the Lie algebra as a
+        vector space over the underlying field, which is either R or C.
+        Also equal to the number of generators of A_n.
 
+        Source: en.wikipedia.org/wiki/Table_of_Lie_groups
+        """
         n = self.n
         if n == 6:
             return 78

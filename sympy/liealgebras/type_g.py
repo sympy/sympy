@@ -5,13 +5,18 @@ from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 
 class TypeG(Standard_Cartan):
+    """
+    This class contains the information about
+    the A series of simple Lie algebras.
+    ====
+    """
 
     def __new__(cls, n):
         assert n == 2
         return Standard_Cartan.__new__(cls, "G", 2)
 
 
-    def dimension(self):
+    def degree(self):
         """
         Returns the dimension of the vector space
         V underlying the Lie algebra
@@ -97,9 +102,11 @@ class TypeG(Standard_Cartan):
         m = Matrix( 2, 2, [2, -1, -3, 2])
         return m
 
-    def basis(self):
+    def dimension(self):
         """
-        Returns the number of independent generators of G_2
+        This method retursn the dimension of the Lie algebra as a
+        vector space over the underlying field, which is either R or C.
+        Also equal to the number of independent generators of G_2.
         """
         return 14
 
