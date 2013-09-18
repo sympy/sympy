@@ -13,7 +13,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
+    Poly, expand_func, E, Q, And, Ne, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
     elliptic_e, elliptic_f, powsimp)
 
 from sympy.functions.combinatorial.numbers import stirling
@@ -30,7 +30,6 @@ from sympy.assumptions import assuming
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
-from sympy.matrices import Matrix
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -1090,30 +1089,33 @@ def test_N10():
 def test_N11():
     assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
 
+
 @XFAIL
 def test_N12():
-    assert solve(sqrt(x)<2, assume=Q.real(x)) == And(Le(0,x),Le(x,4))
+    assert solve(sqrt(x)<2, assume=Q.real(x)) == And(Le(0,x),Lt(x,4))
 
 @XFAIL
 def test_N13():
-    assert solve(sin(x)<2, assume=Q.real(x)) == []
+    assert solve(sin(x)<2, assume=Q.real(x)) == True # unsupported
 
 @XFAIL
 def test_N14():
-    assert solve(sin(x)<1, assume=Q.real(x)) # == [x<>pi/2]
+    assert solve(sin(x)<1, assume=Q.real(x)) ==  Ne(x,pi/2) # unsupported should return
 
 @XFAIL
 def test_N15():
-    assert solve(sin(x)<1, assume=Q.real(x)) # == [x<>pi/2]
+    r, t = symbols('r t', real=True)
+    solve(abs(2*r*(cos(t)-1)+1)<=1,r) # unsupported
 
 @XFAIL
 def test_N16():
     r, t = symbols('r t', real=True)
-    assert solve(abs(2*r*(cos(t)-1)+1,x)<=1)
+    solve((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r)
 
 @XFAIL
 def test_N17():
     assert solve(x+y>0, x-y<0)
+
 
 def test_O1():
     M = Matrix((1 + I, -2, 3*I))
@@ -1122,10 +1124,10 @@ def test_O1():
 def test_O2():
     assert Matrix((2,2,-3)).cross(Matrix((1,3,1))) == Matrix([[11, -5, 4]])
 
-@XFAIL
+@slow
 def test_O3():
-        raise NotImplementedError("cross/dot product for vectors with undetermined dimensions not supported")
-
+    (va, vb, vc, vd)  = MV.setup('va vb vc vd')
+    assert (va^vb)|(vc^vd) == -(va|vc)*(vb|vd) + (va|vd)*(vb|vc)
 
 def test_O4():
     (ex,ey,ez,grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x,y,z))
