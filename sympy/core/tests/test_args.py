@@ -1668,6 +1668,12 @@ def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     assert _test_args(Standard_Cartan(A, 2))
 
 @XFAIL
+
+def test_sympy__liealgebras__root_system__RootSystem():
+    from sympy.liealgebras.root_system import RootSyStem
+    assert _test_args(RootSystem("A2"))
+
+@XFAIL
 def test_sympy__liealgebras__type_a__TypeA():
     from sympy.liealgebras.type_a import TypeA
     assert _test_args(TypeA(2))
@@ -1967,6 +1973,11 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 @SKIP("abstract class")
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
+
+def test_sympy__physics__mechanics__essential__CoordinateSym():
+    from sympy.physics.mechanics import CoordinateSym
+    from sympy.physics.mechanics import ReferenceFrame
+    assert _test_args(CoordinateSym('R_x', ReferenceFrame('R'), 0))
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
@@ -2758,6 +2769,15 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
 
+
+@XFAIL
+def test_sympy__physics__hep__gamma_matrices__GammaMatrixHead():
+    # This test fails, this class can be reconstructed from the *args
+    # of an instance using `TensorHead(*args)`
+    from sympy.physics.hep.gamma_matrices import GammaMatrixHead, Lorentz
+    from sympy.tensor.tensor import tensor_indices
+    i = tensor_indices('i', Lorentz)
+    assert _test_args(GammaMatrixHead())
 
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType

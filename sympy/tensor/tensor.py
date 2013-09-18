@@ -95,6 +95,58 @@ class TIDS(object):
         self.dum = dum
         self._ext_rank = len(self.free) + 2*len(self.dum)
 
+    def get_components_with_free_indices(self):
+        """
+        Get a list of components with their associated indices.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TIDS, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+        >>> T = tensorhead('T', [Lorentz]*4, [[1]*4])
+        >>> A = tensorhead('A', [Lorentz], [[1]])
+        >>> t = TIDS.from_components_and_indices([T], [m0, m1, -m1, m3])
+        >>> t.get_components_with_free_indices()
+        [(T(Lorentz,Lorentz,Lorentz,Lorentz), [(m0, 0, 0), (m3, 3, 0)])]
+        >>> t2 = (A(m0)*A(-m0))._tids
+        >>> t2.get_components_with_free_indices()
+        [(A(Lorentz), []), (A(Lorentz), [])]
+        >>> t3 = (A(m0)*A(-m1)*A(-m0)*A(m1))._tids
+        >>> t3.get_components_with_free_indices()
+        [(A(Lorentz), []), (A(Lorentz), []), (A(Lorentz), []), (A(Lorentz), [])]
+        >>> t4 = (A(m0)*A(m1)*A(-m0))._tids
+        >>> t4.get_components_with_free_indices()
+        [(A(Lorentz), []), (A(Lorentz), [(m1, 0, 1)]), (A(Lorentz), [])]
+        >>> t5 = (A(m0)*A(m1)*A(m2))._tids
+        >>> t5.get_components_with_free_indices()
+        [(A(Lorentz), [(m0, 0, 0)]), (A(Lorentz), [(m1, 0, 1)]), (A(Lorentz), [(m2, 0, 2)])]
+        """
+        components = self.components
+        ret_comp = []
+
+        free_counter = 0
+#        dum_counter1 = 0
+#        dum_counter2 = 0
+        if len(self.free) == 0:
+            return [(comp, []) for comp in components]
+
+        for i, comp in enumerate(components):
+            c_free = []
+            while free_counter < len(self.free):
+                if not self.free[free_counter][2] == i:
+                    break
+
+                c_free.append(self.free[free_counter])
+                free_counter += 1
+
+                if free_counter >= len(self.free):
+                    break
+            ret_comp.append((comp, c_free))
+
+        return ret_comp
+
     @staticmethod
     def from_components_and_indices(components, indices):
         """
@@ -863,7 +915,10 @@ def tensor_indices(s, typ):
     else:
         raise ValueError('expecting a string')
 
-    return [TensorIndex(i, typ) for i in a]
+    tilist = [TensorIndex(i, typ) for i in a]
+    if len(tilist) == 1:
+        return tilist[0]
+    return tilist
 
 
 class TensorSymmetry(Basic):
@@ -932,9 +987,9 @@ class TensorSymmetry(Basic):
     def rank(self):
         return self.args[1][0].size - 2
 
-    def _hashable_content(self):
-        r = (tuple(self.base), tuple(self.generators))
-        return r
+#    def _hashable_content(self):
+#        r = (tuple(self.base), tuple(self.generators))
+#        return r
 
 
 def tensorsymmetry(*args):
@@ -1227,9 +1282,9 @@ class TensorHead(Basic):
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
 
-    def _hashable_content(self):
-        r = (self._name, tuple(self._types), self._symmetry, self._comm)
-        return r
+#    def _hashable_content(self):
+#        r = (self._name, tuple(self._types), self._symmetry, self._comm)
+#        return r
 
     def commutes_with(self, other):
         """
@@ -1332,48 +1387,22 @@ class TensExpr(Basic):
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
 
+    def _eval_simplify(self, ratio, measure):
+        # this is a way to simplify a tensor expression.
 
-def _tensAdd_collect_terms(args):
-    """
-    collect TensMul terms differing at most by their coefficient
-    """
-    a = []
-    pprev = None
-    prev = args[0]
-    prev_coeff = prev._coeff
-    changed = False
+        # This part walks for all `TensorHead`s appearing in the tensor expr
+        # and looks for `simplify_this_type`, to specifically act on a subexpr
+        # containing one type of `TensorHead` instance only:
+        expr = self
+        for i in list(set(self.components)):
+            if hasattr(i, 'simplify_this_type'):
+                expr = i.simplify_this_type(expr)
 
-    for x in args[1:]:
-        # if x and prev have the same tensor, update the coeff of prev
-        if x.components == prev.components \
-                and x.free == prev.free and x.dum == prev.dum:
-            prev_coeff = prev_coeff + x._coeff
-            changed = True
-            op = 0
-        else:
-            # x and prev are different; if not changed, prev has not
-            # been updated; store it
-            if not changed:
-                a.append(prev)
-            else:
-                # get a tensor from prev with coeff=prev_coeff and store it
-                if prev_coeff:
-                    t = TensMul.from_data(prev_coeff, prev.components,
-                        prev.free, prev.dum)
-                    a.append(t)
-            # move x to prev
-            op = 1
-            pprev, prev = prev, x
-            pprev_coeff, prev_coeff = prev_coeff, x._coeff
-            changed = False
-    # if the case op=0 prev was not stored; store it now
-    # in the case op=1 x was not stored; store it now (as prev)
-    if op == 0 and prev_coeff:
-        prev = TensMul.from_data(prev_coeff, prev.components, prev.free, prev.dum)
-        a.append(prev)
-    elif op == 1:
-        a.append(prev)
-    return a
+        # TODO: missing feature, perform metric contraction.
+
+        return expr
+
+
 
 def _tensAdd_flatten(args):
     """
@@ -1399,15 +1428,6 @@ def _tensAdd_flatten(args):
             a.append(x)
     args = [x for x in a if x._coeff]
     return args
-
-def _tensAdd_check(args):
-    """
-    check that all addends have the same free indices
-    """
-    indices0 = sorted([x[0] for x in args[0].free], key=lambda x: x.name)
-    list_indices = [sorted([y[0] for y in x.free], key=lambda x: x.name) for x in args[1:]]
-    if not all(x == indices0 for x in list_indices):
-        raise ValueError('all tensors must have the same indices')
 
 
 class TensAdd(TensExpr):
@@ -1451,34 +1471,94 @@ class TensAdd(TensExpr):
         if not args:
             return S.Zero
 
-        _tensAdd_check(args)
-        obj = Basic.__new__(cls, **kw_args)
+        TensAdd._tensAdd_check(args)
+        args = Tuple(*args)
+
+        # if TensAdd has only 1 TensMul element in its `args`:
         if len(args) == 1 and isinstance(args[0], TensMul):
-            obj._args = tuple(args)
+            obj = Basic.__new__(cls, *args, **kw_args)
+    #        obj._args = tuple(a)
             return obj
+
+        # canonicalize all TensMul
         args = [x.canon_bp() for x in args if x]
         args = [x for x in args if x]
+
+        # if there are no more args (i.e. have cancelled out),
+        # just return zero:
         if not args:
             return S.Zero
 
         # collect canonicalized terms
         args.sort(key=lambda x: (x.components, x.free, x.dum))
-        a = _tensAdd_collect_terms(args)
+        a = TensAdd._tensAdd_collect_terms(args)
         if not a:
             return S.Zero
         # it there is only a component tensor return it
         if len(a) == 1:
             return a[0]
+
+        args = Tuple(*args)
+        obj = Basic.__new__(cls, *args, **kw_args)
         obj._args = tuple(a)
         return obj
 
-    @property
-    def free_args(self):
-        return self.args[0].free_args
+    @staticmethod
+    def _tensAdd_check(args):
+        # check that all addends have the same free indices
+        indices0 = sorted([x[0] for x in args[0].free], key=lambda x: x.name)
+        list_indices = [sorted([y[0] for y in x.free], key=lambda x: x.name) for x in args[1:]]
+        if not all(x == indices0 for x in list_indices):
+            raise ValueError('all tensors must have the same indices')
+
+    @staticmethod
+    def _tensAdd_collect_terms(args):
+        # collect TensMul terms differing at most by their coefficient
+        a = []
+        pprev = None
+        prev = args[0]
+        prev_coeff = prev._coeff
+        changed = False
+
+        for x in args[1:]:
+            # if x and prev have the same tensor, update the coeff of prev
+            if x.components == prev.components \
+                    and x.free == prev.free and x.dum == prev.dum:
+                prev_coeff = prev_coeff + x._coeff
+                changed = True
+                op = 0
+            else:
+                # x and prev are different; if not changed, prev has not
+                # been updated; store it
+                if not changed:
+                    a.append(prev)
+                else:
+                    # get a tensor from prev with coeff=prev_coeff and store it
+                    if prev_coeff:
+                        t = TensMul.from_data(prev_coeff, prev.components,
+                            prev.free, prev.dum)
+                        a.append(t)
+                # move x to prev
+                op = 1
+                pprev, prev = prev, x
+                pprev_coeff, prev_coeff = prev_coeff, x._coeff
+                changed = False
+        # if the case op=0 prev was not stored; store it now
+        # in the case op=1 x was not stored; store it now (as prev)
+        if op == 0 and prev_coeff:
+            prev = TensMul.from_data(prev_coeff, prev.components, prev.free, prev.dum)
+            a.append(prev)
+        elif op == 1:
+            a.append(prev)
+        return a
 
     @property
     def rank(self):
         return self.args[0].rank
+
+    @property
+    def free_args(self):
+        return self.args[0].free_args
 
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
@@ -1528,7 +1608,13 @@ class TensAdd(TensExpr):
     def equals(self, other):
         other = sympify(other)
         if isinstance(other, TensMul) and other._coeff == 0:
-            return self == 0
+            return all(x._coeff == 0 for x in self.args)
+        if isinstance(other, TensExpr):
+            if self.rank != other.rank:
+                return False
+        if isinstance(other, TensAdd):
+            if set(self.args) != set(other.args):
+                return False
         t = self - other
         if not isinstance(t, TensExpr):
             return t == 0
@@ -1537,6 +1623,9 @@ class TensAdd(TensExpr):
                 return t._coeff == 0
             else:
                 return all(x._coeff == 0 for x in t.args)
+
+    def __eq__(self, other):
+        return self.equals(other)
 
     def __add__(self, other):
         return TensAdd(self, other)
@@ -1666,6 +1755,42 @@ class TensAdd(TensExpr):
         s = s.replace('+ -', '- ')
         return s
 
+    @staticmethod
+    def from_TIDS_list(coeff, tids_list):
+        """
+        Given a list of coefficients and a list of `TIDS` objects, construct
+        a `TensAdd` instance, equivalent to the one that would result from
+        creating single instances of `TensMul` and then adding them.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, TensAdd
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> i, j = tensor_indices('i,j', Lorentz)
+        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> eA = 3*A(i, j)
+        >>> eB = 2*B(j, i)
+        >>> t1 = eA._tids
+        >>> t2 = eB._tids
+        >>> c1 = eA.coeff
+        >>> c2 = eB.coeff
+        >>> TensAdd.from_TIDS_list([c1, c2], [t1, t2])
+        2*B(i, j) + 3*A(i, j)
+
+        If the coefficient parameter is a scalar, then it will be applied
+        as a coefficient on all `TIDS` objects.
+
+        >>> TensAdd.from_TIDS_list(4, [t1, t2])
+        4*A(i, j) + 4*B(i, j)
+
+        """
+        if not isinstance(coeff, (list, tuple, Tuple)):
+            coeff = [coeff] * len(tids_list)
+        tensmul_list = [TensMul.from_TIDS(c, t) for c, t in zip(coeff, tids_list)]
+        return TensAdd(*tensmul_list)
+
+
 class TensMul(TensExpr):
     """
     Product of tensors
@@ -1793,6 +1918,13 @@ class TensMul(TensExpr):
 
     def __hash__(self):
         return super(TensMul, self).__hash__()
+
+    def __eq__(self, other):
+        # Basic's equality comparison considers 0 and a zero TensMul
+        # as never equal, here is a workaround:
+        if other == 0 and self.coeff == 0:
+            return True
+        return super(TensMul, self).__eq__(other)
 
     def __ne__(self, other):
         return not self == other
