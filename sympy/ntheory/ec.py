@@ -59,6 +59,7 @@ class EllipticCurve():
 
     def add(self, p1, p2, to_sympy=True):
         """
+        Return new point R = p1 + p2 in curve.
 
         Examples
         ========
@@ -89,6 +90,9 @@ class EllipticCurve():
 
     def mul(self, p, n):
         """
+        Return new point R = nP in curve.
+
+        Compute nP using Double-and-Add method.
 
         Examples
         ========
