@@ -1481,7 +1481,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     return (ret, i, b)
 
 
-def integrate_hypertangent_polynomial(pa, pd, DE):
+def integrate_hypertangent_polynomial(p, DE):
     """
     Integration of hypertangent polynomials.
 
@@ -1491,10 +1491,14 @@ def integrate_hypertangent_polynomial(pa, pd, DE):
     Dq does not have an elementary integral over k(t) if Dc != 0.
     """
     # XXX: Make sure that sqrt(-1) is not in k.
-    q, ra, rd = polynomial_reduce_kt(pa, pd, DE)
+    q, r = polynomial_reduce(p, DE)
     a = DE.d.exquo(Poly(DE.t**2 + 1, DE.t))
+<<<<<<< HEAD
     c = Poly(ra.nth(1)/(2*a.as_expr()), DE.t)
     print(q, c)
+=======
+    c = Poly(r.nth(1)/(2*a.as_expr()), DE.t)
+>>>>>>> dd024acb3265f69c70c9a92eae578440a532e926
     return (q, c)
 
 
@@ -1566,8 +1570,14 @@ def integrate_hypertangent(fa, fd, DE, z=None):
           ).subs(s) + residue_reduce_to_basic(g2, DE, z))
     if not b:
         return (ret, b)
+<<<<<<< HEAD
     print(pa, pd)
     q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
+=======
+    ppa, ppd = (pa*Dq1_d - Dq1_a*pd).cancel(pd*Dq1_d, include=True)
+    pp = ppa.mul_ground(1/ppd)
+    q2, c = integrate_hypertangent_polynomial(pp, DE)
+>>>>>>> dd024acb3265f69c70c9a92eae578440a532e926
     Dc = derivation(c, DE)
     if Dc == 0:
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
@@ -1678,8 +1688,15 @@ def is_deriv(a, d, DE, z=None):
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
             ) + residue_reduce_to_basic(g2, DE, z))
         if not b:
+<<<<<<< HEAD
             return None
         q2, c = integrate_hypertangent_polynomial(pa*Dq1_d - Dq1_a*pd, pd*Dq1_d, DE)
+=======
+            return (ret, b)
+        ppa, ppd = (pa*Dq1_d - Dq1_a*pd).cancel(pd*Dq1_d, include=True)
+        pp = ppa.mul_ground(1/ppd)
+        q2, c = integrate_hypertangent_polynomial(pp, DE)
+>>>>>>> dd024acb3265f69c70c9a92eae578440a532e926
         Dc = derivation(c, DE)
         if Dc == 0:
             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
