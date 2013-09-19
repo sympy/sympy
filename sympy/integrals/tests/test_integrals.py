@@ -701,7 +701,7 @@ def test_is_zero():
 
 def test_series():
     from sympy.abc import x
-    i = Integral(cos(x))
+    i = Integral(cos(x), (x, x))
     e = i.lseries(x)
     assert i.nseries(x, n=8).removeO() == Add(*[next(e) for j in range(4)])
 
