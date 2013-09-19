@@ -513,14 +513,16 @@ class Function(Application, Expr):
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
+                _x = Dummy('x')
+                e = e.subs(x, _x)
                 for i in range(n - 1):
                     i += 1
                     fact *= Rational(i)
-                    e = e.diff(x)
-                    subs = e.subs(x, S.Zero)
+                    e = e.diff(_x)
+                    subs = e.subs(_x, S.Zero)
                     if subs is S.NaN:
                         # try to evaluate a limit if we have to
-                        subs = e.limit(x, S.Zero)
+                        subs = e.limit(_x, S.Zero)
                     if subs.is_bounded is False:
                         raise PoleError("Cannot expand %s around 0" % (self))
                     term = subs*(x**i)/fact

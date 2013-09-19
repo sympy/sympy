@@ -1336,12 +1336,24 @@ class Integral(Expr):
         return Add(*parts)
 
     def _eval_lseries(self, x):
-        for term in self.function.lseries(x):
+        self = self.as_dummy()
+        symb = x
+        for l in self.limits:
+            if x in l[1:]:
+                symb = l[0]
+                break
+        for term in self.function.lseries(symb):
             yield integrate(term, *self.limits)
 
     def _eval_nseries(self, x, n, logx):
+        self = self.as_dummy()
+        symb = x
+        for l in self.limits:
+            if x in l[1:]:
+                symb = l[0]
+                break
         terms, order = self.function.nseries(
-            x, n=n, logx=logx).as_coeff_add(C.Order)
+            x=symb, n=n, logx=logx).as_coeff_add(C.Order)
         return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):
