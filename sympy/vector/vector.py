@@ -272,7 +272,7 @@ def cross(vect_a, vect_b, coord_sys=None):
     >>> c0 = CoordSysRect('c0')
     >>> v1 = c0.x * c0.e_y + 2*c0.y * c0.e_z
     >>> v2 = c0.z * c0.e_x
-    >>> dot(v1, v2)
+    >>> cross(v1, v2)
     -c0.x*c0.z * c0.e_z + 2*c0.y*c0.z * c0.e_y
 
     """
@@ -344,7 +344,7 @@ def div(vect, coord_sys=None):
     ==========
 
     vect : Vector
-        The vector field to whose diergence is to be calculated.
+        The vector field to whose divergence is to be calculated.
     coord_sys : CoordSys
         The coordinate system to express the results in.
 
@@ -378,9 +378,18 @@ def div(vect, coord_sys=None):
 def curl(vect, coord_sys):
     """
     Calculate the curl of a vector field.
-    vect : an object with is_Vector == True
-    coord_sys : an instance of subclass of CoordSys class
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector field to whose curl is to be calculated.
+    coord_sys : CoordSys
+        The coordinate system to express the results in.
+
+    # TODO : Add examples once testing is done.
     """
+
     coord_list = _all_coordinate_systems(coord_sys)
     if not coord_sys and len(coord_list) == 1:
         coord_sys = coord_list[0]
@@ -408,13 +417,47 @@ def curl(vect, coord_sys):
 
 def laplacian(expr, coord_sys=None):
     """
-    Calculate the laplacian of scalar field.
-    expr : a SymPy expression
-    coord_sys : an object of subclass of CoordSys class
+    Calculate the laplacian of a vector field.
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector field to whose laplacian is to be calculated.
+    coord_sys : CoordSys
+        The coordinate system to express the results in.
+
+    # TODO : Add examples once testing is done.
     """
+
     return div(grad(expr, coord_sys))
 
 def _has_base_scalar(expr):
+    """
+    Check whether a SymPy expression has a BaseScalar in it.
+
+    Parameters
+    ==========
+
+    expr : a SymPy expression
+        The expression to check.
+
+    Examples
+    ========
+
+    >>> from sympy.vector.vector import _has_base_scalar
+    >>> from sympy.vector import CoordSysRect
+    >>> from sympy import Symbol
+    >>> c0 = CoordSysRect('c0')
+    >>> expr = 5 * (6 + c0.x) + 2/(3 + (2/c0.y))
+    >>> _has_base_scalar(expr)
+    True
+    >>> x = Symbol('x')
+    >>> expr = 2 * (x + (3/x))
+    >>> _has_base_scalar(expr)
+    False
+
+    """
     try:
         expr = expr.expand()
     except AttributeError:
@@ -430,7 +473,26 @@ def _has_base_scalar(expr):
 
 def _all_base_scalars(scalar):
     """
-    Returns all BaseScalars contained in scalar
+    Returns all BaseScalars contained in a SymPy expression.
+
+    Parameters
+    ==========
+
+    scalar : a SymPy expression.
+         The scalar from which BaseScalars are to be extracted.
+
+    Examples
+    ========
+
+    >>> from sympy.vector.vector import _all_base_scalars
+    >>> from sympy.vector import CoordSysRect
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> c0 = CoordSysRect('c0')
+    >>> expr = 5 * (6 + c0.x) + x/(3 + (2/c0.y))
+    >>> _all_base_scalars(expr)
+    [c0.y, c0.x]
+
     """
     if isinstance(scalar, BaseScalar):
         return [scalar]
@@ -453,6 +515,27 @@ def _separate_to_vectors(vect):
     return r
 
 def _all_coordinate_systems(vector):
+    """
+    Return all coordinate systems used to express a vector.
+
+    Paramters
+    =========
+
+    vector : Vector
+        The vector for which coordinate systems need to be extracted.
+
+    Examples
+    ========
+
+    >>> from sympy.vector.vector import _all_cooordinate_systems
+    >>> from sympy.vector import CoordSysRect, CoordSysSph
+    >>> c0 = CoordSysRect('c0')
+    >>> cs = CoordSysSph('c0')
+    >>> v = c0.x * c0.e_y + cs.r * (c0.e_x + cs.e_r)
+    >>> _all_base_scalars(expr)
+    [cs, c0]
+
+    """
     vector = vector.expand()
     coord_list = []
     # all_args is a separate method that return only the vector args
@@ -471,8 +554,21 @@ def _all_coordinate_systems(vector):
     return list(set(coord_list))
 
 def _coord_sys_scalar_list(scalar):
-    # scalar can be any sympy basic type
-    # return a list of coordinate systems contained within scalar
+    """
+    Return a list of coordinate systems contained within scalar.
+
+    Parameters
+    ==========
+
+    expr : a SymPy expression
+        The expression to extract coordinate systems from.
+
+    See also
+    ========
+
+    _all_coordinate_systems : Find all coordinate systems used to
+    construct a vector.
+    """
     coord_list = []
     for atom in scalar.atoms():
         if isinstance(atom, BaseScalar):
@@ -568,7 +664,12 @@ class BaseScalar(AtomicExpr):
         Takes a BaseScalar and converts it to combination of BaseScalars
         in coord_sys.
 
-        coord_sys: An instance of subclass of CoordSys class
+        Parameters
+        ==========
+
+        coord_sys: CoordSys
+            The coordinate system to convert to.
+
         """
         # First check that both coordinate systems have same position and
         # orientation
@@ -595,7 +696,12 @@ class BaseScalar(AtomicExpr):
         Takes a BaseScalar and converts it to combination of BaseScalars
         in coord_sys.
 
-        coord_sys: An instance of subclass of CoordSys class
+        Parameters
+        ==========
+
+        coord_sys: CoordSys
+            The coordinate system to convert to.
+
         """
         # First check that both coordinate systems have same position and
         # orientation
@@ -622,7 +728,12 @@ class BaseScalar(AtomicExpr):
         Takes a BaseScalar and converts it to combination of BaseScalars
         in coord_sys.
 
-        coord_sys: An instance of subclass of CoordSys class
+        Parameters
+        ==========
+
+        coord_sys: CoordSys
+            The coordinate system to convert to.
+
         """
         # First check that both coordinate systems have same position and
         # orientation
@@ -772,9 +883,7 @@ class CoordSys(Basic):
     _sympyrepr = __str__
 
     def _dcm_parent_method(self, orient_type, amounts, rot_order=''):
-        """
-        Intialize the self._dcm_parent attribute.
-        """
+        """Intialize the self._dcm_parent attribute."""
         orient_type = orient_type.capitalize()
         if orient_type == 'Axis':
             if rot_order:
@@ -803,9 +912,7 @@ class CoordSys(Basic):
 
 
     def _dcm_global_method(self, orient_type, amounts, rot_order=''):
-        """
-        Initialize the self._dcm_global attribute.
-        """
+        """Initialize the self._dcm_global attribute."""
         orient_type = orient_type.capitalize()
         if self.parent:
             # Parent given therefore the given angle is wrt parent.
@@ -849,7 +956,7 @@ class CoordSys(Basic):
                 return global_orient
 
     def _rot(self, axis, angle):
-        """DCM about one of the 3 axes"""
+        """DCM about one of the 3 axes."""
         if axis == 1:
             return Matrix([[1, 0, 0],
                 [0, cos(angle), -sin(angle)],
@@ -892,16 +999,12 @@ class CoordSys(Basic):
 
     @property
     def base_scalars(self):
-        """
-        Return a list of base scalars.
-        """
+        """Return a list of base scalars."""
         return self._coordinates
 
     @property
     def base_vectors(self):
-        """
-        Return a list of base vectors.
-        """
+        """Return a list of base vectors."""
         return self._basis
 
     def dcm(self, other='global'):
@@ -988,18 +1091,38 @@ class CoordSys(Basic):
         """
         Create a coordinate system with a new orientation from an exisitng
         coordinate system.
-        """
-        newframe = copy.copy(self)
 
+        Parameters
+        ==========
+
+        See the parameters in the docstring of CoordSys.__init__
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.vector import CoordSysRect
+        >>> q0 = Symbol('q0')
+        >>> c0 = CoordSysRect('c0')
+        >>> c1 = c0.orientnew('c1', 'Axis', [q0, c0.e_z])
+        >>> c1.dcm(c0)
+        Matrix([
+        [ cos(q0), sin(q0), 0],
+        [-sin(q0), cos(q0), 0],
+        [       0,       0, 1]])
+
+        """
+        import ipdb;ipdb.set_trace()
         if name == None:
             name = 'CoordSys_' + str(Dummy._count)
             Dummy._count += 1
-        newframe.name = name
-        newframe._check_orient_raise(orient_type, orient_amount, rot_order)
-        newframe.parent = self
-        newframe._dcm_parent = newframe._dcm_parent(orient_type,
-                                                    orient_amount, rot_order)
-        newframe._dcm_global = newframe._dcm_global(orient_type, orient_amount)
+
+        newframe = self.__class__(
+            name=name, dim=self.dim, position=self.position,
+            orient_type=orient_type, orient_amount=orient_amount,
+            rot_order=rot_order, parent=self, basis_vectors=self._basis_names,
+            coordinates=self._coord_names)
+
         return newframe
 
     def posnew(self, position):
