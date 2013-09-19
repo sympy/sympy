@@ -50,11 +50,6 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     print("enter primitive")
     t = DE.t
     k = Dummy('k')
-    if not c1.has(DE.t) and not c2.has(DE.t):
-        with DecrementLevel(DE):
-	    print(b1, b2, c1, c2)
-	    print(DE.case, DE.t)
-            return coupled_DE_system(b1, b2, c1, c2, DE)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     A1 = is_log_deriv_k_t_radical_in_field(b1a, b1d, DE)
@@ -93,8 +88,8 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
             raise NonElementaryIntegralException
         c1k = as_poly_1t(c1, t, k).as_poly(t).nth(m)
         c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
-        A = coupled_DE_system(b1, b2, c1k, c2k, DE)
-        (s1, s2) = A
+        with DecrementLevel(DE):
+            (s1, s2) = coupled_DE_system(b1, b2, c1k, c2k, DE)
 	(b1, b2) = (b1.as_poly(DE.t), b2.as_poly(DE.t))
 	print(DE.t)
 	print("s")
