@@ -26,6 +26,10 @@ more information on each (run help(pde)):
 
   - 1st order linear homogeneous partial differential equations
     with constant coefficients.
+  - 1st order linear general partial differential equations
+    with constant coefficients.
+  - 1st order linear partial differential equations with
+    variable coefficients.
 
 """
 from __future__ import print_function, division
