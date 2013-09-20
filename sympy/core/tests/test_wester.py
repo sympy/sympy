@@ -1173,10 +1173,29 @@ def test_P2():
                     [1, 2],
                     [7, 8]])
 
+@XFAIL
 def test_P3():
-    a, b, c = symbols('a b c', real=True)
-    M=Matrix([[a/(b*c), 1/c, 1/b], [1/c, b/(a*c), 1/a], [1/b, 1/a, c/(a*b)]])
-    assert factor(M.norm('fro')) == (a**2 + b**2 + c**2)/(abs(a)*abs(b)*abs(c))
+    A = Matrix([
+        [11, 12, 13, 14],
+        [21, 22, 23, 24],
+        [31, 32, 33, 34],
+        [41, 42, 43, 44]])
+
+    A11 = A[0:3,1:4]
+    A12 = A[(0,1,3),(2,0,3)] # unsupported rasies exception
+    A21 = A
+    A221 = A[0:2,2:4]
+    A222 = A[(3,0),(2,1)] # unsupported rasies exception
+    A22 = BlockMatrix([A221,A222])
+    B= BlockMatrix([[A11,A12],[A21,A22]])
+    assert B  ==  Matrix([
+        [12,13,14,13,11,14],
+        [22,22,24,23,21,24],
+        [32,33,34,43,41,44],
+        [11,12,13,14,13,14],
+        [21,22,23,24,23,24],
+        [31,32,33,34,43,42],
+        [41,42,43,44,13,12]])
 
 @XFAIL
 def test_P4():
@@ -1214,7 +1233,11 @@ def test_P8():
     M=Matrix([[1,-2*I],[-3*I,4]])
     assert M.norm(ord=inf) == 7 # Matrix.norm(ord=inf) not implemented
 
-#P9 skipped, not understood
+def test_P9():
+    a, b, c = symbols('a b c', real=True)
+    M=Matrix([[a/(b*c), 1/c, 1/b], [1/c, b/(a*c), 1/a], [1/b, 1/a, c/(a*b)]])
+    assert factor(M.norm('fro')) == (a**2 + b**2 + c**2)/(abs(a)*abs(b)*abs(c))
+
 @XFAIL # conugate(f(4-5*i)) is not simplified to f(4+5*I)
 def test_P10():
     M=Matrix([[1,2+3*I],[f(4-5*i),6]])
@@ -1222,14 +1245,89 @@ def test_P10():
 
 @XFAIL
 def test_P11():
-    raise NotImplementedError("Matrix([[x,y],[1,x*y]]).inv() not simplifying an extracting common factor")
-
-def __remove_whitespaces(s):
-    return s.replace(' ','').replace('\n','').replace('\t','')
+    #raise NotImplementedError("Matrix([[x,y],[1,x*y]]).inv() not simplifying to extract common factor")
+    assert Matrix([[x,y],[1,x*y]]).inv() ==  (1/(x**2-1))*Matrix([
+                                                            [x, -1],
+                                                            [-1/y, x/y]])
 
 def test_P12():
     A11 = MatrixSymbol('A11',n,n)
     A12 = MatrixSymbol('A12',n,n)
     A22 = MatrixSymbol('A22',n,n)
     B = BlockMatrix([[A11,A12],[ZeroMatrix(n,n),A22]])
-    assert __remove_whitespaces(str(block_collapse(B.I)))  == 'Matrix([[A11^-1,(-1)*A11^-1*A12*A22^-1],[0,A22^-1]])'
+    assert block_collapse(B.I)  == BlockMatrix([
+                                    [A11.I,          (-1)*A11.I*A12*A22.I],
+                                    [ZeroMatrix(n,n), A22.I]])
+
+def test_P13():
+    M=Matrix([
+        [ 1,     x-2,         x-3     ],
+        [x-1, x**2-3*x+6,   x**2-3*x-2  ],
+        [x-2,   x**2-8,   2*(x**2)-12*x+14]])
+    L, U, _= M.LUdecomposition()
+    assert simplify(L) == Matrix([
+                            [    1,     0, 0],
+                            [x - 1,     1, 0],
+                            [x - 2, x - 3, 1]])
+    assert simplify(U) == Matrix([
+                            [1, x - 2, x - 3],
+                            [0,     4, x - 5],
+                            [0,     0, x - 7]])
+
+def test_P14():
+    M = Matrix([
+            [1, 2, 3, 1, 3],
+            [3, 2, 1, 1, 7],
+            [0, 2, 4, 1, 1],
+            [1, 1, 1, 1, 4]])
+    R,_ = M.rref()
+    assert R == Matrix([
+                    [1, 0, -1, 0,  2],
+                    [0, 1,  2, 0, -1],
+                    [0, 0,  0, 1,  3],
+                    [0, 0,  0, 0,  0]])
+
+def test_P15():
+    M = Matrix([
+        [-1, 3, 7, -5],
+        [4, -2, 1, 3],
+        [2, 4, 15, -7]])
+    assert M.rank() == 2
+
+def test_P16():
+    M = Matrix([
+        [2*sqrt(2), 8],
+        [6*sqrt(6), 24*sqrt(3)]])
+    assert M.rank() == 1
+
+@XFAIL
+def test_P17():
+    t = symbols('t', real=True)
+    M=Matrix([
+        [sin(2*t), cos(2*t)],
+        [2*(1 - (cos(t)**2))*cos(t), (1 - 2*(sin(t)**2))*sin(t)]])
+    assert M.rank() == 1
+
+def test_P18():
+    M = Matrix([
+        [1, 0, -2, 0],
+        [-2, 1, 0, 3],
+        [-1, 2, -6, 6]])
+    assert M.nullspace() == [   Matrix([
+                                    [2],
+                                    [4],
+                                    [1],
+                                    [0]]),
+                                Matrix([
+                                    [ 0],
+                                    [-3],
+                                    [ 0],
+                                    [ 1]])]
+@XFAIL
+def test_P19():
+    w,x,y,z = symbols('w x y z',real=True)
+    M = Matrix([[1,   1,   1,   1  ],
+                [w,   x,   y,   z  ],
+                [w^2, x^2, y^2, z^2],
+                [w^3, x^3, y^3, z^3]])
+    assert M.det() # TypeError: unsupported operand type(s) for -: 'Not' and 'Not'
