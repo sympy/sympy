@@ -572,6 +572,7 @@ def _factor(f):
             # what about l_ ?
             pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
             if pfactors is None:
+                f_ = f_.primitive()[1]
                 continue
 
 #            factors = _padic_lift(f_, pfactors, l_, p, B, lcs, minpoly)
