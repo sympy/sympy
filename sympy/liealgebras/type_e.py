@@ -5,10 +5,10 @@ from sympy.matrices import eye
 
 class TypeE(Standard_Cartan):
 
-    def __init__(self, n):
+    def __new__(cls, n):
         assert n >= 6
         assert n <= 8
-        Standard_Cartan.__init__(self, "E", n)
+        return Standard_Cartan.__new__(cls, "E", n)
 
     def dimension(self):
         """
