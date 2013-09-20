@@ -12,7 +12,7 @@ class CartanType_generator(Basic):
         c = list(c)
 
         letter, n = c[0], int(c[1])
-        if n< 0:
+        if n < 0:
             raise ValueError("Lie algebra rank cannot be negative")
         if letter == "A":
             if n >= 0:
