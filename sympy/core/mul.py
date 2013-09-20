@@ -692,8 +692,8 @@ class Mul(Expr, AssocOp):
             if coeff.is_real:
                 return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
             else:
-                re = C.re(coeff)*C.re(m) - C.im(coeff)*C.im(m)
-                im = C.im(coeff)*C.re(m) + C.re(coeff)*C.im(m)
+                re = - C.im(coeff)*C.im(m)
+                im = C.im(coeff)*C.re(m)
                 return (re*addre - im*addim, re*addim + im*addre)
 
     @staticmethod
