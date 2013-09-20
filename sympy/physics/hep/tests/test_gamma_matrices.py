@@ -162,7 +162,6 @@ def test_kahane_algorithm():
 
     def tfunc(e):
         return GammaMatrixHead.kahane_simplify(e.coeff, e._tids)
-#        return TensAdd(*[TensMul.from_TIDS(coeff, ti) for ti in list_new_tids])
 
     execute_gamma_simplify_tests_for_function(tfunc, D=4)
 
