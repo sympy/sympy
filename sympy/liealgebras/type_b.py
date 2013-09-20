@@ -6,9 +6,9 @@ from sympy.matrices import eye
 
 class TypeB(Standard_Cartan):
 
-    def __init__(self, n):
+    def __new__(cls, n):
         assert n >= 2
-        Standard_Cartan.__init__(self, "B", n)
+        return Standard_Cartan.__new__(cls, "B", n)
 
     def dimension(self):
         """

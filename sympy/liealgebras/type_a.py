@@ -12,9 +12,9 @@ class TypeA(Standard_Cartan):
     ====
     """
 
-    def __init__(self, n):
+    def __new__(cls, n):
         assert n >= 1
-        Standard_Cartan.__init__(self, "A", n)
+        return Standard_Cartan.__new__(cls, "A", n)
 
 
     def dimension(self):
