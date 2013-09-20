@@ -581,7 +581,7 @@ def _factor(f):
 #                B *= B
 #                continue
 
-            return (f.LC, [_z_to_alpha(g, ring).monic() for g in pfactors])
+            return (f.LC, [_z_to_alpha(g.primitive()[1], ring).monic() for g in pfactors])
 
         N += 1
 
