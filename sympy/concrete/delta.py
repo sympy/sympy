@@ -193,7 +193,9 @@ def deltaproduct(f, limit):
             result = deltaproduct(newexpr, limit) + deltasummation(
                 deltaproduct(newexpr, (limit[0], limit[1], k - 1)) *
                 delta.subs(limit[0], k) *
-                deltaproduct(newexpr, (limit[0], k + 1, limit[2])), (k, limit[1], limit[2]), no_piecewise=True
+                deltaproduct(newexpr, (limit[0], k + 1, limit[2])),
+                (k, limit[1], limit[2]),
+                no_piecewise=_has_simple_delta(newexpr, limit[0])
             )
         return _remove_multiple_delta(result)
 

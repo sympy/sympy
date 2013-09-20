@@ -110,11 +110,20 @@ def test_deltaproduct_add_mul_x_y_mul_x_kd():
     assert dp(x*y + x*KD(i, j), (j, 2, 2)) == x*y + x*KD(i, 2)
     assert dp(x*y + x*KD(i, j), (j, 3, 3)) == x*y + x*KD(i, 3)
     assert dp(x*y + x*KD(i, j), (j, 1, k)) == \
-        (x*y)**k + (x*y)**(i - 1)*x*(x*y)**(k - i)
+        (x*y)**k + Piecewise(
+            ((x*y)**(i - 1)*x*(x*y)**(k - i), And(S(1) <= i, i <= k)),
+            (0, True)
+        )
     assert dp(x*y + x*KD(i, j), (j, k, 3)) == \
-        (x*y)**(-k + 4) + (x*y)**(i - k)*x*(x*y)**(3 - i)
+        (x*y)**(-k + 4) + Piecewise(
+            ((x*y)**(i - k)*x*(x*y)**(3 - i), And(k <= i, i <= 3)),
+            (0, True)
+        )
     assert dp(x*y + x*KD(i, j), (j, k, l)) == \
-        (x*y)**(-k + l + 1) + (x*y)**(i - k)*x*(x*y)**(l - i)
+        (x*y)**(-k + l + 1) + Piecewise(
+            ((x*y)**(i - k)*x*(x*y)**(l - i), And(k <= i, i <= l)),
+            (0, True)
+        )
 
 def test_deltaproduct_mul_x_add_y_kd():
     assert dp(x*(y + KD(i, j)), (j, 1, 3)) == (x*y)**3 + \
@@ -123,11 +132,20 @@ def test_deltaproduct_mul_x_add_y_kd():
     assert dp(x*(y + KD(i, j)), (j, 2, 2)) == x*(y + KD(i, 2))
     assert dp(x*(y + KD(i, j)), (j, 3, 3)) == x*(y + KD(i, 3))
     assert dp(x*(y + KD(i, j)), (j, 1, k)) == \
-        (x*y)**k + (x*y)**(i - 1)*x*(x*y)**(k - i)
+        (x*y)**k + Piecewise(
+            ((x*y)**(i - 1)*x*(x*y)**(k - i), And(S(1) <= i, i <= k)),
+            (0, True)
+        )
     assert dp(x*(y + KD(i, j)), (j, k, 3)) == \
-        (x*y)**(-k + 4) + (x*y)**(i - k)*x*(x*y)**(3 - i)
+        (x*y)**(-k + 4) + Piecewise(
+            ((x*y)**(i - k)*x*(x*y)**(3 - i), And(k <= i, i <= 3)),
+            (0, True)
+        )
     assert dp(x*(y + KD(i, j)), (j, k, l)) == \
-        (x*y)**(-k + l + 1) + (x*y)**(i - k)*x*(x*y)**(l - i)
+        (x*y)**(-k + l + 1) + Piecewise(
+            ((x*y)**(i - k)*x*(x*y)**(l - i), And(k <= i, i <= l)),
+            (0, True)
+        )
 
 def test_deltaproduct_mul_x_add_y_twokd():
     assert dp(x*(y + 2*KD(i, j)), (j, 1, 3)) == (x*y)**3 + \
@@ -136,11 +154,20 @@ def test_deltaproduct_mul_x_add_y_twokd():
     assert dp(x*(y + 2*KD(i, j)), (j, 2, 2)) == x*(y + 2*KD(i, 2))
     assert dp(x*(y + 2*KD(i, j)), (j, 3, 3)) == x*(y + 2*KD(i, 3))
     assert dp(x*(y + 2*KD(i, j)), (j, 1, k)) == \
-        (x*y)**k + 2*(x*y)**(i - 1)*x*(x*y)**(k - i)
+        (x*y)**k + Piecewise(
+            (2*(x*y)**(i - 1)*x*(x*y)**(k - i), And(S(1) <= i, i <= k)),
+            (0, True)
+        )
     assert dp(x*(y + 2*KD(i, j)), (j, k, 3)) == \
-        (x*y)**(-k + 4) + 2*(x*y)**(i - k)*x*(x*y)**(3 - i)
+        (x*y)**(-k + 4) + Piecewise(
+            (2*(x*y)**(i - k)*x*(x*y)**(3 - i), And(k <= i, i <= 3)),
+            (0, True)
+        )
     assert dp(x*(y + 2*KD(i, j)), (j, k, l)) == \
-        (x*y)**(-k + l + 1) + 2*(x*y)**(i - k)*x*(x*y)**(l - i)
+        (x*y)**(-k + l + 1) + Piecewise(
+            (2*(x*y)**(i - k)*x*(x*y)**(l - i), And(k <= i, i <= l)),
+            (0, True)
+        )
 
 def test_deltaproduct_mul_add_x_y_add_y_kd():
     assert dp((x + y)*(y + KD(i, j)), (j, 1, 3)) == ((x + y)*y)**3 + \
@@ -150,13 +177,24 @@ def test_deltaproduct_mul_add_x_y_add_y_kd():
     assert dp((x + y)*(y + KD(i, j)), (j, 1, 1)) == (x + y)*(y + KD(i, 1))
     assert dp((x + y)*(y + KD(i, j)), (j, 2, 2)) == (x + y)*(y + KD(i, 2))
     assert dp((x + y)*(y + KD(i, j)), (j, 3, 3)) == (x + y)*(y + KD(i, 3))
-    assert dp((x + y)*(y + KD(i, j)), (j, 1, k)) == ((x + y)*y)**k + \
-        ((x + y)*y)**(i - 1)*(x + y)*((x + y)*y)**(k - i)
-    assert dp((x + y)*(y + KD(i, j)), (j, k, 3)) == ((x + y)*y)**(-k + 4) + \
-        ((x + y)*y)**(i - k)*(x + y)*((x + y)*y)**(3 - i)
+    assert dp((x + y)*(y + KD(i, j)), (j, 1, k)) == \
+        ((x + y)*y)**k + Piecewise(
+            (((x + y)*y)**(i - 1)*(x + y)*((x + y)*y)**(k - i),
+             And(S(1) <= i, i <= k)),
+            (0, True)
+        )
+    assert dp((x + y)*(y + KD(i, j)), (j, k, 3)) == \
+        ((x + y)*y)**(-k + 4) + Piecewise(
+            (((x + y)*y)**(i - k)*(x + y)*((x + y)*y)**(3 - i),
+             And(k <= i, i <= 3)),
+            (0, True)
+        )
     assert dp((x + y)*(y + KD(i, j)), (j, k, l)) == \
-        ((x + y)*y)**(-k + l + 1) + \
-        ((x + y)*y)**(i - k)*(x + y)*((x + y)*y)**(l - i)
+        ((x + y)*y)**(-k + l + 1) + Piecewise(
+            (((x + y)*y)**(i - k)*(x + y)*((x + y)*y)**(l - i),
+             And(k <= i, i <= l)),
+            (0, True)
+        )
 
 def test_deltaproduct_mul_add_x_kd_add_y_kd():
     assert dp((x + KD(i, k))*(y + KD(i, j)), (j, 1, 3)) == \
@@ -171,14 +209,23 @@ def test_deltaproduct_mul_add_x_kd_add_y_kd():
     assert dp((x + KD(i, k))*(y + KD(i, j)), (j, 3, 3)) == \
         (x + KD(i, k))*(y + KD(i, 3))
     assert dp((x + KD(i, k))*(y + KD(i, j)), (j, 1, k)) == \
-        ((x + KD(i, k))*y)**k + \
-        ((x + KD(i, k))*y)**(i - 1)*(x + KD(i, k))*((x + KD(i, k))*y)**(-i + k)
+        ((x + KD(i, k))*y)**k + Piecewise(
+            (((x + KD(i, k))*y)**(i - 1)*(x + KD(i, k))*
+             ((x + KD(i, k))*y)**(-i + k), And(S(1) <= i, i <= k)),
+            (0, True)
+        )
     assert dp((x + KD(i, k))*(y + KD(i, j)), (j, k, 3)) == \
-        ((x + KD(i, k))*y)**(4 - k) + \
-        ((x + KD(i, k))*y)**(i - k)*(x + KD(i, k))*((x + KD(i, k))*y)**(-i + 3)
+        ((x + KD(i, k))*y)**(4 - k) + Piecewise(
+            (((x + KD(i, k))*y)**(i - k)*(x + KD(i, k))*
+             ((x + KD(i, k))*y)**(-i + 3), And(k <= i, i <= 3)),
+            (0, True)
+        )
     assert dp((x + KD(i, k))*(y + KD(i, j)), (j, k, l)) == \
-        ((x + KD(i, k))*y)**(-k + l + 1) + \
-        ((x + KD(i, k))*y)**(i - k)*(x + KD(i, k))*((x + KD(i, k))*y)**(-i + l)
+        ((x + KD(i, k))*y)**(-k + l + 1) + Piecewise(
+            (((x + KD(i, k))*y)**(i - k)*(x + KD(i, k))*
+             ((x + KD(i, k))*y)**(-i + l), And(k <= i, i <= l)),
+            (0, True)
+        )
 
 
 def test_deltasummation_trivial():
