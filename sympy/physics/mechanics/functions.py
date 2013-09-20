@@ -466,7 +466,7 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
 
 def _integrate_boundary(expr, var, valueofvar, value):
     """
-    Returns indefinite integratal of expr wrt var, using the boundary
+    Returns indefinite integral of expr wrt var, using the boundary
     condition of expr's value being 'value' at var = valueofvar.
     """
 
@@ -489,8 +489,8 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
     if condition != 0:
         condition = frame.express(condition)
     #Special case of vectdiff == 0
-    if vectdiff == Vector([]):
-        return [0, 0, condition]
+    if vectdiff == Vector(0):
+        return (0, 0, condition)
     #Express vectdiff completely in condition's frame to give vectdiff1
     vectdiff1 = frame.express(vectdiff)
     #Find derivative of vectdiff
@@ -502,10 +502,10 @@ def _process_vector_differential(vectdiff, condition, variable, valueofvar, fram
         vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
                                          dim.dot(condition)) * dim
     #Return list
-    return [vectdiff2, vectdiff, vectdiff0]
+    return (vectdiff2, vectdiff, vectdiff0)
 
 
-def get_motion_pos(position=Vector([]), frame=None):
+def get_motion_pos(frame, position=Vector(0)):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the position vector as a function of
@@ -531,8 +531,8 @@ def get_motion_pos(position=Vector([]), frame=None):
     >>> R = ReferenceFrame('R')
     >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
     >>> v = v1*R.x + v2*R.y + v3*R.z
-    >>> get_motion_pos(v, R)
-    [v1''*R.x + v2''*R.y + v3''*R.z, v1'*R.x + v2'*R.y + v3'*R.z, v1*R.x + v2*R.y + v3*R.z]
+    >>> get_motion_pos(R, v)
+    (v1''*R.x + v2''*R.y + v3''*R.z, v1'*R.x + v2'*R.y + v3'*R.z, v1*R.x + v2*R.y + v3*R.z)
 
     """
 
@@ -543,11 +543,10 @@ def get_motion_pos(position=Vector([]), frame=None):
     _check_vector(position)
     vel = frame.dt(position)
     acc = frame.dt(vel)
-    return [acc, vel, position]
+    return (acc, vel, position)
 
 
-def get_motion_vel(velocity=Vector([]), position=Vector([]), timevalue=Vector([]),
-                   frame=None):
+def get_motion_vel(frame, velocity=Vector(0), position=Vector(0), timevalue=0):
     """
     Calculates the three motion parameters - position, velocity and acceleration
     as vectorial functions of time given the velocity and a boundary
@@ -568,8 +567,8 @@ def get_motion_vel(velocity=Vector([]), position=Vector([]), timevalue=Vector([]
     position : Vector
         Boundary condition of position at time = timevalue
 
-    timevalue : Number
-        The numeric value of time at which the given boundary condition
+    timevalue : sympyfiable
+        The value of time at which the given boundary condition
         has been expressed
 
     frame : ReferenceFrame
@@ -583,8 +582,8 @@ def get_motion_vel(velocity=Vector([]), position=Vector([]), timevalue=Vector([]
     >>> R = ReferenceFrame('R')
     >>> a, b, c = symbols('a b c')
     >>> v = a*R.x + b*R.y + c*R.z
-    >>> get_motion_vel(v, frame=R)
-    [0, a*R.x + b*R.y + c*R.z, a*t*R.x + b*t*R.y + c*t*R.z]
+    >>> get_motion_vel(R, v)
+    (0, a*R.x + b*R.y + c*R.z, a*t*R.x + b*t*R.y + c*t*R.z)
 
     """
 
@@ -599,9 +598,8 @@ def get_motion_vel(velocity=Vector([]), position=Vector([]), timevalue=Vector([]
                                         timevalue, frame)
 
 
-def get_motion_acc(acceleration=Vector([]), velocity=Vector([]),
-                   position=Vector([]), timevalue1=Vector([]),
-                   timevalue2=Vector([]), frame=None):
+def get_motion_acc(frame, acceleration=Vector(0), velocity=Vector(0),
+                   position=Vector(0), timevalue1=0, timevalue2=0):
     """
     Calculates the three motion parameters - position, velocity and
     acceleration as vectorial functions of time given the acceleration and
@@ -625,8 +623,8 @@ def get_motion_acc(acceleration=Vector([]), velocity=Vector([]),
     position : Vector
         Boundary condition of position at time = timevalue2
 
-    timevalue1, timevalue2 : Number
-        The numeric values of times at which the given boundary conditions
+    timevalue1, timevalue2 : sympyfiable
+        The values of time at which the given boundary conditions
         have been expressed
 
     frame : ReferenceFrame
@@ -640,7 +638,7 @@ def get_motion_acc(acceleration=Vector([]), velocity=Vector([]),
     >>> R = ReferenceFrame('R')
     >>> a, b, c = symbols('a b c')
     >>> v = a*R.x + b*R.y + c*R.z
-    >>> parameters = get_motion_acc(v, frame=R)
+    >>> parameters = get_motion_acc(R, v)
     >>> parameters[1]
     a*t*R.x + b*t*R.y + c*t*R.z
     >>> parameters[2]
@@ -661,7 +659,7 @@ def get_motion_acc(acceleration=Vector([]), velocity=Vector([]),
                                        timevalue1, frame)[2]
     pos = _process_vector_differential(vel, position, dynamicsymbols._t,
                                        timevalue2, frame)[2]
-    return [acceleration, vel, pos]
+    return (acceleration, vel, pos)
 
 
 def partial_velocity(vel_list, u_list, frame):

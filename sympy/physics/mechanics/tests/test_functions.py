@@ -351,41 +351,41 @@ def test_get_motion_methods():
     v2d = ad*N.x + bd*N.y + cd*N.z
     v2dd = a2d*N.x + b2d*N.y + c2d*N.z
     #Test get_motion_pos
-    assert get_motion_pos(frame = N) == [0, 0, 0]
-    assert get_motion_pos(v1, N) == [0, 0, v1]
-    assert get_motion_pos(v2, N) == [v2dd, v2d, v2]
+    assert get_motion_pos(frame = N) == (0, 0, 0)
+    assert get_motion_pos(N, v1) == (0, 0, v1)
+    assert get_motion_pos(N, v2) == (v2dd, v2d, v2)
     #Test get_motion_vel
-    assert get_motion_vel(frame = N) == [0, 0, 0]
-    assert get_motion_vel(v1, frame = N) == [0, v1, v1 * t]
-    assert get_motion_vel(v1, v0, t1, N) == [0, v1, v0 + v1*(t - t1)]
-    assert get_motion_vel(v1, v2, t1, N) == \
-           [0, v1, v1*t - v1*t1 + v2.subs(t, t1)]
+    assert get_motion_vel(frame = N) == (0, 0, 0)
+    assert get_motion_vel(N, v1) == (0, v1, v1 * t)
+    assert get_motion_vel(N, v1, v0, t1) == (0, v1, v0 + v1*(t - t1))
+    assert get_motion_vel(N, v1, v2, t1) == \
+           (0, v1, v1*t - v1*t1 + v2.subs(t, t1))
     integral_vector = Integral(a, t)*N.x + Integral(b, t)*N.y + Integral(c, t)*N.z
-    assert get_motion_vel(v2, v0, t1, N) == [v2d, v2,
+    assert get_motion_vel(N, v2, v0, t1) == (v2d, v2,
                                              v0 + integral_vector -
-                                             integral_vector.subs(t, t1)]
+                                             integral_vector.subs(t, t1))
     #Test get_motion_acc
-    assert get_motion_acc(frame = N) == [0, 0, 0]
-    assert get_motion_acc(v1, frame = N) == [v1, v1 * t, v1 * t**2/2]
-    assert get_motion_acc(v1, v0, v2, t1, t2, N) == \
-           [v1, (v0 + v1*t - v1*t1),
+    assert get_motion_acc(frame = N) == (0, 0, 0)
+    assert get_motion_acc(N, v1) == (v1, v1 * t, v1 * t**2/2)
+    assert get_motion_acc(N, v1, v0, v2, t1, t2) == \
+           (v1, (v0 + v1*t - v1*t1),
             -v0*t2 + v1*t**2/2 + v1*t1*t2 - \
             v1*t2**2/2 + t*(v0 - v1*t1) + \
-            v2.subs(t, t2)]
-    assert get_motion_acc(v1, v0, v01, t1, t2, N) == \
-           [v1, v0 + v1*t - v1*t1,
+            v2.subs(t, t2))
+    assert get_motion_acc(N, v1, v0, v01, t1, t2) == \
+           (v1, v0 + v1*t - v1*t1,
             -v0*t2 + v01 + v1*t**2/2 + \
             v1*t1*t2 - v1*t2**2/2 + \
-            t*(v0 - v1*t1)]
+            t*(v0 - v1*t1))
     i = Integral(a, t)
     i_sub = i.subs(t, t1)
-    assert get_motion_acc(a*N.x, S1*N.x,
-                          S2*N.x, t1, t2, N) == \
-                          [a*N.x,
+    assert get_motion_acc(N, a*N.x, S1*N.x,
+                          S2*N.x, t1, t2) == \
+                          (a*N.x,
                            (S1 + i - i_sub)*N.x,
                            (S2 + Integral(S1 - t*(a.subs(t, t1)) + i, t) - \
                             Integral(S1 - t2*(a.subs(t, t1)) + \
-                                     i.subs(t, t2), t))*N.x]
+                                     i.subs(t, t2), t))*N.x)
 
 
 def test_inertia():
