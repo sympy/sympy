@@ -114,17 +114,18 @@ def _monic_associate(f, ring):
 
 
 def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
-    omega = D * gamma
     ring = f.ring
     domain = ring.domain
     symbols = f.ring.symbols
     qring = ring.clone(symbols=(symbols[0], symbols[-1]), domain=domain.get_field())
 
+    omega = domain(D * gamma.rep[0])
+
     denominators = [_denominator(u, qring) for u, _ in U]
 
     m = len(denoms)
 
-    gcd = f.ring.domain.gcd
+    gcd = domain.gcd
 
     for i in xrange(m):
         pi = gcd(omega, divisors[i])
@@ -156,12 +157,38 @@ def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
 
     lcs = []
     for j in xrange(n):
-        lj = ring.mul([lcfactors[i]**e[j][i] for i in xrange(m)])
+        lj = ring.drop(0).mul([lcfactors[i][0]**e[j][i] for i in xrange(m)])
         lcs.append(lj)
 
-    # TODO: distribute omega to l_{j}s and if needed update f
+    zring = qring.clone(domain=domain)
+    U_ = [_alpha_to_z(u, qring).clear_denoms()[1].set_ring(zring) for u, _ in U]
 
-    return f, lcs
+    if omega == 1:
+        for j in xrange(n):
+            dj = lcs[j]
+            djA = dj.evaluate(zip(dj.ring.gens[:-1], A)).drop(0)
+            lcuj = U_[j].LC
+
+            lcs[j] = dj.mul_ground(lcuj // djA)
+    else:
+        for j in xrange(n):
+            dj = lcs[j]
+            djA = dj.evaluate(zip(dj.ring.gens[:-1], A)).drop(0)
+            lcuj = U_[j].LC
+            d = gcd(djA, lcuj)
+
+            lcs[j] = dj.mul_ground(lcuj // d)
+            U_[j] = U_[j].mul_ground(djA // d)
+            omega = (omega * d) // djA
+
+        if omega == 1:
+            return f_, lcs, U_
+        else:
+            lcs = [lc.mul_ground(omega) for lc in lcs]
+            U_ = [u.mul_ground(omega) for u in U_]
+            f_ = f.mul_ground(omega**(n-1))
+
+    return f, lcs, U_
 
 
 def _test_evaluation_points(f, gamma, lcfactors, D, A):
@@ -522,17 +549,14 @@ def _factor(f):
                 g = _z_to_alpha(f_, ring)
                 return (f.LC, [g.monic()])
 
-            # f_ could be updated by _leading_coeffs
-            lcs = _leading_coeffs(f_, fAfactors, gamma_, lcfactors_, A, D, denoms, divisors)
-            if lcs is None:
+            result = _leading_coeffs(f_, fAfactors, gamma_, lcfactors_, A, D, denoms, divisors)
+            if result is None:
                 continue
             else:
-                f_, lcs = lcs
-
-            lcs_ = [_monic_associate(lc, zring.drop(0)) for lc in lcs]
+                f_, lcs, fAfactors_ = result
 
             prod = ring.domain.domain.one
-            for lc in lcs_:
+            for lc in lcs:
                 prod *= lc.LC
             q = ground(prod, f_.LC)
             delta = ground.numer(q)
@@ -545,9 +569,8 @@ def _factor(f):
             while not _test_prime(fA, minpoly, p, zring.domain):
                 p = nextprime(p)
 
-            fAfactors = [_monic_associate(g, zring.drop(*zring.gens[1:-1])) for g, _ in fAfactors]
-
-            pfactors = _hensel_lift(f_, fAfactors, lcs_, A, minpoly, p)
+            # what about l_ ?
+            pfactors = _hensel_lift(f_, fAfactors_, lcs, A, minpoly, p)
             if pfactors is None:
                 continue
 
