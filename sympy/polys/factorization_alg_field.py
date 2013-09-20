@@ -444,8 +444,11 @@ def _padic_lift(f, pfactors, lcs, B, minpoly, p):
     domain = ring.domain
     LC = ring.dmp_LC
 
+    x = ring.gens[0]
+    tails = [g - LC(g).set_ring(ring)*x**g.degree() for g in pfactors]
+
     coeffs = []
-    for i, g in enumerate(pfactors):
+    for i, g in enumerate(tails):
         coeffs += _symbols('c%i' % i, len(g))
 
     coeffring = PolyRing(coeffs, domain)
@@ -453,19 +456,19 @@ def _padic_lift(f, pfactors, lcs, B, minpoly, p):
 
     S = []
     k = 0
-    for g in pfactors:
+    for t in tails:
         s = ring_.zero
-        t = len(g)
-        for i, monom in zip(xrange(k, k+t), g.itermonoms()):
+        r = len(t)
+        for i, monom in zip(xrange(k, k+r), t.itermonoms()):
             s[monom] = coeffring.gens[i]
         S.append(s)
-        k += t
+        k += r
 
     m = minpoly.set_ring(ring_)
     f = f.set_ring(ring_)
     x = ring_.gens[0]
-    H = [g.set_ring(ring_) + (li - LC(g)).set_ring(ring_)*x**g.degree() for
-            g, li in zip(pfactors, lcs)]
+    H = [t.set_ring(ring_) + li.set_ring(ring_)*x**g.degree() for t, g, li in
+            zip(tails, pfactors, lcs)]
 
     prod = ring_.mul(H)
     e = (f - prod).rem(m)
