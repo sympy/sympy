@@ -92,9 +92,10 @@ def _distinct_prime_divisors(A, domain):
     return divisors
 
 
-def _denominator(f):
-    domain = f.ring.domain
-    ring = domain.get_ring()
+def _denominator(f, qring):
+    f = _alpha_to_z(f, qring)
+
+    ring = qring.domain.get_ring()
     lcm = ring.lcm
     den = ring.one
 
@@ -114,10 +115,12 @@ def _monic_associate(f, ring):
 
 def _leading_coeffs(f, U, gamma, lcfactors, A, D, denoms, divisors):
     omega = D * gamma
-    ring = U[0][0].ring
-    qring = f.ring.drop(*f.ring.gens[1:-1])
+    ring = f.ring
+    domain = ring.domain
+    symbols = f.ring.symbols
+    qring = ring.clone(symbols=(symbols[0], symbols[-1]), domain=domain.get_field())
 
-    denominators = [_denominator(_alpha_to_z(u, qring)) for u, _ in U]
+    denominators = [_denominator(u, qring) for u, _ in U]
 
     m = len(denoms)
 
@@ -177,7 +180,7 @@ def _test_evaluation_points(f, gamma, lcfactors, D, A):
     denoms = []
     for l, _ in lcfactors:
         lA = l.evaluate(zip(l.ring.gens, A)) # in Q(alpha)
-        denoms.append(_denominator(_alpha_to_z(lA**(-1), qring)))
+        denoms.append(_denominator(lA**(-1), qring))
 
     divisors = _distinct_prime_divisors(denoms, ring.domain)
 
