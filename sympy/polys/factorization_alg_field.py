@@ -482,6 +482,7 @@ def _factor(f):
     lcqring = qring.drop(0)
 
     zring = qring.clone(domain=ground.get_ring())
+    lczring = zring.drop(0)
 
     minpoly = _minpoly_from_dense(ring.domain.mod, zring.drop(*zring.gens[:-1]))
     f_ = _monic_associate(f, zring)
@@ -500,7 +501,7 @@ def _factor(f):
 
     for l, exp in lcfactors:
         den, l_ = _alpha_to_z(l, lcqring).clear_denoms() # l_ in QQ[x_1, ..., x_n, z], but coeffs in ZZ
-        cont, l_ = l_.primitive()
+        cont, l_ = l_.set_ring(lczring).primitive()
         D_ *= den
         gamma_ *= cont
         lcfactors_.append((l_, exp)) # polyomials over QQ, allthough coeffs are in ZZ
@@ -557,7 +558,7 @@ def _factor(f):
             else:
                 f_, lcs, fAfactors_ = result
 
-            prod = ring.domain.domain.one
+            prod = ground.one
             for lc in lcs:
                 prod *= lc.LC
             q = ground(prod, f_.LC)
