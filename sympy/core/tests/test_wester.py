@@ -1323,11 +1323,23 @@ def test_P18():
                                     [-3],
                                     [ 0],
                                     [ 1]])]
-@XFAIL
+
 def test_P19():
-    w,x,y,z = symbols('w x y z',real=True)
+    w = symbols('w')
     M = Matrix([[1,   1,   1,   1  ],
                 [w,   x,   y,   z  ],
-                [w^2, x^2, y^2, z^2],
-                [w^3, x^3, y^3, z^3]])
-    assert M.det() # TypeError: unsupported operand type(s) for -: 'Not' and 'Not'
+                [w**2, x**2, y**2, z**2],
+                [w**3, x**3, y**3, z**3]])
+    assert M.det()  == w**3*x**2*y - w**3*x**2*z - w**3*x*y**2 + w**3*x*z**2 + w**3*y**2*z - w**3*y*z**2 - w**2*x**3*y + w**2*x**3*z + w**2*x*y**3 - w**2*x*z**3 - w**2*y**3*z + w**2*y*z**3 + w*x**3*y**2 - w*x**3*z**2 - w*x**2*y**3 + w*x**2*z**3 + w*y**3*z**2 - w*y**2*z**3 - x**3*y**2*z + x**3*y*z**2 + x**2*y**3*z - x**2*y*z**3 - x*y**3*z**2 + x*y**2*z**3
+
+@XFAIL
+def test_P20():
+    raise NotImplementedError("Matrix minimal polynomial not supported")
+
+
+def test_P21():
+    A=Matrix([
+        [ 5, -3, -7],
+        [-2,  1,  2],
+        [ 2, -3, -4]])
+    assert A.charpoly(x).as_expr() == x**3 - 2*x**2 - 5*x + 6
