@@ -195,11 +195,11 @@ def _test_evaluation_points(f, gamma, lcfactors, D, A):
     ring = f.ring
     qring = ring.clone(domain=ring.domain.get_field())
 
-    lc = ring.dmp_LC(f)
-    if lc.evaluate(zip(lc.ring.gens, A)) == 0:
+    fA = f.evaluate(zip(ring.gens[1:-1], A))
+
+    if fA.degree() < f.degree():
         return None
 
-    fA = f.evaluate(zip(ring.gens[1:-1], A))
     if not fA.is_squarefree:
         return None
 
@@ -522,7 +522,7 @@ def _factor(f):
             else:
                 continue
 
-            result = _test_evaluation_points(f_, gamma, lcfactors, D, A)
+            result = _test_evaluation_points(f_, _alpha_to_z(gamma, qring), lcfactors, D, A)
             if result is None:
                 continue
             else:
