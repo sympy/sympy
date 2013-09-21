@@ -523,9 +523,9 @@ def get_motion_params(frame, **kwargs):
     a*t**2/2*R.x + b*t**2/2*R.y + c*t**2/2*R.z
 
     """
-    
+
     ##Helper functions
-    
+
     def _integrate_boundary(expr, var, valueofvar, value):
         """
         Returns indefinite integral of expr wrt var, using the boundary
@@ -536,7 +536,7 @@ def get_motion_params(frame, **kwargs):
         n = expr.subs({CoI: solve(expr.subs({var: valueofvar}) -\
                                   value.subs({var: valueofvar}), CoI)[0]})
         return n
-    
+
     def _process_vector_differential(vectdiff, condition, \
                                      variable, valueofvar, frame):
         """
@@ -567,7 +567,7 @@ def get_motion_params(frame, **kwargs):
         return (vectdiff2, vectdiff, vectdiff0)
 
     ##Function body
-    
+
     _check_frame(frame)
     #Decide mode of operation based on user's input
     if 'acceleration' in kwargs:
