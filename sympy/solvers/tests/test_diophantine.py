@@ -6,6 +6,7 @@ from sympy.solvers.diophantine import (diop_solve, diop_DN, diop_bf_DN, length, 
 from sympy import symbols, Integer, Matrix, simplify, Subs, S, factorint, factor_list
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities import default_sort_key
+from sympy.simplify.simplify import _mexpand
 
 x, y, z, w, t, X, Y, Z = symbols("x, y, z, w, t, X, Y, Z", Integer=True)
 
@@ -547,7 +548,7 @@ def check_solutions(eq):
         for term in terms:
             subeq = term[0]
 
-            if simplify(simplify(Subs(subeq, var, solution).doit())) == 0:
+            if simplify(_mexpand(Subs(subeq, var, solution).doit())) == 0:
                 okay = True
 
     return okay
