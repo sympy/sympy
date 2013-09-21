@@ -188,6 +188,10 @@ def test_real_imag():
     i = Symbol('i', imaginary=True)
     assert (i*r*x).as_real_imag() == (I*i*r*im(x), -I*i*r*re(x))
 
+    # issue 4007:
+    assert ((1 + I)/(1 - I)).as_real_imag() == (0, 1)
+    assert ((1 + 2*I)*(1 + 3*I)).as_real_imag() == (-5, 5)
+
 
 def test_pow_issue_1724():
     e = ((-1)**(S(1)/3))
