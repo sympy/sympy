@@ -1112,7 +1112,6 @@ class CoordSys(Basic):
         [       0,       0, 1]])
 
         """
-        import ipdb;ipdb.set_trace()
         if name == None:
             name = 'CoordSys_' + str(Dummy._count)
             Dummy._count += 1
@@ -1125,24 +1124,67 @@ class CoordSys(Basic):
 
         return newframe
 
-    def posnew(self, position):
+    def posnew(self, position, name=None):
+
+        """
+        Create a coordinate system with a new position from an exisitng
+        coordinate system.
+
+        Parameters
+        ==========
+
+        position : Vector
+            The position vector of the new coordinate system.
+        name : string
+            Name of the coordinate system.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.vector import CoordSysRect
+        >>> c0 = CoordSysRect('c0')
+        >>> v = 2 * c0.e_x + 3 * c0.e_y
+        >>> c1 = posnew(v)
+
+        """
         if not position.is_Vector:
             raise TypeError("vector expected for position")
         if not position.is_constant:
-            raise TypeError("Position variables cannot be BaseScalars")
+            raise TypeError("Position variables need to be constant.")
 
-        parent = self
-        newframe = copy.copy(self)
-        c_rect = CoordSysRect()
+        if not name:
+            name = 'CoordSys_' + str(Dummy._count)
+            Dummy._count += 1
 
-        parent_pos = parent.position.express(c_rect)
-        newframe_pos = position.express(c_rect)
-        newframe_pos = parent_pos + newframe_pos
+        newframe = self.__class__(
+            name=name, dim=self.dim, position=position,
+            orient_type=self.orient_type, orient_amount=self.orient_amount,
+            rot_order=self.rot_order, parent=self,
+            basis_vectors=self._basis_names, coordinates=self._coord_names)
 
-        newframe.position = newframe_pos.factor_vect()
-        return newframe
+        return new_frame
 
     def _change_coord_sys(self, coord_sys_class, name=None, flag=False):
+        """
+        Return a coordinate system after changing the type of coordinate
+        system used, keeping other things same.
+
+        Parameters
+        ==========
+
+        coord_sys_class : class object
+             The class in which the resultant coordinate system is
+             desired.
+
+        name : string
+             The name of the returned coordinate system.
+
+        flag : bool
+             Value that enforces the use of same names of bases as the
+             original coordinate system, if true.
+
+        """
         if not name:
             name = "coord_sys_" + str(Dummy._count)
             Dummy._count += 1
@@ -1213,6 +1255,7 @@ class CoordSys(Basic):
 
     @staticmethod
     def _orient_along(vect, coord_sys):
+        # TODO : Used where?
         if vect.coord_sys.dim > 3 or coord_sys.dim > 3:
             raise NotImplementedError
         Ax0, Ay0, Az0 = vect.components
@@ -1230,19 +1273,21 @@ class CoordSys(Basic):
         return VectAdd(*ret)
 
     @staticmethod
-    def _change_sys(vect, coord_sys, func):
-        """
-        Change the coordinate systems of the the vector.
-        """
-        return func(vect, coord_sys)
-
-    @staticmethod
     def _convert_base_vect_rect(vect, coord_sys):
         """
-        vector: An object with is_Vector == True
-        coord_sys: A CoordSys object
-        returns base vectors in rectangular coordinates converted to another
-        set of rectangular coordinates while chaning the orientation
+        Returns base vectors in rectangular coordinates converted
+        to another set of rectangular coordinates while changing
+        the orientation.
+
+        Parameters
+        ==========
+
+        vect : Vector (in rectangular coordinates)
+            The vector to be converted.
+        coord_sys: A CoordSys object.
+            The coordinate system to express the result in.
+            Needs to be rectangular.
+
         """
         if vect.coord_sys == coord_sys:
             return vect
@@ -1264,10 +1309,19 @@ class CoordSys(Basic):
     @staticmethod
     def _convert_base_sclr_rect(sclr, coord_sys):
         """
-        sclr : A BaseScalar
-        coord_sys: A CoordSys object
-        returns base vectors in rectangular coordinates converted to another
-        set of rectangular coordinates while changing the orientation
+        Returns base scalars in rectangular coordinates converted
+        to another set of rectangular coordinates while changing
+        the orientation.
+
+        Parameters
+        ==========
+
+        sclr : a BaseScalar (in rectangular coordinates)
+            The scalar to be converted.
+        coord_sys: A CoordSys object.
+            The coordinate system to express the result in.
+            Needs to be rectangular.
+
         """
         if sclr.coord_sys == coord_sys:
             return sclr
@@ -1305,10 +1359,13 @@ class CoordSys(Basic):
 
 
 class CoordSysRect(CoordSys):
-    """
-    The rectangular coordinate system.
-    """
+    """The class to represent rectangular coordinate system."""
     def __init__(self, *args, **kwargs):
+        """
+        Intialize a rectangular coordinate system.
+
+        See the docstring of CoordSys class for more.
+        """
         if 'coordinates' not in kwargs.keys():
             try:
                 kwargs['coordinates'] = \
@@ -1329,9 +1386,17 @@ class CoordSysRect(CoordSys):
     @staticmethod
     def _convert_to_sph(vector, coord_sys):
         """
-        vector : a VectAdd
-        coord_sys : a CoordSys object - the coordinate system to convert to
-        returns an object with is_Vector == True
+        Return a vector in this coordinate system converted to
+        spherical coordinates.
+
+        Parameters
+        ==========
+
+        vector : Vector
+            The vector to convert.
+        coord_sys : CoordSys
+            The coordinate system to convert to.
+
         """
         # TODO : Implement a coord_sys check method to check same orientation
         # and position of vector.coord_sys and coord_sys
@@ -1357,8 +1422,19 @@ class CoordSysRect(CoordSys):
 
     @staticmethod
     def _convert_to_cyl(vector, coord_sys):
-        __doc__ = CoordSysRect._convert_to_sph.__doc__
+        """
+        Return a vector in this coordinate system converted to
+        cylindrical coordinates.
 
+        Parameters
+        ==========
+
+        vector : Vector
+            The vector to convert.
+        coord_sys : CoordSys
+            The coordinate system to convert to.
+
+        """
         Ax, Ay, Az = vector.components
         x, y, z = vector.coord_sys.base_scalars
         rho, phi, _z = coord_sys.base_scalars
@@ -1386,10 +1462,13 @@ class CoordSysRect(CoordSys):
 
 
 class CoordSysSph(CoordSys):
-    """
-    The spherical polar coordinate system.
-    """
+    """The class to represent spherical polar coordinate system."""
     def __init__(self, *args, **kwargs):
+        """
+        Initialize a spherical coordinate system.
+
+        See the docstring of CoordSys for more.
+        """
         if 'coordinates' not in kwargs.keys():
             kwargs['coordinates'] = ['r', 'theta', 'phi']
         if 'basis_vectors' not in kwargs.keys():
@@ -1405,7 +1484,19 @@ class CoordSysSph(CoordSys):
 
     @staticmethod
     def _convert_to_rect(vector, coord_sys):
-        __doc__ = CoordSysRect._convert_to_sph.__doc__
+        """
+        Return a vector in this coordinate system converted to
+        rectangular coordinates.
+
+        Parameters
+        ==========
+
+        vector : Vector
+            The vector to convert.
+        coord_sys : CoordSys
+            The coordinate system to convert to.
+
+        """
         Ar, At, Ap = vector.components
         r, theta, phi = vector.coord_sys.base_scalars
         x, y, z = coord_sys.base_scalars
@@ -1434,7 +1525,19 @@ class CoordSysSph(CoordSys):
 
     @staticmethod
     def _convert_to_cyl(vector, coord_sys):
-        __doc__ = CoordSysRect._convert_to_sph.__doc__
+        """
+        Return a vector in this coordinate system converted to
+        cylindrical coordinates.
+
+        Parameters
+        ==========
+
+        vector : Vector
+            The vector to convert.
+        coord_sys : CoordSys
+            The coordinate system to convert to.
+
+        """
         Ar, At, Ap = vector.components
         r, theta, phi = vector.coord_sys.base_scalars
         rho, _phi, z = coord_sys.base_scalars
@@ -1467,10 +1570,13 @@ class CoordSysSph(CoordSys):
 
 
 class CoordSysCyl(CoordSys):
-    """
-    The cylindrical coordinate system.
-    """
+    """The class to represent cylindrical coordinate system."""
     def __init__(self, *args, **kwargs):
+        """
+        Initialize a cylindrical coordinate system.
+
+        See the docstring of CoordSys for more.
+        """
         if 'coordinates' not in kwargs.keys():
             kwargs['coordinates'] = ['rho', 'phi', 'z']
         if 'basis_vectors' not in kwargs.keys():
@@ -1487,9 +1593,17 @@ class CoordSysCyl(CoordSys):
     @staticmethod
     def _convert_to_rect(vector, coord_sys):
         """
-        vector : a VectAdd
-        coord_sys : an instance of subclass of CoordSys class
-        returns an object with is_Vector == True
+        Return a vector in this coordinate system converted to
+        rectangular coordinates.
+
+        Parameters
+        ==========
+
+        vector : Vector
+            The vector to convert.
+        coord_sys : CoordSys
+            The coordinate system to convert to.
+
         """
         Ar, Ap, Az = vector.components
         rho, phi, z = vector.base_scalars
@@ -1515,7 +1629,19 @@ class CoordSysCyl(CoordSys):
 
     @staticmethod
     def _convert_to_sph(vector, coord_sys):
-        __doc__ = CoordSysRect._convert_to_sph.__doc__
+        """
+        Return a vector in this coordinate system converted to
+        spherical coordinates.
+
+        Parameters
+        ==========
+
+        vector : Vector
+            The vector to convert.
+        coord_sys : CoordSys
+            The coordinate system to convert to.
+
+        """
         Ar, Ap, Az = vector.components
         rho, phi, z = vector.coord_sys.base_scalars
         r, theta, _phi = coord_sys.base_scalars
@@ -1547,27 +1673,10 @@ class CoordSysCyl(CoordSys):
 
 
 class Vector(AtomicExpr):
-    """
-    Class instances will represent base vectors
-    """
+    """Base class of all vector classes."""
+
     is_Vector = True
     _op_priority = 11.0
-
-    #def __init__(self, name, coord_sys, position):
-    #    self.name = name
-    #    if not isinstance(coord_sys, CoordSys):
-    #        raise TypeError("coord_sys must be isinstance(CoordSys)")
-    #    self.coord_sys = coord_sys
-    #     self.position = position
-    #     if position > coord_sys.dim:
-    #         raise ValueError("Vector outside coordinate system\
-    #                           dimensionality")
-
-    #def __str__(self, printer=None):
-    #    return self.name
-
-    #_sympystr = __str__
-    #_sympyrepr = __str__
 
     def dot(self, other, coord_sys=None):
         __doc__ = dot.__doc__
@@ -1641,9 +1750,7 @@ class Vector(AtomicExpr):
             raise IndexError
 
     def simplify(self):
-        """
-        Simplify the vector.
-        """
+        """Simplify a vector."""
         ret = ZeroVector
         vect = self.expand().factor_vect()
         for arg in vect._all_args:
@@ -1654,9 +1761,7 @@ class Vector(AtomicExpr):
         return ret
 
     def normalize(self):
-        """
-        Normalize the vector. Returns vector/magnitude of vector.
-        """
+        """Normalize the vector. Returns vector divided by its magnitude."""
         return self/sqrt(dot(self, self))
 
     def as_mat(self):
@@ -1671,6 +1776,7 @@ class Vector(AtomicExpr):
         return Matrix([self.components])
 
 class BaseVector(Vector, Symbol):
+    """Class to represent basis vectors."""
     # __new__ required because it the __new__ of super class takes coord_sys,
     # position as a part of assuptions
     def __new__(cls, name, coord_sys, position, **assumptions):
@@ -1680,6 +1786,25 @@ class BaseVector(Vector, Symbol):
         return obj
 
     def __init__(self, name, coord_sys, position):
+        """
+        Intialize a BaseVector.
+        Not to be initialized directly.
+
+        Parameters
+        ==========
+
+        name : string
+            The name of the basis vector.
+
+        coord_sys : CoordSys
+            The coordinate system in which the basis vector has been
+            defined in.
+
+        position : integer
+            Integer to represent which coordinate does the vector represent.
+            Possible values : 1, 2 or 3
+
+        """
         self.name = name
         if not isinstance(coord_sys, CoordSys):
             raise TypeError("coord_sys must be isinstance(CoordSys)")
