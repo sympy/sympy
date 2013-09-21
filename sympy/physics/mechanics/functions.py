@@ -12,9 +12,7 @@ __all__ = ['cross',
            'mlatex',
            'kinematic_equations',
            'inertia_of_point_mass',
-           'get_motion_pos',
-           'get_motion_vel',
-           'get_motion_acc',
+           'get_motion_params',
            'partial_velocity',
            'linear_momentum',
            'angular_momentum',
@@ -464,202 +462,154 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         raise ValueError('Not an approved rotation type for this function')
 
 
-def _integrate_boundary(expr, var, valueofvar, value):
-    """
-    Returns indefinite integral of expr wrt var, using the boundary
-    condition of expr's value being 'value' at var = valueofvar.
-    """
-
-    CoI = Symbol('CoI')
-    expr = integrate(expr, var) + CoI
-    n = expr.subs({CoI: solve(expr.subs({var: valueofvar}) -\
-                               value.subs({var: valueofvar}), CoI)[0]})
-    return n
-
-
-def _process_vector_differential(vectdiff, condition, variable, valueofvar, frame):
-    """
-    Helper function for get_motion methods
-
-    Returns a list of - derivative, vectdiff and integral
-
-    """
-
-    #Make sure boundary condition is independent of 'variable'
-    if condition != 0:
-        condition = frame.express(condition)
-    #Special case of vectdiff == 0
-    if vectdiff == Vector(0):
-        return (0, 0, condition)
-    #Express vectdiff completely in condition's frame to give vectdiff1
-    vectdiff1 = frame.express(vectdiff)
-    #Find derivative of vectdiff
-    vectdiff2 = frame.dt(vectdiff)
-    #Integrate and use boundary condition
-    vectdiff0 = Vector([])
-    for dim in frame:
-        function1 = vectdiff1.dot(dim)
-        vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
-                                         dim.dot(condition)) * dim
-    #Return list
-    return (vectdiff2, vectdiff, vectdiff0)
-
-
-def get_motion_pos(frame, position=Vector(0)):
+def get_motion_params(frame, **kwargs):
     """
     Calculates the three motion parameters - position, velocity and acceleration
-    as vectorial functions of time given the position vector as a function of
-    time.
+    as vectorial functions of time in the given frame.
 
-    Returns a list of vectors as - [acceleration, velocity, position]
+    If a higher order order differential function is provided, the lower order
+    functions are used as boundary conditions. The values of time at which the
+    boundary conditions are specified are taken from timevalue1(for position
+    boundary condition) and timevalue2(for velocity boundary condition).
 
-    Can also be used for calculations pertaining to rotational motion.
+    If any of the boundary conditions are not provided, they are taken to be zero
+    by default (zero vectors, in case of vectorial inputs). If the boundary
+    conditions are also functions of time, they are converted to constants by
+    substituting the time values in the dynamicsymbols._t time Symbol.
+
+    This function can also be used for calculating rotational motion parameters.
 
     Parameters
     ==========
-
-    position : Vector
-        Position vector of an object/frame as a function of time
 
     frame : ReferenceFrame
         The frame to express the motion parameters in
 
-    Examples
-    ========
-
-    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_pos, dynamicsymbols
-    >>> R = ReferenceFrame('R')
-    >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
-    >>> v = v1*R.x + v2*R.y + v3*R.z
-    >>> get_motion_pos(R, v)
-    (v1''*R.x + v2''*R.y + v3''*R.z, v1'*R.x + v2'*R.y + v3'*R.z, v1*R.x + v2*R.y + v3*R.z)
-
-    """
-
-    if frame is None:
-        raise ValueError("No frame specified")
-    else:
-        _check_frame(frame)
-    _check_vector(position)
-    vel = frame.dt(position)
-    acc = frame.dt(vel)
-    return (acc, vel, position)
-
-
-def get_motion_vel(frame, velocity=Vector(0), position=Vector(0), timevalue=0):
-    """
-    Calculates the three motion parameters - position, velocity and acceleration
-    as vectorial functions of time given the velocity and a boundary
-    condition(position vector at time = timevalue).
-    If any of the parameters are not specified, they are automatically taken to
-    be zero vectors.
-
-    Returns a list of vectors as - [acceleration, velocity, position]
-
-    Can also be used for calculations pertaining to rotational motion.
-
-    Parameters
-    ==========
-
-    velocity : Vector
-        Velocity vector of an object/frame as a function of time
-
-    position : Vector
-        Boundary condition of position at time = timevalue
-
-    timevalue : sympyfiable
-        The value of time at which the given boundary condition
-        has been expressed
-
-    frame : ReferenceFrame
-        The frame to express the motion parameters in
-
-    Examples
-    ========
-
-    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_vel
-    >>> from sympy import symbols
-    >>> R = ReferenceFrame('R')
-    >>> a, b, c = symbols('a b c')
-    >>> v = a*R.x + b*R.y + c*R.z
-    >>> get_motion_vel(R, v)
-    (0, a*R.x + b*R.y + c*R.z, a*t*R.x + b*t*R.y + c*t*R.z)
-
-    """
-
-    if frame is None:
-        raise ValueError("No frame specified")
-    else:
-        _check_frame(frame)
-    _check_vector(velocity)
-    _check_vector(position)
-    timevalue = sympify(timevalue)
-    return _process_vector_differential(velocity, position, dynamicsymbols._t,
-                                        timevalue, frame)
-
-
-def get_motion_acc(frame, acceleration=Vector(0), velocity=Vector(0),
-                   position=Vector(0), timevalue1=0, timevalue2=0):
-    """
-    Calculates the three motion parameters - position, velocity and
-    acceleration as vectorial functions of time given the acceleration and
-    two boundary conditions-
-    velocity vector at time = timevalue1 and position vector at
-    time = timevalue2.
-    If any of the parameters are not specified, they are automatically taken to
-    be zero vectors.
-
-    Returns a list of [acceleration, velocity, position]
-
-    Parameters
-    ==========
-
-    acceleration : Vector
+     acceleration : Vector
         Acceleration of the object/frame as a function of time
 
     velocity : Vector
-        Boundary condition of velocity at time = timevalue1
+        Velocity as function of time or as boundary condition
+        of velocity at time = timevalue1
 
     position : Vector
-        Boundary condition of position at time = timevalue2
+        Velocity as function of time or as boundary condition
+        of velocity at time = timevalue1
 
-    timevalue1, timevalue2 : sympyfiable
-        The values of time at which the given boundary conditions
-        have been expressed
+    timevalue1 : sympyfiable
+        Value of time for position boundary condition
 
-    frame : ReferenceFrame
-        The frame to express the motion parameters in
+    timevalue2 : sympyfiable
+        Value of time for velocity boundary condition
 
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_acc
+    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_params, dynamicsymbols
     >>> from sympy import symbols
     >>> R = ReferenceFrame('R')
+    >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
+    >>> v = v1*R.x + v2*R.y + v3*R.z
+    >>> get_motion_params(R, position = v)
+    (v1''*R.x + v2''*R.y + v3''*R.z, v1'*R.x + v2'*R.y + v3'*R.z, v1*R.x + v2*R.y + v3*R.z)
     >>> a, b, c = symbols('a b c')
     >>> v = a*R.x + b*R.y + c*R.z
-    >>> parameters = get_motion_acc(R, v)
+    >>> get_motion_params(R, velocity = v)
+    (0, a*R.x + b*R.y + c*R.z, a*t*R.x + b*t*R.y + c*t*R.z)
+    >>> parameters = get_motion_params(R, acceleration = v)
     >>> parameters[1]
     a*t*R.x + b*t*R.y + c*t*R.z
     >>> parameters[2]
     a*t**2/2*R.x + b*t**2/2*R.y + c*t**2/2*R.z
 
     """
+    
+    ##Helper functions
+    
+    def _integrate_boundary(expr, var, valueofvar, value):
+        """
+        Returns indefinite integral of expr wrt var, using the boundary
+        condition of expr's value being 'value' at var = valueofvar.
+        """
+        CoI = Symbol('CoI')
+        expr = integrate(expr, var) + CoI
+        n = expr.subs({CoI: solve(expr.subs({var: valueofvar}) -\
+                                  value.subs({var: valueofvar}), CoI)[0]})
+        return n
+    
+    def _process_vector_differential(vectdiff, condition, \
+                                     variable, valueofvar, frame):
+        """
+        Helper function for get_motion methods. Finds derivative of vectdiff wrt
+        variable, and its integral using the specified boundary condition at
+        value of variable = valueofvar.
+        Returns a tuple of - (derivative, function and integral) wrt vectdiff
 
-    if frame is None:
-        raise ValueError("No frame specified")
+        """
+
+        #Make sure boundary condition is independent of 'variable'
+        if condition != 0:
+            condition = frame.express(condition)
+        #Special case of vectdiff == 0
+        if vectdiff == Vector(0):
+            return (0, 0, condition)
+        #Express vectdiff completely in condition's frame to give vectdiff1
+        vectdiff1 = frame.express(vectdiff)
+        #Find derivative of vectdiff
+        vectdiff2 = frame.dt(vectdiff)
+        #Integrate and use boundary condition
+        vectdiff0 = Vector([])
+        for dim in frame:
+            function1 = vectdiff1.dot(dim)
+            vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
+                                             dim.dot(condition)) * dim
+        #Return list
+        return (vectdiff2, vectdiff, vectdiff0)
+
+    ##Function body
+    
+    _check_frame(frame)
+    #Decide mode of operation based on user's input
+    if 'acceleration' in kwargs:
+        mode = 2
+    elif 'velocity' in kwargs:
+        mode = 1
     else:
-        _check_frame(frame)
-    _check_vector(acceleration)
-    _check_vector(velocity)
-    _check_vector(position)
-    timevalue1 = sympify(timevalue1)
-    timevalue2 = sympify(timevalue2)
-    vel = _process_vector_differential(acceleration, velocity, dynamicsymbols._t,
-                                       timevalue1, frame)[2]
-    pos = _process_vector_differential(vel, position, dynamicsymbols._t,
-                                       timevalue2, frame)[2]
-    return (acceleration, vel, pos)
+        mode = 0
+    #All the possible parameters in kwargs
+    #Not all are required for every case
+    #If not specified, set to default values(may or may not be used in
+    #calculations)
+    conditions = ['acceleration', 'velocity', 'position',
+                  'timevalue', 'timevalue1', 'timevalue2']
+    for i, x in enumerate(conditions):
+        if x not in kwargs:
+            if i < 3:
+                kwargs[x] = Vector(0)
+            else:
+                kwargs[x] = S(0)
+        elif i < 3:
+            _check_vector(kwargs[x])
+        else:
+            kwargs[x] = sympify(kwargs[x])
+    if mode == 2:
+        vel = _process_vector_differential(kwargs['acceleration'],
+                                           kwargs['velocity'],
+                                           dynamicsymbols._t,
+                                           kwargs['timevalue2'], frame)[2]
+        pos = _process_vector_differential(vel, kwargs['position'],
+                                           dynamicsymbols._t,
+                                           kwargs['timevalue1'], frame)[2]
+        return (kwargs['acceleration'], vel, pos)
+    elif mode == 1:
+        return _process_vector_differential(kwargs['velocity'],
+                                            kwargs['position'],
+                                            dynamicsymbols._t,
+                                            kwargs['timevalue1'], frame)
+    else:
+        vel = frame.dt(kwargs['position'])
+        acc = frame.dt(vel)
+        return (acc, vel, kwargs['position'])
 
 
 def partial_velocity(vel_list, u_list, frame):
