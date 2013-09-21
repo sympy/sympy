@@ -149,7 +149,7 @@ class TypeA(Standard_Cartan):
         This method returns the dimension of the Lie algebra as a
         vector space over the underlying field, which is either R or C.
         Also equal to the number of generators of A_n.
-        
+
         Source: en.wikipedia.org/wiki/Table_of_Lie_groups
         """
         n = self.n
