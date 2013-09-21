@@ -69,7 +69,7 @@ class GammaMatrixHead(TensorHead):
 
         lorentz = _LorentzContainer(*key)
 
-        gmh = TensorHead.__new__(cls, "gamma", TensorType(Tuple(lorentz, DiracSpinor, DiracSpinor), tensorsymmetry([1]*3)), comm=2, matrix_behavior=True)
+        gmh = TensorHead.__new__(cls, "gamma", TensorType(Tuple(lorentz, DiracSpinor, DiracSpinor), tensorsymmetry([1], [1], [1])), comm=2, matrix_behavior=True)
         GammaMatrixHead._gmhd[key] = gmh
         gmh.Lorentz = lorentz
         return gmh
