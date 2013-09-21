@@ -4,13 +4,9 @@ from sympy.matrices import Matrix
 
 
 class TypeF(Standard_Cartan):
-    """
-    This class contains the information about
-    the E series of simple Lie algebras.
-    ====
-    """
 
     def __new__(cls, n):
+        assert n == 4
         return Standard_Cartan.__new__(cls, "F", 4)
 
     def degree(self):
@@ -158,8 +154,11 @@ class TypeF(Standard_Cartan):
         """
         This method returns the dimension of the Lie algebra as a
         vector space over the underlying field, which is either R or C.
-        Also equal to the number of independent generators of F_4
+        Also equal to the number of generators of F4.
+
+        Source: en.wikipedia.org/wiki/Table_of_Lie_groups
         """
+
         return 52
 
     def dynkin_diagram(self):
