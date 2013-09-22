@@ -241,6 +241,38 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     h1, h2 = B
     return (h1*t + h2 + s1, h2*t - h1 + s2)
 
+
+def non_cancellation_algo(b, c, n, DE):
+    from sympy.integrals.prde import real_imag
+    from sympy.integrals.rde import (no_cancel_b_large,
+        no_cancel_b_small, no_cancel_equal)
+    if not b.is_zero and (DE.case == 'base' or \
+      b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
+        q = no_cancel_b_large(b, c, n, DE)
+
+    elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) \
+      and (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
+        q = no_cancel_b_small(b, c, n, DE)
+
+    elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t)- 1 \
+      and n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
+        q = no_cancel_equal(b, c, n, DE)
+
+    qa , qd = frac_in(q, DE.t)
+    qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
+    return (qa_r/qd, qa_i/qd)
+
+
+def cancellation_algo(a, b1, b2, c1, c2, DE, n):
+    if case == 'primitive':
+        (q1, q2) = cds_cancel_primitive(a, b1, b2, c1, c2, DE, n)
+    if case == 'exp':
+        (q1, q2) = cds_cancel_exp(a, b1, b2, c1, c2, DE, n)
+    if case == 'tan':
+        (q1, q2) = cds_cancel_tan(a, b1, b2, c1, c2, DE, n)
+    return (alpha*q1/m, alpha*q2/m)
+
+
 def coupled_DE_system(b1, b2, c1, c2, DE):
     """
     Algorithms for solving Coupled Differential System.
@@ -256,10 +288,9 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
 
     Hence returning (y1, y2) if a solution exist, None otherwise
     """
+    case = DE.case
+    a = Poly(sqrt(-1) , DE.t)
     k = Dummy('k')
-    from sympy.integrals.prde import real_imag
-    from sympy.integrals.rde import (no_cancel_b_large,
-        no_cancel_b_small, no_cancel_equal)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     c1a, c1d = frac_in(c1, DE.t)
@@ -272,39 +303,13 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
     a, (ba, bd), (ca, cd), hn = normal_denom(fa, fd, ga, gd, DE)
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     n = bound_degree(A, B, C, DE)
-    b, c, m, alpha, beta = spde(A, B, C, n, DE)
-    # non cancellation cases solve for q
-    if not b.is_zero and (DE.case == 'base' or \
-      b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
-        q = no_cancel_b_large(b, c, n, DE)
-        qa , qd = frac_in(q, DE.t)
-        qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
-	print(qa_r, qa_i)
-        return (qa_r/qd, qa_i/qd)
-
-    elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) \
-      and (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
-        q = no_cancel_b_small(b, c, n, DE)
-        qa , qd = frac_in(q, DE.t)
-        qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
-	print(qa_r, qa_i)
-        return (qa_r/qd, qa_i/qd)
-
-    elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t)- 1 \
-      and n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
-        q = no_cancel_equal(b, c, n, DE)
-        qa , qd = frac_in(q, DE.t)
-        qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
-	print(qa_r, qa_i)
-        return (qa_r/qd, qa_i/qd)
-    # Does not fall in non cancellation
-    # Hence cancellation cases
-    case = DE.case
-    a = Poly(sqrt(-1) , DE.t)
-    if case == 'primitive':
-        (q1, q2) = cds_cancel_primitive(a, b1, b2, c1, c2, DE, n)
-    if case == 'exp':
-        (q1, q2) = cds_cancel_exp(a, b1, b2, c1, c2, DE, n)
-    if case == 'tan':
-        (q1, q2) = cds_cancel_tan(a, b1, b2, c1, c2, DE, n)
-    return (alpha*q1/m, alpha*q2/m)
+    try:
+       b, c, m, alpha, beta = spde(A, B, C, n, DE)
+    except:
+       # Does not fall in non cancellation
+       # Hence cancellation cases
+       return cancellation_algo(a, b1, b2, c1, c2, DE, n)
+    else:
+       # non cancellation cases solve for q
+       return non_cancellation_algo(b, c, n, DE)
+    
