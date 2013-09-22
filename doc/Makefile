@@ -165,6 +165,6 @@ info:
 logo:
 	rm -rf _build/logo
 	mkdir -p _build/logo
-	$(PYTHONPATH) ./generate_logos.py -d
+	./generate_logos.py -d
 	@echo
 	@echo "Logo generated."
