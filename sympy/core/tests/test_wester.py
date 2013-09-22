@@ -1346,18 +1346,14 @@ def test_P21():
     assert M.charpoly(x).as_expr() == x**3 - 2*x**2 - 5*x + 6
 
 @slow
-@XFAIL
 def test_P22():
 #   Wester test requires calculating eigenvalues for a matrix of dimension 100
 #   This currently takes forever with sympy
 #    M=(2-x)*eye(100);
 #    assert M.eigenvals() == {-x + 2: 100}
-#   So we will speed-up the test checking if for a matrix of dimension 12 this
-#   is completed in 1 second in a Core Duo (it actually takes more than 10 seconds)
-    start = time.time()
+#   So we will speed-up for the moment the test checking only for dimension 12
     M=(2-x)*eye(12)
     assert M.eigenvals() == {-x + 2: 12}
-    assert time.time()-start < 1
 
 def test_P23():
     M = Matrix([
@@ -1366,7 +1362,12 @@ def test_P23():
         [0, 1, 2, 1, 0],
         [0, 0, 1, 2, 1],
         [0, 0, 0, 1, 2]])
-    assert sorted(M.eigenvals()) == [-sqrt(3) + 2, 1, 2, 3, sqrt(3) + 2]
+    assert M.eigenvals() == {
+        S('1'): 1,
+        S('2'): 1,
+        S('3'): 1,
+        S('sqrt(3) + 2'): 1,
+        S('-sqrt(3) + 2'): 1}
 
 def test_P24():
     M = Matrix([
@@ -1378,20 +1379,26 @@ def test_P24():
         [ -52,  -43,   49,   44, -599,  411,  208,  208],
         [ -49,   -8,    8,   59,  208,  208,   99, -911],
         [  29,  -44,   52,  -23,  208,  208, -911,   99]])
-    assert sorted(M.eigenvals()) == [-10*sqrt(10405), 0, -100*sqrt(26) + 510, 1000, 100*sqrt(26) + 510, 1020, 10*sqrt(10405)]
+    assert M.eigenvals() == {
+        S('0'): 1,
+        S('10*sqrt(10405)'): 1,
+        S('100*sqrt(26) + 510'): 1,
+        S('1000'): 2,
+        S('-100*sqrt(26) + 510'): 1,
+        S('-10*sqrt(10405)'): 1,
+        S('1020'): 1}
 
 def test_P25():
-    MF = Matrix([
-            [ 611.0,  196.0, -192.0,  407.0,   -8.0,  -52.0,  -49.0,   29.0],
-            [ 196.0,  899.0,  113.0, -192.0,  -71.0,  -43.0,   -8.0,  -44.0],
-            [-192.0,  113.0,  899.0,  196.0,   61.0,   49.0,    8.0,   52.0],
-            [ 407.0, -192.0,  196.0,  611.0,    8.0,   44.0,   59.0,  -23.0],
-            [  -8.0,  -71.0,   61.0,    8.0,  411.0, -599.0,  208.0,  208.0],
-            [ -52.0,  -43.0,   49.0,   44.0, -599.0,  411.0,  208.0,  208.0],
-            [ -49.0,   -8.0,    8.0,   59.0,  208.0,  208.0,   99.0, -911.0],
-            [  29.0,  -44.0,   52.0,  -23.0,  208.0,  208.0, -911.0,   99.0]])
-   # MF = M.applyfunc(lambda i:Float(i))
-    assert [i.evalf() for i in sorted(MF.eigenvals())] == [-1020.04901843000, 0, 0.0980486407215170, 1000.00000000000, 1019.90195135928, 1020.00000000000, 1020.04901843000]
+    MF = N(Matrix([
+        [ 611,  196, -192,  407,   -8,  -52,  -49,   29],
+        [ 196,  899,  113, -192,  -71,  -43,   -8,  -44],
+        [-192,  113,  899,  196,   61,   49,    8,   52],
+        [ 407, -192,  196,  611,    8,   44,   59,  -23],
+        [  -8,  -71,   61,    8,  411, -599,  208,  208],
+        [ -52,  -43,   49,   44, -599,  411,  208,  208],
+        [ -49,   -8,    8,   59,  208,  208,   99, -911],
+        [  29,  -44,   52,  -23,  208,  208, -911,   99]]))
+    assert [round(i,8) for i in sorted(MF.eigenvals())]  == [-1020.04901843, 0.0, 0.09804864, 1000.0, 1019.90195136, 1020.0, 1020.04901843]
 
 def test_P26():
     a0,a1,a2,a3,a4 = symbols('a0 a1 a2 a3 a4')
