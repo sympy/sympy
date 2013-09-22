@@ -1710,7 +1710,7 @@ class Integer(Rational):
         return Rational.__le__(self, other)
 
     def __hash__(self):
-        return super(Integer, self).__hash__()
+        return hash(self.p)
 
     def __index__(self):
         return self.p
