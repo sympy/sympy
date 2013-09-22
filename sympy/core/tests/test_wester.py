@@ -14,13 +14,13 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Ne, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
-    elliptic_e, elliptic_f, powsimp, hessian)
+    elliptic_e, elliptic_f, powsimp, hessian, wronskian)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
-from sympy.mpmath import mpi, mpc, inf
+from sympy.mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import (BlockMatrix, block_collapse)
 from sympy.matrices.expressions import (MatrixSymbol, ZeroMatrix)
@@ -1232,7 +1232,7 @@ def test_P7():
 @XFAIL
 def test_P8():
     M=Matrix([[1,-2*I],[-3*I,4]])
-    assert M.norm(ord=inf) == 7 # Matrix.norm(ord=inf) not implemented
+    assert M.norm(ord=S.Infinity) == 7 # Matrix.norm(ord=inf) not implemented
 
 def test_P9():
     a, b, c = symbols('a b c', real=True)
@@ -1574,3 +1574,15 @@ def test_P41():
     assert hessian(r**2*sin(t),(r,t)) == Matrix([
                                             [  2*sin(t),   2*r*cos(t)],
                                             [2*r*cos(t), -r**2*sin(t)]])
+
+def test_P42():
+    assert wronskian([cos(x), sin(x)], x).simplify() == 1
+
+def test_P43():
+    def __my_jacobian(M,Y):
+        return Matrix([M.diff(v).T for v in [r,t]]).T
+    r,t = symbols('r t',real=True)
+    M=Matrix([r*cos(t), r*sin(t)])
+    assert __my_jacobian(M,[r,t]) == Matrix([
+                                [cos(t), -r*sin(t)],
+                                [sin(t),  r*cos(t)]])
