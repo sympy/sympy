@@ -17,7 +17,7 @@ class TypeD(Standard_Cartan):
         ========
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("D4")
-        >>> c.dimension()
+        >>> c.degree()
         4
         """
 

@@ -17,7 +17,7 @@ class TypeC(Standard_Cartan):
         ========
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("C3")
-        >>> c.dimension()
+        >>> c.degree()
         3
         """
         n = self.n

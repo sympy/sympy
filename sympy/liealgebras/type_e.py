@@ -22,7 +22,7 @@ class TypeE(Standard_Cartan):
         ========
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
-        >>> c.dimension()
+        >>> c.degree()
         8
         """
 
