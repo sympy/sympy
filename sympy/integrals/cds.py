@@ -47,7 +47,6 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     q1, q2 in k[t] X k[t] of this system with deg(q1) <= n and deg(q2)
     <= n
     """
-    print("enter primitive")
     t = DE.t
     k = Dummy('k')
     b1a, b1d = frac_in(b1, DE.t)
@@ -60,11 +59,8 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         u = u1 + u2*a.as_expr()
         z1a, z1d = frac_in(cancel(u1*c1.as_expr() - u2*c2.as_expr()), DE.t)
         z2a, z2d = frac_in(cancel(u2*c1.as_expr() + u1*c2.as_expr()), DE.t)
-	print(z1a,z1d);
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
-	print(P1)
-	print(P2)
         if P1 and P2:
             p1, _ = P1
             p2, _ = P2
@@ -81,8 +77,6 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         raise NonElementaryIntegralException
     q1, q2 = (Poly(0, t), Poly(0, t))
     while c1 or c2:
-	print("c1")
-	print(c1, c2)
         m = max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t))
         if n < m:
             raise NonElementaryIntegralException
@@ -91,23 +85,13 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
         with DecrementLevel(DE):
             (s1, s2) = coupled_DE_system(b1, b2, c1k, c2k, DE)
 	(b1, b2) = (b1.as_poly(DE.t), b2.as_poly(DE.t))
-	print(DE.t)
-	print("s")
-	print(s1,s2)
-        q1 = q1 + s1*t**m
-        q2 = q2 + s2*t**m
+        q1 = (q1.as_expr() + s1.as_expr()*t**m).as_poly(DE.t)
+        q2 = (q2.as_expr() + s2.as_expr()*t**m).as_poly(DE.t)
         n = m - 1
         Ds1tm = derivation(s1*t**m, DE)
         Ds2tm = derivation(s2*t**m, DE)
-	print("d")
-	print(Ds1tm, Ds2tm)
-	print("b")
-	print(b1, b2)
-        c1 = Poly(c1.as_poly(t) - Ds1tm - (b1*s1 - b2*s2)*t**m, t)
-        c2 = Poly(c2.as_poly(t) - Ds2tm - (b2*s1 + b1*s2)*t**m, t)
-	print("after c")
-	print(c1,c2)
-	print(q1,q2)
+        c1 = Poly(c1 - Ds1tm.as_expr() - (b1*s1 - b2*s2).as_expr()*t**m, t)
+        c2 = Poly(c2 - Ds2tm.as_expr() - (b2*s1 + b1*s2).as_expr()*t**m, t)
     return (q1, q2)
 
 
@@ -168,8 +152,6 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         raise NonElementaryIntegralException
     q1, q2 = (0, 0)
     while c1 or c2:
-	print("c1")
-	print(c1, c2)
         m = max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t))
         if n < m:
             raise NonElementaryIntegralException
@@ -178,23 +160,13 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         A = coupled_DE_system(b1 + m*Dt/t, b2, c1k, c2k, DE)
         (s1, s2) = A
 	(b1, b2) = (b1.as_poly(DE.t), b2.as_poly(DE.t))
-	print(DE.t)
-	print("s")
-	print(s1,s2)
         q1 = q1 + s1*t**m
         q2 = q2 + s2*t**m
         n = m - 1
         Ds1tm = derivation(s1*t**m, DE)
         Ds2tm = derivation(s2*t**m, DE)
-	print("d")
-	print(Ds1tm, Ds2tm)
-	print("b")
-	print(b1, b2)
         c1 = Poly(c1.as_poly(t) - Ds1tm - (b1*s1 - b2*s2)*t**m, t)
         c2 = Poly(c2.as_poly(t) - Ds2tm - (b2*s1 + b1*s2)*t**m, t)
-	print("after c")
-	print(c1,c2)
-	print(q1,q2)
     return (q1, q2)
 
 
@@ -242,35 +214,45 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     return (h1*t + h2 + s1, h2*t - h1 + s2)
 
 
-def non_cancellation_algo(b, c, n, DE):
+def non_cancellation_algo(alpha, hn, hs, b, c, n, DE):
     from sympy.integrals.prde import real_imag
     from sympy.integrals.rde import (no_cancel_b_large,
         no_cancel_b_small, no_cancel_equal)
+    case = DE.case
+    k = Dummy('k')
     if not b.is_zero and (DE.case == 'base' or \
       b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
         q = no_cancel_b_large(b, c, n, DE)
+        qa , qd = frac_in(q, DE.t)
+        qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
+        return (qa_r/qd, qa_i/qd)
 
     elif (b.is_zero or b.degree(DE.t) < DE.d.degree(DE.t) - 1) \
       and (DE.case == 'base' or DE.d.degree(DE.t) >= 2):
         q = no_cancel_b_small(b, c, n, DE)
+        qa , qd = frac_in(q, DE.t)
+        qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
+        return (qa_r/qd, qa_i/qd)
 
     elif DE.d.degree(DE.t) >= 2 and b.degree(DE.t) == DE.d.degree(DE.t)- 1 \
       and n > -b.as_poly(DE.t).LC()/DE.d.as_poly(DE.t).LC():
         q = no_cancel_equal(b, c, n, DE)
-
-    qa , qd = frac_in(q, DE.t)
-    qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
-    return (qa_r/qd, qa_i/qd)
+        qa , qd = frac_in(q, DE.t)
+        qa_r, qa_i, qd = real_imag(alpha*qa, hn*hs*qd, k)
+        return (qa_r/qd, qa_i/qd)
+    #spde passed but not a non-cancellation case
+    return None 
 
 
 def cancellation_algo(a, b1, b2, c1, c2, DE, n):
+    case = DE.case
     if case == 'primitive':
         (q1, q2) = cds_cancel_primitive(a, b1, b2, c1, c2, DE, n)
     if case == 'exp':
         (q1, q2) = cds_cancel_exp(a, b1, b2, c1, c2, DE, n)
     if case == 'tan':
         (q1, q2) = cds_cancel_tan(a, b1, b2, c1, c2, DE, n)
-    return (alpha*q1/m, alpha*q2/m)
+    return (q1, q2)
 
 
 def coupled_DE_system(b1, b2, c1, c2, DE):
@@ -288,9 +270,7 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
 
     Hence returning (y1, y2) if a solution exist, None otherwise
     """
-    case = DE.case
     a = Poly(sqrt(-1) , DE.t)
-    k = Dummy('k')
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
     c1a, c1d = frac_in(c1, DE.t)
@@ -311,5 +291,8 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
        return cancellation_algo(a, b1, b2, c1, c2, DE, n)
     else:
        # non cancellation cases solve for q
-       return non_cancellation_algo(b, c, n, DE)
-    
+       A = non_cancellation_algo(alpha, hn, hs, b, c, n, DE)
+       if A is None:
+           return cancellation_algo(a, b1, b2, c1, c2, DE, n)
+       else:
+           return A 
