@@ -49,14 +49,48 @@ def dot(vec1, vec2):
 dot.__doc__ += Vector.dot.__doc__
 
 
-def express(vec, frame, frame2=None):
-    """Express convenience wrapper"""
-    if isinstance(vec, Dyadic):
-        return vec.express(frame, frame2)
-    else:
-        return frame.express(vec)
+def express(expr, frame, frame2=None):
+    """
+    Express convenience wrapper
 
-express.__doc__ += Vector.express.__doc__
+    Re-express a Vector, scalar(sympyfiable) or Dyadic in given frame.
+
+    Calls ReferenceFrame's express method for vectors and scalars, or
+    Dyadic's express method for dyadics
+
+    Parameters
+    ==========
+
+    expr : Vector/Dyadic/scalar(sympyfiable)
+        The expression to re-express in ReferenceFrame 'frame'
+
+    frame: ReferenceFrame
+        The reference frame to express expr in
+
+    frame2 : ReferenceFrame
+        The other frame required for re-expression(only for Dyadic expr)
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, outer, dynamicsymbols
+    >>> N = ReferenceFrame('N')
+    >>> q = dynamicsymbols('q')
+    >>> B = N.orientnew('B', 'Axis', [q, N.z])
+    >>> d = outer(N.x, N.x)
+    >>> from sympy.physics.mechanics import express
+    >>> express(d, B, N)
+    cos(q)*(B.x|N.x) - sin(q)*(B.y|N.x)
+    >>> express(B.x, N)
+    cos(q)*N.x + sin(q)*N.y
+    >>> express(N[0], B)
+    B_x*cos(q(t)) - B_y*sin(q(t))
+
+    """
+    if isinstance(expr, Dyadic):
+        return expr.express(frame, frame2)
+    else:
+        return frame.express(expr)
 
 
 def outer(vec1, vec2):

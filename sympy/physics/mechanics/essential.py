@@ -485,31 +485,47 @@ class Dyadic(object):
 
 class CoordinateSym(Symbol):
     """
-    Class to represent the coordinate symbols associated wrt a Reference
-    Frame
+    A coordinate symbol/base scalar associated wrt a Reference Frame.
 
-    Users should not instantiate this class. Instances of this class must
-    only be accessed through the corresponding frame as 'frame[index]'
+    Ideally, users should not instantiate this class. Instances of
+    this class must only be accessed through the corresponding frame
+    as 'frame[index]'.
+
+    However, CoordinateSyms having the same frame and index parameters
+    are equal (even though they may be instantiated separately).
+
+    Parameters
+    ==========
+
+    name : string
+        The display name of the CoordinateSym
+
+    frame : ReferenceFrame
+        The reference frame this base scalar belongs to
+
+    index : 0, 1 or 2
+        The index of the dimension denoted by this coordinate variable
 
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import ReferenceFrame
+    >>> from sympy.physics.mechanics import ReferenceFrame, CoordinateSym
     >>> A = ReferenceFrame('A')
     >>> A[1]
     A_y
     >>> type(A[0])
     <class 'sympy.physics.mechanics.essential.CoordinateSym'>
+    >>> a_y = CoordinateSym('a_y', A, 1)
+    >>> a_y == A[1]
+    True
 
-    Refer Symbol documentation for more information-
     """
-    __doc__ += Symbol.__doc__
 
     def __new__(cls, name, frame, index):
         obj = super(CoordinateSym, cls).__new__(cls, name)
         _check_frame(frame)
-        if index > 2:
-            raise ValueError("Value of index cannot be greater than 2")
+        if index not in range(0, 3):
+            raise ValueError("Invalid index specified")
         obj._id = (frame, index)
         return obj
 
@@ -726,19 +742,19 @@ class ReferenceFrame(object):
 
     def variable_map(self, otherframe):
         """
-        Returns a dictionary which expresses the variables of this frame
-        in terms of the variables of otherframe.
+        Returns a dictionary which expresses the coordinate variables
+        of this frame in terms of the variables of otherframe.
 
         If Vector.simp is True, returns a simplified version of the mapped
         values. Else, returns them without simplification.
 
-        Simplification may take time.
+        Simplification of the expressions may take time.
 
         Parameters
         ==========
 
         otherframe : ReferenceFrame
-            The other frame to map this variables to
+            The other frame to map the variables to
 
         Examples
         ========
@@ -1183,9 +1199,9 @@ class ReferenceFrame(object):
         """
         Re-express a vector/scalar function in this frame
 
-        If variables is True, then the coordinate variables present
-        in the vector field expression are also substituted in terms of
-        the base scalars of this frame
+        If 'variables' is True, then the coordinate variables of other
+        frames present in the vector field expression are also
+        substituted in terms of the base scalars of this frame
 
         Parameters
         ==========
@@ -1195,7 +1211,7 @@ class ReferenceFrame(object):
 
         variables : boolean
             Boolean to specify whether to substitute base scalars
-            in vector expression. If field is scalar, this parameter
+            in vector expression. If the field is scalar, this parameter
             is not considered
 
         Examples
@@ -1209,6 +1225,8 @@ class ReferenceFrame(object):
         >>> R1.orient(R0, 'Axis', [q, R0.z])
         >>> R0.express(4*R1.x + 5*R1.z)
         4*cos(q)*R0.x + 4*sin(q)*R0.y + 5*R0.z
+        >>> R1.express(R0[0]*R0[1])
+        (R1_x*sin(q) + R1_y*cos(q))*(R1_x*cos(q) - R1_y*sin(q))
 
         """
 
@@ -1252,13 +1270,13 @@ class ReferenceFrame(object):
 
     def dt(self, expr, order=1):
         """
-        Calculate the time derivative of a field function in this frame.
+        Calculate the time derivative of a vector/scalar field function
+        in this frame.
 
         References
         ==========
 
-        http://en.wikipedia.org/wiki/
-        Rotating_reference_frame#Time_derivatives_in_the_two_frames
+        http://en.wikipedia.org/wiki/Rotating_reference_frame#Time_derivatives_in_the_two_frames
 
         Parameters
         ==========
@@ -1280,10 +1298,12 @@ class ReferenceFrame(object):
         >>> A = N.orientnew('A', 'Axis', [q1, N.x])
         >>> v = u1 * N.x
         >>> A.set_ang_vel(N, 10*A.x)
-        >>> A.x.dt(N) == 0
+        >>> N.dt(A.x) == 0
         True
-        >>> v.dt(N)
+        >>> N.dt(v)
         u1'*N.x
+        >>> N.dt(u1*A[0])
+        N_x*Derivative(u1(t), t)
 
         """
 
@@ -1806,6 +1826,7 @@ class Vector(object):
         """
         Returns a Vector equivalent to this one, expressed in otherframe.
         Uses ReferenceFrame's .express method.
+
         Refer the docstring for ReferenceFrame.express
         """
         return otherframe.express(self, variables)
@@ -1818,28 +1839,25 @@ class Vector(object):
         return ov
 
     def dt(self, otherframe):
-        """Returns a Vector which is the time derivative of the self Vector, taken
-        in frame otherframe.
-
-        Calls ReferenceFrame' express method
-        Refer the docstring for ReferenceFrame.express
         """
+        Returns a Vector which is the time derivative of
+        the self Vector, taken in frame otherframe.
 
-        outvec = Vector(0)
-        _check_frame(otherframe)
-        for i, v in enumerate(self.args):
-            if v[1] == otherframe:
-                outvec += Vector([(v[0].diff(dynamicsymbols._t), otherframe)])
-            else:
-                outvec += (Vector([v]).dt(v[1]) +
-                    (v[1].ang_vel_in(otherframe) ^ Vector([v])))
-        return outvec
+        Calls ReferenceFrame's dt method
+
+        Refer the docstring for ReferenceFrame.dt
+        """
+        return otherframe.dt(self)
 
     def express(self, otherframe):
         """Returns a vector, expressed in the other frame.
 
         A new Vector is returned, equalivalent to this Vector, but its
         components are all defined in only the otherframe.
+
+        Calls ReferenceFrame's express method
+
+        Refer the docstring for ReferenceFrame.express
 
         Parameters
         ==========
@@ -1858,18 +1876,7 @@ class Vector(object):
         cos(q1)*N.x - sin(q1)*N.z
 
         """
-
-        _check_frame(otherframe)
-        outvec = Vector(0)
-        for i, v in enumerate(self.args):
-            if v[1] != otherframe:
-                temp = otherframe.dcm(v[1]) * v[0]
-                if Vector.simp is True:
-                    temp = temp.applyfunc(lambda x: trigsimp(x, method='fu'))
-                outvec += Vector([(temp, otherframe)])
-            else:
-                outvec += Vector([v])
-        return outvec
+        return otherframe.express(self)
 
     def simplify(self):
         """Returns a simplified Vector."""
