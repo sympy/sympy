@@ -19,10 +19,10 @@ Favicon Generator Used : http://www.favicon.co.uk/
 --------------------
 
 
-I updated and reformat "sympy.svg" file of logo. This source is used for the 
+I updated and reformat "sympy.svg" file of logo. This source is used for the
 generating another variants of *.svg logos (with no tail or no text), which are
-produced by script 'sympy/bin/generate_logos.py', and output the result in 
-"generated" sub directory.
+produced by script 'sympy/bin/generate_logos.py', and output the result in
+"doc/_build/logo/" directory.
 
 FontUsed: FreeSerif
 
