@@ -1580,9 +1580,18 @@ def test_P42():
 
 def test_P43():
     def __my_jacobian(M,Y):
-        return Matrix([M.diff(v).T for v in [r,t]]).T
+        return Matrix([M.diff(v).T for v in Y]).T
     r,t = symbols('r t',real=True)
     M=Matrix([r*cos(t), r*sin(t)])
     assert __my_jacobian(M,[r,t]) == Matrix([
                                 [cos(t), -r*sin(t)],
                                 [sin(t),  r*cos(t)]])
+
+def test_P44():
+    def __my_hessian(f,Y):
+        V=Matrix([diff(f,v) for v in Y])
+        return  Matrix([V.T.diff(v) for v in Y])
+    r,t = symbols('r t',real=True)
+    assert __my_hessian(r**2*sin(t),(r,t)) == Matrix([
+                                            [  2*sin(t),   2*r*cos(t)],
+                                            [2*r*cos(t), -r**2*sin(t)]])
