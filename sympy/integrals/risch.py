@@ -1042,7 +1042,6 @@ def polynomial_reduce_kt(pa, pd, DE):
     """
     qa = Poly(0, DE.t)
     qd = Poly(1, DE.t)
-    print(pa, pd)
     while pa.degree(DE.t) - pd.degree(DE.t) >= DE.d.degree(DE.t):
         m = pa.degree(DE.t) - pd.degree(DE.t) - DE.d.degree(DE.t) + 1
         if m < 0:
@@ -1514,8 +1513,6 @@ def integrate_hypertangent_reduced(pa, pd, DE):
     t = DE.t
     dtt = Poly(t**2 + 1, t)
     m = -(order_at(pa, dtt, t) - order_at(pd, dtt, t))
-    print(m, pa, pd)
-    print(order_at(pa, dtt, t), order_at(pd, dtt, t))
     if m <=0:
         return (Z, O, True)
     ha = Poly(dtt**m*pa, t)
@@ -1549,9 +1546,7 @@ def integrate_hypertangent(fa, fd, DE, z=None):
     s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
 
     g1, h, r = hermite_reduce(fa, fd, DE)
-    print(g1, h, r)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
-    print("ended here")
     if not b:
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), b)
@@ -1669,9 +1664,7 @@ def is_deriv(a, d, DE, z=None):
         rrd_g2_a, rrd_g2_d = frac_in(residue_reduce_derivation(g2, DE, z), DE.t)
         pa = h[0]*rrd_g2_d*r[1] - rrd_g2_a*r[1]*h[1] + r[0]*h[1]*rrd_g2_d
         pd = h[1]*r[1]*rrd_g2_d
-	print(pa.nth(0), pd.nth(0))
-	print(pa/pd)
-	i = as_poly_1t(pa/pd, DE.t, z).nth(0)
+	i = as_poly_1t(pa/pd, DE.t, z).nth(0, 0)
         q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
         Dq1_a = q1a*derivation(q1d, DE) + q1d*derivation(q1a, DE)
         Dq1_d = q1d**2
