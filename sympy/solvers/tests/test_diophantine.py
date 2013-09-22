@@ -224,7 +224,7 @@ def is_pell_transformation_ok(eq):
     A, B = transformation_to_DN(eq)
     u = (A*Matrix([X, Y]) + B)[0]
     v = (A*Matrix([X, Y]) + B)[1]
-    simplified = simplify(Subs(eq, (x, y), (u, v)).doit())
+    simplified = _mexpand(Subs(eq, (x, y), (u, v)).doit())
 
     coeff = dict([reversed(t.as_independent(*[X, Y])) for t in simplified.args])
 
@@ -295,7 +295,7 @@ def is_normal_transformation_ok(eq):
 
     A = transformation_to_normal(eq)
     X, Y, Z = A*Matrix([x, y, z])
-    simplified = simplify(Subs(eq, (x, y, z), (X, Y, Z)).doit())
+    simplified = _mexpand(Subs(eq, (x, y, z), (X, Y, Z)).doit())
 
     coeff = dict([reversed(t.as_independent(*[X, Y, Z])) for t in simplified.args])
     for term in [X*Y, Y*Z, X*Z]:
@@ -550,5 +550,6 @@ def check_solutions(eq):
 
             if simplify(_mexpand(Subs(subeq, var, solution).doit())) == 0:
                 okay = True
+                break
 
     return okay
