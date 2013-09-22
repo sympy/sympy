@@ -14,14 +14,14 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Ne, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
-    elliptic_e, elliptic_f, powsimp)
+    elliptic_e, elliptic_f, powsimp, hessian)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc, inf
-from sympy.matrices import Matrix, GramSchmidt
+from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import (BlockMatrix, block_collapse)
 from sympy.matrices.expressions import (MatrixSymbol, ZeroMatrix)
 from sympy.galgebra.ga import MV
@@ -30,6 +30,7 @@ from sympy.assumptions import assuming
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
+import time
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -1338,8 +1339,231 @@ def test_P20():
 
 
 def test_P21():
-    A=Matrix([
+    M=Matrix([
         [ 5, -3, -7],
         [-2,  1,  2],
         [ 2, -3, -4]])
-    assert A.charpoly(x).as_expr() == x**3 - 2*x**2 - 5*x + 6
+    assert M.charpoly(x).as_expr() == x**3 - 2*x**2 - 5*x + 6
+
+@slow
+@XFAIL
+def test_P22():
+#   Wester test requires calculating eigenvalues for a matrix of dimension 100
+#   This currently takes forever with sympy
+#    M=(2-x)*eye(100);
+#    assert M.eigenvals() == {-x + 2: 100}
+#   So we will speed-up the test checking if for a matrix of dimension 12 this
+#   is completed in 1 second in a Core Duo (it actually takes more than 10 seconds)
+    start = time.time()
+    M=(2-x)*eye(12)
+    assert M.eigenvals() == {-x + 2: 12}
+    assert time.time()-start < 1
+
+def test_P23():
+    M = Matrix([
+        [2, 1, 0, 0, 0],
+        [1, 2, 1, 0, 0],
+        [0, 1, 2, 1, 0],
+        [0, 0, 1, 2, 1],
+        [0, 0, 0, 1, 2]])
+    assert sorted(M.eigenvals()) == [-sqrt(3) + 2, 1, 2, 3, sqrt(3) + 2]
+
+def test_P24():
+    M = Matrix([
+        [ 611,  196, -192,  407,   -8,  -52,  -49,   29],
+        [ 196,  899,  113, -192,  -71,  -43,   -8,  -44],
+        [-192,  113,  899,  196,   61,   49,    8,   52],
+        [ 407, -192,  196,  611,    8,   44,   59,  -23],
+        [  -8,  -71,   61,    8,  411, -599,  208,  208],
+        [ -52,  -43,   49,   44, -599,  411,  208,  208],
+        [ -49,   -8,    8,   59,  208,  208,   99, -911],
+        [  29,  -44,   52,  -23,  208,  208, -911,   99]])
+    assert sorted(M.eigenvals()) == [-10*sqrt(10405), 0, -100*sqrt(26) + 510, 1000, 100*sqrt(26) + 510, 1020, 10*sqrt(10405)]
+
+def test_P25():
+    MF = Matrix([
+            [ 611.0,  196.0, -192.0,  407.0,   -8.0,  -52.0,  -49.0,   29.0],
+            [ 196.0,  899.0,  113.0, -192.0,  -71.0,  -43.0,   -8.0,  -44.0],
+            [-192.0,  113.0,  899.0,  196.0,   61.0,   49.0,    8.0,   52.0],
+            [ 407.0, -192.0,  196.0,  611.0,    8.0,   44.0,   59.0,  -23.0],
+            [  -8.0,  -71.0,   61.0,    8.0,  411.0, -599.0,  208.0,  208.0],
+            [ -52.0,  -43.0,   49.0,   44.0, -599.0,  411.0,  208.0,  208.0],
+            [ -49.0,   -8.0,    8.0,   59.0,  208.0,  208.0,   99.0, -911.0],
+            [  29.0,  -44.0,   52.0,  -23.0,  208.0,  208.0, -911.0,   99.0]])
+   # MF = M.applyfunc(lambda i:Float(i))
+    assert [i.evalf() for i in sorted(MF.eigenvals())] == [-1020.04901843000, 0, 0.0980486407215170, 1000.00000000000, 1019.90195135928, 1020.00000000000, 1020.04901843000]
+
+def test_P26():
+    a0,a1,a2,a3,a4 = symbols('a0 a1 a2 a3 a4')
+    M = Matrix([
+    [-a4, -a3, -a2, -a1, -a0,  0,  0,  0,  0],
+    [  1,   0,   0,   0,   0,  0,  0,  0,  0],
+    [  0,   1,   0,   0,   0,  0,  0,  0,  0],
+    [  0,   0,   1,   0,   0,  0,  0,  0,  0],
+    [  0,   0,   0,   1,   0,  0,  0,  0,  0],
+    [  0,   0,   0,   0,   0, -1, -1,  0,  0],
+    [  0,   0,   0,   0,   0,  1,  0,  0,  0],
+    [  0,   0,   0,   0,   0,  0,  1, -1, -1],
+    [  0,   0,   0,   0,   0,  0,  0,  1,  0]])
+    assert M.eigenvals() == {
+        S('-1/2 - sqrt(3)*I/2'): 2,
+        S('-1/2 + sqrt(3)*I/2'): 2}
+
+def test_P27():
+    a = symbols('a')
+    M = Matrix([
+    [a,  0, 0, 0, 0],
+    [0,  0, 0, 0, 1],
+    [0,  0, a, 0, 0],
+    [0,  0, 0, a, 0],
+    [0, -2, 0, 0, 2]])
+    M.eigenvects() == [
+                        (a, 3, [Matrix([
+                        [1],
+                        [0],
+                        [0],
+                        [0],
+                        [0]]), Matrix([
+                        [0],
+                        [0],
+                        [1],
+                        [0],
+                        [0]]), Matrix([
+                        [0],
+                        [0],
+                        [0],
+                        [1],
+                        [0]])]), (1 - I, 1, [Matrix([
+                        [          0],
+                        [-1/(-1 + I)],
+                        [          0],
+                        [          0],
+                        [          1]])]), (1 + I, 1, [Matrix([
+                        [          0],
+                        [-1/(-1 - I)],
+                        [          0],
+                        [          0],
+                        [          1]])])]
+@XFAIL
+def test_P28():
+    raise NotImplementedError("Generalized eigen vectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
+
+@XFAIL
+def test_P29():
+    raise NotImplementedError("Generalized eigen vectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
+
+def test_P30():
+    M = Matrix([
+        [1,  0,  0,  1, -1],
+        [0,  1, -2,  3, -3],
+        [0,  0, -1,  2, -2],
+        [1, -1,  1,  0,  1],
+        [1, -1,  1, -1,  2]])
+    P,J = M.jordan_form()
+    assert J == Matrix([
+        [-1, 0, 0, 0, 0],
+        [ 0, 1, 1, 0, 0],
+        [ 0, 0, 1, 0, 0],
+        [ 0, 0, 0, 1, 1],
+        [ 0, 0, 0, 0, 1]])
+
+@XFAIL
+def test_P31():
+    raise NotImplementedError("Smith normal form not implemented")
+
+def test_P32():
+    M=Matrix([
+        [1, -2],
+        [2, 1]])
+    assert exp(M).rewrite(cos).simplify() == Matrix([
+                                        [E*cos(2), -E*sin(2)],
+                                        [E*sin(2),  E*cos(2)]])
+
+def test_P33():
+    w,t = symbols('w t')
+    M = Matrix([
+        [0, 1,    0,     0  ],
+        [0, 0,    0,     2*w],
+        [0, 0,    0,     1  ],
+        [0, -2*w, 3*w**2, 0  ]])
+    assert exp(M*t).rewrite(cos).expand() == Matrix([
+        [1, -3*t + 4*sin(t*w)/w,  6*t*w - 6*sin(t*w), -2*cos(t*w)/w + 2/w],
+        [0,      4*cos(t*w) - 3, -6*w*cos(t*w) + 6*w,          2*sin(t*w)],
+        [0,  2*cos(t*w)/w - 2/w,     -3*cos(t*w) + 4,          sin(t*w)/w],
+        [0,         -2*sin(t*w),        3*w*sin(t*w),            cos(t*w)]])
+
+
+@XFAIL
+def test_P34():
+    a,b,c = symbols('a b c',real=True)
+    M=Matrix([
+    [a, 1, 0, 0, 0, 0],
+    [0, a, 0, 0, 0, 0],
+    [0, 0, b, 0, 0, 0],
+    [0, 0, 0, c, 1, 0],
+    [0, 0, 0, 0, c, 1],
+    [0, 0, 0, 0, 0, c]])
+    # raises exception, sin(M) not supported. exp(M*I) also not supported
+    # https://code.google.com/p/sympy/issues/detail?id=3119
+    assert sin(M) == Matrix([
+                        [sin(a), cos(a), 0, 0, 0, 0],
+                        [0, sin(a), 0, 0, 0, 0	],
+                        [0, 0, sin(b), 0, 0, 0	],
+                        [0, 0, 0, sin(c), cos(c), -sin(c)/2],
+                        [0, 0, 0, 0, sin(c), cos(c)],
+                        [0, 0, 0, 0, 0, sin(c)]])
+
+@XFAIL
+def test_P35():
+    M = pi/2*Matrix([[2, 1, 1], [2, 3, 2], [1, 1, 2]])
+    # raises exception, sin(M) not supported. exp(M*I) also not supported
+    # https://code.google.com/p/sympy/issues/detail?id=3119
+    assert sin(M) ==  eye(3)
+
+@XFAIL
+def test_P36():
+    M=Matrix([
+        [10, 7],
+        [7, 17]])
+    # sqrt(M) not performmed
+    # sqrtdenest not simplifying sqrt(M)
+    assert sqrtdenest(M**Rational(1,2)) == Matrix([[3, 1], [1, 4]])
+@XFAIL
+def test_P37():
+    M=Matrix([
+        [1, 1, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
+    #raises NotImplementedError: Implemented only for diagonalizable matrices
+    M**Rational(1,2)
+
+@XFAIL
+def test_P38():
+    M=Matrix([
+    [0, 1, 0],
+    [0, 0, 0],
+    [0, 0, 0]])
+    #raises NotImplementedError: Implemented only for diagonalizable matrices
+    M**Rational(1,2)
+
+@XFAIL
+def test_P39():
+    M=Matrix([
+        [1, 1],
+        [2, 2],
+        [3, 3]])
+    #M.SVD()
+    raise NotImplementedError("Singular value decomposition not implemented normal form not implemented")
+
+def test_P40():
+    r,t = symbols('r t',real=True)
+    M=Matrix([r*cos(t), r*sin(t)])
+    assert M.jacobian(Matrix([r, t])) == Matrix([
+                                [cos(t), -r*sin(t)],
+                                [sin(t),  r*cos(t)]])
+
+def test_P41():
+    r,t = symbols('r t',real=True)
+    assert hessian(r**2*sin(t),(r,t)) == Matrix([
+                                            [  2*sin(t),   2*r*cos(t)],
+                                            [2*r*cos(t), -r**2*sin(t)]])
