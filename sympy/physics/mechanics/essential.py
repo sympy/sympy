@@ -491,8 +491,8 @@ class CoordinateSym(Symbol):
     this class must only be accessed through the corresponding frame
     as 'frame[index]'.
 
-    However, CoordinateSyms having the same frame and index parameters
-    are equal (even though they may be instantiated separately).
+    CoordinateSyms having the same frame and index parameters are equal
+    (even though they may be instantiated separately).
 
     Parameters
     ==========
