@@ -10,7 +10,7 @@ class TypeE(Standard_Cartan):
         assert n <= 8
         return Standard_Cartan.__new__(cls, "E", n)
 
-    def dimension(self):
+    def degree(self):
         """
         Returns the dimension of the vector space
         V underlying the Lie algebra
@@ -18,7 +18,7 @@ class TypeE(Standard_Cartan):
         ========
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("E6")
-        >>> c.dimension()
+        >>> c.degree()
         8
         """
 
@@ -261,9 +261,13 @@ class TypeE(Standard_Cartan):
         return m
 
 
-    def basis(self):
+    def dimension(self):
         """
-        Returns the number of independent generators of E_n
+        This method returns the dimension of the Lie algebra as a
+        vector space over the underlying field, which is either R or C.
+        Also equal to the number of generators of E_n.
+
+        Source: en.wikipedia.org/wiki/Table_of_Lie_groups
         """
 
         n = self.n

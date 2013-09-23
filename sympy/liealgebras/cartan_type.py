@@ -15,38 +15,45 @@ class CartanType_generator(Basic):
         if n < 0:
             raise ValueError("Lie algebra rank cannot be negative")
         if letter == "A":
-            if n >= 0:
-                from . import type_a
-                return type_a.TypeA(n)
+            if not (n >= 1):
+                raise ValueError("The rank of the A series must be greater than or equal to 1.")
+            from . import type_a
+            return type_a.TypeA(n)
         if letter == "B":
-            if n >= 0:
-                from . import type_b
-                return type_b.TypeB(n)
+            if not (n >= 2):
+                raise ValueError("The rank of the B series must be greater than or equal to 2.")
+            from . import type_b
+            return type_b.TypeB(n)
 
         if letter == "C":
-            if n >= 0:
-                from . import type_c
-                return type_c.TypeC(n)
+            if not (n >= 3):
+                raise ValueError("The rank of the C series must be greater than or equal to 3.")
+            from . import type_c
+            return type_c.TypeC(n)
 
         if letter == "D":
-            if n >= 0:
-                from . import type_d
-                return type_d.TypeD(n)
+            if not (n >= 4):
+                raise ValueError("The rank of the D series must be greater than or equal to 4.")
+            from . import type_d
+            return type_d.TypeD(n)
 
         if letter == "E":
-            if n >= 6 and n <= 8:
-                from . import type_e
-                return type_e.TypeE(n)
+            if not (6 <= n <= 8):
+                raise ValueError("The rank of a Lie algebra of type E must be 6, 7, or 8.")
+            from . import type_e
+            return type_e.TypeE(n)
 
         if letter == "F":
-            if n == 4:
-                from . import type_f
-                return type_f.TypeF(n)
+            if not (n == 4):
+                raise ValueError("F4 is the only Lie algebra of type F.")
+            from . import type_f
+            return type_f.TypeF(n)
 
         if letter == "G":
-            if n == 2:
-                from . import type_g
-                return type_g.TypeG(n)
+            if not (n == 2):
+                raise ValueError("G2 is the only Lie algebra of type G.")
+            from . import type_g
+            return type_g.TypeG(n)
 
 CartanType = CartanType_generator()
 

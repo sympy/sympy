@@ -11,7 +11,7 @@ class TypeG(Standard_Cartan):
         return Standard_Cartan.__new__(cls, "G", 2)
 
 
-    def dimension(self):
+    def degree(self):
         """
         Returns the dimension of the vector space
         V underlying the Lie algebra
@@ -19,7 +19,7 @@ class TypeG(Standard_Cartan):
         ========
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("G2")
-        >>> c.dimension()
+        >>> c.degree()
         3
         """
         return 3
@@ -97,9 +97,13 @@ class TypeG(Standard_Cartan):
         m = Matrix( 2, 2, [2, -1, -3, 2])
         return m
 
-    def basis(self):
+    def dimension(self):
         """
-        Returns the number of independent generators of G_2
+        This method returns the dimension of the Lie algebra as a
+        vector space over the underlying field, which is either R or C.
+        Also equal to the number of generators of G2.
+
+        Source: en.wikipedia.org/wiki/Table_of_Lie_groups
         """
         return 14
 

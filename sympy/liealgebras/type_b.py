@@ -10,7 +10,7 @@ class TypeB(Standard_Cartan):
         assert n >= 2
         return Standard_Cartan.__new__(cls, "B", n)
 
-    def dimension(self):
+    def degree(self):
         """
         Return the dimension of the vector space
         V underlying the Lie algebra
@@ -18,7 +18,7 @@ class TypeB(Standard_Cartan):
         ========
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("B3")
-        >>> c.dimension()
+        >>> c.degree()
         3
         """
 
@@ -148,9 +148,13 @@ class TypeB(Standard_Cartan):
         m[n-1, n-2] = -1
         return m
 
-    def basis(self):
+    def dimension(self):
         """
-        Returns the number of independent generators of B_n
+        This method returns the dimension of the Lie algebra as a
+        vector space over the underlying field, which is either R or C.
+        Also equal to the number of generators of B_n.
+
+        Source: en.wikipedia.org/wiki/Table_of_Lie_groups
         """
 
         n = self.n
