@@ -9,7 +9,7 @@ class TypeD(Standard_Cartan):
         return Standard_Cartan.__new__(cls, "D", n)
 
 
-    def dimension(self):
+    def degree(self):
         """
         Return the dimension of the vector space
         V underlying the Lie algebra
@@ -17,7 +17,7 @@ class TypeD(Standard_Cartan):
         ========
         >>> from sympy.liealgebras.cartan_type import CartanType
         >>> c = CartanType("D4")
-        >>> c.dimension()
+        >>> c.degree()
         4
         """
 
@@ -146,10 +146,15 @@ class TypeD(Standard_Cartan):
         m[0, 1] = -1
         return m
 
-    def basis(self):
+    def dimension(self):
         """
-        Returns the number of independent generators of D_n
+        This method returns the dimension of the Lie algebra as a
+        vector space over the underlying field, which is either R or C.
+        Also equal to the number of independent generators of D_n.
+
+        Source: en.wikipedia.org/wiki/Table_of_Lie_groups
         """
+
         n = self.n
         return n*(n-1)/2
 
