@@ -2414,7 +2414,7 @@ class MatrixBase(object):
         Possible values for "method":
           bareis ... det_bareis
           berkowitz ... berkowitz_det
-          lu_decomposition ... det_LU
+          det_LU ... det_LU_decomposition
 
         See Also
         ========
