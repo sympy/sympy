@@ -1340,9 +1340,9 @@ class TensorHead(Basic):
         """
         Returns a tensor with indices.
 
-        There is a special behavior in case of indices denote by ``True``,
+        There is a special behavior in case of indices denoted by ``True``,
         they are considered auto-matrix indices, their slots are automatically
-        filled, and confer to the tensor the behavior of a matrix or vensor
+        filled, and confer to the tensor the behavior of a matrix or vector
         upon multiplication with another tensor containing auto-matrix indices
         of the same ``TensorIndexType``. This means indices get summed over the
         same way as in matrix multiplication. For matrix behavior, define two

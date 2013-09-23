@@ -1166,10 +1166,10 @@ def test_hidden_indices_for_matrix_multiplication():
     m0, m1, m2 = tensor_indices('m0:3', L)
     s0, s1, s2 = tensor_indices('s0:3', S)
 
-    A = tensorhead('A', [L, S, S], [[1]*3], matrix_behavior=True)
-    B = tensorhead('B', [L, S], [[1]*2], matrix_behavior=True)
-    D = tensorhead('D', [L, L, S, S], [[1]*4], matrix_behavior=True)
-    E = tensorhead('E', [L, L, L, L], [[1]*4], matrix_behavior=True)
+    A = tensorhead('A', [L, S, S], [[1], [1], [1]], matrix_behavior=True)
+    B = tensorhead('B', [L, S], [[1], [1]], matrix_behavior=True)
+    D = tensorhead('D', [L, L, S, S], [[1], [1], [1], [1]], matrix_behavior=True)
+    E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]] , matrix_behavior=True)
 
     assert (A(m0)) == A(m0, S.auto_left, S.auto_right)
     assert (B(-m1)) == B(-m1, S.auto_left)
