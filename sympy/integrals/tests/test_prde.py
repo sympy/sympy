@@ -1,6 +1,5 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from __future__ import with_statement
-from sympy import Poly, Matrix, S, symbols
+from sympy import Poly, Matrix, S, symbols, I
 from sympy.integrals.risch import DifferentialExtension
 from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
     prde_linear_constraints, constant_system, prde_spde, prde_no_cancel_b_large,
@@ -10,7 +9,7 @@ from sympy.integrals.prde import (prde_normal_denom, prde_special_denom,
 
 from sympy.abc import x, t, n
 
-t0, t1, t2, t3 = symbols('t:4')
+t0, t1, t2, t3, k = symbols('t:4 k')
 
 
 def test_prde_normal_denom():
@@ -43,6 +42,20 @@ def test_prde_special_denom():
     assert prde_special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), G, DE) == \
         (Poly(1, t), Poly(t**2 - 1, t), [(Poly(t**2, t), Poly(1, t)),
         (Poly(1, t), Poly(1, t))], Poly(t, t))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-2*x*t0, t0)]})
+    DE.decrement_level()
+    G = [(Poly(t, t), Poly(t**2, t)), (Poly(2*t, t), Poly(t, t))]
+    assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3 + 2, t), G, DE) == \
+        (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t, t), Poly(t**2, t)),
+        (Poly(2*t, t), Poly(t, t))], Poly(1, x))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly((t**2 + 1)*2*x, t)]})
+    G = [(Poly(t + x, t), Poly(t*x, t)), (Poly(2*t, t), Poly(x**2, x))]
+    assert prde_special_denom(Poly(5*x*t + 1, t), Poly(t**2 + 2*x**3*t, t), Poly(t**3, t), G, DE) == \
+        (Poly(5*x*t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)),
+        (Poly(2*t, t, x), Poly(x**2, t, x))], Poly(1, t))
+    assert prde_special_denom(Poly(t + 1, t), Poly(t**2, t), Poly(t**3, t), G, DE) == \
+        (Poly(t + 1, t), Poly(0, t), [(Poly(t + x, t), Poly(x*t, t)), (Poly(2*t, t, x),
+        Poly(x**2, t, x))], Poly(1, t))
 
 
 def test_prde_linear_constraints():
@@ -176,18 +189,18 @@ def test_is_deriv_k():
 
 
 def test_is_log_deriv_k_t_radical_in_field():
-    # Note, any constant term in the second element of the result doesn't matter,
-    # because it cancels in Da/a.
+    # NOTE: any potential constant factor in the second element of the result
+    # doesn't matter, because it cancels in Da/a.
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert is_log_deriv_k_t_radical_in_field(Poly(5*t + 1, t), Poly(2*t*x, t), DE) == \
-        (2, 2*t*x**5)
+        (2, t*x**5)
     assert is_log_deriv_k_t_radical_in_field(Poly(2 + 3*t, t), Poly(5*x*t, t), DE) == \
-        (5, 125*x**3*t**2)
+        (5, x**3*t**2)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t/x**2, t)]})
     assert is_log_deriv_k_t_radical_in_field(Poly(-(1 + 2*t), t),
     Poly(2*x**2 + 2*x**2*t, t), DE) == \
-        (2, 2*t + 2*t**2)
+        (2, t + t**2)
     assert is_log_deriv_k_t_radical_in_field(Poly(-1, t), Poly(x**2, t), DE) == \
         (1, t)
     assert is_log_deriv_k_t_radical_in_field(Poly(1, t), Poly(2*x**2, t), DE) == \
@@ -198,4 +211,4 @@ def test_parametric_log_deriv():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
     assert parametric_log_deriv_heu(Poly(5*t**2 + t - 6, t), Poly(2*x*t**2, t),
     Poly(-1, t), Poly(x*t**2, t), DE) == \
-        (2, 6, 2*t*x**5)
+        (2, 6, t*x**5)

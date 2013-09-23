@@ -1,5 +1,7 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
+from __future__ import print_function, division
+
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
@@ -23,7 +25,7 @@ __all__ = [
 # Conditionally define the base classes for numpy and scipy.sparse arrays
 # for use in isinstance tests.
 
-np = import_module('numpy', min_python_version=(2, 6))
+np = import_module('numpy')
 if not np:
     class numpy_ndarray(object):
         pass
@@ -162,21 +164,23 @@ def _sympy_tensor_product(*matrices):
     Examples
     ========
 
-        >>> from sympy import I, Matrix, symbols
-        >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
+    >>> from sympy import I, Matrix, symbols
+    >>> from sympy.physics.quantum.matrixutils import _sympy_tensor_product
 
-        >>> m1 = Matrix([[1,2],[3,4]])
-        >>> m2 = Matrix([[1,0],[0,1]])
-        >>> _sympy_tensor_product(m1, m2)
-        [1, 0, 2, 0]
-        [0, 1, 0, 2]
-        [3, 0, 4, 0]
-        [0, 3, 0, 4]
-        >>> _sympy_tensor_product(m2, m1)
-        [1, 2, 0, 0]
-        [3, 4, 0, 0]
-        [0, 0, 1, 2]
-        [0, 0, 3, 4]
+    >>> m1 = Matrix([[1,2],[3,4]])
+    >>> m2 = Matrix([[1,0],[0,1]])
+    >>> _sympy_tensor_product(m1, m2)
+    Matrix([
+    [1, 0, 2, 0],
+    [0, 1, 0, 2],
+    [3, 0, 4, 0],
+    [0, 3, 0, 4]])
+    >>> _sympy_tensor_product(m2, m1)
+    Matrix([
+    [1, 2, 0, 0],
+    [3, 4, 0, 0],
+    [0, 0, 1, 2],
+    [0, 0, 3, 4]])
 
     References
     ==========

@@ -1,11 +1,14 @@
+from __future__ import print_function, division
+
 from sympy.core.assumptions import StdFactKB
-from basic import Basic
-from core import C
-from sympify import sympify
-from singleton import S
-from expr import Expr, AtomicExpr
-from cache import cacheit
-from function import FunctionClass
+from sympy.core.compatibility import string_types
+from .basic import Basic
+from .core import C
+from .sympify import sympify
+from .singleton import S
+from .expr import Expr, AtomicExpr
+from .cache import cacheit
+from .function import FunctionClass
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import cartes
@@ -72,7 +75,7 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        if not isinstance(name, basestring):
+        if not isinstance(name, string_types):
             raise TypeError("name should be a string, not %s" % repr(type(name)))
         obj = Expr.__new__(cls)
         obj.name = name
@@ -91,12 +94,12 @@ class Symbol(AtomicExpr, Boolean):
         return {'_assumptions': self._assumptions}
 
     def _hashable_content(self):
-        return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
+        return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     @property
     def assumptions0(self):
         return dict((key, value) for key, value
-                in self._assumptions.iteritems() if value is not None)
+                in self._assumptions.items() if value is not None)
 
     @cacheit
     def sort_key(self, order=None):
@@ -106,7 +109,7 @@ class Symbol(AtomicExpr, Boolean):
         return Dummy(self.name, **self.assumptions0)
 
     def __call__(self, *args):
-        from function import Function
+        from .function import Function
         return Function(self.name)(*args)
 
     def as_real_imag(self, deep=True, **hints):
@@ -144,9 +147,8 @@ class Dummy(Symbol):
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
-    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
-    >>> Dummy()          # used here to make sure that the doctest passes.
-    _0
+    >>> Dummy() #doctest: +SKIP
+    _Dummy_10
 
     """
 
@@ -158,7 +160,7 @@ class Dummy(Symbol):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = str(Dummy._count)
+            name = "Dummy_" + str(Dummy._count)
 
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
@@ -364,18 +366,8 @@ def symbols(names, **args):
 
     """
     result = []
-    if 'each_char' in args:
-        if args['each_char']:
-            value = "Tip: ' '.join(s) will transform a string s = 'xyz' to 'x y z'."
-        else:
-            value = ""
-        SymPyDeprecationWarning(
-            feature="each_char in the options to symbols() and var()",
-            useinstead="spaces or commas between symbol names",
-            issue=1919, deprecated_since_version="0.7.0", value=value
-        ).warn()
 
-    if isinstance(names, basestring):
+    if isinstance(names, string_types):
         marker = 0
         literals = ['\,', '\:', '\ ']
         for i in range(len(literals)):
@@ -407,9 +399,6 @@ def symbols(names, **args):
         # split on spaces
         for i in range(len(names) - 1, -1, -1):
             names[i: i + 1] = names[i].split()
-
-        if args.pop('each_char', False) and not as_seq and len(names) == 1:
-            return symbols(tuple(names[0]), **args)
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)

@@ -1,5 +1,7 @@
 """Tools for setting up interactive sessions. """
 
+from __future__ import print_function, division
+
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -81,6 +83,7 @@ def int_to_Integer(s):
     Example
     =======
 
+    >>> from __future__ import division
     >>> from sympy.interactive.session import int_to_Integer
     >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
@@ -89,13 +92,13 @@ def int_to_Integer(s):
     >>> s = 'print (1/2)'
     >>> int_to_Integer(s)
     'print (Integer (1 )/Integer (2 ))'
-    >>> exec(s) #doctest: +SKIP
+    >>> exec(s)
     0.5
     >>> exec(int_to_Integer(s))
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from StringIO import StringIO
+    from sympy.core.compatibility import StringIO
 
     def _is_int(num):
         """
@@ -271,7 +274,13 @@ def init_ipython_session(argv=[], auto_symbols=False, auto_int_to_Integer=False)
 
     if IPython.__version__ >= '0.11':
         # use an app to parse the command line, and init config
-        from IPython.frontend.terminal import ipapp
+        # IPython 1.0 deprecates the frontend module, so we import directly
+        # from the terminal module to prevent a deprecation message from being
+        # shown.
+        if IPython.__version__ >= '1.0':
+            from IPython.terminal import ipapp
+        else:
+            from IPython.frontend.terminal import ipapp
         app = ipapp.TerminalIPythonApp()
 
         # don't draw IPython banner during initialization:

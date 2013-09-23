@@ -1,4 +1,6 @@
-from function import Function
+from __future__ import print_function, division
+
+from .function import Function
 
 
 class Mod(Function):
@@ -34,7 +36,7 @@ class Mod(Function):
             to be less than q.
             """
 
-            if p == q or p == -q:
+            if p == q or p == -q or p.is_Pow and p.exp.is_Integer and p.base == q:
                 return S.Zero
 
             if p.is_Number and q.is_Number:
@@ -49,7 +51,7 @@ class Mod(Function):
             else:
                 if type(d) is int:
                     rv = p - d*q
-                    if rv*q < 0:
+                    if (rv*q < 0) is True:
                         rv += q
                     return rv
 

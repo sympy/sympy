@@ -120,11 +120,6 @@ RealNumber
 .. autoclass:: RealNumber
    :members:
 
-Real
-^^^^
-.. autoclass:: Real
-   :members:
-
 igcd
 ^^^^
 .. autofunction:: igcd
@@ -437,14 +432,6 @@ iterable
 is_sequence
 ^^^^^^^^^^^
 .. autofunction:: is_sequence
-
-set_intersection
-^^^^^^^^^^^^^^^^
-.. autofunction:: set_intersection
-
-set_union
-^^^^^^^^^
-.. autofunction:: set_union
 
 as_int
 ^^^^^^

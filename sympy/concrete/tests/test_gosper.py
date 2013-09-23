@@ -1,9 +1,8 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
-from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, log
+from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, log, Symbol
 from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
-from sympy.utilities.pytest import XFAIL
 
 
 def test_gosper_normal():
@@ -44,8 +43,8 @@ def test_gosper_sum():
     # issue 2934:
     assert gosper_sum(
         n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b)), \
-        (n, 0, m)) == a*b*(-exp(m*log(a))*exp(m*log(b))*factorial(a)* \
-        factorial(b) + factorial(a + m)*factorial(b + m))/(factorial(a)* \
+        (n, 0, m)) == -a*b*(exp(m*log(a))*exp(m*log(b))*factorial(a)* \
+        factorial(b) - factorial(a + m)*factorial(b + m))/(factorial(a)* \
         factorial(b)*factorial(a + m)*factorial(b + m))
 
 
@@ -144,21 +143,17 @@ def test_gosper_sum_AeqB_part2():
     g = gosper_sum(f2c, (n, 1, m))
     assert g is not None and simplify(g - g2c) == 0
 
-    # delete these lines and unXFAIL the nan test below when it passes
-    f2d = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
-    g2d = 1/(factorial(a - 1)*factorial(
-        b - 1)) - a**(m + 1)*b**(m + 1)/(factorial(a + m)*factorial(b + m))
-    assert simplify(
-        sum(f2d.subs(n, i) for i in range(3)) - g2d.subs(m, 2)) == 0
 
-
-@XFAIL
 def test_gosper_nan():
+    a = Symbol('a', positive=True)
+    b = Symbol('b', positive=True)
+    n = Symbol('n', integer=True)
+    m = Symbol('m', integer=True)
     f2d = n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b))
     g2d = 1/(factorial(a - 1)*factorial(
         b - 1)) - a**(m + 1)*b**(m + 1)/(factorial(a + m)*factorial(b + m))
     g = gosper_sum(f2d, (n, 0, m))
-    assert g is not S.NaN and simplify(g - g2d) == 0
+    assert simplify(g - g2d) == 0
 
 
 def test_gosper_sum_AeqB_part3():

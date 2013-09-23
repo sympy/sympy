@@ -1,7 +1,9 @@
+from __future__ import print_function, division
+
 from sympy.core import Mul, Basic, sympify, Add
 from sympy.functions import transpose, adjoint
 from sympy.matrices.expressions.transpose import transpose
-from sympy.strategies import (rm_id, unpack, condition, debug, flatten, exhaust,
+from sympy.strategies import (rm_id, unpack, typed, debug, flatten, exhaust,
         do_one, new)
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix)
@@ -26,7 +28,7 @@ class MatMul(MatrixExpr):
     def __new__(cls, *args, **kwargs):
         check = kwargs.get('check', True)
 
-        args = map(sympify, args)
+        args = list(map(sympify, args))
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
         if check:
@@ -79,7 +81,7 @@ class MatMul(MatrixExpr):
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
         if factor != 1:
-            from trace import Trace
+            from .trace import Trace
             return factor * Trace(mmul)
         else:
             raise NotImplementedError("Can't simplify any further")
@@ -88,7 +90,7 @@ class MatMul(MatrixExpr):
         from sympy.matrices.expressions.determinant import Determinant
         factor, matrices = self.as_coeff_matrices()
         square_matrices = only_squares(*matrices)
-        return factor**self.rows * Mul(*map(Determinant, square_matrices))
+        return factor**self.rows * Mul(*list(map(Determinant, square_matrices)))
 
     def _eval_inverse(self):
         try:
@@ -99,8 +101,13 @@ class MatMul(MatrixExpr):
             from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
-    def doit(self, **ignored):
-        return canonicalize(self)
+    def doit(self, **kwargs):
+        deep = kwargs.get('deep', False)
+        if deep:
+            args = [arg.doit(**kwargs) for arg in self.args]
+        else:
+            args = self.args
+        return canonicalize(MatMul(*args))
 
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
@@ -167,8 +174,7 @@ def factor_in_front(mul):
 rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
          factor_in_front, flatten)
 
-canonicalize = exhaust(condition(lambda x: isinstance(x, MatMul),
-                                 do_one(*rules)))
+canonicalize = exhaust(typed({MatMul: do_one(*rules)}))
 
 def only_squares(*matrices):
     """ factor matrices only if they are square """

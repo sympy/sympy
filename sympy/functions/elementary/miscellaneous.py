@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -8,10 +10,11 @@ from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, with_metaclass, xrange
+from sympy.core.logic import fuzzy_and
 
 
-class IdentityFunction(Lambda):
+class IdentityFunction(with_metaclass(Singleton, Lambda)):
     """
     The identity function
 
@@ -24,7 +27,6 @@ class IdentityFunction(Lambda):
     x
 
     """
-    __metaclass__ = Singleton
     __slots__ = []
     nargs = 1
 
@@ -110,7 +112,7 @@ def sqrt(arg):
 
 
 def root(arg, n):
-    """The n-th root function (a shortcut for arg**(1/n))
+    """The n-th root function (a shortcut for ``arg**(1/n)``)
 
     root(x, n) -> Returns the principal n-th root of x.
 
@@ -367,6 +369,10 @@ class MinMaxBase(Expr, LatticeOp):
                 df = Function.fdiff(self, i)
             l.append(df * da)
         return Add(*l)
+
+    @property
+    def is_real(self):
+        return fuzzy_and(arg.is_real for arg in self.args)
 
 class Max(MinMaxBase, Application):
     """

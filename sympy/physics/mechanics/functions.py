@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 __all__ = ['cross',
            'dot',
            'express',
@@ -5,6 +7,7 @@ __all__ = ['cross',
            'inertia',
            'mechanics_printing',
            'mprint',
+           'msprint',
            'mpprint',
            'mlatex',
            'kinematic_equations',
@@ -45,23 +48,21 @@ dot.__doc__ += Vector.dot.__doc__
 
 
 def express(vec, frame, frame2=None):
-    """Express convenience wrapper for Vector.express(): \n"""
-    if not isinstance(vec, (Vector, Dyadic)):
-        raise TypeError('Can only express Vectors')
-    if isinstance(vec, Vector):
-        return vec.express(frame)
-    else:
+    """Express convenience wrapper"""
+    if isinstance(vec, Dyadic):
         return vec.express(frame, frame2)
+    else:
+        return frame.express(vec)
 
 express.__doc__ += Vector.express.__doc__
 
 
 def outer(vec1, vec2):
-    """Outer prodcut convenience wrapper for Vector.outer():\n"""
+    """Outer product convenience wrapper for Vector.outer():\n"""
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.express.__doc__
+outer.__doc__ += Vector.outer.__doc__
 
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
@@ -206,13 +207,42 @@ def mprint(expr, **settings):
 
     """
 
-    pr = MechanicsStrPrinter(settings)
-    outstr = pr.doprint(expr)
+    outstr = msprint(expr, **settings)
 
-    import __builtin__
+    from sympy.core.compatibility import builtins
     if (outstr != 'None'):
-        __builtin__._ = outstr
+        builtins._ = outstr
         print(outstr)
+
+
+def msprint(expr, **settings):
+    r"""Function for displaying expressions generated in mechanics.
+
+    Returns the output of mprint() as a string.
+
+    Parameters
+    ==========
+
+    expr : valid sympy object
+        SymPy expression to print
+    settings : args
+        Same as print for SymPy
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import msprint, dynamicsymbols
+    >>> u1, u2 = dynamicsymbols('u1 u2')
+    >>> u2d = dynamicsymbols('u2', level=1)
+    >>> print("%s = %s" % (u1, u2 + u2d))
+    u1(t) = u2(t) + Derivative(u2(t), t)
+    >>> print("%s = %s" % (msprint(u1), msprint(u2 + u2d)))
+    u1 = u2 + u2'
+
+    """
+
+    pr = MechanicsStrPrinter(settings)
+    return pr.doprint(expr)
 
 
 def mpprint(expr, **settings):
@@ -523,7 +553,7 @@ def linear_momentum(frame, *body):
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please specify a valid ReferenceFrame')
     else:
-        linear_momentum_sys = S(0)
+        linear_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 linear_momentum_sys += e.linear_momentum(frame)
@@ -581,7 +611,7 @@ def angular_momentum(point, frame, *body):
     if not isinstance(point, Point):
         raise TypeError('Please specify a valid Point')
     else:
-        angular_momentum_sys = S(0)
+        angular_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 angular_momentum_sys += e.angular_momentum(point, frame)

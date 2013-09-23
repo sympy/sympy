@@ -1,4 +1,3 @@
-from __future__ import with_statement
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval
 from sympy.abc import x, y
@@ -9,7 +8,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import HAS_GMPY
+from sympy.core.compatibility import exec_, HAS_GMPY
 
 from sympy import mpmath
 
@@ -468,5 +467,5 @@ def test_issue_2497():
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
     assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
-    exec "from sympy.abc import Q, C" in locals
+    exec_("from sympy.abc import Q, C", locals)
     assert str(S('C&Q', locals)) == 'And(C, Q)'

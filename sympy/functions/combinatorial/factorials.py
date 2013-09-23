@@ -1,9 +1,11 @@
+from __future__ import print_function, division
+
 from sympy.core import S, C, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce, as_int
+from sympy.core.compatibility import reduce, as_int, xrange
 from sympy.core.cache import cacheit
 
 
@@ -52,10 +54,10 @@ class factorial(CombinatorialFunction):
        5040
 
        >>> factorial(n)
-       n!
+       factorial(n)
 
        >>> factorial(2*n)
-       (2*n)!
+       factorial(2*n)
 
        See Also
        ========
@@ -158,6 +160,10 @@ class factorial(CombinatorialFunction):
     def _eval_is_integer(self):
         return self.args[0].is_integer
 
+    def _eval_is_positive(self):
+        if self.args[0].is_integer and self.args[0].is_positive:
+            return True
+
 
 class MultiFactorial(CombinatorialFunction):
     pass
@@ -178,7 +184,7 @@ class subfactorial(CombinatorialFunction):
 
     References
     ==========
-    * http://en.wikipedia.org/wiki/Subfactorial
+    .. [1] http://en.wikipedia.org/wiki/Subfactorial
 
     Examples
     ========
@@ -186,7 +192,7 @@ class subfactorial(CombinatorialFunction):
     >>> from sympy import subfactorial
     >>> from sympy.abc import n
     >>> subfactorial(n + 1)
-    !(n + 1)
+    subfactorial(n + 1)
     >>> subfactorial(5)
     44
 
@@ -216,12 +222,6 @@ class subfactorial(CombinatorialFunction):
             if sympify(arg).is_Number:
                 raise ValueError("argument must be a nonnegative integer")
 
-    def _sympystr(self, p):
-        if self.args[0].is_Atom:
-            return "!%s" % p.doprint(self.args[0])
-        else:
-            return "!(%s)" % p.doprint(self.args[0])
-
 
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
@@ -241,7 +241,7 @@ class factorial2(CombinatorialFunction):
     >>> var('n')
     n
     >>> factorial2(n + 1)
-    (n + 1)!!
+    factorial2(n + 1)
     >>> factorial2(5)
     15
     >>> factorial2(-1)
@@ -261,11 +261,6 @@ class factorial2(CombinatorialFunction):
                 return S.One
             return factorial2(arg - 2)*arg
 
-    def _sympystr(self, p):
-        if self.args[0].is_Atom:
-            return "%s!!" % p.doprint(self.args[0])
-        else:
-            return "(%s)!!" % p.doprint(self.args[0])
 
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################

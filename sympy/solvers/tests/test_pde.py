@@ -1,4 +1,5 @@
-from sympy import Derivative as D, Eq, exp, Function, Symbol, symbols
+from sympy import (Derivative as D, Eq, exp, sin,
+    Function, Symbol, symbols, cos, log)
 from sympy.core import S
 from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
@@ -75,7 +76,7 @@ def test_pde_classify():
     for eq in [eq1, eq2, eq3]:
         assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
     for eq in [eq4, eq5, eq6]:
-        assert classify_pde(eq) == ()
+        assert classify_pde(eq) == ('1st_linear_variable_coeff',)
 
 
 def test_checkpdesol():
@@ -91,7 +92,8 @@ def test_checkpdesol():
     assert checkpdesol(eq4, [pdsolve(eq5), pdsolve(eq6)]) == [
         (False, (x - 2)*F(3*x - y)*exp(-x/S(5) - 3*y/S(5))),
          (False, (x - 1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))]
-
+    for eq in [eq4, eq5, eq6]:
+        assert checkpdesol(eq, pdsolve(eq))[0]
 
 def test_solvefun():
     f, F, G, H = map(Function, ['f', 'F', 'G', 'H'])
@@ -125,3 +127,81 @@ def test_pde_1st_linear_constant_coeff_homogeneous():
     eq = a*u + b*u.diff(x) + c*u.diff(y)
     sol = pdsolve(eq)
     assert checkpdesol(eq, sol)[0]
+
+def test_pde_1st_linear_constant_coeff():
+    f, F = map(Function, ['f', 'F'])
+    u = f(x,y)
+    eq = -2*u.diff(x) + 4*u.diff(y) + 5*u - exp(x + 3*y)
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x,y),
+    (F(4*x + 2*y) + exp(x/S(2) + 4*y)/S(15))*exp(x/S(2) - y))
+    assert classify_pde(eq) == ('1st_linear_constant_coeff',
+    '1st_linear_constant_coeff_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = (u.diff(x)/u) + (u.diff(y)/u) + 1 - (exp(x + y)/u)
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2) + exp(x + y)/S(3))
+    assert classify_pde(eq) == ('1st_linear_constant_coeff',
+    '1st_linear_constant_coeff_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = 2*u + -u.diff(x) + 3*u.diff(y) + sin(x)
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x, y),
+         F(3*x + y)*exp(x/S(5) - 3*y/S(5)) - 2*sin(x)/S(5) - cos(x)/S(5))
+    assert classify_pde(eq) == ('1st_linear_constant_coeff',
+    '1st_linear_constant_coeff_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = u + u.diff(x) + u.diff(y) + x*y
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x, y),
+        -x*y + x + y + F(x - y)*exp(-x/S(2) - y/S(2)) - 2)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff',
+    '1st_linear_constant_coeff_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = u + u.diff(x) + u.diff(y) + log(x)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff',
+    '1st_linear_constant_coeff_Integral')
+
+def test_pdsolve_all():
+    f, F = map(Function, ['f', 'F'])
+    u = f(x,y)
+    eq = u + u.diff(x) + u.diff(y) + x**2*y
+    sol = pdsolve(eq, hint = 'all')
+    keys = ['1st_linear_constant_coeff',
+        '1st_linear_constant_coeff_Integral', 'default', 'order']
+    assert sorted(sol.keys()) == keys
+    assert sol['order'] == 1
+    assert sol['default'] == '1st_linear_constant_coeff'
+    assert sol['1st_linear_constant_coeff'] == Eq(f(x, y),
+        -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/S(2) - y/S(2)) + 6)
+
+def test_pdsolve_variable_coeff():
+    f, F = map(Function, ['f', 'F'])
+    u = f(x, y)
+    eq = x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2
+    sol = pdsolve(eq, hint="1st_linear_variable_coeff")
+    assert sol == Eq(u, F(x*y)*exp(y**2/2) + 1)
+    assert checkpdesol(eq, sol)[0]
+
+    eq = x**2*u + x*u.diff(x) + x*y*u.diff(y)
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, F(y*exp(-x))*exp(-x**2/2))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = y*x**2*u + y*u.diff(x) + u.diff(y)
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, F(-x + y**2/2)*exp(-x**3/3))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = exp(x)**2*(u.diff(x)) + y
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, y*exp(-2*x)/2 + F(y))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = exp(2*x)*(u.diff(y)) + y*u - u
+    sol = pdsolve(eq, hint='1st_linear_variable_coeff')
+    assert sol == Eq(u, exp((-y**2 + 2*y + 2*F(x))*exp(-2*x)/2))

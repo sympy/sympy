@@ -6,6 +6,8 @@ their modules. Instead of instantiating the classes directly, you should use
 the function ``homomorphism(from, to, matrix)`` to create homomorphism objects.
 """
 
+from __future__ import print_function, division
+
 from sympy.polys.agca.modules import (Module, FreeModule, QuotientModule,
     SubModule, SubQuotientModule)
 from sympy.polys.polyerrors import CoercionFailed
@@ -20,12 +22,15 @@ class ModuleHomomorphism(object):
 
     Instead, use the ``homomorphism`` function:
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
-    >>> F = QQ[x].free_module(2)
+    >>> from sympy.polys.agca import homomorphism
+
+    >>> F = QQ.old_poly_ring(x).free_module(2)
     >>> homomorphism(F, F, [[1, 0], [0, 1]])
-    [1, 0]
-    [0, 1] : QQ[x]**2 -> QQ[x]**2
+    Matrix([
+    [1, 0], : QQ[x]**2 -> QQ[x]**2
+    [0, 1]])
 
     Attributes:
 
@@ -70,9 +75,11 @@ class ModuleHomomorphism(object):
         That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute
         `ker(\phi) = \{x \in M | \phi(x) = 0\}`.  This is a submodule of `M`.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> homomorphism(F, F, [[1, 0], [x, 0]]).kernel()
         <[x, -1]>
         """
@@ -87,9 +94,11 @@ class ModuleHomomorphism(object):
         That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute
         `im(\phi) = \{\phi(x) | x \in M \}`.  This is a submodule of `N`.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> homomorphism(F, F, [[1, 0], [x, 0]]).image() == F.submodule([1, 0])
         True
         """
@@ -114,11 +123,11 @@ class ModuleHomomorphism(object):
         raise NotImplementedError
 
     def _quotient_domain(self, sm):
-        """Implementation of domain quotienting."""
+        """Implementation of domain quotient."""
         raise NotImplementedError
 
     def _quotient_codomain(self, sm):
-        """Implementation of codomain quotienting."""
+        """Implementation of codomain quotient."""
         raise NotImplementedError
 
     def restrict_domain(self, sm):
@@ -127,23 +136,28 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` has to be a submodule of ``self.domain``.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.restrict_domain(F.submodule([1, 0]))
-        [1, x]
-        [0, 0] : <[1, 0]> -> QQ[x]**2
+        Matrix([
+        [1, x], : <[1, 0]> -> QQ[x]**2
+        [0, 0]])
 
         This is the same as just composing on the right with the submodule
         inclusion:
 
         >>> h * F.submodule([1, 0]).inclusion_hom()
-        [1, x]
-        [0, 0] : <[1, 0]> -> QQ[x]**2
+        Matrix([
+        [1, x], : <[1, 0]> -> QQ[x]**2
+        [0, 0]])
         """
         if not self.domain.is_submodule(sm):
             raise ValueError('sm must be a submodule of %s, got %s'
@@ -159,16 +173,20 @@ class ModuleHomomorphism(object):
         Here ``sm`` has to be a submodule of ``self.codomain`` containing the
         image.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.restrict_codomain(F.submodule([1, 0]))
-        [1, x]
-        [0, 0] : QQ[x]**2 -> <[1, 0]>
+        Matrix([
+        [1, x], : QQ[x]**2 -> <[1, 0]>
+        [0, 0]])
         """
         if not sm.is_submodule(self.image()):
             raise ValueError('the image %s must contain sm, got %s'
@@ -183,16 +201,20 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` must be a submodule of ``self.kernel()``.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.quotient_domain(F.submodule([-x, 1]))
-        [1, x]
-        [0, 0] : QQ[x]**2/<[-x, 1]> -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2/<[-x, 1]> -> QQ[x]**2
+        [0, 0]])
         """
         if not self.kernel().is_submodule(sm):
             raise ValueError('kernel %s must contain sm, got %s' %
@@ -207,22 +229,27 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` must be a submodule of ``self.codomain``.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2
+        [0, 0]])
         >>> h.quotient_codomain(F.submodule([1, 1]))
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        [0, 0]])
 
         This is the same as composing with the quotient map on the left:
 
         >>> (F/[(1, 1)]).quotient_hom() * h
-        [1, x]
-        [0, 0] : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        Matrix([
+        [1, x], : QQ[x]**2 -> QQ[x]**2/<[1, 1]>
+        [0, 0]])
         """
         if not self.codomain.is_submodule(sm):
             raise ValueError('sm must be a submodule of codomain %s, got %s'
@@ -301,9 +328,11 @@ class ModuleHomomorphism(object):
         That is, check if the elements of the domain are mapped to the same
         codomain element.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h.is_injective()
         False
@@ -319,9 +348,11 @@ class ModuleHomomorphism(object):
         That is, check if every element of the codomain has at least one
         preimage.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h.is_surjective()
         False
@@ -337,9 +368,11 @@ class ModuleHomomorphism(object):
         That is, check if every element of the codomain has precisely one
         preimage. Equivalently, ``self`` is both injective and surjective.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h = h.restrict_codomain(h.image())
         >>> h.is_isomorphism()
@@ -356,9 +389,11 @@ class ModuleHomomorphism(object):
         That is, check if every element of the domain is mapped to zero
         under self.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
-        >>> F = QQ[x].free_module(2)
+        >>> from sympy.polys.agca import homomorphism
+
+        >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h.is_zero()
         False
@@ -449,11 +484,11 @@ class MatrixHomomorphism(ModuleHomomorphism):
         return self.__class__(self.domain, sm, self.matrix)
 
     def _quotient_domain(self, sm):
-        """Implementation of domain quotienting."""
+        """Implementation of domain quotient."""
         return self.__class__(self.domain/sm, self.codomain, self.matrix)
 
     def _quotient_codomain(self, sm):
-        """Implementation of codomain quotienting."""
+        """Implementation of codomain quotient."""
         Q = self.codomain/sm
         converter = Q.convert
         if isinstance(self.codomain, SubModule):
@@ -480,12 +515,15 @@ class FreeModuleHomomorphism(MatrixHomomorphism):
     Do not instantiate; the constructor does not check that your data is well
     defined. Use the ``homomorphism`` function instead:
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
-    >>> F = QQ[x].free_module(2)
+    >>> from sympy.polys.agca import homomorphism
+
+    >>> F = QQ.old_poly_ring(x).free_module(2)
     >>> homomorphism(F, F, [[1, 0], [0, 1]])
-    [1, 0]
-    [0, 1] : QQ[x]**2 -> QQ[x]**2
+    Matrix([
+    [1, 0], : QQ[x]**2 -> QQ[x]**2
+    [0, 1]])
     """
 
     def _apply(self, elem):
@@ -514,12 +552,15 @@ class SubModuleHomomorphism(MatrixHomomorphism):
     Do not instantiate; the constructor does not check that your data is well
     defined. Use the ``homomorphism`` function instead:
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
-    >>> M = QQ[x].free_module(2)*x
+    >>> from sympy.polys.agca import homomorphism
+
+    >>> M = QQ.old_poly_ring(x).free_module(2)*x
     >>> homomorphism(M, M, [[1, 0], [0, 1]])
-    [1, 0]
-    [0, 1] : <[x, 0], [0, x]> -> <[x, 0], [0, x]>
+    Matrix([
+    [1, 0], : <[x, 0], [0, x]> -> <[x, 0], [0, x]>
+    [0, 1]])
     """
 
     def _apply(self, elem):
@@ -547,9 +588,11 @@ def homomorphism(domain, codomain, matrix):
     Examples
     ========
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
-    >>> R = QQ[x]
+    >>> from sympy.polys.agca import homomorphism
+
+    >>> R = QQ.old_poly_ring(x)
     >>> T = R.free_module(2)
 
     If ``domain`` is a free module generated by `e_1, \dots, e_n`, then
@@ -560,8 +603,9 @@ def homomorphism(domain, codomain, matrix):
     >>> F = R.free_module(2)
     >>> h = homomorphism(F, T, [[1, x], [x**2, 0]])
     >>> h
-    [1, x**2]
-    [x,    0] : QQ[x]**2 -> QQ[x]**2
+    Matrix([
+    [1, x**2], : QQ[x]**2 -> QQ[x]**2
+    [x,    0]])
     >>> h([1, 0])
     [1, x]
     >>> h([0, 1])
@@ -575,8 +619,9 @@ def homomorphism(domain, codomain, matrix):
 
     >>> S = F.submodule([1, 0], [0, x])
     >>> homomorphism(S, T, [[1, x], [x**2, 0]])
-    [1, x**2]
-    [x,    0] : <[1, 0], [0, x]> -> QQ[x]**2
+    Matrix([
+    [1, x**2], : <[1, 0], [0, x]> -> QQ[x]**2
+    [x,    0]])
 
     If ``domain`` is a (sub)quotient `N/K`, then ``matrix`` determines a
     homomorphism from `N` to ``codomain``. If the kernel contains `K`, this
@@ -584,8 +629,9 @@ def homomorphism(domain, codomain, matrix):
     is raised.
 
     >>> homomorphism(S/[(1, 0)], T, [0, [x**2, 0]])
-    [0, x**2]
-    [0,    0] : <[1, 0] + <[1, 0]>, [0, x] + <[1, 0]>, [1, 0] + <[1, 0]>> -> QQ[x]**2
+    Matrix([
+    [0, x**2], : <[1, 0] + <[1, 0]>, [0, x] + <[1, 0]>, [1, 0] + <[1, 0]>> -> QQ[x]**2
+    [0,    0]])
     >>> homomorphism(S/[(0, x)], T, [0, [x**2, 0]])
     Traceback (most recent call last):
     ...
