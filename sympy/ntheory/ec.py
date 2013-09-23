@@ -37,13 +37,13 @@ class EllipticCurve():
         self._b4 = 2 * a4 + a1 * a3
         self._b6 = a3**2 + 4 * a6
         self._b8 = a1**2 * a6 + 4 * a2 * a6 - a1 * a3 * a4 + a2 * a3**2 - a4**2
-        self._discrim = int(self._domain(-self._b2**2 * self._b8 - 8 * self._b4**3 - 27 * self._b6**2 + 9 * self._b2 * self._b4 * self._b6))
-        self._eq = Eq(y**2 + a1*x*y + a3*y, x**3 + a2*x**2 + a4*x + a6)
+        self._discrim = self._domain(-self._b2**2 * self._b8 - 8 * self._b4**3 - 27 * self._b6**2 + 9 * self._b2 * self._b4 * self._b6)
         self._a1 = self._domain(a1)
         self._a2 = self._domain(a2)
         self._a3 = self._domain(a3)
         self._a4 = self._domain(a4)
         self._a6 = self._domain(a6)
+        self._eq = Eq(y**2 + self._a1*x*y + self._a3*y, x**3 + self._a2*x**2 + self._a4*x + self._a6)
         if isinstance(self._domain, FiniteField):
             self._rank = 0
         elif isinstance(self._domain, RationalField):
@@ -85,7 +85,10 @@ class EllipticCurve():
         x3 = slope**2 - x1 - x2
         y3 = -y1 - slope * (x3 - x1)
         if to_sympy:
-            return self._domain.to_sympy(x3), self._domain.to_sympy(y3), 1
+            try:
+                return self._domain.to_sympy(x3), self._domain.to_sympy(y3), 1
+            except TypeError:
+                pass
         return x3, y3, 1
 
     def minimal(self):
@@ -133,7 +136,10 @@ class EllipticCurve():
                 r = self.add(r, p, to_sympy=False)
             n >>= 1
             p = self.add(p, p, to_sympy=False)
-        return self._domain.to_sympy(r[0]), self._domain.to_sympy(r[1]), r[2]
+        try:
+            return self._domain.to_sympy(r[0]), self._domain.to_sympy(r[1]), r[2]
+        except TypeError:
+            return r
 
     def points(self):
         """
