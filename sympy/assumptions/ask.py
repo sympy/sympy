@@ -37,7 +37,6 @@ class Q:
     nonpositive = Predicate('nonpositive')
     nonnegative = Predicate('nonnegative')
     zero = Predicate('zero')
-
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
     singular = Predicate('singular')
@@ -344,13 +343,12 @@ known_facts = And(
     Equivalent(Q.positive, Q.nonzero & ~Q.negative),
     Equivalent(Q.rational, Q.real & ~Q.irrational),
     Equivalent(Q.real, Q.rational | Q.irrational),
-    Implies(Q.nonzero, Q.real),
+    Implies(Q.nonzero, Q.extended_real),
     Equivalent(Q.nonzero, Q.positive | Q.negative),
-    Equivalent(Q.nonpositive, ~Q.positive & Q.real),
-    Equivalent(Q.nonnegative, ~Q.negative & Q.real),
-    Equivalent(Q.zero, Q.real & ~Q.nonzero),
+    Equivalent(Q.nonpositive, ~Q.positive & Q.extended_real),
+    Equivalent(Q.nonnegative, ~Q.negative & Q.extended_real),
+    Equivalent(Q.zero, Q.extended_real & ~Q.nonzero),
     Implies(Q.zero, Q.even),
-
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),
     Implies(Q.unitary & Q.real, Q.orthogonal),
