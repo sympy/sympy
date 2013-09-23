@@ -118,59 +118,72 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     q1, q2 in k[t] X k[t] of this system with deg(q1)<=n & deg(g2)<=n
     """
     from sympy.integrals.prde import parametric_log_deriv
+    k = Dummy('k')
     t = DE.t
     Dt = derivation(t, DE)
-    if not c1.has(t) and not c2.has(t):
-        with DecrementLevel(DE):
-            return coupled_DE_system(Poly(b1, t), Poly(b2, t), Poly(c1, t),
-                Poly(c2, t), DE)
-    wa, wd = frac_in(DE.d.quo(Poly(DE.t, DE.t)), DE.t)
+    wa, wd = frac_in(DE.d.quo(Poly(t, t)), t)
     b1a, b1d = frac_in(b1, DE.t)
     b2a, b2d = frac_in(b2, DE.t)
+    print(b1a, b1d, b2a, b2d, wa, wd)
     A1 = parametric_log_deriv(b1a, b1d, wa, wd, DE)
     A2 = parametric_log_deriv(b2a, b2d, wa, wd, DE)
-    if A1 is not None and A2 is not None:
+    print("A", A1, A2)
+    if A1 and A2:
         n1, m1, u1 = A1
         n2, m2, u2 = A2
+	print("m", m1, m2)
         m = m1
         u = u1 + u2*a.as_expr()
-        z1a, z1d = frac_in(cancel((u1*c1.as_expr() + a.as_expr()*u2*c2.as_expr())*t**m), DE.t)
-        z2a, z2d = frac_in(cancel((u2*c1.as_expr() + a.as_expr()*u1*c2.as_expr())*t**m), DE.t)
+        z1a, z1d = frac_in(cancel(((u1*c1).as_expr() - (u2*c2).as_expr())*t**m), t)
+        z2a, z2d = frac_in(cancel(((u2*c1).as_expr() + (u1*c2).as_expr())*t**m), t)
+	print("z->", z1a, z1d)
+	print("z->", z2a, z2d)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
+	print("P",P1, P2)
         if P1 and P2:
-            p1, _ = P1
-            p2, _ = P2
-            q1 = ((u1*p1 - a*u2*p2)*t**(-m)).as_expr()/(u1**2 - a*u2**2).as_expr()
-            q2 = ((u1*p2 - u2*p1)*t**(-m)).as_expr()/(u1**2 - a*u2**2).as_expr()
-            q1a, q1d = frac_in(q1, DE.t)
-            q2a, q2d = frac_in(q2, DE.t)
-            if  not q1d.has(DE.t) and  not q2d.has(DE.t) and Poly(p1).degree(t) <= n \
-                and Poly(p2).degree(t) <= n:
+            p1, i1 = P1
+            p2, i2 = P2
+	    print("this is the line of danger", u1, u2, p1, p2, i1, i2)
+            num1 = Poly(cancel(u1*p1 + u2*p2), t)
+            num2 = Poly(cancel(u1*p2 - u2*p1), t)
+            denom = Poly(cancel(u1**2 + u2**2)*(t**m), t)
+            print("cancel",cancel(num1/denom), cancel(num2/denom))
+	    q1 = cancel((u1*p1 + u2*p2)*t**(-m)/(u1**2 + u2**2))
+	    q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 + u2**2))
+	    q1a, q1d = frac_in(q1, t)
+            q2a, q2d = frac_in(q2, t)
+            print("q expr->", q1, q2)
+            print("q->", q1a,q1d,q2a,q2d)
+            if q1d == Poly(1, DE.t) and q2d == Poly(2, t) and Poly(p1).degree(t) <= n and Poly(p2).degree(t) <= n:
                 return (q1, q2)
             else:
                 raise NonElementaryIntegralException
     if c1 == 0 and c2 == 0:
-        return (0, 0)
-    if n < max(c1.degree(), c2.degree()):
+        return (Poly(0, t), Poly(0, t))
+    c1a, c1d = frac_in(c1, DE.t)
+    c2a, c2d = frac_in(c2, DE.t)
+    if n < max(c1a.degree(t) - c1d.degree(t), c2a.degree(t) - c2d.degree(t)):
         raise NonElementaryIntegralException
-    q1, q2 = (0, 0)
+    q1, q2 = (Poly(0, t), Poly(0, t))
     while c1 or c2:
-        m = max(as_poly_1t(c1, t, k).degree(t), as_poly_1t(c2, t, k).degree(t))
+        c1a, c1d = frac_in(c1, DE.t)
+        c2a, c2d = frac_in(c2, DE.t)
+        m = max(c1a.degree(t) - c1d.degree(t), c2a.degree(t) - c2d.degree(t))
         if n < m:
             raise NonElementaryIntegralException
         c1k = as_poly_1t(c1, t, k).as_poly(t).nth(m)
         c2k = as_poly_1t(c2, t, k).as_poly(t).nth(m)
-        A = coupled_DE_system(b1 + m*Dt/t, b2, c1k, c2k, DE)
-        (s1, s2) = A
+        with DecrementLevel(DE):
+            (s1, s2) = coupled_DE_system(b1 + m*Dt/t, b2, c1k, c2k, DE)
         (b1, b2) = (b1.as_poly(DE.t), b2.as_poly(DE.t))
-        q1 = q1 + s1*t**m
-        q2 = q2 + s2*t**m
+        q1 = (q1 + s1.as_expr()*t**m).as_poly(DE.t)
+        q2 = (q2 + s2.as_expr()*t**m).as_poly(DE.t)
         n = m - 1
         Ds1tm = derivation(s1*t**m, DE)
         Ds2tm = derivation(s2*t**m, DE)
-        c1 = Poly(c1.as_poly(t) - Ds1tm - (b1*s1 - b2*s2)*t**m, t)
-        c2 = Poly(c2.as_poly(t) - Ds2tm - (b2*s1 + b1*s2)*t**m, t)
+        c1 = Poly(c1.as_expr() - Ds1tm.as_expr() - (b1*s1 - b2*s2).as_expr()*t**m, t)
+        c2 = Poly(c2.as_expr() - Ds2tm.as_expr() - (b2*s1 + b1*s2).as_expr()*t**m, t)
     return (q1, q2)
 
 
