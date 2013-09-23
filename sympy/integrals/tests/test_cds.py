@@ -22,34 +22,103 @@ def test_cds_cancel_primitive():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1),
         Poly(2*x/(x**2 + 1), t2)], 'L_K': [1, 2], 'E_K': [], 'L_args': [x, x**2 + 1],
         'E_args': []})
+    y1 = Poly(t2 + t1, t2)
+    y2 = Poly(t2**2, t2)
+    b1 = Poly(x, t2)
+    b2 = Poly(2*x, t2)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 5
+    assert cds_cancel_primitive(Poly(sqrt(-1), t2), b1, b2, a, b, DE, n) == \
+        (y1, y2)
     assert cds_cancel_primitive(Poly(sqrt(-1), t), Poly(x, t), Poly(2*x, t),
         Poly(2*x/(x**2 + 1) + x*t2 - 2*x*t1), Poly(1/x + 2*x*t2 + x*t1), DE, 5) == \
         (t2, t1)
+    y1 = Poly(t2 + t1, t2)
+    y2 = Poly(t2**2, t2)
+    b1 = Poly(x + 3*x**2, t2)
+    b2 = Poly(2*x + 2*x, t2)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 3
+    assert cds_cancel_primitive(Poly(sqrt(-1), t2), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+    y1 = Poly(t2*t1**3, t2)
+    y2 = Poly(t2**2 + t1, t2)
+    b1 = Poly(x + 3*x**2, t2)
+    b2 = Poly(x - 1, t2)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 4
+    assert cds_cancel_primitive(Poly(sqrt(-1), t2), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+    y1 = Poly(t2, t2)
+    y2 = Poly(t2, t2)
+    b1 = Poly(x + 3*x**2, t2)
+    b2 = Poly(2*x + 2*x, t2)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 2
+    assert cds_cancel_primitive(Poly(sqrt(-1), t2), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+    y1 = Poly(t2**10, t2)
+    y2 = Poly(t2, t2)
+    b1 = Poly(x + 3*x**2, t2)
+    b2 = Poly(2*x + 2*x, t2)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 11
+    assert cds_cancel_primitive(Poly(sqrt(-1), t2), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+    y1 = Poly(t2/x, t2)
+    y2 = Poly(t2 + t1**10, t2)
+    b1 = Poly(x + 3*x**2, t2)
+    b2 = Poly(2*x + 2*x, t2)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 11
+    assert cds_cancel_primitive(Poly(sqrt(-1), t2), b1, b2, a, b, DE, n) == \
+        (y1, y2)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)],
         'L_K': [1], 'E_K': [], 'L_args': [x], 'E_args': [], 'Tfuncs': [log]})
-    assert cds_cancel_primitive(Poly(sqrt(-1)), Poly((5*t + 1)/(2*t*x)),
-        Poly((2 + 3*t)/(5*x*t)), Poly((7*t + 3)/2 - (2 + 3*t)/(5*t)),
-        Poly((3*t + 7)/5 + (5*t + 1)/(2*t)), DE, 5) == (t*x, x)
-
-    assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(-1/x**2, x), Poly(-1/(2*x**2), x),
-        Poly(t + 2*x - 2*t/x - 1/x**2), Poly(-(3*t)/(2*x) + 2*t + S(7)/2), DE, 4) == \
-        (t*x + x**2 + 1, 2*t*x)
-
-
-    assert cds_cancel_primitive(Poly(sqrt(-1)), Poly((2 + 3*t)/(5*x*t)), Poly(1/x**2),
-        Poly(12*t/5 + 8*t**2/5 + 7*x/5 + 3*t*x/5 - (t*x + 1)/x**2, t),
-        Poly(t**2/x + 8*t/5 + S(2/5) + 2/(5*x*t) + 3/(5*x), DE, 3)) == \
-        (t**2*x + t*x**2, t*x + 1)
-
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t/x**2, t)],
+    y1 = Poly(t + x**2, t)
+    y2 = Poly(t, t)
+    b1 = Poly(x, t)
+    b2 = Poly(2*x, t)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 2
+    assert cds_cancel_primitive(Poly(sqrt(-1), t2), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+    y1 = Poly(t**2, t)
+    y2 = Poly(t/x, t)
+    b1 = Poly(x + 1, t)
+    b2 = Poly(2*x, t)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 2
+    assert cds_cancel_primitive(Poly(sqrt(-1), t), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+    y1 = Poly(1 + t, t)
+    y2 = Poly(t/x, t)
+    b1 = Poly(x + 1, t)
+    b2 = Poly(2*x, t)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 1
+    assert cds_cancel_primitive(Poly(sqrt(-1), t), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2/x, t)],
        'L_K': [1], 'E_K': [], 'L_args': [x], 'E_args': []})
-    assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(-(1 + 2*t)/(2*x**2 + 2*x**2*t)),
-        Poly(t/x**2), Poly(-2*t**2/x + t**2 + 2*t + 2*t/x - (t**2 + 2*t)*(1 + 2*t)/(2*(1 + t)) - t**3/x),
-        Poly(-2*t**2/x**2 + t**2 + t**3/x - (1 + 2*t)*t**2/(2*x*(1 + t))), DE, 4) == \
-        (x*t**2 + 2*x*t, t**x)
-
-    assert cds_cancel_primitive(Poly(sqrt(-1)), Poly(-1/x**2), Poly(1/x**2),
-        Poly(-3*t/x**2), Poly(-t/x**2), DE, 2) == (t, t)
+    y1 = Poly(1 + t, t)
+    y2 = Poly(t, t)
+    b1 = Poly(x + 1, t)
+    b2 = Poly(2*x, t)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 3
+    assert cds_cancel_primitive(Poly(sqrt(-1), t), b1, b2, a, b, DE, n) == \
+        (y1, y2)
 
 
 def test_cds_cancel_exp():
@@ -96,6 +165,12 @@ def test_cds_cancel_tan():
 #   cds_cancel_tan(b0, b2, c1, c2, DE, n)
 
 def test_coupled_DE_system():
+    DE = DifferentialExtension(extension={'D': [Poly(1, x)], 'L_K': [], 'E_K': [],
+        'L_args': [],  'E_args': []})
+    assert coupled_DE_system(Poly(x, x), Poly(2*x, x), Poly(-1/x**2),
+        Poly(-1/(2*x**2) + S(5)/2), DE) == (1/x, 1/(2*x))
+    assert coupled_DE_system(Poly(x, x), Poly(2*x, x), Poly(-1/x**2),
+        Poly(-1/(2*x**2)), DE) == NonElementaryIntegral
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)],
        'L_K': [], 'E_K': [1], 'L_args': [], 'E_args': [x]})
     g1 = Poly(2*t + 1)
