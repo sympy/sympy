@@ -139,7 +139,7 @@ When `\Delta < 0`, there are either no solutions or only a finite number of solu
 set([(2, 1), (5, 1)])
 
 In the above equation `\Delta = (-4)^2 - 4*1*8 = -16` and hence only a finite
-of solutions.
+number of solutions exist.
 
 When `\Delta = 0` we might have either no solutions or parametrized solutions.
 
