@@ -1688,14 +1688,12 @@ def _transformation_to_DN(var, coeff):
 def find_DN(eq):
     """
     This function returns a tuple, `(D, N)` of the simplified form,
-    `x^2 - Dy^2 = N`
-
-    corresponding to the general quadratic,
-     `ax^2 + bxy + cy^2 + dx + ey + f = 0`.
+    `x^2 - Dy^2 = N`, corresponding to the general quadratic,
+    `ax^2 + bxy + cy^2 + dx + ey + f = 0`.
 
     Solving the general quadratic is then equivalent to solving the equation
     `X^2 - DY^2 = N` and transforming the solutions by using the transformation
-     matrices returned by ``transformation_to_DN()``.
+    matrices returned by ``transformation_to_DN()``.
 
     Usage
     =====
