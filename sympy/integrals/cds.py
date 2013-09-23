@@ -131,27 +131,27 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
     if A1 and A2:
         n1, m1, u1 = A1
         n2, m2, u2 = A2
-	print("m", m1, m2)
+        print("m", m1, m2)
         m = m1
         u = u1 + u2*a.as_expr()
         z1a, z1d = frac_in(cancel(((u1*c1).as_expr() - (u2*c2).as_expr())*t**m), t)
         z2a, z2d = frac_in(cancel(((u2*c1).as_expr() + (u1*c2).as_expr())*t**m), t)
-	print("z->", z1a, z1d)
-	print("z->", z2a, z2d)
+        print("z->", z1a, z1d)
+        print("z->", z2a, z2d)
         P1 = is_deriv(z1a, z1d, DE)
         P2 = is_deriv(z2a, z2d, DE)
-	print("P",P1, P2)
+        print("P",P1, P2)
         if P1 and P2:
             p1, i1 = P1
             p2, i2 = P2
-	    print("this is the line of danger", u1, u2, p1, p2, i1, i2)
+            print("this is the line of danger", u1, u2, p1, p2, i1, i2)
             num1 = Poly(cancel(u1*p1 + u2*p2), t)
             num2 = Poly(cancel(u1*p2 - u2*p1), t)
             denom = Poly(cancel(u1**2 + u2**2)*(t**m), t)
             print("cancel",cancel(num1/denom), cancel(num2/denom))
-	    q1 = cancel((u1*p1 + u2*p2)*t**(-m)/(u1**2 + u2**2))
-	    q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 + u2**2))
-	    q1a, q1d = frac_in(q1, t)
+            q1 = cancel((u1*p1 + u2*p2)*t**(-m)/(u1**2 + u2**2))
+            q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 + u2**2))
+            q1a, q1d = frac_in(q1, t)
             q2a, q2d = frac_in(q2, t)
             print("q expr->", q1, q2)
             print("q->", q1a,q1d,q2a,q2d)
