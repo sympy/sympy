@@ -740,7 +740,7 @@ def extended_euclid(a, b):
     =======
 
     ``a`` Any instance of Integer.
-    `b`` Any instance of Integer.
+    ``b`` Any instance of Integer.
 
     Examples
     ========
