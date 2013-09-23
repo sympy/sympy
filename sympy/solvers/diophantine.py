@@ -156,8 +156,13 @@ solutions. Consider the below cases where `\Delta = 8`.
 
 >>> diophantine(x**2 - 4*x*y + 2*y**2 - 3*x + 7*y - 5)
 set()
->>> diophantine(x**2 -  2*y**2 - 2*x - 4*y)
-set([(-(-2*sqrt(2) + 3)**n*(-sqrt(2) + 1)/2 - (1 + sqrt(2))*(2*sqrt(2) + 3)**n/2 + 1, sqrt(2)*((-1 + sqrt(2))*(-2*sqrt(2) + 3)**n + (1 + sqrt(2))*(2*sqrt(2) + 3)**n)/4 - 1)])
+>>> from sympy import expand
+>>> s = diophantine(x**2 -  2*y**2 - 2*x - 4*y)
+>>> x_n, y_n = s.pop()
+>>> expand(x_n)
+-(-2*sqrt(2) + 3)**n/2 + sqrt(2)*(-2*sqrt(2) + 3)**n/2 - sqrt(2)*(2*sqrt(2) + 3)**n/2 - (2*sqrt(2) + 3)**n/2 + 1
+>>> expand(y_n)
+-sqrt(2)*(-2*sqrt(2) + 3)**n/4 + (-2*sqrt(2) + 3)**n/2 + sqrt(2)*(2*sqrt(2) + 3)**n/4 + (2*sqrt(2) + 3)**n/2 - 1
 
 Here `n` is an any non-negative integer.
 
