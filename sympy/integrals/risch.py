@@ -1263,16 +1263,19 @@ def residue_reduce(a, d, DE, z=None, invert=True):
     return (H, b)
 
 
-def residue_reduce_to_basic(H, DE, z):
+def residue_reduce_to_basic(H, DE, z, flag_subs = True):
     """
     Converts the tuple returned by residue_reduce() into a Basic expression.
     """
     # TODO: check what Lambda does with RootOf
     i = Dummy('i')
-    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
-
-    return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
-        {z: i}).subs(s))) for a in H))
+    if flag_subs:
+        s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+        return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
+            {z: i}).subs(s))) for a in H))
+    else:
+        return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
+            {z: i}))) for a in H))
 
 
 def residue_reduce_derivation(H, DE, z):
@@ -1643,7 +1646,7 @@ def is_deriv(a, d, DE, z=None):
         pp = as_poly_1t(p, DE.t, z)
         q, i, b = integrate_primitive_polynomial(p, DE)
         ret = (g1[0].as_expr()/g1[1].as_expr() + q.as_expr() +
-            residue_reduce_to_basic(g2, DE, z))
+            residue_reduce_to_basic(g2, DE, z, flag_subs=False))
         if not b:
             return None
         else:
@@ -1656,7 +1659,7 @@ def is_deriv(a, d, DE, z=None):
         i = pp.nth(0, 0)
 
         ret = (g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
-            qd.as_expr() + residue_reduce_to_basic(g2, DE, z))
+            qd.as_expr() + residue_reduce_to_basic(g2, DE, z, flag_subs=False))
 
         if not b:
             return None
@@ -1664,12 +1667,12 @@ def is_deriv(a, d, DE, z=None):
         rrd_g2_a, rrd_g2_d = frac_in(residue_reduce_derivation(g2, DE, z), DE.t)
         pa = h[0]*rrd_g2_d*r[1] - rrd_g2_a*r[1]*h[1] + r[0]*h[1]*rrd_g2_d
         pd = h[1]*r[1]*rrd_g2_d
-	i = as_poly_1t(pa/pd, DE.t, z).nth(0, 0)
+        i = as_poly_1t(pa/pd, DE.t, z).nth(0, 0)
         q1a, q1d, b = integrate_hypertangent_reduced(pa, pd, DE)
         Dq1_a = q1a*derivation(q1d, DE) + q1d*derivation(q1a, DE)
         Dq1_d = q1d**2
         ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
-            ) + residue_reduce_to_basic(g2, DE, z))
+            ) + residue_reduce_to_basic(g2, DE, z, flag_subs=False))
         if not b:
             return (ret, b)
         ppa, ppd = (pa*Dq1_d - Dq1_a*pd).cancel(pd*Dq1_d, include=True)
@@ -1678,11 +1681,11 @@ def is_deriv(a, d, DE, z=None):
         Dc = derivation(c, DE)
         if Dc == 0:
             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
-                ) + residue_reduce_to_basic(g2, DE, z)
+                ) + residue_reduce_to_basic(g2, DE, z, flag_subs=False)
                 + c*log(DE.t**2 + 1) + q2.as_expr())
         else:
             ret = ((g1[0].as_expr()/g1[1].as_expr() + q1a.as_expr()/q1d.as_expr()
-                ) + residue_reduce_to_basic(g2, DE, z)
+                ) + residue_reduce_to_basic(g2, DE, z, flag_subs=False)
                 + q2.as_expr())
     return (ret, i)
 
