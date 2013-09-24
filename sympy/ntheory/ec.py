@@ -1,10 +1,11 @@
-from sympy import QQ
 from sympy.abc import x, y
+from sympy.core.numbers import oo
 from sympy.core.relational import Eq
+from sympy.polys.domains import FiniteField, QQ, RationalField
+from sympy.solvers.solvers import solve
+
 from .factor_ import divisors
 from .residue_ntheory import sqrt_mod
-from sympy.polys.domains import FiniteField, RationalField
-from sympy.solvers.solvers import solve
 
 
 class EllipticCurve():
@@ -29,6 +30,8 @@ class EllipticCurve():
     [3] G. Hardy, E. Wright "An Introduction to the Theory of Numbers" Sixth Edition
 
     """
+
+    O = (0, 1, 0)
 
     def __init__(self, a4, a6, a1=0, a2=0, a3=0, domain=QQ):
         self._domain = domain
@@ -80,7 +83,7 @@ class EllipticCurve():
             slope = (y1 - y2) / (x1 - x2)
         else:
             if (y1 + y2) == 0:
-                return 0, 1, 0
+                return self.O
             slope = (3 * x1**2 + self._a4) / (2 * y1)
         x3 = slope**2 - x1 - x2
         y3 = -y1 - slope * (x3 - x1)
@@ -130,7 +133,7 @@ class EllipticCurve():
         """
         if n < 1:
             return p
-        r = (0, 1, 0)
+        r = self.O
         while n:
             if n & 1:
                 r = self.add(r, p, to_sympy=False)
@@ -140,6 +143,29 @@ class EllipticCurve():
             return self._domain.to_sympy(r[0]), self._domain.to_sympy(r[1]), r[2]
         except TypeError:
             return r
+
+    def point_order(self, p):
+        """
+        Return order of point p.
+
+        Order of point is integer n that nP = O.
+        """
+        if p not in self:
+            raise ValueError('Invalid point.')
+        if p == self.O:
+            return 1
+        if p[1] == 0:
+            return 2
+        n = self.add(p, p)
+        if n[1] == -p[1]:
+            return 3
+        i = 2
+        while int(n[0]) == n[0]:
+            n = self.add(p, n)
+            i += 1
+            if n == self.O:
+                return i
+        return oo
 
     def points(self):
         """
@@ -166,7 +192,7 @@ class EllipticCurve():
         else:
             raise NotImplementedError("Still not implemented")
 
-    def torsion_list(self):
+    def torsion_points(self):
         """
         Return torsion points of curve over Rational number.
 
@@ -180,21 +206,21 @@ class EllipticCurve():
 
         >>> from sympy.ntheory.ec import EllipticCurve
         >>> e2 = EllipticCurve(-43, 166)
-        >>> sorted(e2.torsion_list())
-        [(-5, -16), (-5, 16), (3, -8), (3, 8), (11, -32), (11, 32)]
+        >>> sorted(e2.torsion_points())
+        [(-5, -16), (-5, 16), (0, 1, 0), (3, -8), (3, 8), (11, -32), (11, 32)]
 
         """
         if self.characteristic > 0:
             raise ValueError("No torsion point for Finite Field.")
-        l = []
+        l = [self.O]
         for x in solve(self._eq.subs(y, 0)):
-            if x.is_rational:
+            if x.is_rational and self.point_order((x, 0,)) != oo:
                 l.append((x, 0,))
         for i in divisors(self.discriminent, generator=True):
             j = int(i**.5)
             if j**2 == i:
                 for x in solve(self._eq.subs(y, j)):
-                    if x.is_rational:
+                    if x.is_rational and self.point_order((x, j,)) != oo:
                         l.extend([(x, j,), (x, -j,)])
         return l
 
