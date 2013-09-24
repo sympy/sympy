@@ -295,11 +295,11 @@ def coupled_DE_system(b1, b2, c1, c2, DE):
     A, B, C, hs = special_denom(a, ba, bd, ca, cd, DE)
     try:
        n = bound_degree(A, B, C, DE)
-    except:
+    except NotImplementedError:
        n = oo
     try:
        B, C, m, alpha, beta = spde(A, B, C, n, DE)
-    except:
+    except NonElementaryIntegralException:
        # Does not fall in non cancellation
        # Hence cancellation cases
        return cancellation_algo(a, b1, b2, c1, c2, DE, n)
