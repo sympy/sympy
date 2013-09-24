@@ -65,3 +65,44 @@ class Transform(object):
             return self[item]
         else:
             return default
+
+
+class MapMatcher(object):
+    """
+    Dictionary-like data structure to handle multiple pattern matching statements.
+    This object is assigned pattern matching expressions and corresponding functions.
+    The functions take one parameter, i.e. the dictionary of substitutions.
+
+    Examples
+    ========
+
+    >>> from sympy.core.rules import MapMatcher
+    >>> from sympy import symbols, Wild, sin, S
+    >>> x, y = symbols('x y')
+    >>> a = Wild('a', exclude=[x, y])
+    >>> b = Wild('b', exclude=[x])
+    >>> map_matcher = MapMatcher()
+    >>> map_matcher[a/b + x] = lambda d : ("first matched", d)
+    >>> map_matcher[a + y] = lambda d : ("second matched", d)
+    >>> map_matcher[3/y + x]
+    ('first matched', {a_: 3, b_: y})
+    >>> map_matcher[y + 2]
+    ('second matched', {a_: 2})
+
+    If no match is successful, return ``None``
+
+    >>> map_matcher[S.One]
+
+    """
+    def __init__(self):
+        self._pattern_func_list = []
+
+    def __setitem__(self, key, value):
+        self._pattern_func_list.append( (key, value) )
+
+    def __getitem__(self, key):
+        for pattern, fun in self._pattern_func_list:
+            d = key.match(pattern)
+            if d:
+                return fun(d)
+        return None
