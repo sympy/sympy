@@ -2,28 +2,29 @@
 Diophantine equations
 =====================
 
-The word `Diophantine` comes with the name Diophantus, a mathematician lived
+The word "Diophantine" comes with the name Diophantus, a mathematician lived
 in the great city of Alexandria sometime around 250 AD. Often referred to as
-the `father \ of \ Algebra`, Diophantus in his famous work `Arithmetica`
+the "father of Algebra", Diophantus in his famous work "Arithmetica"
 presented 150 problems that marked the early beginnings of number theory, the
 field of study about integers and their properties. Diophantine equations play
 a central and an important part in number theory.
 
-We call a `Diophantine \ equation` to an equation of the form, `f(x_1, x_2, ... x_n) = 0`
-where `n \geq 2` and `x_1, x_2, . . . x_n` are integer variables. If we can
-find `n` integers `a_1, a_2, ... a_n` such that `x_1 = a_1, x_2 = a_2, ... x_n = a_n`
-satisfies the above equation, we say that the equation is solvable. You can
-read more about Diophantine equations in [1]_ and [2]_.
+We call a "Diophantine equation" to an equation of the form,
+`f(x_1, x_2, \ldots x_n) = 0` where `n \geq 2` and `x_1, x_2, \ldots x_n` are
+integer variables. If we can find `n` integers `a_1, a_2, \ldots a_n` such that
+`x_1 = a_1, x_2 = a_2, \ldots x_n = a_n` satisfies the above equation, we say
+that the equation is solvable. You can read more about Diophantine equations in
+[1]_ and [2]_.
 
 Currently, following five types of diophantine equations can be solved using
 :py:meth:`~sympy.solvers.diophantine.diophantine` and other helper functions of
 the Diophantine module.
 
-- Linear Diophantine equations: `a_1x_1 + a_2x_2 + ... + a_nx_n = b`.
+- Linear Diophantine equations: `a_1x_1 + a_2x_2 + \ldots + a_nx_n = b`.
 - General binary quadratic equation: `ax^2 + bxy + cy^2 + dx + ey + f = 0`
 - Homogeneous ternary quadratic equation: `ax^2 + by^2 + cz^2 + dxy + eyz + fzx = 0`
-- Extended Pythagorean equation: `a_{1}x_{1}^2 + a_{2}x_{2}^2 + . . . + a_{n}x_{n}^2 = a_{n+1}x_{n+1}^2`
-- General sum of squares: `x_{1}^2 + x_{2}^2 + . . . + x_{n}^2 = k`
+- Extended Pythagorean equation: `a_{1}x_{1}^2 + a_{2}x_{2}^2 + \ldots + a_{n}x_{n}^2 = a_{n+1}x_{n+1}^2`
+- General sum of squares: `x_{1}^2 + x_{2}^2 + \ldots + x_{n}^2 = k`
 
 Module structure
 ================
@@ -54,7 +55,7 @@ Then all the results are combined using :py:meth:`~sympy.solvers.diophantine.mer
 :py:meth:`~sympy.solvers.diophantine.classify_diop`
 to find the type of the equation(and some other details) given to it and then
 calls the appropriate solver function based on the type returned. For example,
-if :py:meth:`~sympy.solvers.diophantine.classify_diop` returned `linear` as the
+if :py:meth:`~sympy.solvers.diophantine.classify_diop` returned "linear" as the
 type of the equation, then :py:meth:`~sympy.solvers.diophantine.diop_solve`
 calls :py:meth:`~sympy.solvers.diophantine.diop_linear` to solve the equation.
 
@@ -66,7 +67,7 @@ and :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares` solves a
 specific type of equations and the type can be easily guessed by their name.
 
 Apart from these functions, there are a considerable number of other functions
-in the `Diophantine \ Module` and all of them are listed under User functions
+in the "Diophantine Module" and all of them are listed under User functions
 and Internal functions.
 
 Tutorial
@@ -181,8 +182,7 @@ use :py:meth:`~sympy.solvers.diophantine.transformation_to_DN`
 
 Here A is a 2 X 2 matrix and B is a 2 X 1 matrix such that the transformation
 
-[ X ] = A * [ x ] + B
-[ Y ]       [ y ]
+Transpose([X, Y]) = A * Transpose([x, y]) + B
 
 gives the equation `X^2 -5Y^2 = 920`. Values of `A` and `B` are as belows.
 
