@@ -56,14 +56,18 @@ class EllipticCurve():
 
     def __contains__(self, point):
         if is_sequence(point):
-            x, y, z = point[:3]
+            if len(point) == 2:
+                z1 = 1
+            else:
+                z1 = point[2]
+            x1, y1 = point[:2]
         elif isinstance(point, EllipticCurvePoint):
-            x, y, z = point.x, point.y, point.z
+            x1, y1, z1 = point.x, point.y, point.z
         else:
             raise ValueError('Invalid point.')
-        if self.characteristic == 0 and z == 0:
+        if self.characteristic == 0 and z1 == 0:
             return True
-        return self._eq.subs({x: x, y: y})
+        return self._eq.subs({x: x1, y: y1})
 
     def __repr__(self):
         return 'E({}): {}'.format(self._domain, self._eq)
@@ -197,14 +201,13 @@ class EllipticCurve():
         ========
 
         >>> from sympy.ntheory.ec import EllipticCurve
-        >>> e1 = EllipticCurve(-10, -20, 0, -1, 1)
-        >>> e2 = e1.minimal()
-        >>> e1.j_invariant == e2.j_invariant
-        True
+        >>> e1 = EllipticCurve(-2, 0, 0, 1, 1)
+        >>> e1.j_invariant
+        1404928/389
 
         """
         c4 = self._b2**2 - 24*self._b4
-        return c4**3 / self.discriminant
+        return self._domain.to_sympy(c4**3 / self._discrim)
 
     @property
     def order(self):
@@ -274,14 +277,15 @@ class EllipticCurvePoint():
             return self
         x1, y1 = self.x, self.y
         x2, y2 = p.x, p.y
+        a2 = self._curve._a2
         if x1 != x2:
             slope = (y1 - y2) / (x1 - x2)
         else:
-            a4 = self._curve._a4
             if (y1 + y2) == 0:
                 return self.point_at_infinity(self._curve)
-            slope = (3 * x1**2 + a4) / (2 * y1)
-        x3 = slope**2 - x1 - x2
+            a4 = self._curve._a4
+            slope = (3 * x1**2 + 2*a2 + a4) / (2 * y1)
+        x3 = slope**2 - a2 - x1 - x2
         y3 = -y1 - slope * (x3 - x1)
         return EllipticCurvePoint(x3, y3, 1, self._curve)
 
@@ -302,6 +306,9 @@ class EllipticCurvePoint():
             n >>= 1
             p = p + p
         return r
+
+    def __rmul__(self, n):
+        return self * n
 
     def __neg__(self):
         return EllipticCurvePoint(self.x, -self.y, self.z, self._curve)
