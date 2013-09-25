@@ -866,8 +866,7 @@ def SOPform(variables, minterms, dontcares=None):
     """
     from sympy.core.symbol import Symbol
 
-    variables = [Symbol(v) if not isinstance(v, Symbol) else v
-                 for v in variables]
+    variables = [sympify(v) for v in variables]
     if minterms == []:
         return False
 
@@ -919,8 +918,7 @@ def POSform(variables, minterms, dontcares=None):
     """
     from sympy.core.symbol import Symbol
 
-    variables = [Symbol(v) if not isinstance(v, Symbol) else v
-                 for v in variables]
+    variables = [sympify(v) for v in variables]
     if minterms == []:
         return False
 
@@ -944,12 +942,26 @@ def POSform(variables, minterms, dontcares=None):
     return And(*[_convert_to_varsPOS(x, variables) for x in essential])
 
 
-def simplify_logic(expr):
+def _find_predicates(expr):
+    """Helper to find logical predicates in BooleanFunctions.
+
+    A logical predicate is defined here as anything within a BooleanFunction
+    that is not a BooleanFunction itself.
+
+    """
+    if not isinstance(expr, BooleanFunction):
+        return set([expr])
+    return set.union(*(_find_predicates(i) for i in expr.args))
+
+
+def simplify_logic(expr, simplify=True):
     """
     This function simplifies a boolean function to its
     simplified version in SOP or POS form. The return type is an
     Or or And object in SymPy. The input can be a string or a boolean
-    expression.
+    expression.  The optional parameter simplify indicates whether to
+    recursively simplify any non-boolean-functions contained within the
+    input.
 
     Examples
     ========
@@ -970,12 +982,15 @@ def simplify_logic(expr):
     expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
         return expr
-    variables = list(expr.free_symbols)
+    variables = _find_predicates(expr)
     truthtable = []
     for t in product([0, 1], repeat=len(variables)):
         t = list(t)
-        if expr.subs(list(zip(variables, t))) == True:
+        if expr.xreplace(dict(zip(variables, t))) == True:
             truthtable.append(t)
+    if simplify:
+        from sympy.simplify.simplify import simplify
+        variables = [simplify(v) for v in variables]
     if (len(truthtable) >= (2 ** (len(variables) - 1))):
         return SOPform(variables, truthtable)
     else:
