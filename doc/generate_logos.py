@@ -233,7 +233,7 @@ def load_svg(fn):
     return doc
 
 def save_svg(fn, doc):
-    with open(fn, "w") as f:
+    with open(fn, "wb") as f:
         xmlstr = doc.toxml("utf-8")
         f.write(xmlstr)
         logging.info(" File saved: %s" % fn)
