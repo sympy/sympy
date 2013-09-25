@@ -15,17 +15,15 @@ in K, it decides whether the system of equations
 from __future__ import print_function, division
 from sympy import sqrt
 
-from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
+from sympy.core import Dummy, oo
 
-from sympy.polys import Poly, cancel, gcd
+from sympy.polys import Poly, cancel
 
 from sympy.integrals.risch import (NonElementaryIntegralException,
-    frac_in, derivation, residue_reduce, is_deriv, as_poly_1t,
-    residue_reduce_derivation, DecrementLevel)
+    frac_in, derivation, is_deriv, as_poly_1t, DecrementLevel)
 from sympy.integrals.rde import (weak_normalizer,
-    bound_degree, spde, solve_poly_rde, normal_denom, special_denom)
-from sympy.integrals.prde import (real_imag, is_log_deriv_k_t_radical,
-    is_log_deriv_k_t_radical_in_field)
+    bound_degree, spde, normal_denom, special_denom)
+from sympy.integrals.prde import (real_imag, is_log_deriv_k_t_radical_in_field)
 def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     """
     Cancellation - primitive case
@@ -56,7 +54,6 @@ def cds_cancel_primitive(a, b1, b2, c1, c2, DE, n):
     if A1 and A2:
         n1, u1 = A1
         n2, u2 = A2
-        u = u1 + u2*a.as_expr()
         z1a, z1d = frac_in(cancel(u1*c1.as_expr() - u2*c2.as_expr()), DE.t)
         z2a, z2d = frac_in(cancel(u2*c1.as_expr() + u1*c2.as_expr()), DE.t)
         P1 = is_deriv(z1a, z1d, DE)
@@ -132,7 +129,6 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         n1, m1, u1 = A1
         n2, m2, u2 = A2
         m = m1
-        u = u1 + u2*a.as_expr()
         z1a, z1d = frac_in(cancel((u1.as_expr()*c1.as_expr() - u2.as_expr()*c2.as_expr())*t**m), t)
         z2a, z2d = frac_in(cancel((u2.as_expr()*c1.as_expr() + u1.as_expr()*c2.as_expr())*t**m), t)
         P1 = is_deriv(z1a, z1d, DE)
@@ -140,9 +136,6 @@ def cds_cancel_exp(a, b1, b2, c1, c2, DE, n):
         if P1 and P2:
             p1, i1 = P1
             p2, i2 = P2
-            num1 = Poly(cancel(u1*p1 + u2*p2), t)
-            num2 = Poly(cancel(u1*p2 - u2*p1), t)
-            denom = Poly(cancel(u1**2 + u2**2)*(t**m), t)
             q1 = cancel((u1*p1 + u2*p2)*t**(-m)/(u1**2 + u2**2))
             q2 = cancel((u1*p2 - u2*p1)*t**(-m)/(u1**2 + u2**2))
             q1a, q1d = frac_in(q1, t)
@@ -195,27 +188,28 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
     has no solution with both degrees at most n in k[t], or a solution
     q1, q2 in k[t] X k[t] of this system with deg(q1)<=n and deg(q2)<=n
     """
+    k = Dummy('k')
     t = DE.t
     if n == 0:
-      if c1 in k and c2 in k:
-          A = coupled_DE_system(b0, b2, c1, c2)
-      else:
-          raise NonElementaryIntegralException
+        if not c1.has(t) and not c2.has(t):
+            A = coupled_DE_system(b0, b2, c1, c2)
+        else:
+            raise NonElementaryIntegralException
     p = t - sqrt(-1)
     eta = DE.d.exquo(Poly(t**2 + 1, t))
     #u1 + u2*I = c1(I) + c2(I)*I
     c1_ = Poly(c1.eval(sqrt(-1)), t)
     c2_ = Poly(c2.eval(sqrt(-1)), t)
     ca, cd = frac_in(c1_ + c2_*sqrt(-1), t)
-    u1a, u2a, u1d = real_imag(ca, cd, DE.t)
-    u2d = u1d
+    u1a, u2a, u1d = real_imag(ca, cd, k)
     u1 = u1a.to_field().mul_ground(1/u1d)
-    u2 = u2a.to_field().mul_ground(1/u2d)
+    u2 = u2a.to_field().mul_ground(1/u1d)
     A = coupled_DE_system(b0, b2, u1, u2, DE)
     (s1, s2) = A
     c = c1 - u1 + n*eta*(s1*t + s2) + (c2 - u2 + n*eta*(s2*t - s1))*sqrt(-1)
     c = c.to_field().mul_ground(1/p)
-    d1a, d2a, d1d = real_imag(c)
+    ca, cd = frac_in(c)
+    d1a, d2a, d1d = real_imag(ca, cd, k)
     d1 = d1a.to_field().mul_ground(1/d1d)
     d2 = d2a.to_field().mul_ground(1/d1d)
     B = cds_cancel_tan(b0, b2 + eta, d1, d2, DE, n-1)
@@ -226,8 +220,7 @@ def cds_cancel_tan(b0, b2, c1, c2, DE, n):
 def non_cancellation_algo(alpha, beta, hn, hs, b, c, n, DE):
     from sympy.integrals.prde import real_imag
     from sympy.integrals.rde import (no_cancel_b_large,
-        no_cancel_b_small, no_cancel_equal, solve_poly_rde)
-    case = DE.case
+        no_cancel_b_small, no_cancel_equal)
     k = Dummy('k')
     if not b.is_zero and (DE.case == 'base' or \
         b.degree(DE.t) > max(0, DE.d.degree(DE.t) - 1)):
