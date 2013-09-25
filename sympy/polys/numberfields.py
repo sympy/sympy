@@ -71,7 +71,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
             candidates = []
             eps = 1.0/10.0**(prec1 / 2)
             for f in factors:
-                if abs(f.as_expr().subs({x: v}).evalf(prec1, subs=points)) < eps:
+                if abs(f.as_expr().subs(x, v).subs(points).evalf(prec1)) < eps:
                     candidates.append(f)
             if candidates:
                 factors = candidates
