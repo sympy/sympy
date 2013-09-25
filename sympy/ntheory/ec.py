@@ -303,6 +303,9 @@ class EllipticCurvePoint():
             p = p + p
         return r
 
+    def __rmul__(self, n):
+        return self * n
+
     def __neg__(self):
         return EllipticCurvePoint(self.x, -self.y, self.z, self._curve)
 
