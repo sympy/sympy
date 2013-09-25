@@ -1270,7 +1270,7 @@ def residue_reduce_to_basic(H, DE, z, flag_subs = True):
     # TODO: check what Lambda does with RootOf
     i = Dummy('i')
     if flag_subs:
-        s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+        s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
         return sum((RootSum(a[0].as_poly(z), Lambda(i, i*log(a[1].as_expr()).subs(
             {z: i}).subs(s))) for a in H))
     else:
