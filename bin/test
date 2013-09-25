@@ -7,6 +7,8 @@ The advantage over py.test is that it only depends on sympy and should just
 work in any circumstances. See "sympy.test?" for documentation.
 """
 
+from __future__ import print_function
+
 import sys
 import os
 from optparse import OptionParser

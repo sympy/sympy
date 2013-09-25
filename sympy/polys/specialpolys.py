@@ -1,5 +1,7 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
+from __future__ import print_function, division
+
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S
@@ -28,11 +30,13 @@ from sympy.ntheory import nextprime
 
 from sympy.utilities import subsets, public
 
+from sympy.core.compatibility import xrange
+
 
 @public
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
-    from numberfields import minimal_polynomial
+    from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
             "can't generate Swinnerton-Dyer polynomial of order %s" % n)

@@ -2,7 +2,7 @@ from sympy import (
     Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify,
-    sqrt, Sum, summation, Symbol, symbols, sympify, zeta
+    sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
@@ -200,6 +200,7 @@ def test_arithmetic_sums():
     assert summation(cos(n), (n, -2, 1)) == cos(-2) + cos(-1) + cos(0) + cos(1)
     assert summation(cos(n), (n, x, x + 2)) == cos(x) + cos(x + 1) + cos(x + 2)
     assert isinstance(summation(cos(n), (n, x, x + S.Half)), Sum)
+    assert summation(k, (k, 0, oo)) == oo
 
 
 def test_polynomial_sums():
@@ -368,6 +369,13 @@ def test_evalf_euler_maclaurin():
               50) == '0.69314793056000780941723211364567656807940638436025'
 
 
+def test_evalf_symbolic():
+    f, g = symbols('f g', cls=Function)
+    # issue 3229
+    expr = Sum(f(x), (x, 1, 3)) + Sum(g(x), (x, 1, 3))
+    assert expr.evalf() == expr
+
+
 def test_simple_products():
     assert Product(S.NaN, (x, 1, 3)) is S.NaN
     assert product(S.NaN, (x, 1, 3)) is S.NaN
@@ -407,18 +415,16 @@ def test_simple_products():
     assert isinstance(Product(n**n, (n, 1, b)), Product)
 
 
-@XFAIL
 def test_rational_products():
-    assert Product(1 + 1/n, (n, a, b)) == (1 + b)/a
-    assert Product(n + 1, (n, a, b)) == factorial(1 + b)/factorial(a)
-    assert Product((n + 1)/(n - 1), (n, a, b)) == b*(1 + b)/(a*(a - 1))
-    assert Product(n/(n + 1)/(n + 2), (n, a, b)) \
-        == a*factorial(a + 1)/(b + 1)/factorial(b + 2)
-    assert Product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b)) \
-        == b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
+    assert simplify(product(1 + 1/n, (n, a, b))) == (1 + b)/a
+    assert simplify(product(n + 1, (n, a, b))) == gamma(2 + b)/gamma(1 + a)
+    assert simplify(product((n + 1)/(n - 1), (n, a, b))) == b*(1 + b)/(a*(a - 1))
+    assert simplify(product(n/(n + 1)/(n + 2), (n, a, b))) == \
+        a*gamma(a + 2)/(b + 1)/gamma(b + 3)
+    assert simplify(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b))) == \
+        b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
 
 
-@XFAIL
 def test_wallis_product():
     # Wallis product, given in two different forms to ensure that Product
     # can factor simple rational expressions
@@ -426,8 +432,8 @@ def test_wallis_product():
     B = Product((2*n)*(2*n)/(2*n - 1)/(2*n + 1), (n, 1, b))
     half = Rational(1, 2)
     R = pi/2 * factorial(b)**2 / factorial(b - half) / factorial(b + half)
-    assert A == R
-    assert B == R
+    assert simplify(A.doit()) == R
+    assert simplify(B.doit()) == R
     # This one should eventually also be doable (Euler's product formula for sin)
     # assert Product(1+x/n**2, (n, 1, b)) == ...
 
@@ -621,22 +627,18 @@ def test_conjugate_transpose():
     assert p.transpose().doit() == p.doit().transpose()
 
 
-@XFAIL
 def test_issue_1072():
-    k = Symbol("k")
     assert summation(factorial(2*k + 1)/factorial(2*k), (k, 0, oo)) == oo
+    assert summation(2*k + 1, (k, 0, oo)) == oo
 
 
-@XFAIL
 def test_issue_3174():
-    # when this passes, the doctests involving Sum in
-    # is_constant can be unskipped
-    assert Sum(x, (x, 1, n)).n(2, subs={n: 0}) == 1
+    assert Sum(x, (x, 1, n)).n(2, subs={n: 1}) == 1
 
 
 def test_issue_3175():
     assert Sum(x, (x, 1, 0)).doit() == 0
-    assert NS(Sum(x, (x, 1, 0))) == '0.e-122'
+    assert NS(Sum(x, (x, 1, 0))) == '0'
     assert Sum(n, (n, 10, 5)).doit() == -30
     assert NS(Sum(n, (n, 10, 5))) == '-30.0000000000000'
 
@@ -728,3 +730,6 @@ def test_reverse_order():
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
     assert reverse_order(Sum(x*y, (x, a, b), (y, 2, 5)), y, x) == \
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
+
+def test_issue_3998():
+    assert sum(x**n/n for n in range(1, 401)) == summation(x**n/n, (n, 1, 400))

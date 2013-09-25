@@ -1,6 +1,8 @@
 """
 Handlers for predicates related to set membership: integer, rational, etc.
 """
+from __future__ import print_function, division
+
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy import I, S
@@ -352,7 +354,7 @@ class AskComplexHandler(CommonHandler):
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
-    Mul = Pow = Add
+    Mul, Pow = [Add]*2
 
     Number, sin, cos, exp, re, im, NumberSymbol, Abs, ImaginaryUnit = \
         [staticmethod(CommonHandler.AlwaysTrue)]*9 # they are all complex functions or expressions

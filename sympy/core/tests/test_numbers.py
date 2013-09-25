@@ -3,6 +3,7 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple, latex)
 from sympy.core.basic import _aresame
+from sympy.core.compatibility import long, u
 from sympy.core.power import integer_nthroot
 from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
 from sympy.mpmath import mpf
@@ -225,12 +226,12 @@ def _test_rational_new(cls):
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
     assert cls('1') is S.One
-    assert cls(u'-1') is S.NegativeOne
+    assert cls(u('-1')) is S.NegativeOne
 
     i = Integer(10)
     assert _strictly_equal(i, cls('10'))
-    assert _strictly_equal(i, cls(u'10'))
-    assert _strictly_equal(i, cls(10L))
+    assert _strictly_equal(i, cls(u('10')))
+    assert _strictly_equal(i, cls(long(10)))
     assert _strictly_equal(i, cls(i))
 
     raises(TypeError, lambda: cls(Symbol('x')))
@@ -346,19 +347,19 @@ def test_Float():
     assert (S(.3) == S(.5)) is False
     x_str = Float((0, '13333333333333', -52, 53))
     x2_str = Float((0, '26666666666666', -53, 53))
-    x_hex = Float((0, 0x13333333333333L, -52, 53))
-    x_dec = Float((0, 5404319552844595L, -52, 53))
-    x2_hex = Float((0, 0x13333333333333L*2, -53, 53))
+    x_hex = Float((0, long(0x13333333333333), -52, 53))
+    x_dec = Float((0, 5404319552844595, -52, 53))
+    x2_hex = Float((0, long(0x13333333333333)*2, -53, 53))
     assert x_str == x_hex == x_dec == x2_hex == Float(1.2)
     # x2_str and 1.2 are superficially the same
     assert str(x2_str) == str(Float(1.2))
     # but are different at the mpf level
-    assert Float(1.2)._mpf_ == (0, 5404319552844595L, -52, 53)
-    assert x2_str._mpf_ == (0, 10808639105689190L, -53, 53)
+    assert Float(1.2)._mpf_ == (0, long(5404319552844595), -52, 53)
+    assert x2_str._mpf_ == (0, long(10808639105689190), -53, 53)
 
-    assert Float((0, 0L, -123, -1)) == Float('nan')
-    assert Float((0, 0L, -456, -2)) == Float('inf') == Float('+inf')
-    assert Float((1, 0L, -789, -3)) == Float('-inf')
+    assert Float((0, long(0), -123, -1)) == Float('nan')
+    assert Float((0, long(0), -456, -2)) == Float('inf') == Float('+inf')
+    assert Float((1, long(0), -789, -3)) == Float('-inf')
 
     raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
 
@@ -1321,12 +1322,12 @@ def test_mpmath_issues():
     from sympy.mpmath.libmp.libmpf import _normalize
     import sympy.mpmath.libmp as mlib
     rnd = mlib.round_nearest
-    mpf = (0, 0L, -123, -1, 53, rnd)  # nan
-    assert _normalize(mpf, 53) != (0, 0L, 0, 0)
-    mpf = (0, 0L, -456, -2, 53, rnd)  # +inf
-    assert _normalize(mpf, 53) != (0, 0L, 0, 0)
-    mpf = (1, 0L, -789, -3, 53, rnd)  # -inf
-    assert _normalize(mpf, 53) != (0, 0L, 0, 0)
+    mpf = (0, long(0), -123, -1, 53, rnd)  # nan
+    assert _normalize(mpf, 53) != (0, long(0), 0, 0)
+    mpf = (0, long(0), -456, -2, 53, rnd)  # +inf
+    assert _normalize(mpf, 53) != (0, long(0), 0, 0)
+    mpf = (1, long(0), -789, -3, 53, rnd)  # -inf
+    assert _normalize(mpf, 53) != (0, long(0), 0, 0)
 
     from sympy.mpmath.libmp.libmpf import fnan
     assert mlib.mpf_eq(fnan, fnan)
@@ -1335,13 +1336,13 @@ def test_mpmath_issues():
 def test_Catalan_EulerGamma_prec():
     n = GoldenRatio
     f = Float(n.n(), 5)
-    assert f._mpf_ == (0, 212079L, -17, 18)
+    assert f._mpf_ == (0, long(212079), -17, 18)
     assert f._prec == 20
     assert n._as_mpf_val(20) == f._mpf_
 
     n = EulerGamma
     f = Float(n.n(), 5)
-    assert f._mpf_ == (0, 302627L, -19, 19)
+    assert f._mpf_ == (0, long(302627), -19, 19)
     assert f._prec == 20
     assert n._as_mpf_val(20) == f._mpf_
 

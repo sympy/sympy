@@ -1,4 +1,6 @@
 """ Change index / Reorder / Reverse order of limits of Sums and Products"""
+from __future__ import print_function, division
+
 from sympy.concrete import Product, Sum
 from sympy import S
 

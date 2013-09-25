@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from collections import defaultdict
 import operator
 
@@ -7,7 +9,7 @@ from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
 from sympy.core.cache import cacheit
 from sympy.core.logic import fuzzy_not
-from sympy.core.compatibility import cmp_to_key
+from sympy.core.compatibility import cmp_to_key, reduce, xrange
 from sympy.core.expr import Expr
 
 # internal marker to indicate:
@@ -175,7 +177,7 @@ class Mul(Expr, AssocOp):
             if b.is_Rational:
                 a, b = b, a
             assert not a is S.One
-            if a and a.is_Rational:
+            if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
                     if r is not S.One:  # 2-arg hack
@@ -417,19 +419,19 @@ class Mul(Expr, AssocOp):
             inv_exp_dict.setdefault(e, []).append(b)
         for e, b in inv_exp_dict.items():
             inv_exp_dict[e] = cls(*b)
-        c_part.extend([Pow(b, e) for e, b in inv_exp_dict.iteritems() if e])
+        c_part.extend([Pow(b, e) for e, b in inv_exp_dict.items() if e])
 
         # b, e -> e' = sum(e), b
         # {(1/5, [1/3]), (1/2, [1/12, 1/4]} -> {(1/3, [1/5, 1/2])}
         comb_e = {}
-        for b, e in pnum_rat.iteritems():
+        for b, e in pnum_rat.items():
             comb_e.setdefault(Add(*e), []).append(b)
         del pnum_rat
         # process them, reducing exponents to values less than 1
         # and updating coeff if necessary else adding them to
         # num_rat for further processing
         num_rat = []
-        for e, b in comb_e.iteritems():
+        for e, b in comb_e.items():
             b = cls(*b)
             if e.q == 1:
                 coeff *= Pow(b, e)
@@ -487,7 +489,7 @@ class Mul(Expr, AssocOp):
             i += 1
 
         # combine bases of the new powers
-        for e, b in pnew.iteritems():
+        for e, b in pnew.items():
             pnew[e] = cls(*b)
 
         # handle -1 and I
@@ -505,7 +507,7 @@ class Mul(Expr, AssocOp):
                 # see if there is any positive base this power of
                 # -1 can join
                 neg1e = Rational(p, q)
-                for e, b in pnew.iteritems():
+                for e, b in pnew.items():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
                         break
@@ -515,7 +517,7 @@ class Mul(Expr, AssocOp):
                     c_part.append(Pow(S.NegativeOne, neg1e, evaluate=False))
 
         # add all the pnew powers
-        c_part.extend([Pow(b, e) for e, b in pnew.iteritems()])
+        c_part.extend([Pow(b, e) for e, b in pnew.items()])
 
         # oo, -oo
         if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
@@ -661,8 +663,10 @@ class Mul(Expr, AssocOp):
             return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import expand_mul
         other = []
         coeff = S.One
+        addterms = S.One
         for a in self.args:
             if a.is_real or a.is_imaginary:
                 coeff *= a
@@ -674,17 +678,23 @@ class Mul(Expr, AssocOp):
                         del other[i]
                         break
                 else:
-                    other.append(a)
+                    if a.is_Add:
+                        addterms *= a
+                    else:
+                        other.append(a)
             else:
                 other.append(a)
+        addre, addim = expand_mul(addterms, deep=False).as_real_imag()
         m = self.func(*other)
         if hints.get('ignore') == m:
             return None
         else:
             if coeff.is_real:
-                return (coeff*C.re(m), coeff*C.im(m))
+                return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
             else:
-                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m))
+                re = - C.im(coeff)*C.im(m)
+                im = C.im(coeff)*C.re(m)
+                return (re*addre - im*addim, re*addim + im*addre)
 
     @staticmethod
     def _expandsums(sums):
@@ -889,7 +899,7 @@ class Mul(Expr, AssocOp):
         # don't use _from_args to rebuild the numerators and denominators
         # as the order is not guaranteed to be the same once they have
         # been separated from each other
-        numers, denoms = zip(*[f.as_numer_denom() for f in self.args])
+        numers, denoms = list(zip(*[f.as_numer_denom() for f in self.args]))
         return self.func(*numers), self.func(*denoms)
 
     def as_base_exp(self):
@@ -1137,7 +1147,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            r = True
+            r, acc = True, 1
             for t in self.args:
                 if not t.is_integer:
                     return None
@@ -1146,8 +1156,11 @@ class Mul(Expr, AssocOp):
                 elif t.is_integer:
                     if r is False:
                         pass
+                    elif acc != 1 and (acc + t).is_odd:
+                        r = False
                     elif t.is_odd is None:
                         r = None
+                acc = t
             return r
 
         # !integer -> !odd
@@ -1427,7 +1440,10 @@ class Mul(Expr, AssocOp):
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
-        return powsimp(self.func(*terms).expand(), combine='exp', deep=True)
+        res = powsimp(self.func(*terms).expand(), combine='exp', deep=True)
+        if res.has(C.Order):
+            res += C.Order(x**n, x)
+        return res
 
     def _eval_as_leading_term(self, x):
         return self.func(*[t.as_leading_term(x) for t in self.args])
@@ -1590,6 +1606,6 @@ def expand_2arg(e):
     return bottom_up(e, do)
 
 
-from numbers import Rational
-from power import Pow
-from add import Add, _addsort, _unevaluated_Add
+from .numbers import Rational
+from .power import Pow
+from .add import Add, _addsort, _unevaluated_Add

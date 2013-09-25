@@ -1,5 +1,7 @@
 """High-level polynomials manipulation functions. """
 
+from __future__ import print_function, division
+
 from sympy.polys.polytools import (
     poly_from_expr, parallel_poly_from_expr, Poly)
 from sympy.polys.polyoptions import allowed_flags
@@ -14,6 +16,8 @@ from sympy.polys.polyerrors import (
 from sympy.utilities import numbered_symbols, take, public
 
 from sympy.core import S, Basic, Add, Mul
+
+from sympy.core.compatibility import xrange
 
 
 @public
@@ -84,10 +88,10 @@ def symmetrize(F, *gens, **args):
 
     for i in xrange(0, len(gens)):
         poly = symmetric_poly(i + 1, gens, polys=True)
-        polys.append((symbols.next(), poly.set_domain(dom)))
+        polys.append((next(symbols), poly.set_domain(dom)))
 
-    indices = range(0, len(gens) - 1)
-    weights = range(len(gens), 0, -1)
+    indices = list(range(0, len(gens) - 1))
+    weights = list(range(len(gens), 0, -1))
 
     result = []
 
@@ -237,12 +241,12 @@ def interpolate(data, x):
     n = len(data)
 
     if isinstance(data, dict):
-        X, Y = zip(*data.items())
+        X, Y = list(zip(*data.items()))
     else:
         if isinstance(data[0], tuple):
-            X, Y = zip(*data)
+            X, Y = list(zip(*data))
         else:
-            X = range(1, n + 1)
+            X = list(range(1, n + 1))
             Y = list(data)
 
     poly = interpolating_poly(n, x, X, Y)

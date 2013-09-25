@@ -46,6 +46,8 @@ For the sake of completeness, `f(n)` can be:
     [2] a rational function       -> rsolve_ratio
     [3] a hypergeometric function  -> rsolve_hyper
 """
+from __future__ import print_function, division
+
 from collections import defaultdict
 
 from sympy.core.singleton import S
@@ -62,7 +64,7 @@ from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
 from sympy.concrete import product
-from sympy.core.compatibility import default_sort_key
+from sympy.core.compatibility import default_sort_key, xrange
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -159,8 +161,8 @@ def rsolve_poly(coeffs, f, n, **hints):
         if terms[i][1] - i == b:
             degree_poly += terms[i][0]*FallingFactorial(x, i)
 
-    nni_roots = roots(degree_poly, x, filter='Z',
-        predicate=lambda r: r >= 0).keys()
+    nni_roots = list(roots(degree_poly, x, filter='Z',
+        predicate=lambda r: r >= 0).keys())
 
     if nni_roots:
         N = [max(nni_roots)]
@@ -205,8 +207,8 @@ def rsolve_poly(coeffs, f, n, **hints):
         A = r
         U = N + A + b + 1
 
-        nni_roots = roots(polys[r], filter='Z',
-            predicate=lambda r: r >= 0).keys()
+        nni_roots = list(roots(polys[r], filter='Z',
+            predicate=lambda r: r >= 0).keys())
 
         if nni_roots != []:
             a = max(nni_roots) + 1
@@ -402,7 +404,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     if not f.is_polynomial(n):
         return None
 
-    coeffs = map(sympify, coeffs)
+    coeffs = list(map(sympify, coeffs))
 
     r = len(coeffs) - 1
 
@@ -417,8 +419,8 @@ def rsolve_ratio(coeffs, f, n, **hints):
         p, q = res.as_numer_denom()
         res = quo(p, q, h)
 
-    nni_roots = roots(res, h, filter='Z',
-        predicate=lambda r: r >= 0).keys()
+    nni_roots = list(roots(res, h, filter='Z',
+        predicate=lambda r: r >= 0).keys())
 
     if not nni_roots:
         return rsolve_poly(coeffs, f, n, **hints)
@@ -510,11 +512,11 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     .. [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
     """
-    coeffs = map(sympify, coeffs)
+    coeffs = list(map(sympify, coeffs))
 
     f = sympify(f)
 
-    r, kernel = len(coeffs) - 1, []
+    r, kernel, symbols = len(coeffs) - 1, [], set()
 
     if not f.is_zero:
         if f.is_Add:
@@ -524,7 +526,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 if not g.is_hypergeometric(n):
                     return None
 
-                for h in similar.iterkeys():
+                for h in similar.keys():
                     if hypersimilar(g, h, n):
                         similar[h] += g
                         break
@@ -533,7 +535,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
             inhomogeneous = []
 
-            for g, h in similar.iteritems():
+            for g, h in similar.items():
                 inhomogeneous.append(g + h)
         elif f.is_hypergeometric(n):
             inhomogeneous = [f]
@@ -572,8 +574,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
-    p_factors = [ z for z in roots(p, n).iterkeys() ]
-    q_factors = [ z for z in roots(q, n).iterkeys() ]
+    p_factors = [ z for z in roots(p, n).keys() ]
+    q_factors = [ z for z in roots(q, n).keys() ]
 
     factors = [ (S.One, S.One) ]
 
@@ -611,13 +613,15 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if coeff is not S.Zero:
                 poly += coeff * Z**i
 
-        for z in roots(poly, Z).iterkeys():
+        for z in roots(poly, Z).keys():
             if z.is_zero:
                 continue
 
-            C = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n)
+            (C, s) = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n, symbols=True)
 
             if C is not None and C is not S.Zero:
+                symbols |= set(s)
+
                 ratio = z * A * C.subs(n, n + 1) / B / C
                 ratio = simplify(ratio)
                 # If there is a nonnegative root in the denominator of the ratio,
@@ -625,7 +629,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 # start the product with the term y(n_root + 1).
                 n0 = 0
                 for n_root in roots(ratio.as_numer_denom()[1], n).keys():
-                    n0 = max(n0, n_root + 1)
+                    if (n0 < (n_root + 1)) is True:
+                        n0 = n_root + 1
                 K = product(ratio, (n, n0, n - 1))
                 if K.has(factorial, FallingFactorial, RisingFactorial):
                     K = simplify(K)
@@ -633,9 +638,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 if casoratian(kernel + [K], n, zero=False) != 0:
                     kernel.append(K)
 
-    symbols = numbered_symbols('C')
     kernel.sort(key=default_sort_key)
-    sk = zip(symbols, kernel)
+    sk = list(zip(numbered_symbols('C'), kernel))
 
     if sk:
         for C, ker in sk:
@@ -644,7 +648,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
         return None
 
     if hints.get('symbols', False):
-        return (result, [s for s, k in sk])
+        symbols |= set([s for s, k in sk])
+        return (result, list(symbols))
     else:
         return result
 
@@ -737,12 +742,12 @@ def rsolve(f, y, init=None):
         else:
             i_part += coeff
 
-    for k, coeff in h_part.iteritems():
+    for k, coeff in h_part.items():
         h_part[k] = simplify(coeff)
 
     common = S.One
 
-    for coeff in h_part.itervalues():
+    for coeff in h_part.values():
         if coeff.is_rational_function(n):
             if not coeff.is_polynomial(n):
                 common = lcm(common, coeff.as_numer_denom()[1], n)
@@ -756,7 +761,7 @@ def rsolve(f, y, init=None):
         common = lcm(common, i_denom, n)
 
     if common is not S.One:
-        for k, coeff in h_part.iteritems():
+        for k, coeff in h_part.items():
             numer, denom = coeff.as_numer_denom()
             h_part[k] = numer*quo(common, denom, n)
 
@@ -771,12 +776,12 @@ def rsolve(f, y, init=None):
         i_part = i_part.subs(n, n + K).expand()
         common = common.subs(n, n + K).expand()
 
-        for k, coeff in h_part.iteritems():
+        for k, coeff in h_part.items():
             H_part[k + K] = coeff.subs(n, n + K).expand()
     else:
         H_part = h_part
 
-    K_max = max(H_part.iterkeys())
+    K_max = max(H_part.keys())
     coeffs = [H_part[i] for i in xrange(K_max + 1)]
 
     result = rsolve_hyper(coeffs, -i_part, n, symbols=True)
@@ -795,7 +800,7 @@ def rsolve(f, y, init=None):
 
         equations = []
 
-        for k, v in init.iteritems():
+        for k, v in init.items():
             try:
                 i = int(k)
             except TypeError:
@@ -814,7 +819,6 @@ def rsolve(f, y, init=None):
         if not result:
             return None
         else:
-            for k, v in result.iteritems():
-                solution = solution.subs(k, v)
+            solution = solution.subs(result)
 
     return solution

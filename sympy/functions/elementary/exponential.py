@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
@@ -8,6 +10,7 @@ from sympy.core.mul import Mul
 
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.core.compatibility import xrange
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -111,7 +114,7 @@ class ExpBase(Function):
         if be.is_polar:
             return rv
         besmall = abs(be) <= S.Pi
-        if besmall:
+        if besmall is True:
             return rv
         elif besmall is False and e.is_Rational and e.q == 2:
             return -rv

@@ -1,6 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
-        factor)
+        factor, cancel)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
         given, independent, dependent, where, FiniteRV, pspace, cdf,
@@ -37,7 +37,8 @@ def test_discreteuniform():
         assert P(Y <= x) == S(x + 6)/10
         assert P(Y >= x) == S(5 - x)/10
 
-    assert density(Die('D', 6)) == density(DiscreteUniform('U', range(1, 7)))
+    assert dict(density(Die('D', 6)).items()) == \
+           dict(density(DiscreteUniform('U', range(1, 7))).items())
 
 
 def test_dice():
@@ -159,7 +160,7 @@ def test_coins():
     assert P(Eq(C, D)) == S.Half
     assert density(Tuple(C, D)) == {(H, H): S.One/4, (H, T): S.One/4,
             (T, H): S.One/4, (T, T): S.One/4}
-    assert density(C) == {H: S.Half, T: S.Half}
+    assert dict(density(C).items()) == {H: S.Half, T: S.Half}
 
     F = Coin('F', S.One/10)
     assert P(Eq(F, H)) == S(1)/10
@@ -193,13 +194,12 @@ def test_binomial_symbolic():
     X = Binomial('X', n, p)
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
     assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
-    assert factor(simplify(skewness(X))) == factor((1-2*p)/sqrt(n*p*(1-p)))
+    assert cancel((skewness(X) - (1-2*p)/sqrt(n*p*(1-p)))) == 0
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
-    assert simplify(E(Y)) == simplify(n*(H*p + T*(1 - p)))
-
+    assert simplify(E(Y) - (n*(H*p + T*(1 - p)))) == 0
 
 def test_hypergeometric_numeric():
     for N in range(1, 5):
@@ -220,7 +220,7 @@ def test_hypergeometric_numeric():
 def test_FiniteRV():
     F = FiniteRV('F', {1: S.Half, 2: S.One/4, 3: S.One/4})
 
-    assert density(F) == {S(1): S.Half, S(2): S.One/4, S(3): S.One/4}
+    assert dict(density(F).items()) == {S(1): S.Half, S(2): S.One/4, S(3): S.One/4}
     assert P(F >= 2) == S.Half
 
     assert pspace(F).domain.as_boolean() == Or(
@@ -230,3 +230,9 @@ def test_density_call():
     x = Bernoulli('x', p)
     d = density(x)
     assert d(0) == 1 - p
+    assert d(S.Zero) == 1 - p
+    assert d(5) == 0
+
+    assert 0 in d
+    assert 5 not in d
+    assert d(S(0)) == d[S(0)]

@@ -1,5 +1,7 @@
 """Tools for setting up interactive sessions. """
 
+from __future__ import print_function, division
+
 from sympy.interactive.printing import init_printing
 
 preexec_source = """\
@@ -96,7 +98,7 @@ def int_to_Integer(s):
     1/2
     """
     from tokenize import generate_tokens, untokenize, NUMBER, NAME, OP
-    from StringIO import StringIO
+    from sympy.core.compatibility import StringIO
 
     def _is_int(num):
         """

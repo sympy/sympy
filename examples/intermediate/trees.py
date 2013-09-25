@@ -29,8 +29,8 @@ def main():
     s = Poly(A(x), x)
     num = list(reversed(s.coeffs()))[:11]
 
-    print s.as_expr()
-    print num
+    print(s.as_expr())
+    print(num)
 
 if __name__ == "__main__":
     main()

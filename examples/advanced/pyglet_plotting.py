@@ -10,7 +10,6 @@ Suggested Usage:    python -i plotting.py
 from sympy import symbols
 from sympy.plotting.pygletplot import PygletPlot
 from sympy import sin, cos, pi, sqrt, exp
-from sympy.core.compatibility import callable
 
 from time import sleep, clock
 
@@ -120,12 +119,12 @@ def main():
         start = clock()
         p[4] = x**2 + y**2, [100], [100], 'style=solid'
         p.wait_for_calculations()
-        print "lambda-based calculation took %s seconds." % (clock() - start)
+        print("lambda-based calculation took %s seconds." % (clock() - start))
 
         start = clock()
         p[4] = x**2 + y**2, [100], [100], 'style=solid; use_sympy_eval'
         p.wait_for_calculations()
-        print "sympy substitution-based calculation took %s seconds." % (clock() - start)
+        print("sympy substitution-based calculation took %s seconds." % (clock() - start))
 
     @example_wrapper
     def gradient_vectors():
@@ -200,11 +199,11 @@ def main():
             p.clear()
             examples[i]()
         else:
-            print "Not a valid example.\n"
-        print p
+            print("Not a valid example.\n")
+        print(p)
 
     example(0)  # 0 - 15 are defined above
-    print help_str()
+    print(help_str())
 
 if __name__ == "__main__":
     main()

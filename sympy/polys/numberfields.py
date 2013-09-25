@@ -1,5 +1,7 @@
 """Computational algebraic number field theory. """
 
+from __future__ import print_function, division
+
 from sympy import (
     S, C, Expr, Rational,
     Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi
@@ -40,6 +42,8 @@ from sympy.simplify.simplify import _mexpand, _is_sum_surds
 from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
+
+from sympy.core.compatibility import xrange
 
 
 def _choose_factor(factors, x, v, prec=200):
@@ -273,7 +277,7 @@ def _muly(p, x, y):
     d = dict_from_expr(p)[0]
     n = max(d.keys())[0]
     d1 = {}
-    for monom, coeff in d.iteritems():
+    for monom, coeff in d.items():
         i = monom[0]
         expv = (i, n - i)
         d1[expv] = coeff
@@ -586,7 +590,7 @@ def minimal_polynomial(ex, x=None, **args):
     mapping, symbols, replace = {}, {}, []
 
     def update_mapping(ex, exp, base=None):
-        a = generator.next()
+        a = next(generator)
         symbols[ex] = a
 
         if base is not None:
@@ -694,8 +698,8 @@ def minimal_polynomial(ex, x=None, **args):
 
         if res is None:
             bus = bottom_up_scan(ex)
-            F = [x - bus] + mapping.values()
-            G = groebner(F, symbols.values() + [x], order='lex')
+            F = [x - bus] + list(mapping.values())
+            G = groebner(F, list(symbols.values()) + [x], order='lex')
 
             _, factors = factor_list(G[-1])
             # by construction G[-1] has root `ex`
@@ -710,7 +714,7 @@ def minimal_polynomial(ex, x=None, **args):
         return result
 
 minpoly = minimal_polynomial
-
+__all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """
@@ -747,7 +751,7 @@ def primitive_element(extension, x=None, **args):
     F, Y = [], []
 
     for ext in extension:
-        y = generator.next()
+        y = next(generator)
 
         if ext.is_Poly:
             if ext.is_univariate:
@@ -828,7 +832,7 @@ def field_isomorphism_pslq(a, b):
 
     n, m, prev = 100, b.minpoly.degree(), None
 
-    for i in xrange(1, 5):
+    for i in range(1, 5):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 

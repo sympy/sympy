@@ -34,7 +34,7 @@ from sympy.core.power import Pow
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, ordered
+from sympy.core.compatibility import reduce, ordered, xrange
 from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
@@ -110,7 +110,7 @@ def integer_powers(exprs):
         newmults = [(i, j*common_denom) for i, j in terms[term]]
         newterms[newterm] = newmults
 
-    return sorted(newterms.iteritems(), key=lambda item: item[0].sort_key())
+    return sorted(iter(newterms.items()), key=lambda item: item[0].sort_key())
 
 
 class DifferentialExtension(object):
@@ -231,7 +231,7 @@ class DifferentialExtension(object):
                 (asin, acos, acot, atan): log,
             }
         #rewrite the trigonometric components
-            for candidates, rule in rewritables.iteritems():
+            for candidates, rule in rewritables.items():
                 self.newf = self.newf.rewrite(candidates, rule)
         else:
             if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
@@ -242,7 +242,7 @@ class DifferentialExtension(object):
             s = set(seq)
             new = atoms - s
             s = atoms.intersection(s)
-            s.update(filter(func, new))
+            s.update(list(filter(func, new)))
             return list(s)
 
         exps = set()
@@ -276,10 +276,8 @@ class DifferentialExtension(object):
             # _exp_part code can generate terms of this form, so we do need to
             # do this at each pass (or else modify it to not do that).
 
-            ratpows = filter(
-                lambda i: (i.base.is_Pow or i.base.func is exp)
-                and i.exp.is_Rational, self.newf.atoms(Pow).union(
-                self.newf.atoms(exp)))
+            ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
+                if (i.base.is_Pow or i.base.func is exp and i.exp.is_Rational)]
 
             ratpows_repl = [
                 (i, i.base.base**(i.exp*i.base.exp)) for i in ratpows]
@@ -497,8 +495,8 @@ class DifferentialExtension(object):
                         rad = Mul(*[term**(power/n) for term, power in ans])
                         self.newf = self.newf.xreplace(dict((exp(p*exparg),
                             exp(const*p)*rad) for exparg, p in others))
-                        self.newf = self.newf.xreplace(dict(zip(reversed(self.T),
-                            reversed([f(self.x) for f in self.Tfuncs]))))
+                        self.newf = self.newf.xreplace(dict(list(zip(reversed(self.T),
+                            reversed([f(self.x) for f in self.Tfuncs])))))
                         restart = True
                         break
                     else:
@@ -513,7 +511,7 @@ class DifferentialExtension(object):
                 dargd = argd**2
                 darga, dargd = darga.cancel(dargd, include=True)
                 darg = darga.as_expr()/dargd.as_expr()
-                self.t = self.ts.next()
+                self.t = next(self.ts)
                 self.T.append(self.t)
                 self.E_args.append(arg)
                 self.E_K.append(len(self.T) - 1)
@@ -567,7 +565,7 @@ class DifferentialExtension(object):
                     arga*derivation(Poly(argd, self.t), self))
                 dargd = argd**2
                 darg = darga.as_expr()/dargd.as_expr()
-                self.t = self.ts.next()
+                self.t = next(self.ts)
                 self.T.append(self.t)
                 self.L_args.append(arg)
                 self.L_K.append(len(self.T) - 1)
@@ -1254,7 +1252,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
                     L = reduced(inv*coeff, [s])[1]
                     coeffs.append(L.as_expr())
 
-                h = Poly(dict(zip(h.monoms(), coeffs)), DE.t)
+                h = Poly(dict(list(zip(h.monoms(), coeffs))), DE.t)
 
             H.append((s, h))
 
@@ -1349,7 +1347,7 @@ def integrate_primitive(a, d, DE, z=None):
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     z = z or Dummy("z")
-    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
@@ -1441,7 +1439,7 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     """
     # XXX: a and d must be canceled, or this might return incorrect results
     z = z or Dummy("z")
-    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
@@ -1466,15 +1464,19 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
         + residue_reduce_to_basic(g2, DE, z))
 
+    qas = qa.as_expr().subs(s)
     qds = qd.as_expr().subs(s)
     if conds == 'piecewise' and DE.x not in qds.free_symbols:
         # We have to be careful if the exponent is S.Zero!
+
+        # XXX: Does qd = 0 always necessarily correspond to the exponential
+        # equaling 1?
         ret += Piecewise(
-                (integrate(p/DE.t, DE.x), Eq(qds, 0)),
-                (qa.as_expr().subs(s) / qds, True)
+                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), Eq(qds, 0)),
+                (qas/qds, True)
             )
     else:
-        ret += qa.as_expr().subs(s) / qds
+        ret += qas/qds
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
@@ -1599,7 +1601,7 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
     # TODO: split out nonelementary integral
     # XXX: a and d must be canceled, or this might not return correct results
     z = z or Dummy("z")
-    s = zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs]))
+    s = list(zip(reversed(DE.T), reversed([f(DE.x) for f in DE.Tfuncs])))
 
     g1, h, r = hermite_reduce(a, d, DE)
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
@@ -1716,14 +1718,14 @@ class NonElementaryIntegral(Integral):
     >>> from sympy.abc import x
 
     >>> a = integrate(exp(-x**2), x, risch=True)
-    >>> print a
+    >>> print(a)
     Integral(exp(-x**2), x)
     >>> type(a)
     <class 'sympy.integrals.risch.NonElementaryIntegral'>
 
     >>> expr = (2*log(x)**2 - log(x) - x**2)/(log(x)**3 - x**2*log(x))
     >>> b = integrate(expr, x, risch=True)
-    >>> print b
+    >>> print(b)
     -log(-x + log(x))/2 + log(x + log(x))/2 + Integral(1/log(x), x)
     >>> type(b.atoms(Integral).pop())
     <class 'sympy.integrals.risch.NonElementaryIntegral'>

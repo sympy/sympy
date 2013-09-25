@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from functools import wraps
 
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
@@ -184,7 +186,8 @@ class MatrixExpr(Basic):
         def is_valid(idx):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
-                0 <= i < self.rows and 0 <= j < self.cols)
+                (0 <= i) is not False and (i < self.rows) is not False and
+                (0 <= j) is not False and (j < self.cols) is not False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -286,6 +289,7 @@ class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
+    _diff_wrt = True
 
 
 class MatrixSymbol(MatrixExpr):
@@ -300,7 +304,7 @@ class MatrixSymbol(MatrixExpr):
     >>> A.shape
     (3, 4)
     >>> 2*A*B + Identity(3)
-    2*A*B + I
+    I + 2*A*B
     """
     is_commutative = False
 
@@ -390,6 +394,9 @@ class Identity(MatrixExpr):
         else:
             return S.Zero
 
+    def _eval_determinant(self):
+        return S.One
+
 
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
@@ -427,6 +434,9 @@ class ZeroMatrix(MatrixExpr):
     def _eval_trace(self):
         return S.Zero
 
+    def _eval_determinant(self):
+        return S.Zero
+
     def conjugate(self):
         return self
 
@@ -436,12 +446,14 @@ class ZeroMatrix(MatrixExpr):
     def __nonzero__(self):
         return False
 
+    __bool__ = __nonzero__
+
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
 
-from matmul import MatMul
-from matadd import MatAdd
-from matpow import MatPow
-from transpose import Transpose
-from inverse import Inverse
+from .matmul import MatMul
+from .matadd import MatAdd
+from .matpow import MatPow
+from .transpose import Transpose
+from .inverse import Inverse

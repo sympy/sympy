@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from pyglet.gl import *
 from plot_mode import PlotMode
 from threading import Thread, Event, RLock
@@ -6,8 +8,6 @@ from sympy.core import S
 from sympy.core.compatibility import is_sequence
 from time import sleep
 import warnings
-
-from sympy.core.compatibility import callable
 
 
 class PlotModeBase(PlotMode):

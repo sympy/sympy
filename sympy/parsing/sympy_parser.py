@@ -1,14 +1,16 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
-from sympy_tokenize import \
+from __future__ import print_function, division
+
+from .sympy_tokenize import \
     generate_tokens, untokenize, TokenError, \
     NUMBER, STRING, NAME, OP, ENDMARKER
 
 from keyword import iskeyword
-from StringIO import StringIO
 import re
 import unicodedata
 
+from sympy.core.compatibility import exec_, StringIO
 from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
@@ -36,16 +38,14 @@ def _token_splittable(token):
 def _token_callable(token, local_dict, global_dict, nextToken=None):
     """
     Predicate for whether a token name represents a callable function.
+
+    Essentially wraps ``callable``, but looks up the token name in the
+    locals and globals.
     """
     func = local_dict.get(token[1])
     if not func:
         func = global_dict.get(token[1])
-    is_Function = getattr(func, 'is_Function', False)
-    if (is_Function or
-        (callable(func) and not hasattr(func, 'is_Function')) or
-            isinstance(nextToken, AppliedFunction)):
-        return True
-    return False
+    return callable(func)
 
 
 def _add_factorial_tokens(name, result):
@@ -176,7 +176,7 @@ def _apply_functions(tokens, local_dict, global_dict):
             symbol = tok
             result.append(tok)
         elif isinstance(tok, ParenthesisGroup):
-            if symbol:
+            if symbol and _token_callable(symbol, local_dict, global_dict):
                 result[-1] = AppliedFunction(symbol, tok)
                 symbol = None
             else:
@@ -207,7 +207,7 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (isinstance(tok, AppliedFunction) and
-                isinstance(nextTok, AppliedFunction)):
+              isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
         elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
@@ -228,7 +228,24 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
         elif (isinstance(tok, AppliedFunction) and nextTok[0] == NAME):
             # Applied function followed by implicitly applied function
             result.append((OP, '*'))
-    result.append(tokens[-1])
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              nextTok[0] == OP and nextTok[1] == '('):
+            # Constant followed by parenthesis
+            result.append((OP, '*'))
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              nextTok[0] == NAME and
+              not _token_callable(nextTok, local_dict, global_dict)):
+            # Constant followed by constant
+            result.append((OP, '*'))
+        elif (tok[0] == NAME and
+              not _token_callable(tok, local_dict, global_dict) and
+              (isinstance(nextTok, AppliedFunction) or nextTok[0] == NAME)):
+            # Constant followed by (implicitly applied) function
+            result.append((OP, '*'))
+    if tokens:
+        result.append(tokens[-1])
     return result
 
 
@@ -243,8 +260,8 @@ def _implicit_application(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and
-            nextTok[0] != OP and
-            nextTok[0] != ENDMARKER):
+              nextTok[0] != OP and
+              nextTok[0] != ENDMARKER):
             if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
@@ -277,7 +294,8 @@ def _implicit_application(tokens, local_dict, global_dict):
             result.append((OP, ')'))
             appendParen -= 1
 
-    result.append(tokens[-1])
+    if tokens:
+        result.append(tokens[-1])
 
     if appendParen:
         result.extend([(OP, ')')] * appendParen)
@@ -326,7 +344,8 @@ def function_exponentiation(tokens, local_dict, global_dict):
                 exponent = []
                 continue
         result.append(tok)
-    result.append(tokens[-1])
+    if tokens:
+        result.append(tokens[-1])
     if exponent:
         result.extend(exponent)
     return result
@@ -719,7 +738,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
 
     if global_dict is None:
         global_dict = {}
-        exec 'from sympy import *' in global_dict
+        exec_('from sympy import *', global_dict)
 
     code = stringify_expr(s, local_dict, global_dict, transformations)
     return eval_expr(code, local_dict, global_dict)

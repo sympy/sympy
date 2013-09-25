@@ -40,6 +40,8 @@ def test_roots_cubic():
 
     assert roots_cubic(Poly(x**3 + 1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
+    assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
+         S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
 
 
 def test_roots_quartic():
@@ -384,18 +386,18 @@ def test_roots_slow():
     f1 = x**2*c + (a/b) + x*c*d - a
     f2 = x**2*(a + b*(c - d)*a) + x*a*b*c/(b*d - d) + (a*d - c/d)
 
-    assert roots(f1, x).values() == [1, 1]
-    assert roots(f2, x).values() == [1, 1]
+    assert list(roots(f1, x).values()) == [1, 1]
+    assert list(roots(f2, x).values()) == [1, 1]
 
     (zz, yy, xx, zy, zx, yx, k) = symbols("zz,yy,xx,zy,zx,yx,k")
 
     e1 = (zz - k)*(yy - k)*(xx - k) + zy*yx*zx + zx - zy - yx
     e2 = (zz - k)*yx*yx + zx*(yy - k)*zx + zy*zy*(xx - k)
 
-    assert roots(e1 - e2, k).values() == [1, 1, 1]
+    assert list(roots(e1 - e2, k).values()) == [1, 1, 1]
 
     f = x**3 + 2*x**2 + 8
-    R = roots(f).keys()
+    R = list(roots(f).keys())
 
     assert f.subs(x, R[0]).simplify() == 0
     assert f.subs(x, R[1]).simplify() == 0
@@ -403,18 +405,18 @@ def test_roots_slow():
 
 
 def test_roots_inexact():
-    R1 = sorted([ r.evalf() for r in roots(x**2 + x + 1, x) ])
-    R2 = sorted([ r for r in roots(x**2 + x + 1.0, x) ])
+    R1 = roots(x**2 + x + 1, x, multiple=True)
+    R2 = roots(x**2 + x + 1.0, x, multiple=True)
 
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-12
 
-    f = x**4 + 3.0*sqrt(
-        2.0)*x**3 - (78.0 + 24.0*sqrt(3.0))*x**2 + 144.0*(2*sqrt(3.0) + 9.0)
+    f = x**4 + 3.0*sqrt(2.0)*x**3 - (78.0 + 24.0*sqrt(3.0))*x**2 \
+        + 144.0*(2*sqrt(3.0) + 9.0)
 
-    R1 = sorted(roots(f, multiple=True))
-    R2 = sorted([-12.7530479110482, -3.85012393732929,
-                4.89897948556636, 7.46155167569183])
+    R1 = roots(f, multiple=True)
+    R2 = (-12.7530479110482, -3.85012393732929,
+          4.89897948556636, 7.46155167569183)
 
     for r1, r2 in zip(R1, R2):
         assert abs(r1 - r2) < 1e-10

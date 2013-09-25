@@ -27,6 +27,7 @@ from operator import mul
 from sympy import im, sqrt, re
 
 from sympy.core import oo
+from sympy.core.compatibility import reduce
 from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
@@ -377,7 +378,7 @@ def spde(a, b, c, n, DE):
     pow_a = 0
 
     while True:
-        if n < 0:
+        if (n < 0) is True:
             if c.is_zero:
                 return (zero, zero, 0, zero, beta)
             raise NonElementaryIntegralException
