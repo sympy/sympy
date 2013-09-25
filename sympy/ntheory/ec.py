@@ -1,4 +1,5 @@
 from sympy.abc import x, y
+from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.polys.domains import FiniteField, QQ, RationalField
@@ -31,8 +32,6 @@ class EllipticCurve():
 
     """
 
-    O = (0, 1, 0)
-
     def __init__(self, a4, a6, a1=0, a2=0, a3=0, domain=QQ):
         self._domain = domain
         # Calculate discriminant
@@ -52,51 +51,26 @@ class EllipticCurve():
         elif isinstance(self._domain, RationalField):
             self._rank = None
 
+    def __call__(self, x, y, z=1):
+        return EllipticCurvePoint(x, y, z, self)
+
     def __contains__(self, point):
-        if self.characteristic == 0 and len(point) == 3 and point[2] == 0:
+        if is_sequence(point):
+            x, y, z = point[:3]
+        elif isinstance(point, EllipticCurvePoint):
+            x, y, z = point.x, point.y, point.z
+        else:
+            raise ValueError('Invalid point.')
+        if self.characteristic == 0 and z == 0:
             return True
-        return self._eq.subs({x: point[0], y: point[1]})
+        return self._eq.subs({x: x, y: y})
 
     def __repr__(self):
         return 'E({}): {}'.format(self._domain, self._eq)
 
-    def add(self, p1, p2, to_sympy=True):
-        """
-        Return new point R = p1 + p2 in curve.
-
-        Examples
-        ========
-
-        >>> from sympy.ntheory.ec import EllipticCurve
-        >>> e1 = EllipticCurve(-17, 16)
-        >>> e1.add((0, -4), (1, 0))
-        (15, -56, 1)
-
-        """
-        if len(p1) == 3 and p1[2] == 0:
-            return p2
-        if len(p2) == 3 and p2[2] == 0:
-            return p1
-        x1, y1 = p1[:2]
-        x2, y2 = p2[:2]
-        if x1 != x2:
-            slope = (y1 - y2) / (x1 - x2)
-        else:
-            if (y1 + y2) == 0:
-                return self.O
-            slope = (3 * x1**2 + self._a4) / (2 * y1)
-        x3 = slope**2 - x1 - x2
-        y3 = -y1 - slope * (x3 - x1)
-        if to_sympy:
-            try:
-                return self._domain.to_sympy(x3), self._domain.to_sympy(y3), 1
-            except TypeError:
-                pass
-        return x3, y3, 1
-
     def minimal(self):
         """
-        Return minimal Weierstrass equation Elliptic Curve.
+        Return minimal Weierstrass equation.
 
         Examples
         ========
@@ -115,57 +89,6 @@ class EllipticCurve():
         c4 = self._b2**2 - 24*self._b4
         c6 = -self._b2**3 + 36*self._b2*self._b4 - 216*self._b6
         return EllipticCurve(-27*c4, -54*c6, domain=self._domain)
-
-    def mul(self, p, n):
-        """
-        Return new point R = nP in curve.
-
-        Compute nP using Double-and-Add method.
-
-        Examples
-        ========
-
-        >>> from sympy.ntheory.ec import EllipticCurve
-        >>> e3 = EllipticCurve(-1, 9)
-        >>> e3.mul((1, -3), 3)
-        (664/169, 17811/2197, 1)
-
-        """
-        if n < 1:
-            return p
-        r = self.O
-        while n:
-            if n & 1:
-                r = self.add(r, p, to_sympy=False)
-            n >>= 1
-            p = self.add(p, p, to_sympy=False)
-        try:
-            return self._domain.to_sympy(r[0]), self._domain.to_sympy(r[1]), r[2]
-        except TypeError:
-            return r
-
-    def point_order(self, p):
-        """
-        Return order of point p.
-
-        Order of point is integer n that nP = O.
-        """
-        if p not in self:
-            raise ValueError('Invalid point.')
-        if p == self.O:
-            return 1
-        if p[1] == 0:
-            return 2
-        n = self.add(p, p)
-        if n[1] == -p[1]:
-            return 3
-        i = 2
-        while int(n[0]) == n[0]:
-            n = self.add(p, n)
-            i += 1
-            if n == self.O:
-                return i
-        return oo
 
     def points(self):
         """
@@ -186,9 +109,9 @@ class EllipticCurve():
             for i in range(char):
                 y = sqrt_mod(i**3 + self._a2*i**2 + self._a4*i + self._a6, char)
                 if y is not None:
-                    yield i, y
+                    yield self(i, y)
                     if y != 0:
-                        yield i, char - y
+                        yield self(i, char - y)
         else:
             raise NotImplementedError("Still not implemented")
 
@@ -196,6 +119,7 @@ class EllipticCurve():
         """
         Return torsion points of curve over Rational number.
 
+        Return point objects those are finite order.
         According to Nagell-Lutz theorem, torsion point p(x, y)
         x and y are integers, either y = 0 or y**2 is divisor
         of discriminent. According to Mazur's theorem, there are
@@ -207,21 +131,22 @@ class EllipticCurve():
         >>> from sympy.ntheory.ec import EllipticCurve
         >>> e2 = EllipticCurve(-43, 166)
         >>> sorted(e2.torsion_points())
-        [(-5, -16), (-5, 16), (0, 1, 0), (3, -8), (3, 8), (11, -32), (11, 32)]
+        [(-5, -16), (-5, 16), O, (3, -8), (3, 8), (11, -32), (11, 32)]
 
         """
         if self.characteristic > 0:
             raise ValueError("No torsion point for Finite Field.")
-        l = [self.O]
+        l = [EllipticCurvePoint.point_at_infinity(self)]
         for x in solve(self._eq.subs(y, 0)):
-            if x.is_rational and self.point_order((x, 0,)) != oo:
-                l.append((x, 0,))
-        for i in divisors(self.discriminent, generator=True):
+            if x.is_rational:
+                l.append(self(x, 0))
+        for i in divisors(self.discriminant, generator=True):
             j = int(i**.5)
             if j**2 == i:
                 for x in solve(self._eq.subs(y, j)):
-                    if x.is_rational and self.point_order((x, j,)) != oo:
-                        l.extend([(x, j,), (x, -j,)])
+                    p = self(x, j)
+                    if x.is_rational and p.order() != oo:
+                        l.extend([p, -p])
         return l
 
     @property
@@ -229,23 +154,39 @@ class EllipticCurve():
         """
         Return domain characteristic.
 
+        Examples
+        ========
+
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e2 = EllipticCurve(-43, 166)
+        >>> e2.characteristic
+        0
+
         """
         return self._domain.characteristic()
 
     @property
-    def discriminent(self):
+    def discriminant(self):
         """
-        Return curve discriminent.
+        Return curve discriminant.
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory.ec import EllipticCurve
+        >>> e2 = EllipticCurve(0, 17)
+        >>> e2.discriminant
+        -124848
 
         """
-        return self._discrim
+        return int(self._discrim)
 
     @property
     def is_singular(self):
         """
-        Return True if curve discriminent is equal to zero.
+        Return True if curve discriminant is equal to zero.
         """
-        return self.discriminent == 0
+        return self.discriminant == 0
 
     @property
     def j_invariant(self):
@@ -263,7 +204,7 @@ class EllipticCurve():
 
         """
         c4 = self._b2**2 - 24*self._b4
-        return c4**3 / self.discriminent
+        return c4**3 / self.discriminant
 
     @property
     def order(self):
@@ -294,3 +235,101 @@ class EllipticCurve():
         if self._rank is not None:
             return self._rank
         raise NotImplementedError("Still not implemented")
+
+EC = EllipticCurve
+
+class EllipticCurvePoint():
+    """
+    Point of Elliptic Curve
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.ec import EllipticCurve
+    >>> e1 = EllipticCurve(-17, 16)
+    >>> p1 = e1(0, -4, 1)
+    >>> p2 = e1(1, 0)
+    >>> p1 + p2
+    (15, -56)
+    >>> e3 = EllipticCurve(-1, 9)
+    >>> e3(1, -3) * 3
+    (664/169, 17811/2197)
+
+    """
+
+    @staticmethod
+    def point_at_infinity(curve):
+        return EllipticCurvePoint(0, 1, 0, curve)
+
+    def __init__(self, x, y, z, curve):
+        self.x = x
+        self.y = y
+        self.z = z
+        self._curve = curve
+
+    def __add__(self, p):
+        if self.z == 0:
+            return p
+        if p.z == 0:
+            return self
+        x1, y1 = self.x, self.y
+        x2, y2 = p.x, p.y
+        if x1 != x2:
+            slope = (y1 - y2) / (x1 - x2)
+        else:
+            a4 = self._curve._a4
+            if (y1 + y2) == 0:
+                return self.point_at_infinity(self._curve)
+            slope = (3 * x1**2 + a4) / (2 * y1)
+        x3 = slope**2 - x1 - x2
+        y3 = -y1 - slope * (x3 - x1)
+        return EllipticCurvePoint(x3, y3, 1, self._curve)
+
+    def __lt__(self, other):
+        return (self.x, self.y, self.z) < (other.x, other.y, other.z)
+
+    def __mul__(self, n):
+        n = as_int(n)
+        if n < 1:
+            return self
+        r = self.point_at_infinity(self._curve)
+        p = self
+        while n:
+            if n & 1:
+                r = r + p
+            n >>= 1
+            p = p + p
+        return r
+
+    def __neg__(self):
+        return EllipticCurvePoint(self.x, -self.y, self.z, self._curve)
+
+    def __repr__(self):
+        if self.z == 0:
+            return 'O'
+        dom = self._curve._domain
+        try:
+            return '({}, {})'.format(dom.to_sympy(self.x), dom.to_sympy(self.y))
+        except TypeError:
+            pass
+        return '({}, {})'.format(self.x, self.y)
+
+    def order(self):
+        """
+        Return point order n where nP = 0.
+
+        """
+        if self.z == 0:
+            return 1
+        if self.y == 0:  # P = -P
+            return 2
+        p = self * 2
+        if p.y == -self.y:  # 2P = -P
+            return 3
+        i = 2
+        while int(p.x) == p.x:
+            p = self + p
+            i += 1
+            if p.z == 0:
+                return i
+        return oo
