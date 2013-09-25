@@ -285,9 +285,8 @@ def _invertx(p, x):
     """
     p1 = poly_from_expr(p, x)[0]
 
-    terms = p1.terms()
-    n = terms[0][0][0]
-    a = [c * x**(n - i[0]) for i, c in terms]
+    n = degree(p1)
+    a = [c * x**(n - i) for (i,), c in p1.terms()]
     return Add(*a)
 
 
@@ -297,9 +296,8 @@ def _muly(p, x, y):
     """
     p1 = poly_from_expr(p, x)[0]
 
-    terms = p1.terms()
-    n = terms[0][0][0]
-    a = [c * x**i[0] * y**(n - i[0]) for i, c in terms]
+    n = degree(p1)
+    a = [c * x**i * y**(n - i) for (i,), c in p1.terms()]
     return Add(*a)
 
 
