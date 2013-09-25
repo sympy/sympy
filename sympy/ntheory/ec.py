@@ -290,9 +290,11 @@ class EllipticCurvePoint():
 
     def __mul__(self, n):
         n = as_int(n)
-        if n < 1:
-            return self
         r = self.point_at_infinity(self._curve)
+        if n == 0:
+            return r
+        if n < 0:
+            return -self * -n
         p = self
         while n:
             if n & 1:
