@@ -132,7 +132,6 @@ def test_cds_cancel_primitive():
         (y1, y2)
 
 
-
 def test_cds_cancel_exp():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)],
         'L_K': [], 'E_K': [1], 'L_args': [], 'E_args': [x], 'Tfuncs': [exp]})

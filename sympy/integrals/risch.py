@@ -1030,36 +1030,6 @@ def polynomial_reduce(p, DE):
     return (q, p)
 
 
-def polynomial_reduce_kt(pa, pd, DE):
-    """
-    Polynomial Reduction.
-
-    Given a derivation D on k(t) and p in k(t) where t is a nonlinear
-    monomial over k, return q, r in k[t] such that p = Dq  + r, and
-    deg(r) < deg_t(Dt).
-    """
-    qa = Poly(0, DE.t)
-    qd = Poly(1, DE.t)
-    while pa.degree(DE.t) - pd.degree(DE.t) >= DE.d.degree(DE.t):
-        m = pa.degree(DE.t) - pd.degree(DE.t) - DE.d.degree(DE.t) + 1
-        if m < 0:
-            q0_a = Poly(pa.LC()/(m*DE.d.LC()), DE.t), DE.t
-            q0_d = Poly(DE.t**-m, DE.t)
-        else:
-            q0_a = Poly(DE.t**m, DE.t).mul(Poly(pa.LC()/(m*DE.d.LC()), DE.t))
-            q0_d = Poly(1, DE.t)
-        qa = qa*q0_d + qd*q0_a
-        qd = qd*q0_d
-        Dq0_a = derivation(q0_a, DE)*q0_d + derivation(q0_d, DE)*q0_a
-        Dq0_d = q0_d**2
-
-        pa = pa*Dq0_d - Dq0_a*pd
-        pd = pd*Dq0_d
-
-    q = (qa.as_expr()/qd.as_expr()).as_poly(DE.t)
-    return (q, pa, pd)
-
-
 def laurent_series(a, d, F, n, DE):
     """
     Contribution of F to the full partial fraction decomposition of A/D

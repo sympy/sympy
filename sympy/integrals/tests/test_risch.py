@@ -157,15 +157,6 @@ def test_polynomial_reduce():
     assert polynomial_reduce(Poly(0, t), DE) == \
         (Poly(0, t), Poly(0, t))
 
-def test_polynomial_reduce_kt():
-    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t**2, t)]})
-    assert polynomial_reduce_kt(Poly(1 + x*t + t**2, t), Poly(1, t), DE) == \
-         (Poly(t, t), Poly(x*t, t), Poly(1, t))
-    assert polynomial_reduce_kt(Poly(0, t), Poly(1, t), DE) == \
-         (Poly(0, t), Poly(0, t), Poly(1, t))
-    assert polynomial_reduce_kt(Poly(t**2 - 1, t), Poly(t**2 + 1, t), DE) == \
-         (Poly(0, t), Poly(t**2 - 1, t), Poly(t**2 + 1, t))
-
 
 def test_laurent_series():
     DE = DifferentialExtension(extension={'D': [Poly(1, x)]})
@@ -485,7 +476,7 @@ def test_is_deriv():
     DE = DifferentialExtension(extension={'D':[Poly(1, x), Poly(1/x, t1), Poly((t2**2 + 1)/x, t2)],
         'Tfuncs':[log, Lambda(x, tan(log(x)))], 'L_K':[1], 'L_args':[x], 'E_K':[],
         'E_args':[], 'T_K':[2], 'T_args':[t1]})
-    assert is_deriv(Poly(t2**2 + 1, t2), Poly(t2*x, t2), DE) == (log(tan(log(x))), 0)
+    assert is_deriv(Poly(t2**2 + 1, t2), Poly(t2*x, t2), DE) == (log(t2), 0)
     assert is_deriv(Poly(0, t2), Poly(x**3*t2**2, t2), DE) == (0, 0)
 
 
