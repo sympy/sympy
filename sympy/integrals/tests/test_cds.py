@@ -119,6 +119,18 @@ def test_cds_cancel_primitive():
     n = 3
     assert cds_cancel_primitive(Poly(sqrt(-1), t), b1, b2, a, b, DE, n) == \
         (y1, y2)
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t1, t1), Poly(t1/(t1 + 1), t2)],
+       'L_K': [1], 'E_K': [], 'L_args': [x], 'E_args': []})
+    y1 = Poly(1 + t2, t2)
+    y2 = Poly(t2*t1, t2)
+    b1 = Poly(x + 1, t2)
+    b2 = Poly(2*x, t2)
+    a = Poly(derivation(y1, DE) + b1*y1 - b2*y2, DE.t)
+    b = Poly(derivation(y2, DE) + b2*y1 + b1*y2, DE.t)
+    n = 3
+    assert cds_cancel_primitive(Poly(sqrt(-1), t), b1, b2, a, b, DE, n) == \
+        (y1, y2)
+
 
 
 def test_cds_cancel_exp():
