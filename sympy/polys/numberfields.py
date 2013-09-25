@@ -58,13 +58,13 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
         return factors[0]
 
     points = {}
-    gens = dom.gens if hasattr(dom, 'gens') else []
+    symbols = dom.symbols if hasattr(dom, 'symbols') else []
 
-    for n in range(bound**len(gens)):
+    for n in range(bound**len(symbols)):
         prec1 = 10
         n_temp = n
-        for gen in gens:
-            points[gen] = n_temp % bound
+        for s in symbols:
+            points[s] = n_temp % bound
             n_temp = int(n_temp/bound)
 
         while True:
@@ -519,10 +519,8 @@ def _minpoly_compose(ex, x, dom):
         return ex.q*x - ex.p
     if ex is I:
         return x**2 + 1
-    if hasattr(dom, 'gens'):
-        gens = [gen.as_expr() for gen in dom.gens]
-        if ex in gens:
-            return x - ex
+    if hasattr(dom, 'symbols') and ex in dom.symbols:
+        return x - ex
 
     if dom.is_QQ and _is_sum_surds(ex):
         # eliminate the square roots
@@ -620,8 +618,8 @@ def minimal_polynomial(ex, x=None, **args):
         x, cls = Dummy('x'), PurePoly
 
     if not dom:
-        dom = FractionField(QQ, *ex.free_symbols) if ex.free_symbols else QQ
-    if hasattr(dom, 'gens') and x in dom.gens:
+        dom = FractionField(QQ, list(ex.free_symbols)) if ex.free_symbols else QQ
+    if hasattr(dom, 'symbols') and x in dom.symbols:
         raise GeneratorsError("the variable %s is an element of the ground domain %s" % (x, dom))
 
     if compose:
