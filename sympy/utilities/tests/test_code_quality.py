@@ -77,7 +77,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
     for fname in files:
         if not exists(fname) or not isfile(fname):
             continue
-        if filter(lambda ex: ex in fname, exclusions):
+        if any(ex in fname for ex in exclusions):
             continue
         if pattern is None or re.match(pattern, fname):
             file_check(fname)
