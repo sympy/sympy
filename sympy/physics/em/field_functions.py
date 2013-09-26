@@ -1,10 +1,24 @@
 from sympy import diff, integrate, S
-from sympy.physics.mechanics import MovingRefFrame, Vector
-from sympy.physics.mechanics.core import _check_vector, _check_frame
+from sympy.physics.mechanics import ReferenceFrame, Vector
+from sympy.physics.mechanics.essential import _check_frame, _check_vector
 
 
 def curl(vect, frame):
-    """ The curl of a vector field in given frame """
+    """
+    The curl of a vector field in the given frame
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector operand
+
+    frame : ReferenceFrame
+        The reference frame to calculate the curl in
+
+    Examples
+    ========
+    """
 
     _check_vector(vect)
     if vect == 0:
@@ -20,7 +34,21 @@ def curl(vect, frame):
 
 
 def divergence(vect, frame):
-    """ The divergence of a vector field in given frame """
+    """
+    The divergence of a vector field in the given frame
+
+    Parameters
+    ==========
+
+    vect : Vector
+        The vector operand
+
+    frame : ReferenceFrame
+        The reference frame to calculate the divergence in
+
+    Examples
+    ========
+    """
 
     _check_vector(vect)
     if vect == 0:
@@ -35,23 +63,26 @@ def divergence(vect, frame):
     return out
 
 
-def separate(vect):
-    
+def _separate(vect):
+    """
+    The components of a vector in different frames, as per its definition
+
+    Returns a dict mapping each frame to the component in it
+    """
     _check_vector(vect)
     if vect == 0:
         return {}
     components = {}
     for x in vect.args:
         components[x[1]] = 0
-        components[x[1]] += x[0][0] * x[1].x
-        components[x[1]] += x[0][1] * x[1].y
-        components[x[1]] += x[0][2] * x[1].z
+        for i, v in enumerate(x[1]):
+            components[x[1]] += x[0][i] * v
     return components
 
 
 def is_conservative(field):
     """
-    Check if a field is conservative
+    Checks if a field is conservative
 
     Paramaters
     ==========
@@ -82,7 +113,7 @@ def is_conservative(field):
 
 def is_solenoidal(field):
     """
-    Check if a field is solenoidal
+    Checks if a field is solenoidal
 
     Paramaters
     ==========
@@ -93,7 +124,7 @@ def is_solenoidal(field):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import MovingRefFrame, is_solenoidal
+    >>> from sympy.physics.mechanics import ReferenceFrame, is_solenoidal
     >>> R = MovingRefFrame('R')
     >>> is_solenoidal(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z)
     True
@@ -113,7 +144,7 @@ def is_solenoidal(field):
 
 def scalar_potential(field, frame):
     """
-    Returns the scalar potential function of a field in a given frame
+    The scalar potential function of a field in a given frame
     (without the added integration constant)
 
     Parameters
@@ -123,14 +154,15 @@ def scalar_potential(field, frame):
         The vector field whose scalar potential function is to be
         calculated
 
-    frame : MovingRefFrame
+    frame : ReferenceFrame
         The frame to do the calculation in
 
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import MovingRefFrame
+    >>> from sympy.physics.mechanics import ReferenceFrame
     >>> from sympy.physics.em import scalar_potential, gradient
+    >>> R = ReferenceFrame('R')
     >>> scalar_potential(R.z, R) == R[2]
     True
     >>> scalar_field = 2*R[0]**2*R[1]*R[2]
@@ -169,15 +201,15 @@ def scalar_potential_difference(field, frame, position1, position2):
     considered. If a conservative vector field is provided, the values
     of its scalar potential function at the two points are used.
 
-    Returns potential of position 2 - potential of position 1
+    Returns (potential at position 2) - (potential at position 1)
 
     Parameters
     ==========
 
-    field : Vector/scalar field
+    field : Vector/sympyfiable
         The field to calculate wrt
 
-    frame : MovingRefFrame
+    frame : ReferenceFrame
         The frame to do the calculations in
 
     position1 : Vector
@@ -219,7 +251,7 @@ def gradient(scalar, frame):
     scalar : sympyfiable
         The scalar field to take the gradient of
 
-    frame : MovingRefFrame
+    frame : ReferenceFrame
         The frame to calculate the gradient in
 
     Examples
