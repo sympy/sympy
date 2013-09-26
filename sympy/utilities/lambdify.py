@@ -142,8 +142,7 @@ def _import(module, reload="False"):
         namespace[sympyname] = namespace[translation]
 
 
-def lambdify(args, expr, modules=None, printer=None, use_imps=True,
-             dummify=True):
+def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
@@ -285,7 +284,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True,
             namespace.update({str(term): term})
 
     # Create lambda function.
-    lstr = lambdastr(args, expr, printer=printer, dummify=dummify)
+    lstr = lambdastr(args, expr, printer=printer, dummify=True)
     return eval(lstr, namespace)
 
 
@@ -343,7 +342,7 @@ def lambdastr(args, expr, printer=None, dummify=False):
             dummies = flatten([sub_args(a, dummies_dict) for a in args])
             return ",".join(str(a) for a in dummies)
         else:
-            if isinstance(args, (Symbol, Function)):
+            if isinstance(args, Function):
                 dummies = Dummy()
                 dummies_dict.update({args : dummies})
                 return str(dummies)
