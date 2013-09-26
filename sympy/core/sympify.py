@@ -50,8 +50,7 @@ class CantSympify(object):
     pass
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, evaluate=True):
-    """
-    Converts an arbitrary expression to a type that can be used inside SymPy.
+    """Converts an arbitrary expression to a type that can be used inside SymPy.
 
     For example, it will convert Python ints into instance of sympy.Rational,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
@@ -155,6 +154,21 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False, eval
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: True
+
+    Evaluation
+    ----------
+
+    If the option ``evaluate`` is set to ``False``, then arithmetic and
+    operators will be converted into their SymPy equivalents and the
+    ``evaluate=False`` option will be added. Nested ``Add`` or ``Mul`` will
+    be denested first. This is done via an AST transformation that replaces
+    operators with their SymPy equivalents, so if an operand redefines any
+    of those operations, the redefined operators will not be used.
+
+    >>> sympify('2**2 / 3 + 5')
+    19/3
+    >>> sympify('2**2 / 3 + 5', evaluate=False)
+    2**2/3 + 5
 
     Extending
     ---------
