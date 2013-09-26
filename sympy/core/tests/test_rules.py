@@ -39,4 +39,4 @@ def test_MapMatcher():
 
     assert mm2[x+y] == {a: y}
     assert mm2[2*x+y] == {a: x+y}
-    assert mm2[y] == None
+    raises(KeyError, lambda: mm2[y])

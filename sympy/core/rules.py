@@ -73,6 +73,11 @@ class MapMatcher(object):
     This object is assigned pattern matching expressions and corresponding functions.
     The functions take one parameter, i.e. the dictionary of substitutions.
 
+    Data can be passed on costruction, or later with item assignment.
+    It is important to notice that the matched pattern for a given expression
+    is the first pattern that matches, in the order given upon construction,
+    any following pattern is disregarded.
+
     Examples
     ========
 
@@ -89,20 +94,23 @@ class MapMatcher(object):
     >>> map_matcher[y + 2]
     ('second matched', {a_: 2})
 
-    If no match is successful, return ``None``
+    If no match is successful, a ``KeyError`` exception is raised.
 
-    >>> map_matcher[S.One]
+    >>> # map_matcher[S.One]
 
     """
-    def __init__(self):
+    def __init__(self, initial_data=()):
         self._pattern_func_list = []
+        for i, j in initial_data:
+            self[i] = j
 
     def __setitem__(self, key, value):
         self._pattern_func_list.append( (key, value) )
 
     def __getitem__(self, key):
+        # the first match is returned.
         for pattern, fun in self._pattern_func_list:
             d = key.match(pattern)
             if d:
                 return fun(d)
-        return None
+        raise KeyError()
