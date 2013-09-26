@@ -1,7 +1,7 @@
 from sympy.core.rules import Transform
 from sympy import symbols, Wild, sin, cos
 from sympy.core.rules import MapMatcher
-
+from sympy import Tuple
 from sympy.utilities.pytest import raises
 
 
@@ -23,20 +23,20 @@ def test_MapMatcher():
     c = Wild('c')
 
     mm = MapMatcher()
-    mm[x+sin(a)] = lambda d: ("1", d)
-    mm[x+y+a] = lambda d: ("2", d)
-    mm[a/b] = lambda d: ("3", d)
+    mm[x+sin(a)] = Tuple(1, a, b)
+    mm[x+y+a] = Tuple(2, a, b)
+    mm[a/b] = Tuple(3, a, b)
 
-    assert mm[x+sin(3)] == ("1", {a: 3})
-    assert mm[x/y] == ("3", {a: x, b: y})
-    assert mm[x+y+3] == ("2", {a: 3})
-    assert mm[x+y] == ("2", {a: 0})
-    assert mm[cos(x)+3] == ('3', {b: 1/(cos(x) + 3), a: 1})
+    assert mm[x+sin(3)] == Tuple(1, 3, b)
+    assert mm[x/y] == Tuple(3, x, y)
+    assert mm[x+y+3] == Tuple(2, 3, b)
+    assert mm[x+y] == Tuple(2, 0, b)
+    assert mm[cos(x)+3] == Tuple(3, 1, 1/(cos(x) + 3))
 
     mm2 = MapMatcher()
-    mm2[x+a] = lambda d : d
-    mm2[2*x+2*a] = lambda d : d
+    mm2[x+a] = Tuple(1, a)
+    mm2[2*x+2*a] = Tuple(2, a)
 
-    assert mm2[x+y] == {a: y}
-    assert mm2[2*x+y] == {a: x+y}
+    assert mm2[x+y] == Tuple(1, y)
+    assert mm2[2*x+y] == Tuple(1, x+y)
     raises(KeyError, lambda: mm2[y])

@@ -83,16 +83,17 @@ class MapMatcher(object):
 
     >>> from sympy.core.rules import MapMatcher
     >>> from sympy import symbols, Wild, sin, S
+    >>> from sympy import Tuple
     >>> x, y = symbols('x y')
     >>> a = Wild('a', exclude=[x, y])
     >>> b = Wild('b', exclude=[x])
     >>> map_matcher = MapMatcher()
-    >>> map_matcher[a/b + x] = lambda d : ("first matched", d)
-    >>> map_matcher[a + y] = lambda d : ("second matched", d)
+    >>> map_matcher[a/b + x] = Tuple(a, b)
+    >>> map_matcher[a + y] = Tuple(a, b)
     >>> map_matcher[3/y + x]
-    ('first matched', {a_: 3, b_: y})
+    (3, y)
     >>> map_matcher[y + 2]
-    ('second matched', {a_: 2})
+    (2, b_)
 
     If no match is successful, a ``KeyError`` exception is raised.
 
@@ -109,8 +110,8 @@ class MapMatcher(object):
 
     def __getitem__(self, key):
         # the first match is returned.
-        for pattern, fun in self._pattern_func_list:
+        for pattern, value in self._pattern_func_list:
             d = key.match(pattern)
             if d:
-                return fun(d)
+                return value.xreplace(d)
         raise KeyError()
