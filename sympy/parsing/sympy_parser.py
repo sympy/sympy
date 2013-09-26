@@ -768,8 +768,20 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.Mult: 'Mul',
         ast.Pow: 'Pow',
         ast.Sub: 'Add',
-        ast.Div: 'Mul'
+        ast.Div: 'Mul',
+        ast.BitOr: 'Or',
+        ast.BitAnd: 'And',
+        ast.BitXor: 'Not',
     }
+
+    def flatten(self, args, func):
+        result = []
+        for arg in args:
+            if isinstance(arg, ast.Call) and arg.func.id == func:
+                result.extend(self.flatten(arg.args, func))
+            else:
+                result.append(arg)
+        return result
 
     def visit_BinOp(self, node):
         if node.op.__class__ in self.operators:
@@ -794,5 +806,10 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
                 starargs=None,
                 kwargs=None
             )
+
+            if sympy_class in ('Add', 'Mul'):
+                # Denest Add or Mul as appropriate
+                new_node.args = self.flatten(new_node.args, sympy_class)
+
             return new_node
         return node
