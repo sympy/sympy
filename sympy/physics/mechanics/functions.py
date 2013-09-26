@@ -558,7 +558,7 @@ def get_motion_params(frame, **kwargs):
         #Find derivative of vectdiff
         vectdiff2 = frame.dt(vectdiff)
         #Integrate and use boundary condition
-        vectdiff0 = Vector([])
+        vectdiff0 = Vector(0)
         for dim in frame:
             function1 = vectdiff1.dot(dim)
             vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
