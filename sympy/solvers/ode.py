@@ -401,6 +401,20 @@ def dsolve(eq, func=None, hint="default", simplify=True,
             :py:meth:`~sympy.solvers.ode.infinitesimals` with the help of various
             heuristics.
 
+        ``ics`` is the set of boundary conditions for the differential equation.
+          It should be given in the form of ``{f(x0): x1, f(x).diff(x).subs(x, x2):
+          x3}`` and so on. For now initial conditions are implemented only for
+          power series solutions of first-order differential equations which should
+          be given in the form of ``{f(x0): x1}`` (See Issue 1621). If nothing is
+          specified for this case ``f(0)`` is assumed to be ``C0`` and the power
+          series solution is calculated about 0.
+
+        ``x0`` is the point about which the power series solution of a differential
+          equation is to be evaluated.
+
+        ``n`` gives the exponent of the dependent variable up to which the power series
+          solution of a differential equation is to be evaluated.
+
     **Hints**
 
         Aside from the various solving methods, there are also some meta-hints

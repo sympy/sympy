@@ -238,19 +238,6 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        # NOTE: when multiplying out series a lot of queries like
-        #       O(...).contains(a*x**b) with many a and few b are made.
-        #       Separating out the independent part allows for better caching.
-        c, m = expr.as_coeff_mul(*self.variables)
-        if m != ():
-            return self._contains(Mul(*m))
-        else:
-            # Mul(*m) == 1, and O(1) treatment is somewhat peculiar ...
-            # some day this else should not be necessary
-            return self._contains(expr)
-
-    @cacheit
-    def _contains(self, expr):
         from sympy import powsimp, limit
         if expr is S.Zero:
             return True
@@ -277,20 +264,19 @@ class Order(Expr):
             if not common_symbols:
                 return None
             r = None
+            ratio = self.expr/expr.expr
+            ratio = powsimp(ratio, deep=True, combine='exp')
             for s in common_symbols:
-                l = limit(powsimp(self.expr/expr.expr, deep=True,
-                    combine='exp'), s, self.point) != 0
+                l = limit(ratio, s, self.point) != 0
                 if r is None:
                     r = l
                 else:
                     if r != l:
                         return
             return r
-        newargs = self.variables + (S.Zero,)
-        obj1 = Order(expr, *newargs)
-        newargs = self.variables + (S.Infinity,)
-        obj2 = Order(expr, *newargs)
-        return self.contains(obj1) or self.contains(obj2)
+        newargs = self.args[1:]
+        obj = Order(expr, *newargs)
+        return self.contains(obj)
 
     def _eval_subs(self, old, new):
         if old.is_Symbol and old in self.variables:

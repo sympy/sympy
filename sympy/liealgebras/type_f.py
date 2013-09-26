@@ -5,9 +5,9 @@ from sympy.matrices import Matrix
 
 class TypeF(Standard_Cartan):
 
-    def __init__(self, n):
+    def __new__(cls, n):
         assert n == 4
-        Standard_Cartan.__init__(self, "F", 4)
+        return Standard_Cartan.__new__(cls, "F", 4)
 
     def dimension(self):
         """
