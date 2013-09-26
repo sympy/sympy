@@ -1,5 +1,6 @@
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,\
+    Pow
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
@@ -382,6 +383,18 @@ def test_int_float():
     assert abs(_sympify(f1_1) - 1.1) < 1e-5
     assert abs(_sympify(f1_1b) - 1.1) < 1e-5
     assert abs(_sympify(f1_1c) - 1.1) < 1e-5
+
+
+def test_evaluate_false():
+    cases = {
+        '2 + 3': Add(2, 3, evaluate=False),
+        '2**2 / 3': Mul(Pow(2, 2, evaluate=False), Pow(3, -1, evaluate=False), evaluate=False),
+        '2 + 3 * 5': Add(2, Mul(3, 5, evaluate=False), evaluate=False),
+        '2 - 3 * 5': Add(2, -Mul(3, 5, evaluate=False), evaluate=False),
+        '1 / 3': Mul(1, Pow(3, -1, evaluate=False), evaluate=False)
+    }
+    for case, result in cases.items():
+        assert sympify(case, evaluate=False) == result
 
 
 def test_issue1034():
