@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic, C, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key
+from sympy.core.compatibility import as_int, default_sort_key, xrange
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.utilities.iterables import has_dups, flatten, group
@@ -86,7 +86,7 @@ class Partition(C.FiniteSet):
         else:
             members = tuple(sorted(self.members,
                              key=lambda w: default_sort_key(w, order)))
-        return self.size, members, self.rank
+        return list(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
     def partition(self):
@@ -100,7 +100,8 @@ class Partition(C.FiniteSet):
         [[1], [2, 3]]
         """
         if self._partition is None:
-            self._partition = sorted(sorted(p) for p in self.args)
+            self._partition = sorted([sorted(p, key=default_sort_key)
+                                      for p in self.args])
         return self._partition
 
     def __add__(self, other):
@@ -230,7 +231,8 @@ class Partition(C.FiniteSet):
         for i, part in enumerate(partition):
             for j in part:
                 rgs[j] = i
-        return tuple([rgs[i] for i in sorted(i for p in partition for i in p)])
+        return tuple([rgs[i] for i in sorted(
+            [i for p in partition for i in p], key=default_sort_key)])
 
     @classmethod
     def from_rgs(self, rgs, elements):
@@ -258,7 +260,7 @@ class Partition(C.FiniteSet):
         if len(rgs) != len(elements):
             raise ValueError('mismatch in rgs and element lengths')
         max_elem = max(rgs) + 1
-        partition = [[] for i in range(max_elem)]
+        partition = [[] for i in xrange(max_elem)]
         j = 0
         for i in rgs:
             partition[i].append(elements[j])
@@ -591,11 +593,11 @@ def RGS_generalized(m):
     [203,   0,   0,  0,  0, 0, 0]])
     """
     d = zeros(m + 1)
-    for i in range(0, m + 1):
+    for i in xrange(0, m + 1):
         d[0, i] = 1
 
-    for i in range(1, m + 1):
-        for j in range(m):
+    for i in xrange(1, m + 1):
+        for j in xrange(m):
             if j <= m - i:
                 d[i, j] = j * d[i - 1, j] + d[i - 1, j + 1]
             else:
@@ -662,7 +664,7 @@ def RGS_unrank(rank, m):
     L = [1] * (m + 1)
     j = 1
     D = RGS_generalized(m)
-    for i in range(2, m + 1):
+    for i in xrange(2, m + 1):
         v = D[m - i, j]
         cr = j*v
         if cr <= rank:
@@ -691,7 +693,7 @@ def RGS_rank(rgs):
     rgs_size = len(rgs)
     rank = 0
     D = RGS_generalized(rgs_size)
-    for i in range(1, rgs_size):
+    for i in xrange(1, rgs_size):
         n = len(rgs[(i + 1):])
         m = max(rgs[0:i])
         rank += D[n, m + 1] * rgs[i]

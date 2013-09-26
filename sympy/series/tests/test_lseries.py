@@ -1,4 +1,4 @@
-from sympy import sin, cos, exp, E, S, Order
+from sympy import sin, cos, exp, tanh, E, S, Order
 from sympy.abc import x, y
 
 
@@ -49,3 +49,12 @@ def test_issue_2084():
     # to be known since, for example, every term has a constant in it.
     s = ((1 + x)**7).series(x, 1, n=None)
     assert [next(s) for i in range(2)] == [128, -448 + 448*x]
+
+
+def test_issue_3900():
+    s = tanh(x).lseries(x, 1)
+    assert next(s) == tanh(1)
+    assert next(s) == x - (x - 1)*tanh(1)**2 - 1
+    assert next(s) == -(x - 1)**2*tanh(1) + (x - 1)**2*tanh(1)**3
+    assert next(s) == -(x - 1)**3*tanh(1)**4 - (x - 1)**3/3 + \
+        4*(x - 1)**3*tanh(1)**2/3

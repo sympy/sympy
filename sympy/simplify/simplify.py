@@ -11,7 +11,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     expand_power_exp, expand_log)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered
+from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered, xrange
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops
@@ -817,7 +817,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
         if n == 0:
             return [1]
         S = []
-        for mi in combinations_with_replacement(range(len(opt.gens)), n):
+        for mi in combinations_with_replacement(xrange(len(opt.gens)), n):
             m = [0]*len(opt.gens)
             for i in mi:
                 m[i] += 1
@@ -875,9 +875,9 @@ def ratsimpmodprime(expr, G, *gens, **args):
             ng = Cs + Ds
 
             c_hat = Poly(
-                sum([Cs[i] * M1[i] for i in range(len(M1))]), opt.gens + ng)
+                sum([Cs[i] * M1[i] for i in xrange(len(M1))]), opt.gens + ng)
             d_hat = Poly(
-                sum([Ds[i] * M2[i] for i in range(len(M2))]), opt.gens + ng)
+                sum([Ds[i] * M2[i] for i in xrange(len(M2))]), opt.gens + ng)
 
             r = reduced(a * d_hat - b * c_hat, G, opt.gens + ng,
                         order=opt.order, polys=True)[1]
@@ -2725,7 +2725,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     # find the number of extractions possible
                     # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
                     min1 = ee[0][1]/ee[0][0]
-                    for i in range(len(ee)):
+                    for i in xrange(len(ee)):
                         rat = ee[i][1]/ee[i][0]
                         if rat < 1:
                             break
@@ -2734,7 +2734,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         # update base factor counts
                         # e.g. if ee = [(2, 5), (3, 6)] then min1 = 2
                         # and the new base counts will be 5-2*2 and 6-2*3
-                        for i in range(len(bb)):
+                        for i in xrange(len(bb)):
                             common_b[bb[i]] -= min1*ee[i][0]
                             update(bb[i])
                         # update the count of the base
@@ -2811,7 +2811,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
         # Pull out numerical coefficients from exponent if assumptions allow
         # e.g., 2**(2*x) => 4**x
-        for i in range(len(c_powers)):
+        for i in xrange(len(c_powers)):
             b, e = c_powers[i]
             if not (b.is_nonnegative or e.is_integer or force or b.is_polar):
                 continue
@@ -3040,12 +3040,12 @@ def combsimp(expr):
                 n, result = int(b), S.One
 
                 if n > 0:
-                    for i in range(n):
+                    for i in xrange(n):
                         result *= a + i
 
                     return result
                 elif n < 0:
-                    for i in range(1, -n + 1):
+                    for i in xrange(1, -n + 1):
                         result *= a - i
 
                     return 1/result
@@ -3271,10 +3271,10 @@ def combsimp(expr):
                 ng.remove(x)
                 dg.remove(y)
                 if n > 0:
-                    for k in range(n):
+                    for k in xrange(n):
                         no.append(2*y + k)
                 elif n < 0:
-                    for k in range(-n):
+                    for k in xrange(-n):
                         do.append(2*y - 1 - k)
                 ng.append(y + S(1)/2)
                 no.append(2**(2*y - 1))

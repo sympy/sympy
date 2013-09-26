@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy import Basic, Symbol, symbols, lambdify
 from util import interpolate, rinterpolate, create_bounds, update_bounds
+from sympy.core.compatibility import xrange
 
 
 class ColorGradient(object):
@@ -171,7 +172,7 @@ class ColorScheme(object):
         # when vars are given explicitly, any vars
         # not given are marked 'unbound' as to not
         # be accidentally used in an expression
-        vars = [Symbol('unbound%i' % (i)) for i in xrange(1, 6)]
+        vars = [Symbol('unbound%i' % (i)) for i in range(1, 6)]
         # interpret as t
         if len(args) == 1:
             vars[3] = args[0]
@@ -257,7 +258,7 @@ class ColorScheme(object):
         # scale and apply gradient
         for _u in xrange(len(u_set)):
             if cverts[_u] is not None:
-                for _c in xrange(3):
+                for _c in range(3):
                     # scale from [f_min, f_max] to [0,1]
                     cverts[_u][_c] = rinterpolate(bounds[_c][0], bounds[_c][1],
                                                   cverts[_u][_c])
@@ -300,7 +301,7 @@ class ColorScheme(object):
             for _v in xrange(len(v_set)):
                 if cverts[_u][_v] is not None:
                     # scale from [f_min, f_max] to [0,1]
-                    for _c in xrange(3):
+                    for _c in range(3):
                         cverts[_u][_v][_c] = rinterpolate(bounds[_c][0],
                                              bounds[_c][1], cverts[_u][_v][_c])
                     # apply gradient

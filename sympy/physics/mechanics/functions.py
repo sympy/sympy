@@ -48,13 +48,11 @@ dot.__doc__ += Vector.dot.__doc__
 
 
 def express(vec, frame, frame2=None):
-    """Express convenience wrapper for Vector.express(): \n"""
-    if not isinstance(vec, (Vector, Dyadic)):
-        raise TypeError('Can only express Vectors')
-    if isinstance(vec, Vector):
-        return vec.express(frame)
-    else:
+    """Express convenience wrapper"""
+    if isinstance(vec, Dyadic):
         return vec.express(frame, frame2)
+    else:
+        return frame.express(vec)
 
 express.__doc__ += Vector.express.__doc__
 
@@ -64,7 +62,7 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.express.__doc__
+outer.__doc__ += Vector.outer.__doc__
 
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
@@ -555,7 +553,7 @@ def linear_momentum(frame, *body):
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please specify a valid ReferenceFrame')
     else:
-        linear_momentum_sys = S(0)
+        linear_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 linear_momentum_sys += e.linear_momentum(frame)
@@ -613,7 +611,7 @@ def angular_momentum(point, frame, *body):
     if not isinstance(point, Point):
         raise TypeError('Please specify a valid Point')
     else:
-        angular_momentum_sys = S(0)
+        angular_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 angular_momentum_sys += e.angular_momentum(point, frame)

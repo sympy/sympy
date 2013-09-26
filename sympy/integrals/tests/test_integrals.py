@@ -701,7 +701,7 @@ def test_is_zero():
 
 def test_series():
     from sympy.abc import x
-    i = Integral(cos(x))
+    i = Integral(cos(x), (x, x))
     e = i.lseries(x)
     assert i.nseries(x, n=8).removeO() == Add(*[next(e) for j in range(4)])
 
@@ -863,8 +863,8 @@ def test_atom_bug():
 def test_limit_bug():
     z = Symbol('z', nonzero=True)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
-        -((-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z) + \
-        log(z**2)/(2*z) + EulerGamma/z + 2*log(pi)/z
+        (log(z**2) + 2*EulerGamma + 2*log(pi))/(2*z) - \
+        (-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z + log(pi)/z
 
 
 def test_issue_1604():
@@ -988,3 +988,9 @@ def test_integrate_Piecewise_rational_over_reals():
         (13.2075145209219*pi/(0.000871222*t + 0.995)**2, t - 478.515625*pi >= 0))
 
     assert integrate(f, (t, 0, oo)) == 15235.9375*pi
+
+
+def test_issue_1704():
+    x_max = Symbol("x_max")
+    assert integrate(y/pi*exp(-(x_max - x)/cos(a)), x) == \
+        y*exp((x - x_max)/cos(a))*cos(a)/pi

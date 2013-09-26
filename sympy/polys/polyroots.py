@@ -22,7 +22,7 @@ from sympy.polys.rationaltools import together
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key, public
 
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, xrange
 
 
 def roots_linear(f):
@@ -105,7 +105,7 @@ def roots_cubic(f):
             return [-aon3]*3
         else:
             if q.is_real:
-                if q > 0:
+                if (q > 0) is True:
                     u1 = -q**Rational(1, 3)
                 else:
                     u1 = (-q)**Rational(1, 3)
@@ -114,6 +114,8 @@ def roots_cubic(f):
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
+    elif q.is_real and q < 0:
+        u1 = -(-q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
     else:
         u1 = (q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
 
@@ -314,7 +316,7 @@ def roots_binomial(f):
 
     roots, I = [], S.ImaginaryUnit
 
-    for k in range(n):
+    for k in xrange(n):
         zeta = exp(2*k*S.Pi*I/n).expand(complex=True)
         roots.append((alpha*zeta).expand(power_base=False))
 
@@ -370,7 +372,7 @@ def roots_cyclotomic(f, factor=False):
     """Compute roots of cyclotomic polynomials. """
     L, U = _inv_totient_estimate(f.degree())
 
-    for n in range(L, U + 1):
+    for n in xrange(L, U + 1):
         g = cyclotomic_poly(n, f.gen, polys=True)
 
         if f == g:
@@ -381,7 +383,7 @@ def roots_cyclotomic(f, factor=False):
     roots = []
 
     if not factor:
-        for k in range(1, n + 1):
+        for k in xrange(1, n + 1):
             if igcd(k, n) == 1:
                 roots.append(exp(2*k*S.Pi*I/n).expand(complex=True))
     else:
@@ -543,7 +545,7 @@ def roots_quintic(f):
     result_n = []
     for root in result:
         result_n.append(root.n(5))
-    result_n = sorted(result_n)
+    result_n = sorted(result_n, key=default_sort_key)
 
     prev_entry = None
     for r in result_n:

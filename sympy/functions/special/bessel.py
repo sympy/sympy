@@ -7,6 +7,7 @@ from sympy.core.function import Function, ArgumentIndexError, expand_func
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import re, im
+from sympy.core.compatibility import xrange
 
 # TODO
 # o Airy Ai and Bi functions
@@ -690,7 +691,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(k)), prec)
-                for k in range(1, k + 1)]
+                for k in xrange(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn
         from scipy.optimize import newton

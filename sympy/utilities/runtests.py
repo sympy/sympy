@@ -558,8 +558,6 @@ def _doctest(*paths, **kwargs):
 
     if import_module('numpy') is None:
         blacklist.extend([
-            "sympy/galgebra/GA.py",
-            "sympy/galgebra/latex_ex.py",
             "sympy/plotting/experimental_lambdify.py",
             "sympy/plotting/plot_implicit.py",
             "examples/advanced/autowrap_integrators.py",
@@ -579,15 +577,11 @@ def _doctest(*paths, **kwargs):
             from sympy.plotting.plot import unset_show
             unset_show()
 
-        # can be removed once a fix for Issue 3696 is merged
-        blacklist.extend(["sympy/galgebra/latex_ex.py"])
-
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
-        "sympy/galgebra/GA.py",
         "sympy/utilities/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
@@ -915,7 +909,7 @@ class SymPyTests(object):
                     value = Tuple(values, Load())
                     assign = Assign([target], value)
                     new_compare = Compare(names_load[0], compare.ops, names_load[1:])
-                    msg_format = "%s " + " %s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + " %s"
+                    msg_format = "\n%s " + "\n%s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + "\n%s"
                     msg = BinOp(Str(msg_format), Mod(), Tuple(names_load, Load()))
                     test = Assert(new_compare, msg, lineno=stmt.lineno, col_offset=stmt.col_offset)
                     return [assign, test]

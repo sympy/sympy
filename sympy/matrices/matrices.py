@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 import collections
 from sympy.core.add import Add
-from sympy.core.basic import Basic, C
+from sympy.core.basic import Basic, C, Atom
 from sympy.core.expr import Expr
 from sympy.core.function import count_ops
 from sympy.core.power import Pow
@@ -10,9 +10,9 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import is_sequence, default_sort_key
+from sympy.core.compatibility import is_sequence, default_sort_key, xrange
 
-from sympy.polys import PurePoly, roots, cancel
+from sympy.polys import PurePoly, roots, cancel, gcd
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
@@ -308,6 +308,46 @@ class MatrixBase(object):
         if method is not None:
             kwargs['method'] = method
         return self._eval_inverse(**kwargs)
+
+    def inv_mod(self, m):
+        r"""
+        Returns the inverse of the matrix `K` (mod `m`), if it exists.
+
+        Method to find the matrix inverse of `K` (mod `m`) implemented in this function:
+
+        * Compute `\mathrm{adj}(K) = \mathrm{cof}(K)^t`, the adjoint matrix of `K`.
+
+        * Compute `r = 1/\mathrm{det}(K) \pmod m`.
+
+        * `K^{-1} = r\cdot \mathrm{adj}(K) \pmod m`.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> A = Matrix(2, 2, [1, 2, 3, 4])
+        >>> A.inv_mod(5)
+        Matrix([
+        [3, 1],
+        [4, 2]])
+        >>> A.inv_mod(3)
+        Matrix([
+        [1, 1],
+        [0, 1]])
+
+        """
+        from sympy.ntheory import totient
+        if not self.is_square:
+            raise NonSquareMatrixError()
+        N = self.cols
+        phi = totient(m)
+        det_K = self.det()
+        if gcd(det_K, m) != 1:
+            raise ValueError('Matrix is not invertible (mod %d)' % m)
+        det_inv = pow(int(det_K), int(phi - 1), int(m))
+        K_adj = self.cofactorMatrix().transpose()
+        K_inv = self.__class__(N, N, [det_inv*K_adj[i, j] % m for i in range(N) for j in range(N)])
+        return K_inv
 
     def transpose(self):
         return self._eval_transpose()
@@ -1096,6 +1136,27 @@ class MatrixBase(object):
 
     n = evalf
 
+    def atoms(self, *types):
+        """Returns the atoms that form the current object.
+
+        >>> from sympy.abc import x, y
+        >>> from sympy.matrices import Matrix
+        >>> Matrix([[x]])
+        Matrix([[x]])
+        >>> _.atoms()
+        set([x])
+        """
+
+        if types:
+            types = tuple(
+                [t if isinstance(t, type) else type(t) for t in types])
+        else:
+            types = (Atom,)
+        result = set()
+        for i in self:
+            result.update( i.atoms(*types) )
+        return result
+
     def subs(self, *args, **kwargs):  # should mirror core.basic.subs
         """Return a new matrix with subs applied to each entry.
 
@@ -1210,13 +1271,13 @@ class MatrixBase(object):
         n = self.rows
         b = rhs.permuteFwd(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in range(n):
-            for j in range(i):
+        for i in xrange(n):
+            for j in xrange(i):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
         # backward substitution
-        for i in range(n - 1, -1, -1):
-            for j in range(i + 1, n):
+        for i in xrange(n - 1, -1, -1):
+            for j in xrange(i + 1, n):
                 scale = A[i, j]
                 b.zip_row_op(i, j, lambda x, y: x - y*scale)
             scale = A[i, i]
@@ -2353,7 +2414,7 @@ class MatrixBase(object):
         Possible values for "method":
           bareis ... det_bareis
           berkowitz ... berkowitz_det
-          lu_decomposition ... det_LU
+          det_LU ... det_LU_decomposition
 
         See Also
         ========
@@ -2590,13 +2651,13 @@ class MatrixBase(object):
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
         pivotlist = []
-        for i in range(r.cols):
+        for i in xrange(r.cols):
             if pivot == r.rows:
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
             if iszerofunc(r[pivot, i]):
-                for k in range(pivot, r.rows):
+                for k in xrange(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
@@ -2606,7 +2667,7 @@ class MatrixBase(object):
                 r.row_swap(pivot, k)
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
-            for j in range(r.rows):
+            for j in xrange(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
@@ -3482,7 +3543,7 @@ class MatrixBase(object):
                 # So we will do the same procedure also for `s-1` and so on until 1 the lowest possible order
                 # where the jordanchain is of lenght 1 and just represented by the eigenvector.
 
-                for s in reversed(range(1, smax+1)):
+                for s in reversed(xrange(1, smax+1)):
                     S = Ms[s]
                     # We want the vectors in `Kernel((self-lI)^s)` (**),
                     # but without those in `Kernel(self-lI)^s-1` so we will add these as additional equations

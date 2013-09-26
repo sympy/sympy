@@ -9,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.utilities.iterables import numbered_symbols
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ########################## TRIGONOMETRIC FUNCTIONS ############################
@@ -197,6 +198,9 @@ class sin(TrigonometricFunction):
         if pi_coeff is not None:
             if pi_coeff.is_integer:
                 return S.Zero
+
+            if (2*pi_coeff).is_integer:
+                return S.NegativeOne**(pi_coeff - S.Half)
 
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
@@ -433,6 +437,10 @@ class cos(TrigonometricFunction):
         if pi_coeff is not None:
             if pi_coeff.is_integer:
                 return (S.NegativeOne)**pi_coeff
+
+            if (2*pi_coeff).is_integer:
+                return S.Zero
+
             if not pi_coeff.is_Rational:
                 narg = pi_coeff*S.Pi
                 if narg != arg:
@@ -905,10 +913,10 @@ class tan(TrigonometricFunction):
                 TX.append(tx)
 
             Yg = numbered_symbols('Y')
-            Y = [ next(Yg) for i in range(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
-            for i in range(n + 1):
+            for i in xrange(n + 1):
                 p[1 - i % 2] += symmetric_poly(i, Y)*(-1)**((i % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, TX)))
 
@@ -1083,7 +1091,7 @@ class cot(TrigonometricFunction):
         i = self.args[0].limit(x, 0)/S.Pi
         if i and i.is_Integer:
             return self.rewrite(cos)._eval_nseries(x, n=n, logx=logx)
-        return Function._eval_nseries(self, x, n=n, logx=logx)
+        return self.rewrite(tan)._eval_nseries(x, n=n, logx=logx)
 
     def _eval_conjugate(self):
         assert len(self.args) == 1
@@ -1163,10 +1171,10 @@ class cot(TrigonometricFunction):
                 CX.append(cx)
 
             Yg = numbered_symbols('Y')
-            Y = [ next(Yg) for i in range(n) ]
+            Y = [ next(Yg) for i in xrange(n) ]
 
             p = [0, 0]
-            for i in range(n, -1, -1):
+            for i in xrange(n, -1, -1):
                 p[(n - i) % 2] += symmetric_poly(i, Y)*(-1)**(((n - i) % 4)//2)
             return (p[0]/p[1]).subs(list(zip(Y, CX)))
         else:
@@ -1842,7 +1850,7 @@ class atan2(Function):
     def _eval_evalf(self, prec):
         y, x = self.args
         if x.is_real and y.is_real:
-            super(self, evalf)
+            super(atan2, self)._eval_evalf(prec)
 
     def _sage_(self):
         import sage.all as sage

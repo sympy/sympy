@@ -51,7 +51,7 @@ class Mod(Function):
             else:
                 if type(d) is int:
                     rv = p - d*q
-                    if rv*q < 0:
+                    if (rv*q < 0) is True:
                         rv += q
                     return rv
 

@@ -4,6 +4,7 @@ Primality testing
 """
 
 from __future__ import print_function, division
+from sympy.core.compatibility import xrange
 
 # pseudoprimes that will pass through last mr_safe test
 _pseudos = set([
@@ -51,10 +52,13 @@ def _test(n, base, s, t):
     if b == 1 or b == n - 1:
         return True
     else:
-        for j in range(1, s):
+        for j in xrange(1, s):
             b = pow(b, 2, n)
             if b == n - 1:
                 return True
+            # see I. Niven et al. "An Introduction to Theory of Numbers", page 78
+            if b == 1:
+                return False
     return False
 
 
@@ -86,7 +90,7 @@ def mr(n, bases):
     n = int(n)
     if n < 2:
         return False
-    # remove powers of 2 from n = t * 2**s
+    # remove powers of 2 from n = t * 2**s + 1
     s = trailing(n - 1)
     t = n >> s
     for base in bases:

@@ -4,7 +4,7 @@ from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, xrange
 from sympy.core.logic import fuzzy_and
 
 
@@ -279,7 +279,7 @@ class AssocOp(Basic):
                     if not nc:
                         return True
                     elif len(nc) <= len(_nc):
-                        for i in range(len(_nc) - len(nc)):
+                        for i in xrange(len(_nc) - len(nc)):
                             if _nc[i:i + len(nc)] == nc:
                                 return True
             return False

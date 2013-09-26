@@ -11,6 +11,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
+from sympy.core.compatibility import xrange
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -342,11 +343,11 @@ class uppergamma(Function):
 
         # We extract branching information here. C/f lowergamma.
         nx, n = z.extract_branch_factor()
-        if a.is_integer and a > 0:
+        if a.is_integer and (a > 0) is True:
             nx = unpolarify(z)
             if z != nx:
                 return uppergamma(a, nx)
-        elif a.is_integer and a <= 0:
+        elif a.is_integer and (a <= 0) is True:
             if n != 0:
                 return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
         elif n != 0:
@@ -427,11 +428,11 @@ class polygamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_is_positive(self):
-        if self.args[1].is_positive and self.args[0] > 0:
+        if self.args[1].is_positive and (self.args[0] > 0) is True:
             return self.args[0].is_odd
 
     def _eval_is_negative(self):
-        if self.args[1].is_positive and self.args[0] > 0:
+        if self.args[1].is_positive and (self.args[0] > 0) is True:
             return self.args[0].is_even
 
     def _eval_is_real(self):
@@ -539,17 +540,17 @@ class polygamma(Function):
                     e = -(n + 1)
                     if coeff > 0:
                         tail = Add(*[C.Pow(
-                            z - i, e) for i in range(1, int(coeff) + 1)])
+                            z - i, e) for i in xrange(1, int(coeff) + 1)])
                     else:
                         tail = -Add(*[C.Pow(
-                            z + i, e) for i in range(0, int(-coeff))])
+                            z + i, e) for i in xrange(0, int(-coeff))])
                     return polygamma(n, z - coeff) + (-1)**n*C.factorial(n)*tail
 
             elif z.is_Mul:
                 coeff, z = z.as_two_terms()
                 if coeff.is_Integer and coeff.is_positive:
                     tail = [ polygamma(n, z + C.Rational(
-                        i, coeff)) for i in range(0, int(coeff)) ]
+                        i, coeff)) for i in xrange(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
                     else:
@@ -592,6 +593,13 @@ class loggamma(Function):
     """
 
     nargs = 1
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(loggamma, self)._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != oo:

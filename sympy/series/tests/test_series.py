@@ -63,7 +63,7 @@ def test_2124():
     assert ((sin(x))**y).nseries(x, n=1, logx=logx) == \
         exp(y*logx) + O(x*exp(y*logx), x)
 
-    assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3)
+    assert sin(1/x).series(x, oo, n=5) == 1/x - 1/(6*x**3) + O(x**(-5), x, oo)
     assert abs(x).series(x, oo, n=5, dir='+') == x
     assert abs(x).series(x, -oo, n=5, dir='-') == -x
     assert abs(-x).series(x, oo, n=5, dir='+') == x
@@ -124,7 +124,7 @@ def test_issue_3219():
 
 def test_x_is_base_detection():
     eq = (x**2)**(S(2)/3)
-    assert eq.series() == eq
+    assert eq.series() == x**(S(4)/3)
 
 def test_sin_power():
     e = sin(x)**1.2

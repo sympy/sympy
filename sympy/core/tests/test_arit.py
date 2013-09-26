@@ -374,6 +374,7 @@ def test_Add_Mul_is_bounded():
 
 def test_Mul_is_even_odd():
     x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
 
     k = Symbol('k', odd=True)
     n = Symbol('n', odd=True)
@@ -415,6 +416,20 @@ def test_Mul_is_even_odd():
     assert (k/2).is_integer is False
     assert (m/2).is_integer is True
 
+    assert (x*y).is_even is None
+    assert (x*x).is_even is None
+    assert (x*(x + k)).is_even is True
+    assert (x*(x + m)).is_even is None
+    assert (x*y*(y + k)).is_even is True
+    assert (x*y*(y + m)).is_even is None
+
+    assert (x*y).is_odd is None
+    assert (x*x).is_odd is None
+    assert (x*(x + k)).is_odd is False
+    assert (x*(x + m)).is_odd is None
+    assert (x*y*(y + k)).is_odd is False
+    assert (x*y*(y + m)).is_odd is None
+
 
 def test_Mul_is_rational():
     x = Symbol('x')
@@ -425,6 +440,17 @@ def test_Mul_is_rational():
     assert (x/pi).is_rational is None
     assert (x/n).is_rational is None
     assert (n/pi).is_rational is False
+
+
+def test_Add_is_rational():
+    x = Symbol('x')
+    n = Symbol('n', rational=True)
+    m = Symbol('m', rational=True)
+
+    assert (n + m).is_rational is True
+    assert (x + pi).is_rational is None
+    assert (x + n).is_rational is None
+    assert (n + pi).is_rational is False
 
 
 def test_Add_is_even_odd():
@@ -876,6 +902,8 @@ def test_Pow_is_integer():
     assert Pow(4, S.Half, evaluate=False).is_integer is True
     assert Pow(S.Half, -2, evaluate=False).is_integer is True
 
+    assert ((-1)**k).is_integer
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -938,6 +966,10 @@ def test_Pow_is_even_odd():
     n = Symbol('n', odd=True)
     m = Symbol('m', integer=True, nonnegative=True)
     p = Symbol('p', integer=True, positive=True)
+
+    assert ((-1)**n).is_odd
+    assert ((-1)**k).is_odd
+    assert ((-1)**(m - p)).is_odd
 
     assert (k**2).is_even is True
     assert (n**2).is_even is False

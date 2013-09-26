@@ -37,6 +37,7 @@ TODO:
 
 """
 
+from __future__ import print_function
 
 import sys, os
 from timeit import default_timer as clock

@@ -4,7 +4,7 @@ import random
 from collections import defaultdict
 
 from sympy.core import Basic
-from sympy.core.compatibility import is_sequence, reduce
+from sympy.core.compatibility import is_sequence, reduce, xrange
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs)
 from sympy.polys.polytools import lcm
@@ -1873,7 +1873,7 @@ class Permutation(Basic):
         order
         """
         af = self.array_form
-        return not af or all(i == af[i] for i in range(self.size))
+        return not af or all(i == af[i] for i in xrange(self.size))
 
     def ascents(self):
         """
