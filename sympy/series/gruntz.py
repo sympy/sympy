@@ -443,7 +443,7 @@ def moveup(l, x):
 
 @debug
 @timeit
-def calculate_series(e, x, skip_abs=False, logx=None):
+def calculate_series(e, x, logx=None):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
@@ -459,7 +459,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
 
         series = series.removeO()
         series = factor_terms(series, fraction=True)
-        if series and ((not skip_abs) or series.has(x)):
+        if series:
             return series
         n *= 2
 
