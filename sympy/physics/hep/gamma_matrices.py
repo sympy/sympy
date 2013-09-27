@@ -150,7 +150,7 @@ class GammaMatrixHead(TensorHead):
             # tr(G(i)) = 0
             if c0 == c1:
                 return ([], [])
-            if p0 == p1:
+            if p0 == p1 > 0:
                 # case gamma(i,s0,-s1)in c0, gamma(j,-s0,s2) in c1;
                 # to deal with this case one could add to the position
                 # a flag for transposition;
@@ -309,7 +309,7 @@ class GammaMatrixHead(TensorHead):
     @staticmethod
     def kahane_simplify(coeff, tids):
         r"""
-        This function cancels contracted elements in an expression of four
+        This function cancels contracted elements in a product of four
         dimensional gamma matrices, resulting in an expression equal to the given
         one, without the contracted gamma matrices.
 
@@ -318,6 +318,27 @@ class GammaMatrixHead(TensorHead):
 
         `coeff`     the coefficient of the tensor expression.
         `tids`      TIDS object representing the gamma matrix expression to simplify.
+
+        Notes
+        =====
+
+        If spinor indices are given, the matrices must be given in
+        the order given in the product. If ``t`` is
+        ``G(i0)*G(i1)`` or
+        ``G(i0,s0,-s1)*G(i1,s1,-s2)*G(-i0,s2,-s3)`` or
+        ``G(i0,True,-s1)*G(i1,s1,-s2)*G(-i0,s2,True)``,
+        ``G.kahane_simplify(t.coeff, t._tids)`` gives
+        ``-2*gamma(i1, auto_left, auto_right)``
+
+        but if one reorders the terms as in
+        ``t = G(-i0,s2,-s3)*G(i0,s0,-s1)*G(i1,s1,-s2)``
+        one gets the wrong result ``4*gamma(i1, auto_left, auto_right)``
+
+        If the result is a multiple of the identity, a number is given
+
+        `` t = G(i0)*G(-i0)`` or
+        ``t = G(i0,s0,-s1)*G(-i0,s1,-s2)``
+        ``G.kahane_simplify(t.coeff, t._tids)`` gives 4
 
         Algorithm
         =========
