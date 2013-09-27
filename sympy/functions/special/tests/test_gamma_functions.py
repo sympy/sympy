@@ -93,7 +93,7 @@ def test_lowergamma():
     assert td(lowergamma(randcplx(), y), y)
     assert lowergamma(x, y).diff(x) == \
         gamma(x)*polygamma(0, x) - uppergamma(x, y)*log(y) \
-        + meijerg([], [1, 1], [0, 0, x], [], y)
+        - meijerg([], [1, 1], [0, 0, x], [], y)
 
     assert lowergamma(S.Half, x) == sqrt(pi)*erf(sqrt(x))
     assert not lowergamma(S.Half - 3, x).has(lowergamma)
