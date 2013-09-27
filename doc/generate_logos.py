@@ -134,6 +134,15 @@ def generate_notail_notext_versions(fn_source, output_dir):
 def convert_to_png(fn_source, output_dir, sizes):
     svgs = list(versions)
     svgs.insert(0, '')
+
+    cmd = "rsvg-convert"
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    p.communicate()
+    if p.returncode == 127:
+        logging.error("%s: command not found" % cmd)
+        return
+
     for ver in svgs:
         if ver == '':
             fn_svg = fn_source
@@ -167,6 +176,15 @@ def convert_to_ico(fn_source, output_dir, sizes):
 
     svgs = list(versions)
     svgs.insert(0, '')
+
+    cmd = "convert"
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
+    p.communicate()
+    if p.returncode == 127:
+        logging.error("%s: command not found" % cmd)
+        return
+
     for ver in svgs:
         if ver == '':
             fn_svg = fn_source
