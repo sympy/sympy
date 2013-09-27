@@ -212,8 +212,17 @@ class GammaMatrixHead(TensorHead):
         rest = [x for x in range(len(tids.components)) if x not in rest]
         a = ex.split()
         trest = tensor_mul(*[x for i, x in enumerate(a) if i in rest])
-        tlines1 = [tensor_mul(*[x for i, x in enumerate(a) if i  in line]) for line in lines]
-        tlines = [GammaMatrixHead.simplify_tens(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in lines]
+        tlines = []
+        for line in lines:
+            first = a[line[0]]
+            last = a[line[-1]]
+            first = [x[0] for x in first.free if x[1] == 1][0]
+            last = [x[0] for x in last.free if x[1] == 2][0]
+            tx = tensor_mul(*[x for i, x in enumerate(a) if i  in line])
+            tx1 = GammaMatrixHead.simplify_tens(tx)
+            if tx1.is_integer:
+                tx1 = tx1*DiracSpinor.delta(first, last)
+            tlines.append(tx1)
         traces = [GammaMatrix.trace_tens(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in traces]
         res = tensor_mul(*([trest] + tlines + traces))
         return res
@@ -222,7 +231,7 @@ class GammaMatrixHead(TensorHead):
     @staticmethod
     def simplify_tens(expression):
         """
-        Simplify expressions of gamma matrices.
+        Simplify single-line product of gamma matrices.
         """
         coeff = expression.coeff
         tids = expression._tids

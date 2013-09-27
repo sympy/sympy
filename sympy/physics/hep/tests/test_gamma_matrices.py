@@ -337,12 +337,22 @@ def test_simplify_lines():
        tensor_indices('s0:17', DiracSpinor)
 
     g = G.Lorentz.metric
+    Sdelta = DiracSpinor.delta
     t = G(i1,s1,-s2)*G(i2,s2,-s1)*G(i3,s4,-s5)*G(i4,s5,-s6)*G(i5,s7,-s8)
     r = G.simplify_lines(t)
     assert r.equals(4*G(i5, s7, -s8)*G(i3, s4, -s0)*G(i4, s0, -s6)*g(i1, i2))
 
-@XFAIL
-def test_simplify_lines_fail():
     t = G(i1,s1,-s2)*G(i2,s2,-s1)*G(i3,s4,-s5)*G(-i3,s5,-s6)*G(i5,s7,-s8)
     r = G.simplify_lines(t)
-    assert r.equals(16*G(i5, s7, -s8)*DiracSpinor.delta(s4, -s0)*g(i1, i2))
+    assert r.equals(16*G(i5, s7, -s8)*Sdelta(s4, -s6)*g(i1, i2))
+    t = G(i1,s1,-s2)*G(i2,s2,-s1)*G(i3,s4,-s5)*G(i4,s5,-s6)*G(i5,s7,-s8)
+    r = G.simplify_lines(t)
+    assert r.equals(4*G(i5, s7, -s8)*G(i3, s4, s0)*G(i4, -s0, -s6)*g(i1, i2))
+    t = G(i5,s7,-s8)*G(i6,s9,-s10)*G(i1,s1,-s2)*G(i3,s4,-s5)*G(i2,s2,-s1)*G(i4,s5,-s6)*G(-i6,s10,-s9)
+    r = G.simplify_lines(t)
+    assert r.equals(64*G(i5, s7, -s8)*G(i3, s4, s0)*G(i4, -s0, -s6)*g(i1, i2))
+    t = G(i5,s7,-s8)*G(i6,s9,-s10)*G(i1,s1,-s2)*G(i7,s12,-s11)*G(i3,s4,-s5)*\
+        G(i2,s2,-s1)*G(i4,s5,-s6)*G(-i6,s10,-s9)*G(-i7,s11,-s13)
+    r = G.simplify_lines(t)
+    assert r.equals(256*G(i5, s7, -s8)*G(i3, s4, s0)*G(i4, -s0, -s6)*\
+           g(i1, i2)*Sdelta(s12,-s13))
