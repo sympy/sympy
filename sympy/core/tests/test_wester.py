@@ -30,7 +30,6 @@ from sympy.assumptions import assuming
 from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
-import time
 
 R = Rational
 x, y, z = symbols('x y z')
