@@ -150,12 +150,15 @@ class GammaMatrixHead(TensorHead):
             # tr(G(i)) = 0
             if c0 == c1:
                 return ([], [])
-            if p0 == p1 > 0:
-                # case gamma(i,s0,-s1)in c0, gamma(j,-s0,s2) in c1;
-                # to deal with this case one could add to the position
-                # a flag for transposition;
-                # one could write [(c0, False), (c1, True)]
-                raise NotImplementedError
+            if p0 == p1:
+                if p0 > 0:
+                    # case gamma(i,s0,-s1)in c0, gamma(j,-s0,s2) in c1;
+                    # to deal with this case one could add to the position
+                    # a flag for transposition;
+                    # one could write [(c0, False), (c1, True)]
+                    raise NotImplementedError
+                else:
+                    continue
             # if p0 == 2 then G in pos c0 is mult on the right by G in c1
             # if p0 == 1 then G in pos c1 is mult on the right by G in c0
             b0, b1 = (c0, c1) if p0 == 2 else (c1, c0)
@@ -209,9 +212,9 @@ class GammaMatrixHead(TensorHead):
         rest = [x for x in range(len(tids.components)) if x not in rest]
         a = ex.split()
         trest = tensor_mul(*[x for i, x in enumerate(a) if i in rest])
+        tlines1 = [tensor_mul(*[x for i, x in enumerate(a) if i  in line]) for line in lines]
         tlines = [GammaMatrixHead.simplify_tens(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in lines]
         traces = [GammaMatrix.trace_tens(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in traces]
-
         res = tensor_mul(*([trest] + tlines + traces))
         return res
 
