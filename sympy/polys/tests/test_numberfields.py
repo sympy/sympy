@@ -695,6 +695,11 @@ def test_minpoly_fraction_field():
     assert minimal_polynomial(sqrt(x) / z, y, polys=True) == \
         Poly(z**2*y**2 - x, y)
 
+    a = sqrt(1 + x**3)/x
+    b = a.integrate(x)
+
+    assert minimal_polynomial(b.diff(x) - a, y) == y
+
     raises(NotAlgebraic, lambda: minimal_polynomial(exp(x), y))
     raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x), x))
     raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x) - y, x))
