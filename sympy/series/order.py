@@ -176,6 +176,9 @@ class Order(Expr):
         if expr is S.Zero:
             return expr
 
+        if expr.is_Order:
+            expr = expr.expr
+
         if not expr.has(*symbols):
             expr = S.One
 
