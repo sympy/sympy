@@ -1836,3 +1836,44 @@ def test_S10():
     Pr = Product((k*(k +  1) + 1 + I)/(k*(k + 1) + 1 - I), (k,0,oo))
     T = Pr.doit()
     assert T.simplify() == -1 # raises OverflowError  https://code.google.com/p/sympy/issues/detail?id=4038
+
+def test_T1():
+    assert limit((1 + 1/n)**n, n, oo) == E
+    assert limit((1 - cos(x))/x**2, x, 0) == Rational(1,2)
+
+def test_T2():
+    assert limit((3**x + 5**x)**(1/x), x, oo) == 5
+
+@XFAIL
+def test_T3():
+    assert limit(log(x)/(log(x) + sin(x)), x, oo) == 1 #raises PoleError
+
+def test_T4():
+    assert limit((exp(x*exp(-x)/(exp(-x) + exp(-2*x**2/(x + 1)))) - exp(x))/x, x, oo) == -exp(2)
+
+def test_T5():
+    assert  limit(x*log(x)*log(x*exp(x) - x**2)**2/log(log(x**2 + 2*exp(exp(3*x**3*log(x))))),x,oo) == Rational(1,3)
+
+def test_T6():
+    assert limit(1/n * factorial(n)**(1/n), n, oo) == exp(-1)
+
+def test_T7():
+    limit(1/n * gamma(n + 1)**(1/n), n, oo)
+
+def test_T8():
+    a,z = symbols('a z', real=True,positive=True)
+    assert limit(gamma(z + a)/gamma(z)*exp(-a*log(z)), z, oo) == 1
+
+@XFAIL
+def test_T9():
+    z,k = symbols('z k', real=True,positive=True)
+    assert limit(hyper((1, k), (1,), z/k), k,oo) == exp(z) # raises NotImplementedError: Don't know how to calculate the mrv of '(1, k)'
+
+@XFAIL
+def test_T10():
+    limit(zeta(x) - 1/(x - 1), x, 1)# raises PoleError shouldreturn euler-mascheroni constant
+
+@XFAIL
+def test_T11():
+    n,k = symbols('m k', integer=True, positive=True)
+    limit(n**x/(x*product((1 + x/k), (k, 1, n))),n,oo) == gamma(x) #raises NotImplementedError
