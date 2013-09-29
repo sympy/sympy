@@ -1632,10 +1632,10 @@ def translate(s):
     '''
     Check for an accent ending the string.  If present, convert the
     accent to latex and translate the rest recursively.
-    
+
     Given a description of a Greek letter or other special character,
     return the appropriate latex.
-    
+
     Let everything else pass as given.
     '''
     # Process accents, if any, and recurse
