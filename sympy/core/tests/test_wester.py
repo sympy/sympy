@@ -1875,5 +1875,5 @@ def test_T10():
 
 @XFAIL
 def test_T11():
-    n,k = symbols('m k', integer=True, positive=True)
+    n,k = symbols('n k', integer=True, positive=True)
     limit(n**x/(x*product((1 + x/k), (k, 1, n))),n,oo) == gamma(x) #raises NotImplementedError
