@@ -425,6 +425,8 @@ class Dyadic(object):
     def dt(self, frame):
         """Take the time derivative of this Dyadic in a frame.
 
+        Calls ReferenceFrame's dt method
+
         Parameters
         ==========
 
@@ -445,13 +447,7 @@ class Dyadic(object):
         """
 
         _check_frame(frame)
-        t = dynamicsymbols._t
-        ol = Dyadic(0)
-        for i, v in enumerate(self.args):
-            ol += (v[0].diff(t) * (v[1] | v[2]))
-            ol += (v[0] * (v[1].dt(frame) | v[2]))
-            ol += (v[0] * (v[1] | v[2].dt(frame)))
-        return ol
+        return frame.dt(self)
 
     def simplify(self):
         """Returns a simplified Dyadic."""
@@ -1195,56 +1191,58 @@ class ReferenceFrame(object):
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
 
-    def express(self, field, variables=False):
+    def express(self, expr, variables=False):
         """
-        Re-express a vector/scalar function in this frame
+        Re-express a vector/scalar function or a dyadic in this frame
 
         If 'variables' is True, then the coordinate variables of other
-        frames present in the vector field expression are also
+        frames present in the vector field / dyadic expression are also
         substituted in terms of the base scalars of this frame
 
         Parameters
         ==========
 
-        field : Vector/sympifyable
-            The vector/scalar field to express in this frame
+        expr : Vector/Dyadic/sympifyable
+            The expression to re-express in this frame
 
         variables : boolean
             Boolean to specify whether to substitute base scalars
-            in vector expression. If the field is scalar, this parameter
-            is not considered
+            in vector or dyadic expression. If the field is scalar,
+            this parameter is not considered
 
         Examples
         ========
 
-        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> from sympy.physics.mechanics import ReferenceFrame, outer
         >>> R0 = ReferenceFrame('R0')
-        >>> R1 = ReferenceFrame('R1')
         >>> from sympy import Symbol
         >>> q = Symbol('q')
-        >>> R1.orient(R0, 'Axis', [q, R0.z])
+        >>> R1 = R0.orientnew('R1', 'Axis', [q, R0.z])
         >>> R0.express(4*R1.x + 5*R1.z)
         4*cos(q)*R0.x + 4*sin(q)*R0.y + 5*R0.z
         >>> R1.express(R0[0]*R0[1])
         (R1_x*sin(q) + R1_y*cos(q))*(R1_x*cos(q) - R1_y*sin(q))
+        >>> d = outer(R0.x, R0.z)
+        >>> R1.express(d)
+        cos(q)*(R1.x|R1.z) - sin(q)*(R1.y|R1.z)
 
         """
 
-        if field == 0:
+        if expr == 0:
             return 0
-        if isinstance(field, Vector):
-            #Given field is a Vector
+        if isinstance(expr, Vector):
+            #Given expr is a Vector
             if variables:
                 #If variables attribute is True, substitute
                 #the coordinate variables in the Vector
-                frame_list = [x[-1] for x in field.args]
+                frame_list = [x[-1] for x in expr.args]
                 subs_dict = {}
                 for frame in frame_list:
                     subs_dict.update(frame.variable_map(self))
-                field = field.subs(subs_dict)
-            #Re-express to other frame
+                expr = expr.subs(subs_dict)
+            #Re-express in this frame
             outvec = Vector([])
-            for i, v in enumerate(field.args):
+            for i, v in enumerate(expr.args):
                 if v[1] != self:
                     temp = self.dcm(v[1]) * v[0]
                     if Vector.simp:
@@ -1255,23 +1253,26 @@ class ReferenceFrame(object):
                     outvec += Vector([v])
             return outvec
 
+        if isinstance(expr, Dyadic):
+            return expr.express(self)
+
         else:
-            #Given field is a scalar
+            #Given expr is a scalar field
             frame_set = set([])
-            field = sympify(field)
+            expr = sympify(expr)
             #Subsitute all the coordinate variables
-            for x in field.atoms():
+            for x in expr.atoms():
                 if isinstance(x, CoordinateSym)and x.frame != self:
                     frame_set.add(x.frame)
             subs_dict = {}
             for frame in frame_set:
                 subs_dict.update(frame.variable_map(self))
-            return field.subs(subs_dict)
+            return expr.subs(subs_dict)
 
     def dt(self, expr, order=1):
         """
         Calculate the time derivative of a vector/scalar field function
-        in this frame.
+        or dyadic expression in this frame.
 
         References
         ==========
@@ -1281,8 +1282,8 @@ class ReferenceFrame(object):
         Parameters
         ==========
 
-        expr : Vector/sympifyable
-            The field whose time derivative is to be calculated
+        expr : Vector/Dyadic/sympifyable
+            The expression whose time derivative is to be calculated
 
         order : integer
             The order of the derivative to be calculated
@@ -1304,6 +1305,11 @@ class ReferenceFrame(object):
         u1'*N.x
         >>> N.dt(u1*A[0])
         N_x*Derivative(u1(t), t)
+        >>> B = N.orientnew('B', 'Axis', [u1, N.z])
+        >>> from sympy.physics.mechanics import outer
+        >>> d = outer(N.x, N.x)
+        >>> B.dt(d)
+        - u1'*(N.y|N.x) - u1'*(N.x|N.y)
 
         """
 
@@ -1312,6 +1318,7 @@ class ReferenceFrame(object):
             return expr
         if order%1 != 0 or order < 0:
             raise ValueError("Unsupported value of order entered")
+
         if isinstance(expr, Vector):
             outvec = Vector(0)
             for i, v in enumerate(expr.args):
@@ -1320,7 +1327,17 @@ class ReferenceFrame(object):
                 else:
                     outvec += v[1].dt(Vector([v])) + \
                               (v[1].ang_vel_in(self) ^ Vector([v]))
-            return outvec
+            return self.dt(outvec, order - 1)
+
+        if isinstance(expr, Dyadic):
+            t = dynamicsymbols._t
+            ol = Dyadic(0)
+            for i, v in enumerate(expr.args):
+                ol += (v[0].diff(t) * (v[1] | v[2]))
+                ol += (v[0] * (self.dt(v[1]) | v[2]))
+                ol += (v[0] * (v[1] | self.dt(v[2])))
+            return self.dt(ol, order - 1)
+
         else:
             return diff(self.express(expr), t, order)
 
