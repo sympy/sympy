@@ -43,41 +43,56 @@ def execute_gamma_simplify_tests_for_function(tfunc, D):
 
     # Fully G.Lorentz-contracted expressions, these return scalars:
 
+    def add_delta(ne):
+        return ne * DiracSpinor.delta(DiracSpinor.auto_left, DiracSpinor.auto_right)
+
     t = (G(mu)*G(-mu))
-    assert tfunc(t) == D
+    ts = add_delta(D)
+    assert tfunc(t) == ts
 
     t = (G(mu)*G(nu)*G(-mu)*G(-nu))
-    assert tfunc(t) == 2*D - D**2  # -8
+    ts = add_delta(2*D - D**2)  # -8
+    assert tfunc(t) == ts
 
     t = (G(mu)*G(nu)*G(-nu)*G(-mu))
-    assert tfunc(t) == D**2  # 16
+    ts = add_delta(D**2)  # 16
+    assert tfunc(t) == ts
 
     t = (G(mu)*G(nu)*G(-rho)*G(-nu)*G(-mu)*G(rho))
-    assert tfunc(t) == 4*D - 4*D**2 + D**3  # 16
+    ts = add_delta(4*D - 4*D**2 + D**3)  # 16
+    assert tfunc(t) == ts
 
     t = (G(mu)*G(nu)*G(rho)*G(-rho)*G(-nu)*G(-mu))
-    assert tfunc(t) == D**3  # 64
+    ts = add_delta(D**3)  # 64
+    assert tfunc(t) == ts
 
     t = (G(a1)*G(a2)*G(a3)*G(a4)*G(-a3)*G(-a1)*G(-a2)*G(-a4))
-    assert tfunc(t) == -8*D + 16*D**2 - 8*D**3 + D**4  # -32
+    ts = add_delta(-8*D + 16*D**2 - 8*D**3 + D**4)  # -32
+    assert tfunc(t) == ts
 
     t = (G(-mu)*G(-nu)*G(-rho)*G(-sigma)*G(nu)*G(mu)*G(sigma)*G(rho))
-    assert tfunc(t) == -16*D + 24*D**2 - 8*D**3 + D**4  # 64
+    ts = add_delta(-16*D + 24*D**2 - 8*D**3 + D**4)  # 64
+    assert tfunc(t) == ts
 
     t = (G(-mu)*G(nu)*G(-rho)*G(sigma)*G(rho)*G(-nu)*G(mu)*G(-sigma))
-    assert tfunc(t) == 8*D - 12*D**2 + 6*D**3 - D**4  # -32
+    ts = add_delta(8*D - 12*D**2 + 6*D**3 - D**4)  # -32
+    assert tfunc(t) == ts
 
     t = (G(a1)*G(a2)*G(a3)*G(a4)*G(a5)*G(-a3)*G(-a2)*G(-a1)*G(-a5)*G(-a4))
-    assert tfunc(t) == 64*D - 112*D**2 + 60*D**3 - 12*D**4 + D**5  # 256
+    ts = add_delta(64*D - 112*D**2 + 60*D**3 - 12*D**4 + D**5)  # 256
+    assert tfunc(t) == ts
 
     t = (G(a1)*G(a2)*G(a3)*G(a4)*G(a5)*G(-a3)*G(-a1)*G(-a2)*G(-a4)*G(-a5))
-    assert tfunc(t) == 64*D - 120*D**2 + 72*D**3 - 16*D**4 + D**5  # -128
+    ts = add_delta(64*D - 120*D**2 + 72*D**3 - 16*D**4 + D**5)  # -128
+    assert tfunc(t) == ts
 
     t = (G(a1)*G(a2)*G(a3)*G(a4)*G(a5)*G(a6)*G(-a3)*G(-a2)*G(-a1)*G(-a6)*G(-a5)*G(-a4))
-    assert tfunc(t) == 416*D - 816*D**2 + 528*D**3 - 144*D**4 + 18*D**5 - D**6  # -128
+    ts = add_delta(416*D - 816*D**2 + 528*D**3 - 144*D**4 + 18*D**5 - D**6)  # -128
+    assert tfunc(t) == ts
 
     t = (G(a1)*G(a2)*G(a3)*G(a4)*G(a5)*G(a6)*G(-a2)*G(-a3)*G(-a1)*G(-a6)*G(-a4)*G(-a5))
-    assert tfunc(t) == 416*D - 848*D**2 + 584*D**3 - 172*D**4 + 22*D**5 - D**6  # -128
+    ts = add_delta(416*D - 848*D**2 + 584*D**3 - 172*D**4 + 22*D**5 - D**6)  # -128
+    assert tfunc(t) == ts
 
     # Expressions with free indices:
 
@@ -162,7 +177,7 @@ def test_kahane_algorithm():
     # Wrap this function to convert to and from TIDS:
 
     def tfunc(e):
-        return GammaMatrixHead.kahane_simplify(e.coeff, e._tids)
+        return GammaMatrixHead._simplify_single_line(e)
 
     execute_gamma_simplify_tests_for_function(tfunc, D=4)
 
@@ -175,7 +190,7 @@ def test_gamma_matrix_class():
 
     t = A(k)*G(i)*G(-i)
     ts = simplify(t)
-    assert ts == 4*A(k)
+    assert ts == 4*A(k)*DiracSpinor.delta(DiracSpinor.auto_left, DiracSpinor.auto_right)
 
     t = G(i)*A(k)*G(j)
     ts = simplify(t)
@@ -184,7 +199,7 @@ def test_gamma_matrix_class():
     execute_gamma_simplify_tests_for_function(simplify, D=4)
 
 def test_gamma_matrix_trace():
-    gamma_trace = G.trace_tens
+    gamma_trace = G._trace_single_line
     g = G.Lorentz.metric
 
     m0, m1, m2, m3, m4, m5, m6 = tensor_indices('m0:7', G.Lorentz)
@@ -289,11 +304,11 @@ def test_simple_trace_cases_symbolic_dim():
     g = G.Lorentz.metric
 
     t = G(m0)*G(m1)
-    t1 = G.trace_tens(t)
+    t1 = G._trace_single_line(t)
     assert t1 == 4 * G.Lorentz.metric(m0, m1)
 
     t = G(m0)*G(m1)*G(m2)*G(m3)
-    t1 = G.trace_tens(t)
+    t1 = G._trace_single_line(t)
     t2 = -4*g(m0, m2)*g(m1, m3) + 4*g(m0, m1)*g(m2, m3) + 4*g(m0, m3)*g(m1, m2)
     assert t1 == t2
 

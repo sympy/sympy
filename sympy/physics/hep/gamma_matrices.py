@@ -1,6 +1,7 @@
 from sympy import S
 from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorIndex,\
-                                TensMul, TensorHead, tensorsymmetry, TensorType, TIDS, TensAdd, tensor_mul
+                                TensMul, TensorHead, tensorsymmetry, TensorType,\
+                                TIDS, TensAdd, tensor_mul, TensExpr
 from sympy.core.containers import Tuple
 import collections
 
@@ -99,7 +100,7 @@ class GammaMatrixHead(TensorHead):
     @staticmethod
     def simplify_this_type(expression):
         extracted_expr, residual_expr = GammaMatrixHead.extract_type_tens(expression)
-        res_expr = GammaMatrixHead.simplify_tens(extracted_expr)
+        res_expr = GammaMatrixHead._simplify_single_line(extracted_expr)
         return res_expr * residual_expr
 
     @staticmethod
@@ -219,32 +220,42 @@ class GammaMatrixHead(TensorHead):
             first = [x[0] for x in first.free if x[1] == 1][0]
             last = [x[0] for x in last.free if x[1] == 2][0]
             tx = tensor_mul(*[x for i, x in enumerate(a) if i  in line])
-            tx1 = GammaMatrixHead.simplify_tens(tx)
+            tx1 = GammaMatrixHead._simplify_single_line(tx)
             if tx1.is_integer:
                 tx1 = tx1*DiracSpinor.delta(first, last)
             tlines.append(tx1)
-        traces = [GammaMatrix.trace_tens(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in traces]
+        traces = [GammaMatrix._trace_single_line(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in traces]
         res = tensor_mul(*([trest] + tlines + traces))
         return res
 
 
     @staticmethod
-    def simplify_tens(expression):
+    def _simplify_single_line(expression):
         """
         Simplify single-line product of gamma matrices.
         """
         coeff = expression.coeff
         tids = expression._tids
 
-        tadd = GammaMatrixHead.kahane_simplify(coeff, tids)
+        flag = False
+        for i in expression.free:
+            if (i[0]._tensortype == DiracSpinor):
+                if not flag:
+                    first_spinor_index = i[0]
+                    flag = True
+                last_spinor_index = i[0]
+
+        tadd = GammaMatrixHead._kahane_simplify(coeff, tids)
+        if not isinstance(tadd, TensExpr) and flag:
+            tadd *= DiracSpinor.delta(first_spinor_index, last_spinor_index)
 
         return tadd
 
-    def trace_tens(self, expression):
+    def _trace_single_line(self, expression):
         """
-        Evaluate the trace of gamma matrix strings inside a ``TensExpr``.
+        Evaluate the trace of a single gamma matrix line inside a ``TensExpr``.
         """
-        tadd = GammaMatrix.simplify_tens(expression)
+        tadd = GammaMatrix._simplify_single_line(expression)
 
         Lorentz = self.Lorentz
         D = Lorentz.dim
@@ -252,12 +263,7 @@ class GammaMatrixHead(TensorHead):
         if not isinstance(tadd, TensAdd):
             tadd = TensAdd(tadd)
 
-        for i in tadd.args:
-            for j in i.dum:
-                if (not j[0]) or (not j[1]):
-                    raise ValueError("expression contains dummy indices")
-
-        if not tadd.rank:
+        if tadd.args[0].get_indices() == [DiracSpinor.auto_left, DiracSpinor.auto_right] or tadd.rank == 0:
             # if rank of simplified expression is zero, return the dimension:
             assert len(tadd.args) == 1
             return D * tadd.args[0].coeff
@@ -319,7 +325,7 @@ class GammaMatrixHead(TensorHead):
         return t
 
     @staticmethod
-    def kahane_simplify(coeff, tids):
+    def _kahane_simplify(coeff, tids):
         r"""
         This function cancels contracted elements in a product of four
         dimensional gamma matrices, resulting in an expression equal to the given
@@ -339,7 +345,7 @@ class GammaMatrixHead(TensorHead):
         ``G(i0)*G(i1)`` or
         ``G(i0,s0,-s1)*G(i1,s1,-s2)*G(-i0,s2,-s3)`` or
         ``G(i0,True,-s1)*G(i1,s1,-s2)*G(-i0,s2,True)``,
-        ``G.kahane_simplify(t.coeff, t._tids)`` gives
+        ``G._kahane_simplify(t.coeff, t._tids)`` gives
         ``-2*gamma(i1, auto_left, auto_right)``
 
         but if one reorders the terms as in
@@ -350,7 +356,7 @@ class GammaMatrixHead(TensorHead):
 
         `` t = G(i0)*G(-i0)`` or
         ``t = G(i0,s0,-s1)*G(-i0,s1,-s2)``
-        ``G.kahane_simplify(t.coeff, t._tids)`` gives 4
+        ``G._kahane_simplify(t.coeff, t._tids)`` gives 4
 
         Algorithm
         =========
@@ -378,18 +384,18 @@ class GammaMatrixHead(TensorHead):
         >>> from sympy.tensor.tensor import tensor_indices, tensorhead, TensMul, TensAdd
         >>> i0, i1, i2 = tensor_indices('i0:3', G.Lorentz)
         >>> ta = G(i0)*G(-i0)
-        >>> sa = G.kahane_simplify(ta.coeff, ta._tids)
+        >>> sa = G._kahane_simplify(ta.coeff, ta._tids)
         >>> sa
         4
         >>> tb = G(i0)*G(i1)*G(-i0)
-        >>> sb = G.kahane_simplify(tb.coeff, tb._tids)
+        >>> sb = G._kahane_simplify(tb.coeff, tb._tids)
         >>> sb
         -2*gamma(i1, auto_left, auto_right)
 
         If there are no contractions, the same expression is returned
 
         >>> tc = 3*G(i0)*G(i1)
-        >>> sc = G.kahane_simplify(tc.coeff, tc._tids)
+        >>> sc = G._kahane_simplify(tc.coeff, tc._tids)
         >>> sc
         3*gamma(i0, auto_left, S_0)*gamma(i1, -S_0, auto_right)
 
