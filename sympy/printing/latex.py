@@ -47,7 +47,6 @@ tex_greek_dictionary = {
     'Chi': 'X',
     'lamda': r'\lambda',
     'Lamda': r'\Lambda',
-    'Lambda': r'\Lambda',
     'khi': r'\chi',
     'Khi': r'X',
     'varepsilon': r'\varepsilon',
