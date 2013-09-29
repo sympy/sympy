@@ -9,7 +9,7 @@ tested system.
 from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
-    I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
+    I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
@@ -17,6 +17,8 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci)
 
 from sympy.functions.combinatorial.numbers import stirling
+from sympy.functions.elementary.integers import floor
+from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
@@ -1609,8 +1611,8 @@ def test_P45():
 def test_R1():
     i,n = symbols('i n', integer=True, positive=True)
     xn=MatrixSymbol('xn',n,1)
-    S=Sum((xn[i,0]-Sum(xn[j,0],(j,0,n-1))/n)**2,(i,0,n-1))
-    S.doit() # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    Sm = Sum((xn[i,0]-Sum(xn[j,0],(j,0,n-1))/n)**2,(i,0,n-1))
+    Sm.doit() # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
 
 @XFAIL
 def test_R2():
@@ -1627,32 +1629,32 @@ def test_R2():
 def test_R3():
     n,k = symbols('n k', integer=True, positive=True)
     sk = ((-1)**k) * (binomial(2*n, k))**2
-    S = Sum(sk, (k,1,oo))
-    T = S.doit()
+    Sm = Sum(sk, (k,1,oo))
+    T = Sm.doit()
     assert T.combsimp() == (-1)**n*binomial(2*n, n)# returns -((-1)**n*factorial(2*n) - (factorial(n))**2)*exp_polar(-I*pi)/(factorial(n))**2
 
 @XFAIL
 def test_R4():
     n,k = symbols('n k', integer=True, positive=True)
     sk = binomial(n, k)/(2**n) - binomial(n + 1, k)/(2**(n + 1))
-    S = Sum(sk, (k,1,oo))
-    T = S.doit()
+    Sm = Sum(sk, (k,1,oo))
+    T = Sm.doit()
     assert T.combsimp() == 2**(-n-1)*binomial(n,k-1) # returns -2**(-n)/2
 
 @XFAIL
 def test_R5():
     a,b,c,n,k = symbols('a b c n k', integer=True, positive=True)
     sk = ((-1)**k) * binomial(a+b, a+k) * binomial(b+c, b+k) * binomial(c+a, c+k)
-    S = Sum(sk, (k,1,oo))
-    T = S.doit() # hypergeometric series not calculated
+    Sm = Sum(sk, (k,1,oo))
+    T = Sm.doit() # hypergeometric series not calculated
     assert T == factorial(a+b+c)/(factorial(a)*factorial(b)*factorial(c))
 
 @XFAIL
 def test_R6():
     n,k = symbols('n k', integer=True, positive=True)
     gn = MatrixSymbol('gn',n+1,1)
-    S = Sum(gn[k,0]-gn[k-1,0],(k,1,n+1))
-    assert S.doit() == -gn[0, 0] + gn[n+1, 0] #raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    Sm = Sum(gn[k,0]-gn[k-1,0],(k,1,n+1))
+    assert Sm.doit() == -gn[0, 0] + gn[n+1, 0] #raises AttributeError: 'str' object has no attribute 'is_Piecewise'
 
 def test_R7():
     n,k = symbols('n k', integer=True, positive=True)
@@ -1662,22 +1664,22 @@ def test_R7():
 @XFAIL
 def test_R8():
     n,k = symbols('n k', integer=True, positive=True)
-    S = Sum(k**2*binomial(n,k),(k,1,n))
-    T = S.doit() #returns Piecewise function
+    Sm = Sum(k**2*binomial(n,k),(k,1,n))
+    T = Sm.doit() #returns Piecewise function
     #T.simplify() raisesAttributeError: 'Or' object has no attribute 'as_numer_denom'
     assert T.combsimp() == n*(n+1)*2**(n-2)
 
 
 def test_R9():
     n,k = symbols('n k', integer=True, positive=True)
-    S = Sum(binomial(n,k-1)/k,(k,1,n+1))
-    assert S.doit().simplify() ==  (2**(n + 1) - 1)/(n + 1)
+    Sm = Sum(binomial(n,k-1)/k,(k,1,n+1))
+    assert Sm.doit().simplify() ==  (2**(n + 1) - 1)/(n + 1)
 
 @XFAIL
 def test_R10():
     n,m,r,k = symbols('n m r k', integer=True, positive=True)
-    S = Sum(binomial(n,k)*binomial(m,r-k),(k,0,r))
-    T = S.doit()
+    Sm = Sum(binomial(n,k)*binomial(m,r-k),(k,0,r))
+    T = Sm.doit()
     T2 = T.combsimp().rewrite(factorial)
     assert T2 == factorial(m + n)/(factorial(r)*factorial(m + n - r))
     assert T2 == binomial(m+n,r).rewrite(factorial)
@@ -1688,7 +1690,28 @@ def test_R10():
 def test_R11():
     n,k = symbols('n k', integer=True, positive=True)
     sk = binomial(n,k)*fibonacci(k)
-    S = Sum(sk,(k,0,n))
-    T = S.doit()
+    Sm = Sum(sk,(k,0,n))
+    T = Sm.doit()
     # Fibonnaci simplification not implemented try (fibonacci(n)+fibonacci(n+1)).simplify()
     assert T == fibonacci(2*n)
+
+@XFAIL
+def test_R12():
+    n,k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(fibonacci(k)**2,(k,0,n))
+    T = Sm.doit()
+    assert T == fibonacci(n)*fibonacci(n+1)
+
+@XFAIL
+def test_R13():
+    n,k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(sin(k*x),(k,1,n))
+    T = Sm.doit() # Sum is not calculated
+    assert T.simplify() ==  cot(x/2)/2 - cos(x*(2*n + 1)/2)/(2*sin(x/2))
+
+@XFAIL
+def test_R14():
+    n,k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(sin((2*k-1)*x),(k,1,n))
+    T = Sm.doit() # Sum is not calculated
+    assert T.simplify() == sin(n*x)**2/sin(x)
