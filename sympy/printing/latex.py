@@ -47,6 +47,7 @@ tex_greek_dictionary = {
     'Chi': 'X',
     'lamda': r'\lambda',
     'Lamda': r'\Lambda',
+    'Lambda': r'\Lambda',
     'khi': r'\chi',
     'Khi': r'X',
     'varepsilon': r'\varepsilon',
@@ -60,6 +61,12 @@ tex_greek_dictionary = {
 
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
                      'hslash', 'mho', 'wp', ])
+
+# Make sure to keep this list sorted by decreasing length so that,
+# e.g., "ddot" is not confused for "d" followed by "dot"
+accent_keys = ['mathring', 'check', 'breve', 'acute', 'grave',
+                'tilde', 'prime', 'ddot', 'hat', 'dot', 'bar',
+                'vec', 'abs', 'prm', 'bm']
 
 greek_letters_set = frozenset(greeks)
 
@@ -1623,11 +1630,26 @@ class LatexPrinter(Printer):
 
 def translate(s):
     '''
+    Check for an accent ending the string.  If present, convert the
+    accent to latex and translate the rest recursively.
+    
     Given a description of a Greek letter or other special character,
-    return the appropriate latex
-
-    let everything else pass as given
+    return the appropriate latex.
+    
+    Let everything else pass as given.
     '''
+    # Process accents, if any, and recurse
+    for key in accent_keys:
+        if s.endswith(key):
+            if(key in ['prime', 'prm']):
+                # MathJax can fail on primes without braces
+                return "{" + translate(s.rsplit(key,1)[0]) + "}'"
+            if(key=='bm'):
+                outkey = 'boldsymbol' # MathJax doesn't know \bm
+            else:
+                outkey = key
+            return "\\" + outkey + "{" + translate(s.rsplit(key,1)[0]) + "}"
+    # Process the rest
     tex = tex_greek_dictionary.get(s)
     if tex:
         return tex
