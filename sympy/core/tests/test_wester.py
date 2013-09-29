@@ -17,7 +17,6 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci)
 
 from sympy.functions.combinatorial.numbers import stirling
-from sympy.functions.elementary.integers import floor
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
@@ -33,6 +32,7 @@ from sympy.polys.rings import vring
 from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
 from sympy.concrete import Sum
+from sympy.concrete.products import Product
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -1683,7 +1683,7 @@ def test_R10():
     T2 = T.combsimp().rewrite(factorial)
     assert T2 == factorial(m + n)/(factorial(r)*factorial(m + n - r))
     assert T2 == binomial(m+n,r).rewrite(factorial)
-    T3 = T2.rewrite(binomial) # rewrite(binomial) is not working
+    T3 = T2.rewrite(binomial) # rewrite(binomial) is not working. https://code.google.com/p/sympy/issues/detail?id=4036
     assert T3 ==  binomial(m+n,r)
 
 @XFAIL
@@ -1692,7 +1692,7 @@ def test_R11():
     sk = binomial(n,k)*fibonacci(k)
     Sm = Sum(sk,(k,0,n))
     T = Sm.doit()
-    # Fibonnaci simplification not implemented try (fibonacci(n)+fibonacci(n+1)).simplify()
+    # Fibonnaci simplification not implemented https://code.google.com/p/sympy/issues/detail?id=4035
     assert T == fibonacci(2*n)
 
 @XFAIL
@@ -1715,3 +1715,124 @@ def test_R14():
     Sm = Sum(sin((2*k-1)*x),(k,1,n))
     T = Sm.doit() # Sum is not calculated
     assert T.simplify() == sin(n*x)**2/sin(x)
+
+@XFAIL
+def test_R15():
+    n,k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(binomial(n - k, k), (k, 0, floor(n/2)))
+    T = Sm.doit() # Sum is not calculated
+    assert T.simplify() == fibonacci(n+1)
+
+def test_R16():
+    k = symbols('k', integer=True, positive=True)
+    Sm = Sum(1/k**2 + 1/k**3, (k,1,oo))
+    assert Sm.doit() == zeta(3) + pi**2/6
+
+def test_R17():
+    k = symbols('k', integer=True, positive=True)
+    assert float(Sum(1/k**2 + 1/k**3, (k,1,oo))) == 2.8469909700078206
+
+@XFAIL
+def test_R18():
+    k = symbols('k', integer=True, positive=True)
+    Sm = Sum(1/(2**k*k**2), (k,1,oo))
+    T = Sm.doit() # returns polylog(2, 1/2), seems particular value for 1/2 is not known. https://code.google.com/p/sympy/issues/detail?id=4033
+    assert T.simplify() == -log(2)**2/2 + pi**2/12
+
+@XFAIL
+def test_R19():
+    k = symbols('k', integer=True, positive=True)
+    Sm = Sum(1/((3*k+1)*(3*k+2)*(3*k+3)), (k,0,oo))
+    T = Sm.doit()
+    assert T.simplify() == -log(3)/4 + sqrt(3)*pi/12 # fails, no simplification
+
+@XFAIL
+def test_R20():
+    n,k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(binomial(n,4*k) , (k,0,oo))
+    T = Sm.doit()
+    assert T.simplify() == 2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2 # fails, no simplification
+
+@XFAIL
+def test_R21():
+    k = symbols('k', integer=True, positive=True)
+    Sm = Sum(1/(sqrt(k*(k + 1)) * (sqrt(k) + sqrt(k + 1))) , (k,1,oo))
+    T = Sm.doit() # Sum not calculated
+    assert T.simplify() == 1
+
+@XFAIL
+def test_R22():
+    n,k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(Sum(binomial(n, k)*binomial(n - k, n - 2*k)*x**n*y**(n - 2*k),(k,0,floor(n/2))),(n,0,oo))
+    # How to express constraint abs(x*y)<1?
+    T = Sm.doit()
+    # Correct answer unknown, not possible to provide assert
+    assert T == False
+
+@XFAIL
+def test_R23():
+    n,k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(Sum(factorial(n)/(factorial(k)**2*factorial(n - 2*k))*(x/y)**k*(x*y)**(n - k), (n,2*k,oo)), (k,0,oo))
+    # How to express constraint abs(x*y)<1?
+    T = Sm.doit() # Sum not calculated
+    assert T == -1/sqrt(x**2*y**2 - 4*x**2 - 2*x*y + 1)
+
+def test_R24():
+    m,k = symbols('m k', integer=True, positive=True)
+    Sm = Sum(Product(k/(2*k - 1), (k,1,m)), (m,2,oo))
+    assert Sm.doit() == pi/2
+
+def test_S1():
+    k = symbols('k', integer=True, positive=True)
+    Pr = Product(gamma(k/3), (k,1,8))
+    assert Pr.doit().simplify() == 640*sqrt(3)*pi**3/6561
+
+def test_S2():
+    n,k = symbols('n k', integer=True, positive=True)
+    assert Product(k,(k,1,n)).doit(),simplify() == factorial(n)
+
+def test_S3():
+    n,k = symbols('n k', integer=True, positive=True)
+    assert Product(x**k,(k,1,n)).doit().simplify() == x**(n*(n + 1)/2)
+
+def test_S4():
+    n,k = symbols('n k', integer=True, positive=True)
+    assert Product(1+1/k,(k,1,n-1)).doit().simplify() == n
+
+def test_S5():
+    n,k = symbols('n k', integer=True, positive=True)
+    assert Product((2*k-1)/(2*k),(k,1,n)).doit().combsimp() == factorial(n-Rational(1,2))/(sqrt(pi)*factorial(n))
+
+@XFAIL
+def test_S6():
+    n,k = symbols('n k', integer=True, positive=True)
+    # Product raises Infinite recursion error. https://code.google.com/p/sympy/issues/detail?id=4034
+    assert Product(x**2-2*x*cos(k*pi/n)+1, (k,1,n-1)).doit().simplify() == (x**(2*n)-1)/(x**2-1)
+
+@XFAIL
+def test_S7():
+    k = symbols('k', integer=True, positive=True)
+    Pr = Product((k**3-1)/(k**3+1), (k,2,oo))
+    T = Pr.doit()
+    assert T.simplify() == Rational(2,3) #T simplifies incorrectly to 0
+
+@XFAIL
+def test_S8():
+    k = symbols('k', integer=True, positive=True)
+    Pr = Product(1 - 1/(2*k)**2, (k,1,oo))
+    T = Pr.doit() # returns nan https://code.google.com/p/sympy/issues/detail?id=4037
+    assert T.simplify() == 2/pi
+
+@XFAIL
+def test_S9():
+    k = symbols('k', integer=True, positive=True)
+    Pr = Product(1 + (-1)**(k + 1)/(2*k - 1), (k, 1, oo))
+    T = Pr.doit() # Product raises Infinite recursion error. https://code.google.com/p/sympy/issues/detail?id=4034
+    assert T.simplify() == sqrt(2)
+
+@XFAIL
+def test_S10():
+    k = symbols('k', integer=True, positive=True)
+    Pr = Product((k*(k +  1) + 1 + I)/(k*(k + 1) + 1 - I), (k,0,oo))
+    T = Pr.doit()
+    assert T.simplify() == -1 # raises OverflowError  https://code.google.com/p/sympy/issues/detail?id=4038
