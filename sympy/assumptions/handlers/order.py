@@ -98,9 +98,9 @@ class AskNegativeHandler(CommonHandler):
         """
         if expr.is_number:
             return AskNegativeHandler._number(expr, assumptions)
-        if ask(Q.real(expr.base), assumptions):
+        if ask(Q.extended_real(expr.base), assumptions):
             if ask(Q.positive(expr.base), assumptions):
-                if ask(Q.real(expr.exp), assumptions):
+                if ask(Q.extended_real(expr.exp), assumptions):
                     return False
             if ask(Q.even(expr.exp), assumptions):
                 return False
@@ -121,7 +121,7 @@ class AskNonNegativeHandler(CommonHandler):
         if expr.is_number:
             notnegative = fuzzy_not(AskNegativeHandler._number(expr, assumptions))
             if notnegative:
-                return ask(Q.real(expr), assumptions)
+                return ask(Q.extended_real(expr), assumptions)
             else:
                 return notnegative
 
@@ -184,7 +184,7 @@ class AskNonPositiveHandler(CommonHandler):
         if expr.is_number:
             notpositive = fuzzy_not(AskPositiveHandler._number(expr, assumptions))
             if notpositive:
-                return ask(Q.real(expr), assumptions)
+                return ask(Q.extended_real(expr), assumptions)
             else:
                 return notpositive
 
