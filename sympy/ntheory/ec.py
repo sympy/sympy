@@ -257,7 +257,15 @@ class EllipticCurvePoint():
     >>> e3 = EllipticCurve(-1, 9)
     >>> e3(1, -3) * 3
     (664/169, 17811/2197)
-
+    >>> e2 = EC(-2, 0, 0, 1, 1)
+    >>> p = e2(-1,1)
+    >>> q = e2(0, -1)
+    >>> p+q
+    (4, 8)
+    >>> p-q
+    (1, 0)
+    >>> 3*p-5*q
+    (328/361, -2800/6859)
     """
 
     @staticmethod
@@ -277,16 +285,21 @@ class EllipticCurvePoint():
             return self
         x1, y1 = self.x, self.y
         x2, y2 = p.x, p.y
+        a1 = self._curve._a1
         a2 = self._curve._a2
+        a3 = self._curve._a3
+        a4 = self._curve._a4
+        a6 = self._curve._a6
         if x1 != x2:
             slope = (y1 - y2) / (x1 - x2)
+            yint = (y1 * x2 - y2 * x1) / (x2 - x1)
         else:
             if (y1 + y2) == 0:
                 return self.point_at_infinity(self._curve)
-            a4 = self._curve._a4
-            slope = (3 * x1**2 + 2*a2 + a4) / (2 * y1)
-        x3 = slope**2 - a2 - x1 - x2
-        y3 = -y1 - slope * (x3 - x1)
+            slope = (3 * x1**2 + 2*a2*x1 + a4 - a1*y1) / (a1 * x1 + a3 + 2 * y1)
+            yint = (-x1**3 + a4*x1 + 2*a6 - a3*y1) / (a1*x1 + a3 + 2*y1)
+        x3 = slope**2 + a1*slope - a2 - x1 - x2
+        y3 = -(slope + a1) * x3 - yint - a3
         return EllipticCurvePoint(x3, y3, 1, self._curve)
 
     def __lt__(self, other):
@@ -311,7 +324,7 @@ class EllipticCurvePoint():
         return self * n
 
     def __neg__(self):
-        return EllipticCurvePoint(self.x, -self.y, self.z, self._curve)
+        return EllipticCurvePoint(self.x, -self.y - self._curve._a1*self.x - self._curve._a3, self.z, self._curve)
 
     def __repr__(self):
         if self.z == 0:
@@ -322,6 +335,9 @@ class EllipticCurvePoint():
         except TypeError:
             pass
         return '({}, {})'.format(self.x, self.y)
+
+    def __sub__(self, other):
+        return self + -other
 
     def order(self):
         """
