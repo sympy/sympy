@@ -1639,15 +1639,15 @@ def translate(s):
     '''
     # Process accents, if any, and recurse
     for key in accent_keys:
-        if s.endswith(key):
+        if s.lower().endswith(key):
             if(key in ['prime', 'prm']):
                 # MathJax can fail on primes without braces
-                return "{" + translate(s.rsplit(key,1)[0]) + "}'"
+                return "{" + translate(s[:-len(key)]) + "}'"
             if(key=='bm'):
                 outkey = 'boldsymbol' # MathJax doesn't know \bm
             else:
                 outkey = key
-            return "\\" + outkey + "{" + translate(s.rsplit(key,1)[0]) + "}"
+            return "\\" + outkey + "{" + translate(s[:-len(key)]) + "}"
     # Process the rest
     tex = tex_greek_dictionary.get(s)
     if tex:
