@@ -1,6 +1,9 @@
-from sympy.core import S, Rational, Symbol, Basic
+from sympy import Matrix, eye
 from sympy.combinatorics import Permutation
-from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
+from sympy.combinatorics.tensor_can import bsgs_direct_product, riemann_bsgs
+from sympy.core import S, Rational, Symbol, Basic
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
@@ -507,7 +510,7 @@ def test_TensExpr():
     raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
     raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
     raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
-    raises(NotImplementedError, lambda: A(a, b)**2)
+    raises(ValueError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
     raises(NotImplementedError, lambda: abs(A(a, b)))
 
@@ -1158,3 +1161,305 @@ def test_hash():
     assert tsymmetry.func(*tsymmetry.args) == tsymmetry
     assert hash(tsymmetry.func(*tsymmetry.args)) == hash(tsymmetry)
     assert check_all(tsymmetry)
+
+
+
+### TEST VALUED TENSORS ###
+
+minkowski = Matrix((
+    (1, 0, 0, 0),
+    (0, -1, 0, 0),
+    (0, 0, -1, 0),
+    (0, 0, 0, -1),
+))
+Lorentz = TensorIndexType('Lorentz')
+Lorentz.data = minkowski
+
+i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
+
+E, px, py, pz = symbols('E px py pz')
+A = tensorhead('A', [Lorentz], [[1]])
+A.data = [E, px, py, pz]
+B = tensorhead('B', [Lorentz], [[1]], 'Gcomm')
+B.data = range(4)
+AB = tensorhead("AB", [Lorentz] * 2, [[1]]*2)
+AB.data = minkowski
+
+ba_matrix = Matrix((
+    (1, 2, 3, 4),
+    (5, 6, 7, 8),
+    (9, 0, -1, -2),
+    (-3, -4, -5, -6),
+))
+
+BA = tensorhead("BA", [Lorentz] * 2, [[1]]*2)
+BA.data = ba_matrix
+
+BA(i0, i1)*A(-i0)*B(-i1)
+
+# Let's test the diagonal metric, with inverted Minkowski metric:
+LorentzD = TensorIndexType('LorentzD')
+LorentzD.data = [-1, 1, 1, 1]
+mu0, mu1, mu2 = tensor_indices('mu0:3', LorentzD)
+C = tensorhead('C', [LorentzD], [[1]])
+C.data = [E, px, py, pz]
+
+### non-diagonal metric ###
+ndm_matrix = (
+    (0, 1, 0,),
+    (1, 0, 1),
+    (0, 1, 0,),
+)
+ndm = TensorIndexType("ndm")
+ndm.data = ndm_matrix
+n0, n1, n2 = tensor_indices('n0:3', ndm)
+NA = tensorhead('NA', [ndm], [[1]])
+NA.data = range(10, 13)
+NB = tensorhead('NB', [ndm]*2, [[1]]*2)
+NB.data = [[i+j for j in range(10, 13)] for i in range(10, 13)]
+NC = tensorhead('NC', [ndm]*3, [[1]]*3)
+NC.data = [[[i+j+k for k in range(4, 7)] for j in range(1, 4)] for i in range(2, 5)]
+
+def test_valued_tensor_iter():
+    # iteration on VTensorHead
+    assert list(A) == [E, px, py, pz]
+    assert list(ba_matrix) == list(BA)
+
+    # iteration on VTensMul
+    assert list(A(i1)) == [E, px, py, pz]
+    assert list(BA(i1, i2)) == list(ba_matrix)
+    assert list(3 * BA(i1, i2)) == [3 * i for i in list(ba_matrix)]
+    assert list(-5 * BA(i1, i2)) == [-5 * i for i in list(ba_matrix)]
+
+    # iteration on VTensAdd
+    # A(i1) + A(i1)
+    assert list(A(i1) + A(i1)) == [2*E, 2*px, 2*py, 2*pz]
+    assert BA(i1, i2) - BA(i1, i2) == 0
+    assert list(BA(i1, i2) - 2 * BA(i1, i2)) == [-i for i in list(ba_matrix)]
+
+
+def test_valued_tensor_covariant_contravariant_elements():
+    # TODO: handle metric with covariant/contravariant indices!
+    assert A(-i0)[0] == A(i0)[0]
+    assert A(-i0)[1] == -A(i0)[1]
+
+    assert AB(i0, i1)[1, 1] == -1
+    assert AB(i0, -i1)[1, 1] == 1
+    assert AB(-i0, -i1)[1, 1] == -1
+    assert AB(-i0, i1)[1, 1] == 1
+
+
+def test_valued_tensor_get_matrix():
+    matab = AB(i0, i1).get_matrix()
+    assert matab == Matrix([
+                            [1,  0,  0,  0],
+                            [0, -1,  0,  0],
+                            [0,  0, -1,  0],
+                            [0,  0,  0, -1],
+                            ])
+    # when alternating contravariant/covariant with [1, -1, -1, -1] metric
+    # it becomes the identity matrix:
+    assert AB(i0, -i1).get_matrix() == eye(4)
+
+    # covariant and contravariant forms:
+    assert A(i0).get_matrix() == Matrix([E, px, py, pz])
+    assert A(-i0).get_matrix() == Matrix([E, -px, -py, -pz])
+    # VTensorHead should also be endowed with a get_matrix method?
+    # VTensMul
+
+
+def test_valued_tensor_contraction():
+    # TODO: decide how contract indices should work.
+    assert A(i0) * A(-i0) == E ** 2 - px ** 2 - py ** 2 - pz ** 2
+    assert A(i0) * A(-i0) == A ** 2
+    assert A(i0) * A(-i0) == A(i0) ** 2
+    assert (A(i0) * B(-i0)) == -px - 2 * py - 3 * pz
+
+    for i in range(4):
+        for j in range(4):
+            assert (A(i0) * B(-i1))[i, j] == [E, px, py, pz][i] * [0, -1, -2, -3][j]
+
+    # test contraction on the alternative Minkowski metric: [-1, 1, 1, 1]
+    assert C(mu0) * C(-mu0) == -E ** 2 + px ** 2 + py ** 2 + pz ** 2
+
+    contrexp = A(i0) * AB(i1, -i0)
+    assert A(i0).rank == 1
+    assert AB(i1, -i0).rank == 2
+    assert contrexp.rank == 1
+    for i in range(4):
+        assert contrexp[i] == [E, px, py, pz][i]
+
+
+def test_valued_tensor_self_contraction():
+    assert AB(i0, -i0) == 4
+    assert BA(i0, -i0) == 2
+
+
+def test_valued_tensor_pow():
+    assert C**2 == -E**2 + px**2 + py**2 + pz**2
+    assert C**1 == sqrt(-E**2 + px**2 + py**2 + pz**2)
+    # TODO: test both TensorHead and TensExpr
+
+
+def test_valued_tensor_expressions():
+    x1, x2, x3 = symbols('x1:4')
+
+    # test coefficient in contraction:
+    rank2coeff = x1 * A(i3) * B(i2)
+    assert rank2coeff[1, 1] == x1 * px
+    assert rank2coeff[3, 3] == 3 * pz * x1
+    coeff_expr = (x1 * A(i4)) * (B(-i4) / x2)
+
+    assert coeff_expr.expand() == -px*x1/x2 - 2*py*x1/x2 - 3*pz*x1/x2
+
+    add_expr = A(i0) + B(i0)
+
+    assert add_expr[0] == E
+    assert add_expr[1] == px + 1
+    assert add_expr[2] == py + 2
+    assert add_expr[3] == pz + 3
+
+    sub_expr = A(i0) - B(i0)
+
+    assert sub_expr[0] == E
+    assert sub_expr[1] == px - 1
+    assert sub_expr[2] == py - 2
+    assert sub_expr[3] == pz - 3
+
+    assert add_expr * B(-i0) == -px - 2*py - 3*pz - 14
+
+    expr1 = x1*A(i0) + x2*B(i0)
+    expr2 = expr1 * B(i1) * (-4)
+    expr3 = expr2 + 3*x3*AB(i0, i1)
+    expr4 = expr3 / 2
+    assert expr4 * 2 == expr3
+    expr5 = expr4 * BA(-i1, -i0)
+
+    # TODO: check numerically that this value is correct:
+    assert expr5 == (-2*x1 * (-20*E + 44*px - 8*py - 32*pz) + 136*x2 + 3*x3).expand()
+    # test contraction in more steps, verify that _vmetric is still there.
+
+
+def test_noncommuting_components():
+    euclid = TensorIndexType('Euclidean')
+    euclid.data = [1, 1]
+    i1, i2, i3 = tensor_indices('i1:4', euclid)
+
+    a, b, c, d = symbols('a b c d', commutative=False)
+    V1 = tensorhead('V1', [euclid] * 2, [[1]]*2)
+    V1.data = [[a, b], (c, d)]
+    V2 = tensorhead('V2', [euclid] * 2, [[1]]*2)
+    V2.data = [[a, c], [b, d]]
+
+    vtp = V1(i1, i2) * V2(-i2, -i1)
+
+    assert vtp == a ** 2 + b * c + c * b + d ** 2
+    assert vtp != a**2 + 2*b*c + d**2
+
+    # TODO: test non-commutative scalar coefficients in Mul, Add, subtractions...
+    Vc = b * V1(i1, -i1)
+    assert Vc.expand() == b * a + b * d
+
+
+#def test_valued_tensor_numeric_indices():
+#    mcov = [A(NumericCovariant(_)) for _ in range(A.data.shape[0])]
+#    mcontra = [A(NumericContravariant(_)) for _ in range(A.data.shape[0])]
+#
+#    for i in range(4):
+#        assert mcov[i] == [E, -px, -py, -pz][i]
+#        assert mcontra[i] == [E, px, py, pz][i]
+#
+#    bacov1 = [BA(i0, NumericCovariant(_)) for _ in range(4)]
+#    bacov2 = [BA(NumericCovariant(_), i0) for _ in range(4)]
+#    bacontra1 = [BA(i0, NumericContravariant(_)) for _ in range(4)]
+#    bacontra2 = [BA(NumericContravariant(_), i0) for _ in range(4)]
+#
+#    for i in range(4):
+#        for j in range(4):
+#            assert bacov1[i][j] == BA(i0, -i1)[j, i]
+#            assert bacov2[j][i] == BA(-i0, i1)[j, i]
+#            assert bacontra1[i][j] == BA(i0, i1)[j, i]
+#            assert bacontra2[j][i] == BA(i0, i1)[j, i]
+#
+#            assert BA(NumericContravariant(i), NumericContravariant(j)) == BA(i0, i1)[i, j]
+#            assert BA(NumericContravariant(i), NumericCovariant(j)) == BA(i0, -i1)[i, j]
+#            assert BA(NumericCovariant(i), NumericContravariant(j)) == BA(-i0, i1)[i, j]
+#            assert BA(NumericCovariant(i), NumericCovariant(j)) == BA(-i0, -i1)[i, j]
+
+
+def test_valued_non_diagonal_metric():
+    mmatrix = Matrix(ndm_matrix)
+    assert NA(n0)*NA(-n0) == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
+    # TODO: fix this test:
+    # assert NA(n0)*NB(n1, -n0)*NA(-n1) == (NA._ndarray.get_matrix().T * mmatrix * NB._ndarray.get_matrix().T * mmatrix * NA._ndarray.get_matrix())[0, 0]
+
+
+def test_valued_tensor_strip():
+    sA = A(i0).strip()
+    sB = B(-i0).strip()
+    sAB = AB(i0, i1).strip()
+
+#    assert len([_ for _ in A(i0).args if isinstance(_, NDArrayWrapper)]) == 1
+#    assert len([_ for _ in B(i0).args if isinstance(_, NDArrayWrapper)]) == 1
+#    assert len([_ for _ in AB(i0, i1).args if isinstance(_, NDArrayWrapper)]) == 1
+#
+#    assert [_ for _ in sA.args if isinstance(_, NDArrayWrapper)] == []
+#    assert [_ for _ in sB.args if isinstance(_, NDArrayWrapper)] == []
+#    assert [_ for _ in sAB.args if isinstance(_, NDArrayWrapper)] == []
+#
+#    assert sA.abstract == True
+#    assert sB.abstract == True
+#    assert sAB.abstract == True
+
+    assert sA.data is None
+    assert sB.data is None
+    assert sAB.data is None
+
+    sthA = A.strip()
+    sthB = B.strip()
+    sthAB = AB.strip()
+
+    assert sA.data is None
+    assert sB.data is None
+    assert sAB.data is None
+
+#    assert not A.abstract
+#    assert not B.abstract
+#    assert not AB.abstract
+#
+#    assert sthA.abstract
+#    assert sthB.abstract
+#    assert sthAB.abstract
+#
+#    assert sthA(i0).abstract
+#    assert sthB(i0).abstract
+#    assert sthAB(i0, i1).abstract
+
+
+def test_valued_tensor_applyfunc():
+    aA = A(i0).applyfunc(lambda x: x**2)
+    aB = B(i0).applyfunc(lambda x: x**3)
+    aB2 = B(-i0).applyfunc(lambda x: x**3)
+
+    for i in range(4):
+        assert aA[i] == A(i0)[i]**2
+        assert aB[i] == B(i1)[i]**3
+    assert aB*aB2 == -794
+
+    tA = A.applyfunc(lambda x: x + 33)
+    tB = B.applyfunc(lambda x: x + 33)
+    tAB = AB.applyfunc(lambda x: x + 33)
+
+    assert (tA(i0)*tA(-i0)).expand() == ((E + 33)**2 - (px + 33)**2 - (py + 33)**2 - (pz + 33)**2).expand()
+    assert tB(i0).get_matrix() == Matrix([33, 34, 35, 36])
+    assert tAB(i0, i1).get_matrix() == Matrix([
+        [34, 33, 33, 33],
+        [33, 32, 33, 33],
+        [33, 33, 32, 33],
+        [33, 33, 33, 32],
+    ])
+
+if __name__ == "__main__":
+    for key, value in locals().items():
+        if key.startswith("test_"):
+            value()
