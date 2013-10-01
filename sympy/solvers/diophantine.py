@@ -182,7 +182,9 @@ use :py:meth:`~sympy.solvers.diophantine.transformation_to_DN`
 
 Here A is a 2 X 2 matrix and B is a 2 X 1 matrix such that the transformation
 
-Transpose([X, Y]) = A * Transpose([x, y]) + B
+.. math::
+
+    \\begin{bmatrix} X\\\Y \\end{bmatrix} = A \\begin{bmatrix} x\\\y \\end{bmatrix} + B
 
 gives the equation `X^2 -5Y^2 = 920`. Values of `A` and `B` are as belows.
 
@@ -253,6 +255,10 @@ level API.
 >>> diophantine(a**2 + b**2 + c**2 + d**2 + e**2 + f**2 - 112)
 set([(8, 4, 4, 4, 0, 0)])
 
+If you want to get a more thorough idea about the the Diophantine module please
+refer to the following blog.
+
+http://thilinaatsympy.wordpress.com/
 
 References
 ==========
