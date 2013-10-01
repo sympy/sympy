@@ -16,7 +16,7 @@ integer variables. If we can find `n` integers `a_1, a_2, \ldots a_n` such that
 that the equation is solvable. You can read more about Diophantine equations in
 [1]_ and [2]_.
 
-Currently, following five types of diophantine equations can be solved using
+Currently, following five types of Diophantine equations can be solved using
 :py:meth:`~sympy.solvers.diophantine.diophantine` and other helper functions of
 the Diophantine module.
 
@@ -30,7 +30,7 @@ Module structure
 ================
 
 This module contains :py:meth:`~sympy.solvers.diophantine.diophantine` and
-helper functions that are needed to solve certain diophantine equations. It's
+helper functions that are needed to solve certain Diophantine equations. It's
 structured in the following manner.
 
 - :py:meth:`~sympy.solvers.diophantine.diophantine`
@@ -64,7 +64,7 @@ Each of the functions, :py:meth:`~sympy.solvers.diophantine.diop_linear`,
 :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`,
 :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean`
 and :py:meth:`~sympy.solvers.diophantine.diop_general_sum_of_squares` solves a
-specific type of equations and the type can be easily guessed by their name.
+specific type of equations and the type can be easily guessed by it's name.
 
 Apart from these functions, there are a considerable number of other functions
 in the "Diophantine Module" and all of them are listed under User functions
@@ -73,7 +73,7 @@ and Internal functions.
 Tutorial
 ========
 
-First, let's import the highest API of the diophantine module.
+First, let's import the highest API of the Diophantine module.
 
 >>> from sympy.solvers.diophantine import diophantine
 
@@ -82,10 +82,10 @@ Before we start solving the equations, we need to define the variables.
 >>> from sympy import symbols
 >>> x, y, z = symbols("x, y, z", Integer=True)
 
-Let's start by solving the most easiest type of Diophantine equations, i.e
-linear Diophantine equations. Let's solve `2x + 3y = 5`. Note that although we
+Let's start by solving the easiest type of Diophantine equations, i.e. linear
+Diophantine equations. Let's solve `2x + 3y = 5`. Note that although we
 write the equation in the above form, when we input the equation to any of the
-functions in diophantine module, it need to be in the form `eq = 0`.
+functions in Diophantine module, it needs to be in the form `eq = 0`.
 
 >>> diophantine(2*x + 3*y - 5)
 set([(3*t - 5, -2*t + 5)])
@@ -102,8 +102,8 @@ Note that it returns a tuple rather than a set.
 But :py:meth:`~sympy.solvers.diophantine.diop_solve` may return a single tuple
 or a set of tuples depending on the type of the equation given.
 
-We can also solve this equation by calling :py:meth:`~sympy.solvers.diophantine.diop_linear`
-which operates under the cover of :py:meth:`~sympy.solvers.diophantine.diop_solve`.
+We can also solve this equation by calling :py:meth:`~sympy.solvers.diophantine.diop_linear`,
+which is what :py:meth:`~sympy.solvers.diophantine.diop_solve` calls internally.
 
 >>> from sympy.solvers.diophantine import diop_linear
 >>> diop_linear(2*x + 3*y - 5)
@@ -131,7 +131,7 @@ Let's try solving a binary quadratic equation which is an equation with two
 variables and has a degree of two. Before trying to solve these equations, an
 idea about various cases associated with the equation would help a lot. Please
 refer [3]_ and [4]_ for detailed analysis of different cases and the nature
-of the solutions. Let us define `\Delta = b^2 - 4ac` w.r.t the binary quadratic
+of the solutions. Let us define `\Delta = b^2 - 4ac` w.r.t. the binary quadratic
 `ax^2 + bxy + cy^2 + dx + ey + f = 0`.
 
 When `\Delta < 0`, there are either no solutions or only a finite number of solutions.
@@ -142,7 +142,7 @@ set([(2, 1), (5, 1)])
 In the above equation `\Delta = (-4)^2 - 4*1*8 = -16` and hence only a finite
 number of solutions exist.
 
-When `\Delta = 0` we might have either no solutions or parametrized solutions.
+When `\Delta = 0` we might have either no solutions or parameterized solutions.
 
 >>> diophantine(3*x**2 - 6*x*y + 3*y**2 - 3*x + 7*y - 5)
 set()
@@ -175,7 +175,7 @@ transformed to an equivalent form `X^2 - DY^2 = N`.
 (5, 920)
 
 So, the above equation is equivalent to the equation `X^2 - 5Y^2 = 920` after
-an linear transformation. If we want to find the linear transformation, we can
+a linear transformation. If we want to find the linear transformation, we can
 use :py:meth:`~sympy.solvers.diophantine.transformation_to_DN`
 
 >>> A, B = transformation_to_DN(x**2 - 3*x*y + y**2 - 7*x + 5*y - 3)
@@ -205,7 +205,7 @@ Unfortunately, our equation does not have solutions.
 
 Now let's turn to homogeneous ternary quadratic equations. These equations are
 of the form `ax^2 + by^2 + cz^2 + dxy + eyz + fzx = 0`. These type of equations
-either have infinetely many solutions or no solutions (except the obvious
+either have infinitely many solutions or no solutions (except the obvious
 solution (0, 0, 0))
 
 >>> diophantine(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y + 6*y*z + 7*z*x)
@@ -213,36 +213,38 @@ set()
 >>> diophantine(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y - 7*y*z + 7*z*x)
 set([(-16*p**2 + 28*p*q + 20*q**2, 3*p**2 + 38*p*q - 25*q**2, 4*p**2 - 24*p*q + 68*q**2)])
 
-If you are only interested about a base solution rather than parametrized
-general solution (to be more precise, one of the general solutions), one can
+If you are only interested about a base solution rather than the parameterized
+general solution (to be more precise, one of the general solutions), you can
 use :py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic`.
 
 >>> from sympy.solvers.diophantine import diop_ternary_quadratic
 >>> diop_ternary_quadratic(3*x**2 + 4*y**2 - 5*z**2 + 4*x*y - 7*y*z + 7*z*x)
 (-4, 5, 1)
 
-:py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic` first convert the
+:py:meth:`~sympy.solvers.diophantine.diop_ternary_quadratic` first converts the
 given equation to an equivalent equation of the form `w^2 = AX^2 + BY^2` and
 then it uses :py:meth:`~sympy.solvers.diophantine.descent` to solve the latter
-equation. You can refer the docs of
+equation. You can refer to the docs of
 :py:meth:`~sympy.solvers.diophantine.transformation_to_normal` to find more on
 this. The equation `w^2 = AX^2 + BY^2` can be solved more easily by using the
-before-mentioned :py:meth:`~sympy.solvers.diophantine.descent`.
+Aforementioned :py:meth:`~sympy.solvers.diophantine.descent`.
 
 >>> from sympy.solvers.diophantine import descent
 >>> descent(3, 1) # solves the equation w**2 = 3*Y**2 + Z**2
 (1, 0, 1)
 
-Here solution tuple is in the same order as (w, Y, Z)
+Here the solution tuple is in the order (w, Y, Z)
 
-Extended Pythagorean equation and general sum of squares equation can also be
-solved using the Diophantine module.
+The extended Pythagorean equation,
+`a_{1}x_{1}^2 + a_{2}x_{2}^2 + \ldots + a_{n}x_{n}^2 = a_{n+1}x_{n+1}^2` and the
+general sum of squares equation, `x_{1}^2 + x_{2}^2 + \ldots + x_{n}^2 = k` can
+also be solved using the Diophantine module.
 
 >>> from sympy.abc import a, b, c, d, e, f
 >>> diophantine(9*a**2 + 16*b**2 + c**2 + 49*d**2 + 4*e**2 - 25*f**2)
 set([(70*t1**2 + 70*t2**2 + 70*t3**2 + 70*t4**2 - 70*t5**2, 105*t1*t5, 420*t2*t5, 60*t3*t5, 210*t4*t5, 42*t1**2 + 42*t2**2 + 42*t3**2 + 42*t4**2 + 42*t5**2)])
 
-functions :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` can
+function :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` can
 also be called directly to solve the same equation. This is true about the
 general sum of squares too. Either you can call
 :py:meth:`~sympy.solvers.diophantine.diop_general_pythagorean` or use the high
