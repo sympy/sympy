@@ -1636,6 +1636,10 @@ def translate(s):
     return the appropriate latex.
 
     Let everything else pass as given.
+
+    >>> from sympy.printing.latex import translate
+    >>> translate('alphahatdotprime')
+    "{\\dot{\\hat{\\alpha}}}'"
     '''
     # Process accents, if any, and recurse
     for key in accent_keys:
