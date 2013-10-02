@@ -34,14 +34,14 @@ message_eof = "File does not end with a newline: %s, line %s"
 message_multi_eof = "File ends with more than 1 newline: %s, line %s"
 message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s"
 
-implicit_test_re = re.compile('^\s*(>>> )?(\.\.\. )?from .* import .*\*')
+implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
     r'^\s*(>>> )?(\.\.\. )?raise(\s+(\'|\")|\s*(\(\s*)+(\'|\"))')
 gen_raise_re = re.compile(
     r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
-test_suite_def_re = re.compile('^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
-
+test_suite_def_re = re.compile(r'^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
+test_file_re = re.compile(r'.*test_.*\.py$')
 
 def tab_in_leading(s):
     """Returns True if there are tabs in the leading whitespace of a line,
@@ -77,7 +77,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
     for fname in files:
         if not exists(fname) or not isfile(fname):
             continue
-        if filter(lambda ex: ex in fname, exclusions):
+        if any(ex in fname for ex in exclusions):
             continue
         if pattern is None or re.match(pattern, fname):
             file_check(fname)
@@ -106,7 +106,7 @@ def test_files():
     def test_this_file(fname, test_file):
         line = None  # to flag the case where there were no lines in file
         for idx, line in enumerate(test_file):
-            if re.match(r'.*test_.*\.py$', fname) and test_suite_def_re.match(line):
+            if test_file_re.match(fname) and test_suite_def_re.match(line):
                 assert False, message_test_suite_def % (fname, idx + 1)
             if line.endswith(" \n") or line.endswith("\t\n"):
                 assert False, message_space % (fname, idx + 1)

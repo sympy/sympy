@@ -443,11 +443,13 @@ def moveup(l, x):
 
 @debug
 @timeit
-def calculate_series(e, x, skip_abs=False, logx=None):
+def calculate_series(e, x, logx=None):
     """ Calculates at least one term of the series of "e" in "x".
 
     This is a place that fails most often, so it is in its own function.
     """
+    from sympy.core.exprtools import factor_terms
+
     n = 1
     while 1:
         series = e.nseries(x, n=n, logx=logx)
@@ -456,7 +458,8 @@ def calculate_series(e, x, skip_abs=False, logx=None):
             return series
 
         series = series.removeO()
-        if series and ((not skip_abs) or series.has(x)):
+        series = factor_terms(series, fraction=True)
+        if series:
             return series
         n *= 2
 

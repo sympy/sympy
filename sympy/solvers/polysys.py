@@ -2,13 +2,13 @@
 
 from __future__ import print_function, division
 
+from sympy.core import S
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed)
-from sympy.utilities import postfixes
 from sympy.simplify import rcollect
-from sympy.core import S
+from sympy.utilities import default_sort_key, postfixes
 
 
 class SolveFailed(Exception):
@@ -95,7 +95,7 @@ def solve_biquadratic(f, g, opt):
             solution = (p_root.subs(y, q_root), q_root)
             solutions.append(solution)
 
-    return sorted(solutions)
+    return sorted(solutions, key=default_sort_key)
 
 
 def solve_generic(polys, opt):
@@ -230,7 +230,7 @@ def solve_generic(polys, opt):
         raise NotImplementedError
 
     if result is not None:
-        return sorted(result)
+        return sorted(result, key=default_sort_key)
     else:
         return None
 
@@ -316,4 +316,4 @@ def solve_triangulated(polys, *gens, **args):
     for i, (solution, _) in enumerate(solutions):
         solutions[i] = solution
 
-    return sorted(solutions)
+    return sorted(solutions, key=default_sort_key)

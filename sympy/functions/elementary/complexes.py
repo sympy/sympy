@@ -418,6 +418,8 @@ class Abs(Function):
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
                 return arg
+            if exponent.is_integer and base is S.NegativeOne:
+                return S.One
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero

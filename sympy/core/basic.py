@@ -6,7 +6,7 @@ from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.core.compatibility import (reduce, iterable, Iterator, ordered,
-    string_types, with_metaclass)
+    string_types, with_metaclass, zip_longest)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
@@ -70,14 +70,6 @@ class Basic(with_metaclass(ManagedProperties)):
     is_Boolean = False
     is_Not = False
     is_Matrix = False
-
-    @property
-    @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
-    def is_Real(self):  # pragma: no cover
-        """Deprecated alias for ``is_Float``"""
-        # When this is removed, remove the piece of code disabling the warning
-        # from test_pickling.py
-        return self.is_Float
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -359,6 +351,16 @@ class Basic(with_metaclass(ManagedProperties)):
         from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
+        if self is other:
+            return True
+
+        from .function import AppliedUndef, UndefinedFunction as UndefFunc
+
+        if isinstance(self, UndefFunc) and isinstance(other, UndefFunc):
+            if self.class_key() == other.class_key():
+                return True
+            else:
+                return False
         if type(self) is not type(other):
             # issue 3001 a**1.0 == a like a**2.0 == a**2
             while isinstance(self, C.Pow) and self.exp == 1:
@@ -370,7 +372,11 @@ class Basic(with_metaclass(ManagedProperties)):
             except SympifyError:
                 return False    # sympy != other
 
-            if type(self) is not type(other):
+            if isinstance(self, AppliedUndef) and isinstance(other,
+                                                             AppliedUndef):
+                if self.class_key() != other.class_key():
+                    return False
+            elif type(self) is not type(other):
                 return False
 
         return self._hashable_content() == other._hashable_content()
@@ -989,7 +995,7 @@ class Basic(with_metaclass(ManagedProperties)):
                 if not hasattr(arg, '_eval_subs'):
                     continue
                 arg = arg._subs(old, new, **hints)
-                if arg is not args[i]:
+                if arg != args[i]:
                     hit = True
                     args[i] = arg
             if hit:
@@ -1669,9 +1675,15 @@ def _aresame(a, b):
     False
 
     """
-    for i, j in zip(preorder_traversal(a), preorder_traversal(b)):
+    from .function import AppliedUndef, UndefinedFunction as UndefFunc
+    for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
         if i != j or type(i) != type(j):
-            return False
+            if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
+                (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
+                if i.class_key() != j.class_key():
+                    return False
+            else:
+                return False
     else:
         return True
 

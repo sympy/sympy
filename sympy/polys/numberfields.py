@@ -714,7 +714,7 @@ def minimal_polynomial(ex, x=None, **args):
         return result
 
 minpoly = minimal_polynomial
-
+__all__.append('minpoly')
 
 def _coeffs_generator(n):
     """Generate coefficients for `primitive_element()`. """

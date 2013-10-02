@@ -909,7 +909,7 @@ class SymPyTests(object):
                     value = Tuple(values, Load())
                     assign = Assign([target], value)
                     new_compare = Compare(names_load[0], compare.ops, names_load[1:])
-                    msg_format = "%s " + " %s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + " %s"
+                    msg_format = "\n%s " + "\n%s ".join([ ops[op.__class__.__name__] for op in compare.ops ]) + "\n%s"
                     msg = BinOp(Str(msg_format), Mod(), Tuple(names_load, Load()))
                     test = Assert(new_compare, msg, lineno=stmt.lineno, col_offset=stmt.col_offset)
                     return [assign, test]

@@ -12,6 +12,7 @@ __all__ = ['cross',
            'mlatex',
            'kinematic_equations',
            'inertia_of_point_mass',
+           'get_motion_params',
            'partial_velocity',
            'linear_momentum',
            'angular_momentum',
@@ -23,11 +24,12 @@ from sympy.physics.mechanics.essential import (Vector, Dyadic, ReferenceFrame,
                                                MechanicsStrPrinter,
                                                MechanicsPrettyPrinter,
                                                MechanicsLatexPrinter,
-                                               dynamicsymbols)
+                                               dynamicsymbols,
+                                               _check_frame, _check_vector)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.physics.mechanics.point import Point
-from sympy import sympify, diff, sin, cos, Matrix
+from sympy import sympify, solve, diff, sin, cos, Matrix, Symbol, integrate
 from sympy.core.basic import S
 
 
@@ -48,13 +50,11 @@ dot.__doc__ += Vector.dot.__doc__
 
 
 def express(vec, frame, frame2=None):
-    """Express convenience wrapper for Vector.express(): \n"""
-    if not isinstance(vec, (Vector, Dyadic)):
-        raise TypeError('Can only express Vectors')
-    if isinstance(vec, Vector):
-        return vec.express(frame)
-    else:
+    """Express convenience wrapper"""
+    if isinstance(vec, Dyadic):
         return vec.express(frame, frame2)
+    else:
+        return frame.express(vec)
 
 express.__doc__ += Vector.express.__doc__
 
@@ -64,7 +64,7 @@ def outer(vec1, vec2):
     if not isinstance(vec1, Vector):
         raise TypeError('Outer product is between two Vectors')
     return vec1 | vec2
-outer.__doc__ += Vector.express.__doc__
+outer.__doc__ += Vector.outer.__doc__
 
 
 def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
@@ -462,6 +462,156 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
         raise ValueError('Not an approved rotation type for this function')
 
 
+def get_motion_params(frame, **kwargs):
+    """
+    Calculates the three motion parameters - position, velocity and acceleration
+    as vectorial functions of time in the given frame.
+
+    If a higher order order differential function is provided, the lower order
+    functions are used as boundary conditions. The values of time at which the
+    boundary conditions are specified are taken from timevalue1(for position
+    boundary condition) and timevalue2(for velocity boundary condition).
+
+    If any of the boundary conditions are not provided, they are taken to be zero
+    by default (zero vectors, in case of vectorial inputs). If the boundary
+    conditions are also functions of time, they are converted to constants by
+    substituting the time values in the dynamicsymbols._t time Symbol.
+
+    This function can also be used for calculating rotational motion parameters.
+
+    Parameters
+    ==========
+
+    frame : ReferenceFrame
+        The frame to express the motion parameters in
+
+     acceleration : Vector
+        Acceleration of the object/frame as a function of time
+
+    velocity : Vector
+        Velocity as function of time or as boundary condition
+        of velocity at time = timevalue1
+
+    position : Vector
+        Velocity as function of time or as boundary condition
+        of velocity at time = timevalue1
+
+    timevalue1 : sympyfiable
+        Value of time for position boundary condition
+
+    timevalue2 : sympyfiable
+        Value of time for velocity boundary condition
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, get_motion_params, dynamicsymbols
+    >>> from sympy import symbols
+    >>> R = ReferenceFrame('R')
+    >>> v1, v2, v3 = dynamicsymbols('v1 v2 v3')
+    >>> v = v1*R.x + v2*R.y + v3*R.z
+    >>> get_motion_params(R, position = v)
+    (v1''*R.x + v2''*R.y + v3''*R.z, v1'*R.x + v2'*R.y + v3'*R.z, v1*R.x + v2*R.y + v3*R.z)
+    >>> a, b, c = symbols('a b c')
+    >>> v = a*R.x + b*R.y + c*R.z
+    >>> get_motion_params(R, velocity = v)
+    (0, a*R.x + b*R.y + c*R.z, a*t*R.x + b*t*R.y + c*t*R.z)
+    >>> parameters = get_motion_params(R, acceleration = v)
+    >>> parameters[1]
+    a*t*R.x + b*t*R.y + c*t*R.z
+    >>> parameters[2]
+    a*t**2/2*R.x + b*t**2/2*R.y + c*t**2/2*R.z
+
+    """
+
+    ##Helper functions
+
+    def _integrate_boundary(expr, var, valueofvar, value):
+        """
+        Returns indefinite integral of expr wrt var, using the boundary
+        condition of expr's value being 'value' at var = valueofvar.
+        """
+        CoI = Symbol('CoI')
+        expr = integrate(expr, var) + CoI
+        n = expr.subs({CoI: solve(expr.subs({var: valueofvar}) -\
+                                  value.subs({var: valueofvar}), CoI)[0]})
+        return n
+
+    def _process_vector_differential(vectdiff, condition, \
+                                     variable, valueofvar, frame):
+        """
+        Helper function for get_motion methods. Finds derivative of vectdiff wrt
+        variable, and its integral using the specified boundary condition at
+        value of variable = valueofvar.
+        Returns a tuple of - (derivative, function and integral) wrt vectdiff
+
+        """
+
+        #Make sure boundary condition is independent of 'variable'
+        if condition != 0:
+            condition = frame.express(condition)
+        #Special case of vectdiff == 0
+        if vectdiff == Vector(0):
+            return (0, 0, condition)
+        #Express vectdiff completely in condition's frame to give vectdiff1
+        vectdiff1 = frame.express(vectdiff)
+        #Find derivative of vectdiff
+        vectdiff2 = frame.dt(vectdiff)
+        #Integrate and use boundary condition
+        vectdiff0 = Vector(0)
+        for dim in frame:
+            function1 = vectdiff1.dot(dim)
+            vectdiff0 += _integrate_boundary(function1, variable, valueofvar,
+                                             dim.dot(condition)) * dim
+        #Return list
+        return (vectdiff2, vectdiff, vectdiff0)
+
+    ##Function body
+
+    _check_frame(frame)
+    #Decide mode of operation based on user's input
+    if 'acceleration' in kwargs:
+        mode = 2
+    elif 'velocity' in kwargs:
+        mode = 1
+    else:
+        mode = 0
+    #All the possible parameters in kwargs
+    #Not all are required for every case
+    #If not specified, set to default values(may or may not be used in
+    #calculations)
+    conditions = ['acceleration', 'velocity', 'position',
+                  'timevalue', 'timevalue1', 'timevalue2']
+    for i, x in enumerate(conditions):
+        if x not in kwargs:
+            if i < 3:
+                kwargs[x] = Vector(0)
+            else:
+                kwargs[x] = S(0)
+        elif i < 3:
+            _check_vector(kwargs[x])
+        else:
+            kwargs[x] = sympify(kwargs[x])
+    if mode == 2:
+        vel = _process_vector_differential(kwargs['acceleration'],
+                                           kwargs['velocity'],
+                                           dynamicsymbols._t,
+                                           kwargs['timevalue2'], frame)[2]
+        pos = _process_vector_differential(vel, kwargs['position'],
+                                           dynamicsymbols._t,
+                                           kwargs['timevalue1'], frame)[2]
+        return (kwargs['acceleration'], vel, pos)
+    elif mode == 1:
+        return _process_vector_differential(kwargs['velocity'],
+                                            kwargs['position'],
+                                            dynamicsymbols._t,
+                                            kwargs['timevalue1'], frame)
+    else:
+        vel = frame.dt(kwargs['position'])
+        acc = frame.dt(vel)
+        return (acc, vel, kwargs['position'])
+
+
 def partial_velocity(vel_list, u_list, frame):
     """Returns a list of partial velocities.
 
@@ -555,7 +705,7 @@ def linear_momentum(frame, *body):
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please specify a valid ReferenceFrame')
     else:
-        linear_momentum_sys = S(0)
+        linear_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 linear_momentum_sys += e.linear_momentum(frame)
@@ -613,7 +763,7 @@ def angular_momentum(point, frame, *body):
     if not isinstance(point, Point):
         raise TypeError('Please specify a valid Point')
     else:
-        angular_momentum_sys = S(0)
+        angular_momentum_sys = Vector(0)
         for e in body:
             if isinstance(e, (RigidBody, Particle)):
                 angular_momentum_sys += e.angular_momentum(point, frame)

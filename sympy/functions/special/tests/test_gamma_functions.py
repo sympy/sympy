@@ -293,6 +293,11 @@ def test_loggamma():
 
     assert loggamma(x).rewrite('intractable') == log(gamma(x))
 
+    s1 = loggamma(x).series(x)
+    assert s1 == -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + \
+        pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
+    assert s1 == loggamma(x).rewrite('intractable').series(x)
+
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real

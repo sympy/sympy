@@ -1,4 +1,4 @@
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
+from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import is_sequence, iterable, u
@@ -86,6 +86,16 @@ def test_Tuple_index():
     raises(ValueError, lambda: Tuple(0, 1, 2, 3).index(4))
     raises(ValueError, lambda: Tuple(4, 0, 1, 2, 3).index(4, 1))
     raises(ValueError, lambda: Tuple(0, 1, 2, 3, 4).index(4, 1, 4))
+
+
+def test_Tuple_mul():
+    assert Tuple(1, 2, 3)*2 == Tuple(1, 2, 3, 1, 2, 3)
+    assert 2*Tuple(1, 2, 3) == Tuple(1, 2, 3, 1, 2, 3)
+    assert Tuple(1, 2, 3)*Integer(2) == Tuple(1, 2, 3, 1, 2, 3)
+    assert Integer(2)*Tuple(1, 2, 3) == Tuple(1, 2, 3, 1, 2, 3)
+
+    raises(TypeError, lambda: Tuple(1, 2, 3)*S.Half)
+    raises(TypeError, lambda: S.Half*Tuple(1, 2, 3))
 
 
 def test_tuple_wrapper():

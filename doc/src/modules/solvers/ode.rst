@@ -124,6 +124,22 @@ the various ODE solving methods. For this reason, they are documented here.
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
+:obj:`lie_group`
+^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_lie_group
+
+:obj:`1st_power_series`
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_1st_power_series
+
+:obj:`2nd_power_series_ordinary`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_power_series_ordinary
+
+:obj:`2nd_power_series_regular`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_2nd_power_series_regular
+
 Lie heuristics
 --------------
 These functions are intended for internal use of the Lie Group Solver.
@@ -145,6 +161,26 @@ implemented for the various heuristics.
 :obj:`chi`
 ^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.lie_heuristic_chi
+
+:obj:`abaco2_similar`
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_similar
+
+:obj:`function_sum`
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_function_sum
+
+:obj:`abaco2_unique_unknown`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_unique_unknown
+
+:obj:`abaco2_unique_general`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_abaco2_unique_general
+
+:obj:`linear`
+^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.lie_heuristic_linear
 
 Information on the ode module
 -----------------------------

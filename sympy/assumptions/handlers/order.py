@@ -5,6 +5,7 @@ from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
+from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
 
 
 class AskNegativeHandler(CommonHandler):
@@ -96,6 +97,17 @@ class AskNegativeHandler(CommonHandler):
             return False
 
 
+class AskNonNegativeHandler(CommonHandler):
+    @staticmethod
+    def Basic(expr, assumptions):
+        if expr.is_number:
+            notnegative = fuzzy_not(AskNegativeHandler._number(expr, assumptions))
+            if notnegative:
+                return ask(Q.real(expr), assumptions)
+            else:
+                return notnegative
+
+
 class AskNonZeroHandler(CommonHandler):
     """
     Handler for key 'zero'
@@ -133,6 +145,26 @@ class AskNonZeroHandler(CommonHandler):
     def Abs(expr, assumptions):
         return ask(Q.nonzero(expr.args[0]), assumptions)
 
+class AskZeroHandler(CommonHandler):
+    @staticmethod
+    def Basic(expr, assumptions):
+        return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
+            ask(Q.real(expr), assumptions)])
+
+    @staticmethod
+    def Mul(expr, assumptions):
+        # TODO: This should be deducible from the nonzero handler
+        return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
+
+class AskNonPositiveHandler(CommonHandler):
+    @staticmethod
+    def Basic(expr, assumptions):
+        if expr.is_number:
+            notpositive = fuzzy_not(AskPositiveHandler._number(expr, assumptions))
+            if notpositive:
+                return ask(Q.real(expr), assumptions)
+            else:
+                return notpositive
 
 class AskPositiveHandler(CommonHandler):
     """

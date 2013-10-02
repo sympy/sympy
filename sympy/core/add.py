@@ -457,6 +457,8 @@ class Add(Expr, AssocOp):
         'is_imaginary', when_multiple=None)
     _eval_is_integer = lambda self: self._eval_template_is_attr(
         'is_integer', when_multiple=None)
+    _eval_is_rational = lambda self: self._eval_template_is_attr(
+        'is_rational', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr(
         'is_commutative')
 
@@ -667,6 +669,10 @@ class Add(Expr, AssocOp):
         >>> from sympy import I
         >>> (7 + 9*I).as_real_imag()
         (7, 9)
+        >>> ((1 + I)/(1 - I)).as_real_imag()
+        (0, 1)
+        >>> ((1 + 2*I)*(1 + 3*I)).as_real_imag()
+        (-5, 5)
         """
         sargs, terms = self.args, []
         re_part, im_part = [], []
@@ -686,14 +692,14 @@ class Add(Expr, AssocOp):
             return self.as_leading_term(x)
 
         unbounded = [t for t in self.args if t.is_unbounded]
-        if unbounded:
-            return self.func._from_args(unbounded)
 
         self = self.func(*[t.as_leading_term(x) for t in self.args]).removeO()
         if not self:
             # simple leading term analysis gave us 0 but we have to send
             # back a term, so compute the leading term (via series)
             return old.compute_leading_term(x)
+        elif self is S.NaN:
+            return old.func._from_args(unbounded)
         elif not self.is_Add:
             return self
         else:
@@ -703,6 +709,8 @@ class Add(Expr, AssocOp):
             # if it simplifies to an x-free expression, return that;
             # tests don't fail if we don't but it seems nicer to do this
             if x not in rv_fraction.free_symbols:
+                if rv_fraction.is_zero and plain.is_zero is not True:
+                    return (self - plain)._eval_as_leading_term(x)
                 return rv_fraction
             return rv
 

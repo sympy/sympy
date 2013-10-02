@@ -343,11 +343,11 @@ class uppergamma(Function):
 
         # We extract branching information here. C/f lowergamma.
         nx, n = z.extract_branch_factor()
-        if a.is_integer and a > 0:
+        if a.is_integer and (a > 0) is True:
             nx = unpolarify(z)
             if z != nx:
                 return uppergamma(a, nx)
-        elif a.is_integer and a <= 0:
+        elif a.is_integer and (a <= 0) is True:
             if n != 0:
                 return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
         elif n != 0:
@@ -428,11 +428,11 @@ class polygamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_is_positive(self):
-        if self.args[1].is_positive and self.args[0] > 0:
+        if self.args[1].is_positive and (self.args[0] > 0) is True:
             return self.args[0].is_odd
 
     def _eval_is_negative(self):
-        if self.args[1].is_positive and self.args[0] > 0:
+        if self.args[1].is_positive and (self.args[0] > 0) is True:
             return self.args[0].is_even
 
     def _eval_is_real(self):
@@ -593,6 +593,13 @@ class loggamma(Function):
     """
 
     nargs = 1
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(loggamma, self)._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[0] != oo:

@@ -153,7 +153,7 @@ class Pow(Expr):
                 e.is_real is False and smallarg is False):
             return -self.func(b, e*other)
         if (other.is_integer or
-            e.is_real and (b_nneg or abs(e) < 1) or
+            e.is_real and (b_nneg or (abs(e) < 1) is True) or
             e.is_real is False and smallarg is True or
                 b.is_polar):
             return self.func(b, e*other)
@@ -203,6 +203,8 @@ class Pow(Expr):
         if not c1 and e.is_nonnegative:  # rat**nonneg
             return False
         if c1 and c2:  # int**int
+            if b is S.NegativeOne:
+                return True
             if e.is_nonnegative or e.is_positive:
                 return True
             if self.exp.is_negative:
@@ -260,6 +262,8 @@ class Pow(Expr):
             if self.exp.is_positive:
                 return self.base.is_odd
             elif self.exp.is_nonnegative and self.base.is_odd:
+                return True
+            elif self.base is S.NegativeOne:
                 return True
 
     def _eval_is_bounded(self):
@@ -689,7 +693,7 @@ class Pow(Expr):
         base = base._evalf(prec)
         if not exp.is_Integer:
             exp = exp._evalf(prec)
-        if exp < 0 and base.is_number and base.is_real is False:
+        if (exp < 0) is True and base.is_number and base.is_real is False:
             base = base.conjugate() / (base * base.conjugate())._evalf(prec)
             exp = -exp
             return self.func(base, exp).expand()
@@ -702,7 +706,7 @@ class Pow(Expr):
         if self.base.has(*syms):
             return self.base._eval_is_polynomial(syms) and \
                 self.exp.is_Integer and \
-                self.exp >= 0
+                (self.exp >= 0) is True
         else:
             return True
 

@@ -105,7 +105,7 @@ def roots_cubic(f):
             return [-aon3]*3
         else:
             if q.is_real:
-                if q > 0:
+                if (q > 0) is True:
                     u1 = -q**Rational(1, 3)
                 else:
                     u1 = (-q)**Rational(1, 3)
@@ -114,6 +114,8 @@ def roots_cubic(f):
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
+    elif q.is_real and q < 0:
+        u1 = -(-q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
     else:
         u1 = (q/2 + sqrt(q**2/4 + pon3**3))**Rational(1, 3)
 
@@ -543,7 +545,7 @@ def roots_quintic(f):
     result_n = []
     for root in result:
         result_n.append(root.n(5))
-    result_n = sorted(result_n)
+    result_n = sorted(result_n, key=default_sort_key)
 
     prev_entry = None
     for r in result_n:

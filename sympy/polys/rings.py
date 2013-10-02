@@ -302,6 +302,8 @@ class PolyRing(DefaultPrinting, IPolys):
         if isinstance(element, PolyElement):
             if self == element.ring:
                 return element
+            elif isinstance(self.domain, PolynomialRing) and self.domain.ring == element.ring:
+                return self.ground_new(element)
             else:
                 raise NotImplementedError("conversion")
         elif isinstance(element, string_types):
@@ -485,6 +487,21 @@ class PolyRing(DefaultPrinting, IPolys):
                 p *= obj
 
         return p
+
+    def drop_to_ground(self, *gens):
+        r"""
+        Remove specified generators from the ring and inject them into
+        its domain.
+        """
+        indices = set(map(self.index, gens))
+        symbols = [s for i, s in enumerate(self.symbols) if i not in indices]
+        gens = [gen for i, gen in enumerate(self.gens) if i not in indices]
+
+        if not symbols:
+            return self
+        else:
+            return self.clone(symbols=symbols, domain=self.drop(*gens))
+
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     """Element of multivariate distributed polynomial ring. """
@@ -684,6 +701,31 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     raise ValueError("can't drop %s" % gen)
 
             return poly
+
+    def _drop_to_ground(self, gen):
+        ring = self.ring
+        i = ring.index(gen)
+
+        symbols = list(ring.symbols)
+        del symbols[i]
+        return i, ring.clone(symbols=symbols, domain=ring[i])
+
+    def drop_to_ground(self, gen):
+        if self.ring.ngens == 1:
+            raise ValueError("can't drop only generator to ground")
+
+        i, ring = self._drop_to_ground(gen)
+        poly = ring.zero
+        gen = ring.domain.gens[0]
+
+        for monom, coeff in self.iterterms():
+            mon = monom[:i] + monom[i+1:]
+            if not mon in poly:
+                poly[mon] = (gen**monom[i]).mul_ground(coeff)
+            else:
+                poly[mon] += (gen**monom[i]).mul_ground(coeff)
+
+        return poly
 
     def to_dense(self):
         return dmp_from_dict(self, self.ring.ngens-1, self.ring.domain)

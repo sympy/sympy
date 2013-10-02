@@ -310,6 +310,22 @@ def test_function_non_commutative():
     assert sin(x).is_commutative is False
     assert exp(x).is_commutative is False
     assert log(x).is_commutative is False
+    assert f(x).is_complex is False
+    assert sin(x).is_complex is False
+    assert exp(x).is_complex is False
+    assert log(x).is_complex is False
+
+
+def test_function_complex():
+    x = Symbol('x', complex=True)
+    assert f(x).is_commutative is True
+    assert sin(x).is_commutative is True
+    assert exp(x).is_commutative is True
+    assert log(x).is_commutative is True
+    assert f(x).is_complex is True
+    assert sin(x).is_complex is True
+    assert exp(x).is_complex is True
+    assert log(x).is_complex is True
 
 
 def test_function__eval_nseries():
@@ -535,7 +551,6 @@ def test_unhandled():
     assert diff(expr, f(x), x) == Derivative(expr, f(x), x)
 
 
-@XFAIL
 def test_issue_1612():
     x = Symbol("x")
     assert Symbol('f')(x) == f(x)
