@@ -205,14 +205,67 @@ class Plot(object):
         del self._series[index]
 
     def append(self, *args):
-        """Adds one more graph to the figure."""
+        """Adds one more graph to the figure.
+
+        Raises a TypeError exception if the argument is not an
+        instance of BaseSeries.
+        
+        Examples:
+        =========
+
+        >>> from sympy.plotting import plot
+        >>> from sympy import symbols, sin
+        >>> x = symbols('x')
+              
+        >>> p1 = plot(x**2, (x, -5, 5))
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-5.0, 5.0)
+
+        >>> p2 = plot(sin(x), (x, -5, 5))
+        >>> p2
+        Plot object containing:
+        [0]: cartesian line: sin(x) for x over (-5.0, 5.0)
+
+        >>> p1.append(p2[0])
+        >>> p1
+        Plot object containing: 
+        [0]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [1]: cartesian line: sin(x) for x over (-5.0, 5.0)
+
+        """
         if len(args) == 1 and isinstance(args[0], BaseSeries):
             self._series.append(*args)
         else:
-            self._series.append(Series(*args))
+            raise TypeError("Only BaseSeries can be appended to Plot")
 
     def extend(self, arg):
-        """Adds the series from another plot or a list of series."""
+        """Adds the series from another plot or a list of series.
+
+        Examples:
+        =========
+
+        >>> from sympy.plotting import plot
+        >>> from sympy import symbols, sin
+        >>> x = symbols('x')
+              
+        >>> p1 = plot(x**2, (x, -5, 5))
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-5.0, 5.0)
+        
+        >>> p2 = plot(sin(x), (x, -5, 5))
+        >>> p2
+        Plot object containing:
+        [0]: cartesian line: sin(x) for x over (-5.0, 5.0)
+
+        >>> p1.extend(p2)
+        >>> p1
+        Plot object containing: 
+        [0]: cartesian line: x**2 for x over (-5.0, 5.0)
+        [1]: cartesian line: sin(x) for x over (-5.0, 5.0)
+
+        """
         if isinstance(arg, Plot):
             self._series.extend(arg._series)
         else:
