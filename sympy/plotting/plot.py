@@ -237,7 +237,12 @@ class Plot(object):
         if len(args) == 1 and isinstance(args[0], BaseSeries):
             self._series.append(*args)
         else:
+<<<<<<< HEAD
             raise TypeError("Only BaseSeries can be appended to Plot")
+=======
+            for i in args:
+		self._series.extend(i._series)
+>>>>>>> 7550f5daec94423549c090e3cda556d90a6585f0
 
     def extend(self, arg):
         """Adds the series from another plot or a list of series.
