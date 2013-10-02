@@ -209,7 +209,8 @@ class Plot(object):
         if len(args) == 1 and isinstance(args[0], BaseSeries):
             self._series.append(*args)
         else:
-            self._series.append(Series(*args))
+            for i in args:
+				self._series.extend(i._series)
 
     def extend(self, arg):
         """Adds the series from another plot or a list of series."""
