@@ -1048,6 +1048,34 @@ def test_translate():
     assert translate(s) == r'\Pi'
     s = 'pi'
     assert translate(s) == r'\pi'
+    s = 'LamdaHatDOT'
+    assert translate(s) == r'\dot{\hat{\Lambda}}'
+
+def test_accents():
+    # Test each accent individually in the simplest case (with funny cases)
+    assert latex(symbols("xMathring")) == r"\mathring{x}"
+    assert latex(symbols("xCheck")) == r"\check{x}"
+    assert latex(symbols("xBreve")) == r"\breve{x}"
+    assert latex(symbols("xAcute")) == r"\acute{x}"
+    assert latex(symbols("xGrave")) == r"\grave{x}"
+    assert latex(symbols("xTilde")) == r"\tilde{x}"
+    assert latex(symbols("xPrime")) == r"{x}'"
+    assert latex(symbols("xDDot")) == r"\ddot{x}"
+    assert latex(symbols("xBold")) == r"\boldsymbol{x}"
+    assert latex(symbols("xHat")) == r"\hat{x}"
+    assert latex(symbols("xDot")) == r"\dot{x}"
+    assert latex(symbols("xBar")) == r"\bar{x}"
+    assert latex(symbols("xVec")) == r"\vec{x}"
+    assert latex(symbols("xAbs")) == r"\left\lvert{x}\right\rvert"
+    assert latex(symbols("xPrM")) == r"{x}'"
+    assert latex(symbols("xBM")) == r"\boldsymbol{x}"
+    # Check a few combinations
+    assert latex(symbols("xvecdot")) == r"\dot{\vec{x}}"
+    assert latex(symbols("xDotVec")) == r"\vec{\dot{x}}"
+    assert latex(symbols("xHATabs")) == r"\left\lvert{\hat{x}}\right\rvert"
+    # Check a couple big, ugly combinations
+    assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left\lvert{\breve{z}}\right\rvert}_{{\check{y}}'}"
+    assert latex(symbols('alphadothat_nVECDOT__tTildePrime')) == r"\hat{\dot{\alpha}}^{{\tilde{t}}'}_{\dot{\vec{n}}}"
 
 def test_greek_symbols():
     assert latex(Symbol('alpha'))   == r'\alpha'
