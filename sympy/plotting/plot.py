@@ -204,12 +204,28 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
-    def append(self, *args):
-        """Adds one more graph to the figure."""
-        if len(args) == 1 and isinstance(args[0], BaseSeries):
-            self._series.append(*args)
+    def append(self, arg):
+        """Adds a plot to an existing plot.
+
+        For example, consider two plots:
+        p1 = plot(x*x)
+        p2 = plot(x)
+
+        You can either pass a series object to append the first plot
+        to the second:
+
+        p2.append(p1[0])
+
+        Or, you can also pass the plot object directly:
+        p2.append(p1)
+        """
+        if isinstance(arg, BaseSeries):
+            self._series.append(arg)
+        elif isinstance(arg, Plot):
+            self._series.extend(arg)
         else:
-            self._series.append(Series(*args))
+            raise TypeError('Can only accept a series or a Plot '
+                             'object as an argument')
 
     def extend(self, arg):
         """Adds the series from another plot or a list of series."""
