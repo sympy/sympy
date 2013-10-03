@@ -230,12 +230,12 @@ class GA_Printer(StrPrinter):
         GA_Printer._off()
 
     @staticmethod
-    @deprecated(useinstead="with GA_Printer()", issue=2490, deprecated_since_version="0.7.3")
+    @deprecated(useinstead="with GA_Printer()", issue=4042, deprecated_since_version="0.7.4")
     def on():
         GA_Printer._on()
 
     @staticmethod
-    @deprecated(useinstead="with GA_Printer()", issue=2490, deprecated_since_version="0.7.3")
+    @deprecated(useinstead="with GA_Printer()", issue=4042, deprecated_since_version="0.7.4")
     def off():
         GA_Printer._off()
 
