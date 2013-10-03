@@ -1628,7 +1628,7 @@ class LatexPrinter(Printer):
 
 
 def translate(s):
-    '''
+    r'''
     Check for an accent ending the string.  If present, convert the
     accent to latex and translate the rest recursively.
 
