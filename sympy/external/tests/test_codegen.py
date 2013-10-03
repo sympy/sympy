@@ -23,8 +23,6 @@
 
 from __future__ import print_function
 
-from __future__ import print_function
-
 from sympy.abc import x, y, z
 from sympy.utilities.pytest import skip
 from sympy.utilities.codegen import(
