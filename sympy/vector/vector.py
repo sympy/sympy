@@ -850,7 +850,7 @@ class CoordSys(Basic):
             # any other coordinate system other than rectangular.
             if parent:
                 self.position = _vect_add_const(parent.position, position,
-                                                parent.coord_sys)
+                                                parent)
             else:
                 self.position = position
         else:
@@ -892,7 +892,6 @@ class CoordSys(Basic):
                 raise TypeError('Amounts are a list or tuple of length 2')
             theta = amounts[0]
             axis = amounts[1]
-            # TODO : Implement normalize and as_mat methods
             axis = axis.express(self.parent).normalize().as_mat().T
             parent_orient = ((eye(3) - axis * axis.T) * cos(theta) +
                     Matrix([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]],
@@ -1112,15 +1111,18 @@ class CoordSys(Basic):
         [       0,       0, 1]])
 
         """
+        import pudb;pu.db
         if name == None:
             name = 'CoordSys_' + str(Dummy._count)
             Dummy._count += 1
 
         newframe = self.__class__(
-            name=name, dim=self.dim, position=self.position,
+            name=name, dim=self.dim,
             orient_type=orient_type, orient_amount=orient_amount,
             rot_order=rot_order, parent=self, basis_vectors=self._basis_names,
             coordinates=self._coord_names)
+
+        newframe = newframe.posnew(self.position, name)
 
         return newframe
 
@@ -1163,7 +1165,7 @@ class CoordSys(Basic):
             rot_order=self.rot_order, parent=self,
             basis_vectors=self._basis_names, coordinates=self._coord_names)
 
-        return new_frame
+        return newframe
 
     def _change_coord_sys(self, coord_sys_class, name=None, flag=False):
         """
@@ -2519,16 +2521,14 @@ def _vect_add_const(one, other, coord_sys):
     # Constant vectors are different from other vectors in the sense
     # that they cannot be moved in space. They, thus, need to be handled
     # differently.
-    assert isinstance(one, CoordSysRect) and isinstance(other, CoordSysRect)
+    assert one.is_Vector and other.is_Vector
+
+    # Check that both the vectors are non zero
+    if not one or not other:
+        return _vect_add(one, other)
+
     if one.coord_sys == other.coord_sys:
         return _vect_add(one, other).factor_vect()
-
-    """
-    if not coord_sys:
-        else:
-            raise ValueError("No coordinate system provided for the result.")
-    """
-    one = one.express(coord_sys)
     other = other.express(coord_sys)
     one_comp = one.components
     other_comp = other.components
