@@ -1,12 +1,14 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
-                   Derivative, diff, I, sqrt, erf)
+                   Derivative, diff, I, sqrt, erf, Piecewise,
+                   Eq, Ne)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
 x = Symbol('x')
 y = Symbol('y')
 u = Symbol('u')
+n = Symbol('n')
 
 def test_find_substitutions():
     assert find_substitutions((cot(x)**2 + 1)**2*csc(x)**2*cot(x)**2, x, u) == \
@@ -113,3 +115,15 @@ def test_manual_true():
         (exp(x) * sin(x)) / 2 - (exp(x) * cos(x)) / 2
     assert integrate(sin(x) * cos(x), x, manual=True) in \
         [sin(x) ** 2 / 2, -cos(x)**2 / 2]
+
+def test_issue_3647():
+    assert manualintegrate(y**x, x) == \
+        Piecewise((x, Eq(log(y), 0)), (y**x/log(y), True))
+    assert manualintegrate(y**(n*x), x) == \
+        Piecewise(
+            (x, Eq(n, 0)),
+            (Piecewise(
+                (n*x, Eq(log(y), 0)),
+                (y**(n*x)/log(y), True))/n, True))
+    assert manualintegrate(exp(n*x), x) == \
+        Piecewise((x, Eq(n, 0)), (exp(n*x)/n, True))
