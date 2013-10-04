@@ -683,6 +683,7 @@ def derivative_rule(integral):
 def fallback_rule(integral):
     return DontKnowRule(*integral)
 
+# Cache is used to break cyclic integrals
 _integral_cache = {}
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
@@ -788,7 +789,7 @@ def integral_steps(integrand, symbol, **options):
             )
         ),
         fallback_rule)(integral)
-    _integral_cache[cachekey] = result
+    del _integral_cache[cachekey]
     return result
 
 @evaluates(ConstantRule)
