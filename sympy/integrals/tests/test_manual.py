@@ -1,7 +1,7 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
                    Derivative, diff, I, sqrt, erf, Piecewise,
-                   Eq, Ne)
+                   Eq, Ne, Q, assuming)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
@@ -127,3 +127,8 @@ def test_issue_3647():
                 (y**(n*x)/log(y), True))/n, True))
     assert manualintegrate(exp(n*x), x) == \
         Piecewise((x, Eq(n, 0)), (exp(n*x)/n, True))
+
+    with assuming(Q.is_true(Ne(log(y), 0))):
+        assert manualintegrate(y**x, x) == y**x/log(y)
+    with assuming(Q.is_true(Eq(log(y), 0))):
+        manualintegrate(y**x, x) == x

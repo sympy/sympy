@@ -224,6 +224,12 @@ def power_rule(integral):
         return PowerRule(base, exp, integrand, symbol)
     elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
         rule = ExpRule(base, exp, integrand, symbol)
+
+        if sympy.ask(sympy.Q.is_true(sympy.Ne(sympy.log(base), 0))):
+            return rule
+        elif sympy.ask(sympy.Q.is_true(sympy.Eq(sympy.log(base), 0))):
+            return ConstantRule(1, 1, symbol)
+
         return PiecewiseRule([
             (ConstantRule(1, 1, symbol), sympy.Eq(sympy.log(base), 0)),
             (rule, True)
