@@ -251,11 +251,19 @@ def arctan_rule(integral):
         if match:
             a, b = match[a], match[b]
 
+            if ((isinstance(a, sympy.Number) and a < 0) or
+                (isinstance(b, sympy.Number) and b < 0)):
+                return
+            if (sympy.ask(sympy.Q.negative(a) | sympy.Q.negative(b) |
+                          sympy.Q.is_true(a <= 0) | sympy.Q.is_true(b <= 0))):
+                return
+
             if a != 1 or b != 1:
+                b_condition = b >= 0
                 u_var = sympy.Dummy("u")
-                rewritten = sympy.Rational(1, a) * (base / a) ** (-1)
-                u_func = sympy.sqrt(sympy.Rational(b, a)) * symbol
-                constant = 1 / sympy.sqrt(sympy.Rational(b, a))
+                rewritten = (sympy.Integer(1) / a) * (base / a) ** (-1)
+                u_func = sympy.sqrt(sympy.sympify(b) / a) * symbol
+                constant = 1 / sympy.sqrt(sympy.sympify(b) / a)
                 substituted = rewritten.subs(u_func, u_var)
 
                 if a == b:
@@ -263,6 +271,7 @@ def arctan_rule(integral):
                 else:
                     subrule = ArctanRule(substituted, u_var)
                     if constant != 1:
+                        b_condition = b > 0
                         subrule = ConstantTimesRule(
                             constant, substituted, subrule,
                             substituted, symbol)
@@ -273,10 +282,13 @@ def arctan_rule(integral):
 
                 if a != 1:
                     other = (base / a) ** (-1)
-                    return ConstantTimesRule(
-                        sympy.Rational(1, a), other,
-                        substep, integrand, symbol)
-                return substep
+                    substep = ConstantTimesRule(
+                        sympy.Integer(1) / a, other, substep,
+                        integrand, symbol)
+
+                return PiecewiseRule([
+                    (substep, sympy.And(a > 0, b_condition))
+                ], integrand, symbol)
 
             return ArctanRule(integrand, symbol)
 
@@ -781,7 +793,7 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(sympy.Mul, sympy.log, sympy.atan),
                     parts_rule),
                 condition(
-                    integral_is_subclass(sympy.Mul),
+                    integral_is_subclass(sympy.Mul, sympy.Pow),
                     partial_fractions_rule),
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
