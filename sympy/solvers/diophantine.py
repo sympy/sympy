@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
 from sympy import (degree_list, Poly, igcd, divisors, sign, symbols, S, Integer, Wild, Symbol, factorint,
-    Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Subs, ilcm, Matrix, factor_list, perfect_power,
+    Add, Mul, solve, ceiling, floor, sqrt, sympify, Subs, ilcm, Matrix, factor_list, perfect_power,
     isprime, nextprime, integer_nthroot)
 
-from sympy.simplify.simplify import rad_rationalize
+from sympy.simplify.simplify import rad_rationalize, _mexpand
 from sympy.ntheory.modular import solve_congruence
 from sympy.utilities import default_sort_key
 from sympy.core.numbers import igcdex
@@ -643,7 +643,7 @@ def _diop_quadratic(var, coeff, t):
         if A != 0:
             r = sqrt(B**2 - 4*A*C)
             u, v = symbols("u, v", integer=True)
-            eq = simplify(4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) + 2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
+            eq = _mexpand(4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) + 2*A*4*A*E*(u - v) + 4*A*r*4*A*F)
 
             sol = diop_solve(eq, t)
             sol = list(sol)
@@ -707,8 +707,8 @@ def _diop_quadratic(var, coeff, t):
                     x_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n + (r - s*sqrt(D))*(T - U*sqrt(D))**n)/2
                     y_n = S((r + s*sqrt(D))*(T + U*sqrt(D))**n - (r - s*sqrt(D))*(T - U*sqrt(D))**n)/(2*sqrt(D))
 
-                    x_n = simplify(x_n)
-                    y_n = simplify(y_n)
+                    x_n = _mexpand(x_n)
+                    y_n = _mexpand(y_n)
                     x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
 
                     l.add((x_n, y_n))
@@ -751,8 +751,8 @@ def _diop_quadratic(var, coeff, t):
                             x_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) + (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ 2
                             y_n = S( (X_1 + sqrt(D)*Y_1)*(T + sqrt(D)*U)**(n*L) - (X_1 - sqrt(D)*Y_1)*(T - sqrt(D)*U)**(n*L) )/ (2*sqrt(D))
 
-                            x_n = simplify(x_n)
-                            y_n = simplify(y_n)
+                            x_n = _mexpand(x_n)
+                            y_n = _mexpand(y_n)
                             x_n, y_n = (P*Matrix([x_n, y_n]) + Q)[0], (P*Matrix([x_n, y_n]) + Q)[1]
                             l.add((x_n, y_n))
 
@@ -773,7 +773,7 @@ def is_solution_quad(var, coeff, u, v):
 
     eq = x**2*coeff[x**2] + x*y*coeff[x*y] + y**2*coeff[y**2] + x*coeff[x] + y*coeff[y] + coeff[Integer(1)]
 
-    return simplify(Subs(eq, (x, y), (u, v)).doit()) == 0
+    return _mexpand(Subs(eq, (x, y), (u, v)).doit()) == 0
 
 
 def diop_DN(D, N, t=symbols("t", Integer=True)):
@@ -1464,7 +1464,7 @@ def _find_DN(var, coeff):
     v = (A*Matrix([X, Y]) + B)[1]
     eq = x**2*coeff[x**2] + x*y*coeff[x*y] + y**2*coeff[y**2] + x*coeff[x] + y*coeff[y] + coeff[Integer(1)]
 
-    simplified = simplify(Subs(eq, (x, y), (u, v)).doit())
+    simplified = _mexpand(Subs(eq, (x, y), (u, v)).doit())
 
     coeff = dict([reversed(t.as_independent(*[X, Y])) for t in simplified.args])
 
@@ -1488,8 +1488,8 @@ def check_param(x, y, a, t):
 
     for i in xrange(a):
 
-        z_x = simplify(Subs(x, t, a*k + i).doit()).match(p*k + q)
-        z_y = simplify(Subs(y, t, a*k + i).doit()).match(p*k + q)
+        z_x = _mexpand(Subs(x, t, a*k + i).doit()).match(p*k + q)
+        z_y = _mexpand(Subs(y, t, a*k + i).doit()).match(p*k + q)
 
         if (isinstance(z_x[p], Integer) and isinstance(z_x[q], Integer) and
             isinstance(z_y[p], Integer) and isinstance(z_y[q], Integer)):
@@ -1824,13 +1824,13 @@ def _parametrize_ternary_quadratic(solution, _var, coeff):
 
     eq = x**2*coeff[x**2] + y**2*coeff[y**2] + z**2*coeff[z**2] + x*y*coeff[x*y] + y*z*coeff[y*z] + z*x*coeff[z*x]
     eq_1 = Subs(eq, (x, y, z), (r*x_0, r*y_0 + p, r*z_0 + q)).doit()
-    eq_1 = eq_1.expand(force=True)
+    eq_1 = _mexpand(eq_1)
     A, B = eq_1.as_independent(r, as_Add=True)
 
 
     x = A*x_0
-    y = (A*y_0 - simplify(B/r)*p).expand(force=True)
-    z = (A*z_0 - simplify(B/r)*q).expand(force=True)
+    y = (A*y_0 - _mexpand(B/r*p))
+    z = (A*z_0 - _mexpand(B/r*q))
 
     return x, y, z
 

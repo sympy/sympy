@@ -335,6 +335,9 @@ def test_ei():
 
     assert gruntz(Ei(x+exp(-x))*exp(-x)*x, x, oo) == 1
 
+    assert Ei(x).series(x) == EulerGamma + log(x) + x + x**2/4 + \
+        x**3/18 + x**4/96 + x**5/600 + O(x**6)
+
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
@@ -391,6 +394,9 @@ def test__eis():
 
     assert expand(Ei(z).rewrite('tractable').diff(z).rewrite('intractable')) \
         == Ei(z).diff(z)
+
+    assert _eis(z).series(z, n=3) == EulerGamma + log(z) + z*(-log(z) - \
+        EulerGamma + 1) + z**2*(log(z)/2 - S(3)/4 + EulerGamma/2) + O(z**3*log(z))
 
 
 def tn_arg(func):
