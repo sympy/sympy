@@ -506,7 +506,7 @@ def _all_base_scalars(scalar):
             l = _all_base_scalars(arg)
             if l:
                 ret = ret + l
-    return list(set(ret))
+    return _remove_duplicates(ret)
 
 def _separate_to_vectors(vect):
     # TODO: Used where?
@@ -551,7 +551,7 @@ def _all_coordinate_systems(vector):
             # Shouldn't happen
             raise ValueError("Couldn't expand vector")
 
-    return list(set(coord_list))
+    return _remove_duplicates(coord_list)
 
 def _coord_sys_scalar_list(scalar):
     """
@@ -573,7 +573,7 @@ def _coord_sys_scalar_list(scalar):
     for atom in scalar.atoms():
         if isinstance(atom, BaseScalar):
             coord_list.append(atom.coord_sys)
-    return list(set(coord_list))
+    return _remove_duplicates(coord_list)
 
 
 class BaseScalar(AtomicExpr):
@@ -763,15 +763,15 @@ class CoordSys(Basic):
     Superclass for all CoordSys<type> classes. Not to be intialized
     directly.
     """
-    def __new__(cls, name=None, dim=None, position=None,
+    def __new__(cls, name=None, dim=None, position=None, pos_flag=None,
                 orient_type=None, orient_amount=None, rot_order=None,
                 parent=None, basis_vectors=None, coordinates=None):
-        return Basic.__new__(cls, name, dim, position,
+        return Basic.__new__(cls, name, dim, position, pos_flag,
                              orient_type, orient_amount, rot_order, parent,
                              basis_vectors, coordinates)
 
     def __init__(
-            self, name=None, dim=3, position=None,
+            self, name=None, dim=3, position=None, pos_flag=True,
             orient_type=None, orient_amount=None, rot_order=None,
             parent=None, basis_vectors=None, coordinates=None
             ):
@@ -788,6 +788,11 @@ class CoordSys(Basic):
             for only rectangular coordinates.
         position : Vector
             The vector position of the coordinate system.
+        pos_flag : Boolean
+            A bool to determine whether the position is to be interpreted
+            as being wrt the parent, if one exists. Defaults to True.
+            If parent exists, the position is taken as if it was expressed
+            wrt the parents by default.
         orient_type : string
             The type of orientation to be used.
             Values:
@@ -848,9 +853,12 @@ class CoordSys(Basic):
 
             # The position vector needs to be constant, hence, it cannot be in
             # any other coordinate system other than rectangular.
-            if parent:
+            if parent and pos_flag:
                 self.position = _vect_add_const(parent.position, position,
                                                 parent)
+            elif parent and not pos_flag:
+                # Take the position to be expressed as global coordinates
+                self.position = position
             else:
                 self.position = position
         else:
@@ -1117,12 +1125,10 @@ class CoordSys(Basic):
             Dummy._count += 1
 
         newframe = self.__class__(
-            name=name, dim=self.dim,
+            name=name, dim=self.dim, position=self.position, pos_flag=False,
             orient_type=orient_type, orient_amount=orient_amount,
             rot_order=rot_order, parent=self, basis_vectors=self._basis_names,
             coordinates=self._coord_names)
-
-        newframe = newframe.posnew(self.position, name)
 
         return newframe
 
@@ -2010,8 +2016,8 @@ class VectAdd(Add, Vector):
                 raise ValueError
 
         for c, v in coord_sys_dict.iteritems():
-            coord_sys_dict[c][0] = list(set(v[0]))
-            coord_sys_dict[c][1] = list(set(v[1]))
+            coord_sys_dict[c][0] = _remove_duplicates(v[0])
+            coord_sys_dict[c][1] = _remove_duplicates(v[1])
 
         return coord_sys_dict
 
@@ -2708,6 +2714,13 @@ def _coord_sys_dict(vect):
     ret = {}
     for c in coord_list:
         ret[c] = c._change_coord_sys(CoordSysRect)
+    return ret
+
+def _remove_duplicates(l):
+    ret = []
+    for i in l:
+        if i not in ret:
+            ret.append(i)
     return ret
 
 ZeroVector = ZeroVectorClass()
