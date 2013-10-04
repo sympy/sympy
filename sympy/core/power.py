@@ -870,8 +870,17 @@ class Pow(Expr):
                 if cf < 0:
                     cf = S.One/abs(cf)
 
+                try:
+                    dn = C.Order(rest/prefactor, x).getn()
+                    if dn and dn < 0:
+                        pass
+                    else:
+                        dn = 0
+                except NotImplementedError:
+                    dn = 0
+
                 terms = [1/prefactor]
-                for m in xrange(1, ceiling(n/l*cf)):
+                for m in xrange(1, ceiling((n - dn)/l*cf)):
                     new_term = terms[-1]*(-rest)
                     if new_term.is_Pow:
                         new_term = new_term._eval_expand_multinomial(
