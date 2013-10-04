@@ -631,13 +631,14 @@ def substitution_rule(integral):
                         could_be_zero.append(denom)
 
                     for expr in could_be_zero:
-                        substep = integral_steps(integrand.subs(expr, 0), symbol)
+                        if not sympy.ask(sympy.Q.nonzero(expr)):
+                            substep = integral_steps(integrand.subs(expr, 0), symbol)
 
-                        if substep:
-                            piecewise.append((
-                                substep,
-                                sympy.Eq(expr, 0)
-                            ))
+                            if substep:
+                                piecewise.append((
+                                    substep,
+                                    sympy.Eq(expr, 0)
+                                ))
                     piecewise.append((subrule, True))
                     subrule = PiecewiseRule(piecewise, substituted, symbol)
 

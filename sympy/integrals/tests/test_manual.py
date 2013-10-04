@@ -131,4 +131,10 @@ def test_issue_3647():
     with assuming(Q.is_true(Ne(log(y), 0))):
         assert manualintegrate(y**x, x) == y**x/log(y)
     with assuming(Q.is_true(Eq(log(y), 0))):
-        manualintegrate(y**x, x) == x
+        assert manualintegrate(y**x, x) == x
+    with assuming(Q.nonzero(n)):
+        assert manualintegrate(y**(n*x), x) == \
+            Piecewise((n*x, Eq(log(y), 0)), (y**(n*x)/log(y), True))/n
+    with assuming(Q.nonzero(n) & Q.is_true(Ne(log(y), 0))):
+        assert manualintegrate(y**(n*x), x) == \
+            y**(n*x)/(n*log(y))
