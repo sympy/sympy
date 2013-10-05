@@ -6,6 +6,7 @@ from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.inference import satisfiable
 from sympy.logic.boolalg import And, Implies, Equivalent, Or
 from sympy.assumptions.ask import Q
+from sympy.utilities.iterables import sift
 
 def newask(proposition, assumptions=True, context=global_assumptions):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context)
@@ -41,20 +42,17 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
 
     relevant_facts = True
 
-    # TODO: Write this in a more scalable and extendable way
+    keys_by_predicate = sift(keys, lambda ap: ap.func)
 
-    real_keys = [key for key in keys if key.func == Q.real]
-    positive_keys = [key for key in keys if key.func == Q.positive]
-    zero_keys = [key for key in keys if key.func == Q.zero]
-    nonzero_keys = [key for key in keys if key.func == Q.nonzero]
+    # TODO: Write this in a more scalable and extendable way
 
     # To keep things straight, for implications, only worry about the
     # Implies(key, Q.something(key.args[0])) fact.
 
-    for key in positive_keys:
+    for key in keys_by_predicate[Q.positive]:
         relevant_facts &= Implies(key, Q.real(key.args[0]))
 
-    for key in zero_keys:
+    for key in keys_by_predicate[Q.zero]:
         relevant_facts &= Equivalent(key, ~Q.nonzero(key.args[0]))
         relevant_facts &= Implies(key, ~Q.positive(key.args[0]))
         relevant_facts &= Implies(key, Q.real(key.args[0]))
@@ -69,7 +67,7 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
             relevant_facts &= Implies(And(Q.zero(key.args[0].base),
                 Q.positive(key.args[0].exp)), key)
 
-    for key in nonzero_keys:
+    for key in keys_by_predicate[Q.nonzero]:
         relevant_facts &= Equivalent(key, ~Q.zero(key.args[0]))
 
         if isinstance(key.args[0], Add):
