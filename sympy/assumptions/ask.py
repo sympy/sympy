@@ -335,6 +335,7 @@ known_facts = And(
     Equivalent(Q.nonpositive, ~Q.positive & Q.real),
     Equivalent(Q.nonnegative, ~Q.negative & Q.real),
     Equivalent(Q.zero, Q.real & ~Q.nonzero),
+    Implies(Q.zero, Q.even),
 
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),
