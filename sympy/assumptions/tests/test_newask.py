@@ -37,6 +37,7 @@ def test_zero():
     model.
     """
     assert newask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
+    assert newask(Q.zero(x*y), Q.zero(x) | Q.zero(y)) is True
 
     assert newask(Implies(Q.zero(x), Q.zero(x*y))) is True
 
