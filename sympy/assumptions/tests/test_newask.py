@@ -27,6 +27,8 @@ def test_newask():
     assert newask(Q.zero(x), Q.nonzero(x)) is False
     assert newask(Q.positive(x), Q.zero(x)) is False
     assert newask(Q.real(x), Q.zero(x)) is True
+    assert newask(Q.zero(x), Q.zero(x*y)) is None
+    assert newask(Q.zero(x*y), Q.zero(x))
 
 def test_zero():
     """
@@ -34,8 +36,6 @@ def test_zero():
     very difficult or impossible to make work under the current handlers
     model.
     """
-
-    assert newask(Q.zero(x), Q.zero(x*y)) is None
     assert newask(Q.zero(x) | Q.zero(y), Q.zero(x*y)) is True
 
     assert newask(Implies(Q.zero(x), Q.zero(x*y))) is True
