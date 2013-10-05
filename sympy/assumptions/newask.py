@@ -32,7 +32,8 @@ def newask(proposition, assumptions=True, context=global_assumptions):
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
 
-equiv_any_args = set(((Q.zero, Mul),))
+equiv_any_args = set(((Q.zero, Mul),
+                      (Q.infinity, Add)))
 
 def get_relevant_facts(proposition, assumptions=True, context=global_assumptions):
     keys = proposition.atoms(AppliedPredicate)
