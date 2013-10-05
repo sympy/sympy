@@ -10,3 +10,4 @@ Inkscape
 4. Shift-Ctrl-C
 5. Save As `sympy.svg`
 
+Note: You should install the Computer Modern fonts.
