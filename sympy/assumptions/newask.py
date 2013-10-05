@@ -32,6 +32,8 @@ def newask(proposition, assumptions=True, context=global_assumptions):
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
 
+equiv_any_args = set(((Q.zero, Mul),))
+
 def get_relevant_facts(proposition, assumptions=True, context=global_assumptions):
     keys = proposition.atoms(AppliedPredicate)
     if isinstance(assumptions, Basic):
@@ -58,10 +60,6 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
         relevant_facts &= Implies(key, Q.real(key.args[0]))
 
         # Now for something interesting...
-        if isinstance(key.args[0], Mul):
-            relevant_facts &= Equivalent(key, Or(*[Q.zero(i) for i in
-                key.args[0].args]))
-
         if isinstance(key.args[0], Pow):
             relevant_facts &= Implies(key, Q.zero(key.args[0].base))
             relevant_facts &= Implies(And(Q.zero(key.args[0].base),
@@ -73,6 +71,12 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
         if isinstance(key.args[0], Add):
             relevant_facts &= Implies(And(*[Q.positive(i) for i in
                 key.args[0].args]), key)
+
+    for key in keys:
+        predicate = key.func
+        expr = key.args[0]
+        if (predicate, type(expr)) in equiv_any_args:
+            relevant_facts &= Equivalent(key, Or(*map(predicate, expr.args)))
 
 
     return relevant_facts
