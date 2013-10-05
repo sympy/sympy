@@ -262,7 +262,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         wrap("%s: %s" % item,
             subsequent_indent=HANG,
             break_long_words=False))
-        for item in mapping.items()]) + ','
+        for item in sorted(mapping.items(), key=str)]) + ','
     return fact_string % (c, m)
 
 # handlers tells us what ask handler we should use
@@ -335,6 +335,7 @@ known_facts = And(
     Equivalent(Q.nonpositive, ~Q.positive & Q.real),
     Equivalent(Q.nonnegative, ~Q.negative & Q.real),
     Equivalent(Q.zero, Q.real & ~Q.nonzero),
+    Implies(Q.zero, Q.even),
 
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.orthogonal, Q.unitary),
