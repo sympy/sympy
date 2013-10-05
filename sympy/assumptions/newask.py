@@ -75,8 +75,8 @@ def get_all_relevant_facts(proposition, assumptions=True, context=global_assumpt
     # we stop getting new things.  Hopefully this strategy won't lead to an
     # infinite loop in the future.
     relevant_facts = True
-    old_relevant_facts = True
-    while relevant_facts == old_relevant_facts == True or relevant_facts != old_relevant_facts:
+    old_relevant_facts = False
+    while relevant_facts != old_relevant_facts:
         old_relevant_facts, relevant_facts = (relevant_facts,
             get_relevant_facts(proposition, assumptions & relevant_facts,
                 context))
