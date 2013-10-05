@@ -45,8 +45,9 @@ def test_zero():
     # relevant facts, because going from Q.nonzero(x*y) -> ~Q.zero(x*y) and
     # Q.zero(x*y) -> Equivalent(Q.zero(x*y), Q.zero(x) | Q.zero(y)) takes two
     # steps.
-
     assert newask(Q.zero(x) | Q.zero(y), Q.nonzero(x*y)) is False
+
+    assert newask(Q.zero(x), Q.zero(x**2)) is True
 
 def test_zero_positive():
     assert newask(Q.zero(x + y), Q.positive(x) & Q.positive(y)) is False
@@ -56,3 +57,11 @@ def test_zero_positive():
 
     # This one requires several levels of forward chaining
     assert newask(Q.nonzero(x*(x + y)), Q.positive(x) & Q.positive(y)) is True
+
+def test_zero_pow():
+    assert newask(Q.zero(x**y), Q.zero(x) & Q.positive(y)) is True
+    assert newask(Q.zero(x**y), Q.nonzero(x) & Q.zero(y)) is False
+
+    assert newask(Q.zero(x), Q.zero(x**y)) is True
+
+    assert newask(Q.zero(x**y), Q.zero(x)) is None

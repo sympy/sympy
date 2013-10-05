@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add
+from sympy.core import Basic, Mul, Add, Pow
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.inference import satisfiable
@@ -63,6 +63,11 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
         if isinstance(key.args[0], Mul):
             relevant_facts &= Equivalent(key, Or(*[Q.zero(i) for i in
                 key.args[0].args]))
+
+        if isinstance(key.args[0], Pow):
+            relevant_facts &= Implies(key, Q.zero(key.args[0].base))
+            relevant_facts &= Implies(And(Q.zero(key.args[0].base),
+                Q.positive(key.args[0].exp)), key)
 
     for key in nonzero_keys:
         relevant_facts &= Equivalent(key, ~Q.zero(key.args[0]))
