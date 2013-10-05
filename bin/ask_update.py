@@ -24,7 +24,6 @@ if os.path.isdir(sympy_dir):
 from sympy.assumptions.ask import (compute_known_facts, known_facts,
         known_facts_keys)
 
-f = open('sympy/assumptions/ask_generated.py', 'w')
-code = compute_known_facts(known_facts, known_facts_keys)
-f.write(code)
-f.close()
+with open('sympy/assumptions/ask_generated.py', 'w') as f:
+    code = compute_known_facts(known_facts, known_facts_keys)
+    f.write(code)
