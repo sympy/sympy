@@ -8,7 +8,17 @@ from sympy.logic.boolalg import And, Implies
 from sympy.assumptions.ask import Q
 
 def newask(proposition, assumptions=True, context=global_assumptions):
-    relevant_facts = get_relevant_facts(proposition, assumptions, context)
+    # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
+    # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
+    # we stop getting new things.  Hopefully this strategy won't lead to an
+    # infinite loop in the future.
+    relevant_facts = False
+    old_relevant_facts = True
+    while relevant_facts != old_relevant_facts:
+        old_relevant_facts, relevant_facts = (relevant_facts,
+            get_relevant_facts(proposition, assumptions & old_relevant_facts,
+                context))
+
     # TODO: Can this be faster to do it in one pass using xor?
     can_be_true = satisfiable(And(proposition, assumptions,
         relevant_facts, *context))
