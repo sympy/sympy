@@ -44,7 +44,7 @@ help:
 	@echo "  texinfo     to make Texinfo files"
 	@echo "  update-po   to update po files for translation"
 	@echo "  web         to make files usable by Sphinx.web"
-	@echo "  logo        generate logos from source/*.svg"
+	@echo "  logo        generate logos from src/logo/sympy.svg"
 
 clean:
 	-rm -rf _build
