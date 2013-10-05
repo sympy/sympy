@@ -262,7 +262,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         wrap("%s: %s" % item,
             subsequent_indent=HANG,
             break_long_words=False))
-        for item in mapping.items()]) + ','
+        for item in sorted(mapping.items(), key=str)]) + ','
     return fact_string % (c, m)
 
 # handlers tells us what ask handler we should use
