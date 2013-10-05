@@ -162,7 +162,7 @@ info:
 	make -C _build/texinfo info
 	@echo "makeinfo finished; the Info files are in _build/texinfo."
 
-logo:
+logo: src/logo/sympy.svg
 	rm -rf _build/logo
 	mkdir -p _build/logo
 	./generate_logos.py -d
