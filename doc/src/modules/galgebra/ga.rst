@@ -1919,11 +1919,18 @@ command is used the entire multivector is printed on one line.
 
 Redirects printer output from standard *sympy* print handler.  Needed if
 one wishes to use compact forms of *function* and *derivative* output
-strings.
+strings for interactive use.
 
 .. function:: sympy.galgebra.ga.ga_print_off()
 
 Restores standard *sympy* print handler.
+
+.. function:: sympy.galgebra.printing.GA_Printer()
+
+Context handler for use inside Sympy code. The code indented under the
+*with GA_Printer():* statement will run with the compact forms of *function* and
+*derivative* output strings, and have the printing restored to standard *sympy*
+printing after it has finished, even if it is aborted with an exception.
 
 
 Latex Printing
@@ -2129,6 +2136,17 @@ and *_print_Function* the printer should be redirected with the function
 *ga_print_on()* and restored with the function *ga_print_off()*.  Both
 functions can be imported from *sympy.galgebra.ga*
 (see *examples/galgebra/terminal_check.py* for usage).
+
+SymPy provides a context handler that will allow you to rewrite any
+*ga_print_on(); "do something"; ga_print_off();* sequence like this:
+
+  .. code-block:: python
+
+    with GA_printer:
+      "do something"
+
+This has the advantage that even in the case of an exception inside "do something",
+the *ga_print_off();* call will be made.
 
 For LaTeX printing the *Format()* (import from *sympy.galgebra.ga*) redirects the printer output to a
 string.  After all printing requests one must call the function *xdvi()*
