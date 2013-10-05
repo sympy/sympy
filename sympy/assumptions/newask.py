@@ -8,16 +8,7 @@ from sympy.logic.boolalg import And, Implies, Equivalent, Or
 from sympy.assumptions.ask import Q
 
 def newask(proposition, assumptions=True, context=global_assumptions):
-    # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
-    # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
-    # we stop getting new things.  Hopefully this strategy won't lead to an
-    # infinite loop in the future.
-    relevant_facts = False
-    old_relevant_facts = True
-    while relevant_facts != old_relevant_facts:
-        old_relevant_facts, relevant_facts = (relevant_facts,
-            get_relevant_facts(proposition, assumptions & old_relevant_facts,
-                context))
+    relevant_facts = get_all_relevant_facts(proposition, assumptions, context)
 
     # TODO: Can this be faster to do it in one pass using xor?
     can_be_true = satisfiable(And(proposition, assumptions,
@@ -75,5 +66,19 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
 
     for key in nonzero_keys:
         relevant_facts &= Equivalent(key, ~Q.zero(key.args[0]))
+
+    return relevant_facts
+
+def get_all_relevant_facts(proposition, assumptions=True, context=global_assumptions):
+    # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
+    # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
+    # we stop getting new things.  Hopefully this strategy won't lead to an
+    # infinite loop in the future.
+    relevant_facts = True
+    old_relevant_facts = True
+    while relevant_facts == old_relevant_facts == True or relevant_facts != old_relevant_facts:
+        old_relevant_facts, relevant_facts = (relevant_facts,
+            get_relevant_facts(proposition, assumptions & relevant_facts,
+                context))
 
     return relevant_facts
