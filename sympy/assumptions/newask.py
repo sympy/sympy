@@ -7,11 +7,12 @@ from sympy.logic.inference import satisfiable
 from sympy.logic.boolalg import And, Implies, Equivalent, Or
 from sympy.assumptions.ask import Q
 from sympy.utilities.iterables import sift
+from sympy.assumptions.ask_generated import known_facts_cnf
 
-def newask(proposition, assumptions=True, context=global_assumptions):
-    relevant_facts = get_all_relevant_facts(proposition, assumptions, context)
+def newask(proposition, assumptions=True, context=global_assumptions, use_known_facts=True):
+    relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
+        use_known_facts=use_known_facts)
 
-    # TODO: Can this be faster to do it in one pass using xor?
     can_be_true = satisfiable(And(proposition, assumptions,
         relevant_facts, *context))
     can_be_false = satisfiable(And(~proposition, assumptions,
@@ -35,7 +36,8 @@ def newask(proposition, assumptions=True, context=global_assumptions):
 equiv_any_args = set(((Q.zero, Mul),
                       (Q.infinity, Add)))
 
-def get_relevant_facts(proposition, assumptions=True, context=global_assumptions):
+def get_relevant_facts(proposition, assumptions=True,
+    context=global_assumptions, use_known_facts=True):
     keys = proposition.atoms(AppliedPredicate)
     if isinstance(assumptions, Basic):
         # XXX: We need this since True/False are not Basic
@@ -43,7 +45,13 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
     if context:
         keys |= And(*context).atoms(AppliedPredicate)
 
+    predicates = set([i.args[0] for i in keys])
+
     relevant_facts = True
+
+    if use_known_facts:
+        for predicate in predicates:
+            relevant_facts &= known_facts_cnf.rcall(predicate)
 
     keys_by_predicate = sift(keys, lambda ap: ap.func)
 
@@ -56,9 +64,9 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
         relevant_facts &= Implies(key, Q.real(key.args[0]))
 
     for key in keys_by_predicate[Q.zero]:
-        relevant_facts &= Equivalent(key, ~Q.nonzero(key.args[0]))
-        relevant_facts &= Implies(key, ~Q.positive(key.args[0]))
-        relevant_facts &= Implies(key, Q.real(key.args[0]))
+        # relevant_facts &= Equivalent(key, ~Q.nonzero(key.args[0]))
+        # relevant_facts &= Implies(key, ~Q.positive(key.args[0]))
+        # relevant_facts &= Implies(key, Q.real(key.args[0]))
 
         # Now for something interesting...
         if isinstance(key.args[0], Pow):
@@ -67,7 +75,7 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
                 Q.positive(key.args[0].exp)), key)
 
     for key in keys_by_predicate[Q.nonzero]:
-        relevant_facts &= Equivalent(key, ~Q.zero(key.args[0]))
+        # relevant_facts &= Equivalent(key, ~Q.zero(key.args[0]))
 
         if isinstance(key.args[0], Add):
             relevant_facts &= Implies(And(*[Q.positive(i) for i in
@@ -82,7 +90,8 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
 
     return relevant_facts
 
-def get_all_relevant_facts(proposition, assumptions=True, context=global_assumptions):
+def get_all_relevant_facts(proposition, assumptions=True,
+    context=global_assumptions, use_known_facts=True):
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
     # we stop getting new things.  Hopefully this strategy won't lead to an
@@ -92,6 +101,6 @@ def get_all_relevant_facts(proposition, assumptions=True, context=global_assumpt
     while relevant_facts != old_relevant_facts:
         old_relevant_facts, relevant_facts = (relevant_facts,
             get_relevant_facts(proposition, assumptions & relevant_facts,
-                context))
+                context, use_known_facts=use_known_facts))
 
     return relevant_facts
