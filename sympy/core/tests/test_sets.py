@@ -1,7 +1,7 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S, sympify, nan,
     GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
-    FiniteSet, Intersection, imageset
+    FiniteSet, Intersection, imageset, I
 )
 from sympy.mpmath import mpi
 
@@ -533,3 +533,9 @@ def test_image_Intersection():
 def test_image_EmptySet():
     x = Symbol('x', real=True)
     assert imageset(x, 2*x, S.EmptySet) == S.EmptySet
+
+
+def test_issue_2625():
+    raises(TypeError, lambda: I in Interval(-oo,oo))
+    raises(TypeError, lambda: Interval(-oo,oo).contains(I))
+    raises(TypeError, lambda: I > 2)
