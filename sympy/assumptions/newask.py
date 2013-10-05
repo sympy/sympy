@@ -1,10 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic
+from sympy.core import Basic, Mul
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.inference import satisfiable
-from sympy.logic.boolalg import And, Implies
+from sympy.logic.boolalg import And, Implies, Equivalent, Or
 from sympy.assumptions.ask import Q
 
 def newask(proposition, assumptions=True, context=global_assumptions):
@@ -54,13 +54,26 @@ def get_relevant_facts(proposition, assumptions=True, context=global_assumptions
 
     real_keys = [key for key in keys if key.func == Q.real]
     positive_keys = [key for key in keys if key.func == Q.positive]
+    zero_keys = [key for key in keys if key.func == Q.zero]
+    nonzero_keys = [key for key in keys if key.func == Q.nonzero]
 
-    for key in real_keys:
-        if Q.positive(key.args[0]) in positive_keys:
-            relevant_facts &= Implies(Q.positive(key.args[0]), key)
+    # To keep things straight, for implications, only worry about the
+    # Implies(key, Q.something(key.args[0])) fact.
 
     for key in positive_keys:
-        if Q.real(key.args[0]) in real_keys:
-            relevant_facts &= Implies(key, Q.real(key.args[0]))
+        relevant_facts &= Implies(key, Q.real(key.args[0]))
+
+    for key in zero_keys:
+        relevant_facts &= Equivalent(key, ~Q.nonzero(key.args[0]))
+        relevant_facts &= Implies(key, ~Q.positive(key.args[0]))
+        relevant_facts &= Implies(key, Q.real(key.args[0]))
+
+        # Now for something interesting...
+        if isinstance(key.args[0], Mul):
+            relevant_facts &= Equivalent(key, Or(*[Q.zero(i) for i in
+                key.args[0].args]))
+
+    for key in nonzero_keys:
+        relevant_facts &= Equivalent(key, ~Q.zero(key.args[0]))
 
     return relevant_facts
