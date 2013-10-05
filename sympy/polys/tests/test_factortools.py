@@ -534,8 +534,7 @@ def test_dup_factor_list():
     f = 4*t*x**2 + 4*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (4, [(t, 1),
-             (x, 1),
+        (4*t, [(x, 1),
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
@@ -544,8 +543,7 @@ def test_dup_factor_list():
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dup_factor_list(f) == \
-        (QQ(1, 2), [(t, 1),
-                    (x, 1),
+        (QQ(1, 2)*t, [(x, 1),
                     (x + t, 1)])
 
     R, x = ring("x", QQ.algebraic_field(I))
@@ -640,8 +638,7 @@ def test_dmp_factor_list():
     f = 4*t*x**2 + 4*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (4, [(t, 1),
-             (x, 1),
+        (4*t, [(x, 1),
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
@@ -649,8 +646,7 @@ def test_dmp_factor_list():
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dmp_factor_list(f) == \
-        (QQ(1, 2), [(t, 1),
-                    (x, 1),
+        (QQ(1, 2)*t, [(x, 1),
                     (x + t, 1)])
 
     R, x, y = ring("x,y", FF(2))

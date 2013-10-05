@@ -40,6 +40,8 @@ def test_roots_cubic():
 
     assert roots_cubic(Poly(x**3 + 1, x)) == \
         [-1, S.Half - I*sqrt(3)/2, S.Half + I*sqrt(3)/2]
+    assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
+         S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
 
 
 def test_roots_quartic():
