@@ -1,6 +1,6 @@
 from sympy.assumptions.newask import newask
 
-from sympy import symbols, Q, assuming, Implies
+from sympy import symbols, Q, assuming, Implies, MatrixSymbol
 
 from sympy.utilities.pytest import raises
 
@@ -65,3 +65,10 @@ def test_zero_pow():
     assert newask(Q.zero(x), Q.zero(x**y)) is True
 
     assert newask(Q.zero(x**y), Q.zero(x)) is None
+
+def test_invertible():
+    A = MatrixSymbol('A', 5, 5)
+    B = MatrixSymbol('B', 5, 5)
+    assert newask(Q.invertible(A*B), Q.invertible(A) & Q.invertible(B)) is True
+    assert newask(Q.invertible(A), Q.invertible(A*B))
+    assert newask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B))

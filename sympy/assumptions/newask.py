@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 from sympy.core import Basic, Mul, Add, Pow
+from sympy.matrices.expressions import MatMul
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.logic.inference import satisfiable
@@ -33,8 +34,20 @@ def newask(proposition, assumptions=True, context=global_assumptions, use_known_
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
 
-equiv_any_args = set(((Q.zero, Mul),
-                      (Q.infinity, Add)))
+# Q.assumption(expr) iff any(Q.assumption(arg) for arg in expr.args)
+equiv_any_args = set([(Q.zero, Mul),
+                      (Q.infinity, Add),
+    ])
+
+# Q.assumption(expr) iff all(Q.assumption(arg) for arg in expr.args)
+equiv_all_args = set([(Q.invertible, MatMul),
+    ])
+
+# all(Q.assumption(arg) for arg in expr.args) implies Q.assumption(expr) (but
+# the reverse implication does not hold)
+
+all_args_implies = set([(Q.positive, Add),
+    ])
 
 def get_relevant_facts(proposition, assumptions=True,
     context=global_assumptions, use_known_facts=True):
@@ -57,36 +70,26 @@ def get_relevant_facts(proposition, assumptions=True,
 
     # TODO: Write this in a more scalable and extendable way
 
-    # To keep things straight, for implications, only worry about the
-    # Implies(key, Q.something(key.args[0])) fact.
-
-    for key in keys_by_predicate[Q.positive]:
-        relevant_facts &= Implies(key, Q.real(key.args[0]))
-
     for key in keys_by_predicate[Q.zero]:
-        # relevant_facts &= Equivalent(key, ~Q.nonzero(key.args[0]))
-        # relevant_facts &= Implies(key, ~Q.positive(key.args[0]))
-        # relevant_facts &= Implies(key, Q.real(key.args[0]))
+        expr = key.args[0]
 
         # Now for something interesting...
-        if isinstance(key.args[0], Pow):
-            relevant_facts &= Implies(key, Q.zero(key.args[0].base))
-            relevant_facts &= Implies(And(Q.zero(key.args[0].base),
-                Q.positive(key.args[0].exp)), key)
+        if isinstance(expr, Pow):
+            relevant_facts &= Implies(key, Q.zero(expr.base))
+            relevant_facts &= Implies(And(Q.zero(expr.base),
+                Q.positive(expr.exp)), key)
 
-    for key in keys_by_predicate[Q.nonzero]:
-        # relevant_facts &= Equivalent(key, ~Q.zero(key.args[0]))
-
-        if isinstance(key.args[0], Add):
-            relevant_facts &= Implies(And(*[Q.positive(i) for i in
-                key.args[0].args]), key)
 
     for key in keys:
         predicate = key.func
         expr = key.args[0]
+        # TODO: Use isinstance
         if (predicate, type(expr)) in equiv_any_args:
             relevant_facts &= Equivalent(key, Or(*map(predicate, expr.args)))
-
+        if (predicate, type(expr)) in equiv_all_args:
+            relevant_facts &= Equivalent(key, And(*map(predicate, expr.args)))
+        if (predicate, type(expr)) in all_args_implies:
+            relevant_facts &= Implies(And(*map(predicate, expr.args)), key)
 
     return relevant_facts
 
