@@ -30,3 +30,9 @@ express
 =======
 
 .. autofunction:: sympy.physics.mechanics.functions.express
+
+
+get_motion_params
+=================
+
+.. autofunction:: sympy.physics.mechanics.functions.get_motion_params
