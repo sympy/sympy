@@ -251,6 +251,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is not True:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonnegative is not None and \
                 dif.is_nonnegative is not dif.is_negative:
             return dif.is_nonnegative
@@ -259,6 +261,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is not True:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_nonpositive is not None and \
                 dif.is_nonpositive is not dif.is_positive:
             return dif.is_nonpositive
@@ -267,6 +271,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is not True:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_positive is not None and \
                 dif.is_positive is not dif.is_nonpositive:
             return dif.is_positive
@@ -275,6 +281,8 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
         dif = self - other
+        if dif.is_number and dif.is_real is not True:
+            raise TypeError("Invalid comparison of complex %s" % dif)
         if dif.is_negative is not None and \
                 dif.is_negative is not dif.is_nonnegative:
             return dif.is_negative
