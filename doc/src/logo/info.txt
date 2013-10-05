@@ -6,7 +6,7 @@ To create it from `sympy-use-text.svg` do:
 Inkscape
 1. Run Inkscape.
 2. Open `sympy-use-text.svg`
-3. Cntrl-A
+3. Ctrl-A
 4. Shift-Ctrl-C
 5. Save As `sympy.svg`
 
