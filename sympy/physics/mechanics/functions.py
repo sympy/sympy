@@ -491,7 +491,7 @@ def get_motion_params(frame, **kwargs):
     frame : ReferenceFrame
         The frame to express the motion parameters in
 
-     acceleration : Vector
+    acceleration : Vector
         Acceleration of the object/frame as a function of time
 
     velocity : Vector
