@@ -2181,7 +2181,7 @@ def dynamicsymbols(names, level=0):
         twice of t, etc.
 
     Examples
-    =======
+    ========
 
     >>> from sympy.physics.mechanics import dynamicsymbols
     >>> from sympy import diff, Symbol
