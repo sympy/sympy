@@ -204,15 +204,60 @@ class Plot(object):
     def __delitem__(self, index):
         del self._series[index]
 
-    def append(self, *args):
-        """Adds one more graph to the figure."""
-        if len(args) == 1 and isinstance(args[0], BaseSeries):
-            self._series.append(*args)
+    def append(self, arg):
+        """Adds a plot to an existing plot.
+
+        Example
+        =======
+
+        Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
+        second plot's first series object to the first, use the
+        ``append`` method, like so:
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot
+        >>> x = symbols('x')
+        >>> p1 = plot(x*x)
+        >>> p2 = plot(x)
+        >>> p1.append(p2[0])
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+        [1]: cartesian line: x for x over (-10.0, 10.0)
+
+        Also, see ``extend`` below.
+        """
+        if isinstance(arg, BaseSeries):
+            self._series.append(arg)
         else:
-            self._series.append(Series(*args))
+            raise TypeError('Can only accept a series '
+                             'as an argument')
 
     def extend(self, arg):
-        """Adds the series from another plot or a list of series."""
+        """Adds the series from another plot or a list of series.
+
+        Example
+        =======
+
+        Consider two ``Plot`` objects, ``p1`` and ``p2``. To add the
+        second plot to the first, use the ``extend`` method, like so:
+
+        >>> from sympy import symbols
+        >>> from sympy.plotting import plot
+        >>> x = symbols('x')
+        >>> p1 = plot(x*x)
+        >>> p2 = plot(x)
+        >>> p1.extend(p2)
+        >>> p1
+        Plot object containing:
+        [0]: cartesian line: x**2 for x over (-10.0, 10.0)
+        [1]: cartesian line: x for x over (-10.0, 10.0)
+
+        Alternatively, you can also specify the list of series objects
+        explicitly, like so:
+
+        ``p1.extend(p2._series)``
+        """
         if isinstance(arg, Plot):
             self._series.extend(arg._series)
         else:
