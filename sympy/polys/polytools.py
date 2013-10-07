@@ -2941,6 +2941,16 @@ class Poly(Expr):
         """
         Compute isolating intervals for roots of ``f``.
 
+        For real roots the Vincent-Akritas-Strzebonski (VAS) continued fractions method is used.
+
+        References:
+        ===========
+           1. Alkiviadis G. Akritas and Adam W. Strzebonski: A Comparative Study of Two Real Root
+           Isolation Methods . Nonlinear Analysis: Modelling and Control, Vol. 10, No. 4, 297-304, 2005.
+           2. Alkiviadis G. Akritas, Adam W. Strzebonski and Panagiotis S. Vigklas: Improving the
+           Performance of the Continued Fractions Method Using new Bounds of Positive Roots. Nonlinear
+           Analysis: Modelling and Control, Vol. 13, No. 3, 265-279, 2008.
+
         Examples
         ========
 

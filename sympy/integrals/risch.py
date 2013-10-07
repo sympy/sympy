@@ -1424,15 +1424,19 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
         + residue_reduce_to_basic(g2, DE, z))
 
+    qas = qa.as_expr().subs(s)
     qds = qd.as_expr().subs(s)
     if conds == 'piecewise' and DE.x not in qds.free_symbols:
         # We have to be careful if the exponent is S.Zero!
+
+        # XXX: Does qd = 0 always necessarily correspond to the exponential
+        # equaling 1?
         ret += Piecewise(
-                (integrate(p/DE.t, DE.x), Eq(qds, 0)),
-                (qa.as_expr().subs(s) / qds, True)
+                (integrate((p - i).subs(DE.t, 1).subs(s), DE.x), Eq(qds, 0)),
+                (qas/qds, True)
             )
     else:
-        ret += qa.as_expr().subs(s) / qds
+        ret += qas/qds
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\

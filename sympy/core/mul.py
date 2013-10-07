@@ -663,8 +663,10 @@ class Mul(Expr, AssocOp):
             return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy import expand_mul
         other = []
         coeff = S.One
+        addterms = S.One
         for a in self.args:
             if a.is_real or a.is_imaginary:
                 coeff *= a
@@ -676,17 +678,23 @@ class Mul(Expr, AssocOp):
                         del other[i]
                         break
                 else:
-                    other.append(a)
+                    if a.is_Add:
+                        addterms *= a
+                    else:
+                        other.append(a)
             else:
                 other.append(a)
+        addre, addim = expand_mul(addterms, deep=False).as_real_imag()
         m = self.func(*other)
         if hints.get('ignore') == m:
             return None
         else:
             if coeff.is_real:
-                return (coeff*C.re(m), coeff*C.im(m))
+                return (coeff*(C.re(m)*addre - C.im(m)*addim), coeff*(C.im(m)*addre + C.re(m)*addim))
             else:
-                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m))
+                re = - C.im(coeff)*C.im(m)
+                im = C.im(coeff)*C.re(m)
+                return (re*addre - im*addim, re*addim + im*addre)
 
     @staticmethod
     def _expandsums(sums):
@@ -1139,7 +1147,7 @@ class Mul(Expr, AssocOp):
         is_integer = self.is_integer
 
         if is_integer:
-            r = True
+            r, acc = True, 1
             for t in self.args:
                 if not t.is_integer:
                     return None
@@ -1148,8 +1156,11 @@ class Mul(Expr, AssocOp):
                 elif t.is_integer:
                     if r is False:
                         pass
+                    elif acc != 1 and (acc + t).is_odd:
+                        r = False
                     elif t.is_odd is None:
                         r = None
+                acc = t
             return r
 
         # !integer -> !odd

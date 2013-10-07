@@ -289,6 +289,7 @@ class MatrixElement(Expr):
     parent = property(lambda self: self.args[0])
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
+    _diff_wrt = True
 
 
 class MatrixSymbol(MatrixExpr):
@@ -393,6 +394,9 @@ class Identity(MatrixExpr):
         else:
             return S.Zero
 
+    def _eval_determinant(self):
+        return S.One
+
 
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
@@ -428,6 +432,9 @@ class ZeroMatrix(MatrixExpr):
         return ZeroMatrix(self.cols, self.rows)
 
     def _eval_trace(self):
+        return S.Zero
+
+    def _eval_determinant(self):
         return S.Zero
 
     def conjugate(self):

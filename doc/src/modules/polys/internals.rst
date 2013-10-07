@@ -501,6 +501,19 @@ TODO sort and explain
 .. autoclass:: OptionError
 .. autoclass:: FlagError
 
+Reference
+=========
+
+Modular GCD
+***********
+
+.. currentmodule:: sympy.polys.modulargcd
+
+.. autoclass:: modgcd_univariate
+.. autoclass:: modgcd_bivariate
+.. autoclass:: modgcd_multivariate
+.. autoclass:: func_field_modgcd
+
 Undocumented
 ============
 
