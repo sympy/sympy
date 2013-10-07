@@ -13,8 +13,9 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Ne, Or, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
-    elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci)
+    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
+    elliptic_e, elliptic_f, powsimp, hessian, wronskian,fibonacci, sign,
+    Lambda, Piecewise)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
@@ -33,6 +34,7 @@ from sympy.polys.fields import vfield
 from sympy.polys.solvers import solve_lin_sys
 from sympy.concrete import Sum
 from sympy.concrete.products import Product
+from sympy.integrals import integrate
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -1876,4 +1878,38 @@ def test_T10():
 @XFAIL
 def test_T11():
     n,k = symbols('n k', integer=True, positive=True)
-    limit(n**x/(x*product((1 + x/k), (k, 1, n))),n,oo) == gamma(x) #raises NotImplementedError
+    assert limit(n**x/(x*product((1 + x/k), (k, 1, n))),n,oo) == gamma(x) #raises NotImplementedError
+
+@XFAIL
+def test_T12():
+    x,t = symbols('x,t', real=True)
+    assert limit(x * integrate(exp(-t**2), (t, 0, x))/(1 - exp(-x**2)), x, 0) == 1 # raises PoleError: Don't know how to calculate the limit(sqrt(pi)*x*erf(x)/(2*(1 - exp(-x**2))), x, 0, dir=+)
+
+def test_T13():
+    x = symbols('x', real=True)
+    assert [limit(x/abs(x), x, 0, dir='-'), limit(x/abs(x), x, 0, dir='+')] == [-1, 1]
+
+def test_T14():
+    x = symbols('x', real=True)
+    assert limit(atan(-log(x)), x, 0, dir='+') == pi/2
+
+def test_U1():
+    x = symbols('x', real=True)
+    assert diff(abs(x), x) == sign(x)
+
+def test_U2():
+    f=Lambda(x,Piecewise((-x,x<0), (x,x>=0)))
+    assert diff(f(x),x) == Piecewise((-1, x < 0), (1, x >= 0))
+
+def test_U3():
+    f=Lambda(x,Piecewise((x**2-1, x==1), (x**3, x!=1)))
+    f1=Lambda(x,diff(f(x),x))
+    assert f1(x) == 3*x**2
+    assert f1(1) == 3
+
+@XFAIL
+def test_U4():
+    n = symbols('n', integer=True, positive=True)
+    x = symbols('x', real=True)
+    diff(x**n,x,n)
+    assert diff(x**n,x,n).rewrite(factorial) == factorial(n)
