@@ -122,7 +122,7 @@ def igcd(*args):
     >>> from sympy.core.numbers import igcd
     >>> igcd(2, 4)
     2
-    >>> igcd(*[5, 10, 15])
+    >>> igcd(5, 10, 15)
     5
 
     """
@@ -143,6 +143,8 @@ def igcd(*args):
                 a = abs(a or b)
 
             _gcdcache[(a, b)] = a
+        if a == 1 or b == 1:
+            return 1
     return a
 
 
@@ -157,7 +159,7 @@ def ilcm(*args):
     10
     >>> ilcm(7, 3)
     21
-    >>> ilcm(*[5, 10, 15])
+    >>> ilcm(5, 10, 15)
     30
 
     """
