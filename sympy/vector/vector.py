@@ -350,7 +350,8 @@ def div(vect, coord_sys=None):
 
     # TODO : Add examples once testing is done.
     """
-    coord_list = _all_coordinate_systems(coord_sys)
+    import pudb;pu.db
+    coord_list = _all_coordinate_systems(vect)
     if not coord_sys and len(coord_list) == 1:
         coord_sys = coord_list[0]
     else:
@@ -369,10 +370,11 @@ def div(vect, coord_sys=None):
     ret = S.Zero
 
     for i, index in enumerate(indices):
-        ret = ret + diff(vect_comp[i] * h_list[index[0]] * h_list[index[1]]).factor_vect()
+        ret = ret + diff(vect_comp[i] * h_list[index[0]] * \
+                         h_list[index[1]], base_scalars[i]).factor()
     ret = (1/(h_list[0] * h_list[1] * h_list[2])) * ret
 
-    return ret.factor_vect()
+    return ret.factor()
 
 
 def curl(vect, coord_sys):
@@ -766,9 +768,11 @@ class CoordSys(Basic):
     def __new__(cls, name=None, dim=None, position=None, pos_flag=None,
                 orient_type=None, orient_amount=None, rot_order=None,
                 parent=None, basis_vectors=None, coordinates=None):
+        if orient_amount:
+            orient_amount = tuple(orient_amount)
         return Basic.__new__(cls, name, dim, position, pos_flag,
-                             orient_type, orient_amount, rot_order, parent,
-                             basis_vectors, coordinates)
+                             orient_type, orient_amount, rot_order,
+                             parent, basis_vectors, coordinates)
 
     def __init__(
             self, name=None, dim=3, position=None, pos_flag=True,
@@ -889,6 +893,11 @@ class CoordSys(Basic):
     __repr__ = __str__
     _sympystr = __str__
     _sympyrepr = __str__
+
+    """
+    def _hashable_content(self):
+        return (repr(self),) + tuple(sorted(self.assumptions0.items()))
+    """
 
     def _dcm_parent_method(self, orient_type, amounts, rot_order=''):
         """Intialize the self._dcm_parent attribute."""
@@ -1119,7 +1128,6 @@ class CoordSys(Basic):
         [       0,       0, 1]])
 
         """
-        import pudb;pu.db
         if name == None:
             name = 'CoordSys_' + str(Dummy._count)
             Dummy._count += 1
@@ -1198,7 +1206,8 @@ class CoordSys(Basic):
             Dummy._count += 1
         CoordSysClass = coord_sys_class
         if flag:
-            ret_coord_sys = CoordSysClass(name=name, position=self.position,
+            ret_coord_sys = CoordSysClass(name=name,
+                                    position=self.position, pos_flag=False,
                                     orient_type=self.orient_type,
                                     orient_amount=self.orient_amount,
                                     rot_order=self.rot_order,
@@ -1206,7 +1215,8 @@ class CoordSys(Basic):
                                     basis_vectors=self._basis_names,
                                     coordinates=self._coord_names)
         else:
-            ret_coord_sys = CoordSysClass(name=name, position=self.position,
+            ret_coord_sys = CoordSysClass(name=name,
+                                    position=self.position, pos_flag=False,
                                     orient_type=self.orient_type,
                                     orient_amount=self.orient_amount,
                                     rot_order=self.rot_order,
@@ -1379,13 +1389,17 @@ class CoordSysRect(CoordSys):
                 kwargs['coordinates'] = \
                         ['x' + str(i + 1) for i in range(kwargs['dim'])]
             except:
-                kwargs['coordinates'] = ['x', 'y', 'z']
+                kwargs['coordinates'] = ('x', 'y', 'z')
         if 'basis_vectors' not in kwargs.keys():
             try:
                 kwargs['basis_vectors'] = \
                     ['e_' + str(i + 1) for i in range(kwargs['dim'])]
             except:
-                kwargs['basis_vectors'] = ['e_x', 'e_y', 'e_z']
+                kwargs['basis_vectors'] = ('e_x', 'e_y', 'e_z')
+
+        # Convert to tuple
+        kwargs['coordinates'] = tuple(kwargs['coordinates'])
+        kwargs['basis_vectors'] = tuple(kwargs['basis_vectors'])
 
         super(CoordSysRect, self).__init__(*args, **kwargs)
         self.h_list = tuple([S.One] * self.dim)
@@ -1478,9 +1492,9 @@ class CoordSysSph(CoordSys):
         See the docstring of CoordSys for more.
         """
         if 'coordinates' not in kwargs.keys():
-            kwargs['coordinates'] = ['r', 'theta', 'phi']
+            kwargs['coordinates'] = ('r', 'theta', 'phi')
         if 'basis_vectors' not in kwargs.keys():
-            kwargs['basis_vectors'] = ['e_r', 'e_theta', 'e_phi']
+            kwargs['basis_vectors'] = ('e_r', 'e_theta', 'e_phi')
         super(CoordSysSph, self).__init__(*args, **kwargs)
 
         self.dim = S(3)
@@ -1586,9 +1600,9 @@ class CoordSysCyl(CoordSys):
         See the docstring of CoordSys for more.
         """
         if 'coordinates' not in kwargs.keys():
-            kwargs['coordinates'] = ['rho', 'phi', 'z']
+            kwargs['coordinates'] = ('rho', 'phi', 'z')
         if 'basis_vectors' not in kwargs.keys():
-            kwargs['basis_vectors'] = ['e_rho', 'e_phi', 'e_z']
+            kwargs['basis_vectors'] = ('e_rho', 'e_phi', 'e_z')
         super(CoordSysCyl, self).__init__(*args, **kwargs)
 
         self.dim = S(3)
@@ -2564,7 +2578,6 @@ def express(vect, coord_sys):
     """
     coord_list = _all_coordinate_systems(vect)
     subs_dict = {}
-
     # We proceed to build a dictionary that, upon substituting in the
     # original vector, will give us a vector in desired coord_sys
 
