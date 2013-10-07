@@ -225,9 +225,9 @@ def power_rule(integral):
     elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
         rule = ExpRule(base, exp, integrand, symbol)
 
-        if sympy.ask(sympy.Q.is_true(sympy.Ne(sympy.log(base), 0))):
+        if sympy.ask(~sympy.Q.zero(sympy.log(base))):
             return rule
-        elif sympy.ask(sympy.Q.is_true(sympy.Eq(sympy.log(base), 0))):
+        elif sympy.ask(sympy.Q.zero(sympy.log(base))):
             return ConstantRule(1, 1, symbol)
 
         return PiecewiseRule([
@@ -643,7 +643,7 @@ def substitution_rule(integral):
                         could_be_zero.append(denom)
 
                     for expr in could_be_zero:
-                        if not sympy.ask(sympy.Q.nonzero(expr)):
+                        if not sympy.ask(~sympy.Q.zero(expr)):
                             substep = integral_steps(integrand.subs(expr, 0), symbol)
 
                             if substep:

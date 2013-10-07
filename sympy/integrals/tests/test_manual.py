@@ -136,14 +136,14 @@ def test_issue_3647():
     assert manualintegrate(exp(n*x), x) == \
         Piecewise((x, Eq(n, 0)), (exp(n*x)/n, True))
 
-    with assuming(Q.is_true(Ne(log(y), 0))):
+    with assuming(~Q.zero(log(y))):
         assert manualintegrate(y**x, x) == y**x/log(y)
-    with assuming(Q.is_true(Eq(log(y), 0))):
+    with assuming(Q.zero(log(y))):
         assert manualintegrate(y**x, x) == x
-    with assuming(Q.nonzero(n)):
+    with assuming(~Q.zero(n)):
         assert manualintegrate(y**(n*x), x) == \
             Piecewise((n*x, Eq(log(y), 0)), (y**(n*x)/log(y), True))/n
-    with assuming(Q.nonzero(n) & Q.is_true(Ne(log(y), 0))):
+    with assuming(~Q.zero(n) & ~Q.zero(log(y))):
         assert manualintegrate(y**(n*x), x) == \
             y**(n*x)/(n*log(y))
     with assuming(Q.negative(a)):
