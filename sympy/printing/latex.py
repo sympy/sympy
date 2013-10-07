@@ -63,9 +63,8 @@ other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
 
 # Make sure to keep this list sorted by decreasing length so that,
 # e.g., "ddot" is not confused for "d" followed by "dot"
-accent_keys = ['mathring', 'check', 'breve', 'acute', 'grave',
-               'tilde', 'prime', 'ddot', 'bold', 'hat', 'dot',
-               'bar', 'vec', 'abs', 'prm', 'bm']
+modifier_keys = ['mathring', 'check', 'breve', 'acute', 'grave', 'tilde', 'prime', 'ddot',
+                 'bold', 'norm', 'avg', 'hat', 'dot', 'bar', 'vec', 'abs', 'mag', 'prm', 'bm']
 
 greek_letters_set = frozenset(greeks)
 
@@ -1629,8 +1628,8 @@ class LatexPrinter(Printer):
 
 def translate(s):
     r'''
-    Check for an accent ending the string.  If present, convert the
-    accent to latex and translate the rest recursively.
+    Check for a modifier ending the string.  If present, convert the
+    modifier to latex and translate the rest recursively.
 
     Given a description of a Greek letter or other special character,
     return the appropriate latex.
@@ -1641,21 +1640,6 @@ def translate(s):
     >>> translate('alphahatdotprime')
     "{\\dot{\\hat{\\alpha}}}'"
     '''
-    # Process accents, if any, and recurse
-    for key in accent_keys:
-        if s.lower().endswith(key):
-            if(key in ['prime', 'prm']):
-                # MathJax can fail on primes without braces
-                return "{" + translate(s[:-len(key)]) + "}'"
-            if(key=='abs'):
-                # MathJax doesn't know \abs
-                return "\\left\\lvert{" + translate(s[:-len(key)]) + "}\\right\\rvert"
-            if(key in ['bold', 'bm']):
-                # MathJax doesn't know \bm
-                outkey = 'boldsymbol'
-            else:
-                outkey = key
-            return "\\" + outkey + "{" + translate(s[:-len(key)]) + "}"
     # Process the rest
     tex = tex_greek_dictionary.get(s)
     if tex:
@@ -1663,6 +1647,22 @@ def translate(s):
     elif s.lower() in greek_letters_set or s in other_symbols:
         return "\\" + s
     else:
+        # Process modifiers, if any, and recurse
+        for key in modifier_keys:
+            if s.lower().endswith(key) and len(s)>len(key):
+                if(key in ['prime', 'prm']):
+                    # MathJax can fail on primes without braces
+                    return "{" + translate(s[:-len(key)]) + "}'"
+                if(key in ['abs', 'mag']):
+                    return "\\left\\lvert{" + translate(s[:-len(key)]) + "}\\right\\rvert"
+                if(key=='norm'):
+                    return "\\left\\lVert{" + translate(s[:-len(key)]) + "}\\right\\rVert"
+                if(key=='avg'):
+                    return "\\left\\langle{" + translate(s[:-len(key)]) + "}\\right\\rangle"
+                if(key in ['bm', 'bold']):
+                    # MathJax doesn't know \bm
+                    return "\\boldsymbol{" + translate(s[:-len(key)]) + "}"
+                return "\\" + key + "{" + translate(s[:-len(key)]) + "}"
         return s
 
 def latex(expr, **settings):
