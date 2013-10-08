@@ -942,11 +942,9 @@ def roots(f, *gens, **flags):
                 _update_dict(result, r, 1)
         elif f.degree() == 1:
             result[roots_linear(f)[0]] = 1
-        elif f.degree() == 2:
-            for r in roots_quadratic(f):
-                _update_dict(result, r, 1)
         elif f.length() == 2:
-            for r in roots_binomial(f):
+            roots_fun = roots_quadratic if f.degree() == 2 else roots_binomial
+            for r in roots_fun(f):
                 _update_dict(result, r, 1)
         else:
             _, factors = Poly(f.as_expr()).factor_list()
