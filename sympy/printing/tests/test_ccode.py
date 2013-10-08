@@ -129,19 +129,19 @@ def test_ccode_Piecewise_deep():
     p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-2*((x < 1) ? (
-   x
-)
-: (
-   pow(x, 2)
-) )\
+if (x < 1) {
+   2*x
+}
+else {
+   2*pow(x, 2)
+}\
 """
     assert p == s
 
 def test_ccode_Piecewise3():
     t = symbols("t")
     e = t*x*y + x**2 + y**2 + Piecewise((0, x < 0.5), (1, x >= 0.5)) + cos(t) - 1
-    p = ccode(piecewise_fold(e))
+    p = ccode(e)
     s = "if (x < 0.5) {\n   t*x*y + pow(x, 2) + pow(y, 2) + cos(t) - 1\n}\nelse if (x >= 0.5) {\n   t*x*y + pow(x, 2) + pow(y, 2) + cos(t)\n}"
     assert p == s
 

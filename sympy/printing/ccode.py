@@ -63,6 +63,8 @@ class CCodePrinter(CodePrinter):
         Actually format the expression as C code.
         """
 
+        from sympy.functions import piecewise_fold
+
         if isinstance(assign_to, string_types):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
@@ -76,6 +78,7 @@ class CCodePrinter(CodePrinter):
 
         # We treat top level Piecewise here to get if tests outside loops
         lines = []
+        expr = piecewise_fold(expr)
         if isinstance(expr, C.Piecewise):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
