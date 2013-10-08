@@ -79,20 +79,8 @@ class CCodePrinter(CodePrinter):
         # We treat top level Piecewise here to get if tests outside loops
         lines = []
         expr = piecewise_fold(expr)
-        if isinstance(expr, C.Piecewise):
-            for i, (e, c) in enumerate(expr.args):
-                if i == 0:
-                    lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args) - 1 and c is True:
-                    lines.append("else {")
-                else:
-                    lines.append("else if (%s) {" % self._print(c))
-                code0 = self._doprint_a_piece(e, assign_to)
-                lines.extend(code0)
-                lines.append("}")
-        else:
-            code0 = self._doprint_a_piece(expr, assign_to)
-            lines.extend(code0)
+        code0 = self._doprint_a_piece(expr, assign_to)
+        lines.extend(code0)
 
         # format the output
         if self._settings["human"]:
