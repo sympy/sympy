@@ -871,7 +871,7 @@ class Pow(Expr):
                     cf = S.One/abs(cf)
 
                 try:
-                    dn = C.Order(rest/prefactor, x).getn()
+                    dn = C.Order(1/prefactor, x).getn()
                     if dn and dn < 0:
                         pass
                     else:
