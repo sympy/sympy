@@ -73,7 +73,7 @@ class class_handler_registry(MutableMapping):
         self.d[key].add(item)
 
     def __getitem__(self, key):
-        ret = set()
+        ret = self.d[key]
         for k in self.d:
             if issubclass(key, k):
                 ret.update(self.d[k])
