@@ -9,6 +9,7 @@ from sympy.logic.boolalg import And, Implies, Equivalent, Or
 from sympy.assumptions.ask import Q
 from sympy.utilities.iterables import sift
 from sympy.assumptions.ask_generated import known_facts_cnf
+from sympy.assumptions.newhandlers import handler_registry
 
 def newask(proposition, assumptions=True, context=global_assumptions, use_known_facts=True):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
@@ -33,21 +34,6 @@ def newask(proposition, assumptions=True, context=global_assumptions, use_known_
         # assumptions, global_assumptions, and relevant_facts are
         # inconsistent.
         raise ValueError("Inconsistent assumptions")
-
-# Q.assumption(expr) iff any(Q.assumption(arg) for arg in expr.args)
-equiv_any_args = set([(Q.zero, Mul),
-                      (Q.infinity, Add),
-    ])
-
-# Q.assumption(expr) iff all(Q.assumption(arg) for arg in expr.args)
-equiv_all_args = set([(Q.invertible, MatMul),
-    ])
-
-# all(Q.assumption(arg) for arg in expr.args) implies Q.assumption(expr) (but
-# the reverse implication does not hold)
-
-all_args_implies = set([(Q.positive, Add),
-    ])
 
 def get_relevant_facts(proposition, assumptions=True,
     context=global_assumptions, use_known_facts=True):
@@ -81,15 +67,9 @@ def get_relevant_facts(proposition, assumptions=True,
 
 
     for key in keys:
-        predicate = key.func
         expr = key.args[0]
-        # TODO: Use isinstance
-        if (predicate, type(expr)) in equiv_any_args:
-            relevant_facts &= Equivalent(key, Or(*map(predicate, expr.args)))
-        if (predicate, type(expr)) in equiv_all_args:
-            relevant_facts &= Equivalent(key, And(*map(predicate, expr.args)))
-        if (predicate, type(expr)) in all_args_implies:
-            relevant_facts &= Implies(And(*map(predicate, expr.args)), key)
+        for handler in handler_registry[expr.func]:
+            relevant_facts &= handler.get_relevant_fact(key)
 
     return relevant_facts
 
