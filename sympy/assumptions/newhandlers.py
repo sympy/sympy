@@ -66,17 +66,17 @@ class class_handler_registry(MutableMapping):
     of its superclasses.
     """
     def __init__(self):
-        self.d = defaultdict(set)
+        self.d = defaultdict(frozenset)
         super(class_handler_registry, self).__init__()
 
     def __setitem__(self, key, item):
-        self.d[key].add(item)
+        self.d[key] = frozenset(item)
 
     def __getitem__(self, key):
         ret = self.d[key]
         for k in self.d:
             if issubclass(key, k):
-                ret.update(self.d[k])
+                ret |= self.d[k]
         return ret
 
     def __delitem__(self, key):

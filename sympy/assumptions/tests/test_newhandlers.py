@@ -12,8 +12,8 @@ def test_class_handler_registry():
     all_args_implies_is_true = AllArgsImplies(Q.is_true)
     equiv_all_args_is_true = EquivalentAllArgs(Q.is_true)
 
-    my_handler_registry[Mul] = all_args_implies_is_true
-    my_handler_registry[Expr] = equiv_all_args_is_true
+    my_handler_registry[Mul] = set([all_args_implies_is_true])
+    my_handler_registry[Expr] = set([equiv_all_args_is_true])
 
     assert my_handler_registry[Basic] == set()
     assert my_handler_registry[Expr] == set([equiv_all_args_is_true])
