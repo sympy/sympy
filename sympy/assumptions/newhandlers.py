@@ -37,23 +37,23 @@ class EquivalentAnyArgs(ArgHandler):
     """
     Q.assumption(expr) iff any(Q.assumption(arg) for arg in expr.args)
     """
-    def get_relationship(self, key, mapped_args):
-        return Equivalent(key, Or(*mapped_args))
+    def get_relationship(self, key, keyed_args):
+        return Equivalent(key, Or(*keyed_args))
 
 class EquivalentAllArgs(ArgHandler):
     """
     Q.assumption(expr) iff all(Q.assumption(arg) for arg in expr.args)
     """
-    def get_relationship(self, key, mapped_args):
-        return Equivalent(key, And(*mapped_args))
+    def get_relationship(self, key, keyed_args):
+        return Equivalent(key, And(*keyed_args))
 
 class AllArgsImplies(ArgHandler):
     """
     all(Q.assumption(arg) for arg in expr.args) implies Q.assumption(expr)
     (but the reverse implication does not hold)
     """
-    def get_relationship(self, key, mapped_args):
-        return Implies(And(*mapped_args), key)
+    def get_relationship(self, key, keyed_args):
+        return Implies(And(*keyed_args), key)
 
 # TODO: Create a handler registry system
 
@@ -89,7 +89,7 @@ class class_handler_registry(MutableMapping):
         return len(self.d)
 
     def __repr__(self):
-        return str(self.d)
+        return repr(self.d)
 
 handler_registry = class_handler_registry()
 
