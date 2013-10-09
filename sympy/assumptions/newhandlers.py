@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from collections import MutableMapping, defaultdict
 
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, Pow
 from sympy.matrices.expressions import MatMul
 
 from sympy.assumptions.ask import Q
@@ -22,15 +22,28 @@ class ArgHandler(Handler):
     Q.assumption(expr) and Q.assumption(arg) for arg in expr.args.
 
     Subclasses should override the get_relationship method.
+
+    Alternately, you can instantiate this class with the get_relationship
+    function as the second argument.  That is, ``handler = ArgHandler(predicate, lambda
+    key, keyed_args: relationship)`` is the same as::
+
+        class MyHandler(ArgHandler):
+            def get_relationship(self, key, keyed_args):
+                return relationship
+
+        handler = MyHandler(predicate)
+
     """
 
-    def __init__(self, predicate):
+    def __init__(self, predicate, get_relationship=None):
         self.predicate = predicate
+        if get_relationship:
+            self.get_relationship = get_relationship
 
     def get_relevant_fact(self, key):
         expr = key.args[0]
         if key.func == self.predicate: # TODO: isinstance doesn't work here
-            return self.get_relationship(key, map(self.predicate, expr.args))
+            return self.get_relationship(key, list(map(self.predicate, expr.args)))
         return True
 
 class EquivalentAnyArgs(ArgHandler):
@@ -94,12 +107,16 @@ class class_handler_registry(MutableMapping):
 handler_registry = class_handler_registry()
 
 def register_handler(klass, handler, registry=handler_registry):
-    registry[klass].add(handler)
+    registry[klass] |= set([handler])
 
-for handler, key, klass in [
-    (EquivalentAnyArgs, Q.zero, Mul),
-    (EquivalentAllArgs, Q.invertible, MatMul),
-    (AllArgsImplies, Q.positive, Add),
+for handler, klass in [
+    (EquivalentAnyArgs(Q.zero), Mul),
+    (EquivalentAllArgs(Q.invertible), MatMul),
+    (AllArgsImplies(Q.positive), Add),
+    (ArgHandler(Q.zero, lambda key, keyed_args: Implies(key, keyed_args[0])),
+    Pow),
+    (ArgHandler(Q.zero, lambda key, keyed_args:
+        Implies(And(Q.zero(keyed_args[0].args[0]), Q.positive(keyed_args[1].args[0])), key)), Pow),
     ]:
 
-    register_handler(klass, handler(key))
+    register_handler(klass, handler)

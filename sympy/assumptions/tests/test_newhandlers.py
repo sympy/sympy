@@ -21,13 +21,19 @@ def test_class_handler_registry():
 
 def test_ArgHandler():
     class AndArgHandler(ArgHandler):
-        def get_relationship(self, key, mapped_args):
-            return And(key, *mapped_args)
+        def get_relationship(self, key, keyed_args):
+            return And(key, *keyed_args)
 
     handler = AndArgHandler(Q.zero)
     assert handler.get_relevant_fact(Q.zero(x*y)) == And(Q.zero(x*y),
-    Q.zero(x), Q.zero(y))
+        Q.zero(x), Q.zero(y))
     assert handler.get_relevant_fact(Q.positive(x*y)) == True
+
+    handler = ArgHandler(Q.positive, lambda key, keyed_args: And(key,
+        *keyed_args))
+    assert handler.get_relevant_fact(Q.positive(x*y)) == And(Q.positive(x*y),
+        Q.positive(x), Q.positive(y))
+    assert handler.get_relevant_fact(Q.zero(x*y)) == True
 
 def test_EquivalentAllArgs():
     handler = EquivalentAllArgs(Q.invertible)

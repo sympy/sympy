@@ -52,20 +52,6 @@ def get_relevant_facts(proposition, assumptions=True,
         for predicate in predicates:
             relevant_facts &= known_facts_cnf.rcall(predicate)
 
-    keys_by_predicate = sift(keys, lambda ap: ap.func)
-
-    # TODO: Write this in a more scalable and extendable way
-
-    for key in keys_by_predicate[Q.zero]:
-        expr = key.args[0]
-
-        # Now for something interesting...
-        if isinstance(expr, Pow):
-            relevant_facts &= Implies(key, Q.zero(expr.base))
-            relevant_facts &= Implies(And(Q.zero(expr.base),
-                Q.positive(expr.exp)), key)
-
-
     for key in keys:
         expr = key.args[0]
         for handler in handler_registry[expr.func]:
