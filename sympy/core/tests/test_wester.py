@@ -15,7 +15,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
     elliptic_e, elliptic_f, powsimp, hessian, wronskian,fibonacci, sign,
-    Lambda, Piecewise)
+    Lambda, Piecewise, Subs, residue)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
@@ -1882,7 +1882,7 @@ def test_T11():
 
 @XFAIL
 def test_T12():
-    x,t = symbols('x,t', real=True)
+    x,t = symbols('x t', real=True)
     assert limit(x * integrate(exp(-t**2), (t, 0, x))/(1 - exp(-x**2)), x, 0) == 1 # raises PoleError: Don't know how to calculate the limit(sqrt(pi)*x*erf(x)/(2*(1 - exp(-x**2))), x, 0, dir=+)
 
 def test_T13():
@@ -1913,3 +1913,59 @@ def test_U4():
     x = symbols('x', real=True)
     diff(x**n,x,n)
     assert diff(x**n,x,n).rewrite(factorial) == factorial(n)
+
+@XFAIL
+def test_U5():
+    # https://code.google.com/p/sympy/issues/detail?id=3582
+    # f(g(x)).diff(x,2) returns Derivative(g(x), x)**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (g(x),)) + Derivative(g(x), x, x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
+    raise NotImplementedError("f(g(t)).diff(t,2) Subs not performmed")
+
+@XFAIL
+def test_U6():
+    h = Function('h')
+    T=integrate(f(y),y, h(x),g(x)) # raises ValueError: Invalid limits given: (y, h(x), g(x))
+    T.diff(x)
+
+@XFAIL
+def test_U7():
+    p,t = symbols('p t', real=True)
+    diff(f(p,t)) # raises ValueError:  Since there is more than one variable in the expression, the variable(s) of differentiation must be supplied to differentiate f(p,t)
+
+def test_U8():
+    x,y = symbols('x y', real=True)
+    eq = cos(x*y)+x
+    eq = eq.subs(y, f(x))
+    #  If Sympy had implicit_diff() function this hack could be avoided
+    solve((f(x)-eq).diff(x), f(x).diff(x))[0].subs(f(x),y) == (-y*sin(x*y) + 1)/(x*sin(x*y) + 1)
+
+@XFAIL
+def test_U9():
+    x,y = symbols('x y', real=True)
+    su=diff(f(x, y), x) + diff(f(x, y), y)
+    s2=Subs(su,f(x,y),g(x**2+y**2)).doit()
+    s2.doit().factor() #manual factorization required, Almost correct, but..
+    raise NotImplementedError("Subs replacement not performmed")
+
+@XFAIL
+def test_U10():
+    z = symbols('z')
+    assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9,4) # returns wrong value-3/4 . should be fixed with https://github.com/sympy/sympy/pull/2502
+
+def test_U11():
+    (dx, dy, dz)  = MV.setup('dx dy dz')
+    #answer is correct, but I can't find in the doc how to implement differential form with SymPy
+    assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx^dy^dz
+
+
+'''
+(c41) /* d(3 x^5 dy /\ dz + 5 x y^2 dz /\ dx + 8 z dx /\ dy)
+   => (15 x^4 + 10 x y + 8) dx /\ dy /\ dz */
+factor(ext_diff(3*x^5 * dy ~ dz + 5*x*y^2 * dz ~ dx + 8*z * dx ~ dy));
+Time= 60 msecs
+				       4
+(d41) 			 (10 x y + 15 x  + 8) dx dy dz
+'''
+@XFAIL
+def test_U12():
+    raise NotImplementedError("External diff of differential form not supported")
+
