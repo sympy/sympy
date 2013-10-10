@@ -1,4 +1,4 @@
-from sympy import sympify
+from sympy import pi, sympify, S
 from sympy.physics.mechanics import Vector, Particle, _check_frame
 from sympy.physics.em import gradient, scalar_potential, divergence, laplacian
 
@@ -9,9 +9,22 @@ k = Symbol('k')
 class ParticleCharge(Particle):
     """
     Class to represent a charged particle in space
+
+    Parameters
+    ==========
+
+    name : string
+        The name for the ParticleCharge instance
+
+    mass : sympyfiable
+        The mass of the charged particle
+
+    charge : sympyfiable
+        The charge of the charged particle
+
     """
 
-    def __init__(self, name, mass, charge=0):
+    def __init__(self, name, mass, charge=S(0)):
         super(ParticleCharge, self).__init__(name, mass)
         self._charge = charge
 
@@ -39,7 +52,7 @@ class ParticleCharge(Particle):
         Parameters
         ==========
 
-        frame : MovingRefFrame
+        frame : ReferenceFrame
             The field to express the potential function in
 
         point(optional) : Vector
@@ -72,7 +85,7 @@ class ParticleCharge(Particle):
         Parameters
         ==========
 
-        frame : MovingRefFrame
+        frame : ReferenceFrame
             The field to express the potential function in
 
         point(optional) : Vector
@@ -104,7 +117,7 @@ class ParticleCharge(Particle):
         Parameters
         ==========
 
-        efields : list
+        efields : list(of Vectors)
             List of electrostatic fields to consider
 
         Examples
@@ -116,7 +129,7 @@ class ParticleCharge(Particle):
         for x in efields:
             if not isinstance(x, Vector):
                 raise TypeError(str(x)+ " is not a vector field")
-            total_force = self.charge*x
+            total_force = self.charge * x
         return total_force
 
 
@@ -124,6 +137,19 @@ def electrostatic_field(potential, frame):
     """
     The electric field corresponding to a scalar electrostatic potential \
     in given frame
+
+    Parameters
+    ==========
+
+    potential : sympyfiable scalar
+        The electrostatic potential function
+
+    frame : ReferenceFrame
+        The frame to do the calculations in
+
+    Examples
+    ========
+
     """
     return -1 * gradient(potential, frame)
 
@@ -132,6 +158,19 @@ def electrostatic_potential(electric_field, frame):
     """
     The electric scalar potential corresponding to an electrostatic field \
     in given frame
+
+    Parameters
+    ==========
+
+    electric_field : Vector
+        The electric field whose potential is to be calculated
+
+    frame : ReferenceFrame
+        The frame to do the calculations in
+
+    Examples
+    ========
+
     """
     return -1 * scalar_potential(electric_field, frame)
 
@@ -174,14 +213,14 @@ def charge_density(field, frame):
         The vector electrostatic field or scalar potential field
         under consideration
 
-    frame : MovingRefFrame
+    frame : ReferenceFrame
         The frame to do the calculations in
 
     Examples
     ========
 
     """
-    
+
     _check_frame(frame)
     if isinstance(field, Vector):
         return divergence(field, frame) / (4*pi*k)

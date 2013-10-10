@@ -1,8 +1,8 @@
-from sympy.physics.mechanics import MovingRefFrame
+from sympy.physics.mechanics import ReferenceFrame
 from sympy.physics.em import gradient, curl, is_conservative
 from sympy.utilities.pytest import raises
 
-R = MovingRefFrame('R')
+R = ReferenceFrame('R')
 scalar_field = 2*R[0]**2*R[1]*R[2]
 grad_field = gradient(scalar_field, R)
 vector_field = R[1]**2*R.x + 3*R[0]*R.y + 5*R[1]*R[2]*R.z
@@ -62,5 +62,3 @@ def test_scalarpotential_difference():
                                        R[0]*R[1]*R[2] - 6
     assert raises(ValueError, scalar_potential_difference(curl_field, \
                                                           R, point1, point2))
-    
-    

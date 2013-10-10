@@ -26,7 +26,7 @@ def curl(vect, frame):
     vectx = vect.dot(frame.x)
     vecty = vect.dot(frame.y)
     vectz = vect.dot(frame.z)
-    outvec = 0
+    outvec = Vector(0)
     outvec += (diff(vectz, frame[1]) - diff(vecty, frame[2])) * frame.x
     outvec += (diff(vectx, frame[2]) - diff(vectz, frame[0])) * frame.y
     outvec += (diff(vecty, frame[0]) - diff(vectx, frame[1])) * frame.z
@@ -93,8 +93,8 @@ def is_conservative(field):
     Examples
     ========
 
-    >>> from sympy.physics.mechanics import MovingRefFrame, is_conservative
-    >>> R = MovingRefFrame('R')
+    >>> from sympy.physics.mechanics import ReferenceFrame, is_conservative
+    >>> R = ReferenceFrame('R')
     >>> is_conservative(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z)
     True
     >>> is_conservative(R[2] * R.y)
@@ -125,7 +125,7 @@ def is_solenoidal(field):
     ========
 
     >>> from sympy.physics.mechanics import ReferenceFrame, is_solenoidal
-    >>> R = MovingRefFrame('R')
+    >>> R = ReferenceFrame('R')
     >>> is_solenoidal(R[1]*R[2]*R.x + R[0]*R[2]*R.y + R[0]*R[1]*R.z)
     True
     >>> is_solenoidal(R[1] * R.y)
@@ -194,8 +194,8 @@ def scalar_potential(field, frame):
 
 def scalar_potential_difference(field, frame, position1, position2):
     """
-    Calculate the scalar potential difference between two points
-    in a certain frame, wrt a given field.
+    The scalar potential difference between two points in a certain
+    frame, wrt a given field.
 
     If a scalar field is provided, its values at the two points are
     considered. If a conservative vector field is provided, the values
@@ -240,6 +240,7 @@ def scalar_potential_difference(field, frame, position1, position2):
         subs_dict1[frame[i]] = x.dot(position1)
         subs_dict2[frame[i]] = x.dot(position2)
     return scalar_fn.subs(subs_dict2) - scalar_fn.subs(subs_dict1)
+
 
 def gradient(scalar, frame):
     """

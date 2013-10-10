@@ -1,10 +1,11 @@
 from sympy import symbols
 from sympy.physics.em import ParticleCharge, gradient, scalar_potential, \
      charge_density, charge_assembly_energy
-from sympy.physics.mechanics import MovingRefFrame, get_motion_acc
+from sympy.physics.mechanics import ReferenceFrame, get_motion_acc, \
+     dynamicsymbols
 from sympy.utilities.pytest import raises
 
-R = MovingRefFrame('R')
+R = ReferenceFrame('R')
 
 
 def test_particle_charge():
