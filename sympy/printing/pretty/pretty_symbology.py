@@ -187,8 +187,8 @@ for s in '+-=()':
 modifier_dict = {
     # Accents
     'mathring': lambda s: s+u('\u030A'),
-    # 'ddddot': lambda s: s,
-    # 'dddot': lambda s: s,
+    'ddddot': lambda s: s+u('\u0308\u0308'),
+    'dddot': lambda s: s+u('\u0308\u0307'),
     'ddot': lambda s: s+u('\u0308'),
     'dot': lambda s: s+u('\u0307'),
     'check': lambda s: s+u('\u030C'),
@@ -201,12 +201,12 @@ modifier_dict = {
     'vec': lambda s: s+u('\u20D7'),
     'prime': lambda s: s+u('\u030D'),
     'prm': lambda s: s+u('\u030D'),
-    # Faces
-    # 'bold': lambda s:,
-    # 'bm': lambda s:,
-    # 'cal': lambda s:,
-    # 'scr': lambda s:,
-    # 'frak': lambda s:,
+    # Faces -- these are here for some compatibility with latex printing
+    'bold': lambda s: s,
+    'bm': lambda s: s,
+    'cal': lambda s: s,
+    'scr': lambda s: s,
+    'frak': lambda s: s,
     # Brackets
     'norm': lambda s: u('\u2016')+s+u('\u2016'),
     'avg': lambda s: u('\u27E8')+s+u('\u27E9'),

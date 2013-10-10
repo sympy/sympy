@@ -274,6 +274,8 @@ def test_upretty_subs_missingin_24():
 def test_upretty_modifiers():
     # Accents
     assert upretty( Symbol('Fmathring') ) == u('F̊')
+    assert upretty( Symbol('Fddddot') ) == u('F̈̈')
+    assert upretty( Symbol('Fdddot') ) == u('F̈̇')
     assert upretty( Symbol('Fddot') ) == u('F̈')
     assert upretty( Symbol('Fdot') ) == u('Ḟ')
     assert upretty( Symbol('Fcheck') ) == u('F̌')
@@ -286,7 +288,12 @@ def test_upretty_modifiers():
     assert upretty( Symbol('Fvec') ) == u('F⃗')
     assert upretty( Symbol('Fprime') ) == u('F̍')
     assert upretty( Symbol('Fprm') ) == u('F̍')
-    # No faces are implemented...
+    # No faces are actually implemented, but test to make sure the modifiers are stripped
+    assert upretty( Symbol('Fbold') ) == u('F')
+    assert upretty( Symbol('Fbm') ) == u('F')
+    assert upretty( Symbol('Fcal') ) == u('F')
+    assert upretty( Symbol('Fscr') ) == u('F')
+    assert upretty( Symbol('Ffrak') ) == u('F')
     # Brackets
     assert upretty( Symbol('Fnorm') ) == u('‖F‖')
     assert upretty( Symbol('Favg') ) == u('⟨F⟩')
