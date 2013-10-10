@@ -1949,7 +1949,7 @@ def test_U9():
 @XFAIL
 def test_U10():
     z = symbols('z')
-    assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9,4) # returns wrong value-3/4 . should be fixed with https://github.com/sympy/sympy/pull/2502
+    assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9,4) # returns wrong value-3/4 . problem seems to come from series expansion
 
 def test_U11():
     (dx, dy, dz)  = MV.setup('dx dy dz')
@@ -1968,4 +1968,96 @@ Time= 60 msecs
 @XFAIL
 def test_U12():
     raise NotImplementedError("External diff of differential form not supported")
+
+def _minimize(expr, x):
+    f = Lambda(x, expr)
+    f1 = f(x).diff(x)
+    f2 = Lambda(x,f1.diff(x))
+    m = None
+    mp = None
+    for p in solve(f1,x):
+        if Gt(f2(p),0)==True  and ((m == None) or Lt(f(p),m)==True):
+            m=f(p)
+            mp = p
+    if f(oo) < m:
+        m = f(oo)
+        mp=oo
+    if f(-oo)<m:
+        m=f(-oo)
+        mp=-oo
+    return (m,mp)
+
+def _maximize(expr, x):
+    (m,mp) = _minimize(-expr, x)
+    return (-m, mp)
+
+# workaround, not natively supported in SymPy
+def test_U13():
+    assert _minimize(x**4 - x + 1, x)[0] == -3*2**Rational(1,3)/8 + 1
+
+def _minimize2(expr, x, y):
+    f = Lambda((x,y), expr)
+    f1x = f(x,y).diff(x)
+    f1y = f(x,y).diff(y)
+    d = solve((f1x,f1y),(x,y))
+    m = f(d[x],d[y])
+    mp=(d[x],d[y])
+    if f(oo,oo) < m:
+        m = f(oo,oo)
+        mp = (oo,oo)
+    if f(-oo,-oo) < m:
+        m = f(-oo,-oo)
+        mp = (-oo,-oo)
+    if f(oo,-oo) < m:
+        m = f(oo,-oo)
+        mp = (oo,-oo)
+    if f(-oo,oo) < m:
+        m = f(-oo,oo)
+        mp = (-oo,oo)
+    return (m,mp)
+
+def _maximize2(expr, x, y):
+    (m,mp) = _minimize2(-expr, x, y)
+    return (-m,mp)
+
+# workaround, not natively supported in SymPy
+def test_U14():
+    f = 1/(x**2 + y**2 + 1)
+    assert [_minimize2(f,x,y)[0], _maximize2(f,x,y)[0]] == [0,1]
+
+@XFAIL
+def test_U15():
+    raise NotImplementedError("minimize() not supported in SymPy and also solve does not support multivariate inequalities")
+
+@XFAIL
+def test_U16():
+    raise NotImplementedError("minimize() not supported in SymPy and also solve does not support multivariate inequalities")
+
+@XFAIL
+def test_U17():
+    raise NotImplementedError("Linear programming, symbolic simplex not supported in SymPy")
+
+@XFAIL
+def test_V1():
+    x = symbols('x', real=True)
+    assert integrate(abs(x),x) == x*abs(x)/2 # integral not calculated https://code.google.com/p/sympy/issues/detail?id=1113
+
+def test_V2():
+    assert integrate(Piecewise((-x, x < 0), (x, x >= 0)),x) == Piecewise((-x**2/2, x < 0), (x**2/2, x >= 0))
+
+def test_V3():
+    assert integrate(1/(x**3 + 2),x).diff().simplify() == 1/(x**3 + 2)
+
+@XFAIL
+def test_V4():
+    assert integrate(2**x/sqrt(1 + 4**x), x) == asinh(2**x)/log(2)
+
+#def test_V5():
+#    # Locked in Inifnite lopp? https://code.google.com/p/sympy/issues/detail?id=4050
+#    assert integrate((3*x - 5)**2/(2*x - 1)**(Rational(7,2)), x) == (-41 + 80*x - 45*x**2)/(5*(2*x-1)**Rational(5/2))
+
+@XFAIL
+def test_V6():
+    # returns RootSum(40*_z**2 - 1, Lambda(_i, _i*log(-4*_i + exp(-m*x))))/m
+    assert integrate(1/(2*exp(m*x) - 5*exp(-m*x)), x) == sqrt(10)*(log(2*exp(m*x) - sqrt(10)) - log(2*exp(m*x) + sqrt(10)))/(20*m)
 
