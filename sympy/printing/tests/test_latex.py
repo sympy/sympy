@@ -1065,6 +1065,8 @@ def test_modifiers():
     assert latex(symbols("xGrave")) == r"\grave{x}"
     assert latex(symbols("xTilde")) == r"\tilde{x}"
     assert latex(symbols("xPrime")) == r"{x}'"
+    assert latex(symbols("xddDDot")) == r"\ddddot{x}"
+    assert latex(symbols("xDdDot")) == r"\dddot{x}"
     assert latex(symbols("xDDot")) == r"\ddot{x}"
     assert latex(symbols("xBold")) == r"\boldsymbol{x}"
     assert latex(symbols("xnOrM")) == r"\left\lVert{x}\right\rVert"
@@ -1097,6 +1099,7 @@ def test_modifiers():
     assert latex(symbols("Mag")) == r"Mag"
     assert latex(symbols("PrM")) == r"PrM"
     assert latex(symbols("BM")) == r"BM"
+    assert latex(symbols("hbar")) == r"\hbar"
     # Check a few combinations
     assert latex(symbols("xvecdot")) == r"\dot{\vec{x}}"
     assert latex(symbols("xDotVec")) == r"\vec{\dot{x}}"

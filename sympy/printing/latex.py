@@ -61,10 +61,36 @@ tex_greek_dictionary = {
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
                      'hslash', 'mho', 'wp', ])
 
-# Make sure to keep this list sorted by decreasing length so that,
-# e.g., "ddot" is not confused for "d" followed by "dot"
-modifier_keys = ['mathring', 'check', 'breve', 'acute', 'grave', 'tilde', 'prime', 'ddot',
-                 'bold', 'norm', 'avg', 'hat', 'dot', 'bar', 'vec', 'abs', 'mag', 'prm', 'bm']
+# Variable name modifiers
+modifier_dict = {
+    # Accents
+    'mathring': lambda s: r'\mathring{'+s+r'}',
+    'ddddot': lambda s: r'\ddddot{'+s+r'}',
+    'dddot': lambda s: r'\dddot{'+s+r'}',
+    'ddot': lambda s: r'\ddot{'+s+r'}',
+    'dot': lambda s: r'\dot{'+s+r'}',
+    'check': lambda s: r'\check{'+s+r'}',
+    'breve': lambda s: r'\breve{'+s+r'}',
+    'acute': lambda s: r'\acute{'+s+r'}',
+    'grave': lambda s: r'\grave{'+s+r'}',
+    'tilde': lambda s: r'\tilde{'+s+r'}',
+    'hat': lambda s: r'\hat{'+s+r'}',
+    'bar': lambda s: r'\bar{'+s+r'}',
+    'vec': lambda s: r'\vec{'+s+r'}',
+    'prime': lambda s: "{"+s+"}'",
+    'prm': lambda s: "{"+s+"}'",
+    # Faces
+    'bold': lambda s: r'\boldsymbol{'+s+r'}',
+    'bm': lambda s: r'\boldsymbol{'+s+r'}',
+    'cal': lambda s: r'\mathcal{'+s+r'}',
+    'scr': lambda s: r'\mathscr{'+s+r'}',
+    'frak': lambda s: r'\mathfrak{'+s+r'}',
+    # Brackets
+    'norm': lambda s: r'\left\lVert{'+s+r'}\right\rVert',
+    'avg': lambda s: r'\left\langle{'+s+r'}\right\rangle',
+    'abs': lambda s: r'\left\lvert{'+s+r'}\right\rvert',
+    'mag': lambda s: r'\left\lvert{'+s+r'}\right\rvert',
+}
 
 greek_letters_set = frozenset(greeks)
 
@@ -1648,21 +1674,9 @@ def translate(s):
         return "\\" + s
     else:
         # Process modifiers, if any, and recurse
-        for key in modifier_keys:
+        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True):
             if s.lower().endswith(key) and len(s)>len(key):
-                if(key in ['prime', 'prm']):
-                    # MathJax can fail on primes without braces
-                    return "{" + translate(s[:-len(key)]) + "}'"
-                if(key in ['abs', 'mag']):
-                    return "\\left\\lvert{" + translate(s[:-len(key)]) + "}\\right\\rvert"
-                if(key=='norm'):
-                    return "\\left\\lVert{" + translate(s[:-len(key)]) + "}\\right\\rVert"
-                if(key=='avg'):
-                    return "\\left\\langle{" + translate(s[:-len(key)]) + "}\\right\\rangle"
-                if(key in ['bm', 'bold']):
-                    # MathJax doesn't know \bm
-                    return "\\boldsymbol{" + translate(s[:-len(key)]) + "}"
-                return "\\" + key + "{" + translate(s[:-len(key)]) + "}"
+                return modifier_dict[key](translate(s[:-len(key)]))
         return s
 
 def latex(expr, **settings):

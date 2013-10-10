@@ -271,6 +271,28 @@ def test_upretty_subs_missingin_24():
     assert upretty( Symbol('F_v') ) == u('Fᵥ')
     assert upretty( Symbol('F_x') ) == u('Fₓ')
 
+def test_upretty_modifiers():
+    # Accents
+    assert upretty( Symbol('Fmathring') ) == u('F̊')
+    assert upretty( Symbol('Fddot') ) == u('F̈')
+    assert upretty( Symbol('Fdot') ) == u('Ḟ')
+    assert upretty( Symbol('Fcheck') ) == u('F̌')
+    assert upretty( Symbol('Fbreve') ) == u('F̆')
+    assert upretty( Symbol('Facute') ) == u('F́')
+    assert upretty( Symbol('Fgrave') ) == u('F̀')
+    assert upretty( Symbol('Ftilde') ) == u('F̃')
+    assert upretty( Symbol('Fhat') ) == u('F̂')
+    assert upretty( Symbol('Fbar') ) == u('F̅')
+    assert upretty( Symbol('Fvec') ) == u('F⃗')
+    assert upretty( Symbol('Fprime') ) == u('F̍')
+    assert upretty( Symbol('Fprm') ) == u('F̍')
+    # No faces are implemented...
+    # Brackets
+    assert upretty( Symbol('Fnorm') ) == u('‖F‖')
+    assert upretty( Symbol('Favg') ) == u('⟨F⟩')
+    assert upretty( Symbol('Fabs') ) == u('|F|')
+    assert upretty( Symbol('Fmag') ) == u('|F|')
+
 
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
