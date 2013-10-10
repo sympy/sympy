@@ -186,21 +186,21 @@ for s in '+-=()':
 # TODO: Make brackets adjust to height of contents
 modifier_dict = {
     # Accents
-    'mathring': lambda s: s+u'\u030A',
+    'mathring': lambda s: s+u('\u030A'),
     # 'ddddot': lambda s: s,
     # 'dddot': lambda s: s,
-    'ddot': lambda s: s+u'\u0308',
-    'dot': lambda s: s+u'\u0307',
-    'check': lambda s: s+u'\u030C',
-    'breve': lambda s: s+u'\u0306',
-    'acute': lambda s: s+u'\u0301',
-    'grave': lambda s: s+u'\u0300',
-    'tilde': lambda s: s+u'\u0303',
-    'hat': lambda s: s+u'\u0302',
-    'bar': lambda s: s+u'\u0305',
-    'vec': lambda s: s+u'\u20D7',
-    'prime': lambda s: s+u'\u030D',
-    'prm': lambda s: s+u'\u030D',
+    'ddot': lambda s: s+u('\u0308'),
+    'dot': lambda s: s+u('\u0307'),
+    'check': lambda s: s+u('\u030C'),
+    'breve': lambda s: s+u('\u0306'),
+    'acute': lambda s: s+u('\u0301'),
+    'grave': lambda s: s+u('\u0300'),
+    'tilde': lambda s: s+u('\u0303'),
+    'hat': lambda s: s+u('\u0302'),
+    'bar': lambda s: s+u('\u0305'),
+    'vec': lambda s: s+u('\u20D7'),
+    'prime': lambda s: s+u('\u030D'),
+    'prm': lambda s: s+u('\u030D'),
     # Faces
     # 'bold': lambda s:,
     # 'bm': lambda s:,
@@ -208,10 +208,10 @@ modifier_dict = {
     # 'scr': lambda s:,
     # 'frak': lambda s:,
     # Brackets
-    'norm': lambda s: u'\u2016'+s+u'\u2016',
-    'avg': lambda s: u'\u27E8'+s+u'\u27E9',
-    'abs': lambda s: u'\u007C'+s+u'\u007C',
-    'mag': lambda s: u'\u007C'+s+u'\u007C',
+    'norm': lambda s: u('\u2016')+s+u('\u2016'),
+    'avg': lambda s: u('\u27E8')+s+u('\u27E9'),
+    'abs': lambda s: u('\u007C')+s+u('\u007C'),
+    'mag': lambda s: u('\u007C')+s+u('\u007C'),
 }
 
 # VERTICAL OBJECTS
