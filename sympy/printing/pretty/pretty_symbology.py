@@ -199,14 +199,14 @@ modifier_dict = {
     'hat': lambda s: s+u('\u0302'),
     'bar': lambda s: s+u('\u0305'),
     'vec': lambda s: s+u('\u20D7'),
-    'prime': lambda s: s+u('\u030D'),
-    'prm': lambda s: s+u('\u030D'),
-    # Faces -- these are here for some compatibility with latex printing
-    'bold': lambda s: s,
-    'bm': lambda s: s,
-    'cal': lambda s: s,
-    'scr': lambda s: s,
-    'frak': lambda s: s,
+    'prime': lambda s: s+u(' \u030D'),
+    'prm': lambda s: s+u(' \u030D'),
+    # # Faces -- these are here for some compatibility with latex printing
+    # 'bold': lambda s: s,
+    # 'bm': lambda s: s,
+    # 'cal': lambda s: s,
+    # 'scr': lambda s: s,
+    # 'frak': lambda s: s,
     # Brackets
     'norm': lambda s: u('\u2016')+s+u('\u2016'),
     'avg': lambda s: u('\u27E8')+s+u('\u27E9'),
@@ -517,7 +517,11 @@ def pretty_symbol(symb_name):
 
     # glue the results into one string
     if pretty_subs is None:  # nice formatting of sups/subs did not work
-        return name + '_'+'_'.join([translate(s) for s in subs]) + '__'+'__'.join([translate(s) for s in sups])
+        if subs:
+            name += '_'+'_'.join([translate(s) for s in subs])
+        if sups:
+            name += '__'+'__'.join([translate(s) for s in sups])
+        return name
     else:
         sups_result = ' '.join(pretty_sups)
         subs_result = ' '.join(pretty_subs)
