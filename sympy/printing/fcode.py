@@ -45,6 +45,12 @@ class FCodePrinter(CodePrinter):
         "cosh", "tanh", "sqrt", "log", "exp", "erf", "Abs", "sign", "conjugate",
     ])
 
+    _operators = {
+        'and': ' .and. ',
+        'or': ' .or. ',
+        'not': '.not. ',
+    }
+
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
         self._init_leading_padding()
