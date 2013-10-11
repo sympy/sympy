@@ -301,7 +301,7 @@ def test_upretty_modifiers():
     assert upretty( Symbol('Fmag') ) == u('|F|')
     # Combinations
     assert upretty( Symbol('xvecdot') ) == u('x⃗̇')
-    assert upretty( Symbol('xDotVec') ) == u('ẋ⃗')
+    assert upretty( Symbol('xDotVec') ) == u('ẋ⃗')
     assert upretty( Symbol('xHATNorm') ) == u('‖x̂‖')
     assert upretty( Symbol('xMathring_yCheckPRM__zbreveAbs') ) == u('x̊_y̌ ̍__|z̆|')
     assert upretty( Symbol('alphadothat_nVECDOT__tTildePrime') ) == u('α̇̂_n⃗̇__t̃ ̍')
