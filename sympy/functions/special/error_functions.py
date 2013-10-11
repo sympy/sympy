@@ -99,6 +99,13 @@ class erf(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfinv
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -282,6 +289,12 @@ class erfc(Function):
             return -2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfcinv
 
     @classmethod
     def eval(cls, arg):
@@ -627,6 +640,12 @@ class erf2(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erf2inv
+
     @classmethod
     def eval(cls, x, y):
         I = S.Infinity
@@ -741,6 +760,12 @@ class erfinv(Function):
         else :
             raise ArgumentIndexError(self, argindex)
 
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erf
+
     @classmethod
     def eval(cls, z):
         if z is S.NaN:
@@ -813,6 +838,12 @@ class erfcinv (Function):
             return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erfc
 
     @classmethod
     def eval(cls, z):
@@ -888,6 +919,12 @@ class erf2inv(Function):
             return sqrt(S.Pi)*S.Half*C.exp(self.func(x,y)**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def inverse(self, argindex=1):
+        """
+        Returns the inverse of this function.
+        """
+        return erf2
 
     @classmethod
     def eval(cls, x, y):
