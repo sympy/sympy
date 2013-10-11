@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
+
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
 from contextlib import contextmanager
@@ -100,7 +101,7 @@ class AppliedPredicate(Boolean):
         return self.func.eval(self.arg, assumptions)
 
 
-class Predicate(Boolean):
+class Predicate(Boolean, Expr):
     """A predicate is a function that returns a boolean value.
 
     Predicates merely wrap their argument and remain unevaluated:

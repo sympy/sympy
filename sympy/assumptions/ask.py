@@ -1,14 +1,30 @@
 """Module for querying SymPy objects about assumptions."""
 from __future__ import print_function, division
 
-from sympy.core import sympify
+from sympy.core.compatibility import with_metaclass
+from sympy.core import sympify, Symbol
 from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent, BooleanFunction
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 
+class PredicateSymbol(Symbol):
+    pass
 
-class Q:
+class QSymbols:
+    """
+    PredicateSymbols corresponding to predicates in Q
+    """
+    pass
+
+class QueryMeta(type):
+    def __init__(cls, name, bases, dict_):
+        for name in dict_:
+            if name.startswith('_'):
+                continue
+            setattr(QSymbols, name, PredicateSymbol(name))
+
+class Q(with_metaclass(QueryMeta)):
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
     bounded = Predicate('bounded')
