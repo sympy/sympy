@@ -1932,7 +1932,7 @@ def test_U8():
     eq = cos(x*y)+x
     eq = eq.subs(y, f(x))
     #  If SymPy had implicit_diff() function this hack could be avoided
-    solve((f(x)-eq).diff(x), f(x).diff(x))[0].subs(f(x),y) == (-y*sin(x*y) + 1)/(x*sin(x*y) + 1)
+    assert solve((f(x)-eq).diff(x), f(x).diff(x))[0].subs(f(x),y) == (-y*sin(x*y) + 1)/(x*sin(x*y) + 1)
 
 @XFAIL
 def test_U9():
@@ -1980,7 +1980,7 @@ def test_U12():
 @XFAIL
 def test_U13():
     #assert minimize(x**4 - x + 1, x)== -3*2**Rational(1,3)/8 + 1
-    raise NotImplementedError("minimize(), maximize() not supported")
+    raise NotImplementedError("minimize() not supported")
     
 @XFAIL
 def test_U14():
@@ -2016,7 +2016,7 @@ def test_V4():
     assert integrate(2**x/sqrt(1 + 4**x), x) == asinh(2**x)/log(2)
 
 #def test_V5():
-#    # Locked in Infinite loop? https://code.google.com/p/sympy/issues/detail?id=4050
+#    # Takes extremely long https://code.google.com/p/sympy/issues/detail?id=4050
 #    assert integrate((3*x - 5)**2/(2*x - 1)**(Rational(7,2)), x) == (-41 + 80*x - 45*x**2)/(5*(2*x-1)**Rational(5/2))
 
 @XFAIL
