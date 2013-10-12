@@ -3,6 +3,7 @@ from sympy import sin, cos, atan2, log, exp, gamma, conjugate, sqrt, \
 from sympy import Catalan, EulerGamma, E, GoldenRatio, I, pi
 from sympy import Function, Rational, Integer, Lambda
 
+from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not
 from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
@@ -228,6 +229,16 @@ def test_fcode_Logical():
         "y .or. z .or. .not. x"
     assert fcode(Not(Or(x, y, z), evaluate=False), source_format="free") == \
         ".not. (x .or. y .or. z)"
+
+
+def test_fcode_Relational():
+    x, y = symbols("x y")
+    assert fcode(Relational(x, y, "=="), source_format="free") == "x == y"
+    assert fcode(Relational(x, y, "!="), source_format="free") == "x /= y"
+    assert fcode(Relational(x, y, ">="), source_format="free") == "x >= y"
+    assert fcode(Relational(x, y, "<="), source_format="free") == "x <= y"
+    assert fcode(Relational(x, y, ">"), source_format="free") == "x > y"
+    assert fcode(Relational(x, y, "<"), source_format="free") == "x < y"
 
 
 def test_fcode_Piecewise():
