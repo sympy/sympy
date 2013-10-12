@@ -15,7 +15,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
     elliptic_e, elliptic_f, powsimp, hessian, wronskian,fibonacci, sign,
-    Lambda, Piecewise, Subs, residue)
+    Lambda, Piecewise, Subs, residue, Derivative)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
@@ -1119,8 +1119,7 @@ def test_N16():
 
 @XFAIL
 def test_N17():
-    assert solve(x+y>0, x-y<0)
-
+    assert solve((x+y>0, x-y<0)) == (abs(x) < y) # raises NotImplementedError: only univariate inequalities are supported
 
 def test_O1():
     M = Matrix((1 + I, -2, 3*I))
@@ -1137,11 +1136,7 @@ def test_O3():
 def test_O4():
     (ex,ey,ez,grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x,y,z))
     F=ex*(x*y*z)+ey*((x*y*z)**2)+ez*((y**2)*(z**3))
-    cu=grad^F
-    assert cu|ex == (x*z*(-2*y**2*z + 1))*ey + x*y*ez
-    assert cu|ey == (x*z*(2*y**2*z - 1))*ex + (2*y*z*(x**2*y - z**2))*ez
-    assert cu|ez == -x*y*ex + (2*y*z*(-x**2*y + z**2))*ey
-    #assert cu == (x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez + (2*y*z*(-x**2*y + z**2))*ey^ez
+    assert grad^F -(x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez + (2*y*z*(-x**2*y + z**2))*ey^ez == 0
 
 @XFAIL
 @slow
@@ -1151,23 +1146,24 @@ def test_O5():
     g = MV('g','vector',fct=True)
     assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
 
-#O8-O9 MISSING!!
+#testO8-O9 MISSING!!
+
 def test_O10():
     L = [Matrix([2,3,5]), Matrix([3,6,2]), Matrix([8,3,6])]
     assert GramSchmidt(L) == [Matrix([
                                 [2],
                                 [3],
                                 [5]]), Matrix([
-                                [ 23/19],
-                                [ 63/19],
-                                [-47/19]]), Matrix([
-                                [ 1692/353],
-                                [-1551/706],
-                                [ -423/706]])]
+                                [ S(23)/19],
+                                [ S(63)/19],
+                                [ S(-47)/19]]), Matrix([
+                                [ S(1692)/353],
+                                [ S(-1551)/706],
+                                [ S(-423)/706]])]
 
 @XFAIL
 def test_P1():
-    raise NotImplementedError("Matrix property/function to extract Nth diagnoal not implemented")
+    raise NotImplementedError("Matrix property/function to extract Nth diagonal not implemented. See Matlab diag(A,k) http://www.mathworks.de/de/help/symbolic/diag.html")
 
 
 def test_P2():
@@ -1187,10 +1183,10 @@ def test_P3():
         [41, 42, 43, 44]])
 
     A11 = A[0:3,1:4]
-    A12 = A[(0,1,3),(2,0,3)] # unsupported rasies exception
+    A12 = A[(0,1,3),(2,0,3)] # unsupported raises exception
     A21 = A
     A221 = A[0:2,2:4]
-    A222 = A[(3,0),(2,1)] # unsupported rasies exception
+    A222 = A[(3,0),(2,1)] # unsupported raises exception
     A22 = BlockMatrix([A221,A222])
     B= BlockMatrix([[A11,A12],[A21,A22]])
     assert B  ==  Matrix([
@@ -1209,7 +1205,7 @@ def test_P4():
 @XFAIL
 def test_P5():
     M = Matrix([[7,11],[3,8]])
-    assert  M % 2 == Matrix([ # Raises exception % not supported for matrixes
+    assert  M % 2 == Matrix([ # Raises exception % not supported for matrices
                         [1, 1],
                         [1, 0]])
 
@@ -1243,7 +1239,7 @@ def test_P9():
     M=Matrix([[a/(b*c), 1/c, 1/b], [1/c, b/(a*c), 1/a], [1/b, 1/a, c/(a*b)]])
     assert factor(M.norm('fro')) == (a**2 + b**2 + c**2)/(abs(a)*abs(b)*abs(c))
 
-@XFAIL # conugate(f(4-5*i)) is not simplified to f(4+5*I)
+@XFAIL # conjugate(f(4-5*i)) is not simplified to f(4+5*I)
 def test_P10():
     M=Matrix([[1,2+3*I],[f(4-5*i),6]])
     assert M.H == Matrix([[1,f(4+5*I)],[2+3*I,6]])
@@ -1402,7 +1398,7 @@ def test_P25():
         [ -52,  -43,   49,   44, -599,  411,  208,  208],
         [ -49,   -8,    8,   59,  208,  208,   99, -911],
         [  29,  -44,   52,  -23,  208,  208, -911,   99]]))
-    assert [float(i) for i in sorted(MF.eigenvals())]  == [-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0, 1019.9019513592784, 1020.0, 1020.0490184299969]
+    assert (Matrix(sorted(MF.eigenvals())) - Matrix([-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0, 1019.9019513592784, 1020.0, 1020.0490184299969])).norm() < 1e-13
 
 def test_P26():
     a0,a1,a2,a3,a4 = symbols('a0 a1 a2 a3 a4')
@@ -1457,11 +1453,11 @@ def test_P27():
                         [          1]])])]
 @XFAIL
 def test_P28():
-    raise NotImplementedError("Generalized eigen vectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
+    raise NotImplementedError("Generalized eigenvectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
 
 @XFAIL
 def test_P29():
-    raise NotImplementedError("Generalized eigen vectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
+    raise NotImplementedError("Generalized eigenvectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
 
 def test_P30():
     M = Matrix([
@@ -1536,9 +1532,8 @@ def test_P36():
     M=Matrix([
         [10, 7],
         [7, 17]])
-    # sqrt(M) not performmed
-    # sqrtdenest not simplifying sqrt(M)
-    assert sqrtdenest(M**Rational(1,2)) == Matrix([[3, 1], [1, 4]])
+    assert sqrt(M) == Matrix([[3, 1], [1, 4]])
+
 @XFAIL
 def test_P37():
     M=Matrix([
@@ -1694,7 +1689,7 @@ def test_R11():
     sk = binomial(n,k)*fibonacci(k)
     Sm = Sum(sk,(k,0,n))
     T = Sm.doit()
-    # Fibonnaci simplification not implemented https://code.google.com/p/sympy/issues/detail?id=4035
+    # Fibonacci simplification not implemented https://code.google.com/p/sympy/issues/detail?id=4035
     assert T == fibonacci(2*n)
 
 @XFAIL
@@ -1732,7 +1727,7 @@ def test_R16():
 
 def test_R17():
     k = symbols('k', integer=True, positive=True)
-    assert float(Sum(1/k**2 + 1/k**3, (k,1,oo))) == 2.8469909700078206
+    assert float(Sum(1/k**2 + 1/k**3, (k,1,oo))) - 2.8469909700078206 < 1e-15
 
 @XFAIL
 def test_R18():
@@ -1873,7 +1868,7 @@ def test_T9():
 
 @XFAIL
 def test_T10():
-    limit(zeta(x) - 1/(x - 1), x, 1)# raises PoleError shouldreturn euler-mascheroni constant
+    limit(zeta(x) - 1/(x - 1), x, 1)# raises PoleError should return euler-mascheroni constant
 
 @XFAIL
 def test_T11():
@@ -1918,7 +1913,7 @@ def test_U4():
 def test_U5():
     # https://code.google.com/p/sympy/issues/detail?id=3582
     # f(g(x)).diff(x,2) returns Derivative(g(x), x)**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (g(x),)) + Derivative(g(x), x, x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
-    raise NotImplementedError("f(g(t)).diff(t,2) Subs not performmed")
+    raise NotImplementedError("f(g(t)).diff(t,2) Subs not performed")
 
 @XFAIL
 def test_U6():
@@ -1929,22 +1924,34 @@ def test_U6():
 @XFAIL
 def test_U7():
     p,t = symbols('p t', real=True)
+    # Exact differential => d(V(P, T)) => dV/dP DP + dV/dT DT 
     diff(f(p,t)) # raises ValueError:  Since there is more than one variable in the expression, the variable(s) of differentiation must be supplied to differentiate f(p,t)
 
 def test_U8():
     x,y = symbols('x y', real=True)
     eq = cos(x*y)+x
     eq = eq.subs(y, f(x))
-    #  If Sympy had implicit_diff() function this hack could be avoided
+    #  If SymPy had implicit_diff() function this hack could be avoided
     solve((f(x)-eq).diff(x), f(x).diff(x))[0].subs(f(x),y) == (-y*sin(x*y) + 1)/(x*sin(x*y) + 1)
 
 @XFAIL
 def test_U9():
+    ''' Maple syntax:
+    O29 := diff(f(x, y), x) + diff(f(x, y), y);
+                          /d         \   /d         \
+                          |-- f(x, y)| + |-- f(x, y)|
+                          \dx        /   \dy        /
+    
+    O30 := factor(subs(f(x, y) = g(x^2 + y^2), %));
+                                    2    2
+                            2 D(g)(x  + y ) (x + y)
+    '''
     x,y = symbols('x y', real=True)
-    su=diff(f(x, y), x) + diff(f(x, y), y)
-    s2=Subs(su,f(x,y),g(x**2+y**2)).doit()
-    s2.doit().factor() #manual factorization required, Almost correct, but..
-    raise NotImplementedError("Subs replacement not performmed")
+    su = diff(f(x, y), x) + diff(f(x, y), y)
+    s2 = Subs(su,f(x,y),g(x**2+y**2)).doit()
+    s3 = s2.doit().factor() 
+    # Subs not performed, s3 = 2*(x + y)*Subs(Derivative(g(_xi_1), _xi_1), (_xi_1,), (x**2 + y**2,))
+    assert s3 == 2*(x + y)*Derivative(g(x**2 + y**2), x**2 + y**2) # raises ValueError: Can't differentiate wrt the variable: x**2 + y**2, 1
 
 @XFAIL
 def test_U10():
@@ -1957,77 +1964,33 @@ def test_U11():
     assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx^dy^dz
 
 
-'''
-(c41) /* d(3 x^5 dy /\ dz + 5 x y^2 dz /\ dx + 8 z dx /\ dy)
-   => (15 x^4 + 10 x y + 8) dx /\ dy /\ dz */
-factor(ext_diff(3*x^5 * dy ~ dz + 5*x*y^2 * dz ~ dx + 8*z * dx ~ dy));
-Time= 60 msecs
-				       4
-(d41) 			 (10 x y + 15 x  + 8) dx dy dz
-'''
+
 @XFAIL
 def test_U12():
+    '''
+    (c41) /* d(3 x^5 dy /\ dz + 5 x y^2 dz /\ dx + 8 z dx /\ dy)
+       => (15 x^4 + 10 x y + 8) dx /\ dy /\ dz */
+    factor(ext_diff(3*x^5 * dy ~ dz + 5*x*y^2 * dz ~ dx + 8*z * dx ~ dy));
+    Time= 60 msecs
+    				       4
+    (d41) 			 (10 x y + 15 x  + 8) dx dy dz
+    '''
     raise NotImplementedError("External diff of differential form not supported")
 
-def _minimize(expr, x):
-    f = Lambda(x, expr)
-    f1 = f(x).diff(x)
-    f2 = Lambda(x,f1.diff(x))
-    m = None
-    mp = None
-    for p in solve(f1,x):
-        if Gt(f2(p),0)==True  and ((m == None) or Lt(f(p),m)==True):
-            m=f(p)
-            mp = p
-    if f(oo) < m:
-        m = f(oo)
-        mp=oo
-    if f(-oo)<m:
-        m=f(-oo)
-        mp=-oo
-    return (m,mp)
-
-def _maximize(expr, x):
-    (m,mp) = _minimize(-expr, x)
-    return (-m, mp)
-
-# workaround, not natively supported in SymPy
+@XFAIL
 def test_U13():
-    assert _minimize(x**4 - x + 1, x)[0] == -3*2**Rational(1,3)/8 + 1
-
-def _minimize2(expr, x, y):
-    f = Lambda((x,y), expr)
-    f1x = f(x,y).diff(x)
-    f1y = f(x,y).diff(y)
-    d = solve((f1x,f1y),(x,y))
-    m = f(d[x],d[y])
-    mp=(d[x],d[y])
-    if f(oo,oo) < m:
-        m = f(oo,oo)
-        mp = (oo,oo)
-    if f(-oo,-oo) < m:
-        m = f(-oo,-oo)
-        mp = (-oo,-oo)
-    if f(oo,-oo) < m:
-        m = f(oo,-oo)
-        mp = (oo,-oo)
-    if f(-oo,oo) < m:
-        m = f(-oo,oo)
-        mp = (-oo,oo)
-    return (m,mp)
-
-def _maximize2(expr, x, y):
-    (m,mp) = _minimize2(-expr, x, y)
-    return (-m,mp)
-
-# workaround, not natively supported in SymPy
+    #assert minimize(x**4 - x + 1, x)== -3*2**Rational(1,3)/8 + 1
+    raise NotImplementedError("minimize(), maximize() not supported")
+    
+@XFAIL
 def test_U14():
-    f = 1/(x**2 + y**2 + 1)
-    assert [_minimize2(f,x,y)[0], _maximize2(f,x,y)[0]] == [0,1]
+    #f = 1/(x**2 + y**2 + 1)
+    #assert [minimize(f), maximize(f)] == [0,1] 
+    raise NotImplementedError("minimize(), maximize() not supported")
 
 @XFAIL
 def test_U15():
-    raise NotImplementedError("minimize() not supported in SymPy and also solve does not support multivariate inequalities")
+    raise NotImplementedError("minimize() not supported and also solve does not support multivariate inequalities")
 
 @XFAIL
 def test_U16():
@@ -2053,7 +2016,7 @@ def test_V4():
     assert integrate(2**x/sqrt(1 + 4**x), x) == asinh(2**x)/log(2)
 
 #def test_V5():
-#    # Locked in Inifnite lopp? https://code.google.com/p/sympy/issues/detail?id=4050
+#    # Locked in Infinite loop? https://code.google.com/p/sympy/issues/detail?id=4050
 #    assert integrate((3*x - 5)**2/(2*x - 1)**(Rational(7,2)), x) == (-41 + 80*x - 45*x**2)/(5*(2*x-1)**Rational(5/2))
 
 @XFAIL
