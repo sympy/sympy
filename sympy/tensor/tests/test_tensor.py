@@ -11,6 +11,8 @@ from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorManager, TensExpr, TIDS)
 from sympy.utilities.pytest import raises
 from sympy.core.containers import Tuple
+from sympy.external import import_module
+from sympy.utilities.pytest import skip
 
 #################### Tests from tensor_can.py #######################
 
@@ -1166,61 +1168,67 @@ def test_hash():
 
 ### TEST VALUED TENSORS ###
 
-minkowski = Matrix((
-    (1, 0, 0, 0),
-    (0, -1, 0, 0),
-    (0, 0, -1, 0),
-    (0, 0, 0, -1),
-))
-Lorentz = TensorIndexType('Lorentz')
-Lorentz.data = minkowski
+numpy = import_module('numpy')
 
-i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
+if numpy:
+    minkowski = Matrix((
+        (1, 0, 0, 0),
+        (0, -1, 0, 0),
+        (0, 0, -1, 0),
+        (0, 0, 0, -1),
+    ))
+    Lorentz = TensorIndexType('Lorentz', dim=4)
+    Lorentz.data = minkowski
 
-E, px, py, pz = symbols('E px py pz')
-A = tensorhead('A', [Lorentz], [[1]])
-A.data = [E, px, py, pz]
-B = tensorhead('B', [Lorentz], [[1]], 'Gcomm')
-B.data = range(4)
-AB = tensorhead("AB", [Lorentz] * 2, [[1]]*2)
-AB.data = minkowski
+    i0, i1, i2, i3, i4 = tensor_indices('i0:5', Lorentz)
 
-ba_matrix = Matrix((
-    (1, 2, 3, 4),
-    (5, 6, 7, 8),
-    (9, 0, -1, -2),
-    (-3, -4, -5, -6),
-))
+    E, px, py, pz = symbols('E px py pz')
+    A = tensorhead('A', [Lorentz], [[1]])
+    A.data = [E, px, py, pz]
+    B = tensorhead('B', [Lorentz], [[1]], 'Gcomm')
+    B.data = range(4)
+    AB = tensorhead("AB", [Lorentz] * 2, [[1]]*2)
+    AB.data = minkowski
 
-BA = tensorhead("BA", [Lorentz] * 2, [[1]]*2)
-BA.data = ba_matrix
+    ba_matrix = Matrix((
+        (1, 2, 3, 4),
+        (5, 6, 7, 8),
+        (9, 0, -1, -2),
+        (-3, -4, -5, -6),
+    ))
 
-BA(i0, i1)*A(-i0)*B(-i1)
+    BA = tensorhead("BA", [Lorentz] * 2, [[1]]*2)
+    BA.data = ba_matrix
 
-# Let's test the diagonal metric, with inverted Minkowski metric:
-LorentzD = TensorIndexType('LorentzD')
-LorentzD.data = [-1, 1, 1, 1]
-mu0, mu1, mu2 = tensor_indices('mu0:3', LorentzD)
-C = tensorhead('C', [LorentzD], [[1]])
-C.data = [E, px, py, pz]
+    BA(i0, i1)*A(-i0)*B(-i1)
 
-### non-diagonal metric ###
-ndm_matrix = (
-    (0, 1, 0,),
-    (1, 0, 1),
-    (0, 1, 0,),
-)
-ndm = TensorIndexType("ndm")
-ndm.data = ndm_matrix
-n0, n1, n2 = tensor_indices('n0:3', ndm)
-NA = tensorhead('NA', [ndm], [[1]])
-NA.data = range(10, 13)
-NB = tensorhead('NB', [ndm]*2, [[1]]*2)
-NB.data = [[i+j for j in range(10, 13)] for i in range(10, 13)]
-NC = tensorhead('NC', [ndm]*3, [[1]]*3)
-NC.data = [[[i+j+k for k in range(4, 7)] for j in range(1, 4)] for i in range(2, 5)]
+    # Let's test the diagonal metric, with inverted Minkowski metric:
+    LorentzD = TensorIndexType('LorentzD')
+    LorentzD.data = [-1, 1, 1, 1]
+    mu0, mu1, mu2 = tensor_indices('mu0:3', LorentzD)
+    C = tensorhead('C', [LorentzD], [[1]])
+    C.data = [E, px, py, pz]
+
+    ### non-diagonal metric ###
+    ndm_matrix = (
+        (0, 1, 0,),
+        (1, 0, 1),
+        (0, 1, 0,),
+    )
+    ndm = TensorIndexType("ndm")
+    ndm.data = ndm_matrix
+    n0, n1, n2 = tensor_indices('n0:3', ndm)
+    NA = tensorhead('NA', [ndm], [[1]])
+    NA.data = range(10, 13)
+    NB = tensorhead('NB', [ndm]*2, [[1]]*2)
+    NB.data = [[i+j for j in range(10, 13)] for i in range(10, 13)]
+    NC = tensorhead('NC', [ndm]*3, [[1]]*3)
+    NC.data = [[[i+j+k for k in range(4, 7)] for j in range(1, 4)] for i in range(2, 5)]
 
 def test_valued_tensor_iter():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
     # iteration on VTensorHead
     assert list(A) == [E, px, py, pz]
     assert list(ba_matrix) == list(BA)
@@ -1239,6 +1247,10 @@ def test_valued_tensor_iter():
 
 
 def test_valued_tensor_covariant_contravariant_elements():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     # TODO: handle metric with covariant/contravariant indices!
     assert A(-i0)[0] == A(i0)[0]
     assert A(-i0)[1] == -A(i0)[1]
@@ -1250,6 +1262,10 @@ def test_valued_tensor_covariant_contravariant_elements():
 
 
 def test_valued_tensor_get_matrix():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     matab = AB(i0, i1).get_matrix()
     assert matab == Matrix([
                             [1,  0,  0,  0],
@@ -1269,6 +1285,10 @@ def test_valued_tensor_get_matrix():
 
 
 def test_valued_tensor_contraction():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     # TODO: decide how contract indices should work.
     assert A(i0) * A(-i0) == E ** 2 - px ** 2 - py ** 2 - pz ** 2
     assert A(i0) * A(-i0) == A ** 2
@@ -1291,17 +1311,31 @@ def test_valued_tensor_contraction():
 
 
 def test_valued_tensor_self_contraction():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     assert AB(i0, -i0) == 4
     assert BA(i0, -i0) == 2
 
 
 def test_valued_tensor_pow():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     assert C**2 == -E**2 + px**2 + py**2 + pz**2
     assert C**1 == sqrt(-E**2 + px**2 + py**2 + pz**2)
+    assert C(mu0)**2 == C**2
+    assert C(mu0)**1 == C**1
     # TODO: test both TensorHead and TensExpr
 
 
 def test_valued_tensor_expressions():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     x1, x2, x3 = symbols('x1:4')
 
     # test coefficient in contraction:
@@ -1341,6 +1375,10 @@ def test_valued_tensor_expressions():
 
 
 def test_noncommuting_components():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     euclid = TensorIndexType('Euclidean')
     euclid.data = [1, 1]
     i1, i2, i3 = tensor_indices('i1:4', euclid)
@@ -1361,33 +1399,11 @@ def test_noncommuting_components():
     assert Vc.expand() == b * a + b * d
 
 
-#def test_valued_tensor_numeric_indices():
-#    mcov = [A(NumericCovariant(_)) for _ in range(A.data.shape[0])]
-#    mcontra = [A(NumericContravariant(_)) for _ in range(A.data.shape[0])]
-#
-#    for i in range(4):
-#        assert mcov[i] == [E, -px, -py, -pz][i]
-#        assert mcontra[i] == [E, px, py, pz][i]
-#
-#    bacov1 = [BA(i0, NumericCovariant(_)) for _ in range(4)]
-#    bacov2 = [BA(NumericCovariant(_), i0) for _ in range(4)]
-#    bacontra1 = [BA(i0, NumericContravariant(_)) for _ in range(4)]
-#    bacontra2 = [BA(NumericContravariant(_), i0) for _ in range(4)]
-#
-#    for i in range(4):
-#        for j in range(4):
-#            assert bacov1[i][j] == BA(i0, -i1)[j, i]
-#            assert bacov2[j][i] == BA(-i0, i1)[j, i]
-#            assert bacontra1[i][j] == BA(i0, i1)[j, i]
-#            assert bacontra2[j][i] == BA(i0, i1)[j, i]
-#
-#            assert BA(NumericContravariant(i), NumericContravariant(j)) == BA(i0, i1)[i, j]
-#            assert BA(NumericContravariant(i), NumericCovariant(j)) == BA(i0, -i1)[i, j]
-#            assert BA(NumericCovariant(i), NumericContravariant(j)) == BA(-i0, i1)[i, j]
-#            assert BA(NumericCovariant(i), NumericCovariant(j)) == BA(-i0, -i1)[i, j]
-
-
 def test_valued_non_diagonal_metric():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     mmatrix = Matrix(ndm_matrix)
     assert NA(n0)*NA(-n0) == (NA(n0).get_matrix().T * mmatrix * NA(n0).get_matrix())[0, 0]
     # TODO: fix this test:
@@ -1395,21 +1411,13 @@ def test_valued_non_diagonal_metric():
 
 
 def test_valued_tensor_strip():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     sA = A(i0).strip()
     sB = B(-i0).strip()
     sAB = AB(i0, i1).strip()
-
-#    assert len([_ for _ in A(i0).args if isinstance(_, NDArrayWrapper)]) == 1
-#    assert len([_ for _ in B(i0).args if isinstance(_, NDArrayWrapper)]) == 1
-#    assert len([_ for _ in AB(i0, i1).args if isinstance(_, NDArrayWrapper)]) == 1
-#
-#    assert [_ for _ in sA.args if isinstance(_, NDArrayWrapper)] == []
-#    assert [_ for _ in sB.args if isinstance(_, NDArrayWrapper)] == []
-#    assert [_ for _ in sAB.args if isinstance(_, NDArrayWrapper)] == []
-#
-#    assert sA.abstract == True
-#    assert sB.abstract == True
-#    assert sAB.abstract == True
 
     assert sA.data is None
     assert sB.data is None
@@ -1423,20 +1431,12 @@ def test_valued_tensor_strip():
     assert sB.data is None
     assert sAB.data is None
 
-#    assert not A.abstract
-#    assert not B.abstract
-#    assert not AB.abstract
-#
-#    assert sthA.abstract
-#    assert sthB.abstract
-#    assert sthAB.abstract
-#
-#    assert sthA(i0).abstract
-#    assert sthB(i0).abstract
-#    assert sthAB(i0, i1).abstract
-
 
 def test_valued_tensor_applyfunc():
+    numpy = import_module("numpy")
+    if numpy is None:
+        skip("numpy not installed.")
+
     aA = A(i0).applyfunc(lambda x: x**2)
     aB = B(i0).applyfunc(lambda x: x**3)
     aB2 = B(-i0).applyfunc(lambda x: x**3)
@@ -1458,8 +1458,3 @@ def test_valued_tensor_applyfunc():
         [33, 33, 32, 33],
         [33, 33, 33, 32],
     ])
-
-if __name__ == "__main__":
-    for key, value in locals().items():
-        if key.startswith("test_"):
-            value()

@@ -499,7 +499,20 @@ class TIDS(object):
 
 class VTIDS(TIDS):
     """
-    This class handles a ``TIDS`` object with an attached ``numpy`` ``ndarray``.
+    This class handles a ``VTIDS`` object, which is a ``TIDS`` object with an
+    attached ``numpy`` ``ndarray``.
+
+    To create a `TIDS` object via the standard constructor, the required
+    arguments are
+
+    ``components``  `TensorHead` objects representing the components
+                    of the tensor expression.
+
+    ``free``        Free indices in their internal representation.
+
+    ``dum``         Dummy indices in their internal representation.
+
+    ``data``        Data as a ``numpy`` ``ndarray``.
     """
 
     def __init__(self, components, free, dum, data):
@@ -579,6 +592,12 @@ class VTIDS(TIDS):
             else:
                 data = numpy.array(data)
         return data
+
+    def __str__(self):
+        return "VTIDS(%s, %s, %s, %s)" % (self.components, self.free, self.dum, self.data)
+
+    def __repr__(self):
+        return str(self)
 
 
 class _TensorManager(object):
@@ -874,16 +893,29 @@ class TensorIndexType(Basic):
         if data.ndim > 2:
             raise ValueError("data have to be of rank 1 (diagonal metric) or 2.")
         if data.ndim == 1:
+            if self.dim is not None:
+                nda_dim = data.shape[0]
+                if nda_dim != self.dim:
+                    raise ValueError("Dimension mismatch")
+
             dim = data.shape[0]
             newndarray = numpy.zeros((dim, dim), dtype=object)
             for i, val in enumerate(data):
                 newndarray[i, i] = val
             data = newndarray
+        dim1, dim2 = data.shape
+        if dim1 != dim2:
+            raise ValueError("Non-square matrix tensor.")
+        if self.dim is not None:
+            if self.dim != dim1:
+                raise ValueError("Dimension mismatch")
         self._data = data
+        self.metric.data = data
 
     @data.deleter
     def data(self):
         del self._data
+        del self.metric.data
 
     @property
     def name(self):
@@ -1467,6 +1499,11 @@ class TensorHead(Basic):
     @data.setter
     def data(self, data):
         data = VTIDS.parse_data(data)
+        for dim, indextype in zip(data.shape, self.index_types):
+            if indextype.dim is None:
+                continue
+            if dim != indextype.dim:
+                raise ValueError("wrong dimension of ndarray")
         self._data = data
 
     @data.deleter
