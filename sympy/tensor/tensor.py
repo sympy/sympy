@@ -759,6 +759,7 @@ class TensorIndexType(Basic):
             sym2 = TensorSymmetry(get_symmetric_group_sgs(2, obj.metric_antisym))
             S2 = TensorType([obj]*2, sym2)
             obj.metric = S2(metric_name)
+            obj.metric._matrix_behavior = True
 
         obj._dim = dim
         obj._delta = obj.get_kronecker_delta()
@@ -813,6 +814,7 @@ class TensorIndexType(Basic):
         sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
         S2 = TensorType([self]*2, sym2)
         delta = S2('KD')
+        delta._matrix_behavior = True
         return delta
 
     def get_epsilon(self):
@@ -1579,14 +1581,13 @@ class TensAdd(TensExpr):
     """
 
     def __new__(cls, *args, **kw_args):
-        old_args = args[:]
         args = [sympify(x) for x in args if x]
         args = TensAdd._tensAdd_flatten(args)
         if not args:
             return S.Zero
 
         # substitute auto-matrix indices so that they are the same in all addends
-#        args = TensAdd._tensAdd_check_automatrix(args)
+        args = TensAdd._tensAdd_check_automatrix(args)
 
         # now check that all addends have the same indices:
         TensAdd._tensAdd_check(args)
@@ -1652,29 +1653,40 @@ class TensAdd(TensExpr):
         if not args:
             return args
 
-        if not args[0]._matrix_behavior_kinds:
-            return args
-
-        new_args = [args[0]]
-
-        # get the automatrix indices from the first addend
-        for key, v1 in args[0]._matrix_behavior_kinds.items():
-            for i in args[1:]:
-                if key not in i._matrix_behavior_kinds:
-                    raise ValueError("auto-matrix indices are not the same")
-                v2 = i._matrix_behavior_kinds[key]
-                argel = i
-                for j, k in zip(v1, v2):
-                    argel = argel.substitute_indices((k, j))
-                new_args.append(argel)
-
-        return new_args
+        # @type auto_left_types: set
+        auto_left_types = set([])
+        auto_right_types = set([])
+        args_auto_left_types = []
+        args_auto_right_types = []
+        for i, arg in enumerate(args):
+            arg_auto_left_types = set([])
+            arg_auto_right_types = set([])
+            for index in arg.get_indices():
+                # @type index: TensorIndex
+                if index == index._tensortype.auto_left:
+                    auto_left_types.add(index._tensortype)
+                    arg_auto_left_types.add(index._tensortype)
+                if index == index._tensortype.auto_right:
+                    auto_right_types.add(index._tensortype)
+                    arg_auto_right_types.add(index._tensortype)
+            args_auto_left_types.append(arg_auto_left_types)
+            args_auto_right_types.append(arg_auto_right_types)
+        for arg, aas_left, aas_right in zip(args, args_auto_left_types, args_auto_right_types):
+            missing_left = auto_left_types - aas_left
+            missing_right = auto_right_types - aas_right
+            missing_intersection = missing_left & missing_right
+            for j in missing_intersection:
+                args[i] *= j.delta(j.auto_left, j.auto_right)
+            if missing_left != missing_right:
+                raise ValueError("cannot determine how to add auto-matrix indices on some args")
+        pass
+        return args
 
     @staticmethod
     def _tensAdd_check(args):
         # check that all addends have the same free indices
-        indices0 = sorted([x[0] for x in args[0].free], key=lambda x: x.name)
-        list_indices = [sorted([y[0] for y in x.free], key=lambda x: x.name) for x in args[1:]]
+        indices0 = set([x[0] for x in args[0].free])
+        list_indices = [set([y[0] for y in x.free]) for x in args[1:]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 
@@ -2017,7 +2029,6 @@ class TensMul(TensExpr):
 
         t_components = Tuple(*components)
         t_indices = Tuple(*indices)
-
 
         obj = Basic.__new__(cls, coeff, t_components, t_indices)
         obj._types = []

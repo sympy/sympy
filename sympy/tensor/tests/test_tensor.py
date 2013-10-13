@@ -1163,13 +1163,14 @@ def test_hidden_indices_for_matrix_multiplication():
     L = TensorIndexType('Lorentz')
     S = TensorIndexType('Matind')
 
-    m0, m1, m2 = tensor_indices('m0:3', L)
+    m0, m1, m2, m3, m4, m5 = tensor_indices('m0:6', L)
     s0, s1, s2 = tensor_indices('s0:3', S)
 
     A = tensorhead('A', [L, S, S], [[1], [1], [1]], matrix_behavior=True)
     B = tensorhead('B', [L, S], [[1], [1]], matrix_behavior=True)
     D = tensorhead('D', [L, L, S, S], [[1, 1], [1, 1]], matrix_behavior=True)
-    E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]] , matrix_behavior=True)
+    E = tensorhead('E', [L, L, L, L], [[1], [1], [1], [1]], matrix_behavior=True)
+    F = tensorhead('F', [L], [[1]], matrix_behavior=True)
 
     assert (A(m0)) == A(m0, S.auto_left, S.auto_right)
     assert (B(-m1)) == B(-m1, S.auto_left)
@@ -1214,3 +1215,18 @@ def test_hidden_indices_for_matrix_multiplication():
     raises(ValueError, lambda: C())
 
     raises(ValueError, lambda: E(True, True, True, True))
+
+    # test that a delta is automatically added on missing auto-matrix indices in TensAdd
+    assert F(m2)*F(m3)*F(m4)*A(m1) + E(m1, m2, m3, m4) == \
+        E(m1, m2, m3, m4)*S.delta(S.auto_left, S.auto_right) +\
+        F(m2)*F(m3)*F(m4)*A(m1, S.auto_left, S.auto_right)
+    assert E(m1, m2) + F(m1)*F(m2) == E(m1, m2) + F(m1)*F(m2)*L.delta(L.auto_left, L.auto_right)
+    assert E(m1, m2)*A(m3) + F(m1)*F(m2)*F(m3) == \
+        E(m1, m2, L.auto_left, L.auto_right)*A(m3, S.auto_left, S.auto_right) +\
+        F(m1)*F(m2)*F(m3)*L.delta(L.auto_left, L.auto_right)*S.delta(S.auto_left, S.auto_right)
+
+    assert L.delta() == L.delta(L.auto_left, L.auto_right)
+    assert S.delta() == S.delta(S.auto_left, S.auto_right)
+
+    assert L.metric() == L.metric(L.auto_left, L.auto_right)
+    assert S.metric() == S.metric(S.auto_left, S.auto_right)
