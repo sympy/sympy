@@ -2190,6 +2190,7 @@ def test_V4():
     assert integrate(2**x/sqrt(1 + 4**x), x) == asinh(2**x)/log(2)
 
 
+@XFAIL
 @slow
 def test_V5():
     # Takes extremely long time
