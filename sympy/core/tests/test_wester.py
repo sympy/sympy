@@ -1078,17 +1078,19 @@ def test_N7():
 @XFAIL
 def test_N8():
     x, y, z = symbols('x y z', real=True)
-    assert ask(Q.is_true((x == y) & (y == z)), Q.is_true((x >= y) & (y >= z) & (z >= x)))
+    assert ask(Q.is_true((x == y) & (y == z)),
+               Q.is_true((x >= y) & (y >= z) & (z >= x)))
 
 
 def test_N9():
     with assuming(Q.real(x)):
-        assert solve(abs(x-1) > 2) == Or(x < -1, x > 3)
+        assert solve(abs(x - 1) > 2) == Or(x < -1, x > 3)
 
 
 def test_N10():
-    p=(x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
-    assert solve(expand(p) < 0, assume=Q.real(x)) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+    p = (x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
+    assert solve(expand(p) < 0, assume=Q.real(x)) == Or(
+        And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
 
 
 def test_N11():
@@ -1097,46 +1099,62 @@ def test_N11():
 
 @XFAIL
 def test_N12():
-    assert solve(sqrt(x)<2, assume=Q.real(x)) == And(Le(0,x),Lt(x,4))
+    assert solve(sqrt(x) < 2, assume=Q.real(x)) == And(Le(0, x), Lt(x, 4))
+
 
 @XFAIL
 def test_N13():
-    assert solve(sin(x)<2, assume=Q.real(x)) == S.Reals # unsupported
+    # raises NotImplementedError: can't reduce [sin(x) < 2]
+    assert solve(sin(x) < 2, assume=Q.real(x)) == S.Reals
+
 
 @XFAIL
 def test_N14():
-    assert solve(sin(x)<1, assume=Q.real(x)) ==  Ne(x,pi/2) # unsupported should return
+    # raises NotImplementedError: can't reduce [sin(x) < 1]
+    assert (solve(sin(x) < 1, assume=Q.real(x)) == Ne(x, pi/2))
+
 
 @XFAIL
 def test_N15():
     r, t = symbols('r t', real=True)
-    solve(abs(2*r*(cos(t)-1)+1)<=1,r) # unsupported
+    # raises NotImplementedError: only univariate inequalities are supported
+    solve(abs(2*r*(cos(t) - 1) + 1) <= 1, r)
+
 
 @XFAIL
 def test_N16():
     r, t = symbols('r t', real=True)
     solve((r**2)*((cos(t) - 4)**2)*sin(t)**2 < 9, r)
 
+
 @XFAIL
 def test_N17():
-    assert solve((x+y>0, x-y<0)) == (abs(x) < y) # raises NotImplementedError: only univariate inequalities are supported
+    # raises NotImplementedError: only univariate inequalities are supported
+    assert solve((x + y > 0, x - y < 0)) == (abs(x) < y)
+
 
 def test_O1():
     M = Matrix((1 + I, -2, 3*I))
     assert sqrt(expand(M.dot(M.H))) == sqrt(15)
 
+
 def test_O2():
-    assert Matrix((2,2,-3)).cross(Matrix((1,3,1))) == Matrix([[11, -5, 4]])
+    assert Matrix((2, 2, -3)).cross(Matrix((1, 3, 1))) == Matrix([[11, -5, 4]])
+
 
 @slow
 def test_O3():
-    (va, vb, vc, vd)  = MV.setup('va vb vc vd')
-    assert (va^vb)|(vc^vd) == -(va|vc)*(vb|vd) + (va|vd)*(vb|vc)
+    (va, vb, vc, vd) = MV.setup('va vb vc vd')
+    assert (va ^ vb) | (vc ^ vd) == -(va | vc)*(vb | vd) + (va | vd)*(vb | vc)
+
 
 def test_O4():
-    (ex,ey,ez,grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x,y,z))
-    F=ex*(x*y*z)+ey*((x*y*z)**2)+ez*((y**2)*(z**3))
-    assert grad^F -(x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez + (2*y*z*(-x**2*y + z**2))*ey^ez == 0
+    (ex, ey, ez, grad) = MV.setup('e*x|y|z', metric='[1,1,1]',
+                                  coords=(x, y, z))
+    F = ex*(x*y*z) + ey*((x*y*z)**2) + ez*((y**2)*(z**3))
+    assert (grad^F -(x*z*(2*y**2*z - 1))*ex^ey - x*y*ex^ez +
+            (2*y*z*(-x**2*y + z**2))*ey^ez) == 0
+
 
 @XFAIL
 @slow
@@ -1148,31 +1166,37 @@ def test_O5():
 
 #testO8-O9 MISSING!!
 
+
 def test_O10():
-    L = [Matrix([2,3,5]), Matrix([3,6,2]), Matrix([8,3,6])]
+    L = [Matrix([2, 3, 5]), Matrix([3, 6, 2]), Matrix([8, 3, 6])]
     assert GramSchmidt(L) == [Matrix([
-                                [2],
-                                [3],
-                                [5]]), Matrix([
-                                [ S(23)/19],
-                                [ S(63)/19],
-                                [ S(-47)/19]]), Matrix([
-                                [ S(1692)/353],
-                                [ S(-1551)/706],
-                                [ S(-423)/706]])]
+                              [2],
+                              [3],
+                              [5]]),
+                              Matrix([
+                              [S(23)/19],
+                              [S(63)/19],
+                              [S(-47)/19]]),
+                              Matrix([
+                              [S(1692)/353],
+                              [S(-1551)/706],
+                              [S(-423)/706]])]
+
 
 @XFAIL
 def test_P1():
-    raise NotImplementedError("Matrix property/function to extract Nth diagonal not implemented. See Matlab diag(A,k) http://www.mathworks.de/de/help/symbolic/diag.html")
+    raise NotImplementedError("Matrix property/function to extract Nth \
+diagonal not implemented. See Matlab diag(A,k) \
+http://www.mathworks.de/de/help/symbolic/diag.html")
 
 
 def test_P2():
-    M = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+    M = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     M.row_del(1)
     M.col_del(2)
-    assert M == Matrix([
-                    [1, 2],
-                    [7, 8]])
+    assert M == Matrix([[1, 2],
+                        [7, 8]])
+
 
 @XFAIL
 def test_P3():
@@ -1182,123 +1206,138 @@ def test_P3():
         [31, 32, 33, 34],
         [41, 42, 43, 44]])
 
-    A11 = A[0:3,1:4]
-    A12 = A[(0,1,3),(2,0,3)] # unsupported raises exception
+    A11 = A[0:3, 1:4]
+    A12 = A[(0, 1, 3), (2, 0, 3)]  # unsupported raises exception
     A21 = A
-    A221 = A[0:2,2:4]
-    A222 = A[(3,0),(2,1)] # unsupported raises exception
-    A22 = BlockMatrix([A221,A222])
-    B= BlockMatrix([[A11,A12],[A21,A22]])
-    assert B  ==  Matrix([
-        [12,13,14,13,11,14],
-        [22,22,24,23,21,24],
-        [32,33,34,43,41,44],
-        [11,12,13,14,13,14],
-        [21,22,23,24,23,24],
-        [31,32,33,34,43,42],
-        [41,42,43,44,13,12]])
+    A221 = A[0:2, 2:4]
+    A222 = A[(3, 0), (2, 1)]   # unsupported raises exception
+    A22 = BlockMatrix([A221, A222])
+    B = BlockMatrix([[A11, A12],
+                    [A21, A22]])
+    assert B == Matrix([[12, 13, 14, 13, 11, 14],
+                        [22, 22, 24, 23, 21, 24],
+                        [32, 33, 34, 43, 41, 44],
+                        [11, 12, 13, 14, 13, 14],
+                        [21, 22, 23, 24, 23, 24],
+                        [31, 32, 33, 34, 43, 42],
+                        [41, 42, 43, 44, 13, 12]])
+
 
 @XFAIL
 def test_P4():
     raise NotImplementedError("Block matrix diagonalization not supported")
 
+
 @XFAIL
 def test_P5():
-    M = Matrix([[7,11],[3,8]])
-    assert  M % 2 == Matrix([ # Raises exception % not supported for matrices
-                        [1, 1],
-                        [1, 0]])
+    M = Matrix([[7, 11],
+                [3, 8]])
+    # Raises exception % not supported for matrices
+    assert  M % 2 == Matrix([[1, 1],
+                             [1, 0]])
+
 
 def test_P5_workaround():
-    M = Matrix([[7,11],[3,8]])
-    assert  M.applyfunc(lambda i:i%2) == Matrix([
-                                            [1, 1],
-                                            [1, 0]])
+    M = Matrix([[7, 11],
+                [3, 8]])
+    assert  M.applyfunc(lambda i: i % 2) == Matrix([[1, 1],
+                                                    [1, 0]])
+
+
 def test_P6():
-    M = Matrix([[cos(x),sin(x)],[-sin(x),cos(x)]])
-    assert  M.diff(x,2) == Matrix([
-        [-cos(x), -sin(x)],
-        [ sin(x), -cos(x)]])
+    M = Matrix([[cos(x), sin(x)],
+                [-sin(x), cos(x)]])
+    assert M.diff(x, 2) == Matrix([[-cos(x), -sin(x)],
+                                   [sin(x), -cos(x)]])
+
 
 def test_P7():
-    M = Matrix([[x,y]])*(z*Matrix([
-                    [1,3,5],
-                    [2,4,6]])+Matrix([
-                        [7,-9,11],
-                        [-8,10,-12]]))
-    assert M == Matrix([
-        [x*(z + 7) + y*(2*z - 8), x*(3*z - 9) + y*(4*z + 10), x*(5*z + 11) + y*(6*z - 12)]])
+    M = Matrix([[x, y]])*(
+        z*Matrix([[1, 3, 5],
+                  [2, 4, 6]]) + Matrix([[7, -9, 11],
+                                        [-8, 10, -12]]))
+    assert M == Matrix([[x*(z + 7) + y*(2*z - 8), x*(3*z - 9) + y*(4*z + 10),
+                         x*(5*z + 11) + y*(6*z - 12)]])
+
 
 @XFAIL
 def test_P8():
-    M=Matrix([[1,-2*I],[-3*I,4]])
-    assert M.norm(ord=S.Infinity) == 7 # Matrix.norm(ord=inf) not implemented
+    M = Matrix([[1, -2*I],
+                [-3*I, 4]])
+    assert M.norm(ord=S.Infinity) == 7  # Matrix.norm(ord=inf) not implemented
+
 
 def test_P9():
     a, b, c = symbols('a b c', real=True)
-    M=Matrix([[a/(b*c), 1/c, 1/b], [1/c, b/(a*c), 1/a], [1/b, 1/a, c/(a*b)]])
+    M = Matrix([[a/(b*c), 1/c, 1/b],
+                [1/c, b/(a*c), 1/a],
+                [1/b, 1/a, c/(a*b)]])
     assert factor(M.norm('fro')) == (a**2 + b**2 + c**2)/(abs(a)*abs(b)*abs(c))
 
-@XFAIL # conjugate(f(4-5*i)) is not simplified to f(4+5*I)
+
+@XFAIL
 def test_P10():
-    M=Matrix([[1,2+3*I],[f(4-5*i),6]])
-    assert M.H == Matrix([[1,f(4+5*I)],[2+3*I,6]])
+    M = Matrix([[1, 2 + 3*I],
+                [f(4 - 5*i), 6]])
+    # conjugate(f(4 - 5*i)) is not simplified to f(4+5*I)
+    assert M.H == Matrix([[1, f(4 + 5*I)],
+                          [2 + 3*I, 6]])
+
 
 @XFAIL
 def test_P11():
-    #raise NotImplementedError("Matrix([[x,y],[1,x*y]]).inv() not simplifying to extract common factor")
-    assert Matrix([[x,y],[1,x*y]]).inv() ==  (1/(x**2-1))*Matrix([
-                                                            [x, -1],
-                                                            [-1/y, x/y]])
+    # raises NotImplementedError("Matrix([[x,y],[1,x*y]]).inv()
+    #   not simplifying to extract common factor")
+    assert Matrix([[x, y],
+                   [1, x*y]]).inv() == (1/(x**2 - 1))*Matrix([[x, -1],
+                                                              [-1/y, x/y]])
+
 
 def test_P12():
-    A11 = MatrixSymbol('A11',n,n)
-    A12 = MatrixSymbol('A12',n,n)
-    A22 = MatrixSymbol('A22',n,n)
-    B = BlockMatrix([[A11,A12],[ZeroMatrix(n,n),A22]])
-    assert block_collapse(B.I)  == BlockMatrix([
-                                    [A11.I,          (-1)*A11.I*A12*A22.I],
-                                    [ZeroMatrix(n,n), A22.I]])
+    A11 = MatrixSymbol('A11', n, n)
+    A12 = MatrixSymbol('A12', n, n)
+    A22 = MatrixSymbol('A22', n, n)
+    B = BlockMatrix([[A11, A12],
+                     [ZeroMatrix(n, n), A22]])
+    assert block_collapse(B.I) == BlockMatrix([[A11.I, (-1)*A11.I*A12*A22.I],
+                                               [ZeroMatrix(n, n), A22.I]])
+
 
 def test_P13():
-    M=Matrix([
-        [ 1,     x-2,         x-3     ],
-        [x-1, x**2-3*x+6,   x**2-3*x-2  ],
-        [x-2,   x**2-8,   2*(x**2)-12*x+14]])
-    L, U, _= M.LUdecomposition()
-    assert simplify(L) == Matrix([
-                            [    1,     0, 0],
-                            [x - 1,     1, 0],
-                            [x - 2, x - 3, 1]])
-    assert simplify(U) == Matrix([
-                            [1, x - 2, x - 3],
-                            [0,     4, x - 5],
-                            [0,     0, x - 7]])
+    M = Matrix([[1,     x - 2,                         x - 3],
+                [x - 1, x**2 - 3*x + 6,       x**2 - 3*x - 2],
+                [x - 2, x**2 - 8,       2*(x**2) - 12*x + 14]])
+    L, U, _ = M.LUdecomposition()
+    assert simplify(L) == Matrix([[1,     0,     0],
+                                  [x - 1, 1,     0],
+                                  [x - 2, x - 3, 1]])
+    assert simplify(U) == Matrix([[1, x - 2, x - 3],
+                                  [0,     4, x - 5],
+                                  [0,     0, x - 7]])
+
 
 def test_P14():
-    M = Matrix([
-            [1, 2, 3, 1, 3],
-            [3, 2, 1, 1, 7],
-            [0, 2, 4, 1, 1],
-            [1, 1, 1, 1, 4]])
-    R,_ = M.rref()
-    assert R == Matrix([
-                    [1, 0, -1, 0,  2],
-                    [0, 1,  2, 0, -1],
-                    [0, 0,  0, 1,  3],
-                    [0, 0,  0, 0,  0]])
+    M = Matrix([[1, 2, 3, 1, 3],
+                [3, 2, 1, 1, 7],
+                [0, 2, 4, 1, 1],
+                [1, 1, 1, 1, 4]])
+    R, _ = M.rref()
+    assert R == Matrix([[1, 0, -1, 0,  2],
+                        [0, 1,  2, 0, -1],
+                        [0, 0,  0, 1,  3],
+                        [0, 0,  0, 0,  0]])
+
 
 def test_P15():
-    M = Matrix([
-        [-1, 3, 7, -5],
-        [4, -2, 1, 3],
-        [2, 4, 15, -7]])
+    M = Matrix([[-1, 3,  7, -5],
+                [4, -2,  1,  3],
+                [2,  4, 15, -7]])
     assert M.rank() == 2
 
+
 def test_P16():
-    M = Matrix([
-        [2*sqrt(2), 8],
-        [6*sqrt(6), 24*sqrt(3)]])
+    M = Matrix([[2*sqrt(2), 8],
+                [6*sqrt(6), 24*sqrt(3)]])
     assert M.rank() == 1
 
 @XFAIL
@@ -1309,29 +1348,35 @@ def test_P17():
         [2*(1 - (cos(t)**2))*cos(t), (1 - 2*(sin(t)**2))*sin(t)]])
     assert M.rank() == 1
 
+
 def test_P18():
-    M = Matrix([
-        [1, 0, -2, 0],
-        [-2, 1, 0, 3],
-        [-1, 2, -6, 6]])
-    assert M.nullspace() == [   Matrix([
-                                    [2],
-                                    [4],
-                                    [1],
-                                    [0]]),
-                                Matrix([
-                                    [ 0],
-                                    [-3],
-                                    [ 0],
-                                    [ 1]])]
+    M = Matrix([[1,  0, -2, 0],
+                [-2, 1,  0, 3],
+                [-1, 2, -6, 6]])
+    assert M.nullspace() == [Matrix([[2],
+                                     [4],
+                                     [1],
+                                     [0]]),
+                             Matrix([[0],
+                                     [-3],
+                                     [0],
+                                     [1]])]
+
 
 def test_P19():
     w = symbols('w')
-    M = Matrix([[1,   1,   1,   1  ],
-                [w,   x,   y,   z  ],
+    M = Matrix([[1,    1,    1,    1],
+                [w,    x,    y,    z],
                 [w**2, x**2, y**2, z**2],
                 [w**3, x**3, y**3, z**3]])
-    assert M.det()  == w**3*x**2*y - w**3*x**2*z - w**3*x*y**2 + w**3*x*z**2 + w**3*y**2*z - w**3*y*z**2 - w**2*x**3*y + w**2*x**3*z + w**2*x*y**3 - w**2*x*z**3 - w**2*y**3*z + w**2*y*z**3 + w*x**3*y**2 - w*x**3*z**2 - w*x**2*y**3 + w*x**2*z**3 + w*y**3*z**2 - w*y**2*z**3 - x**3*y**2*z + x**3*y*z**2 + x**2*y**3*z - x**2*y*z**3 - x*y**3*z**2 + x*y**2*z**3
+    assert M.det() == (w**3*x**2*y   - w**3*x**2*z - w**3*x*y**2 + w**3*x*z**2
+                       + w**3*y**2*z - w**3*y*z**2 - w**2*x**3*y + w**2*x**3*z
+                       + w**2*x*y**3 - w**2*x*z**3 - w**2*y**3*z + w**2*y*z**3
+                       + w*x**3*y**2 - w*x**3*z**2 - w*x**2*y**3 + w*x**2*z**3
+                       + w*y**3*z**2 - w*y**2*z**3 - x**3*y**2*z + x**3*y*z**2
+                       + x**2*y**3*z - x**2*y*z**3 - x*y**3*z**2 + x*y**2*z**3
+                       )
+
 
 @XFAIL
 def test_P20():
@@ -1339,21 +1384,23 @@ def test_P20():
 
 
 def test_P21():
-    M=Matrix([
-        [ 5, -3, -7],
-        [-2,  1,  2],
-        [ 2, -3, -4]])
+    M = Matrix([[5, -3, -7],
+                [-2, 1,  2],
+                [2, -3, -4]])
     assert M.charpoly(x).as_expr() == x**3 - 2*x**2 - 5*x + 6
+
 
 @slow
 def test_P22():
-#   Wester test requires calculating eigenvalues for a matrix of dimension 100
-#   This currently takes forever with sympy
-#    M=(2-x)*eye(100);
-#    assert M.eigenvals() == {-x + 2: 100}
-#   So we will speed-up for the moment the test checking only for dimension 12
-    M=(2-x)*eye(12)
-    assert M.eigenvals() == {-x + 2: 12}
+    # Wester test calculates eigenvalues for a diagonal matrix of dimension 100
+    # This currently takes forever with sympy:
+    # M = (2 - x)*eye(100);
+    # assert M.eigenvals() == {-x + 2: 100}
+    # So we will speed-up the test checking only for dimension=12
+    d = 12
+    M = (2 - x)*eye(d)
+    assert M.eigenvals() == {-x + 2: d}
+
 
 def test_P23():
     M = Matrix([
@@ -1369,16 +1416,16 @@ def test_P23():
         S('sqrt(3) + 2'): 1,
         S('-sqrt(3) + 2'): 1}
 
+
 def test_P24():
-    M = Matrix([
-        [ 611,  196, -192,  407,   -8,  -52,  -49,   29],
-        [ 196,  899,  113, -192,  -71,  -43,   -8,  -44],
-        [-192,  113,  899,  196,   61,   49,    8,   52],
-        [ 407, -192,  196,  611,    8,   44,   59,  -23],
-        [  -8,  -71,   61,    8,  411, -599,  208,  208],
-        [ -52,  -43,   49,   44, -599,  411,  208,  208],
-        [ -49,   -8,    8,   59,  208,  208,   99, -911],
-        [  29,  -44,   52,  -23,  208,  208, -911,   99]])
+    M = Matrix([[611,  196, -192,  407,   -8,  -52,  -49,   29],
+                [196,  899,  113, -192,  -71,  -43,   -8,  -44],
+                [-192,  113,  899,  196,   61,   49,    8,   52],
+                [ 407, -192,  196,  611,    8,   44,   59,  -23],
+                [  -8,  -71,   61,    8,  411, -599,  208,  208],
+                [ -52,  -43,   49,   44, -599,  411,  208,  208],
+                [ -49,   -8,    8,   59,  208,  208,   99, -911],
+                [  29,  -44,   52,  -23,  208,  208, -911,   99]])
     assert M.eigenvals() == {
         S('0'): 1,
         S('10*sqrt(10405)'): 1,
@@ -1388,111 +1435,115 @@ def test_P24():
         S('-10*sqrt(10405)'): 1,
         S('1020'): 1}
 
+
 def test_P25():
-    MF = N(Matrix([
-        [ 611,  196, -192,  407,   -8,  -52,  -49,   29],
-        [ 196,  899,  113, -192,  -71,  -43,   -8,  -44],
-        [-192,  113,  899,  196,   61,   49,    8,   52],
-        [ 407, -192,  196,  611,    8,   44,   59,  -23],
-        [  -8,  -71,   61,    8,  411, -599,  208,  208],
-        [ -52,  -43,   49,   44, -599,  411,  208,  208],
-        [ -49,   -8,    8,   59,  208,  208,   99, -911],
-        [  29,  -44,   52,  -23,  208,  208, -911,   99]]))
-    assert (Matrix(sorted(MF.eigenvals())) - Matrix([-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0, 1019.9019513592784, 1020.0, 1020.0490184299969])).norm() < 1e-13
+    MF = N(Matrix([[ 611,  196, -192,  407,   -8,  -52,  -49,   29],
+                   [ 196,  899,  113, -192,  -71,  -43,   -8,  -44],
+                   [-192,  113,  899,  196,   61,   49,    8,   52],
+                   [ 407, -192,  196,  611,    8,   44,   59,  -23],
+                   [  -8,  -71,   61,    8,  411, -599,  208,  208],
+                   [ -52,  -43,   49,   44, -599,  411,  208,  208],
+                   [ -49,   -8,    8,   59,  208,  208,   99, -911],
+                   [  29,  -44,   52,  -23,  208,  208, -911,   99]]))
+    assert (Matrix(sorted(MF.eigenvals())) - Matrix(
+            [-1020.0490184299969, 0.0, 0.09804864072151699, 1000.0,
+             1019.9019513592784, 1020.0, 1020.0490184299969])).norm() < 1e-13
+
 
 def test_P26():
-    a0,a1,a2,a3,a4 = symbols('a0 a1 a2 a3 a4')
-    M = Matrix([
-    [-a4, -a3, -a2, -a1, -a0,  0,  0,  0,  0],
-    [  1,   0,   0,   0,   0,  0,  0,  0,  0],
-    [  0,   1,   0,   0,   0,  0,  0,  0,  0],
-    [  0,   0,   1,   0,   0,  0,  0,  0,  0],
-    [  0,   0,   0,   1,   0,  0,  0,  0,  0],
-    [  0,   0,   0,   0,   0, -1, -1,  0,  0],
-    [  0,   0,   0,   0,   0,  1,  0,  0,  0],
-    [  0,   0,   0,   0,   0,  0,  1, -1, -1],
-    [  0,   0,   0,   0,   0,  0,  0,  1,  0]])
+    a0, a1, a2, a3, a4 = symbols('a0 a1 a2 a3 a4')
+    M = Matrix([[-a4, -a3, -a2, -a1, -a0,  0,  0,  0,  0],
+                [  1,   0,   0,   0,   0,  0,  0,  0,  0],
+                [  0,   1,   0,   0,   0,  0,  0,  0,  0],
+                [  0,   0,   1,   0,   0,  0,  0,  0,  0],
+                [  0,   0,   0,   1,   0,  0,  0,  0,  0],
+                [  0,   0,   0,   0,   0, -1, -1,  0,  0],
+                [  0,   0,   0,   0,   0,  1,  0,  0,  0],
+                [  0,   0,   0,   0,   0,  0,  1, -1, -1],
+                [  0,   0,   0,   0,   0,  0,  0,  1,  0]])
     assert M.eigenvals() == {
         S('-1/2 - sqrt(3)*I/2'): 2,
         S('-1/2 + sqrt(3)*I/2'): 2}
 
+
 def test_P27():
     a = symbols('a')
-    M = Matrix([
-    [a,  0, 0, 0, 0],
-    [0,  0, 0, 0, 1],
-    [0,  0, a, 0, 0],
-    [0,  0, 0, a, 0],
-    [0, -2, 0, 0, 2]])
-    M.eigenvects() == [
-                        (a, 3, [Matrix([
-                        [1],
-                        [0],
-                        [0],
-                        [0],
-                        [0]]), Matrix([
-                        [0],
-                        [0],
-                        [1],
-                        [0],
-                        [0]]), Matrix([
-                        [0],
-                        [0],
-                        [0],
-                        [1],
-                        [0]])]), (1 - I, 1, [Matrix([
-                        [          0],
-                        [-1/(-1 + I)],
-                        [          0],
-                        [          0],
-                        [          1]])]), (1 + I, 1, [Matrix([
-                        [          0],
-                        [-1/(-1 - I)],
-                        [          0],
-                        [          0],
-                        [          1]])])]
+    M = Matrix([[a,  0, 0, 0, 0],
+                [0,  0, 0, 0, 1],
+                [0,  0, a, 0, 0],
+                [0,  0, 0, a, 0],
+                [0, -2, 0, 0, 2]])
+    M.eigenvects() == [(a, 3, [Matrix([[1],
+                                       [0],
+                                       [0],
+                                       [0],
+                                       [0]]),
+                               Matrix([[0],
+                                       [0],
+                                       [1],
+                                       [0],
+                                       [0]]),
+                               Matrix([[0],
+                                       [0],
+                                       [0],
+                                       [1],
+                                       [0]])]),
+                        (1 - I, 1, [Matrix([[          0],
+                                            [-1/(-1 + I)],
+                                            [          0],
+                                            [          0],
+                                            [          1]])]),
+                        (1 + I, 1, [Matrix([[          0],
+                                            [-1/(-1 - I)],
+                                            [          0],
+                                            [          0],
+                                            [          1]])])]
+
+
 @XFAIL
 def test_P28():
-    raise NotImplementedError("Generalized eigenvectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
+    raise NotImplementedError("Generalized eigenvectors not supported \
+https://code.google.com/p/sympy/issues/detail?id=2194")
+
 
 @XFAIL
 def test_P29():
-    raise NotImplementedError("Generalized eigenvectors not supported https://code.google.com/p/sympy/issues/detail?id=2194")
+    raise NotImplementedError("Generalized eigenvectors not supported \
+https://code.google.com/p/sympy/issues/detail?id=2194")
+
 
 def test_P30():
-    M = Matrix([
-        [1,  0,  0,  1, -1],
-        [0,  1, -2,  3, -3],
-        [0,  0, -1,  2, -2],
-        [1, -1,  1,  0,  1],
-        [1, -1,  1, -1,  2]])
-    P,J = M.jordan_form()
-    assert J == Matrix([
-        [-1, 0, 0, 0, 0],
-        [ 0, 1, 1, 0, 0],
-        [ 0, 0, 1, 0, 0],
-        [ 0, 0, 0, 1, 1],
-        [ 0, 0, 0, 0, 1]])
+    M = Matrix([[1,  0,  0,  1, -1],
+                [0,  1, -2,  3, -3],
+                [0,  0, -1,  2, -2],
+                [1, -1,  1,  0,  1],
+                [1, -1,  1, -1,  2]])
+    P, J = M.jordan_form()
+    assert J == Matrix([[-1, 0, 0, 0, 0],
+                        [0,  1, 1, 0, 0],
+                        [0,  0, 1, 0, 0],
+                        [0,  0, 0, 1, 1],
+                        [0,  0, 0, 0, 1]])
+
 
 @XFAIL
 def test_P31():
     raise NotImplementedError("Smith normal form not implemented")
 
+
 def test_P32():
-    M=Matrix([
-        [1, -2],
-        [2, 1]])
-    assert exp(M).rewrite(cos).simplify() == Matrix([
-                                        [E*cos(2), -E*sin(2)],
-                                        [E*sin(2),  E*cos(2)]])
+    M = Matrix([[1, -2],
+                [2, 1]])
+    assert exp(M).rewrite(cos).simplify() == Matrix([[E*cos(2), -E*sin(2)],
+                                                     [E*sin(2),  E*cos(2)]])
+
 
 def test_P33():
-    w,t = symbols('w t')
-    M = Matrix([
-        [0, 1,    0,     0  ],
-        [0, 0,    0,     2*w],
-        [0, 0,    0,     1  ],
-        [0, -2*w, 3*w**2, 0  ]])
+    w, t = symbols('w t')
+    M = Matrix([[0,    1,      0,   0],
+                [0,    0,      0, 2*w],
+                [0,    0,      0,   1],
+                [0, -2*w, 3*w**2,   0]])
     assert exp(M*t).rewrite(cos).expand() == Matrix([
         [1, -3*t + 4*sin(t*w)/w,  6*t*w - 6*sin(t*w), -2*cos(t*w)/w + 2/w],
         [0,      4*cos(t*w) - 3, -6*w*cos(t*w) + 6*w,          2*sin(t*w)],
@@ -1502,55 +1553,58 @@ def test_P33():
 
 @XFAIL
 def test_P34():
-    a,b,c = symbols('a b c',real=True)
-    M=Matrix([
-    [a, 1, 0, 0, 0, 0],
-    [0, a, 0, 0, 0, 0],
-    [0, 0, b, 0, 0, 0],
-    [0, 0, 0, c, 1, 0],
-    [0, 0, 0, 0, c, 1],
-    [0, 0, 0, 0, 0, c]])
+    a, b, c = symbols('a b c', real=True)
+    M = Matrix([[a, 1, 0, 0, 0, 0],
+                [0, a, 0, 0, 0, 0],
+                [0, 0, b, 0, 0, 0],
+                [0, 0, 0, c, 1, 0],
+                [0, 0, 0, 0, c, 1],
+                [0, 0, 0, 0, 0, c]])
     # raises exception, sin(M) not supported. exp(M*I) also not supported
     # https://code.google.com/p/sympy/issues/detail?id=3119
-    assert sin(M) == Matrix([
-                        [sin(a), cos(a), 0, 0, 0, 0],
-                        [0, sin(a), 0, 0, 0, 0	],
-                        [0, 0, sin(b), 0, 0, 0	],
-                        [0, 0, 0, sin(c), cos(c), -sin(c)/2],
-                        [0, 0, 0, 0, sin(c), cos(c)],
-                        [0, 0, 0, 0, 0, sin(c)]])
+    assert sin(M) == Matrix([[sin(a), cos(a), 0, 0, 0, 0],
+                             [0, sin(a), 0, 0, 0, 0],
+                             [0, 0, sin(b), 0, 0, 0],
+                             [0, 0, 0, sin(c), cos(c), -sin(c)/2],
+                             [0, 0, 0, 0, sin(c), cos(c)],
+                             [0, 0, 0, 0, 0, sin(c)]])
+
 
 @XFAIL
 def test_P35():
-    M = pi/2*Matrix([[2, 1, 1], [2, 3, 2], [1, 1, 2]])
+    M = pi/2*Matrix([[2, 1, 1],
+                     [2, 3, 2],
+                     [1, 1, 2]])
     # raises exception, sin(M) not supported. exp(M*I) also not supported
     # https://code.google.com/p/sympy/issues/detail?id=3119
-    assert sin(M) ==  eye(3)
+    assert sin(M) == eye(3)
+
 
 @XFAIL
 def test_P36():
-    M=Matrix([
-        [10, 7],
-        [7, 17]])
-    assert sqrt(M) == Matrix([[3, 1], [1, 4]])
+    M = Matrix([[10, 7],
+                [7, 17]])
+    assert sqrt(M) == Matrix([[3, 1],
+                              [1, 4]])
+
 
 @XFAIL
 def test_P37():
-    M=Matrix([
-        [1, 1, 0],
-        [0, 1, 0],
-        [0, 0, 1]])
+    M = Matrix([[1, 1, 0],
+                [0, 1, 0],
+                [0, 0, 1]])
     #raises NotImplementedError: Implemented only for diagonalizable matrices
-    M**Rational(1,2)
+    M**Rational(1, 2)
+
 
 @XFAIL
 def test_P38():
-    M=Matrix([
-    [0, 1, 0],
-    [0, 0, 0],
-    [0, 0, 0]])
+    M=Matrix([[0, 1, 0],
+              [0, 0, 0],
+              [0, 0, 0]])
     #raises NotImplementedError: Implemented only for diagonalizable matrices
     M**Rational(1,2)
+
 
 @XFAIL
 def test_P39():
@@ -1561,466 +1615,591 @@ def test_P39():
         [3, 3]])
     M.SVD()
     '''
-    raise NotImplementedError("Singular value decomposition not implemented normal form not implemented")
+    raise NotImplementedError("Singular value decomposition not implemented")
+
 
 def test_P40():
-    r,t = symbols('r t',real=True)
-    M=Matrix([r*cos(t), r*sin(t)])
-    assert M.jacobian(Matrix([r, t])) == Matrix([
-                                [cos(t), -r*sin(t)],
-                                [sin(t),  r*cos(t)]])
+    r, t = symbols('r t', real=True)
+    M = Matrix([r*cos(t), r*sin(t)])
+    assert M.jacobian(Matrix([r, t])) == Matrix([[cos(t), -r*sin(t)],
+                                                 [sin(t),  r*cos(t)]])
+
 
 def test_P41():
-    r,t = symbols('r t',real=True)
-    assert hessian(r**2*sin(t),(r,t)) == Matrix([
-                                            [  2*sin(t),   2*r*cos(t)],
-                                            [2*r*cos(t), -r**2*sin(t)]])
+    r, t = symbols('r t', real=True)
+    assert hessian(r**2*sin(t),(r,t)) == Matrix([[  2*sin(t),   2*r*cos(t)],
+                                                 [2*r*cos(t), -r**2*sin(t)]])
+
 
 def test_P42():
     assert wronskian([cos(x), sin(x)], x).simplify() == 1
 
+
 def test_P43():
-    def __my_jacobian(M,Y):
+    def __my_jacobian(M, Y):
         return Matrix([M.diff(v).T for v in Y]).T
-    r,t = symbols('r t',real=True)
-    M=Matrix([r*cos(t), r*sin(t)])
-    assert __my_jacobian(M,[r,t]) == Matrix([
-                                [cos(t), -r*sin(t)],
-                                [sin(t),  r*cos(t)]])
+    r, t = symbols('r t', real=True)
+    M = Matrix([r*cos(t), r*sin(t)])
+    assert __my_jacobian(M,[r,t]) == Matrix([[cos(t), -r*sin(t)],
+                                             [sin(t),  r*cos(t)]])
+
 
 def test_P44():
-    def __my_hessian(f,Y):
-        V=Matrix([diff(f,v) for v in Y])
+    def __my_hessian(f, Y):
+        V = Matrix([diff(f, v) for v in Y])
         return  Matrix([V.T.diff(v) for v in Y])
-    r,t = symbols('r t',real=True)
-    assert __my_hessian(r**2*sin(t),(r,t)) == Matrix([
+    r, t = symbols('r t', real=True)
+    assert __my_hessian(r**2*sin(t), (r, t)) == Matrix([
                                             [  2*sin(t),   2*r*cos(t)],
                                             [2*r*cos(t), -r**2*sin(t)]])
 
+
 def test_P45():
-    def __my_wronskian(Y,v):
-        return  Matrix([Matrix(Y).T.diff(x,n) for n in range(0,len(Y))]).det()
+    def __my_wronskian(Y, v):
+        M = Matrix([Matrix(Y).T.diff(x, n) for n in range(0, len(Y))])
+        return  M.det()
     assert __my_wronskian([cos(x), sin(x)], x).simplify() == 1
 
 # Q1-Q6  Tensor tests missing
 
+
 @XFAIL
 def test_R1():
-    i,n = symbols('i n', integer=True, positive=True)
-    xn=MatrixSymbol('xn',n,1)
-    Sm = Sum((xn[i,0]-Sum(xn[j,0],(j,0,n-1))/n)**2,(i,0,n-1))
-    Sm.doit() # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    i, n = symbols('i n', integer=True, positive=True)
+    xn = MatrixSymbol('xn', n, 1)
+    Sm = Sum((xn[i, 0] - Sum(xn[j, 0], (j, 0, n - 1))/n)**2, (i, 0, n - 1))
+    # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    Sm.doit()
+
 
 @XFAIL
 def test_R2():
-    m,b = symbols('m b',real=True)
-    i,n = symbols('i n', integer=True, positive=True)
-    xn=MatrixSymbol('xn',n,1)
-    yn=MatrixSymbol('yn',n,1)
-    f=Sum((yn[i,0]-m*xn[i,0]-b)**2,(i,0,n-1))
-    f1=diff(f,m)
-    f2=diff(f,b)
-    solve((f1,f2),m,b) # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    m, b = symbols('m b', real=True)
+    i, n = symbols('i n', integer=True, positive=True)
+    xn = MatrixSymbol('xn', n, 1)
+    yn = MatrixSymbol('yn', n, 1)
+    f = Sum((yn[i, 0] - m*xn[i, 0] - b)**2, (i, 0, n - 1))
+    f1 = diff(f, m)
+    f2 = diff(f, b)
+    # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    solve((f1, f2), m, b)
+
 
 @XFAIL
 def test_R3():
-    n,k = symbols('n k', integer=True, positive=True)
+    n, k = symbols('n k', integer=True, positive=True)
     sk = ((-1)**k) * (binomial(2*n, k))**2
-    Sm = Sum(sk, (k,1,oo))
+    Sm = Sum(sk, (k, 1, oo))
     T = Sm.doit()
-    assert T.combsimp() == (-1)**n*binomial(2*n, n)# returns -((-1)**n*factorial(2*n) - (factorial(n))**2)*exp_polar(-I*pi)/(factorial(n))**2
+    T2 = T.combsimp()
+    # returns -((-1)**n*factorial(2*n)
+    #           - (factorial(n))**2)*exp_polar(-I*pi)/(factorial(n))**2
+    assert T2 == (-1)**n*binomial(2*n, n)
+
 
 @XFAIL
 def test_R4():
-    n,k = symbols('n k', integer=True, positive=True)
+    n, k = symbols('n k', integer=True, positive=True)
     sk = binomial(n, k)/(2**n) - binomial(n + 1, k)/(2**(n + 1))
-    Sm = Sum(sk, (k,1,oo))
+    Sm = Sum(sk, (k, 1, oo))
     T = Sm.doit()
-    assert T.combsimp() == 2**(-n-1)*binomial(n,k-1) # returns -2**(-n)/2
+    assert T.combsimp() == 2**(-n-1)*binomial(n, k-1)  # returns -2**(-n)/2
+
 
 @XFAIL
 def test_R5():
-    a,b,c,n,k = symbols('a b c n k', integer=True, positive=True)
-    sk = ((-1)**k) * binomial(a+b, a+k) * binomial(b+c, b+k) * binomial(c+a, c+k)
-    Sm = Sum(sk, (k,1,oo))
-    T = Sm.doit() # hypergeometric series not calculated
+    a, b, c, n, k = symbols('a b c n k', integer=True, positive=True)
+    sk = ((-1)**k)*(binomial(a + b, a + k)
+                    *binomial(b + c, b + k)*binomial(c + a, c + k))
+    Sm = Sum(sk, (k, 1, oo))
+    T = Sm.doit()  # hypergeometric series not calculated
     assert T == factorial(a+b+c)/(factorial(a)*factorial(b)*factorial(c))
+
 
 @XFAIL
 def test_R6():
-    n,k = symbols('n k', integer=True, positive=True)
-    gn = MatrixSymbol('gn',n+1,1)
-    Sm = Sum(gn[k,0]-gn[k-1,0],(k,1,n+1))
-    assert Sm.doit() == -gn[0, 0] + gn[n+1, 0] #raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    n, k = symbols('n k', integer=True, positive=True)
+    gn = MatrixSymbol('gn', n + 1, 1)
+    Sm = Sum(gn[k, 0] - gn[k - 1, 0], (k, 1, n + 1))
+    # raises AttributeError: 'str' object has no attribute 'is_Piecewise'
+    assert Sm.doit() == -gn[0, 0] + gn[n + 1, 0]
+
 
 def test_R7():
-    n,k = symbols('n k', integer=True, positive=True)
+    n, k = symbols('n k', integer=True, positive=True)
     T = Sum(k**3,(k,1,n)).doit()
     assert T.factor() == n**2*(n + 1)**2/4
 
 @XFAIL
 def test_R8():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(k**2*binomial(n,k),(k,1,n))
+    n, k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(k**2*binomial(n, k), (k, 1, n))
     T = Sm.doit() #returns Piecewise function
-    #T.simplify() raisesAttributeError: 'Or' object has no attribute 'as_numer_denom'
-    assert T.combsimp() == n*(n+1)*2**(n-2)
+    # T.simplify() raisesAttributeError
+    assert T.combsimp() == n*(n + 1)*2**(n - 2)
 
 
 def test_R9():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(binomial(n,k-1)/k,(k,1,n+1))
-    assert Sm.doit().simplify() ==  (2**(n + 1) - 1)/(n + 1)
+    n, k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(binomial(n, k - 1)/k, (k, 1, n + 1))
+    assert Sm.doit().simplify() == (2**(n + 1) - 1)/(n + 1)
+
 
 @XFAIL
 def test_R10():
-    n,m,r,k = symbols('n m r k', integer=True, positive=True)
-    Sm = Sum(binomial(n,k)*binomial(m,r-k),(k,0,r))
+    n, m, r, k = symbols('n m r k', integer=True, positive=True)
+    Sm = Sum(binomial(n, k)*binomial(m, r - k), (k, 0, r))
     T = Sm.doit()
     T2 = T.combsimp().rewrite(factorial)
     assert T2 == factorial(m + n)/(factorial(r)*factorial(m + n - r))
-    assert T2 == binomial(m+n,r).rewrite(factorial)
-    T3 = T2.rewrite(binomial) # rewrite(binomial) is not working. https://code.google.com/p/sympy/issues/detail?id=4036
-    assert T3 ==  binomial(m+n,r)
+    assert T2 == binomial(m + n, r).rewrite(factorial)
+    # rewrite(binomial) is not working.
+    # https://code.google.com/p/sympy/issues/detail?id=4036
+    T3 = T2.rewrite(binomial)
+    assert T3 == binomial(m + n, r)
+
 
 @XFAIL
 def test_R11():
-    n,k = symbols('n k', integer=True, positive=True)
-    sk = binomial(n,k)*fibonacci(k)
-    Sm = Sum(sk,(k,0,n))
+    n, k = symbols('n k', integer=True, positive=True)
+    sk = binomial(n, k)*fibonacci(k)
+    Sm = Sum(sk, (k, 0, n))
     T = Sm.doit()
-    # Fibonacci simplification not implemented https://code.google.com/p/sympy/issues/detail?id=4035
+    # Fibonacci simplification not implemented
+    # https://code.google.com/p/sympy/issues/detail?id=4035
     assert T == fibonacci(2*n)
+
 
 @XFAIL
 def test_R12():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(fibonacci(k)**2,(k,0,n))
+    n, k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(fibonacci(k)**2, (k, 0, n))
     T = Sm.doit()
-    assert T == fibonacci(n)*fibonacci(n+1)
+    assert T == fibonacci(n)*fibonacci(n + 1)
+
 
 @XFAIL
 def test_R13():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(sin(k*x),(k,1,n))
-    T = Sm.doit() # Sum is not calculated
-    assert T.simplify() ==  cot(x/2)/2 - cos(x*(2*n + 1)/2)/(2*sin(x/2))
+    n, k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(sin(k*x), (k, 1, n))
+    T = Sm.doit()  # Sum is not calculated
+    assert T.simplify() == cot(x/2)/2 - cos(x*(2*n + 1)/2)/(2*sin(x/2))
+
 
 @XFAIL
 def test_R14():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(sin((2*k-1)*x),(k,1,n))
-    T = Sm.doit() # Sum is not calculated
+    n, k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(sin((2*k - 1)*x), (k, 1, n))
+    T = Sm.doit()  # Sum is not calculated
     assert T.simplify() == sin(n*x)**2/sin(x)
+
 
 @XFAIL
 def test_R15():
-    n,k = symbols('n k', integer=True, positive=True)
+    n, k = symbols('n k', integer=True, positive=True)
     Sm = Sum(binomial(n - k, k), (k, 0, floor(n/2)))
-    T = Sm.doit() # Sum is not calculated
-    assert T.simplify() == fibonacci(n+1)
+    T = Sm.doit()  # Sum is not calculated
+    assert T.simplify() == fibonacci(n + 1)
+
 
 def test_R16():
     k = symbols('k', integer=True, positive=True)
-    Sm = Sum(1/k**2 + 1/k**3, (k,1,oo))
+    Sm = Sum(1/k**2 + 1/k**3, (k, 1, oo))
     assert Sm.doit() == zeta(3) + pi**2/6
+
 
 def test_R17():
     k = symbols('k', integer=True, positive=True)
-    assert float(Sum(1/k**2 + 1/k**3, (k,1,oo))) - 2.8469909700078206 < 1e-15
+    assert abs(float(Sum(1/k**2 + 1/k**3, (k, 1, oo)))
+               - 2.8469909700078206) < 1e-15
+
 
 @XFAIL
 def test_R18():
     k = symbols('k', integer=True, positive=True)
-    Sm = Sum(1/(2**k*k**2), (k,1,oo))
-    T = Sm.doit() # returns polylog(2, 1/2), seems particular value for 1/2 is not known. https://code.google.com/p/sympy/issues/detail?id=4033
+    Sm = Sum(1/(2**k*k**2), (k, 1, oo))
+    # returns polylog(2, 1/2),  particular value for 1/2 is not known.
+    # https://code.google.com/p/sympy/issues/detail?id=4033
+    T = Sm.doit()
     assert T.simplify() == -log(2)**2/2 + pi**2/12
+
 
 @XFAIL
 def test_R19():
     k = symbols('k', integer=True, positive=True)
-    Sm = Sum(1/((3*k+1)*(3*k+2)*(3*k+3)), (k,0,oo))
+    Sm = Sum(1/((3*k + 1)*(3*k + 2)*(3*k + 3)), (k, 0, oo))
     T = Sm.doit()
-    assert T.simplify() == -log(3)/4 + sqrt(3)*pi/12 # fails, no simplification
+    # assert fails, T not  simplified
+    assert T.simplify() == -log(3)/4 + sqrt(3)*pi/12
+
 
 @XFAIL
 def test_R20():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(binomial(n,4*k) , (k,0,oo))
+    n, k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(binomial(n, 4*k), (k, 0, oo))
     T = Sm.doit()
-    assert T.simplify() == 2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2 # fails, no simplification
+    # assert fails, T not  simplified
+    assert T.simplify() == 2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2
+
 
 @XFAIL
 def test_R21():
     k = symbols('k', integer=True, positive=True)
-    Sm = Sum(1/(sqrt(k*(k + 1)) * (sqrt(k) + sqrt(k + 1))) , (k,1,oo))
-    T = Sm.doit() # Sum not calculated
+    Sm = Sum(1/(sqrt(k*(k + 1)) * (sqrt(k) + sqrt(k + 1))), (k, 1, oo))
+    T = Sm.doit()  # Sum not calculated
     assert T.simplify() == 1
 
-@XFAIL
-def test_R22():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(Sum(binomial(n, k)*binomial(n - k, n - 2*k)*x**n*y**(n - 2*k),(k,0,floor(n/2))),(n,0,oo))
-    # How to express constraint abs(x*y)<1?
-    T = Sm.doit()
-    # Correct answer unknown, not possible to provide assert
-    assert T == False
+
+# test_R22 answer not available in Wester samples
+# Sum(Sum(binomial(n, k)*binomial(n - k, n - 2*k)*x**n*y**(n - 2*k),
+#                 (k, 0, floor(n/2))), (n, 0, oo)) with abs(x*y)<1?
+
 
 @XFAIL
 def test_R23():
-    n,k = symbols('n k', integer=True, positive=True)
-    Sm = Sum(Sum(factorial(n)/(factorial(k)**2*factorial(n - 2*k))*(x/y)**k*(x*y)**(n - k), (n,2*k,oo)), (k,0,oo))
-    # How to express constraint abs(x*y)<1?
-    T = Sm.doit() # Sum not calculated
+    n, k = symbols('n k', integer=True, positive=True)
+    Sm = Sum(Sum((factorial(n)/(factorial(k)**2*factorial(n - 2*k)))*
+                 (x/y)**k*(x*y)**(n - k), (n, 2*k, oo)), (k, 0, oo))
+    # Missing how to express constraint abs(x*y)<1?
+    T = Sm.doit()  # Sum not calculated
     assert T == -1/sqrt(x**2*y**2 - 4*x**2 - 2*x*y + 1)
 
+
 def test_R24():
-    m,k = symbols('m k', integer=True, positive=True)
-    Sm = Sum(Product(k/(2*k - 1), (k,1,m)), (m,2,oo))
+    m, k = symbols('m k', integer=True, positive=True)
+    Sm = Sum(Product(k/(2*k - 1), (k, 1, m)), (m, 2, oo))
     assert Sm.doit() == pi/2
+
 
 def test_S1():
     k = symbols('k', integer=True, positive=True)
-    Pr = Product(gamma(k/3), (k,1,8))
+    Pr = Product(gamma(k/3), (k, 1, 8))
     assert Pr.doit().simplify() == 640*sqrt(3)*pi**3/6561
 
+
 def test_S2():
-    n,k = symbols('n k', integer=True, positive=True)
-    assert Product(k,(k,1,n)).doit(),simplify() == factorial(n)
+    n, k = symbols('n k', integer=True, positive=True)
+    assert Product(k, (k, 1, n)).doit() == factorial(n)
+
 
 def test_S3():
-    n,k = symbols('n k', integer=True, positive=True)
-    assert Product(x**k,(k,1,n)).doit().simplify() == x**(n*(n + 1)/2)
+    n, k = symbols('n k', integer=True, positive=True)
+    assert Product(x**k, (k, 1, n)).doit().simplify() == x**(n*(n + 1)/2)
+
 
 def test_S4():
-    n,k = symbols('n k', integer=True, positive=True)
-    assert Product(1+1/k,(k,1,n-1)).doit().simplify() == n
+    n, k = symbols('n k', integer=True, positive=True)
+    assert Product(1 + 1/k, (k, 1, n -1)).doit().simplify() == n
+
 
 def test_S5():
-    n,k = symbols('n k', integer=True, positive=True)
-    assert Product((2*k-1)/(2*k),(k,1,n)).doit().combsimp() == factorial(n-Rational(1,2))/(sqrt(pi)*factorial(n))
+    n, k = symbols('n k', integer=True, positive=True)
+    assert (Product((2*k - 1)/(2*k), (k, 1, n)).doit().combsimp() ==
+            factorial(n - Rational(1, 2))/(sqrt(pi)*factorial(n)))
+
 
 @XFAIL
 def test_S6():
-    n,k = symbols('n k', integer=True, positive=True)
-    # Product raises Infinite recursion error. https://code.google.com/p/sympy/issues/detail?id=4034
-    assert Product(x**2-2*x*cos(k*pi/n)+1, (k,1,n-1)).doit().simplify() == (x**(2*n)-1)/(x**2-1)
+    n, k = symbols('n k', integer=True, positive=True)
+    # Product raises Infinite recursion error.
+    # https://code.google.com/p/sympy/issues/detail?id=4034
+    assert (Product(x**2 -2*x*cos(k*pi/n) + 1, (k, 1, n - 1)).doit().simplify()
+            == (x**(2*n) - 1)/(x**2 - 1))
+
 
 @XFAIL
 def test_S7():
     k = symbols('k', integer=True, positive=True)
-    Pr = Product((k**3-1)/(k**3+1), (k,2,oo))
+    Pr = Product((k**3 - 1)/(k**3 + 1), (k, 2, oo))
     T = Pr.doit()
-    assert T.simplify() == Rational(2,3) #T simplifies incorrectly to 0
+    assert T.simplify() == Rational(2, 3)  # T simplifies incorrectly to 0
+
 
 @XFAIL
 def test_S8():
     k = symbols('k', integer=True, positive=True)
-    Pr = Product(1 - 1/(2*k)**2, (k,1,oo))
-    T = Pr.doit() # returns nan https://code.google.com/p/sympy/issues/detail?id=4037
+    Pr = Product(1 - 1/(2*k)**2, (k, 1, oo))
+    T = Pr.doit()
+    # T = nan https://code.google.com/p/sympy/issues/detail?id=4037
     assert T.simplify() == 2/pi
+
 
 @XFAIL
 def test_S9():
     k = symbols('k', integer=True, positive=True)
     Pr = Product(1 + (-1)**(k + 1)/(2*k - 1), (k, 1, oo))
-    T = Pr.doit() # Product raises Infinite recursion error. https://code.google.com/p/sympy/issues/detail?id=4034
+    # Product.doit() raises Infinite recursion error.
+    # https://code.google.com/p/sympy/issues/detail?id=4034
+    T = Pr.doit()
     assert T.simplify() == sqrt(2)
+
 
 @XFAIL
 def test_S10():
     k = symbols('k', integer=True, positive=True)
-    Pr = Product((k*(k +  1) + 1 + I)/(k*(k + 1) + 1 - I), (k,0,oo))
+    Pr = Product((k*(k + 1) + 1 + I)/(k*(k + 1) + 1 - I), (k, 0, oo))
     T = Pr.doit()
-    assert T.simplify() == -1 # raises OverflowError  https://code.google.com/p/sympy/issues/detail?id=4038
+    # raises OverflowError
+    # https://code.google.com/p/sympy/issues/detail?id=4038
+    assert T.simplify() == -1
+
 
 def test_T1():
     assert limit((1 + 1/n)**n, n, oo) == E
-    assert limit((1 - cos(x))/x**2, x, 0) == Rational(1,2)
+    assert limit((1 - cos(x))/x**2, x, 0) == Rational(1, 2)
+
 
 def test_T2():
     assert limit((3**x + 5**x)**(1/x), x, oo) == 5
 
+
 @XFAIL
 def test_T3():
-    assert limit(log(x)/(log(x) + sin(x)), x, oo) == 1 #raises PoleError
+    assert limit(log(x)/(log(x) + sin(x)), x, oo) == 1  # raises PoleError
+
 
 def test_T4():
-    assert limit((exp(x*exp(-x)/(exp(-x) + exp(-2*x**2/(x + 1)))) - exp(x))/x, x, oo) == -exp(2)
+    assert limit((exp(x*exp(-x)/(exp(-x) + exp(-2*x**2/(x + 1))))
+                 - exp(x))/x, x, oo) == -exp(2)
+
 
 def test_T5():
-    assert  limit(x*log(x)*log(x*exp(x) - x**2)**2/log(log(x**2 + 2*exp(exp(3*x**3*log(x))))),x,oo) == Rational(1,3)
+    assert  limit(x*log(x)*log(x*exp(x) - x**2)**2/log(log(x**2
+                  + 2*exp(exp(3*x**3*log(x))))), x, oo) == Rational(1, 3)
+
 
 def test_T6():
     assert limit(1/n * factorial(n)**(1/n), n, oo) == exp(-1)
 
+
 def test_T7():
     limit(1/n * gamma(n + 1)**(1/n), n, oo)
 
+
 def test_T8():
-    a,z = symbols('a z', real=True,positive=True)
+    a, z = symbols('a z', real=True, positive=True)
     assert limit(gamma(z + a)/gamma(z)*exp(-a*log(z)), z, oo) == 1
+
 
 @XFAIL
 def test_T9():
-    z,k = symbols('z k', real=True,positive=True)
-    assert limit(hyper((1, k), (1,), z/k), k,oo) == exp(z) # raises NotImplementedError: Don't know how to calculate the mrv of '(1, k)'
+    z, k = symbols('z k', real=True, positive=True)
+    # raises NotImplementedError:
+    #           Don't know how to calculate the mrv of '(1, k)'
+    assert limit(hyper((1, k), (1,), z/k), k, oo) == exp(z)
+
 
 @XFAIL
 def test_T10():
-    limit(zeta(x) - 1/(x - 1), x, 1)# raises PoleError should return euler-mascheroni constant
+    # raises PoleError should return euler-mascheroni constant
+    limit(zeta(x) - 1/(x - 1), x, 1)
+
 
 @XFAIL
 def test_T11():
-    n,k = symbols('n k', integer=True, positive=True)
-    assert limit(n**x/(x*product((1 + x/k), (k, 1, n))),n,oo) == gamma(x) #raises NotImplementedError
+    n, k = symbols('n k', integer=True, positive=True)
+    # raises NotImplementedError
+    assert limit(n**x/(x*product((1 + x/k), (k, 1, n))), n, oo) == gamma(x)
+
 
 @XFAIL
 def test_T12():
-    x,t = symbols('x t', real=True)
-    assert limit(x * integrate(exp(-t**2), (t, 0, x))/(1 - exp(-x**2)), x, 0) == 1 # raises PoleError: Don't know how to calculate the limit(sqrt(pi)*x*erf(x)/(2*(1 - exp(-x**2))), x, 0, dir=+)
+    x, t = symbols('x t', real=True)
+    # raises PoleError: Don't know how to calculate the
+    #           limit(sqrt(pi)*x*erf(x)/(2*(1 - exp(-x**2))), x, 0, dir=+)
+    assert limit(x * integrate(exp(-t**2), (t, 0, x))/(1 - exp(-x**2)),
+                 x, 0) == 1
+
 
 def test_T13():
     x = symbols('x', real=True)
-    assert [limit(x/abs(x), x, 0, dir='-'), limit(x/abs(x), x, 0, dir='+')] == [-1, 1]
+    assert [limit(x/abs(x), x, 0, dir='-'),
+            limit(x/abs(x), x, 0, dir='+')] == [-1, 1]
+
 
 def test_T14():
     x = symbols('x', real=True)
     assert limit(atan(-log(x)), x, 0, dir='+') == pi/2
 
+
 def test_U1():
     x = symbols('x', real=True)
     assert diff(abs(x), x) == sign(x)
 
+
 def test_U2():
-    f=Lambda(x,Piecewise((-x,x<0), (x,x>=0)))
-    assert diff(f(x),x) == Piecewise((-1, x < 0), (1, x >= 0))
+    f = Lambda(x, Piecewise((-x, x < 0), (x, x >= 0)))
+    assert diff(f(x), x) == Piecewise((-1, x < 0), (1, x >= 0))
+
 
 def test_U3():
-    f=Lambda(x,Piecewise((x**2-1, x==1), (x**3, x!=1)))
-    f1=Lambda(x,diff(f(x),x))
+    f = Lambda(x, Piecewise((x**2 - 1, x == 1), (x**3, x != 1)))
+    f1 = Lambda(x, diff(f(x), x))
     assert f1(x) == 3*x**2
     assert f1(1) == 3
+
 
 @XFAIL
 def test_U4():
     n = symbols('n', integer=True, positive=True)
     x = symbols('x', real=True)
-    diff(x**n,x,n)
-    assert diff(x**n,x,n).rewrite(factorial) == factorial(n)
+    diff(x**n, x, n)
+    assert diff(x**n, x, n).rewrite(factorial) == factorial(n)
+
 
 @XFAIL
 def test_U5():
     # https://code.google.com/p/sympy/issues/detail?id=3582
-    # f(g(x)).diff(x,2) returns Derivative(g(x), x)**2*Subs(Derivative(f(_xi_1), _xi_1, _xi_1), (_xi_1,), (g(x),)) + Derivative(g(x), x, x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
+    # f(g(x)).diff(x,2) returns Derivative(g(x), x)**2*Subs(Derivative(
+    #  f(_xi_1), _xi_1, _xi_1), (_xi_1,), (g(x),)) + Derivative(g(x), x, x)*
+    #  Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
     raise NotImplementedError("f(g(t)).diff(t,2) Subs not performed")
+
 
 @XFAIL
 def test_U6():
     h = Function('h')
-    T=integrate(f(y),y, h(x),g(x)) # raises ValueError: Invalid limits given: (y, h(x), g(x))
+    # raises ValueError: Invalid limits given: (y, h(x), g(x))
+    T = integrate(f(y), y, h(x), g(x))
     T.diff(x)
+
 
 @XFAIL
 def test_U7():
-    p,t = symbols('p t', real=True)
-    # Exact differential => d(V(P, T)) => dV/dP DP + dV/dT DT 
-    diff(f(p,t)) # raises ValueError:  Since there is more than one variable in the expression, the variable(s) of differentiation must be supplied to differentiate f(p,t)
+    p, t = symbols('p t', real=True)
+    # Exact differential => d(V(P, T)) => dV/dP DP + dV/dT DT
+    # raises ValueError:  Since there is more than one variable in the
+    # expression, the variable(s) of differentiation must be supplied to
+    # differentiate f(p,t)
+    diff(f(p, t))
+
 
 def test_U8():
-    x,y = symbols('x y', real=True)
-    eq = cos(x*y)+x
+    x, y = symbols('x y', real=True)
+    eq = cos(x*y) + x
     eq = eq.subs(y, f(x))
     #  If SymPy had implicit_diff() function this hack could be avoided
-    assert solve((f(x)-eq).diff(x), f(x).diff(x))[0].subs(f(x),y) == (-y*sin(x*y) + 1)/(x*sin(x*y) + 1)
+    assert (solve((f(x) - eq).diff(x), f(x).diff(x))[0].subs(f(x), y) ==
+            (-y*sin(x*y) + 1)/(x*sin(x*y) + 1))
+
 
 @XFAIL
 def test_U9():
-    ''' Maple syntax:
-    O29 := diff(f(x, y), x) + diff(f(x, y), y);
-                          /d         \   /d         \
-                          |-- f(x, y)| + |-- f(x, y)|
-                          \dx        /   \dy        /
-    
-    O30 := factor(subs(f(x, y) = g(x^2 + y^2), %));
-                                    2    2
-                            2 D(g)(x  + y ) (x + y)
-    '''
-    x,y = symbols('x y', real=True)
+    # Wester sample case for Maple:
+    # O29 := diff(f(x, y), x) + diff(f(x, y), y);
+    #                      /d         \   /d         \
+    #                      |-- f(x, y)| + |-- f(x, y)|
+    #                      \dx        /   \dy        /
+    #
+    # O30 := factor(subs(f(x, y) = g(x^2 + y^2), %));
+    #                                2    2
+    #                        2 D(g)(x  + y ) (x + y)
+    x, y = symbols('x y', real=True)
     su = diff(f(x, y), x) + diff(f(x, y), y)
-    s2 = Subs(su,f(x,y),g(x**2+y**2)).doit()
-    s3 = s2.doit().factor() 
-    # Subs not performed, s3 = 2*(x + y)*Subs(Derivative(g(_xi_1), _xi_1), (_xi_1,), (x**2 + y**2,))
-    assert s3 == 2*(x + y)*Derivative(g(x**2 + y**2), x**2 + y**2) # raises ValueError: Can't differentiate wrt the variable: x**2 + y**2, 1
+    s2 = Subs(su, f(x, y), g(x**2 + y**2)).doit()
+    s3 = s2.doit().factor()
+    # Subs not performed, s3 = 2*(x + y)*Subs(Derivative(
+    #   g(_xi_1), _xi_1), (_xi_1,), (x**2 + y**2,))
+    # Derivative(g(x*2 + y**2), x**2 + y**2) is not valid in SymPy,
+    # and probably will remain that way. You can take derivatives with respect
+    # to other expressions only if they are atomic, like a symbol or a
+    # function.
+    # D operator should be added to SymPy
+    # See https://code.google.com/p/sympy/issues/detail?id=1620.
+
+    # raises ValueError: Can't differentiate wrt the variable: x**2 + y**2
+    assert s3 == 2*(x + y)*Derivative(g(x**2 + y**2), x**2 + y**2)
+
 
 @XFAIL
 def test_U10():
     z = symbols('z')
-    assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9,4) # returns wrong value-3/4 . problem seems to come from series expansion
+    # returns wrong value-3/4 . problem seems to come from series expansion
+    assert residue((z**3 + 5)/((z**4 - 1)*(z + 1)), z, -1) == Rational(-9, 4)
+
 
 def test_U11():
-    (dx, dy, dz)  = MV.setup('dx dy dz')
-    #answer is correct, but I can't find in the doc how to implement differential form with SymPy
-    assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx^dy^dz
-
+    (dx, dy, dz) = MV.setup('dx dy dz')
+    # answer is correct, but SymPy doc does not indicate how/if differential
+    # forms are supported
+    assert (2*dx + dz) ^ (3*dx + dy + dz) ^ (dx + dy + 4*dz) == 8*dx ^ dy ^dz
 
 
 @XFAIL
 def test_U12():
-    '''
-    (c41) /* d(3 x^5 dy /\ dz + 5 x y^2 dz /\ dx + 8 z dx /\ dy)
-       => (15 x^4 + 10 x y + 8) dx /\ dy /\ dz */
-    factor(ext_diff(3*x^5 * dy ~ dz + 5*x*y^2 * dz ~ dx + 8*z * dx ~ dy));
-    Time= 60 msecs
-    				       4
-    (d41) 			 (10 x y + 15 x  + 8) dx dy dz
-    '''
-    raise NotImplementedError("External diff of differential form not supported")
+    # Wester sample case:
+    # (c41) /* d(3 x^5 dy /\ dz + 5 x y^2 dz /\ dx + 8 z dx /\ dy)
+    #    => (15 x^4 + 10 x y + 8) dx /\ dy /\ dz */
+    # factor(ext_diff(3*x^5 * dy ~ dz + 5*x*y^2 * dz ~ dx + 8*z * dx ~ dy));
+    # 				       4
+    # (d41) 			 (10 x y + 15 x  + 8) dx dy dz
+    raise NotImplementedError(
+        "External diff of differential form not supported")
+
 
 @XFAIL
 def test_U13():
     #assert minimize(x**4 - x + 1, x)== -3*2**Rational(1,3)/8 + 1
     raise NotImplementedError("minimize() not supported")
-    
+
+
 @XFAIL
 def test_U14():
     #f = 1/(x**2 + y**2 + 1)
-    #assert [minimize(f), maximize(f)] == [0,1] 
+    #assert [minimize(f), maximize(f)] == [0,1]
     raise NotImplementedError("minimize(), maximize() not supported")
+
 
 @XFAIL
 def test_U15():
-    raise NotImplementedError("minimize() not supported and also solve does not support multivariate inequalities")
+    raise NotImplementedError("minimize() not supported and also solve does \
+not support multivariate inequalities")
+
 
 @XFAIL
 def test_U16():
-    raise NotImplementedError("minimize() not supported in SymPy and also solve does not support multivariate inequalities")
+    raise NotImplementedError("minimize() not supported in SymPy and also \
+solve does not support multivariate inequalities")
+
 
 @XFAIL
 def test_U17():
-    raise NotImplementedError("Linear programming, symbolic simplex not supported in SymPy")
+    raise NotImplementedError("Linear programming, symbolic simplex not \
+supported in SymPy")
+
 
 @XFAIL
 def test_V1():
     x = symbols('x', real=True)
-    assert integrate(abs(x),x) == x*abs(x)/2 # integral not calculated https://code.google.com/p/sympy/issues/detail?id=1113
+    # integral not calculated
+    # https://code.google.com/p/sympy/issues/detail?id=1113
+    assert integrate(abs(x), x) == x*abs(x)/2
+
 
 def test_V2():
-    assert integrate(Piecewise((-x, x < 0), (x, x >= 0)),x) == Piecewise((-x**2/2, x < 0), (x**2/2, x >= 0))
+    assert (integrate(Piecewise((-x, x < 0), (x, x >= 0)), x) ==
+            Piecewise((-x**2/2, x < 0), (x**2/2, x >= 0)))
+
 
 def test_V3():
     assert integrate(1/(x**3 + 2),x).diff().simplify() == 1/(x**3 + 2)
+
 
 @XFAIL
 def test_V4():
     assert integrate(2**x/sqrt(1 + 4**x), x) == asinh(2**x)/log(2)
 
-#def test_V5():
-#    # Takes extremely long https://code.google.com/p/sympy/issues/detail?id=4050
-#    assert integrate((3*x - 5)**2/(2*x - 1)**(Rational(7,2)), x) == (-41 + 80*x - 45*x**2)/(5*(2*x-1)**Rational(5/2))
+
+@slow
+def test_V5():
+    # Takes extremely long time
+    # https://code.google.com/p/sympy/issues/detail?id=4050
+    assert (integrate((3*x - 5)**2/(2*x - 1)**(Rational(7, 2)), x) ==
+            (-41 + 80*x - 45*x**2)/(5*(2*x - 1)**Rational(5, 2)))
+
 
 @XFAIL
 def test_V6():
     # returns RootSum(40*_z**2 - 1, Lambda(_i, _i*log(-4*_i + exp(-m*x))))/m
-    assert integrate(1/(2*exp(m*x) - 5*exp(-m*x)), x) == sqrt(10)*(log(2*exp(m*x) - sqrt(10)) - log(2*exp(m*x) + sqrt(10)))/(20*m)
-
+    assert (integrate(1/(2*exp(m*x) - 5*exp(-m*x)), x) == sqrt(10)*(
+            log(2*exp(m*x) - sqrt(10)) - log(2*exp(m*x) + sqrt(10)))/(20*m))
