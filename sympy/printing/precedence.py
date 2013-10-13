@@ -7,6 +7,7 @@ from sympy.core.function import _coeff_isneg
 # Default precedence values for some basic types
 PRECEDENCE = {
     "Lambda": 1,
+    "Xor": 10,
     "Relational": 20,
     "Or": 20,
     "And": 30,
@@ -21,6 +22,8 @@ PRECEDENCE = {
 # treated like they were inherited, so not every single class has to be named
 # here.
 PRECEDENCE_VALUES = {
+    "Equivalent": PRECEDENCE["Xor"],
+    "Xor": PRECEDENCE["Xor"],
     "Or": PRECEDENCE["Or"],
     "And": PRECEDENCE["And"],
     "Add": PRECEDENCE["Add"],

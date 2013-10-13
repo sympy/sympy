@@ -48,6 +48,8 @@ class FCodePrinter(CodePrinter):
     _operators = {
         'and': ' .and. ',
         'or': ' .or. ',
+        'xor': ' .neqv. ',
+        'equivalent': ' .eqv. ',
         'not': '.not. ',
     }
 
