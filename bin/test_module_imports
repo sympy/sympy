@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+
+"""
+Checks that running "import sympy" does not trigger a package import from any
+SymPy module (module imports are fine).
+
+Importing sympy packages from inside a SymPy package's __init__ is fragile
+because the imported package may itself assume that other packages are already
+loaded an fully initialized, causing subtle ordering dependencies.
+Reporting package imports as errors does not prevent these problems, but it
+removes the indirection through the package import and makes them easier to
+diagnose.
+
+Usage:
+
+$ bin/test_module_imports
+"""
+
+from __future__ import print_function
+
+import __builtin__
+builtin_import = __builtin__.__import__
+
+symbol_definers = {} # Maps each function/variable name to name of module to define it
+
+def tracking_import(module, globals = globals(), locals = [], fromlist = None, level = -1):
+    importer_filename = globals['__file__']
+    importer_module = globals['__name__']
+    result = builtin_import(module, globals, locals, fromlist, level)
+    importee_module = result.__name__
+    # We're only interested if importer and importee are in SymPy
+    if (
+        # Importer is a SymPy module
+        importer_module != None # Main module does not have a name
+        and (importer_module == 'sympy' or importer_module.startswith('sympy.'))
+        # Importee is a SymPy module
+        and (importee_module == 'sympy' or importee_module.startswith('sympy.'))
+        ):
+        global symbol_definers
+        for symbol in result.__dict__.iterkeys():
+            # Note that in nested imports, the innermost one is filled in first.
+            # When an __init__ re-exports a function, the initial import will
+            # already have been recorded as definer and won't be overwritten.
+            if not symbol_definers.has_key(symbol):
+                symbol_definers[symbol] = importee_module
+        if hasattr(result, 'path'):
+            print("Error: %s contains package import %s" % (importer_filename, module))
+        if fromlist != None:
+            symbol_list = fromlist
+            if '*' in symbol_list:
+                symbol_list = result.__dict__.iterkeys()
+            for symbol in symbol_list:
+                symbol_definer = symbol_definers[symbol]
+                if symbol_definer != importee_module:
+                    print("Error: %s imports %s from %s, but should import it from its definer %s"
+                          % (importer_filename, symbol, importee_module, symbol_definer))
+    return result
+
+__builtin__.__import__ = tracking_import
+
+import sympy
