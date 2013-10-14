@@ -1,7 +1,7 @@
 from sympy.tensor.tensor import tensor_indices, TensorIndexType, tensorhead, TensorManager, TensMul, TensAdd
 from sympy import simplify, trace
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, GammaMatrixHead, DiracSpinor
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 
 def execute_gamma_simplify_tests_for_function(tfunc, D):
@@ -181,6 +181,80 @@ def test_kahane_algorithm():
 
     execute_gamma_simplify_tests_for_function(tfunc, D=4)
 
+def test_kahane_simplify1():
+    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15 = tensor_indices('i0:16', G.Lorentz)
+    mu, nu, rho, sigma = tensor_indices("mu, nu, rho, sigma", G.Lorentz)
+    KD = DiracSpinor.delta
+    sl = DiracSpinor.auto_left
+    sr = DiracSpinor.auto_right
+    D = 4
+    s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16 = \
+                   tensor_indices('s0:17', DiracSpinor)
+    t = DiracSpinor.delta(s0,s1)
+    t = G(i0)*G(i1)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(t)
+
+    t = G(i0)*G(i1)*G(-i0)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(-2*G(i1))
+    t = G(i0,s0,-s1)*G(i1,s1,-s2)*G(-i0,s2,-s3)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(-2*G(i1, s0, -s3))
+
+    t = G(i0, s0, -s1)*G(i1, s1, -s2)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(t)
+    t = G(i0, s0, -s1)*G(i1, s1, -s0)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(t)
+    t = G(i0)*G(-i0)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(4*KD(sl, sr))
+    t = G(i0,s0,-s1)*G(-i0,s1,-s2)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(4*KD(s0, -s2))
+    t = G(i0,s0,-s1)*G(-i0,s1,-s0)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(16)
+    t = G(i0)*G(i1)*G(-i0)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(-2*G(i1))
+    t = G(i0)*G(i1)*G(-i0)*G(-i1)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals((2*D - D**2)*KD(sl, sr))
+    t = G(i0,s0,-s1)*G(i1,s1,-s2)*G(-i0,s2,-s3)*G(-i1,s3,-s0)
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(4*(2*D - D**2))
+    t = G(i0,s0,-s1)*G(-i0,s2,-s3)*G(i1,s1,-s2)*G(-i1,s3,-s0)
+    raises(ValueError, lambda: G._kahane_simplify(t.coeff, t._tids))
+    t = (G(mu)*G(nu)*G(-nu)*G(-mu))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(D**2*KD(sl, sr))
+    t = (G(mu,s0,-s1)*G(nu,s1,-s2)*G(-nu,s2,-s3)*G(-mu,s3,-s4))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(D**2*KD(s0, -s4))
+    t = (G(mu,s0,-s1)*G(nu,s1,-s2)*G(-nu,s2,-s3)*G(-mu,s3,-s0))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(4*D**2)
+    t = (G(mu)*G(nu)*G(-rho)*G(-nu)*G(-mu)*G(rho))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals((4*D - 4*D**2 + D**3)*KD(sl, sr))
+    t = (G(-mu)*G(-nu)*G(-rho)*G(-sigma)*G(nu)*G(mu)*G(sigma)*G(rho))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals((-16*D + 24*D**2 - 8*D**3 + D**4)*KD(sl, sr))
+    t = (G(-mu)*G(nu)*G(-rho)*G(sigma)*G(rho)*G(-nu)*G(mu)*G(-sigma))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals((8*D - 12*D**2 + 6*D**3 - D**4)*KD(sl, sr))
+
+    # Expressions with free indices:
+    t = (G(mu)*G(nu)*G(rho)*G(sigma)*G(-mu))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(-2*G(sigma)*G(rho)*G(nu))
+    t = (G(mu,s0,-s1)*G(nu,s1,-s2)*G(rho,s2,-s3)*G(sigma,s3,-s4)*G(-mu,s4,-s5))
+    r = G._kahane_simplify(t.coeff, t._tids)
+    assert r.equals(-2*G(sigma,s0,-s1)*G(rho,s1,-s2)*G(nu,s2,-s5))
+
 
 def test_gamma_matrix_class():
     i, j, k = tensor_indices('i,j,k', G.Lorentz)
@@ -199,7 +273,7 @@ def test_gamma_matrix_class():
     execute_gamma_simplify_tests_for_function(simplify, D=4)
 
 def test_gamma_matrix_trace():
-    gamma_trace = G._trace_single_line
+    gamma_trace = G.gamma_trace
     g = G.Lorentz.metric
 
     m0, m1, m2, m3, m4, m5, m6 = tensor_indices('m0:7', G.Lorentz)
@@ -211,19 +285,19 @@ def test_gamma_matrix_trace():
     # traces of odd number of gamma matrices are zero:
     t = G(m0)
     t1 = gamma_trace(t)
-    assert t1 == 0
+    assert t1.equals(0)
 
     t = G(m0)*G(m1)*G(m2)
     t1 = gamma_trace(t)
-    assert t1 == 0
+    assert t1.equals(0)
 
     t = G(m0)*G(m1)*G(-m0)
     t1 = gamma_trace(t)
-    assert t1 == 0
+    assert t1.equals(0)
 
     t = G(m0)*G(m1)*G(m2)*G(m3)*G(m4)
     t1 = gamma_trace(t)
-    assert t1 == 0
+    assert t1.equals(0)
 
     # traces without internal contractions:
     t = G(m0)*G(m1)
@@ -245,27 +319,27 @@ def test_gamma_matrix_trace():
     # traces of expressions with internal contractions:
     t = G(m0)*G(-m0)
     t1 = gamma_trace(t)
-    assert t1 == 4*D
+    assert t1.equals(4*D)
 
     t = G(m0)*G(m1)*G(-m0)*G(-m1)
     t1 = gamma_trace(t)
-    assert t1 == 8*D - 4*D**2
+    assert t1.equals(8*D - 4*D**2)
 
     t = G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(-m0)
     t1 = gamma_trace(t)
     t2 = (-4*D)*g(m1, m3)*g(m2, m4) + (4*D)*g(m1, m2)*g(m3, m4) + \
                  (4*D)*g(m1, m4)*g(m2, m3)
-    assert t1 == t2
+    assert t1.equals(t2)
 
     t = G(-m5)*G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(-m0)*G(m5)
     t1 = gamma_trace(t)
     t2 = (32*D + 4*(-D + 4)**2 - 64)*(g(m1, m2)*g(m3, m4) - \
             g(m1, m3)*g(m2, m4) + g(m1, m4)*g(m2, m3))
-    assert t1 == t2
+    assert t1.equals(t2)
 
     t = G(m0)*G(m1)*G(-m0)*G(m3)
     t1 = gamma_trace(t)
-    assert t1 == (-4*D + 8)*g(m1, m3)
+    assert t1.equals((-4*D + 8)*g(m1, m3))
 
 #    p, q = S1('p,q')
 #    ps = p(m0)*G(-m0)
@@ -276,7 +350,7 @@ def test_gamma_matrix_trace():
 
     t = G(m0)*G(m1)*G(m2)*G(m3)*G(m4)*G(m5)*G(-m0)*G(-m1)*G(-m2)*G(-m3)*G(-m4)*G(-m5)
     t1 = gamma_trace(t)
-    assert t1 == -4*D**6 + 120*D**5 - 1040*D**4 + 3360*D**3 - 4480*D**2 + 2048*D
+    assert t1.equals(-4*D**6 + 120*D**5 - 1040*D**4 + 3360*D**3 - 4480*D**2 + 2048*D)
 
     t = G(m0)*G(m1)*G(n1)*G(m2)*G(n2)*G(m3)*G(m4)*G(-n2)*G(-n1)*G(-m0)*G(-m1)*G(-m2)*G(-m3)*G(-m4)
     t1 = gamma_trace(t)
@@ -294,6 +368,23 @@ def test_gamma_matrix_trace():
     c2 = -4*D**5 + 88*D**4 - 560*D**3 + 1440*D**2 - 1600*D + 640
     assert t1 == c1*g(n1, n4)*g(n2, n3) + c2*g(n1, n2)*g(n3, n4) + \
             (-c1)*g(n1, n3)*g(n2, n4)
+
+    p, q = tensorhead('p,q', [G.Lorentz], [[1]])
+    ps = p(m0)*G(-m0)
+    qs = q(m0)*G(-m0)
+    p2 = p(m0)*p(-m0)
+    q2 = q(m0)*q(-m0)
+    pq = p(m0)*q(-m0)
+    t = ps*qs*ps*qs
+    r = gamma_trace(t)
+    assert r == 8*pq*pq - 4*p2*q2
+    t = ps*qs*ps*qs*ps*qs
+    r = gamma_trace(t)
+    assert r.equals(-12*p2*pq*q2 + 16*pq*pq*pq)
+    t = ps*qs*ps*qs*ps*qs*ps*qs
+    r = gamma_trace(t)
+    assert r.equals(-32*pq*pq*p2*q2 + 32*pq*pq*pq*pq + 4*p2*p2*q2*q2)
+
 
 def test_simple_trace_cases_symbolic_dim():
     from sympy import symbols
