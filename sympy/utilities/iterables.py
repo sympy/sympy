@@ -876,7 +876,7 @@ def rotate_left(x, y):
 
 def rotate_right(x, y):
     """
-    Left rotates a list x by the number of steps specified
+    Right rotates a list x by the number of steps specified
     in y.
 
     Examples

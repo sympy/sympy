@@ -498,3 +498,14 @@ def test_issue2084():
     assert (1 + 1/x).series() == 1 + 1/x
     assert Derivative(exp(x).series(), x).doit() == \
         1 + x + x**2/2 + x**3/6 + x**4/24 + O(x**5)
+
+
+def test_issue_2826():
+    sx = sqrt(x + z).series(z, 0, 1)
+    sxy = sqrt(x + y + z).series(z, 0, 1)
+    s1, s2 = sx.subs(x, x + y), sxy
+    assert (s1 - s2).expand().removeO().simplify() == 0
+
+    sx = sqrt(x + z).series(z, 0, 1)
+    sxy = sqrt(x + y + z).series(z, 0, 1)
+    assert sxy.subs({x:1, y:2}) == sx.subs(x, 3)

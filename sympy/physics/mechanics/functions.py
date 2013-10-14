@@ -464,20 +464,26 @@ def kinematic_equations(speeds, coords, rot_type, rot_order=''):
 
 def get_motion_params(frame, **kwargs):
     """
-    Calculates the three motion parameters - position, velocity and acceleration
-    as vectorial functions of time in the given frame.
+    Calculates the three motion parameters - position, velocity and
+    acceleration as vectorial functions of time in the given frame.
 
-    If a higher order order differential function is provided, the lower order
-    functions are used as boundary conditions. The values of time at which the
-    boundary conditions are specified are taken from timevalue1(for position
-    boundary condition) and timevalue2(for velocity boundary condition).
+    If a higher order differential function is provided, the lower order
+    functions are used as boundary conditions. For example, given the
+    acceleration, the velocity and position parameters are taken as
+    boundary conditions.
 
-    If any of the boundary conditions are not provided, they are taken to be zero
-    by default (zero vectors, in case of vectorial inputs). If the boundary
-    conditions are also functions of time, they are converted to constants by
-    substituting the time values in the dynamicsymbols._t time Symbol.
+    The values of time at which the boundary conditions are specified
+    are taken from timevalue1(for position boundary condition) and
+    timevalue2(for velocity boundary condition).
 
-    This function can also be used for calculating rotational motion parameters.
+    If any of the boundary conditions are not provided, they are taken
+    to be zero by default (zero vectors, in case of vectorial inputs). If
+    the boundary conditions are also functions of time, they are converted
+    to constants by substituting the time values in the dynamicsymbols._t
+    time Symbol.
+
+    This function can also be used for calculating rotational motion
+    parameters. Have a look at the Parameters and Examples for more clarity.
 
     Parameters
     ==========
@@ -485,7 +491,7 @@ def get_motion_params(frame, **kwargs):
     frame : ReferenceFrame
         The frame to express the motion parameters in
 
-     acceleration : Vector
+    acceleration : Vector
         Acceleration of the object/frame as a function of time
 
     velocity : Vector
