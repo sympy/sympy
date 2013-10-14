@@ -220,9 +220,24 @@ def grad(expr, coord_sys=None):
         The SymPy expression whose gradient needs to be calculated.
         Needs to have at least one base scalar for non zero gradient.
     coord_sys : CoordSys
-        A coordinate system to express the gradient in.
+        A coordinate system to express the gradient in. If expr is in
+        only one coordinate system, then, this parameter can be left
+        out. Otherwise, raises ValueError.
 
-    # TODO : Add examples (once it is tested and works.
+    Examples
+    ========
+
+    >>> from sympy.vector import CoordSysRect, CoordSysSph, dot
+    >>> c0 = CoordSysRect('c0')
+    >>> cs = CoordSysSph('cs')
+    >>> expr1 = c0.x**2 + exp(c0.z)*c0.y
+    >>> grad(expr1)
+    exp(c0.z) * c0.e_y + c0.y*exp(c0.z) * c0.e_z + 2*c0.x * c0.e_x
+    >>> expr2 = 1/cs.r
+    >>> grad(expr2)
+    -1/cs.r**2 * cs.e_r
+
+    # TODO : Add  more examples (once it is tested and works).
     """
     if not _has_base_scalar(expr):
         return ZeroVector
@@ -350,7 +365,6 @@ def div(vect, coord_sys=None):
 
     # TODO : Add examples once testing is done.
     """
-    import pudb;pu.db
     coord_list = _all_coordinate_systems(vect)
     if not coord_sys and len(coord_list) == 1:
         coord_sys = coord_list[0]
@@ -554,6 +568,23 @@ def _all_coordinate_systems(vector):
             raise ValueError("Couldn't expand vector")
 
     return _remove_duplicates(coord_list)
+
+def _all_coordinate_systems_scalar(scalar):
+    """
+    Return all coordinate syetms in a scalar.
+
+    Parameters
+    ==========
+
+    scalar : a SymPy expression.
+        The scalar from which coordinate systems have to be extracted.
+    """
+    coord_list = []
+    base_scalars = _all_base_scalars(scalar)
+    for b in base_scalars:
+        if b.coord_sys not in coord_list:
+            coord_list.append(b.coord_sys)
+    return coord_list
 
 def _coord_sys_scalar_list(scalar):
     """
@@ -1499,10 +1530,9 @@ class CoordSysSph(CoordSys):
 
         self.dim = S(3)
 
-        self.one, self.two, self.three = symbols('_1 _2 _3')
         self.h_list = (S.One,
-                       self.one,
-                       self.one*sin(self.two))
+                       self.base_scalars[0],
+                       self.base_scalars[0]*sin(self.base_scalars[1]))
 
     @staticmethod
     def _convert_to_rect(vector, coord_sys):
@@ -1607,9 +1637,8 @@ class CoordSysCyl(CoordSys):
 
         self.dim = S(3)
 
-        self.one, self.two, self.three = symbols('_1 _2 _3')
         self.h_list = (S.One,
-                       self.one,
+                       self.base_scalars[0],
                        S.One)
 
     @staticmethod
@@ -2694,12 +2723,18 @@ def _express_scalar(expr, coord_sys):
     expr : a SymPy expression
     coord_sys : an instance of subclass of CoordSys class
     """
+    # First check if expr is entirely in coord_sys
+    coord_list = _all_coordinate_systems_scalar(expr)
+    if len(coord_list) == 1 and coord_sys == coord_list[0]:
+        return expr
+
     expr = expr.expand()
     subs_dict = {}
     all_base_scalars = _all_base_scalars(expr)
+    coord_dict = _coord_sys_dict_scalar(expr)
     for arg in all_base_scalars:
         # Convert base scalars to c_rect
-        c_rect = arg.coord_sys._change_coord_sys(CoordSysRect)
+        c_rect = coord_dict[arg.coord_sys]
         subs_dict[arg] = arg._convert_to_rect(c_rect)
     expr = expr.subs(subs_dict)
     subs_dict = {}
@@ -2717,13 +2752,20 @@ def _express_scalar(expr, coord_sys):
 
     # Now convert back to coord_sys
     for arg in all_base_scalars:
-        subs_dict[arg] = arg.coord_sys._convert_to_rect(coord_sys)
+        subs_dict[arg] = arg._convert_to_rect(coord_sys)
 
     expr = expr.subs(subs_dict)
     return expr
 
 def _coord_sys_dict(vect):
     coord_list = _all_coordinate_systems(vect)
+    ret = {}
+    for c in coord_list:
+        ret[c] = c._change_coord_sys(CoordSysRect)
+    return ret
+
+def _coord_sys_dict_scalar(scalar):
+    coord_list = _all_coordinate_systems_scalar(scalar)
     ret = {}
     for c in coord_list:
         ret[c] = c._change_coord_sys(CoordSysRect)
