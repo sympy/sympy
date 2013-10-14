@@ -70,7 +70,7 @@ class AllArgsImplies(ArgHandler):
 
 # TODO: Create a handler registry system
 
-class class_handler_registry(MutableMapping):
+class ClassHandlerRegistry(MutableMapping):
     """
     Register handlers against classes
 
@@ -80,7 +80,7 @@ class class_handler_registry(MutableMapping):
     """
     def __init__(self):
         self.d = defaultdict(frozenset)
-        super(class_handler_registry, self).__init__()
+        super(ClassHandlerRegistry, self).__init__()
 
     def __setitem__(self, key, item):
         self.d[key] = frozenset(item)
@@ -104,7 +104,7 @@ class class_handler_registry(MutableMapping):
     def __repr__(self):
         return repr(self.d)
 
-handler_registry = class_handler_registry()
+handler_registry = ClassHandlerRegistry()
 
 def register_handler(klass, handler, registry=handler_registry):
     registry[klass] |= set([handler])
