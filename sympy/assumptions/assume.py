@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
+from sympy.core.expr import Expr
 
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
