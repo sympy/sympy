@@ -8,9 +8,9 @@ from sympy.core.function import _coeff_isneg
 PRECEDENCE = {
     "Lambda": 1,
     "Xor": 10,
-    "Relational": 20,
     "Or": 20,
     "And": 30,
+    "Relational": 35,
     "Add": 40,
     "Mul": 50,
     "Pow": 60,
