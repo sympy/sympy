@@ -119,7 +119,7 @@ def test_diagonal():
 
 
 def test_non_atoms():
-    assert ask(Q.real(Trace(X)), Q.positive(Trace(X)))
+    assert ask(Q.extended_real(Trace(X)), Q.positive(Trace(X)))
 
 @XFAIL
 def test_non_trivial_implies():
