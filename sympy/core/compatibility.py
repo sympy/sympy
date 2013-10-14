@@ -16,7 +16,7 @@ Python 2 and Python 3 compatible imports
 String and Unicode compatible changes:
     * `unicode()` removed in Python 3, defined as `str()`
     * `u()` escapes unicode sequences in Python 2 (e.g. u('\u2020'))
-    * `u_decode()` decodes utf-8 fomrmatted unicode strings
+    * `u_decode()` decodes utf-8 formatted unicode strings
     * `string_types` gives str in Python 3, unicode and str in Python 2,
       equivalent to basestring
 
@@ -296,7 +296,10 @@ def cmp_to_key(mycmp):
             return mycmp(self.obj, other.obj) != 0
     return K
 
-
+try:
+    from itertools import zip_longest
+except ImportError: # <= Python 2.7
+    from itertools import izip_longest as zip_longest
 try:
     from itertools import combinations_with_replacement
 except ImportError:  # <= Python 2.6

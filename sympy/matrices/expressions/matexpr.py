@@ -394,6 +394,9 @@ class Identity(MatrixExpr):
         else:
             return S.Zero
 
+    def _eval_determinant(self):
+        return S.One
+
 
 class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
@@ -429,6 +432,9 @@ class ZeroMatrix(MatrixExpr):
         return ZeroMatrix(self.cols, self.rows)
 
     def _eval_trace(self):
+        return S.Zero
+
+    def _eval_determinant(self):
         return S.Zero
 
     def conjugate(self):

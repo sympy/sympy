@@ -1068,6 +1068,14 @@ class Ei(Function):
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(z) * _eis(z)
 
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_Si(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(Ei, self)._eval_nseries(x, n, logx)
+
+
 class expint(Function):
     r"""
     Generalized exponential integral.
@@ -1230,6 +1238,17 @@ class expint(Function):
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
+
+    def _eval_nseries(self, x, n, logx):
+        if not self.args[0].has(x):
+            nu = self.args[0]
+            if nu == 1:
+                f = self._eval_rewrite_as_Si(*self.args)
+                return f._eval_nseries(x, n, logx)
+            elif nu.is_Integer and nu > 1:
+                f = self._eval_rewrite_as_Ei(*self.args)
+                return f._eval_nseries(x, n, logx)
+        return super(expint, self)._eval_nseries(x, n, logx)
 
 
 def E1(z):
@@ -2277,3 +2296,10 @@ class _eis(Function):
 
     def _eval_rewrite_as_intractable(self, z):
         return C.exp(-z)*Ei(z)
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if x0 is S.Zero:
+            f = self._eval_rewrite_as_intractable(*self.args)
+            return f._eval_nseries(x, n, logx)
+        return super(_eis, self)._eval_nseries(x, n, logx)

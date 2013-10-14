@@ -1069,6 +1069,8 @@ def hypsum(expr, n, start, prec):
 
 
 def evalf_sum(expr, prec, options):
+    if 'subs' in options:
+        expr = expr.subs(options['subs'])
     func = expr.function
     limits = expr.limits
     if len(limits) != 1 or len(limits[0]) != 3:
@@ -1095,11 +1097,7 @@ def evalf_sum(expr, prec, options):
             if err <= eps:
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
-        try:
-            re, im, re_acc, im_acc = evalf(s, prec2, options)
-        except TypeError:  # issue 3174
-            # when should it try subs if they are in options?
-            raise NotImplementedError
+        re, im, re_acc, im_acc = evalf(s, prec2, options)
         if re_acc is None:
             re_acc = -err
         if im_acc is None:

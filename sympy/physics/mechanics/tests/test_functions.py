@@ -1,12 +1,13 @@
-from sympy import symbols, sin, cos, sqrt, pi
-from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
-                                     ReferenceFrame, inertia, Point,
-                                     kinematic_equations, Vector,
-                                     inertia_of_point_mass, partial_velocity,
-                                     outer, Particle,
-                                     RigidBody, angular_momentum,
-                                     linear_momentum, kinetic_energy,
-                                     potential_energy)
+from sympy import S, Integral, sin, cos, pi, sqrt, symbols
+from sympy.physics.mechanics import (Dyadic, Particle, Point, ReferenceFrame,
+                                     RigidBody, Vector)
+from sympy.physics.mechanics import (angular_momentum, cross, dot,
+                                     dynamicsymbols, express, inertia,
+                                     inertia_of_point_mass,
+                                     kinematic_equations, kinetic_energy,
+                                     linear_momentum, outer, partial_velocity,
+                                     potential_energy, get_motion_params)
+from sympy.utilities.pytest import raises
 
 Vector.simp = True
 q1, q2, q3, q4, q5 = symbols('q1 q2 q3 q4 q5')
@@ -90,6 +91,78 @@ def test_cross_different_frames():
     assert cross(C.x, A.x) == -sin(q3)*C.y
     assert cross(C.y, A.x) == sin(q3)*C.x - cos(q3)*C.z
     assert cross(C.z, A.x) == cos(q3)*C.y
+
+def test_operator_match():
+    """Test that the output of dot, cross, outer functions match
+    operator behavior.
+    """
+    A = ReferenceFrame('A')
+    v = A.x + A.y
+    d = v | v
+    zerov = Vector(0)
+    zerod = Dyadic(0)
+
+    # dot products
+    assert d & d == dot(d, d)
+    assert d & zerod == dot(d, zerod)
+    assert zerod & d == dot(zerod, d)
+    assert d & v == dot(d, v)
+    assert v & d == dot(v, d)
+    assert d & zerov == dot(d, zerov)
+    assert zerov & d == dot(zerov, d)
+    raises(TypeError, lambda: dot(d, S(0)))
+    raises(TypeError, lambda: dot(S(0), d))
+    raises(TypeError, lambda: dot(d, 0))
+    raises(TypeError, lambda: dot(0, d))
+    assert v & v == dot(v, v)
+    assert v & zerov == dot(v, zerov)
+    assert zerov & v == dot(zerov, v)
+    raises(TypeError, lambda: dot(v, S(0)))
+    raises(TypeError, lambda: dot(S(0), v))
+    raises(TypeError, lambda: dot(v, 0))
+    raises(TypeError, lambda: dot(0, v))
+
+    # cross products
+    raises(TypeError, lambda: cross(d, d))
+    raises(TypeError, lambda: cross(d, zerod))
+    raises(TypeError, lambda: cross(zerod, d))
+    assert d ^ v == cross(d, v)
+    assert v ^ d == cross(v, d)
+    assert d ^ zerov == cross(d, zerov)
+    assert zerov ^ d == cross(zerov, d)
+    assert zerov ^ d == cross(zerov, d)
+    raises(TypeError, lambda: cross(d, S(0)))
+    raises(TypeError, lambda: cross(S(0), d))
+    raises(TypeError, lambda: cross(d, 0))
+    raises(TypeError, lambda: cross(0, d))
+    assert v ^ v == cross(v, v)
+    assert v ^ zerov == cross(v, zerov)
+    assert zerov ^ v == cross(zerov, v)
+    raises(TypeError, lambda: cross(v, S(0)))
+    raises(TypeError, lambda: cross(S(0), v))
+    raises(TypeError, lambda: cross(v, 0))
+    raises(TypeError, lambda: cross(0, v))
+
+    # outer products
+    raises(TypeError, lambda: outer(d, d))
+    raises(TypeError, lambda: outer(d, zerod))
+    raises(TypeError, lambda: outer(zerod, d))
+    raises(TypeError, lambda: outer(d, v))
+    raises(TypeError, lambda: outer(v, d))
+    raises(TypeError, lambda: outer(d, zerov))
+    raises(TypeError, lambda: outer(zerov, d))
+    raises(TypeError, lambda: outer(zerov, d))
+    raises(TypeError, lambda: outer(d, S(0)))
+    raises(TypeError, lambda: outer(S(0), d))
+    raises(TypeError, lambda: outer(d, 0))
+    raises(TypeError, lambda: outer(0, d))
+    assert v | v == outer(v, v)
+    assert v | zerov == outer(v, zerov)
+    assert zerov | v == outer(zerov, v)
+    raises(TypeError, lambda: outer(v, S(0)))
+    raises(TypeError, lambda: outer(S(0), v))
+    raises(TypeError, lambda: outer(v, 0))
+    raises(TypeError, lambda: outer(0, v))
 
 
 def test_express():
@@ -258,6 +331,61 @@ def test_express():
             cos(q2)*cos(q3)*A.z), C)
     assert C.x == express((cos(q3)*B.x - sin(q3)*B.z), C)
     assert C.z == express((sin(q3)*B.x + cos(q3)*B.z), C)
+
+
+def test_get_motion_methods():
+    #Initialization
+    t = dynamicsymbols._t
+    s1, s2, s3 = symbols('s1 s2 s3')
+    S1, S2, S3 = symbols('S1 S2 S3')
+    S4, S5, S6 = symbols('S4 S5 S6')
+    t1, t2 = symbols('t1 t2')
+    a, b, c = dynamicsymbols('a b c')
+    ad, bd, cd = dynamicsymbols('a b c', 1)
+    a2d, b2d, c2d = dynamicsymbols('a b c', 2)
+    v0 = S1*N.x + S2*N.y + S3*N.z
+    v01 = S4*N.x + S5*N.y + S6*N.z
+    v1 = s1*N.x + s2*N.y + s3*N.z
+    v2 = a*N.x + b*N.y + c*N.z
+    v2d = ad*N.x + bd*N.y + cd*N.z
+    v2dd = a2d*N.x + b2d*N.y + c2d*N.z
+    #Test position parameter
+    assert get_motion_params(frame = N) == (0, 0, 0)
+    assert get_motion_params(N, position=v1) == (0, 0, v1)
+    assert get_motion_params(N, position=v2) == (v2dd, v2d, v2)
+    #Test velocity parameter
+    assert get_motion_params(N, velocity=v1) == (0, v1, v1 * t)
+    assert get_motion_params(N, velocity=v1, position=v0, timevalue1=t1) == \
+           (0, v1, v0 + v1*(t - t1))
+    assert get_motion_params(N, velocity=v1, position=v2, timevalue1=t1) == \
+           (0, v1, v1*t - v1*t1 + v2.subs(t, t1))
+    integral_vector = Integral(a, t)*N.x + Integral(b, t)*N.y + Integral(c, t)*N.z
+    assert get_motion_params(N, velocity=v2, position=v0, timevalue1=t1) == (v2d, v2,
+                                             v0 + integral_vector -
+                                             integral_vector.subs(t, t1))
+    #Test acceleration parameter
+    assert get_motion_params(N, acceleration=v1) == (v1, v1 * t, v1 * t**2/2)
+    assert get_motion_params(N, acceleration=v1, velocity=v0,
+                          position=v2, timevalue1=t1, timevalue2=t2) == \
+           (v1, (v0 + v1*t - v1*t2),
+            -v0*t1 + v1*t**2/2 + v1*t2*t1 - \
+            v1*t1**2/2 + t*(v0 - v1*t2) + \
+            v2.subs(t, t1))
+    assert get_motion_params(N, acceleration=v1, velocity=v0,
+                             position=v01, timevalue1=t1, timevalue2=t2) == \
+           (v1, v0 + v1*t - v1*t2,
+            -v0*t1 + v01 + v1*t**2/2 + \
+            v1*t2*t1 - v1*t1**2/2 + \
+            t*(v0 - v1*t2))
+    i = Integral(a, t)
+    i_sub = i.subs(t, t2)
+    assert get_motion_params(N, acceleration=a*N.x, velocity=S1*N.x,
+                          position=S2*N.x, timevalue1=t1, timevalue2=t2) == \
+                          (a*N.x,
+                           (S1 + i - i_sub)*N.x,
+                           (S2 + Integral(S1 - t*(a.subs(t, t2)) + i, t) - \
+                            Integral(S1 - t1*(a.subs(t, t2)) + \
+                                     i.subs(t, t1), t))*N.x)
 
 
 def test_inertia():

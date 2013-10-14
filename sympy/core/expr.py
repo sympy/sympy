@@ -451,11 +451,11 @@ class Expr(Basic, EvalfMixin):
         True
         >>> Sum(x, (x, 1, 10)).is_constant()
         True
-        >>> Sum(x, (x, 1, n)).is_constant()  # doctest: +SKIP
+        >>> Sum(x, (x, 1, n)).is_constant()
         False
         >>> Sum(x, (x, 1, n)).is_constant(y)
         True
-        >>> Sum(x, (x, 1, n)).is_constant(n) # doctest: +SKIP
+        >>> Sum(x, (x, 1, n)).is_constant(n)
         False
         >>> Sum(x, (x, 1, n)).is_constant(x)
         True
@@ -2427,17 +2427,6 @@ class Expr(Basic, EvalfMixin):
             else:
                 return self
 
-        ## it seems like the following should be doable, but several failures
-        ## then occur. Is this related to issue 1747 et al See also XPOS below.
-        #if x.is_positive is x.is_negative is None:
-        #    # replace x with an x that has a positive assumption
-        #    xpos = C.Dummy('x', positive=True)
-        #    rv = self.subs(x, xpos).series(xpos, x0, n, dir)
-        #    if n is None:
-        #        return (s.subs(xpos, x) for s in rv)
-        #    else:
-        #        return rv.subs(xpos, x)
-
         if len(dir) != 1 or dir not in '+-':
             raise ValueError("Dir must be '+' or '-'")
 
@@ -2446,8 +2435,7 @@ class Expr(Basic, EvalfMixin):
             s = self.subs(x, 1/x).series(x, n=n, dir=dir)
             if n is None:
                 return (si.subs(x, 1/x) for si in s)
-            # don't include the order term since it will eat the larger terms
-            return s.removeO().subs(x, 1/x)
+            return s.subs(x, 1/x)
 
         # use rep to shift origin to x0 and change sign (if dir is negative)
         # and undo the process with rep2
@@ -2471,6 +2459,15 @@ class Expr(Basic, EvalfMixin):
             return s.subs(x, rep2 + rep2b) + o
 
         # from here on it's x0=0 and dir='+' handling
+
+        if x.is_positive is x.is_negative is None:
+            # replace x with an x that has a positive assumption
+            xpos = C.Dummy('x', positive=True, bounded=True)
+            rv = self.subs(x, xpos).series(xpos, x0, n, dir)
+            if n is None:
+                return (s.subs(xpos, x) for s in rv)
+            else:
+                return rv.subs(xpos, x)
 
         if n is not None:  # nseries handling
             s1 = self._eval_nseries(x, n=n, logx=None)
@@ -2658,16 +2655,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.series.limits import limit
         return limit(self, x, xlim, dir)
 
-    def compute_leading_term(self, x, skip_abs=False, logx=None):
+    def compute_leading_term(self, x, logx=None):
         """
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
-        If skip_abs is true, the absolute term is assumed to be zero.
-        (This is necessary because sometimes it cannot be simplified
-        to zero without a lot of work, but is still known to be zero.
-        See log._eval_nseries for an example.)
-        If skip_log is true, log(x) is treated as an independent symbol.
-        (This is needed for the gruntz algorithm.)
         """
         from sympy.series.gruntz import calculate_series
         from sympy import cancel
@@ -2675,12 +2666,10 @@ class Expr(Basic, EvalfMixin):
             return self
         if logx is None:
             d = C.Dummy('logx')
-            s = calculate_series(self, x, skip_abs, d).subs(d, C.log(x))
+            s = calculate_series(self, x, d).subs(d, C.log(x))
         else:
-            s = calculate_series(self, x, skip_abs, logx)
+            s = calculate_series(self, x, logx)
         s = cancel(s)
-        if skip_abs:
-            s = expand_mul(s).as_independent(x)[1]
         return s.as_leading_term(x)
 
     @cacheit
@@ -2794,7 +2783,6 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
-        cls = expr.__class__
         # XXX: Hack to support non-Basic args
         #              |
         #              V
@@ -2806,7 +2794,7 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = cls(*sargs)
+                expr = expr.func(*sargs)
 
         if hasattr(expr, hint):
             newexpr = getattr(expr, hint)(**hints)

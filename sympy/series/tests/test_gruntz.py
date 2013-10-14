@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer
+    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL, skip
@@ -413,3 +413,32 @@ def test_issue3744():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
     assert gruntz(r, x, 1).simplify() == n/2
+
+
+def test_issue1091():
+    assert gruntz(x - gamma(1/x), x, oo) == S.EulerGamma
+
+
+@XFAIL
+def test_issue_2073():
+    n = Symbol('n')
+    r = Symbol('r', positive=True)
+    c = Symbol('c')
+    p = Symbol('p', positive=True)
+    m = Symbol('m', negative=True)
+    expr = ((2*n*(n - r + 1)/(n + r*(n - r + 1)))**c + \
+        (r - 1)*(n*(n - r + 2)/(n + r*(n - r + 1)))**c - n)/(n**c - n)
+    expr = expr.subs(c, c + 1)
+    assert gruntz(expr.subs(c, m), n, oo) == 1
+    # fail:
+    assert gruntz(expr.subs(c, p), n, oo).simplify() == \
+        (2**(p + 1) + r - 1)/(r + 1)**(p + 1)
+
+
+def test_issue_1010():
+    assert gruntz(1/gamma(x), x, 0) == 0
+    assert gruntz(x*gamma(x), x, 0) == 1
+
+
+def test_issue_3583():
+    assert gruntz(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)

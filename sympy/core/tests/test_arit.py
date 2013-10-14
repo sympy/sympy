@@ -374,6 +374,7 @@ def test_Add_Mul_is_bounded():
 
 def test_Mul_is_even_odd():
     x = Symbol('x', integer=True)
+    y = Symbol('y', integer=True)
 
     k = Symbol('k', odd=True)
     n = Symbol('n', odd=True)
@@ -414,6 +415,20 @@ def test_Mul_is_even_odd():
     assert (x/2).is_integer is None
     assert (k/2).is_integer is False
     assert (m/2).is_integer is True
+
+    assert (x*y).is_even is None
+    assert (x*x).is_even is None
+    assert (x*(x + k)).is_even is True
+    assert (x*(x + m)).is_even is None
+    assert (x*y*(y + k)).is_even is True
+    assert (x*y*(y + m)).is_even is None
+
+    assert (x*y).is_odd is None
+    assert (x*x).is_odd is None
+    assert (x*(x + k)).is_odd is False
+    assert (x*(x + m)).is_odd is None
+    assert (x*y*(y + k)).is_odd is False
+    assert (x*y*(y + m)).is_odd is None
 
 
 def test_Mul_is_rational():

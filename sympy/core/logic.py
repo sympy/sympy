@@ -22,11 +22,8 @@ def fuzzy_bool(x):
     return bool(x)
 
 
-def fuzzy_and(*args):
+def fuzzy_and(args):
     """Return True (all True), False (any False) or None.
-
-    If `a` is an iterable it must not be empty; it
-    can be an iterator.
 
     >>> from sympy.core.logic import fuzzy_and
     >>> from sympy import Dummy
@@ -48,28 +45,14 @@ def fuzzy_and(*args):
     False
     """
 
-    if len(args) == 2:
-        a, b = [fuzzy_bool(i) for i in args]
-        if a is True and b is True:
-            return True
-        elif a is False or b is False:
+    rv = True
+    for ai in args:
+        ai = fuzzy_bool(ai)
+        if ai is False:
             return False
-    elif (len(args) == 1 and iterable(args[0]) or len(args) > 2):
-        if len(args) == 1:
-            args = args[0]
-        if args:
-            rv = True
-            for ai in args:
-                ai = fuzzy_bool(ai)
-                if ai is False:
-                    return False
-                if rv:  # this will stop updating if a None is ever trapped
-                    rv = ai
-            return rv
-    if not args:
-        raise ValueError('fuzzy_and needs at least 1 argument')
-    elif len(args) == 1:
-        return fuzzy_bool(args[0])
+        if rv:  # this will stop updating if a None is ever trapped
+            rv = ai
+    return rv
 
 
 def fuzzy_not(v):
@@ -93,6 +76,27 @@ def fuzzy_not(v):
         return v
     else:
         return not v
+
+
+def fuzzy_or(args):
+    """
+    Or in fuzzy logic. Returns True (any True), False (all False), or None
+
+    See the docstrings of fuzzy_and and fuzzy_not for more info.  fuzzy_or is
+    related to the two by the standard De Morgan's law.
+
+    >>> from sympy.core.logic import fuzzy_or
+    >>> fuzzy_or([True, False])
+    True
+    >>> fuzzy_or([True, None])
+    True
+    >>> fuzzy_or([False, False])
+    False
+    >>> print(fuzzy_or([False, None]))
+    None
+
+    """
+    return fuzzy_not(fuzzy_and(fuzzy_not(i) for i in args))
 
 
 class Logic(object):
