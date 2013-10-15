@@ -1,7 +1,7 @@
 from sympy import S
 from sympy.tensor.tensor import TensorIndexType, tensorhead, TensorIndex,\
-                                TensMul, TensorHead, tensorsymmetry, TensorType,\
-                                TIDS, TensAdd, tensor_mul, TensExpr
+    TensMul, TensorHead, tensorsymmetry, TensorType,\
+    TIDS, TensAdd, tensor_mul, TensExpr, get_lines
 from sympy.core.containers import Tuple
 import collections
 
@@ -106,87 +106,6 @@ class GammaMatrixHead(TensorHead):
         return res_expr * residual_expr
 
     @staticmethod
-    def _get_lines(ex):
-        """
-        returns ``(lines, traces)``
-        where ``lines`` is the list of list of positions of a gamma line,
-        ``traces`` is the list of list of traced gamma lines
-
-        Examples
-        ========
-        from sympy.physics.hep.gamma_matrices import GammaMatrix
-        from sympy.tensor.tensor import tensor_indices, TensorIndexType,  tensorhead
-        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix, DiracSpinor
-        >>> from sympy.tensor.tensor import tensor_indices
-        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', GammaMatrix.Lorentz)
-        >>> s0,s1,s2,s3,s4,s5,s6,s7 = tensor_indices('s0:8', DiracSpinor)
-        >>> G = GammaMatrix
-        >>> t = G(i1,s1,-s2)*G(i4,s7,-s6)*G(i2,s2,-s3)*G(i3,s4,-s5)*G(i5,s6,-s7)
-        >>> GammaMatrix._get_lines(t)
-        ([[0, 2]], [[1, 4]])
-        """
-        def _join_lines(a):
-            i = 0
-            while i < len(a):
-                x = a[i]
-                xend = x[-1]
-                hit = True
-                while hit:
-                    hit = False
-                    for j in range(i + 1, len(a)):
-                        if j >= len(a):
-                            break
-                        if a[j][0] == xend:
-                            hit = True
-                            x.extend(a[j][1:])
-                            xend = x[-1]
-                            a.pop(j)
-                i += 1
-            return a
-
-        tids = ex._tids
-        dum = tids.dum
-        lines = []
-        traces = []
-        traces1 = []
-        for p0, p1, c0, c1 in dum:
-            # tr(G(i)) = 0
-            if c0 == c1:
-                return ([], [])
-            if p0 == p1:
-                if p0 > 0:
-                    # case gamma(i,s0,-s1)in c0, gamma(j,-s0,s2) in c1;
-                    # to deal with this case one could add to the position
-                    # a flag for transposition;
-                    # one could write [(c0, False), (c1, True)]
-                    raise NotImplementedError
-                else:
-                    continue
-            # if p0 == 2 then G in pos c0 is mult on the right by G in c1
-            # if p0 == 1 then G in pos c1 is mult on the right by G in c0
-            b0, b1 = (c0, c1) if p0 == 2 else (c1, c0)
-            lines1 = lines[:]
-            for line in lines:
-                if line[-1] == b0:
-                    if line[0] == b1:
-                        n = line.index(min(line))
-                        traces1.append(line)
-                        traces.append(line[n:] + line[:n])
-                    else:
-                        line.append(b1)
-                    break
-                elif line[0] == b1:
-                    line.insert(0, b0)
-                    break
-            else:
-                lines1.append([b0, b1])
-
-            lines = [x for x in lines1 if x not in traces1]
-            lines = _join_lines(lines)
-
-        return lines, traces
-
-    @staticmethod
     def simplify_lines(ex):
         """
         simplify a product of gamma matrices
@@ -204,15 +123,7 @@ class GammaMatrixHead(TensorHead):
 
         """
         tids = ex._tids
-        lines, traces = GammaMatrixHead._get_lines(ex)
-        rest = []
-        for line in lines:
-            for y in line:
-                rest.append(y)
-        for line in traces:
-            for y in line:
-                rest.append(y)
-        rest = [x for x in range(len(tids.components)) if x not in rest]
+        lines, traces, rest = get_lines(ex, DiracSpinor)
         a = ex.split()
         trest = tensor_mul(*[x for i, x in enumerate(a) if i in rest])
         tlines = []
@@ -330,8 +241,8 @@ class GammaMatrixHead(TensorHead):
                 ind2, lind2, rind2 = a[i + 1].args[-1]
                 aa = a[:i] + a[i + 2:]
                 t1 = tensor_mul(*aa)*g(ind1, ind2)*sg(lind1, rind1)*sg(lind2, rind2)
-                t1 = t1.contract_metric(g, contract_all=True)
-                t1 = t1.contract_metric(sg, contract_all=True)
+                t1 = t1.contract_metric(g)
+                t1 = t1.contract_metric(sg)
                 args = [t1]
                 sign = 1
                 for k in range(i + 2, j):
@@ -339,8 +250,8 @@ class GammaMatrixHead(TensorHead):
                     ind2, lind2, rind2 = a[k].args[-1]
                     aa = a[:i] + a[i + 1:k] + a[k + 1:]
                     t2 = sign*tensor_mul(*aa)*g(ind1, ind2)*sg(lind1, rind1)*sg(lind2, rind2)
-                    t2 = t2.contract_metric(g, contract_all=True)
-                    t2 = t2.contract_metric(sg, contract_all=True)
+                    t2 = t2.contract_metric(g)
+                    t2 = t2.contract_metric(sg)
                     args.append(t2)
                 t3 = TensAdd(*args)
 
@@ -359,7 +270,7 @@ class GammaMatrixHead(TensorHead):
                 t3 = t1*t2
                 if not t3:
                     return t3
-                t3 = t3.contract_metric(g, contract_all=True)
+                t3 = t3.contract_metric(g)
                 return t3
         if isinstance(t, TensAdd):
             a = [self._trace_single_line(x) for x in t.args]

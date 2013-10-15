@@ -1847,7 +1847,7 @@ class TensAdd(TensExpr):
         t = TensAdd(*args)
         return canon_bp(t)
 
-    def contract_metric(self, g, contract_all=False):
+    def contract_metric(self, g):
         """
         Raise or lower indices with the metric ``g``
 
@@ -1864,7 +1864,7 @@ class TensAdd(TensExpr):
         see the ``TensorIndexType`` docstring for the contraction conventions
         """
 
-        args = [x.contract_metric(g, contract_all) for x in self.args]
+        args = [x.contract_metric(g) for x in self.args]
         t = TensAdd(*args)
         return canon_bp(t)
 
@@ -2345,67 +2345,15 @@ class TensMul(TensExpr):
         tmul._matrix_behavior_kinds = self._matrix_behavior_kinds
         return tmul
 
-    def _contract(self, g, antisym, contract_all=False):
-        """
-        helper method for ``contract_metric`` and ``contract_delta``
-
-        ``g`` metric to be contracted
-
-        ``antisym``:
-        False  symmetric metric
-        True   antisymmetric metric
-        None   delta
-        """
-        if not self.components:
-            return self
-        free_indices = [x[0] for x in self.free]
-        a = self.split()
-        typ = g.index_types[0]
-        for i, tg in enumerate(a):
-            if tg.components[0] == g:
-                tg_free = [x[0] for x in tg.free]
-                if len(tg_free) == 0:
-                    t = _contract_g_with_itself(a, i, tg, tg_free, g, antisym)
-                    if contract_all == True and g in t.components:
-                        return t._contract(g, antisym, True)
-                    return t
-
-                if all(indx in free_indices for indx in tg_free):
-                    continue
-                else:
-                    break
-        else:
-            # all metric tensors have only free indices, there is no contraction
-            return self
-
-        # tg has one or two indices contracted with other tensors
-        # i position of tg in a
-        tg_free = tg.free
-        if antisym:
-            # order by slot position
-            tg_free = sorted(tg_free, key=lambda x: x[1])
-
-        if tg_free[0][0] in free_indices or tg_free[1][0] in free_indices:
-            # tg has one free index
-            res = _contract_g_with_free_index(a, free_indices, i, tg, tg_free, g, antisym)
-        else:
-            # tg has two indices contracted with other tensors
-            res = _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, antisym)
-        if contract_all == True and g in res.components:
-            return res._contract(g, antisym, True)
-        return res
-
     def contract_delta(self, delta):
-        t = self._contract(delta, None, True)
+        t = self.contract_metric(delta)
         return t
 
-    def contract_metric(self, g, contract_all=False):
+    def contract_metric(self, g):
         """
         Raise or lower indices with the metric ``g``
 
         ``g``  metric
-
-        ``contract_all`` if True, eliminate all ``g`` which are contracted
 
         Notes
         =====
@@ -2426,7 +2374,134 @@ class TensMul(TensExpr):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        return self._contract(g, g.index_types[0].metric_antisym, contract_all)
+        components = self.components
+        antisym = g.index_types[0].metric_antisym
+        #if not any(x == g for x in components):
+        #    return self
+        # list of positions of the metric ``g``
+        gpos = [i for i, x in enumerate(components) if x == g]
+        if not gpos:
+            return self
+        coeff = self._coeff
+        tids = self._tids
+        dum = tids.dum[:]
+        free = tids.free[:]
+        elim = set()
+        for gposx in gpos:
+            if gposx in elim:
+                continue
+            free1 = [x for x in free if x[-1] == gposx]
+            dum1 = [x for x in dum if x[-2] == gposx or x[-1] == gposx]
+            if not dum1:
+                continue
+            elim.add(gposx)
+            if len(dum1) == 2:
+                if not antisym:
+                    dum10, dum11 = dum1
+                    if dum10[3] == gposx:
+                        # the index with pos p0 and component c0 is contravariant
+                        c0 = dum10[2]
+                        p0 = dum10[0]
+                    else:
+                        # the index with pos p0 and component c0 is covariant
+                        c0 = dum10[3]
+                        p0 = dum10[1]
+                    if dum11[3] == gposx:
+                        # the index with pos p1 and component c1 is contravariant
+                        c1 = dum11[2]
+                        p1 = dum11[0]
+                    else:
+                        # the index with pos p1 and component c1 is covariant
+                        c1 = dum11[3]
+                        p1 = dum11[1]
+                    dum.append((p0, p1, c0, c1))
+                else:
+                    dum10, dum11 = dum1
+                    # change the sign to bring the indices of the metric to contravariant
+                    # form; change the sign if dum10 has the metric index in position 0
+                    if dum10[3] == gposx:
+                        # the index with pos p0 and component c0 is contravariant
+                        c0 = dum10[2]
+                        p0 = dum10[0]
+                        if dum10[1] == 1:
+                            coeff = -coeff
+                    else:
+                        # the index with pos p0 and component c0 is covariant
+                        c0 = dum10[3]
+                        p0 = dum10[1]
+                        if dum10[0] == 0:
+                            coeff = -coeff
+                    if dum11[3] == gposx:
+                        # the index with pos p1 and component c1 is contravariant
+                        c1 = dum11[2]
+                        p1 = dum11[0]
+                        coeff = -coeff
+                    else:
+                        # the index with pos p1 and component c1 is covariant
+                        c1 = dum11[3]
+                        p1 = dum11[1]
+                    dum.append((p0, p1, c0, c1))
+
+            elif len(dum1) == 1:
+                if not antisym:
+                    dp0, dp1, dc0, dc1 = dum1[0]
+                    if dc0 == dc1:
+                        # g(i, -i)
+                        typ = g.index_types[0]
+                        if typ._dim is None:
+                            raise ValueError('dimension not assigned')
+                        coeff = coeff*typ._dim
+
+                    else:
+                        # g(i0, i1)*p(-i1)
+                        if dc0 == gposx:
+                            p1 = dp1
+                            c1 = dc1
+                        else:
+                            p1 = dp0
+                            c1 = dc0
+                        ind, p, c = free1[0]
+                        free.append((ind, p1, c1))
+                else:
+                    dp0, dp1, dc0, dc1 = dum1[0]
+                    if dc0 == dc1:
+                        # g(i, -i)
+                        typ = g.index_types[0]
+                        if typ._dim is None:
+                            raise ValueError('dimension not assigned')
+                        coeff = coeff*typ._dim
+
+                        if dp0 < dp1:
+                            # g(i, -i) = -D with antisymmetric metric
+                            coeff = -coeff
+                    else:
+                        # g(i0, i1)*p(-i1)
+                        if dc0 == gposx:
+                            p1 = dp1
+                            c1 = dc1
+                            if dp0 == 0:
+                                coeff = -coeff
+                        else:
+                            p1 = dp0
+                            c1 = dc0
+                        ind, p, c = free1[0]
+                        free.append((ind, p1, c1))
+            dum = [x for x in dum if x not in dum1]
+            free = [x for x in free if x not in free1]
+
+        shift = 0
+        shifts = [0]*len(components)
+        for i in range(len(components)):
+            if i in elim:
+                shift += 1
+                continue
+            shifts[i] = shift
+        free = [(ind, p, c - shifts[c]) for (ind, p, c) in free if c not in elim]
+        dum = [(p0, p1, c0 - shifts[c0], c1 - shifts[c1]) for  i, (p0, p1, c0, c1) in enumerate(dum) if c0 not in elim and c1 not in elim]
+        components = [c for i, c in enumerate(components) if i not in elim]
+        tids = TIDS(components, free, dum)
+        res = TensMul.from_TIDS(coeff, tids)
+        return res
 
     def substitute_indices(self, *index_tuples):
         """
@@ -2607,174 +2682,96 @@ def riemann_cyclic(t2):
     else:
         return canon_bp(t3)
 
+def get_lines(ex, index_type):
+    """
+    returns ``(lines, traces, rest)`` for an index type,
+    where ``lines`` is the list of list of positions of a matrix line,
+    ``traces`` is the list of list of traced matrix lines,
+    ``rest`` is the rest of the elements ot the tensor.
+    """
+    def _join_lines(a):
+        i = 0
+        while i < len(a):
+            x = a[i]
+            xend = x[-1]
+            hit = True
+            while hit:
+                hit = False
+                for j in range(i + 1, len(a)):
+                    if j >= len(a):
+                        break
+                    if a[j][0] == xend:
+                        hit = True
+                        x.extend(a[j][1:])
+                        xend = x[-1]
+                        a.pop(j)
+            i += 1
+        return a
 
-def tensorlist_contract_metric(a, tg):
-    """
-    contract `tg` with a tensor in the list `a = t.split()`
-    Only for symmetric metric.
-    """
-    ind1, ind2 = [x[0] for x in tg.free]
-    mind1 = -ind1
-    mind2 = -ind2
-    for i in range(len(a)):
-        t1 = a[i]
-        for j in range(len(t1.free)):
-            indx, ipos, _ = t1.free[j]
-            if indx == mind1 or indx == mind2:
-                ind3 = ind2 if indx == mind1 else ind1
-                free1 = list(t1.free[:])
-                free1[j] = (ind3, ipos, 0)
-                t2 = TensMul.from_data(t1._coeff, t1.components, free1, t1.dum)
-                a[i] = t2
-                return a
-    a.append(tg)
-    return a
-
-def _contract_g_with_itself(a, i, tg, tg_free, g, antisym):
-    """
-    helper function for _contract
-    """
-    typ = g.index_types[0]
-    a1 = a[:i] + a[i + 1:]
-    t11 = tensor_mul(*a1)
-    if typ._dim is None:
-        raise ValueError('dimension not assigned')
-    coeff = typ._dim*a[i]._coeff
-    if antisym and tg.dum[0][0] == 0:
-        # g(i, -i) = -D
-        coeff = -coeff
-    t = tensor_mul(*a1)*coeff
-    return t
-
-
-def _contract_g_with_free_index(a, free_indices, i, tg, tg_free, g, antisym):
-    """
-    helper function for _contract
-    """
-    if tg_free[0][0] in free_indices:
-        ind_free = tg_free[0][0]
-        ind, ipos1, _ = tg_free[1]
-    else:
-        ind_free = tg_free[1][0]
-        ind, ipos1, _ = tg_free[0]
-
-    ind1 = -ind
-    # search ind1 in the other component tensors
-    for j, tx in enumerate(a):
-        if ind1 in [x[0] for x in tx.free]:
-            break
-    # replace ind1 with ind_free
-    free1 = []
-    for indx, iposx, _ in tx.free:
-        if indx == ind1:
-            free1.append((ind_free, iposx, 0))
+    tids = ex._tids
+    components = tids.components
+    dt = {}
+    for c in components:
+        if c in dt:
+            continue
+        index_types = c.index_types
+        a = []
+        for i in range(len(index_types)):
+            if index_types[i] is index_type:
+                a.append(i)
+        if len(a) > 2:
+            raise ValueError('at most two indices of type %s allowed' % index_type)
+        if len(a) == 2:
+            dt[c] = a
+    dum = tids.dum
+    lines = []
+    traces = []
+    traces1 = []
+    for p0, p1, c0, c1 in dum:
+        if components[c0] not in dt:
+            continue
+        if c0 == c1:
+            traces.append([c0])
+            continue
+        ta0 = dt[components[c0]]
+        ta1 = dt[components[c1]]
+        if p0 not in ta0:
+            continue
+        if ta0.index(p0) == ta1.index(p1):
+            # case gamma(i,s0,-s1)in c0, gamma(j,-s0,s2) in c1;
+            # to deal with this case one could add to the position
+            # a flag for transposition;
+            # one could write [(c0, False), (c1, True)]
+            raise NotImplementedError
+        # if p0 == ta0[1] then G in pos c0 is mult on the right by G in c1
+        # if p0 == ta0[0] then G in pos c1 is mult on the right by G in c0
+        ta0 = dt[components[c0]]
+        b0, b1 = (c0, c1) if p0 == ta0[1]  else (c1, c0)
+        lines1 = lines[:]
+        for line in lines:
+            if line[-1] == b0:
+                if line[0] == b1:
+                    n = line.index(min(line))
+                    traces1.append(line)
+                    traces.append(line[n:] + line[:n])
+                else:
+                    line.append(b1)
+                break
+            elif line[0] == b1:
+                line.insert(0, b0)
+                break
         else:
-            free1.append((indx, iposx, 0))
-    coeff = tx._coeff
-    if antisym:
-        if ind._is_up and ind == tg_free[0][0] or \
-        (not ind._is_up) and ind == tg_free[1][0]:
-            # g(i1, i0)*psi(-i1) = -psi(i0)
-            # g(-i0, -i1)*psi(i1) = -psi(-i0)
-            coeff = -coeff
-    t1 = TensMul.from_data(coeff, tx.components, free1, tx.dum)
-    a[j] = t1
-    a = a[:i] + a[i + 1:]
-    coeff = tg._coeff
-    res = tensor_mul(*a)
-    return coeff*res
+            lines1.append([b0, b1])
 
+        lines = [x for x in lines1 if x not in traces1]
+        lines = _join_lines(lines)
+    rest = []
+    for line in lines:
+        for y in line:
+            rest.append(y)
+    for line in traces:
+        for y in line:
+            rest.append(y)
+    rest = [x for x in range(len(components)) if x not in rest]
 
-def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, antisym):
-    """
-    helper function for _contract
-    """
-    coeff = S.One
-    ind1 = tg_free[0][0]
-    ind2 = tg_free[1][0]
-    ind1m = -ind1
-    ind2m = -ind2
-    for k, ty in enumerate(a):
-        if ind2m in [x[0] for x in ty.free]:
-            break
-    # ty has the index ind2m
-    ty_free = ty.free[:]
-    if ty.components == [g]:
-        ty_indices = [x[0] for  x in ty_free]
-        if all(x in [ind1m, ind2m] for x in ty_indices):
-            # the two `g` are completely contracted
-            # i < k always
-            a = a[:i] + a[i+1:k] + a[k+1:]
-            coeff = coeff*typ._dim*tg._coeff*ty._coeff
-            if antisym:
-                ty_free = sorted(ty_free, key=lambda x: x[1])
-                if ind1._is_up == ind2._is_up:
-                    # g(i,j)*g(-i,-j) = g(-i,-j)*g(i,j) = dim
-                    # g(i,j)*g(-j,-i) = g(-i,-j)*g(j,i) = -dim
-                    if ind1m == ty_free[1][0]:
-                        coeff = -coeff
-                else:
-                    # g(-i,j)*g(i,-j) = g(i,-j)^g(-i,j) = -dim
-                    # g(-i,j)*g(-j,i) = g(i,-j)*g(j,i) = dim
-                    if ind1m == ty_free[0][0]:
-                        coeff = -coeff
-
-            if a:
-                res = tensor_mul(*a)
-                res = coeff*res
-            else:
-                res = TensMul.from_data(coeff, [], [], [], is_canon_bp=True)
-            return res
-
-    free2 = []
-    ty_freeindices = [x[0] for x in ty_free]
-    if ind1m in ty_freeindices:
-        # tg has both indices contracted with ty
-        free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty.free if indx != ind1m and indx != ind2m]
-        dum2 = list(ty.dum[:])
-        for indx, iposx, _ in ty_free:
-            if indx == ind1m:
-                iposx1 = iposx
-            if indx == ind2m:
-                iposx2 = iposx
-        if antisym:
-            if ind1._is_up == ind2._is_up:
-                if iposx1 < iposx2:
-                    coeff = -coeff
-                    dum2.append((iposx1, iposx2, 0, 0))
-                else:
-                    dum2.append((iposx2, iposx1, 0, 0))
-            else:
-                if iposx1 > iposx2:
-                    coeff = -coeff
-                    dum2.append((iposx2, iposx1, 0, 0))
-                else:
-                    dum2.append((iposx1, iposx2, 0, 0))
-        else:
-            dum2.append((iposx1, iposx2, 0, 0))
-    else:
-        # replace ind2m with ind1 in the free indices of ty
-
-        free2 = []
-        if not antisym:
-            for indx, iposx, _ in ty_free:
-                if indx == ind2m:
-                    free2.append((ind1, iposx, 0))
-                else:
-                    free2.append((indx, iposx, 0))
-        else:
-            for indx, iposx, _ in ty_free:
-                if indx == ind2m:
-                    free2.append((ind1, iposx, 0))
-                    if indx._is_up:
-                        coeff = -coeff
-                else:
-                    free2.append((indx, iposx, 0))
-        dum2 = ty.dum
-
-    t2 = TensMul.from_data(ty._coeff, ty.components, free2, dum2)
-    a[k] = t2
-    a = a[:i] + a[i + 1:]
-    coeff = coeff*tg._coeff
-    res = tensor_mul(*a)
-    return coeff*res
+    return lines, traces, rest

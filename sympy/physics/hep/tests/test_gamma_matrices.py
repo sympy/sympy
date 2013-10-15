@@ -1,4 +1,4 @@
-from sympy.tensor.tensor import tensor_indices, TensorIndexType, tensorhead, TensorManager, TensMul, TensAdd
+from sympy.tensor.tensor import tensor_indices, TensorIndexType, tensorhead, TensorManager, TensMul, TensAdd, get_lines
 from sympy import simplify, trace
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, GammaMatrixHead, DiracSpinor
 from sympy.utilities.pytest import XFAIL, raises
@@ -409,33 +409,33 @@ def test_get_lines():
     s0,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16 = \
        tensor_indices('s0:17', DiracSpinor)
     t = G(i1,s1,-s2)*G(i2,s3,-s4)*G(i4,s2,-s6)*G(i3,s4,-s3)
-    r = G._get_lines(t)
-    assert r == ([[0, 2]], [[1, 3]])
+    r = get_lines(t, DiracSpinor)
+    assert r == ([[0, 2]], [[1, 3]], [])
     t = G(i1,s1,-s2)*G(i2,s2,-s3)*G(i3,s3,-s4)*G(i4,s4,-s5)*\
         G(i5,s6,-s7)*G(i6,s7,-s8)*G(i7,s8,-s9)*G(i8,s9,-s6)
-    r = G._get_lines(t)
-    assert r == ([[0, 1, 2, 3]], [[4, 5, 6, 7]])
+    r = get_lines(t, DiracSpinor)
+    assert r == ([[0, 1, 2, 3]], [[4, 5, 6, 7]], [])
     t = G(i1,s1,-s2)*G(i0,s0,-s10)*G(i2,s2,-s3)*G(i3,s3,-s4)*\
     G(i4,s4,-s5)*G(i5,s6,-s7)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
     G(i8,s9,-s6)*G(i9,s10,-s0)
-    r = G._get_lines(t)
-    assert r == ([[0, 2, 3, 4]], [[5, 6, 7, 8], [1, 9]])
+    r = get_lines(t, DiracSpinor)
+    assert r == ([[0, 2, 3, 4]], [[5, 6, 7, 8], [1, 9]], [])
     t = G(i1,s1,-s2)*G(i11,s12,-s13)*G(i0,s0,-s10)*G(i2,s2,-s3)*G(i3,s3,-s4)*\
         G(i4,s4,-s5)*G(i5,s6,-s7)*G(i10,s11,-s12)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
         G(i8,s9,-s6)*G(i9,s10,-s0)
-    r = G._get_lines(t)
-    assert r == ([[0, 3, 4, 5], [7, 1]], [[6, 8, 9, 10], [2, 11]])
+    r = get_lines(t, DiracSpinor)
+    assert r == ([[0, 3, 4, 5], [7, 1]], [[6, 8, 9, 10], [2, 11]], [])
     t = G(i4,s4,-s5)*G(i5,s6,-s7)*G(i10,s11,-s12)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
         G(i8,s9,-s6)*G(i9,s10,-s0)*\
         G(i1,s1,-s2)*G(i11,s12,-s13)*G(i0,s0,-s10)*G(i2,s2,-s3)*G(i3,s3,-s4)
-    r = G._get_lines(t)
-    assert r == ([[2, 8], [7, 10, 11, 0]], [[1, 3, 4, 5], [6, 9]])
+    r = get_lines(t, DiracSpinor)
+    assert r == ([[2, 8], [7, 10, 11, 0]], [[1, 3, 4, 5], [6, 9]], [])
     t = G(i8,s9,-s6)*G(i9,s10,-s0)*G(i4,s4,-s5)*G(i13,s14,-s15)*\
         G(i10,s11,-s12)*G(i1,s1,-s2)*G(i11,s12,-s13)*\
         G(i0,s0,-s10)*G(i6,s7,-s8)*G(i7,s8,-s9)*\
         G(i2,s2,-s3)*G(i12,s13,-s14)*G(i3,s3,-s4)*G(i5,s6,-s7)
-    r = G._get_lines(t)
-    assert r == ([[4, 6, 11, 3], [5, 10, 12, 2]], [[1, 7], [0, 13, 8, 9]])
+    r = get_lines(t, DiracSpinor)
+    assert r == ([[4, 6, 11, 3], [5, 10, 12, 2]], [[1, 7], [0, 13, 8, 9]], [])
 
 def test_simplify_lines():
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12 = tensor_indices('i0:13', G.Lorentz)

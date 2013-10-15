@@ -4,7 +4,7 @@ from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
+  TensMul, tensorsymmetry, tensorhead,
   TensorManager, TensExpr, TIDS)
 from sympy.utilities.pytest import raises
 from sympy.core.containers import Tuple
@@ -763,7 +763,6 @@ def test_contract_metric1():
 
     t1 = A(a,b)*B(-b,-c)*g(c, d)*g(-a, -d)
     t2 = t1.contract_metric(g)
-    t2 = t2.contract_metric(g)
     assert t2 == A(a,b)*B(-b,-a)
 
     t1 = A(a,b)*g(-a,-b)
@@ -786,7 +785,6 @@ def test_contract_metric2():
     t2 = 3*g(-a,-b)*q(c)*q(-c)
     t = t1*t2
     t = t.contract_metric(g)
-    t = t.contract_metric(g)
     assert t == 3*D*p(a)*p(-a)*q(b)*q(-b)
     t1 = g(a,b)*p(c)*p(-c)
     t2 = 3*q(-a)*q(-b)
@@ -799,9 +797,7 @@ def test_contract_metric2():
     t2 = - 3*g(-a,-b)*q(c)*q(-c)
     t = t1*t2
     t = t.contract_metric(g)
-    t = t.contract_metric(g)
     t = 6*g(a,b)*g(-a,-b)*p(c)*p(-c)*q(d)*q(-d)
-    t = t.contract_metric(g)
     t = t.contract_metric(g)
 
     t1 = 2*g(a,b)*p(c)*p(-c)
@@ -819,24 +815,13 @@ def test_contract_metric2():
 
     t = g(a,b)*g(c,d)*g(-b,-c)
     t1 = t.contract_metric(g)
-    t1 = t1.canon_bp()
-    assert t1 == g(a,c)*g(d,-c)
-
-    t2 = t1.contract_metric(g)
-    assert t2 == g(a, d)
-
-    t1 = t.contract_metric(g, True)
     assert t1 == g(a, d)
 
     t1 = g(a,b)*g(c,d) + g(a,c)*g(b,d) + g(a,d)*g(b,c)
     t2 = t1.substitute_indices((a,-a),(b,-b),(c,-c),(d,-d))
     t = t1*t2
-    t3 = t.contract_metric(g)
-    t3 = t3.contract_metric(g)
-    t3 = t3.contract_metric(g)
-    assert t3.equals(3*D**2 + 6*D)
-    t = t.contract_metric(g, True)
-    assert t3.equals(3*D**2 + 6*D)
+    t = t.contract_metric(g)
+    assert t.equals(3*D**2 + 6*D)
 
     t = 2*p(a)*g(b,-b)
     t1 = t.contract_metric(g)
@@ -850,13 +835,6 @@ def test_contract_metric2():
     t = (p(a)*p(b) + g(a, b)*M**2)*g(-a, -b) - D*M**2
     t1 = t.contract_metric(g)
     assert t1 == p(a)*p(-a)
-
-    v = [p(a), q(b), p(c)]
-    v1 = tensorlist_contract_metric(v, g(-a, -b))
-    assert v1 == [p(-b), q(b), p(c)]
-    v = [p(a), q(b), p(c)]
-    v1 = tensorlist_contract_metric(v, g(d, e))
-    assert v1 == [p(a), q(b), p(c), g(d, e)]
 
     A = tensorhead('A', [Lorentz]*2, [[1]*2])
     t = A(a, b)*p(L_0)*g(-a, -b)
@@ -1060,7 +1038,7 @@ def test_fun():
     gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
     # t = g_{a b; c}
     t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
-    t = t.contract_metric(g, True)
+    t = t.contract_metric(g)
     assert t == 0
     t = q(c)*p(a)*q(b)
     assert t(b,c,d) == q(d)*p(b)*q(c)
