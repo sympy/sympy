@@ -2,7 +2,7 @@ from sympy.assumptions.newask import newask
 
 from sympy import symbols, Q, assuming, Implies, MatrixSymbol
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 
 x, y = symbols('x y')
 
@@ -66,6 +66,8 @@ def test_zero_pow():
 
     assert newask(Q.zero(x**y), Q.zero(x)) is None
 
+@XFAIL
+# Requires correct Q.square calculation first
 def test_invertible():
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)

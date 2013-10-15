@@ -1,7 +1,7 @@
 from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 
-from sympy.assumptions.newhandlers import (handler_registry, AllArgsImplies,
-    EquivalentAnyArgs, EquivalentAllArgs, ClassHandlerRegistry, ArgHandler,
+from sympy.assumptions.newhandlers import (fact_registry, AllArgsImplies,
+    EquivalentAnyArgs, EquivalentAllArgs, ClassFactRegistry, ArgHandler,
     AllArgs, UnevaluatedOnFree, AnyArgs)
 
 from sympy.utilities.pytest import raises
@@ -9,7 +9,7 @@ from sympy.utilities.pytest import raises
 x, y = symbols('x y')
 
 def test_class_handler_registry():
-    my_handler_registry = ClassHandlerRegistry()
+    my_handler_registry = ClassFactRegistry()
 
     # The predicate doesn't matter here, so just use is_true
     all_args_implies_is_true = AllArgsImplies(Q.is_true)

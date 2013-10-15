@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 from collections import MutableMapping, defaultdict
 
-from sympy.core import Add, Mul, Pow
+from sympy.core import Add, Mul, Pow, Integer, Lambda, Dummy
 from sympy.core.sympify import _sympify
 
 from sympy.matrices.expressions import MatMul
@@ -178,7 +178,23 @@ class AnyArgs(UnevaluatedOnFree):
         return Or(*[self.args[0].xreplace({self.expr: arg}) for arg in
             self.expr.args])
 
-class ClassHandlerRegistry(MutableMapping):
+class CheckIsPrime(UnevaluatedOnFree):
+    def apply(self):
+        from sympy import isprime
+        return Equivalent(Q.prime(self.expr), isprime(self.expr))
+
+class CustomLambda(object):
+    """
+    Interface to lambda with rcall
+
+    Workaround until we get a better way to represent certain facts.
+    """
+    def __init__(self, lamda):
+        self.lamda = lamda
+    def rcall(self, *args):
+        return self.lamda(*args)
+
+class ClassFactRegistry(MutableMapping):
     """
     Register handlers against classes
 
@@ -188,7 +204,7 @@ class ClassHandlerRegistry(MutableMapping):
     """
     def __init__(self):
         self.d = defaultdict(frozenset)
-        super(ClassHandlerRegistry, self).__init__()
+        super(ClassFactRegistry, self).__init__()
 
     def __setitem__(self, key, item):
         self.d[key] = frozenset(item)
@@ -212,19 +228,19 @@ class ClassHandlerRegistry(MutableMapping):
     def __repr__(self):
         return repr(self.d)
 
-handler_registry = ClassHandlerRegistry()
+fact_registry = ClassFactRegistry()
 
-def register_handler(klass, handler, registry=handler_registry):
+def register_handler(klass, handler, registry=fact_registry):
     registry[klass] |= set([handler])
 
-for handler, klass in [
-    (EquivalentAnyArgs(Q.zero), Mul),
-    (EquivalentAllArgs(Q.invertible), MatMul),
-    (AllArgsImplies(Q.positive), Add),
-    (ArgHandler(Q.zero, lambda key, keyed_args: Implies(key, keyed_args[0])),
-    Pow),
-    (ArgHandler(Q.zero, lambda key, keyed_args:
-        Implies(And(Q.zero(keyed_args[0].args[0]), Q.positive(keyed_args[1].args[0])), key)), Pow),
+for klass, fact in [
+    (Mul, Equivalent(Q.zero, AnyArgs(Q.zero))),
+    (MatMul, Implies(AllArgs(Q.square), Equivalent(Q.invertible, AllArgs(Q.invertible)))),
+    (Add, Implies(AllArgs(Q.positive), Q.positive)),
+    # This one can still be made easier to read. I think we need basic pattern
+    # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
+    (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
+    (Integer, CheckIsPrime(Q.prime)),
     ]:
 
-    register_handler(klass, handler)
+    register_handler(klass, fact)

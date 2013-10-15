@@ -9,7 +9,7 @@ from sympy.logic.boolalg import And, Implies, Equivalent, Or
 from sympy.assumptions.ask import Q
 from sympy.utilities.iterables import sift
 from sympy.assumptions.ask_generated import known_facts_cnf
-from sympy.assumptions.newhandlers import handler_registry
+from sympy.assumptions.newhandlers import fact_registry
 
 def newask(proposition, assumptions=True, context=global_assumptions, use_known_facts=True):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
@@ -38,8 +38,8 @@ def newask(proposition, assumptions=True, context=global_assumptions, use_known_
 def get_relevant_facts(proposition, assumptions=True,
     context=global_assumptions, use_known_facts=True):
     keys = proposition.atoms(AppliedPredicate)
+    # XXX: We need this since True/False are not Basic
     if isinstance(assumptions, Basic):
-        # XXX: We need this since True/False are not Basic
         keys |= assumptions.atoms(AppliedPredicate)
     if context:
         keys |= And(*context).atoms(AppliedPredicate)
@@ -54,8 +54,8 @@ def get_relevant_facts(proposition, assumptions=True,
 
     for key in keys:
         expr = key.args[0]
-        for handler in handler_registry[expr.func]:
-            relevant_facts &= handler.get_relevant_fact(key)
+        for fact in fact_registry[expr.func]:
+            relevant_facts &= fact.rcall(expr)
 
     return relevant_facts
 
