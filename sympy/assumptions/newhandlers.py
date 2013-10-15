@@ -14,64 +14,6 @@ from sympy.logic.boolalg import (Equivalent, Implies, And, Or, BooleanFunction,
 
 # APIs here may be subject to change
 
-class Handler(object):
-    def get_relevant_fact(self, key):
-        return True
-
-class ArgHandler(Handler):
-    """
-    A handler relationships among args
-
-    This handles cases when there is some relationship between
-    Q.assumption(expr) and Q.assumption(arg) for arg in expr.args.
-
-    Subclasses should override the get_relationship method.
-
-    Alternately, you can instantiate this class with the get_relationship
-    function as the second argument.  That is, ``handler = ArgHandler(predicate, lambda
-    key, keyed_args: relationship)`` is the same as::
-
-        class MyHandler(ArgHandler):
-            def get_relationship(self, key, keyed_args):
-                return relationship
-
-        handler = MyHandler(predicate)
-
-    """
-
-    def __init__(self, predicate, get_relationship=None):
-        self.predicate = predicate
-        if get_relationship:
-            self.get_relationship = get_relationship
-
-    def get_relevant_fact(self, key):
-        expr = key.args[0]
-        if key.func == self.predicate: # TODO: isinstance doesn't work here
-            return self.get_relationship(key, list(map(self.predicate, expr.args)))
-        return True
-
-class EquivalentAnyArgs(ArgHandler):
-    """
-    Q.assumption(expr) iff any(Q.assumption(arg) for arg in expr.args)
-    """
-    def get_relationship(self, key, keyed_args):
-        return Equivalent(key, Or(*keyed_args))
-
-class EquivalentAllArgs(ArgHandler):
-    """
-    Q.assumption(expr) iff all(Q.assumption(arg) for arg in expr.args)
-    """
-    def get_relationship(self, key, keyed_args):
-        return Equivalent(key, And(*keyed_args))
-
-class AllArgsImplies(ArgHandler):
-    """
-    all(Q.assumption(arg) for arg in expr.args) implies Q.assumption(expr)
-    (but the reverse implication does not hold)
-    """
-    def get_relationship(self, key, keyed_args):
-        return Implies(And(*keyed_args), key)
-
 # XXX: Better name?
 class UnevaluatedOnFree(BooleanFunction):
     """

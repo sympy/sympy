@@ -1,8 +1,7 @@
 from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 
-from sympy.assumptions.newhandlers import (fact_registry, AllArgsImplies,
-    EquivalentAnyArgs, EquivalentAllArgs, ClassFactRegistry, ArgHandler,
-    AllArgs, UnevaluatedOnFree, AnyArgs)
+from sympy.assumptions.newhandlers import (ClassFactRegistry, AllArgs,
+    UnevaluatedOnFree, AnyArgs)
 
 from sympy.utilities.pytest import raises
 
@@ -12,49 +11,15 @@ def test_class_handler_registry():
     my_handler_registry = ClassFactRegistry()
 
     # The predicate doesn't matter here, so just use is_true
-    all_args_implies_is_true = AllArgsImplies(Q.is_true)
-    equiv_all_args_is_true = EquivalentAllArgs(Q.is_true)
+    fact1 = Equivalent(Q.is_true, AllArgs(Q.is_true))
+    fact2 = Equivalent(Q.is_true, AnyArgs(Q.is_true))
 
-    my_handler_registry[Mul] = set([all_args_implies_is_true])
-    my_handler_registry[Expr] = set([equiv_all_args_is_true])
+    my_handler_registry[Mul] = set([fact1])
+    my_handler_registry[Expr] = set([fact2])
 
     assert my_handler_registry[Basic] == set()
-    assert my_handler_registry[Expr] == set([equiv_all_args_is_true])
-    assert my_handler_registry[Mul] == set([equiv_all_args_is_true, all_args_implies_is_true])
-
-def test_ArgHandler():
-    class AndArgHandler(ArgHandler):
-        def get_relationship(self, key, keyed_args):
-            return And(key, *keyed_args)
-
-    handler = AndArgHandler(Q.zero)
-    assert handler.get_relevant_fact(Q.zero(x*y)) == And(Q.zero(x*y),
-        Q.zero(x), Q.zero(y))
-    assert handler.get_relevant_fact(Q.positive(x*y)) == True
-
-    handler = ArgHandler(Q.positive, lambda key, keyed_args: And(key,
-        *keyed_args))
-    assert handler.get_relevant_fact(Q.positive(x*y)) == And(Q.positive(x*y),
-        Q.positive(x), Q.positive(y))
-    assert handler.get_relevant_fact(Q.zero(x*y)) == True
-
-def test_EquivalentAllArgs():
-    handler = EquivalentAllArgs(Q.invertible)
-    assert handler.get_relevant_fact(Q.invertible(x*y)) == Equivalent(Q.invertible(x*y),
-    And(Q.invertible(x), Q.invertible(y)))
-    assert handler.get_relevant_fact(Q.zero(x*y)) == True
-
-def test_EquivalentAnyArgs():
-    handler = EquivalentAnyArgs(Q.zero)
-    assert handler.get_relevant_fact(Q.zero(x*y)) == Equivalent(Q.zero(x*y),
-    Or(Q.zero(x), Q.zero(y)))
-    assert handler.get_relevant_fact(Q.integer(x*y)) == True
-
-def test_AllArgsImplies():
-    handler = AllArgsImplies(Q.positive)
-    assert handler.get_relevant_fact(Q.positive(x + y)) == \
-    Implies(And(Q.positive(x), Q.positive(y)), Q.positive(x + y))
-    assert handler.get_relevant_fact(Q.zero(x + y)) == True
+    assert my_handler_registry[Expr] == set([fact2])
+    assert my_handler_registry[Mul] == set([fact1, fact2])
 
 def test_UnevaluatedOnFree():
     a = UnevaluatedOnFree(Q.positive)
