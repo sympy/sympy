@@ -9,7 +9,7 @@ from sympy.matrices.expressions import MatMul
 
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
-from sympy.logic.boolalg import (Equivalent, Implies, And, Or, Boolean,
+from sympy.logic.boolalg import (Equivalent, Implies, And, Or, BooleanFunction,
     _find_predicates)
 
 # APIs here may be subject to change
@@ -73,7 +73,7 @@ class AllArgsImplies(ArgHandler):
         return Implies(And(*keyed_args), key)
 
 # XXX: Better name?
-class UnevaluatedOnFree(Boolean):
+class UnevaluatedOnFree(BooleanFunction):
     """
     Represents a Boolean function that remains unevaluated on free predicates
 
@@ -110,13 +110,13 @@ class UnevaluatedOnFree(Boolean):
         if predicates and applied_predicates:
             raise ValueError("arg must be either completely free or singly applied")
         if not applied_predicates:
-            obj = Boolean.__new__(cls, arg)
+            obj = BooleanFunction.__new__(cls, arg)
             obj.expr = None
             return obj
         predicate_args = set([pred.args[0] for pred in applied_predicates])
         if len(predicate_args) > 1:
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
-        obj = Boolean.__new__(cls, arg)
+        obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
         return obj.apply()
 
@@ -137,13 +137,13 @@ class AllArgs(UnevaluatedOnFree):
     =======
 
     >>> from sympy.assumptions.newhandlers import AllArgs
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
     >>> a = AllArgs(Q.positive | Q.negative)
     >>> a
     AllArgs(Or(Q.negative, Q.positive))
     >>> a.rcall(x*y)
-    >>> And(Or(Q.negative(x), Q.positive(x)), Or(Q.negative(y), Q.positive(y)))
+    And(Or(Q.negative(x), Q.positive(x)), Or(Q.negative(y), Q.positive(y)))
     """
 
     def apply(self):
@@ -165,13 +165,13 @@ class AnyArgs(UnevaluatedOnFree):
     =======
 
     >>> from sympy.assumptions.newhandlers import AnyArgs
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Q
     >>> x, y = symbols('x y')
-    >>> a = AnyArgs(Q.positive | Q.negative)
+    >>> a = AnyArgs(Q.positive & Q.negative)
     >>> a
     AnyArgs(And(Q.negative, Q.positive))
     >>> a.rcall(x*y)
-    >>> Or(And(Q.negative(x), Q.positive(x)), And(Q.negative(y), Q.positive(y)))
+    Or(And(Q.negative(x), Q.positive(x)), And(Q.negative(y), Q.positive(y)))
     """
 
     def apply(self):
