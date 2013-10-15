@@ -4,7 +4,6 @@ import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
-from sympy.core.expr import Expr
 
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
@@ -106,7 +105,7 @@ class AppliedPredicate(Boolean):
         return self.func.eval(self.arg, assumptions)
 
 
-class Predicate(Boolean, Expr):
+class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
 
     Predicates merely wrap their argument and remain unevaluated:
