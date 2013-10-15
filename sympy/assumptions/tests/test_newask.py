@@ -74,3 +74,8 @@ def test_invertible():
     assert newask(Q.invertible(A*B), Q.invertible(A) & Q.invertible(B)) is True
     assert newask(Q.invertible(A), Q.invertible(A*B))
     assert newask(Q.invertible(A) & Q.invertible(B), Q.invertible(A*B))
+
+def test_prime():
+    assert newask(Q.prime(5)) is True
+    assert newask(Q.prime(6)) is False
+    assert newask(Q.prime(-5)) is False
