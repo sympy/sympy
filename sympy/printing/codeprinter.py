@@ -20,8 +20,8 @@ class CodePrinter(StrPrinter):
     """
 
     _operators = {
-        'and': ' && ',
-        'or': ' || ',
+        'and': '&&',
+        'or': '||',
         'not': '!',
     }
 
@@ -153,26 +153,26 @@ class CodePrinter(StrPrinter):
 
     def _print_And(self, expr):
         PREC = precedence(expr)
-        return self._operators['and'].join(self.parenthesize(a, PREC)
+        return (" %s " % self._operators['and']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Or(self, expr):
         PREC = precedence(expr)
-        return self._operators['or'].join(self.parenthesize(a, PREC)
+        return (" %s " % self._operators['or']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Xor(self, expr):
         if self._operators.get('xor') is None:
             return self._print_not_supported(expr)
         PREC = precedence(expr)
-        return self._operators['xor'].join(self.parenthesize(a, PREC)
+        return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Equivalent(self, expr):
         if self._operators.get('equivalent') is None:
             return self._print_not_supported(expr)
         PREC = precedence(expr)
-        return self._operators['equivalent'].join(self.parenthesize(a, PREC)
+        return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
                 for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Not(self, expr):
