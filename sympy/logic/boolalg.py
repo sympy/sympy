@@ -47,9 +47,6 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
-    def __call__(self, *args):
-        return self.func(*[arg(*args) for arg in self.args])
-
     def _eval_simplify(self, ratio, measure):
         return simplify_logic(self)
 
