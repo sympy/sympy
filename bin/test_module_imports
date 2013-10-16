@@ -21,7 +21,28 @@ from __future__ import print_function
 import __builtin__
 builtin_import = __builtin__.__import__
 
-symbol_definers = {} # Maps each function/variable name to name of module to define it
+class Definition(object):
+    "A symbol with its value."
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+    def __hash__(self):
+        return hash(self.name)
+    def __eq__(self, other):
+        return self.name == other.name and self.value == other.value
+    def __ne__(self, other):
+        return not (self == other)
+    def __repr__(self):
+        return 'Definition(' + repr(self.name) + ',' + repr(self.value) + ')'
+
+symbol_definers = {} # Maps each function/variable to name of module to define it
+
+def in_module(what, where):
+    "Is what the same or a submodule of where?"
+    return what == where or what != None and what.startswith(where + '.')
+
+def relevant(module):
+    return in_module(module, "sympy") and not in_module(module, "sympy.mpmath")
 
 def tracking_import(module, globals = globals(), locals = [], fromlist = None, level = -1):
     importer_filename = globals['__file__']
@@ -29,20 +50,15 @@ def tracking_import(module, globals = globals(), locals = [], fromlist = None, l
     result = builtin_import(module, globals, locals, fromlist, level)
     importee_module = result.__name__
     # We're only interested if importer and importee are in SymPy
-    if (
-        # Importer is a SymPy module
-        importer_module != None # Main module does not have a name
-        and (importer_module == 'sympy' or importer_module.startswith('sympy.'))
-        # Importee is a SymPy module
-        and (importee_module == 'sympy' or importee_module.startswith('sympy.'))
-        ):
+    if relevant(importer_module) and relevant(importee_module):
         global symbol_definers
         for symbol in result.__dict__.iterkeys():
+            definition = Definition(symbol, result.__dict__[symbol])
             # Note that in nested imports, the innermost one is filled in first.
             # When an __init__ re-exports a function, the initial import will
             # already have been recorded as definer and won't be overwritten.
-            if not symbol_definers.has_key(symbol):
-                symbol_definers[symbol] = importee_module
+            if not symbol_definers.has_key(definition):
+                symbol_definers[definition] = importee_module
         if hasattr(result, 'path'):
             print("Error: %s contains package import %s" % (importer_filename, module))
         if fromlist != None:
@@ -50,10 +66,15 @@ def tracking_import(module, globals = globals(), locals = [], fromlist = None, l
             if '*' in symbol_list:
                 symbol_list = result.__dict__.iterkeys()
             for symbol in symbol_list:
-                symbol_definer = symbol_definers[symbol]
-                if symbol_definer != importee_module:
-                    print("Error: %s imports %s from %s, but should import it from its definer %s"
-                          % (importer_filename, symbol, importee_module, symbol_definer))
+                if not symbol in result.__dict__:
+                    print("Error: %s imports %s from %s, which does not define it (yet)"
+                          % (importer_filename, symbol, importee_module))
+                else:
+                    definition = Definition(symbol, result.__dict__[symbol])
+                    symbol_definer = symbol_definers[definition]
+                    if symbol_definer != importee_module:
+                        print("Error: %s imports %s from %s, but should import it from its definer %s"
+                              % (importer_filename, symbol, importee_module, symbol_definer))
     return result
 
 __builtin__.__import__ = tracking_import
