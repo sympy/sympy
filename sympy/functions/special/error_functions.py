@@ -636,12 +636,6 @@ class erf2(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return erf2inv
-
     @classmethod
     def eval(cls, x, y):
         I = S.Infinity
@@ -912,12 +906,6 @@ class erf2inv(Function):
             return sqrt(S.Pi)*S.Half*C.exp(self.func(x,y)**2)
         else:
             raise ArgumentIndexError(self, argindex)
-
-    def inverse(self, argindex=1):
-        """
-        Returns the inverse of this function.
-        """
-        return erf2
 
     @classmethod
     def eval(cls, x, y):
