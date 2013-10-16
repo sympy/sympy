@@ -355,7 +355,7 @@ def test_gamma_matrix_trace():
     t = G(m0)*G(m1)*G(n1)*G(m2)*G(n2)*G(m3)*G(m4)*G(-n2)*G(-n1)*G(-m0)*G(-m1)*G(-m2)*G(-m3)*G(-m4)
     t1 = gamma_trace(t)
     tresu = -7168*D + 16768*D**2 - 14400*D**3 + 5920*D**4 - 1232*D**5 + 120*D**6 - 4*D**7
-    assert t1 == tresu
+    assert t1.equals(tresu)
 
     # checked with Mathematica
     # In[1]:= <<Tracer.m
@@ -385,6 +385,11 @@ def test_gamma_matrix_trace():
     r = gamma_trace(t)
     assert r.equals(-32*pq*pq*p2*q2 + 32*pq*pq*pq*pq + 4*p2*p2*q2*q2)
 
+    t = 4*p(m1)*p(m0)*p(-m0)*q(-m1)*q(m2)*q(-m2)
+    assert gamma_trace(t) == t
+    t = ps*ps*ps*ps*ps*ps*ps*ps
+    r = gamma_trace(t)
+    assert r.equals(4*p2*p2*p2*p2)
 
 def test_simple_trace_cases_symbolic_dim():
     from sympy import symbols

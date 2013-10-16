@@ -106,6 +106,94 @@ class GammaMatrixHead(TensorHead):
         return res_expr * residual_expr
 
     @staticmethod
+    def simplify_gpgp(ex, sort=True):
+        """
+        simplify products ``G(i)*p(-i)*G(j)*p(-j) -> p(i)*p(-i)``
+
+        Examples
+        ========
+
+        >>> from sympy.physics.hep.gamma_matrices import GammaMatrix as G
+        >>> from sympy.tensor.tensor import tensor_indices, tensorhead
+        >>> p, q = tensorhead('p, q', [G.Lorentz], [[1]])
+        >>> i0,i1,i2,i3,i4,i5 = tensor_indices('i0:6', G.Lorentz)
+        >>> ps = p(i0)*G(-i0)
+        >>> qs = q(i0)*G(-i0)
+        >>> G.simplify_gpgp(ps*qs*qs)
+        gamma(-L_0, auto_left, auto_right)*p(L_0)*q(L_1)*q(-L_1)
+        """
+        def _simplify_gpgp(ex):
+            tids = ex._tids
+            components = tids.components
+            a = []
+            for i in range(len(components)):
+                if not isinstance(components[i], GammaMatrixHead):
+                    continue
+                dum = tids.dum
+                for dx in dum:
+                    if dx[2] == i:
+                        p_pos1 = dx[3]
+                    elif dx[3] == i:
+                        p_pos1 = dx[2]
+                    else:
+                        continue
+                    comp1 = components[p_pos1]
+                    if comp1.comm == 0 and comp1.rank == 1:
+                        a.append((i, p_pos1))
+            if not a:
+                return ex
+            elim = set()
+            tv = []
+            hit = True
+            coeff = S.One
+            ta = None
+            while hit:
+                hit = False
+                for i, ai in enumerate(a[:-1]):
+                    if ai[0] in elim:
+                        continue
+                    if ai[0] != a[i + 1][0] - 1:
+                        continue
+                    if components[ai[1]] != components[a[i + 1][1]]:
+                        continue
+                    elim.add(ai[0])
+                    elim.add(ai[1])
+                    elim.add(a[i + 1][0])
+                    elim.add(a[i + 1][1])
+                    if not ta:
+                        ta = ex.split()
+                        mu = TensorIndex('mu', GammaMatrix.Lorentz)
+                    ind1 = ta[ai[0]].args[-1][1]
+                    ind2 = ta[ai[0] + 1].args[-1][2]
+                    hit = True
+                    if i == 0:
+                        coeff = ex.coeff
+                    tx = components[ai[1]](mu)*components[ai[1]](-mu)
+                    tv.append(tx*DiracSpinor.delta(ind1, ind2))
+                    break
+
+
+            if tv:
+                a = [x for j, x in enumerate(ta) if j not in elim]
+                a.extend(tv)
+                t = tensor_mul(*a)*coeff
+                t = t.contract_metric(DiracSpinor.delta)
+                return t
+            else:
+                return ex
+
+        if sort:
+            ex = ex.sorted_components()
+        while 1:
+            t = _simplify_gpgp(ex)
+            if t != ex:
+                ex = t
+            else:
+                return t
+
+
+
+    @staticmethod
     def simplify_lines(ex):
         """
         simplify a product of gamma matrices
@@ -134,8 +222,6 @@ class GammaMatrixHead(TensorHead):
             last = [x[0] for x in last.free if x[1] == 2][0]
             tx = tensor_mul(*[x for i, x in enumerate(a) if i  in line])
             tx1 = GammaMatrixHead._simplify_single_line(tx)
-            if tx1.is_integer:
-                tx1 = tx1*DiracSpinor.delta(first, last)
             tlines.append(tx1)
         traces = [GammaMatrix._trace_single_line(tensor_mul(*[x for i, x in enumerate(a) if i  in line])) for line in traces]
         res = tensor_mul(*([trest] + tlines + traces))
@@ -187,7 +273,8 @@ class GammaMatrixHead(TensorHead):
 
         """
         t1, t2 = GammaMatrixHead.extract_type_tens(expression)
-        t1 = GammaMatrixHead._kahane_simplify(t1.coeff, t1._tids)
+        if t1 != 1:
+            t1 = GammaMatrixHead._kahane_simplify(t1.coeff, t1._tids)
         res = t1*t2
         return res
 
@@ -196,6 +283,12 @@ class GammaMatrixHead(TensorHead):
     def _trace_single_line(self, t):
         """
         Evaluate the trace of a single gamma matrix line inside a ``TensExpr``.
+
+        Notes
+        =====
+
+        If there are ``DiracSpinor.auto_left`` and ``DiracSpinor.auto_right``
+        indices trace over them; otherwise traces are not implied (explain)
 
 
         Examples
@@ -218,7 +311,7 @@ class GammaMatrixHead(TensorHead):
             components = t.components
             ncomps = len(components)
             g = self.Lorentz.metric
-            sg = DiracSpinor.metric
+            sg = DiracSpinor.delta
             # gamma matirices are in a[i:j]
             hit = 0
             for i in range(ncomps):
@@ -232,6 +325,15 @@ class GammaMatrixHead(TensorHead):
             else:
                 j = ncomps
             numG = j - i
+            if numG == 0:
+                spinor_free = [_[0] for _ in t._tids.free if _[0].tensortype is DiracSpinor]
+                tcoeff = t.coeff
+                if spinor_free == [DiracSpinor.auto_left, DiracSpinor.auto_right]:
+                    t = t*DiracSpinor.delta(-DiracSpinor.auto_left, -DiracSpinor.auto_right)
+                    t = t.contract_metric(sg)
+                    return t/tcoeff if tcoeff else t
+                else:
+                    return t/tcoeff if tcoeff else t
             if numG % 2 == 1:
                 return TensMul.from_data(S.Zero, [], [], [])
             elif numG > 4:
@@ -252,6 +354,8 @@ class GammaMatrixHead(TensorHead):
                     t2 = sign*tensor_mul(*aa)*g(ind1, ind2)*sg(lind1, rind1)*sg(lind2, rind2)
                     t2 = t2.contract_metric(g)
                     t2 = t2.contract_metric(sg)
+
+                    t2 = GammaMatrixHead.simplify_gpgp(t2, False)
                     args.append(t2)
                 t3 = TensAdd(*args)
 
@@ -272,8 +376,9 @@ class GammaMatrixHead(TensorHead):
                     return t3
                 t3 = t3.contract_metric(g)
                 return t3
+
         if isinstance(t, TensAdd):
-            a = [self._trace_single_line(x) for x in t.args]
+            a = [x.coeff*_trace_single_line1(x) for x in t.args]
             return TensAdd(*a)
         elif isinstance(t, TensMul):
             r = t.coeff*_trace_single_line1(t)
