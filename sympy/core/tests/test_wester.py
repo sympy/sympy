@@ -1706,7 +1706,7 @@ def test_R4():
 #Time= 2690 msecs
 #                      (- n + k - 1) binomial(n + 1, k)
 #(d15)               - --------------------------------
-#				       n
+#				                       n
 #                                   2 2  (n + 1)
 #
 #(c16) factcomb(makefact(%));
