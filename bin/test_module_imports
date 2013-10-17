@@ -64,7 +64,14 @@ def tracking_import(module, globals = globals(), locals = [], fromlist = None, l
         if fromlist != None:
             symbol_list = fromlist
             if '*' in symbol_list:
-                symbol_list = result.__dict__.iterkeys()
+                if (importer_filename.endswith('__init__.py')
+                    or importer_filename.endswith('__init__.pyc')
+                    or importer_filename.endswith('__init__.pyo')):
+                    # We do not check starred imports inside __init__
+                    # That's the normal "please copy over its imports to my namespace"
+                    symbol_list = []
+                else:
+                    symbol_list = result.__dict__.iterkeys()
             for symbol in symbol_list:
                 if not symbol in result.__dict__:
                     print("Error: %s imports %s from %s, which does not define it (yet)"
