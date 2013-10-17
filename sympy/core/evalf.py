@@ -1176,7 +1176,7 @@ def _create_evalf_table():
 
 
 def evalf(x, prec, options):
-    from sympy import re as re_, im as im_
+    from sympy.functions.elementary.complexes import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
         r = rf(x, prec, options)

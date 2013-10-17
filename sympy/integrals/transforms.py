@@ -85,7 +85,6 @@ class IntegralTransform(Function):
         raise NotImplementedError
 
     def _collapse_extra(self, extra):
-        from sympy import And
         cond = And(*extra)
         if cond is False:
             raise IntegralTransformError(self.__class__.name, None, '')
@@ -296,11 +295,10 @@ class MellinTransform(IntegralTransform):
         return _mellin_transform(f, x, s, **hints)
 
     def _as_integral(self, f, x, s):
-        from sympy import Integral
         return Integral(f*x**(s - 1), (x, 0, oo))
 
     def _collapse_extra(self, extra):
-        from sympy import And, Max, Min
+        from sympy import Max, Min
         a = []
         b = []
         cond = []
@@ -388,7 +386,7 @@ def _rewrite_sin(m_n, s, a, b):
     # we create an undefined function!
     # So we try to write this in such a way that the gammas are
     # eminently on the right side of the strip.
-    from sympy import expand_mul, pi, ceiling, gamma, re
+    from sympy import expand_mul, pi, ceiling, gamma
     m, n = m_n
 
     m = expand_mul(m/pi)
@@ -452,7 +450,7 @@ def _rewrite_gamma(f, s, a, b):
     (([], []), ([], []), 1/2, 1, 8)
     """
     from itertools import repeat
-    from sympy import (Poly, gamma, Mul, re, RootOf, exp as exp_, E, expand,
+    from sympy import (Poly, gamma, Mul, re, RootOf, exp as exp_, expand,
                        roots, ilcm, pi, sin, cos, tan, cot, igcd, exp_polar)
     # Our strategy will be as follows:
     # 1) Guess a constant c such that the inversion integral should be
@@ -702,7 +700,7 @@ def _rewrite_gamma(f, s, a, b):
 def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
     """ A helper for the real inverse_mellin_transform function, this one here
         assumes x to be real and positive. """
-    from sympy import (expand, expand_mul, hyperexpand, meijerg, And, Or,
+    from sympy import (expand, expand_mul, hyperexpand, meijerg,
                        arg, pi, re, factor, Heaviside, gamma, Add)
     x = _dummy('t', 'inverse-mellin-transform', F, positive=True)
     # Actually, we won't try integration at all. Instead we use the definition
@@ -803,7 +801,7 @@ class InverseMellinTransform(IntegralTransform):
         return _inverse_mellin_transform(F, s, x, strip, **hints)
 
     def _as_integral(self, F, s, x):
-        from sympy import Integral, I, oo
+        from sympy.core.numbers import I
         c = self.__class__._c
         return Integral(F*x**(-s), (s, c - I*oo, c + I*oo))
 
@@ -949,7 +947,7 @@ def _simplifyconds(expr, s, a):
 @_noconds
 def _laplace_transform(f, t, s_, simplify=True):
     """ The backend function for Laplace transforms. """
-    from sympy import (re, Max, exp, pi, Abs, Min, periodic_argument as arg,
+    from sympy import (re, Max, exp, pi, Min, periodic_argument as arg,
                        cos, Wild, symbols, polar_lift)
     s = Dummy('s')
     F = integrate(exp(-s*t) * f, (t, 0, oo))
@@ -1060,7 +1058,7 @@ class LaplaceTransform(IntegralTransform):
         return _laplace_transform(f, t, s, **hints)
 
     def _as_integral(self, f, t, s):
-        from sympy import Integral, exp
+        from sympy import exp
         return Integral(f*exp(-s*t), (t, 0, oo))
 
     """
@@ -1071,7 +1069,7 @@ class LaplaceTransform(IntegralTransform):
     docstring.
     """
     def _collapse_extra(self, extra):
-        from sympy import And, Max
+        from sympy import Max
         conds = []
         planes = []
         for plane, cond in extra:
@@ -1122,7 +1120,7 @@ def laplace_transform(f, t, s, **hints):
 @_noconds_(True)
 def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
     """ The backend function for inverse Laplace transforms. """
-    from sympy import exp, Heaviside, log, expand_complex, Integral, Piecewise
+    from sympy import exp, Heaviside, log, expand_complex, Piecewise
     from sympy.integrals.meijerint import meijerint_inversion, _get_coeff_exp
     # There are two strategies we can try:
     # 1) Use inverse mellin transforms - related by a simple change of variables.
@@ -1222,7 +1220,7 @@ class InverseLaplaceTransform(IntegralTransform):
         return _inverse_laplace_transform(F, s, t, self.fundamental_plane, **hints)
 
     def _as_integral(self, F, s, t):
-        from sympy import I, Integral, exp
+        from sympy import I, exp
         c = self.__class__._c
         return Integral(exp(s*t)*F, (s, c - I*oo, c + I*oo))
 
@@ -1281,7 +1279,7 @@ def _fourier_transform(f, x, k, a, b, name, simplify=True):
     For suitable choice of a and b, this reduces to the standard Fourier
     and inverse Fourier transforms.
     """
-    from sympy import exp, I, oo
+    from sympy import exp, I
     F = integrate(a*f*exp(b*I*x*k), (x, -oo, oo))
 
     if not F.has(Integral):
@@ -1420,7 +1418,9 @@ def inverse_fourier_transform(F, k, x, **hints):
 # Fourier Sine and Cosine Transform
 ##########################################################################
 
-from sympy import sin, cos, sqrt, pi, I, oo
+from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.core.numbers import pi
 
 
 @_noconds_(True)
@@ -1461,7 +1461,6 @@ class SineCosineTypeTransform(IntegralTransform):
                                       self.__class__._name, **hints)
 
     def _as_integral(self, f, x, k):
-        from sympy import Integral, exp, I
         a = self.__class__._a
         b = self.__class__._b
         K = self.__class__._kern
@@ -1676,7 +1675,7 @@ def _hankel_transform(f, r, k, nu, name, simplify=True):
 
     .. math:: F_\nu(k) = \int_{0}^\infty f(r) J_\nu(k r) r \mathrm{d} r.
     """
-    from sympy import besselj, oo
+    from sympy import besselj
     F = integrate(f*besselj(nu, k*r)*r, (r, 0, oo))
 
     if not F.has(Integral):
@@ -1710,7 +1709,7 @@ class HankelTypeTransform(IntegralTransform):
         return _hankel_transform(f, r, k, nu, self._name, **hints)
 
     def _as_integral(self, f, r, k, nu):
-        from sympy import Integral, besselj, oo
+        from sympy import besselj
         return Integral(f*besselj(nu, k*r)*r, (r, 0, oo))
 
     @property

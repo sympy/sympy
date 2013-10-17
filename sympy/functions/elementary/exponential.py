@@ -489,7 +489,7 @@ class log(Function):
 
     @classmethod
     def eval(cls, arg, base=None):
-        from sympy import unpolarify
+        from sympy.simplify.simplify import unpolarify
         arg = sympify(arg)
 
         if base is not None:
