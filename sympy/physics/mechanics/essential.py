@@ -1802,14 +1802,6 @@ class Vector(object):
                     outvec += Vector([(d, otherframe)]).express(v[1])
         return outvec
 
-    def express(self, otherframe, variables=False):
-        """
-        Returns a Vector equivalent to this one, expressed in otherframe.
-        Uses ReferenceFrame's .express method.
-        Refer the docstring for ReferenceFrame.express
-        """
-        return otherframe.express(self, variables)
-
     def doit(self, **hints):
         """Calls .doit() on each term in the Vector"""
         ov = Vector(0)
