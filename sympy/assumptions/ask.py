@@ -195,7 +195,7 @@ def register_handler(key, handler):
         True
 
     """
-    if type(key) is Predicate:
+    if isinstance(key, Predicate):
         key = key.name
     try:
         getattr(Q, key).add_handler(handler)
@@ -205,7 +205,7 @@ def register_handler(key, handler):
 
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
-    if type(key) is Predicate:
+    if isinstance(key, Predicate):
         key = key.name
     getattr(Q, key).remove_handler(handler)
 
