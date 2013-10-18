@@ -175,8 +175,8 @@ class ClassFactRegistry(MutableMapping):
 
 fact_registry = ClassFactRegistry()
 
-def register_handler(klass, handler, registry=fact_registry):
-    registry[klass] |= set([handler])
+def register_fact(klass, fact, registry=fact_registry):
+    registry[klass] |= set([fact])
 
 for klass, fact in [
     (Mul, Equivalent(Q.zero, AnyArgs(Q.zero))),
@@ -188,4 +188,4 @@ for klass, fact in [
     (Integer, CheckIsPrime(Q.prime)),
     ]:
 
-    register_handler(klass, fact)
+    register_fact(klass, fact)
