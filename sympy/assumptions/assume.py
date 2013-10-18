@@ -103,6 +103,8 @@ class AppliedPredicate(Boolean):
 class _sentinel:
     pass
 
+__test__ = {}
+
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
 
@@ -126,6 +128,13 @@ class Predicate(Boolean):
         >>> Q.is_true(S(1) < x)
         Q.is_true(1 < x)
 
+    Documentation
+    =============
+
+    You can add documentation to Predicate instances by assigning the doc
+    parameter.
+
+
     """
 
     is_Atom = True
@@ -145,6 +154,12 @@ class Predicate(Boolean):
             obj.name = name
             obj.handlers = handlers or []
             obj.__class__.__doc__ = doc
+            # Allow these to be doctested
+            # XXX: This should be done better than this. For one thing, the
+            # doctester shows the test as coming from assume.py instead of
+            # ask.py.  Also, we don't need to register user-created predicates
+            # with the doctester.
+            __test__[obj.__class__.__name__] = obj.__class__
         return obj
 
     def _hashable_content(self):
