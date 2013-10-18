@@ -10,31 +10,47 @@ from sympy.assumptions.assume import (global_assumptions, Predicate,
 
 class Q:
     """Supported ask keys."""
+
+    # Generic
+    is_true = Predicate('is_true')
+
+    # Operators
     antihermitian = Predicate('antihermitian')
-    bounded = Predicate('bounded')
-    commutative = Predicate('commutative')
-    complex = Predicate('complex')
-    composite = Predicate('composite')
-    even = Predicate('even')
-    extended_real = Predicate('extended_real')
     hermitian = Predicate('hermitian')
+    commutative = Predicate('commutative')
+
+    # Complex numbers
+    complex = Predicate('complex')
     imaginary = Predicate('imaginary')
-    infinitesimal = Predicate('infinitesimal')
-    infinity = Predicate('infinity')
+
+    ## Number theory
     integer = Predicate('integer')
-    irrational = Predicate('irrational')
-    rational = Predicate('rational')
-    negative = Predicate('negative')
-    nonzero = Predicate('nonzero')
-    positive = Predicate('positive')
     prime = Predicate('prime')
     real = Predicate('real')
     odd = Predicate('odd')
-    is_true = Predicate('is_true')
+    composite = Predicate('composite')
+    even = Predicate('even')
+
+    ## Algebra
+    irrational = Predicate('irrational')
+    rational = Predicate('rational')
+    algebraic = Predicate('algebraic')
+
+    ## Real
+    negative = Predicate('negative')
+    nonzero = Predicate('nonzero')
+    positive = Predicate('positive')
     nonpositive = Predicate('nonpositive')
     nonnegative = Predicate('nonnegative')
     zero = Predicate('zero')
 
+    # Extended complex numbers
+    extended_real = Predicate('extended_real')
+    infinitesimal = Predicate('infinitesimal')
+    infinity = Predicate('infinity')
+    bounded = Predicate('bounded')
+
+    # Matrix
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
     singular = Predicate('singular')
