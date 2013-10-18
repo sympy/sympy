@@ -60,10 +60,13 @@ class UnevaluatedOnFree(BooleanFunction):
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
-        return obj.apply()
+        applied = obj.apply()
+        if applied is None:
+            return obj
+        return applied
 
     def apply(self):
-        return self
+        return
 
 class AllArgs(UnevaluatedOnFree):
     """
