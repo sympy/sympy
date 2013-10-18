@@ -116,6 +116,8 @@ class AskNonZeroHandler(CommonHandler):
 
     @staticmethod
     def Basic(expr, assumptions):
+        if ask(Q.real(expr)) is False:
+            return False
         if expr.is_number:
             # if there are no symbols just evalf
             return expr.evalf() != 0
@@ -139,7 +141,7 @@ class AskNonZeroHandler(CommonHandler):
     def Pow(expr, assumptions):
         return ask(Q.nonzero(expr.base), assumptions)
 
-    NaN = staticmethod(CommonHandler.AlwaysTrue)
+    NaN = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
     def Abs(expr, assumptions):
