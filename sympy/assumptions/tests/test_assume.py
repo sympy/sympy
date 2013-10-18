@@ -28,9 +28,15 @@ def test_Predicate():
     assert c.__class__.__name__ == 'CMyPredicate'
 
 def test_Predicate_doc():
-    doc = """
+    doc1 = """
 This is a predicate about a
 """
 
-    a = Predicate('a', doc=doc)
-    assert a.__class__.__doc__ == doc
+    doc2 = """
+This is another predicate about a
+"""
+    a = Predicate('a', doc=doc1)
+    assert a.__class__.__doc__ == doc1
+
+    a2 = Predicate('a', doc=doc2)
+    assert a2.__class__.__doc__ == doc2
