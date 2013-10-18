@@ -58,7 +58,43 @@ class Q:
     transcendental = Predicate('transcendental')
 
     ## Real
-    real = Predicate('real')
+    real = Predicate('real', doc="""
+    Real number predicate
+
+    ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
+    interval `(-\infty, \infty)`.  Note in particular that the infinities are
+    not real. Use ``Q.extended_real`` if you want to consider those as well.
+    A few important facts about reals:
+
+    - Every real number is positive, negative, or zero.  Furthermore, because
+      these sets are pairwise disjoint, each real number is exactly one of
+      those three.
+
+    - Every real number is also complex.
+
+    - Every real number is either rational or irrational.
+
+    - Every real number is either algebraic or transcendental.
+
+    - The facts ``Q.negative``, ``Q.zero``, ``Q.positive``, ``Q.nonnegative``,
+      ``Q.nonpositive``, ``Q.nonzero``, ``Q.integer``, and ``Q.rational`` all
+      imply ``Q.real``, as do all facts that imply those facts.
+
+    - The facts ``Q.irrational``, ``Q.algebraic``, and ``Q.transcendental`` do
+      not imply ``Q.real``; they imply ``Q.complex``. An irrational,
+      algebraic, or transcendental number may or may not be real.
+
+    Examples
+    ========
+
+    >>> from sympy import Q, ask, symbols
+    >>> x = symbols('x')
+    >>> ask(Q.real(x), Q.positive(x))
+    True
+    >>> ask(Q.real(0))
+    True
+
+    """)
     negative = Predicate('negative')
     nonzero = Predicate('nonzero')
     positive = Predicate('positive')
