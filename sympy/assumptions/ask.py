@@ -47,7 +47,6 @@ class Q:
     ## Number theory
     integer = Predicate('integer')
     prime = Predicate('prime')
-    real = Predicate('real')
     odd = Predicate('odd')
     composite = Predicate('composite')
     even = Predicate('even')
@@ -58,6 +57,7 @@ class Q:
     algebraic = Predicate('algebraic')
 
     ## Real
+    real = Predicate('real')
     negative = Predicate('negative')
     nonzero = Predicate('nonzero')
     positive = Predicate('positive')
