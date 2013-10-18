@@ -85,6 +85,12 @@ class Q:
       not imply ``Q.real``; they imply ``Q.complex``. An irrational,
       algebraic, or transcendental number may or may not be real.
 
+    - The "non" facts (i.e., ``Q.nonnegative``, ``Q.nonzero``, and
+    ``Q.nonpositive``)  are not equivalent to not the fact, but rather, not
+    the fact *and* ``Q.real``.  For example, ``Q.nonnegative`` means
+    ``~Q.negative & Q.real``. So for example, ``I`` is not nonnegative,
+    nonzero, or nonpositive.
+
     Examples
     ========
 
@@ -132,7 +138,41 @@ class Q:
     True
 
     """)
-    nonzero = Predicate('nonzero')
+    nonzero = Predicate('nonzero', doc="""
+    Nonzero real number predicate.
+
+    ``Q.nonzero(x)`` is true iff ``x`` is real and ``x`` is not zero.  Note in
+    particular that ``Q.nonzero(x)`` is false if ``x`` is not real.  Use
+    ``~Q.zero(x)`` if you want the negation of being zero without any real
+    assumptions.
+
+    A few important facts about nonzero numbers:
+
+    - ``Q.nonzero`` is logically equivalent to ``Q.positive | Q.negative``.
+
+    - See the docstring of ``Q.real`` for more information about related
+      facts.
+
+    Example
+    =======
+
+    >>> from sympy import Q, ask, symbols, I
+    >>> x = symbols('x')
+    >>> print(ask(Q.nonzero(x), ~Q.zero(x)))
+    None
+    >>> ask(Q.nonzero(x), Q.positive(x))
+    True
+    >>> ask(Q.nonzero(x), Q.zero(x))
+    False
+    >>> ask(Q.nonzero(0))
+    False
+
+    >>> ask(Q.nonzero(I))
+    False
+    >>> ask(~Q.zero(I))
+    True
+
+    """)
     positive = Predicate('positive')
     nonpositive = Predicate('nonpositive')
     nonnegative = Predicate('nonnegative')
