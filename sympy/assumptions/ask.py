@@ -12,7 +12,28 @@ class Q:
     """Supported ask keys."""
 
     # Generic
-    is_true = Predicate('is_true')
+    is_true = Predicate('is_true', doc="""
+    Generic predicate
+
+    ``Q.is_true(x)`` is true iff ``x`` is true. This only makes sense if ``x`` is a
+    predicate.
+    """
+    # TODO: we would like for this statement to be true:
+    # In general, ``Q.is_true(x)`` is not needed, as you can just use ``x``
+    # directly, e.g., instead of ``ask(Q.is_true(x))``, you can just write
+    # ``ask(x)``. ``Q.is_true`` is primarily intended for internal use, where
+    # it is useful to have all predicates as ``Predicate``s.
+    """
+    Example
+    =======
+
+    >>> from sympy import ask, Q, symbols
+    >>> x = symbols('x')
+    >>> ask(Q.is_true(True))
+    True
+
+    """
+    )
 
     # Operators
     antihermitian = Predicate('antihermitian')
