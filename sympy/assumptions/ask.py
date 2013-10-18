@@ -55,6 +55,7 @@ class Q:
     irrational = Predicate('irrational')
     rational = Predicate('rational')
     algebraic = Predicate('algebraic')
+    transcendental = Predicate('transcendental')
 
     ## Real
     real = Predicate('real')
