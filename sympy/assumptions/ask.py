@@ -64,6 +64,7 @@ class Q:
     ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
     interval `(-\infty, \infty)`.  Note in particular that the infinities are
     not real. Use ``Q.extended_real`` if you want to consider those as well.
+
     A few important facts about reals:
 
     - Every real number is positive, negative, or zero.  Furthermore, because
@@ -95,7 +96,42 @@ class Q:
     True
 
     """)
-    negative = Predicate('negative')
+
+    # XXX: Add extended_negative
+    negative = Predicate('negative', doc="""
+    Negative number predicate
+
+    ``Q.negative(x)`` is true iff ``x`` is a real number and `x < 0`, that is,
+    it is in the interval `(-oo, 0)`.  Note in particular that negative
+    infinity is not negative.
+
+    A few important facts about negative numbers:
+
+    - Note that ``Q.nonnegative`` and ``~Q.negative`` are *not* the same
+      thing. ``~Q.negative(x)`` simply means that ``x`` is not negative,
+      whereas ``Q.nonnegative(x)`` means that ``x`` is real and not
+      negative, i.e., ``Q.nonnegative(x)`` is logically equivalent to
+      ``Q.zero(x) | Q.positive(x)``.  So for example, ``~Q.negative(I)`` is
+      true, whereas ``Q.nonnegative(I)`` is false.
+
+    - See the docstring of ``Q.real`` for more information about related facts.
+
+    Example
+    =======
+
+    >>> from sympy import Q, ask, symbols, I
+    >>> x = symbols('x')
+    >>> ask(Q.negative(x), Q.real(x) & ~Q.positive(x) & ~Q.zero(x))
+    True
+    >>> ask(Q.negative(-1))
+    True
+
+    >>> ask(Q.nonnegative(I))
+    False
+    >>> ask(~Q.negative(I))
+    True
+
+    """)
     nonzero = Predicate('nonzero')
     positive = Predicate('positive')
     nonpositive = Predicate('nonpositive')
