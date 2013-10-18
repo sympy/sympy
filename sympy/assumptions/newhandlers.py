@@ -147,8 +147,9 @@ class ClassFactRegistry(MutableMapping):
     ``C``. ``registry[C]`` returns a set of handlers for class ``C``, or any
     of its superclasses.
     """
-    def __init__(self):
-        self.d = defaultdict(frozenset)
+    def __init__(self, d=None):
+        d = d or {}
+        self.d = defaultdict(frozenset, d)
         super(ClassFactRegistry, self).__init__()
 
     def __setitem__(self, key, item):
