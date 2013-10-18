@@ -58,7 +58,7 @@ class Q:
     transcendental = Predicate('transcendental')
 
     ## Real
-    real = Predicate('real', doc="""
+    real = Predicate('real', doc=r"""
     Real number predicate
 
     ``Q.real(x)`` is true iff ``x`` is a real number, i.e., it is in the
@@ -104,7 +104,7 @@ class Q:
     """)
 
     # XXX: Add extended_negative
-    negative = Predicate('negative', doc="""
+    negative = Predicate('negative', doc=r"""
     Negative number predicate
 
     ``Q.negative(x)`` is true iff ``x`` is a real number and `x < 0`, that is,
@@ -138,7 +138,7 @@ class Q:
     True
 
     """)
-    nonzero = Predicate('nonzero', doc="""
+    nonzero = Predicate('nonzero', doc=r"""
     Nonzero real number predicate.
 
     ``Q.nonzero(x)`` is true iff ``x`` is real and ``x`` is not zero.  Note in
