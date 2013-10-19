@@ -1068,13 +1068,6 @@ class LaplaceTransform(IntegralTransform):
         from sympy import Integral, exp
         return Integral(f*exp(-s*t), (t, 0, oo))
 
-    """
-    Class representing unevaluated Laplace transforms.
-
-    For usage of this class, see the :class:`IntegralTransform` docstring.
-    For how to compute Laplace transforms, see the :func:`laplace_transform`
-    docstring.
-    """
     def _collapse_extra(self, extra):
         from sympy import And, Max
         conds = []
