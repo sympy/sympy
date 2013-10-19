@@ -828,10 +828,10 @@ class Pow(Expr):
                 try:
                     ord = b.as_leading_term(x)
                     cf = C.Order(ord, x).getn()
-                    if cf:
+                    if cf and cf.is_Integer:
                         nuse = n + 2*cf
                     else:
-                       cf = 1
+                        cf = 1
                 except NotImplementedError:
                     pass
 
