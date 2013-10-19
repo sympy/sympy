@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow
+from sympy.core import Basic, Mul, Add, Pow, oo
 from sympy.matrices.expressions import MatMul
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
@@ -11,9 +11,10 @@ from sympy.utilities.iterables import sift
 from sympy.assumptions.ask_generated import known_facts_cnf
 from sympy.assumptions.newhandlers import fact_registry
 
-def newask(proposition, assumptions=True, context=global_assumptions, use_known_facts=True):
+def newask(proposition, assumptions=True, context=global_assumptions,
+    use_known_facts=True, iterations=oo):
     relevant_facts = get_all_relevant_facts(proposition, assumptions, context,
-        use_known_facts=use_known_facts)
+        use_known_facts=use_known_facts, iterations=iterations)
 
     can_be_true = satisfiable(And(proposition, assumptions,
         relevant_facts, *context))
@@ -60,16 +61,20 @@ def get_relevant_facts(proposition, assumptions=True,
     return relevant_facts
 
 def get_all_relevant_facts(proposition, assumptions=True,
-    context=global_assumptions, use_known_facts=True):
+    context=global_assumptions, use_known_facts=True, iterations=oo):
     # The relevant facts might introduce new keys, e.g., Q.zero(x*y) will
     # introduce the keys Q.zero(x) and Q.zero(y), so we need to run it until
     # we stop getting new things.  Hopefully this strategy won't lead to an
     # infinite loop in the future.
+    i = 0
     relevant_facts = True
     old_relevant_facts = False
     while relevant_facts != old_relevant_facts:
         old_relevant_facts, relevant_facts = (relevant_facts,
             get_relevant_facts(proposition, assumptions & relevant_facts,
                 context, use_known_facts=use_known_facts))
+        i += 1
+        if i >= iterations:
+            return relevant_facts
 
     return relevant_facts
