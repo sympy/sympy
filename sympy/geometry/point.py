@@ -8,15 +8,15 @@ Point
 
 from __future__ import print_function, division
 
-from sympy.core import S, sympify
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
-from sympy.simplify import simplify, nsimplify
+from sympy.simplify.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from .entity import GeometryEntity
-from sympy.matrices import Matrix
-from sympy.core.numbers import Float
+from sympy.matrices.dense import Matrix
 
 
 class Point(GeometryEntity):

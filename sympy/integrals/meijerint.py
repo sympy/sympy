@@ -27,20 +27,25 @@ The main references for this are:
 """
 from __future__ import print_function, division
 
-from sympy.core import oo, S, pi, Expr
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
+from sympy.core.numbers import pi
+from sympy.core.expr import Expr
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Dummy, Wild
-from sympy.simplify import hyperexpand, powdenest
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.simplify import powdenest
 from sympy.logic.boolalg import And, Or
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
-from sympy.utilities.iterables import multiset_partitions, ordered
+from sympy.utilities.iterables import multiset_partitions
+from sympy.core.compatibility import ordered
 from sympy.utilities.misc import debug as _debug
-from sympy.utilities import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 # keep this at top for easy reference
 z = Dummy('z')

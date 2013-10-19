@@ -2,10 +2,21 @@
 
 from __future__ import print_function, division
 
-from sympy import S, Symbol, symbols, I, log, atan, \
-    roots, collect, solve, RootSum, Lambda, cancel, Dummy
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol, symbols
+from sympy.core.numbers import I
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import atan
+from sympy.polys.polyroots import roots
+from sympy.simplify.simplify import collect
+from sympy.solvers.solvers import solve
+from sympy.polys.rootoftools import RootSum
+from sympy.core.function import Lambda
+from sympy.polys.polytools import cancel
+from sympy.core.symbol import Dummy
 
-from sympy.polys import Poly, subresultants, resultant, ZZ
+from sympy.polys.polytools import Poly, resultant
+from sympy.polys.domains import ZZ
 from sympy.core.compatibility import xrange
 
 
