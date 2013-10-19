@@ -1,16 +1,20 @@
 from __future__ import print_function, division
 
-from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
+from sympy.core.expr import Expr
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.core.numbers import oo, pi
+from sympy.core.symbol import Symbol
 from sympy.core.compatibility import as_int, xrange
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt, atan
+from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.geometry.exceptions import GeometryError
-from sympy.logic import And
-from sympy.matrices import Matrix
-from sympy.simplify import simplify
-from sympy.solvers import solve
-from sympy.utilities import default_sort_key
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
+from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import has_variety, has_dups
 
 from .entity import GeometryEntity

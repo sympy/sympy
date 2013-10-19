@@ -8,14 +8,18 @@ Contains
 
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, pi, Dummy
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.sympify import sympify
+from sympy.core.numbers import pi
+from sympy.core.symbol import Dummy
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import oo
-from sympy.simplify import simplify, trigsimp
+from sympy.simplify.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.complexes import im
 from sympy.geometry.exceptions import GeometryError
-from sympy.solvers import solve
+from sympy.solvers.solvers import solve
 from .entity import GeometryEntity
 from .point import Point
 from .line import LinearEntity, Line

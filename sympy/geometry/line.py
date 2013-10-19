@@ -10,11 +10,13 @@ Segment
 """
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify, Dummy
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.sympify import sympify
+from sympy.core.symbol import Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
-from sympy.core.logic import fuzzy_and
 from sympy.simplify.simplify import simplify
-from sympy.solvers import solve
+from sympy.solvers.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from .entity import GeometryEntity
 from .point import Point
