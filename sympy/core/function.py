@@ -2265,12 +2265,10 @@ def nfloat(expr, n=15, exponent=False):
         return rv
 
     if not exponent:
-        reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
+        reps = [(p, Pow(p.base.n(n), p.exp)) for p in rv.atoms(Pow)]
         rv = rv.xreplace(dict(reps))
-    rv = rv.n(n)
-    if not exponent:
-        rv = rv.xreplace(dict([(d.exp, p.exp) for p, d in reps]))
     else:
+        rv = rv.n(n)
         # Pow._eval_evalf special cases Integer exponents so if
         # exponent is suppose to be handled we have to do so here
         rv = rv.xreplace(Transform(

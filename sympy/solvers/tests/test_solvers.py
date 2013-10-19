@@ -220,6 +220,16 @@ def test_quintics_1():
     for root in s:
         assert root.func == RootOf
 
+    # if one uses solve to get the roots of a polynomial that has a RootOf
+    # solution, make sure that the use of nfloat during the solve process
+    # doesn't fail. Note: if you want numerical solutions to a polynomial
+    # it is *much* faster to use nroots to get them than to evaluate
+    # RootOf solutions (e.g. Poly(x**5 + 3*x + 7).nroots() to get the
+    # numerical roots of that expression.
+    assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) = \
+        RootOf(x**5 + 3*x**3 + 7, 0)
+
+
 
 def test_highorder_poly():
     # just testing that the uniq generator is unpacked
