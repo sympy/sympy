@@ -6,7 +6,7 @@ SymPy module (module imports are fine).
 
 Importing sympy packages from inside a SymPy package's __init__ is fragile
 because the imported package may itself assume that other packages are already
-loaded an fully initialized, causing subtle ordering dependencies.
+loaded and fully initialized, causing subtle ordering dependencies.
 Reporting package imports as errors does not prevent these problems, but it
 removes the indirection through the package import and makes them easier to
 diagnose.
@@ -47,7 +47,7 @@ def in_module(what, where):
 def relevant(module):
     return in_module(module, "sympy") and not in_module(module, "sympy.mpmath")
 
-def tracking_import(module, globals = globals(), locals = [], fromlist = None, level = -1):
+def tracking_import(module, globals=globals(), locals=[], fromlist=None, level=-1):
     caller_frame = getframeinfo(_getframe(1))
     importer_filename = caller_frame.filename
     importer_module = globals['__name__']
