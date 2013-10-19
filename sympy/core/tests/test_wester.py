@@ -2,21 +2,21 @@
 capabilities".
 
 http://www.math.unm.edu/~wester/cas/book/Wester.pdf
-See also http://math.unm.edu/~wester/cas_review.html for detailed output of each
-tested system.
+See also http://math.unm.edu/~wester/cas_review.html for detailed output of
+each tested system.
 """
 
-from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
-    binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
+from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
+    product, binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt,
-    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh,
+    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Ge, Gt, QQ, 
+    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
     ask, refine, AlgebraicNumber,
-    elliptic_e, elliptic_f, powsimp, hessian, wronskian,fibonacci, sign,
+    elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci, sign,
     Lambda, Piecewise, Subs, residue, Derivative, logcombine)
 
 from sympy.functions.combinatorial.numbers import stirling
@@ -26,8 +26,8 @@ from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy.matrices import Matrix, GramSchmidt, eye
-from sympy.matrices.expressions.blockmatrix import (BlockMatrix, block_collapse)
-from sympy.matrices.expressions import (MatrixSymbol, ZeroMatrix)
+from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
+from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.galgebra.ga import MV
 from sympy.physics.quantum import Commutator
 from sympy.assumptions import assuming
@@ -2269,3 +2269,60 @@ def test_V13():
     # expression not simplified, returns: -sqrt(11)*I*log(tan(x/2) + 4/3
     #   - sqrt(11)*I/3)/11 + sqrt(11)*I*log(tan(x/2) + 4/3 + sqrt(11)*I/3)/11
     assert I.simplify() == 2*sqrt(11)*atan(sqrt(11)*(3*tan(x/2) + 4)/11)/11
+
+
+@XFAIL
+def test_V14():
+    I = integrate(log(abs(x**2 - y**2)), x)
+    # I.simplify() raises AttributeError
+    # https://code.google.com/p/sympy/issues/detail?id=4059
+    assert (I.simplify() == x*log(abs(x**2  - y**2))
+                            + y*log(x + y) - y*log(x - y) - 2*x)
+
+
+def test_V15():
+    I = integrate(x*acot(x/y), x)
+    assert simplify(I - (x*y + (x**2 + y**2)*acot(x/y))/2) == 0
+
+
+@XFAIL
+def test_V16():
+# test case in Mathematica syntax:
+# In[53]:= Integrate[Cos[5*x]*CosIntegral[2*x], x]
+#          CosIntegral[2 x] Sin[5 x]   -SinIntegral[3 x] - SinIntegral[7 x]
+# Out[53]= ------------------------- + ------------------------------------
+#                      5                                10
+# cosine Integral function not supported
+# http://reference.wolfram.com/mathematica/ref/CosIntegral.html
+    raise NotImplementedError("cosine integral function not supported")
+
+
+@XFAIL
+def test_V17():
+    I = integrate((diff(f(x), x)*g(x)
+                   - f(x)*diff(g(x), x))/(f(x)**2 - g(x)**2), x)
+    # integral not calculated
+    assert simplify(I - (f(x) - g(x))/(f(x) + g(x))/2) == 0
+
+
+@XFAIL
+def test_W1():
+    # The function has a pole at y.
+    # The integral has a Cauchy principal value of zero but SymPy returns -I*pi
+    assert integrate(1/(x - y), (x, y - 1, y + 1)) == 0
+
+
+@XFAIL
+def test_W2():
+    # The function has a pole at y.
+    # The integral is divergent but SymPy returns -2
+    # Test case in Macsyma:
+    # (c6) errcatch(integrate(1/(x - a)^2, x, a - 1, a + 1));
+    # Integral is divergent
+    assert integrate(1/(x - y)**2, (x, y - 1, y + 1)) == zoo
+
+
+@XFAIL
+def test_W3():
+    # integral is not  calculated
+    assert integrate(sqrt(x + 1/x - 2), (x, 0, 1)) == Rational(4,3)
