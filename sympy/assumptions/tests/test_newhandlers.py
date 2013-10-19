@@ -1,7 +1,7 @@
 from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 
 from sympy.assumptions.newhandlers import (ClassFactRegistry, AllArgs,
-    UnevaluatedOnFree, AnyArgs)
+    UnevaluatedOnFree, AnyArgs, CheckOldAssump)
 
 from sympy.utilities.pytest import raises
 
@@ -58,3 +58,32 @@ def test_AnyArgs():
     b = AnyArgs(Q.positive & Q.negative)
     assert a.rcall(x*y) == Or(Q.zero(x), Q.zero(y))
     assert b.rcall(x*y) == Or(Q.positive(x) & Q.negative(x), Q.positive(y) & Q.negative(y))
+
+def test_CheckOldAssump():
+    # TODO: Make these tests more complete
+
+    class Test1(Expr):
+        def _eval_is_positive(self):
+            return True
+        def _eval_is_negative(self):
+            return False
+
+    class Test2(Expr):
+        def _eval_is_finite(self):
+            return True
+        def _eval_is_positive(self):
+            return True
+        def _eval_is_negative(self):
+            return False
+
+    t1 = Test1()
+    t2 = Test2()
+
+    # We can't say if it's positive or negative in the old assumptions without
+    # finite. Remember, True means "no new knowledge", and Q.positive(t2)
+    # means "t2 is positive."
+    assert CheckOldAssump(Q.positive(t1)) == True
+    assert CheckOldAssump(Q.negative(t1)) == ~Q.negative(t1)
+
+    assert CheckOldAssump(Q.positive(t2)) == Q.positive(t2)
+    assert CheckOldAssump(Q.negative(t2)) == ~Q.negative(t2)

@@ -2,9 +2,12 @@ from __future__ import print_function, division
 
 from collections import MutableMapping, defaultdict
 
-from sympy.core import Add, Mul, Pow, Integer, Lambda, Dummy
+from sympy.core import (Add, Mul, Pow, Integer, Lambda, Dummy, Number,
+    NumberSymbol,)
+from sympy.core.numbers import ImaginaryUnit
 from sympy.core.sympify import _sympify
-
+from sympy.core.rules import Transform
+from sympy.core.logic import fuzzy_or, fuzzy_and
 from sympy.matrices.expressions import MatMul
 
 from sympy.assumptions.ask import Q
@@ -123,10 +126,54 @@ class AnyArgs(UnevaluatedOnFree):
         return Or(*[self.args[0].xreplace({self.expr: arg}) for arg in
             self.expr.args])
 
+# TODO: How can we avoid calling evalf on the same expression multiple times
+# (once for each evalf fact)?
+
+def _old_assump_replacer(obj):
+    # Things to be careful of:
+    # - real means real or infinite in the old assumptions.
+    # - nonzero does not imply real in the old assumptions.
+    # - finite means finite and not zero in the old assumptions.
+    if not isinstance(obj, AppliedPredicate):
+        return obj
+
+    e = obj.args[0]
+    ret = None
+
+    if obj.func == Q.positive:
+        ret = fuzzy_and([e.is_finite, e.is_positive])
+    if obj.func == Q.zero:
+        ret = e.is_zero
+    if obj.func == Q.negative:
+        ret = fuzzy_and([e.is_finite, e.is_negative])
+    if obj.func == Q.nonpositive:
+        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]), e.is_nonpositive])
+    if obj.func == Q.nonzero:
+        ret = fuzzy_and([e.is_real, e.is_finite, e.is_nonzero])
+    if obj.func == Q.nonnegative:
+        ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]), e.is_nonnegative])
+    if ret is None:
+        return obj
+    return ret
+
+def evaluate_old_assump(pred):
+    """
+    Replace assumptions of expressions replaced with their values in the old
+    assumptions (like Q.negative(-1) => True). Useful because some direct
+    computations for numeric objects is defined most conveniently in the old
+    assumptions.
+
+    """
+    return pred.xreplace(Transform(_old_assump_replacer))
+
+class CheckOldAssump(UnevaluatedOnFree):
+    def apply(self):
+        return Equivalent(self.args[0], evaluate_old_assump(self.args[0]))
+
 class CheckIsPrime(UnevaluatedOnFree):
     def apply(self):
         from sympy import isprime
-        return Equivalent(Q.prime(self.expr), isprime(self.expr))
+        return Equivalent(self.args[0], isprime(self.expr))
 
 class CustomLambda(object):
     """
@@ -183,10 +230,30 @@ for klass, fact in [
     (Mul, Equivalent(Q.zero, AnyArgs(Q.zero))),
     (MatMul, Implies(AllArgs(Q.square), Equivalent(Q.invertible, AllArgs(Q.invertible)))),
     (Add, Implies(AllArgs(Q.positive), Q.positive)),
+    (Mul, Implies(AllArgs(Q.positive), Q.positive)),
     # This one can still be made easier to read. I think we need basic pattern
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
     (Integer, CheckIsPrime(Q.prime)),
+    (Number, CheckOldAssump(Q.negative)),
+    (Number, CheckOldAssump(Q.zero)),
+    (Number, CheckOldAssump(Q.positive)),
+    (Number, CheckOldAssump(Q.nonnegative)),
+    (Number, CheckOldAssump(Q.nonzero)),
+    (Number, CheckOldAssump(Q.nonpositive)),
+    # For some reason NumberSymbol does not subclass Number
+    (NumberSymbol, CheckOldAssump(Q.negative)),
+    (NumberSymbol, CheckOldAssump(Q.zero)),
+    (NumberSymbol, CheckOldAssump(Q.positive)),
+    (NumberSymbol, CheckOldAssump(Q.nonnegative)),
+    (NumberSymbol, CheckOldAssump(Q.nonzero)),
+    (NumberSymbol, CheckOldAssump(Q.nonpositive)),
+    (ImaginaryUnit, CheckOldAssump(Q.negative)),
+    (ImaginaryUnit, CheckOldAssump(Q.zero)),
+    (ImaginaryUnit, CheckOldAssump(Q.positive)),
+    (ImaginaryUnit, CheckOldAssump(Q.nonnegative)),
+    (ImaginaryUnit, CheckOldAssump(Q.nonzero)),
+    (ImaginaryUnit, CheckOldAssump(Q.nonpositive)),
     ]:
 
     register_fact(klass, fact)

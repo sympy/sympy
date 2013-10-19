@@ -1,6 +1,6 @@
 from sympy.assumptions.newask import newask
 
-from sympy import symbols, Q, assuming, Implies, MatrixSymbol
+from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi
 
 from sympy.utilities.pytest import raises, XFAIL
 
@@ -79,3 +79,40 @@ def test_prime():
     assert newask(Q.prime(5)) is True
     assert newask(Q.prime(6)) is False
     assert newask(Q.prime(-5)) is False
+
+def test_old_assump():
+    assert newask(Q.positive(1)) is True
+    assert newask(Q.positive(-1)) is False
+    assert newask(Q.positive(0)) is False
+    assert newask(Q.positive(I)) is False
+    assert newask(Q.positive(pi)) is True
+
+    assert newask(Q.negative(1)) is False
+    assert newask(Q.negative(-1)) is True
+    assert newask(Q.negative(0)) is False
+    assert newask(Q.negative(I)) is False
+    assert newask(Q.negative(pi)) is False
+
+    assert newask(Q.zero(1)) is False
+    assert newask(Q.zero(-1)) is False
+    assert newask(Q.zero(0)) is True
+    assert newask(Q.zero(I)) is False
+    assert newask(Q.zero(pi)) is False
+
+    assert newask(Q.nonzero(1)) is True
+    assert newask(Q.nonzero(-1)) is True
+    assert newask(Q.nonzero(0)) is False
+    assert newask(Q.nonzero(I)) is False
+    assert newask(Q.nonzero(pi)) is True
+
+    assert newask(Q.nonpositive(1)) is False
+    assert newask(Q.nonpositive(-1)) is True
+    assert newask(Q.nonpositive(0)) is True
+    assert newask(Q.nonpositive(I)) is False
+    assert newask(Q.nonpositive(pi)) is False
+
+    assert newask(Q.nonnegative(1)) is True
+    assert newask(Q.nonnegative(-1)) is False
+    assert newask(Q.nonnegative(0)) is True
+    assert newask(Q.nonnegative(I)) is False
+    assert newask(Q.nonnegative(pi)) is True
