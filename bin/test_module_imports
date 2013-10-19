@@ -18,6 +18,9 @@ $ bin/test_module_imports
 
 from __future__ import print_function
 
+from sys import _getframe
+from inspect import getframeinfo
+
 import __builtin__
 builtin_import = __builtin__.__import__
 
@@ -45,8 +48,13 @@ def relevant(module):
     return in_module(module, "sympy") and not in_module(module, "sympy.mpmath")
 
 def tracking_import(module, globals = globals(), locals = [], fromlist = None, level = -1):
-    importer_filename = globals['__file__']
+    caller_frame = getframeinfo(_getframe(1))
+    importer_filename = caller_frame.filename
     importer_module = globals['__name__']
+    if importer_filename == caller_frame.filename:
+        importer_reference = importer_filename + " line " + str(caller_frame.lineno)
+    else:
+        importer_reference = importer_filename
     result = builtin_import(module, globals, locals, fromlist, level)
     importee_module = result.__name__
     # We're only interested if importer and importee are in SymPy
@@ -60,7 +68,7 @@ def tracking_import(module, globals = globals(), locals = [], fromlist = None, l
             if not symbol_definers.has_key(definition):
                 symbol_definers[definition] = importee_module
         if hasattr(result, 'path'):
-            print("Error: %s contains package import %s" % (importer_filename, module))
+            print("Error: %s contains package import %s" % (importer_reference, module))
         if fromlist != None:
             symbol_list = fromlist
             if '*' in symbol_list:
@@ -75,13 +83,13 @@ def tracking_import(module, globals = globals(), locals = [], fromlist = None, l
             for symbol in symbol_list:
                 if not symbol in result.__dict__:
                     print("Error: %s imports %s from %s, which does not define it (yet)"
-                          % (importer_filename, symbol, importee_module))
+                          % (importer_reference, symbol, importee_module))
                 else:
                     definition = Definition(symbol, result.__dict__[symbol])
                     symbol_definer = symbol_definers[definition]
                     if symbol_definer != importee_module:
                         print("Error: %s imports %s from %s, but should import it from its definer %s"
-                              % (importer_filename, symbol, importee_module, symbol_definer))
+                              % (importer_reference, symbol, importee_module, symbol_definer))
     return result
 
 __builtin__.__import__ = tracking_import
