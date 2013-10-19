@@ -223,11 +223,12 @@ def test_quintics_1():
     # if one uses solve to get the roots of a polynomial that has a RootOf
     # solution, make sure that the use of nfloat during the solve process
     # doesn't fail. Note: if you want numerical solutions to a polynomial
-    # it is *much* faster to use nroots to get them than to evaluate
-    # RootOf solutions (e.g. Poly(x**5 + 3*x + 7).nroots() to get the
-    # numerical roots of that expression.
-    assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) = \
-        RootOf(x**5 + 3*x**3 + 7, 0)
+    # it is *much* faster to use nroots to get them than to solve the
+    # equation only to get RootOf solutions which are then numerically
+    # evaluated. So for eq = x**5 + 3*x + 7 do Poly(eq).nroots() rather
+    # than [i.n() for i in solve(eq)] to get the numerical roots of eq.
+    assert nfloat(solve(x**5 + 3*x**3 + 7)[0], exponent=False) == \
+        RootOf(x**5 + 3*x**3 + 7, 0).n()
 
 
 
