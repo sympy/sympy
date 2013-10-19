@@ -11,11 +11,13 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
-    im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
+    im, DiracDelta, chebyshevt,
+    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Ge, Gt, QQ, ask, refine, AlgebraicNumber,
+    Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt, Ge, Gt, QQ, 
+    ask, refine, AlgebraicNumber,
     elliptic_e, elliptic_f, powsimp, hessian, wronskian,fibonacci, sign,
-    Lambda, Piecewise, Subs, residue, Derivative)
+    Lambda, Piecewise, Subs, residue, Derivative, logcombine)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.functions.special.zeta_functions import zeta
@@ -1105,7 +1107,7 @@ def test_N12():
 @XFAIL
 def test_N13():
     # raises NotImplementedError: can't reduce [sin(x) < 2]
-    assert solve(sin(x) < 2, assume=Q.real(x)) == S.Reals
+    assert solve(sin(x) < 2, assume=Q.real(x)) == [] # S.Reals not found
 
 
 @XFAIL
@@ -1159,7 +1161,7 @@ def test_O4():
 @XFAIL
 @slow
 def test_O5():
-    (ex,ey,ez,grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x,y,z))
+    (_, _, _, grad) = MV.setup('e*x|y|z',metric='[1,1,1]',coords=(x, y, z))
     f = MV('f','vector',fct=True)
     g = MV('g','vector',fct=True)
     assert grad|(f^g)-g|(grad^f)+f|(grad^g)  == 0
@@ -1473,7 +1475,7 @@ def test_P27():
                 [0,  0, a, 0, 0],
                 [0,  0, 0, a, 0],
                 [0, -2, 0, 0, 2]])
-    M.eigenvects() == [(a, 3, [Matrix([[1],
+    assert M.eigenvects() == [(a, 3, [Matrix([[1],
                                        [0],
                                        [0],
                                        [0],
@@ -1518,7 +1520,7 @@ def test_P30():
                 [0,  0, -1,  2, -2],
                 [1, -1,  1,  0,  1],
                 [1, -1,  1, -1,  2]])
-    P, J = M.jordan_form()
+    _, J = M.jordan_form()
     assert J == Matrix([[-1, 0, 0, 0, 0],
                         [0,  1, 1, 0, 0],
                         [0,  0, 1, 0, 0],
@@ -1715,6 +1717,7 @@ def test_R4():
 #(d16)                     ----------------
 #                                n
 #                          2 k! 2  (n - k)!
+# Might be possible after fixing https://github.com/sympy/sympy/pull/1879
     raise NotImplementedError("Indefinite sum not supported")
 
 
@@ -2216,3 +2219,53 @@ def test_V6():
     # returns RootSum(40*_z**2 - 1, Lambda(_i, _i*log(-4*_i + exp(-m*x))))/m
     assert (integrate(1/(2*exp(m*x) - 5*exp(-m*x)), x) == sqrt(10)*(
             log(2*exp(m*x) - sqrt(10)) - log(2*exp(m*x) + sqrt(10)))/(20*m))
+
+
+def test_V7():
+    I = integrate(sinh(x)**4/cosh(x)**2)
+    assert I.simplify() == -3*x/2 + sinh(x)**3/(2*cosh(x)) + 3*tanh(x)/2
+
+
+@XFAIL
+def test_V8_V9():
+#Macsyma test case:
+#(c27) /* This example involves several symbolic parameters
+#   => 1/sqrt(b^2 - a^2) log([sqrt(b^2 - a^2) tan(x/2) + a + b]/
+#                            [sqrt(b^2 - a^2) tan(x/2) - a - b])   (a^2 < b^2)
+#      [Gradshteyn and Ryzhik 2.553(3)] */
+#assume(b^2 > a^2)$
+#(c28) integrate(1/(a + b*cos(x)), x);
+#(c29) trigsimp(ratsimp(diff(%, x)));
+#                        1
+#(d29)             ------------
+#                  b cos(x) + a
+    raise NotImplementedError(
+        "Integrate with assumption not supported")
+
+
+def test_V10():
+    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(tan(x/2) + 3/4)/4
+
+
+def test_V11():
+#    x = symbols('x', real=True)
+    I = integrate(1/(4 + 3*cos(x) + 4*sin(x)), x)
+    F = factor(I)
+    assert (logcombine(F, force=True) ==
+            log(((tan(x/2) + 1)/(tan(x/2) + 7))**(1/3)))
+
+
+@XFAIL
+def test_V12():
+    I = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
+    # Correct result in python2.7.4 wrong result in python3.3.1
+    # https://code.google.com/p/sympy/issues/detail?id=4058
+    assert I == -1/(tan(x/2) + 2)
+
+
+@XFAIL
+def test_V13():
+    I = integrate(1/(6 + 3*cos(x) + 4*sin(x)), x)
+    # expression not simplified, returns: -sqrt(11)*I*log(tan(x/2) + 4/3
+    #   - sqrt(11)*I/3)/11 + sqrt(11)*I*log(tan(x/2) + 4/3 + sqrt(11)*I/3)/11
+    assert I.simplify() == 2*sqrt(11)*atan(sqrt(11)*(3*tan(x/2) + 4)/11)/11
