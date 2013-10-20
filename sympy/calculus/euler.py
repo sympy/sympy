@@ -1,7 +1,7 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol
 from sympy.utilities import numbered_symbols
 
-def euler_equations(L, funcs, vars):
+def euler_equations(L, funcs=(), vars=()):
     """Find the Euler-Lagrange equations for a given Lagrangian.
 
     For the case of two functions (f(x,y), g(x,y)), two independent variables
@@ -19,6 +19,10 @@ def euler_equations(L, funcs, vars):
         are differential equations for each of these functions.
     vars : Symbol or list/tuple of Symbols
         The Symbols that are the independent variables of the functions.
+
+    In many cases it is not necessary to provide anything, except the
+    Lagrangian, it will be autodetected (and an error raised if it
+    couldn't be done).
 
     Returns
     =======
@@ -50,18 +54,33 @@ def euler_equations(L, funcs, vars):
 
     if not isinstance(funcs, (tuple, list)):
         funcs = (funcs,)
+
+    if not funcs:
+        funcs = tuple(L.atoms(Function))
+    else:
+        for f in funcs:
+            if not isinstance(f, Function):
+                raise TypeError('Function expected, got: %s' % f)
+
     if not isinstance(vars, (tuple, list)):
         vars = (vars,)
 
-    vars = [sympify(var) for var in vars]
+    if not vars:
+        vars = funcs[0].args
+    else:
+        vars = tuple(sympify(var) for var in vars)
+
+    if not all(isinstance(v, Symbol) for v in vars):
+        raise TypeError('Variables are not symbols, got %s' % vars)
+
+    for f in funcs:
+        if not vars == f.args:
+            raise ValueError("Variables %s don't match function arguments: %s" % (vars, f))
+
     constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
 
     eqns = []
     for f in funcs:
-        if not isinstance(f, Function):
-            raise TypeError('Function expected, got: %r' % f)
-        if not set(vars) == f.free_symbols:
-            raise ValueError("Variables %r don't match function arguments: %r" % (vars, f))
         eq = diff(L, f)
         if eq == S.Zero and len(vars) == 1:
             eqns.append(Eq(diff(L, diff(f, var)), constants.next()))
@@ -69,4 +88,5 @@ def euler_equations(L, funcs, vars):
             for var in vars:
                 eq = eq - diff(L, diff(f, var), var)
             eqns.append(Eq(eq, 0))
+
     return set(eqns)
