@@ -11,7 +11,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
-    im, DiracDelta, chebyshevt,
+    im, DiracDelta, chebyshevt, legendre_poly, polylog,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
@@ -2385,3 +2385,89 @@ def test_W10():
     r1 = integrate(x/(1 + x + x**2 + x**4), (x, -oo, oo))
     r2 = r1.doit()
     assert r2 == 2*pi*(sqrt(5)/4 + 5/4)*csc(2*pi/5)/5
+
+
+@XFAIL
+def test_W11():
+    # integral not calculated
+    assert (integrate(sqrt(1 - x**2)/(1 + x**2), (x, -1, 1)) ==
+            pi*(-1 + sqrt(2)))
+
+
+def test_W12():
+    p = symbols('p', real=True, positive=True)
+    q = symbols('q', real=True)
+    r1 = integrate(x*exp(-p*x**2 + 2*q*x), (x, -oo, oo))
+    assert r1.simplify() == sqrt(pi)*q*exp(q**2/p)/p**(3/2)
+
+
+@XFAIL
+def test_W13():
+    # Integral not calculated. Expected result is 2*(Euler_mascheroni_constant)
+    r1 = integrate(1/log(x) + 1/(1 - x) - log(log(1/x)), (x, 0, 1))
+    assert r1 == 2*EulerGamma
+
+
+def test_W14():
+    assert integrate(sin(x)/x*exp(2*I*x), (x, -oo, oo)) == 0
+
+
+@XFAIL
+def test_W15():
+    # integral not calculated
+    assert integrate(log(gamma(x))*cos(6*pi*x), (x, 0, 1)) == S(1)/12
+
+
+def test_W16():
+    assert integrate((1 + x)**3*legendre_poly(1, x)*legendre_poly(2, x),
+                     (x, -1, 1)) == S(36)/35
+
+
+def test_W17():
+    a, b = symbols('a b', real=True, positive=True)
+    assert integrate(exp(-a*x)*besselj(0, b*x),
+                 (x, 0, oo)) == 1/(b*sqrt(a**2/b**2 + 1))
+
+
+def test_W18():
+    assert integrate((besselj(1, x)/x)**2, (x, 0, oo)) == 4/(3*pi)
+
+
+@XFAIL
+def test_W19():
+    # integrate(cos_int(x)*bessel_j[0](2*sqrt(7*x)), x, 0, inf);
+    # Expected result is cos 7 - 1)/7   [Gradshteyn and Ryzhik 6.782(3)]
+    raise NotImplementedError("cosine integral function not supported")
+
+
+@XFAIL
+def test_W20():
+    # integral not calculated
+    assert (integrate(x**2*polylog(3, 1/(x + 1)), (x, 0, 1)) ==
+            -pi**2/36 - S(17)/108 + zeta(3)/4 +
+            (-pi**2/2 - 4*log(2) + log(2)**2 + 35/3)*log(2)/9)
+
+
+def test_W21():
+    assert abs(N(integrate(x**2*polylog(3, 1/(x + 1)), (x, 0, 1)))
+        - 0.210882859565594) < 1e-15
+
+
+def test_W22():
+    t, u = symbols('t u', real=True)
+    s = Lambda(x, Piecewise((1, And(x >= 1, x <= 2)), (0, True)))
+    assert (integrate(s(t)*cos(t), (t, 0, u)) ==
+            Piecewise((sin(u) - sin(1), And(u <= 2, u >= 1)),
+                      (0, u <= 1),
+                      (-sin(1) + sin(2), True)))
+
+
+@XFAIL
+@slow
+def test_W23():
+    a, b = symbols('a b', real=True, positive=True)
+    r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
+    assert r1.simplify() == pi*(-a + b)
+    # integrate raises RuntimeError: maximum recursion depth exceeded
+    r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
+    assert r1 == r2
