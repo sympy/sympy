@@ -12,7 +12,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt,
-    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot,
+    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
     ask, refine, AlgebraicNumber,
@@ -2222,8 +2222,8 @@ def test_V6():
 
 
 def test_V7():
-    I = integrate(sinh(x)**4/cosh(x)**2)
-    assert I.simplify() == -3*x/2 + sinh(x)**3/(2*cosh(x)) + 3*tanh(x)/2
+    r1 = integrate(sinh(x)**4/cosh(x)**2)
+    assert r1.simplify() == -3*x/2 + sinh(x)**3/(2*cosh(x)) + 3*tanh(x)/2
 
 
 @XFAIL
@@ -2249,40 +2249,40 @@ def test_V10():
 
 def test_V11():
 #    x = symbols('x', real=True)
-    I = integrate(1/(4 + 3*cos(x) + 4*sin(x)), x)
-    F = factor(I)
-    assert (logcombine(F, force=True) ==
+    r1 = integrate(1/(4 + 3*cos(x) + 4*sin(x)), x)
+    r2 = factor(r1)
+    assert (logcombine(r1, force=True) ==
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**(1/3)))
 
 
 @XFAIL
 def test_V12():
-    I = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
+    r1 = integrate(1/(5 + 3*cos(x) + 4*sin(x)), x)
     # Correct result in python2.7.4 wrong result in python3.3.1
     # https://code.google.com/p/sympy/issues/detail?id=4058
-    assert I == -1/(tan(x/2) + 2)
+    assert r1 == -1/(tan(x/2) + 2)
 
 
 @XFAIL
 def test_V13():
-    I = integrate(1/(6 + 3*cos(x) + 4*sin(x)), x)
+    r1 = integrate(1/(6 + 3*cos(x) + 4*sin(x)), x)
     # expression not simplified, returns: -sqrt(11)*I*log(tan(x/2) + 4/3
     #   - sqrt(11)*I/3)/11 + sqrt(11)*I*log(tan(x/2) + 4/3 + sqrt(11)*I/3)/11
-    assert I.simplify() == 2*sqrt(11)*atan(sqrt(11)*(3*tan(x/2) + 4)/11)/11
+    assert r1.simplify() == 2*sqrt(11)*atan(sqrt(11)*(3*tan(x/2) + 4)/11)/11
 
 
 @XFAIL
 def test_V14():
-    I = integrate(log(abs(x**2 - y**2)), x)
+    r1 = integrate(log(abs(x**2 - y**2)), x)
     # I.simplify() raises AttributeError
     # https://code.google.com/p/sympy/issues/detail?id=4059
-    assert (I.simplify() == x*log(abs(x**2  - y**2))
+    assert (r1.simplify() == x*log(abs(x**2  - y**2))
                             + y*log(x + y) - y*log(x - y) - 2*x)
 
 
 def test_V15():
-    I = integrate(x*acot(x/y), x)
-    assert simplify(I - (x*y + (x**2 + y**2)*acot(x/y))/2) == 0
+    r1 = integrate(x*acot(x/y), x)
+    assert simplify(r1 - (x*y + (x**2 + y**2)*acot(x/y))/2) == 0
 
 
 @XFAIL
@@ -2299,16 +2299,17 @@ def test_V16():
 
 @XFAIL
 def test_V17():
-    I = integrate((diff(f(x), x)*g(x)
+    r1 = integrate((diff(f(x), x)*g(x)
                    - f(x)*diff(g(x), x))/(f(x)**2 - g(x)**2), x)
     # integral not calculated
-    assert simplify(I - (f(x) - g(x))/(f(x) + g(x))/2) == 0
+    assert simplify(r1 - (f(x) - g(x))/(f(x) + g(x))/2) == 0
 
 
 @XFAIL
 def test_W1():
     # The function has a pole at y.
     # The integral has a Cauchy principal value of zero but SymPy returns -I*pi
+    # https://code.google.com/p/sympy/issues/detail?id=4060
     assert integrate(1/(x - y), (x, y - 1, y + 1)) == 0
 
 
@@ -2316,6 +2317,7 @@ def test_W1():
 def test_W2():
     # The function has a pole at y.
     # The integral is divergent but SymPy returns -2
+    # https://code.google.com/p/sympy/issues/detail?id=4061
     # Test case in Macsyma:
     # (c6) errcatch(integrate(1/(x - a)^2, x, a - 1, a + 1));
     # Integral is divergent
@@ -2325,4 +2327,59 @@ def test_W2():
 @XFAIL
 def test_W3():
     # integral is not  calculated
-    assert integrate(sqrt(x + 1/x - 2), (x, 0, 1)) == Rational(4,3)
+    # https://code.google.com/p/sympy/issues/detail?id=4062
+    assert integrate(sqrt(x + 1/x - 2), (x, 0, 1)) == S(4)/3
+
+
+@XFAIL
+def test_W4():
+    # integral is not  calculated
+    assert integrate(sqrt(x + 1/x - 2), (x, 1, 2)) == -2*sqrt(2)/3 + S(4)/3
+
+
+@XFAIL
+def test_W5():
+    # integral is not  calculated
+    assert integrate(sqrt(x + 1/x - 2), (x, 0, 2)) == -2*sqrt(2)/3 + S(8)/3
+
+
+@XFAIL
+@slow
+def test_W6():
+    # integral is not  calculated
+    assert integrate(sqrt(2 - 2*cos(2*x))/2, (x, -3*pi/4, -pi/4)) == sqrt(2)
+
+
+def test_W7():
+    a = symbols('a', real=True, positive=True)
+    r1 = integrate(cos(x)/(x**2 + a**2), (x, -oo, oo))
+    assert r1.simplify() == pi*exp(-a)/a
+
+
+@XFAIL
+def test_W8():
+    # Test case in Mathematica:
+    # In[19]:= Integrate[t^(a - 1)/(1 + t), {t, 0, Infinity},
+    #                    Assumptions -> 0 < a < 1]
+    # Out[19]= Pi Csc[a Pi]
+    raise NotImplementedError(
+        "Integrate with assumption 0 < a < 1 not supported")
+
+
+@XFAIL
+def test_W9():
+    # Integrand with a residue at infinity => -2 pi [sin(pi/5) + sin(2pi/5)]
+    # (principal value)   [Levinson and Redheffer, p. 234] *)
+    r1 = integrate(5*x**3/(1 + x + x**2 + x**3 + x**4), (x, -oo, oo))
+    r2 = r1.doit()
+    assert r2 == -2*pi*(sqrt(-sqrt(5)/8 + 5/8) + sqrt(sqrt(5)/8 + 5/8))
+
+
+@XFAIL
+def test_W10():
+    # integrate(1/[1 + x + x^2 + ... + x^(2 n)], x = -infinity..infinity) =
+    #        2 pi/(2 n + 1) [1 + cos(pi/[2 n + 1])] csc(2 pi/[2 n + 1])
+    # [Levinson and Redheffer, p. 255] => 2 pi/5 [1 + cos(pi/5)] csc(2 pi/5) */
+    r1 = integrate(x/(1 + x + x**2 + x**4), (x, -oo, oo))
+    r2 = r1.doit()
+    assert r2 == 2*pi*(sqrt(5)/4 + 5/4)*csc(2*pi/5)/5
