@@ -1,6 +1,6 @@
 from __future__ import print_function, division
 
-from sympy.core import Basic, Mul, Add, Pow, oo
+from sympy.core import Basic, Mul, Add, Pow, oo, Tuple
 from sympy.matrices.expressions import MatMul
 
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
@@ -40,23 +40,22 @@ def get_relevant_facts(proposition, assumptions=True,
     context=global_assumptions, use_known_facts=True):
     keys = proposition.atoms(AppliedPredicate)
     # XXX: We need this since True/False are not Basic
-    if isinstance(assumptions, Basic):
-        keys |= assumptions.atoms(AppliedPredicate)
+    keys |= Tuple(*assumptions).atoms(AppliedPredicate)
     if context:
         keys |= And(*context).atoms(AppliedPredicate)
 
     predicates = set([i.args[0] for i in keys])
 
-    relevant_facts = True
+    relevant_facts = set([])
 
     if use_known_facts:
         for predicate in predicates:
-            relevant_facts &= known_facts_cnf.rcall(predicate)
+            relevant_facts.add(known_facts_cnf.rcall(predicate))
 
     for key in keys:
         expr = key.args[0]
         for fact in fact_registry[expr.func]:
-            relevant_facts &= fact.rcall(expr)
+            relevant_facts.add(fact.rcall(expr))
 
     return relevant_facts
 
@@ -67,14 +66,14 @@ def get_all_relevant_facts(proposition, assumptions=True,
     # we stop getting new things.  Hopefully this strategy won't lead to an
     # infinite loop in the future.
     i = 0
-    relevant_facts = True
-    old_relevant_facts = False
+    relevant_facts = set([])
+    old_relevant_facts = [False]
     while relevant_facts != old_relevant_facts:
         old_relevant_facts, relevant_facts = (relevant_facts,
-            get_relevant_facts(proposition, assumptions & relevant_facts,
+            get_relevant_facts(proposition, And.make_args(assumptions) | relevant_facts,
                 context, use_known_facts=use_known_facts))
         i += 1
         if i >= iterations:
-            return relevant_facts
+            return And(*relevant_facts)
 
-    return relevant_facts
+    return And(*relevant_facts)
