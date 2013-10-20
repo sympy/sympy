@@ -2,13 +2,15 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S
-from sympy.polys import Poly, groebner, roots
+from sympy.core.singleton import S
+from sympy.polys.polytools import Poly, groebner
+from sympy.polys.polyroots import roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed)
-from sympy.simplify import rcollect
-from sympy.utilities import default_sort_key, postfixes
+from sympy.simplify.simplify import rcollect
+from sympy.core.compatibility import default_sort_key
+from sympy.utilities.iterables import postfixes
 
 
 class SolveFailed(Exception):

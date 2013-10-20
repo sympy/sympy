@@ -56,14 +56,16 @@ from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.relational import Equality
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core import sympify
+from sympy.core.sympify import sympify
 
-from sympy.simplify import simplify, hypersimp, hypersimilar
-from sympy.solvers import solve, solve_undetermined_coeffs
-from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
-from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
-from sympy.matrices import Matrix, casoratian
-from sympy.concrete import product
+from sympy.simplify.simplify import simplify, hypersimp, hypersimilar
+from sympy.solvers.solvers import solve, solve_undetermined_coeffs
+from sympy.polys.polytools import Poly, quo, gcd, lcm
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import resultant
+from sympy.functions.combinatorial.factorials import binomial, factorial, FallingFactorial, RisingFactorial
+from sympy.matrices.dense import Matrix, casoratian
+from sympy.concrete.products import product
 from sympy.core.compatibility import default_sort_key, xrange
 from sympy.utilities.iterables import numbered_symbols
 

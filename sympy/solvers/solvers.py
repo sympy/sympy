@@ -18,29 +18,40 @@ from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, reduce, xrange)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
-from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
-    Expr, Mul, Pow)
+from sympy.core.core import C
+from sympy.core.singleton import S
+from sympy.core.add import Add
+from sympy.core.symbol import Symbol
+from sympy.core.relational import Equality
+from sympy.core.symbol import Dummy
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops, Function, expand_power_exp)
+                          Function, expand_power_exp)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
 from sympy.core.basic import preorder_traversal
 
-from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
-                             sinh, tanh, coth, acos, asin, atan, acot, acosh,
-                             asinh, atanh, acoth, Abs, sign, re, im, arg,
-                             sqrt, atan2)
-from sympy.functions.elementary.miscellaneous import real_root
-from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom, logcombine)
+from sympy.functions.elementary.exponential import log, exp, LambertW
+from sympy.functions.elementary.trigonometric import cos, sin, tan, acos, asin, atan
+from sympy.functions.elementary.complexes import Abs, re, im, arg
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import atan2
+from sympy.simplify.simplify import simplify, collect, powsimp, posify
+from sympy.simplify.simplify import powdenest, nsimplify, denom, logcombine
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
-from sympy.simplify.fu import TR1, hyper_as_trig
-from sympy.matrices import Matrix, zeros
-from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
-    degree, PolynomialError)
+from sympy.simplify.fu import TR1
+from sympy.matrices.dense import Matrix, zeros
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import cancel, factor, Poly
+from sympy.polys.rationaltools import together
+from sympy.polys.rootoftools import RootOf
+from sympy.polys.polytools import degree
+from sympy.polys.polyerrors import PolynomialError
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -51,8 +62,6 @@ from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
-
-from sympy.assumptions import Q, ask
 
 from types import GeneratorType
 from collections import defaultdict
