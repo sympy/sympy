@@ -1,4 +1,5 @@
-from sympy import Function, sympify, diff, Eq, S, Symbol
+from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
+from itertools import combinations_with_replacement
 
 def euler_equations(L, funcs=(), vars=()):
     """Find the Euler-Lagrange equations for a given Lagrangian.
@@ -76,11 +77,14 @@ def euler_equations(L, funcs=(), vars=()):
         if not vars == f.args:
             raise ValueError("Variables %s don't match function arguments: %s" % (vars, f))
 
+    order = max(len(d.variables) for d in L.atoms(Derivative) if d.expr in funcs)
+
     eqns = []
     for f in funcs:
         eq = diff(L, f)
-        for var in vars:
-            eq = eq - diff(L, diff(f, var), var)
+        for i in range(1, order + 1):
+            for p in combinations_with_replacement(vars, i):
+                eq = eq + S.NegativeOne**i*diff(L, diff(f, *p), *p)
         eqns.append(Eq(eq, 0))
 
     return set(eqns)
