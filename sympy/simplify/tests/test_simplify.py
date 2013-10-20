@@ -281,6 +281,12 @@ def test_issue_3826():
     assert trigsimp(tan(2*x).expand(trig=True)) == tan(2*x)
 
 
+def test_trigsimp_issue_4032():
+    n = Symbol('n', integer=True, positive=True)
+    assert trigsimp(2**(n/2)*cos(pi*n/4)/2 + 2**(n - 1)/2) == \
+        2**(n/2)*cos(pi*n/4)/2 + 2**n/4
+
+
 def test_trigsimp_noncommutative():
     x, y = symbols('x,y')
     A, B = symbols('A,B', commutative=False)

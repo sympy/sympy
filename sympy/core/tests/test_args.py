@@ -1665,10 +1665,14 @@ def test_sympy__liealgebras__cartan_type__CartanType_generator():
 @XFAIL
 def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     from sympy.liealgebras.cartan_type import Standard_Cartan
-    assert _test_args(Standard_Cartan(A, 2))
+    assert _test_args(Standard_Cartan("A", 2))
 
 @XFAIL
+def test_sympy__liealgebras__weyl_group__WeylGroup():
+    from sympy.liealgebras.weyl_group import WeylGroup
+    assert _test_args(WeylGroup("B4"))
 
+@XFAIL
 def test_sympy__liealgebras__root_system__RootSystem():
     from sympy.liealgebras.root_system import RootSyStem
     assert _test_args(RootSystem("A2"))

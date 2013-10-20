@@ -1,5 +1,5 @@
 from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer
+    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
 from sympy.utilities.pytest import XFAIL, skip
@@ -433,3 +433,12 @@ def test_issue_2073():
     # fail:
     assert gruntz(expr.subs(c, p), n, oo).simplify() == \
         (2**(p + 1) + r - 1)/(r + 1)**(p + 1)
+
+
+def test_issue_1010():
+    assert gruntz(1/gamma(x), x, 0) == 0
+    assert gruntz(x*gamma(x), x, 0) == 1
+
+
+def test_issue_3583():
+    assert gruntz(exp(2*Ei(-x))/x**2, x, 0) == exp(2*EulerGamma)
