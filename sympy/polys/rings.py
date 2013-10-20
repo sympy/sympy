@@ -23,7 +23,7 @@ from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt, buil
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.polys.constructor import construct_domain
 from sympy.printing.defaults import DefaultPrinting
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 from sympy.utilities.magic import pollute
 
 @public

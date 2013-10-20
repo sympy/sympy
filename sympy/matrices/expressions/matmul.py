@@ -4,6 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.core.add import Add
+from sympy.functions import transpose
 from sympy.functions.elementary.complexes import adjoint
 from sympy.strategies.rl import rm_id, unpack
 from sympy.strategies.tools import typed

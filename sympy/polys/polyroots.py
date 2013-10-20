@@ -5,13 +5,18 @@ from __future__ import print_function, division
 import math
 
 from sympy.core.symbol import Dummy, Symbol, symbols
-from sympy.core import S, I, pi
+from sympy.core.singleton import S
+from sympy.core.numbers import I
 from sympy.core.mul import expand_2arg
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
-from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt, re, im, Abs, cos, sin
+from sympy.ntheory.factor_ import divisors
+from sympy.ntheory.primetest import isprime
+from sympy.ntheory.generate import nextprime
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im
 
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
@@ -19,8 +24,9 @@ from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainErro
 from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
 
-from sympy.simplify import simplify, powsimp
-from sympy.utilities import default_sort_key, public
+from sympy.simplify.simplify import simplify, powsimp
+from sympy.core.compatibility import default_sort_key
+from sympy.utilities.decorator import public
 
 from sympy.core.compatibility import reduce, xrange
 

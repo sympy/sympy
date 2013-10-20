@@ -2,9 +2,9 @@
 
 from __future__ import print_function, division
 
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 from sympy.polys.constructor import construct_domain
 from sympy.polys.polytools import Poly, PurePoly

@@ -2,8 +2,14 @@
 
 from __future__ import print_function, division
 
-from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
-        sympify, Rational)
+from sympy.core.singleton import S
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer, Float, I
+from sympy.core.add import Add
+from sympy.core.function import Lambda
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.core.numbers import Rational
 
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
@@ -28,7 +34,8 @@ from sympy.polys.domains import QQ
 from sympy.mpmath import mp, mpf, mpc, findroot
 from sympy.mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.utilities import lambdify, public
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.decorator import public
 
 from sympy.core.compatibility import xrange
 

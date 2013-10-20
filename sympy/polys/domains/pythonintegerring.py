@@ -9,7 +9,7 @@ from sympy.polys.domains.groundtypes import (
 )
 
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 class PythonIntegerRing(IntegerRing):

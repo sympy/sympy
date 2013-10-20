@@ -8,7 +8,7 @@ from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 @public
 class FiniteField(Field, SimpleDomain):
