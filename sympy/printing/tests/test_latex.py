@@ -1048,6 +1048,65 @@ def test_translate():
     assert translate(s) == r'\Pi'
     s = 'pi'
     assert translate(s) == r'\pi'
+    s = 'LamdaHatDOT'
+    assert translate(s) == r'\dot{\hat{\Lambda}}'
+
+def test_other_symbols():
+    from sympy.printing.latex import other_symbols
+    for s in other_symbols:
+        assert latex(symbols(s)) == "\\"+s
+
+def test_modifiers():
+    # Test each modifier individually in the simplest case (with funny capitalizations)
+    assert latex(symbols("xMathring")) == r"\mathring{x}"
+    assert latex(symbols("xCheck")) == r"\check{x}"
+    assert latex(symbols("xBreve")) == r"\breve{x}"
+    assert latex(symbols("xAcute")) == r"\acute{x}"
+    assert latex(symbols("xGrave")) == r"\grave{x}"
+    assert latex(symbols("xTilde")) == r"\tilde{x}"
+    assert latex(symbols("xPrime")) == r"{x}'"
+    assert latex(symbols("xddDDot")) == r"\ddddot{x}"
+    assert latex(symbols("xDdDot")) == r"\dddot{x}"
+    assert latex(symbols("xDDot")) == r"\ddot{x}"
+    assert latex(symbols("xBold")) == r"\boldsymbol{x}"
+    assert latex(symbols("xnOrM")) == r"\left\lVert{x}\right\rVert"
+    assert latex(symbols("xAVG")) == r"\left\langle{x}\right\rangle"
+    assert latex(symbols("xHat")) == r"\hat{x}"
+    assert latex(symbols("xDot")) == r"\dot{x}"
+    assert latex(symbols("xBar")) == r"\bar{x}"
+    assert latex(symbols("xVec")) == r"\vec{x}"
+    assert latex(symbols("xAbs")) == r"\left\lvert{x}\right\rvert"
+    assert latex(symbols("xMag")) == r"\left\lvert{x}\right\rvert"
+    assert latex(symbols("xPrM")) == r"{x}'"
+    assert latex(symbols("xBM")) == r"\boldsymbol{x}"
+    # Test strings that are *only* the names of modifiers
+    assert latex(symbols("Mathring")) == r"Mathring"
+    assert latex(symbols("Check")) == r"Check"
+    assert latex(symbols("Breve")) == r"Breve"
+    assert latex(symbols("Acute")) == r"Acute"
+    assert latex(symbols("Grave")) == r"Grave"
+    assert latex(symbols("Tilde")) == r"Tilde"
+    assert latex(symbols("Prime")) == r"Prime"
+    assert latex(symbols("DDot")) == r"\dot{D}"
+    assert latex(symbols("Bold")) == r"Bold"
+    assert latex(symbols("NORm")) == r"NORm"
+    assert latex(symbols("AVG")) == r"AVG"
+    assert latex(symbols("Hat")) == r"Hat"
+    assert latex(symbols("Dot")) == r"Dot"
+    assert latex(symbols("Bar")) == r"Bar"
+    assert latex(symbols("Vec")) == r"Vec"
+    assert latex(symbols("Abs")) == r"Abs"
+    assert latex(symbols("Mag")) == r"Mag"
+    assert latex(symbols("PrM")) == r"PrM"
+    assert latex(symbols("BM")) == r"BM"
+    assert latex(symbols("hbar")) == r"\hbar"
+    # Check a few combinations
+    assert latex(symbols("xvecdot")) == r"\dot{\vec{x}}"
+    assert latex(symbols("xDotVec")) == r"\vec{\dot{x}}"
+    assert latex(symbols("xHATNorm")) == r"\left\lVert{\hat{x}}\right\rVert"
+    # Check a couple big, ugly combinations
+    assert latex(symbols('xMathringBm_yCheckPRM__zbreveAbs')) == r"\boldsymbol{\mathring{x}}^{\left\lvert{\breve{z}}\right\rvert}_{{\check{y}}'}"
+    assert latex(symbols('alphadothat_nVECDOT__tTildePrime')) == r"\hat{\dot{\alpha}}^{{\tilde{t}}'}_{\dot{\vec{n}}}"
 
 def test_greek_symbols():
     assert latex(Symbol('alpha'))   == r'\alpha'
