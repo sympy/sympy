@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
 from sympy.matrices.expressions.matexpr  import MatrixExpr
-from sympy import Tuple, Basic
+from sympy.core.containers import Tuple
+from sympy.core.basic import Basic
 from sympy.functions.elementary.integers import floor
-from sympy.assumptions import Q, ask
 
 def normalize(i, parentsize):
     if isinstance(i, slice):
