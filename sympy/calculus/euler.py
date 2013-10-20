@@ -1,5 +1,4 @@
 from sympy import Function, sympify, diff, Eq, S, Symbol
-from sympy.utilities import numbered_symbols
 
 def euler_equations(L, funcs=(), vars=()):
     """Find the Euler-Lagrange equations for a given Lagrangian.
@@ -77,16 +76,11 @@ def euler_equations(L, funcs=(), vars=()):
         if not vars == f.args:
             raise ValueError("Variables %s don't match function arguments: %s" % (vars, f))
 
-    constants = numbered_symbols(prefix='C', cls=Symbol, start=1)
-
     eqns = []
     for f in funcs:
         eq = diff(L, f)
-        if eq == S.Zero and len(vars) == 1:
-            eqns.append(Eq(diff(L, diff(f, var)), constants.next()))
-        else:
-            for var in vars:
-                eq = eq - diff(L, diff(f, var), var)
-            eqns.append(Eq(eq, 0))
+        for var in vars:
+            eq = eq - diff(L, diff(f, var), var)
+        eqns.append(Eq(eq, 0))
 
     return set(eqns)
