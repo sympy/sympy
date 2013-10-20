@@ -1141,7 +1141,9 @@ def test_O1():
 
 
 def test_O2():
-    assert Matrix((2, 2, -3)).cross(Matrix((1, 3, 1))) == Matrix([[11, -5, 4]])
+    assert Matrix((2, 2, -3)).cross(Matrix((1, 3, 1))) == Matrix([[11],
+                                                                  [-5],
+                                                                  [4]])
 
 
 @slow
@@ -2251,7 +2253,7 @@ def test_V11():
 #    x = symbols('x', real=True)
     r1 = integrate(1/(4 + 3*cos(x) + 4*sin(x)), x)
     r2 = factor(r1)
-    assert (logcombine(r1, force=True) ==
+    assert (logcombine(r2, force=True) ==
             log(((tan(x/2) + 1)/(tan(x/2) + 7))**(1/3)))
 
 
