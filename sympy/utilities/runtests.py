@@ -921,73 +921,77 @@ class SymPyTests(object):
         return fix_missing_locations(new_tree)
 
     def test_file(self, filename, sort=True, timeout=False, slow=False, enhance_asserts=False):
-        clear_cache()
-        self._count += 1
-        gl = {'__file__': filename}
-        random.seed(self._seed)
+        funcs = []
         try:
-            if IS_PYTHON_3:
-                open_file = lambda: open(filename, encoding="utf8")
-            else:
-                open_file = lambda: open(filename)
-
-            with open_file() as f:
-                source = f.read()
-
-            if enhance_asserts:
-                try:
-                    source = self._enhance_asserts(source)
-                except ImportError:
-                    pass
-
-            code = compile(source, filename, "exec")
-            exec_(code, gl)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except ImportError:
-            self._reporter.import_error(filename, sys.exc_info())
-            return
-        pytestfile = ""
-        if "XFAIL" in gl:
-            pytestfile = inspect.getsourcefile(gl["XFAIL"])
-        pytestfile2 = ""
-        if "slow" in gl:
-            pytestfile2 = inspect.getsourcefile(gl["slow"])
-        disabled = gl.get("disabled", False)
-        if disabled:
-            funcs = []
-        else:
-            # we need to filter only those functions that begin with 'test_'
-            # that are defined in the testing file or in the file where
-            # is defined the XFAIL decorator
-            funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
-                (inspect.getsourcefile(gl[f]) == filename or
-                 inspect.getsourcefile(gl[f]) == pytestfile or
-                 inspect.getsourcefile(gl[f]) == pytestfile2)]
-            if slow:
-                funcs = [f for f in funcs if getattr(f, '_slow', False)]
-            # Sorting of XFAILed functions isn't fixed yet :-(
-            funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
-            i = 0
-            while i < len(funcs):
-                if isgeneratorfunction(funcs[i]):
-                # some tests can be generators, that return the actual
-                # test functions. We unpack it below:
-                    f = funcs.pop(i)
-                    for fg in f():
-                        func = fg[0]
-                        args = fg[1:]
-                        fgw = lambda: func(*args)
-                        funcs.insert(i, fgw)
-                        i += 1
+            clear_cache()
+            self._count += 1
+            gl = {'__file__': filename}
+            random.seed(self._seed)
+            try:
+                if IS_PYTHON_3:
+                    open_file = lambda: open(filename, encoding="utf8")
                 else:
-                    i += 1
-            # drop functions that are not selected with the keyword expression:
-            funcs = [x for x in funcs if self.matches(x)]
+                    open_file = lambda: open(filename)
 
-        if not funcs:
-            return
+                with open_file() as f:
+                    source = f.read()
+
+                if enhance_asserts:
+                    try:
+                        source = self._enhance_asserts(source)
+                    except ImportError:
+                        pass
+
+                code = compile(source, filename, "exec")
+                exec_(code, gl)
+            except (SystemExit, KeyboardInterrupt):
+                raise
+            except ImportError:
+                self._reporter.import_error(filename, sys.exc_info())
+                return
+            pytestfile = ""
+            if "XFAIL" in gl:
+                pytestfile = inspect.getsourcefile(gl["XFAIL"])
+            pytestfile2 = ""
+            if "slow" in gl:
+                pytestfile2 = inspect.getsourcefile(gl["slow"])
+            disabled = gl.get("disabled", False)
+            if not disabled:
+                # we need to filter only those functions that begin with 'test_'
+                # that are defined in the testing file or in the file where
+                # is defined the XFAIL decorator
+                funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
+                    (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
+                    (inspect.getsourcefile(gl[f]) == filename or
+                     inspect.getsourcefile(gl[f]) == pytestfile or
+                     inspect.getsourcefile(gl[f]) == pytestfile2)]
+                if slow:
+                    funcs = [f for f in funcs if getattr(f, '_slow', False)]
+                # Sorting of XFAILed functions isn't fixed yet :-(
+                funcs.sort(key=lambda x: inspect.getsourcelines(x)[1])
+                i = 0
+                while i < len(funcs):
+                    if isgeneratorfunction(funcs[i]):
+                    # some tests can be generators, that return the actual
+                    # test functions. We unpack it below:
+                        f = funcs.pop(i)
+                        for fg in f():
+                            func = fg[0]
+                            args = fg[1:]
+                            fgw = lambda: func(*args)
+                            funcs.insert(i, fgw)
+                            i += 1
+                    else:
+                        i += 1
+                # drop functions that are not selected with the keyword expression:
+                funcs = [x for x in funcs if self.matches(x)]
+
+            if not funcs:
+                return
+        except Exception:
+            self._reporter.entering_filename(filename, len(funcs))
+            raise
+
         self._reporter.entering_filename(filename, len(funcs))
         if not sort:
             random.shuffle(funcs)
