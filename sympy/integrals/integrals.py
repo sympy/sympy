@@ -1357,7 +1357,35 @@ class Integral(Expr):
         return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):
-        return _eval_subs(self, old, new)
+        oldsyms = old.free_symbols
+        newsyms = new.free_symbols
+        limits = self.limits[-1]  # Take the outer most limit
+        intvar = limits[0]
+
+        # Direct substitution if old = f(intvar) and new = f(intvar)
+        # irrespective of whether the integral is definite or indefinite
+        if len(oldsyms) == 1 and len(newsyms) == 1 and \
+            intvar in oldsyms and intvar in newsyms and old != intvar:
+                return _eval_subs(self, old, new)
+
+        # Indefinite integral, see issue 2571
+        elif len(limits) == 1:
+            if old == intvar:
+                newargs = list(self.args)[:-1]
+                newargs.append((old, new))
+                return Integral(*newargs)
+
+            else:
+                raise ValueError("First argument of subs should be  " + str(intvar) +
+                    " or a function of " + str(intvar))
+
+        # Definite integral, substitute if transformation of variables is linear
+        else:
+            if old == intvar and new.is_Symbol:
+                return self.xreplace({old: new})
+            else:
+                raise NotImplementedError("Unable to substitute " + str(old) +
+                    "for " + str(new))
 
     def _eval_transpose(self):
         if all([x.is_real for x in flatten(self.limits)]):
