@@ -10,7 +10,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     expand_multinomial, FunctionClass, expand_power_base, symbols, igcd,
     expand_power_exp, expand_log)
 from sympy.core.add import _unevaluated_Add
-from sympy.core.cache import cacheit
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.compatibility import iterable, reduce, default_sort_key, ordered, xrange
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number, I
@@ -1347,6 +1347,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 _trigs = (C.TrigonometricFunction, C.HyperbolicFunction)
 
 
+@user_cacheit
 def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
@@ -3520,6 +3521,7 @@ def signsimp(expr, evaluate=True):
     return e
 
 
+@user_cacheit
 def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     """
     Simplifies the given expression.

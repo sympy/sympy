@@ -119,10 +119,10 @@ debug this function to figure out the exact problem.
 from __future__ import print_function, division
 
 from sympy.core import Basic, S, oo, Symbol, I, Dummy, Wild
+from sympy.core.cache import user_cacheit, cacheit
 from sympy.functions import log, exp
 from sympy.series.order import Order
 from sympy.simplify import powsimp
-from sympy import cacheit
 
 from sympy.core.compatibility import reduce
 
@@ -609,6 +609,7 @@ def rewrite(e, Omega, x, wsym):
     return f, logw
 
 
+@user_cacheit
 def gruntz(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0 using the Gruntz algorithm.

@@ -1872,8 +1872,8 @@ class PyTestReporter(Reporter):
             (executable, python_version, implementation))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
-        from sympy.core.cache import USE_CACHE
-        self.write("cache:              %s\n" % USE_CACHE)
+        #from sympy.core.cache import USE_CACHE
+        #self.write("cache:              %s\n" % USE_CACHE)
         from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
         version = ''
         if GROUND_TYPES =='gmpy':

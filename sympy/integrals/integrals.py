@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic, C
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.compatibility import is_sequence, xrange
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -104,6 +105,7 @@ def _process_limits(*symbols):
     return limits, sign
 
 
+@cacheit
 def _as_dummy(expr_with_limits):
     """
     Replace instances of the limit variables with their dummy
@@ -155,6 +157,7 @@ def _as_dummy(expr_with_limits):
     return self.func(f, *limits)
 
 
+@cacheit
 def _eval_subs(expr_with_limits, old, new):
         """
         Substitute old with new in the function and the limits, but don't
@@ -533,6 +536,8 @@ class Integral(Expr):
     def as_dummy(self):
         return _as_dummy(self)
 
+    @user_cacheit
+    @cacheit
     def transform(self, x, u, inverse=False):
         r"""
         Performs a change of variables from `x` to `u` using the relationship
@@ -1479,6 +1484,8 @@ class Integral(Expr):
         return result*dx
 
 
+@user_cacheit
+@cacheit
 @xthreaded
 def integrate(*args, **kwargs):
     """integrate(f, var, ...)

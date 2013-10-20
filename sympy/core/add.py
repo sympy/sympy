@@ -6,7 +6,7 @@ from sympy.core.core import C
 from sympy.core.compatibility import reduce
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
-from sympy.core.cache import cacheit
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.numbers import ilcm, igcd
 from sympy.core.expr import Expr
 
@@ -582,6 +582,8 @@ class Add(Expr, AssocOp):
         elif not neg and not nonpos:
             return False
 
+    @user_cacheit
+    @cacheit
     def _eval_subs(self, old, new):
         if not old.is_Add:
             return None
@@ -625,6 +627,7 @@ class Add(Expr, AssocOp):
         if args:
             return self._new_rawargs(*args)
 
+    @user_cacheit
     @cacheit
     def extract_leading_order(self, *symbols):
         """

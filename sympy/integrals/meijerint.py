@@ -31,7 +31,7 @@ from sympy.core import oo, S, pi, Expr
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.cache import cacheit
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.symbol import Dummy, Wild
 from sympy.simplify import hyperexpand, powdenest
 from sympy.logic.boolalg import And, Or
@@ -46,6 +46,7 @@ from sympy.utilities import default_sort_key
 z = Dummy('z')
 
 
+@cacheit
 def _create_lookup_table(table):
     """ Add formulae for the function -> meijerg lookup table. """
     def wild(n):
@@ -266,6 +267,7 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('meijerg')
 
 
+@cacheit
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
     if x not in f.free_symbols:
@@ -288,6 +290,7 @@ class _CoeffExpValueError(ValueError):
     pass
 
 
+@cacheit
 def _get_coeff_exp(expr, x):
     """
     When expr is known to be of the form c*x**b, with c and/or b possibly 1,
@@ -319,6 +322,7 @@ def _get_coeff_exp(expr, x):
         raise _CoeffExpValueError('expr not of form a*x**b: %s' % expr)
 
 
+@cacheit
 def _exponents(expr, x):
     """
     Find the exponents of ``x`` (not including zero) in ``expr``.
@@ -349,12 +353,14 @@ def _exponents(expr, x):
     return res
 
 
+@cacheit
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
     return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
 
 
+@cacheit
 def _find_splitting_points(expr, x):
     """
     Find numbers a such that a linear substitution x --> x+a would
@@ -389,6 +395,7 @@ def _find_splitting_points(expr, x):
     return innermost
 
 
+@cacheit
 def _split_mul(f, x):
     """
     Split expression ``f`` into fac, po, g, where fac is a constant factor,
@@ -426,6 +433,7 @@ def _split_mul(f, x):
     return fac, po, g
 
 
+@cacheit
 def _mul_args(f):
     """
     Return a list ``L`` such that Mul(*L) == f.
@@ -449,6 +457,7 @@ def _mul_args(f):
     return gs
 
 
+@cacheit
 def _mul_as_two_parts(f):
     """
     Find all the ways to split f into a product of two terms.
@@ -477,6 +486,7 @@ def _mul_as_two_parts(f):
     return [(Mul(*x), Mul(*y)) for (x, y) in multiset_partitions(gs, 2)]
 
 
+@cacheit
 def _inflate_g(g, n):
     """ Return C, h such that h is a G function of argument z**n and
         g = C*h. """
@@ -497,6 +507,7 @@ def _inflate_g(g, n):
                       g.argument**n * n**(n*v))
 
 
+@cacheit
 def _flip_g(g):
     """ Turn the G function into one of inverse argument
         (i.e. G(1/x) -> G'(x)) """
@@ -506,6 +517,7 @@ def _flip_g(g):
     return meijerg(tr(g.bm), tr(g.bother), tr(g.an), tr(g.aother), 1/g.argument)
 
 
+@cacheit
 def _inflate_fox_h(g, a):
     r"""
     Let d denote the integrand in the definition of the G function ``g``.
@@ -534,6 +546,7 @@ def _inflate_fox_h(g, a):
 _dummies = {}
 
 
+@cacheit
 def _dummy(name, token, expr, **kwargs):
     """
     Return a dummy. This will return the same dummy if the same token+name is
@@ -546,6 +559,7 @@ def _dummy(name, token, expr, **kwargs):
     return d
 
 
+@cacheit
 def _dummy_(name, token, **kwargs):
     """
     Return a dummy associated to name and token. Same effect as declaring
@@ -557,6 +571,7 @@ def _dummy_(name, token, **kwargs):
     return _dummies[(name, token)]
 
 
+@cacheit
 def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
@@ -564,6 +579,7 @@ def _is_analytic(f, x):
     return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
+@cacheit
 def _condsimp(cond):
     """
     Do naive simplifications on ``cond``.
@@ -659,6 +675,7 @@ def _condsimp(cond):
         repl_eq)
 
 
+@cacheit
 def _eval_cond(cond):
     """ Re-evaluate the conditions. """
     if isinstance(cond, bool):
@@ -670,6 +687,7 @@ def _eval_cond(cond):
 ####################################################################
 
 
+@cacheit
 def _my_principal_branch(expr, period, full_pb=False):
     """ Bring expr nearer to its principal branch by removing superfluous
         factors.
@@ -683,6 +701,7 @@ def _my_principal_branch(expr, period, full_pb=False):
     return res
 
 
+@cacheit
 def _rewrite_saxena_1(fac, po, g, x):
     """
     Rewrite the integral fac*po*g dx, from zero to infinity, as
@@ -704,6 +723,7 @@ def _rewrite_saxena_1(fac, po, g, x):
                       a*x)
 
 
+@cacheit
 def _check_antecedents_1(g, x, helper=False):
     """
     Return a condition under which the mellin transform of g exists.
@@ -821,6 +841,7 @@ def _check_antecedents_1(g, x, helper=False):
     return Or(*conds)
 
 
+@cacheit
 def _int0oo_1(g, x):
     """
     Evaluate int_0^\infty g dx using G functions,
@@ -848,6 +869,7 @@ def _int0oo_1(g, x):
     return combsimp(unpolarify(res))
 
 
+@cacheit
 def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     """
     Rewrite the integral fac*po*g1*g2 from 0 to oo in terms of G functions
@@ -915,6 +937,7 @@ def _rewrite_saxena(fac, po, g1, g2, x, full_pb=False):
     return powdenest(fac, polar=True), g1, g2
 
 
+@cacheit
 def _check_antecedents(g1, g2, x):
     """ Return a condition under which the integral theorem applies. """
     from sympy import (re, Eq, Not, Ne, cos, I, exp, ceiling, sin, sign,
@@ -1222,6 +1245,7 @@ def _check_antecedents(g1, g2, x):
     #      can be found in [L, section 5.6.2].
 
 
+@cacheit
 def _int0oo(g1, g2, x):
     """
     Express integral from zero to infinity g1*g2 using a G function,
@@ -1248,6 +1272,7 @@ def _int0oo(g1, g2, x):
     return meijerg(a1, a2, b1, b2, omega/eta)/eta
 
 
+@cacheit
 def _rewrite_inversion(fac, po, g, x):
     """ Absorb ``po`` == x**s into g. """
     _, s = _get_coeff_exp(po, x)
@@ -1259,6 +1284,7 @@ def _rewrite_inversion(fac, po, g, x):
             meijerg(tr(g.an), tr(g.aother), tr(g.bm), tr(g.bother), g.argument))
 
 
+@cacheit
 def _check_antecedents_inversion(g, x):
     """ Check antecedents for the laplace inversion integral. """
     from sympy import re, im, Or, And, Eq, exp, I, Add, nan, Ne
@@ -1380,6 +1406,7 @@ def _check_antecedents_inversion(g, x):
     return Or(*conds)
 
 
+@cacheit
 def _int_inversion(g, x, t):
     """
     Compute the laplace inversion integral, assuming the formula applies.
@@ -1581,6 +1608,7 @@ def _rewrite2(f, x):
                     return fac, po, g1[0], g2[0], cond
 
 
+@user_cacheit
 def meijerint_indefinite(f, x):
     """
     Compute an indefinite integral of ``f`` by rewriting it as a G function.
@@ -1604,6 +1632,7 @@ def meijerint_indefinite(f, x):
         return next(ordered(results))
 
 
+@cacheit
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
     from sympy import Integral, piecewise_fold
@@ -1826,6 +1855,7 @@ def _guess_expansion(f, x):
     return res
 
 
+@cacheit
 def _meijerint_definite_2(f, x):
     """
     Try to integrate f dx from zero to infinty.
@@ -1855,6 +1885,7 @@ def _meijerint_definite_2(f, x):
             return res
 
 
+@cacheit
 def _meijerint_definite_3(f, x):
     """
     Try to integrate f dx from zero to infinity.
@@ -1884,6 +1915,7 @@ def _my_unpolarify(f):
     return _eval_cond(unpolarify(f))
 
 
+@cacheit
 @timeit
 def _meijerint_definite_4(f, x, only_double=False):
     """
@@ -1945,6 +1977,7 @@ def _meijerint_definite_4(f, x, only_double=False):
                 return _my_unpolarify(hyperexpand(res)), cond
 
 
+@user_cacheit
 def meijerint_inversion(f, x, t):
     """
     Compute the inverse laplace transform

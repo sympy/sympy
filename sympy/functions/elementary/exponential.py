@@ -3,7 +3,7 @@ from __future__ import print_function, division
 from sympy.core import C, sympify
 from sympy.core.add import Add
 from sympy.core.function import Lambda, Function, ArgumentIndexError
-from sympy.core.cache import cacheit
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.core.mul import Mul
@@ -294,6 +294,7 @@ class exp(ExpBase):
         return S.Exp1
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):
         """
@@ -564,6 +565,7 @@ class log(Function):
         return self, S.One
 
     @staticmethod
+    @user_cacheit
     @cacheit
     def taylor_term(n, x, *previous_terms):  # of log(1+x)
         """

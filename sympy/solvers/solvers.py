@@ -17,6 +17,7 @@ from __future__ import print_function, division
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, reduce, xrange)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
     Expr, Mul, Pow)
@@ -337,6 +338,8 @@ def check_assumptions(expr, **assumptions):
     return result
 
 
+@user_cacheit
+@cacheit
 def solve(f, *symbols, **flags):
     """
     Algebraically solves equations and systems of equations.
@@ -1065,6 +1068,7 @@ def solve(f, *symbols, **flags):
     return k, set([tuple([s[ki] for ki in k]) for s in solution])
 
 
+@cacheit
 def _solve(f, *symbols, **flags):
     """Return a checked solution for f in terms of one or more of the
     symbols."""
@@ -1406,6 +1410,7 @@ def _solve(f, *symbols, **flags):
     return result
 
 
+@cacheit
 def _solve_system(exprs, symbols, **flags):
     check = flags.get('check', True)
     if not exprs:
@@ -1608,6 +1613,8 @@ def _solve_system(exprs, symbols, **flags):
     return result
 
 
+@user_cacheit
+@cacheit
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     r""" Return a tuple derived from f = lhs - rhs that is either:
 
@@ -1753,6 +1760,8 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     return n, d  # should we cancel now?
 
 
+@user_cacheit
+@cacheit
 def minsolve_linear_system(system, *symbols, **flags):
     r"""
     Find a particular solution to a linear system.
@@ -1834,6 +1843,8 @@ def minsolve_linear_system(system, *symbols, **flags):
         return bestsol
 
 
+@user_cacheit
+@cacheit
 def solve_linear_system(system, *symbols, **flags):
     r"""
     Solve system of N linear equations with M variables, which means
@@ -2016,6 +2027,8 @@ def solve_linear_system(system, *symbols, **flags):
         return []   # no solutions
 
 
+@user_cacheit
+@cacheit
 def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     """Solve equation of a type p(x; a_1, ..., a_k) == q(x) where both
        p, q are univariate polynomials and f depends on k parameters.
@@ -2055,6 +2068,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         return None  # no solutions
 
 
+@user_cacheit
+@cacheit
 def solve_linear_system_LU(matrix, syms):
     """
     Solves the augmented matrix system using LUsolve and returns a dictionary
@@ -2251,6 +2266,8 @@ def _tsolve(eq, sym, **flags):
 # TODO: option for calculating J numerically
 
 
+@user_cacheit
+@cacheit
 def nsolve(*args, **kwargs):
     r"""
     Solve a nonlinear equation system numerically::

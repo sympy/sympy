@@ -64,6 +64,7 @@ from itertools import product
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, xrange
 from sympy.utilities.iterables import sift
@@ -2425,6 +2426,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     return func0(z0)
 
 
+@user_cacheit
 def hyperexpand(f, allow_hyper=False, rewrite='default'):
     """
     Expand hypergeometric functions. If allow_hyper is True, allow partial

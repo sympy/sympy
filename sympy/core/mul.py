@@ -7,7 +7,7 @@ from sympy.core.sympify import sympify
 from sympy.core.basic import Basic, C
 from sympy.core.singleton import S
 from sympy.core.operations import AssocOp
-from sympy.core.cache import cacheit
+from sympy.core.cache import cacheit, user_cacheit
 from sympy.core.logic import fuzzy_not
 from sympy.core.compatibility import cmp_to_key, reduce, xrange
 from sympy.core.expr import Expr
@@ -1176,6 +1176,8 @@ class Mul(Expr, AssocOp):
         elif is_integer is False:
             return False
 
+    @user_cacheit
+    @cacheit
     def _eval_subs(self, old, new):
         from sympy.functions.elementary.complexes import sign
         from sympy.ntheory.factor_ import multiplicity
@@ -1191,6 +1193,7 @@ class Mul(Expr, AssocOp):
                     return self._subs(-old, -new)
                 return None
 
+        @cacheit
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
             # a -1 base (see issue 3322); all we want here are the
@@ -1199,6 +1202,7 @@ class Mul(Expr, AssocOp):
                 return a.as_base_exp()
             return a, S.One
 
+        @cacheit
         def breakup(eq):
             """break up powers of eq when treated as a Mul:
                    b**(Rational*e) -> b**e, Rational
@@ -1220,6 +1224,7 @@ class Mul(Expr, AssocOp):
                     nc.append([b, e])
             return (c, nc)
 
+        @cacheit
         def rejoin(b, co):
             """
             Put rational back with exponent; in general this is not ok, but
@@ -1230,6 +1235,7 @@ class Mul(Expr, AssocOp):
             (b, e) = base_exp(b)
             return Pow(b, e*co)
 
+        @cacheit
         def ndiv(a, b):
             """if b divides a in an extractive way (like 1/4 divides 1/2
             but not vice versa, and 2/5 does not divide 1/3) then return

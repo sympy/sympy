@@ -285,6 +285,7 @@ class Pow(Expr):
     def _eval_is_polar(self):
         return self.base.is_polar
 
+    @cacheit
     def _eval_subs(self, old, new):
         if old.func is self.func and self.base == old.base:
             coeff1, terms1 = self.exp.as_independent(C.Symbol, as_Add=False)

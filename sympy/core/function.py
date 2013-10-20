@@ -612,6 +612,7 @@ class AppliedUndef(Function):
     Base class for expressions resulting from the application of an undefined
     function.
     """
+    @cacheit
     def __new__(cls, *args, **options):
         args = list(map(sympify, args))
         result = super(AppliedUndef, cls).__new__(cls, *args, **options)
@@ -878,6 +879,7 @@ class Derivative(Expr):
         else:
             return False
 
+    @cacheit
     def __new__(cls, expr, *variables, **assumptions):
 
         expr = sympify(expr)
