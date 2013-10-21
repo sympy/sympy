@@ -40,12 +40,14 @@ class UnevaluatedOnFree(BooleanFunction):
     singly applied predicate.
 
     On a free predicate, this class remains unevaluated. On a singly applied
-    predicate, the method apply is called and returned. In that case,
+    predicate, the method apply() is called and returned, or the original
+    expression returned if apply() returns None. When apply() is called,
     self.expr is set to the unique expression that the predicates are applied
     at.
 
     The typical usage is to create this class with free predicates and
     evaluate it using .rcall().
+
     """
     def __new__(cls, arg):
         # Mostly type checking here
