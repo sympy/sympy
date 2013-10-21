@@ -43,7 +43,7 @@ class UnevaluatedOnFree(BooleanFunction):
     predicate, the method apply() is called and returned, or the original
     expression returned if apply() returns None. When apply() is called,
     self.expr is set to the unique expression that the predicates are applied
-    at.
+    at.  self.pred is set to the free form of the predicate.
 
     The typical usage is to create this class with free predicates and
     evaluate it using .rcall().
@@ -58,6 +58,7 @@ class UnevaluatedOnFree(BooleanFunction):
             raise ValueError("arg must be either completely free or singly applied")
         if not applied_predicates:
             obj = BooleanFunction.__new__(cls, arg)
+            obj.pred = arg
             obj.expr = None
             return obj
         predicate_args = set([pred.args[0] for pred in applied_predicates])
@@ -65,6 +66,8 @@ class UnevaluatedOnFree(BooleanFunction):
             raise ValueError("The AppliedPredicates in arg must be applied to a single expression.")
         obj = BooleanFunction.__new__(cls, arg)
         obj.expr = predicate_args.pop()
+        obj.pred = arg.xreplace(Transform(lambda e: e.func, lambda e:
+            isinstance(e, AppliedPredicate)))
         applied = obj.apply()
         if applied is None:
             return obj
@@ -97,14 +100,13 @@ class AllArgs(UnevaluatedOnFree):
     """
 
     def apply(self):
-        return And(*[self.args[0].xreplace({self.expr: arg}) for arg in
-            self.expr.args])
+        return And(*[self.pred.rcall(arg) for arg in self.expr.args])
 
 
 class AnyArgs(UnevaluatedOnFree):
     """
     Class representing vectorizing a predicate over any of the .args of an
-    expression
+    expression.
 
     See the docstring of UnevaluatedOnFree for more information on this
     class.
@@ -125,8 +127,8 @@ class AnyArgs(UnevaluatedOnFree):
     """
 
     def apply(self):
-        return Or(*[self.args[0].xreplace({self.expr: arg}) for arg in
-            self.expr.args])
+        return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
+
 
 
 def _old_assump_replacer(obj):

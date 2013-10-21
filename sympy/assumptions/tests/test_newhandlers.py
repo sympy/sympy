@@ -29,6 +29,8 @@ def test_UnevaluatedOnFree():
     assert b.rcall(x) == UnevaluatedOnFree(Q.positive(x) | Q.negative(x))
     assert c.rcall(x) == UnevaluatedOnFree(Q.positive(x) & ~Q.positive(x))
     assert a.rcall(x).expr == x
+    assert a.rcall(x).pred == Q.positive
+    assert b.rcall(x).pred == Q.positive | Q.negative
     raises(ValueError, lambda: UnevaluatedOnFree(Q.positive(x) | Q.negative))
     raises(ValueError, lambda: UnevaluatedOnFree(Q.positive(x) |
         Q.negative(y)))
