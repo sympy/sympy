@@ -11,7 +11,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
-    im, DiracDelta, chebyshevt, legendre_poly, polylog,
+    im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
     atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
@@ -2471,3 +2471,84 @@ def test_W23():
     # integrate raises RuntimeError: maximum recursion depth exceeded
     r2 = integrate(integrate(x/(x**2 + y**2), (y, -oo, oo)), (x, a, b))
     assert r1 == r2
+
+
+@XFAIL
+@slow
+def test_W24():
+    x, y = symbols('x y', real=True)
+    r1 = integrate(integrate(sqrt(x**2 + y**2), (x, 0, 1)), (y, 0, 1))
+    assert (r1 - (sqrt(2) + asinh(1))/3).simplify() == 0
+
+
+@XFAIL
+@slow
+def test_W25():
+    a, x, y = symbols('a x y', real=True)
+    i1 = integrate(sin(a)*sin(y)/sqrt(1- sin(a)**2*sin(x)**2*sin(y)**2),
+                   (x, 0, pi/2))
+    i2 = integrate(i1, (y, 0, pi/2))
+    assert (i2 - pi*a/2).simplify() == 0
+
+
+@XFAIL
+def test_W26():
+    x, y = symbols('x y', real=True)
+    # integrate(abs(y - x**2), (y,0,2)) raises ValueError: gamma function pole
+    # https://code.google.com/p/sympy/issues/detail?id=4066
+    assert integrate(integrate(abs(y - x**2), (y, 0, 2)),
+                     (x, -1, 1)) == S(46)/15
+
+
+def test_W27():
+    a, b, c = symbols('a b c')
+    assert integrate(integrate(integrate(1, (z, 0, c*(1 - x/a - y/b))),
+                               (y, 0, b*(1 - x/a))),
+                     (x, 0, a)) == a*b*c/6
+
+
+def test_X1():
+    v, c = symbols('v c', real=True)
+    assert (series(1/sqrt(1 - (v/c)**2), v, x0 = 0, n = 8) ==
+            5*v**6/(16*c**6) + 3*v**4/(8*c**4) + v**2/(2*c**2) + 1 + O(v**8))
+
+
+@XFAIL
+def test_X2():
+    v, c = symbols('v c', real=True)
+    f = 1/sqrt(1 - (v/c)**2)
+    s1 = series(f, v, x0 = 0, n = 8)
+    assert 1/f**2 == 1 - v**2/c**2
+    # 1/s1**2 returns (5*v**6/(16*c**6) + 3*v**4/(8*c**4)
+    # + v**2/(2*c**2) + 1 + O(v**8))**(-2)
+    assert 1/s1**2 == 1 - v**2/c*2 + O(v**8)
+
+
+@XFAIL
+def test_X3():
+    s1 = series(sin(x))/series(cos(x))
+    # s1 = (x - x**3/6 + x**5/120 + O(x**6))/(1 - x**2/2 + x**4/24 + O(x**6))
+    #
+    # trying to use lazy series raises TypeError:
+    # s1 = series(sin(x), n=None)/series(cos(x), n=None)
+    # TypeError: unsupported operand type(s) for /: 'generator' and 'generator'
+    assert series(tan(x)) == x + x**3/3 + 2*x**5/15 + O(x**6)
+    assert s1 == x + x**3/3 + 2*x**5/15 + O(x**6)
+
+@XFAIL
+def test_X4():
+    assert series(log(sin(x)/x)) == -x**2/6 - x**4/180 + O(x**6)
+    # log(series(sin(x)/x)) returns log(1 - x**2/6 + x**4/120 + O(x**6))
+    assert log(series(sin(x)/x)) == -x**2/6 - x**4/180 + O(x**6)
+
+
+@XFAIL
+def test_X5():
+    h = Function('h')
+    a, b, c, d = symbols('a b c d', real=True)
+    # series() raises NotImplementedError:
+    # The _eval_nseries method should be added to <class
+    # 'sympy.core.function.Subs'> to give terms up to O(x**n) at x=0
+    assert series(diff(f(a*x), x) + g(b*x) + integrate(h(c*y), (y, 0, x)),
+           x, x0 = d, n = 2)
+
