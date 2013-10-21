@@ -10,10 +10,10 @@ from sympy.core.numbers import Float
 from sympy.core.compatibility import iterable, with_metaclass
 
 from sympy.mpmath import mpi, mpf
-from sympy.assumptions import ask
+from sympy.assumptions.ask import ask
 from sympy.logic.boolalg import And, Or
 
-from sympy.utilities import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 
 class Set(Basic):

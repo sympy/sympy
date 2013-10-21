@@ -6,7 +6,8 @@ import random
 from operator import gt
 
 from sympy.core.decorators import deprecated
-from sympy.core import Basic, C
+from sympy.core.basic import Basic
+from sympy.core.core import C
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (

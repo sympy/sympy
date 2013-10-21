@@ -7,7 +7,7 @@ from __future__ import print_function, division
 
 import operator
 from collections import defaultdict
-from sympy.external import import_module
+from sympy.external.importtools import import_module
 
 
 """
@@ -479,7 +479,8 @@ def default_sort_key(item, order=None):
 
     """
 
-    from sympy.core import S, Basic
+    from sympy.core.singleton import S
+    from sympy.core.basic import Basic
     from sympy.core.sympify import sympify, SympifyError
     from sympy.core.compatibility import iterable
 
