@@ -128,8 +128,6 @@ class AnyArgs(UnevaluatedOnFree):
         return Or(*[self.args[0].xreplace({self.expr: arg}) for arg in
             self.expr.args])
 
-# TODO: How can we avoid calling evalf on the same expression multiple times
-# (once for each evalf fact)?
 
 def _old_assump_replacer(obj):
     # Things to be careful of:
