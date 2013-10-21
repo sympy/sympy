@@ -83,7 +83,6 @@ def _test_args(obj):
     return all(isinstance(arg, Basic) for arg in obj.args)
 
 
-@XFAIL
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
