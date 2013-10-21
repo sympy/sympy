@@ -78,18 +78,19 @@ class Q:
     - Every real number is either algebraic or transcendental.
 
     - The facts ``Q.negative``, ``Q.zero``, ``Q.positive``, ``Q.nonnegative``,
-      ``Q.nonpositive``, ``Q.nonzero``, ``Q.integer``, and ``Q.rational`` all
-      imply ``Q.real``, as do all facts that imply those facts.
+      ``Q.nonpositive``, ``Q.nonzero``, ``Q.integer``, ``Q.rational``, and
+      ``Q.irrational`` all imply ``Q.real``, as do all facts that imply those
+      facts.
 
-    - The facts ``Q.irrational``, ``Q.algebraic``, and ``Q.transcendental`` do
-      not imply ``Q.real``; they imply ``Q.complex``. An irrational,
-      algebraic, or transcendental number may or may not be real.
+    - The facts ``Q.algebraic``, and ``Q.transcendental`` do not imply
+      ``Q.real``; they imply ``Q.complex``. An algebraic or transcendental
+      number may or may not be real.
 
     - The "non" facts (i.e., ``Q.nonnegative``, ``Q.nonzero``, and
-    ``Q.nonpositive``)  are not equivalent to not the fact, but rather, not
-    the fact *and* ``Q.real``.  For example, ``Q.nonnegative`` means
-    ``~Q.negative & Q.real``. So for example, ``I`` is not nonnegative,
-    nonzero, or nonpositive.
+      ``Q.nonpositive``) are not equivalent to not the fact, but rather, not
+      the fact *and* ``Q.real``.  For example, ``Q.nonnegative`` means
+      ``~Q.negative & Q.real``. So for example, ``I`` is not nonnegative,
+      nonzero, or nonpositive.
 
     Examples
     ========
