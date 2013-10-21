@@ -2,8 +2,9 @@
 
 from __future__ import print_function, division
 
-from sympy import S, pi, I
-from sympy.core.function import Function, ArgumentIndexError, expand_func
+from sympy.core.singleton import S
+from sympy.core.numbers import pi, I
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import re, im

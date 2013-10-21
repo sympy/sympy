@@ -3,7 +3,12 @@
 
 from __future__ import print_function, division
 
-from sympy.core import Add, S, C, sympify, cacheit, pi, I
+from sympy.core.add import Add
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.sympify import sympify
+from sympy.core.cache import cacheit
+from sympy.core.numbers import pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log

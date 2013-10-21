@@ -2,14 +2,19 @@
 
 from __future__ import print_function, division
 
-from sympy.core import S, I, pi, oo, ilcm, Mod, C
+from sympy.core.singleton import S
+from sympy.core.numbers import I, pi, oo, ilcm
+from sympy.core.mod import Mod
+from sympy.core.core import C
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import reduce
 from sympy.core.mul import Mul
 
-from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import sin, cos, asin, atan
+from sympy.functions.elementary.hyperbolic import sinh, cosh, asinh, acosh, atanh, acoth
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):

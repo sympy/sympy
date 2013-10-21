@@ -8,7 +8,8 @@ from sympy.core.basic import Basic
 from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
-from sympy.core.function import Application, sympify
+from sympy.core.function import Application
+from sympy.core.sympify import sympify
 from sympy.core.compatibility import ordered, xrange
 
 

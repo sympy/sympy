@@ -3,7 +3,7 @@ from __future__ import print_function, division
 
 from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
     conjuncts, to_cnf
-from sympy.core.basic import C
+from sympy.core.core import C
 from sympy.core.sympify import sympify
 
 

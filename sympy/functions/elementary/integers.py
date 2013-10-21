@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
-from sympy.core.basic import C
+from sympy.core.core import C
 from sympy.core.singleton import S
 from sympy.core.function import Function
-from sympy.core import Add
+from sympy.core.add import Add
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
 
 ###############################################################################

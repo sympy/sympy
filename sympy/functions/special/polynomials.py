@@ -8,9 +8,9 @@ combinatorial polynomials.
 
 from __future__ import print_function, division
 
-from sympy.core.basic import C
+from sympy.core.core import C
 from sympy.core.singleton import S
-from sympy.core import Rational
+from sympy.core.numbers import Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.gamma_functions import gamma

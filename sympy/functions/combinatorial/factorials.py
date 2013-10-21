@@ -1,8 +1,10 @@
 from __future__ import print_function, division
 
-from sympy.core import S, C, sympify
+from sympy.core.singleton import S
+from sympy.core.core import C
+from sympy.core.sympify import sympify
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.ntheory import sieve
+from sympy.ntheory.generate import sieve
 from math import sqrt as _sqrt
 
 from sympy.core.compatibility import reduce, as_int, xrange

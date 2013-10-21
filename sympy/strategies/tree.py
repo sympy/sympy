@@ -1,9 +1,9 @@
 from __future__ import print_function, division
 
 from functools import partial
-from sympy.strategies import chain, minimize
+from sympy.strategies.core import chain, minimize
 import sympy.strategies.branch as branch
-from sympy.strategies.branch import yieldify
+from sympy.strategies.branch.core import yieldify
 
 identity = lambda x: x
 
