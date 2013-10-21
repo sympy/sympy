@@ -1,3 +1,4 @@
+import sympy
 from sympy.parsing.sympy_parser import (
     parse_expr,
     standard_transformations,
@@ -103,6 +104,19 @@ def test_symbol_splitting():
     for letter in greek_letters:
         assert(parse_expr(letter, transformations=transformations) ==
                parse_expr(letter))
+
+    # Make sure symbol splitting resolves names
+    transformations += (implicit_multiplication,)
+    local_dict = { 'e': sympy.E }
+    cases = {
+        'xe': 'E*x',
+        'Iy': 'I*y',
+        'ee': 'E*E',
+    }
+    for case, expected in cases.items():
+        assert(parse_expr(case, local_dict=local_dict,
+                          transformations=transformations) ==
+               parse_expr(expected))
 
     # Make sure custom splitting works
     def can_split(symbol):

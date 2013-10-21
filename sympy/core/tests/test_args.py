@@ -160,6 +160,27 @@ def test_sympy__concrete__products__Product():
     assert _test_args(Product(x, (x, 0, y), (y, 0, 10)))
 
 
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_limits__ExprWithLimits():
+    from sympy.concrete.expr_with_limits import ExprWithLimits
+    assert _test_args(ExprWithLimits(x, (x, 0, 10)))
+    assert _test_args(ExprWithLimits(x*y, (x, 0, 10.),(y,1.,3)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_limits__AddWithLimits():
+    from sympy.concrete.expr_with_limits import AddWithLimits
+    assert _test_args(AddWithLimits(x, (x, 0, 10)))
+    assert _test_args(AddWithLimits(x*y, (x, 0, 10),(y,1,3)))
+
+
+@SKIP("abstract Class")
+def test_sympy__concrete__expr_with_intlimits__ExprWithIntLimits():
+    from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
+    assert _test_args(ExprWithIntLimits(x, (x, 0, 10)))
+    assert _test_args(ExprWithIntLimits(x*y, (x, 0, 10),(y,1,3)))
+
+
 def test_sympy__concrete__summations__Sum():
     from sympy.concrete.summations import Sum
     assert _test_args(Sum(x, (x, 0, 10)))
