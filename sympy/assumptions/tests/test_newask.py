@@ -4,7 +4,7 @@ from sympy import symbols, Q, assuming, Implies, MatrixSymbol, I, pi
 
 from sympy.utilities.pytest import raises, XFAIL
 
-x, y = symbols('x y')
+x, y, z = symbols('x y z')
 
 def test_newask():
     # No relevant facts
@@ -116,3 +116,33 @@ def test_old_assump():
     assert newask(Q.nonnegative(0)) is True
     assert newask(Q.nonnegative(I)) is False
     assert newask(Q.nonnegative(pi)) is True
+
+def test_irrational():
+    assert newask(Q.irrational(2)) is False
+    assert newask(Q.rational(2)) is True
+    assert newask(Q.irrational(pi)) is True
+    assert newask(Q.rational(pi)) is False
+    assert newask(Q.irrational(I)) is False
+    assert newask(Q.rational(I)) is False
+
+    assert newask(Q.irrational(x*y*z), Q.irrational(x) & Q.irrational(y) &
+        Q.rational(z)) is None
+    assert newask(Q.irrational(x*y*z), Q.irrational(x) & Q.rational(y) &
+        Q.rational(z)) is True
+    assert newask(Q.irrational(pi*x*y), Q.rational(x) & Q.rational(y)) is True
+
+    assert newask(Q.irrational(x + y + z), Q.irrational(x) & Q.irrational(y) &
+        Q.rational(z)) is None
+    assert newask(Q.irrational(x + y + z), Q.irrational(x) & Q.rational(y) &
+        Q.rational(z)) is True
+    assert newask(Q.irrational(pi + x + y), Q.rational(x) & Q.rational(y)) is True
+
+    assert newask(Q.irrational(x*y*z), Q.rational(x) & Q.rational(y) &
+        Q.rational(z)) is False
+    assert newask(Q.rational(x*y*z), Q.rational(x) & Q.rational(y) &
+        Q.rational(z)) is True
+
+    assert newask(Q.irrational(x + y + z), Q.rational(x) & Q.rational(y) &
+        Q.rational(z)) is False
+    assert newask(Q.rational(x + y + z), Q.rational(x) & Q.rational(y) &
+        Q.rational(z)) is True

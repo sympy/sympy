@@ -185,6 +185,10 @@ def _old_assump_replacer(obj):
         ret = fuzzy_and([e.is_real, e.is_finite, e.is_nonzero])
     if obj.func == Q.nonnegative:
         ret = fuzzy_and([fuzzy_or([e.is_zero, e.is_finite]), e.is_nonnegative])
+    if obj.func == Q.rational:
+        ret = e.is_rational
+    if obj.func == Q.irrational:
+        ret = e.is_irrational
     if ret is None:
         return obj
     return ret
@@ -268,12 +272,20 @@ for klass, fact in [
     # matching, so that we can just write Equivalent(Q.zero(x**y), Q.zero(x) & Q.positive(y))
     (Pow, CustomLambda(lambda power: Equivalent(Q.zero(power), Q.zero(power.base) & Q.positive(power.exp)))),
     (Integer, CheckIsPrime(Q.prime)),
+    (Mul, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
+        Q.irrational))),
+    (Add, Implies(AllArgs(Q.real), Implies(ExactlyOneArg(Q.irrational),
+        Q.irrational))),
+    (Mul, Implies(AllArgs(Q.rational), Q.rational)),
+    (Add, Implies(AllArgs(Q.rational), Q.rational)),
     (Number, CheckOldAssump(Q.negative)),
     (Number, CheckOldAssump(Q.zero)),
     (Number, CheckOldAssump(Q.positive)),
     (Number, CheckOldAssump(Q.nonnegative)),
     (Number, CheckOldAssump(Q.nonzero)),
     (Number, CheckOldAssump(Q.nonpositive)),
+    (Number, CheckOldAssump(Q.rational)),
+    (Number, CheckOldAssump(Q.irrational)),
     # For some reason NumberSymbol does not subclass Number
     (NumberSymbol, CheckOldAssump(Q.negative)),
     (NumberSymbol, CheckOldAssump(Q.zero)),
@@ -281,12 +293,16 @@ for klass, fact in [
     (NumberSymbol, CheckOldAssump(Q.nonnegative)),
     (NumberSymbol, CheckOldAssump(Q.nonzero)),
     (NumberSymbol, CheckOldAssump(Q.nonpositive)),
+    (NumberSymbol, CheckOldAssump(Q.rational)),
+    (NumberSymbol, CheckOldAssump(Q.irrational)),
     (ImaginaryUnit, CheckOldAssump(Q.negative)),
     (ImaginaryUnit, CheckOldAssump(Q.zero)),
     (ImaginaryUnit, CheckOldAssump(Q.positive)),
     (ImaginaryUnit, CheckOldAssump(Q.nonnegative)),
     (ImaginaryUnit, CheckOldAssump(Q.nonzero)),
     (ImaginaryUnit, CheckOldAssump(Q.nonpositive)),
+    (ImaginaryUnit, CheckOldAssump(Q.rational)),
+    (ImaginaryUnit, CheckOldAssump(Q.irrational)),
     ]:
 
     register_fact(klass, fact)
