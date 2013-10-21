@@ -100,12 +100,13 @@ class AskNegativeHandler(CommonHandler):
             return AskNegativeHandler._number(expr, assumptions)
         if ask(Q.extended_real(expr.base), assumptions):
             if ask(Q.positive(expr.base), assumptions):
-                if ask(Q.extended_real(expr.exp), assumptions):
+                if ask(Q.real(expr.exp), assumptions):
                     return False
-            if ask(Q.even(expr.exp), assumptions):
-                return False
-            if ask(Q.odd(expr.exp), assumptions):
-                return ask(Q.negative(expr.base), assumptions)
+            if ask(Q.real(expr.base), assumptions):
+                if ask(Q.even(expr.exp), assumptions):
+                    return False
+                if ask(Q.odd(expr.exp), assumptions):
+                    return ask(Q.negative(expr.base), assumptions)
 
     ImaginaryUnit, Abs = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
@@ -258,7 +259,7 @@ class AskPositiveHandler(CommonHandler):
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
         if ask(Q.positive(expr.base), assumptions):
-            if ask(Q.real(expr.exp), assumptions):
+            if ask(Q.real(expr.base) & Q.real(expr.exp), assumptions):
                 return True
         if ask(Q.negative(expr.base), assumptions):
             if ask(Q.even(expr.exp), assumptions):

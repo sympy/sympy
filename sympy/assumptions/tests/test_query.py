@@ -1557,9 +1557,12 @@ def test_negative():
     assert ask(Q.negative(x*y), Q.positive(x) & Q.negative(y)) is True
     assert ask(Q.negative(x*y), Q.complex(x) & Q.complex(y)) is None
 
+    assert ask(Q.negative(x/y), Q.negative(x) & Q.negative(y)) is None
+    assert ask(Q.negative(x/y), Q.negative(x) & Q.negative(y) & ~Q.infinity(y)) is False
+
     assert ask(Q.negative(x**y)) is None
-    assert ask(Q.negative(x**y), Q.negative(x) & Q.even(y)) is False
-    assert ask(Q.negative(x**y), Q.negative(x) & Q.odd(y)) is True
+    assert ask(Q.negative(x**y), Q.negative(x) & ~Q.infinity(x) & Q.even(y)) is False
+    assert ask(Q.negative(x**y), Q.negative(x) & ~Q.infinity(x) & Q.odd(y)) is True
     assert ask(Q.negative(x**y), Q.positive(x) & Q.integer(y)) is False
 
     assert ask(Q.negative(Abs(x))) is False
@@ -1750,6 +1753,8 @@ def test_positive():
     # that don't evaluate to a zero with precision
     assert ask(Q.positive(cos(I)**2 + sin(I)**2 - 1)) is None
     assert ask(Q.positive(-I + I*(cos(2)**2 + sin(2)**2))) is None
+
+    assert ask(Q.positive(x/y), Q.positive(x) & Q.positive(y)) is None
 
     #exponential
     assert ask(Q.positive(exp(x)), Q.real(x)) is True
