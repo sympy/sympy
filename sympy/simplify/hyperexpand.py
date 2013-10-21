@@ -62,22 +62,50 @@ from collections import defaultdict
 from itertools import product
 
 from sympy import SYMPY_DEBUG
-from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, oo, zoo, expand_func, Add, nan, Expr)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, symbols
+from sympy.core.sympify import sympify
+from sympy.core.containers import Tuple
+from sympy.core.function import expand
+from sympy.core.numbers import I, pi
+from sympy.core.mul import Mul
+from sympy.core import EulerGamma
+from sympy.core.numbers import oo, zoo
+from sympy.core.function import expand_func
+from sympy.core.add import Add
+from sympy.core.numbers import nan
+from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, xrange
 from sympy.utilities.iterables import sift
-from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
-        besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
-        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
-        rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt, root
+from sympy.functions.elementary.exponential import log
+from sympy.functions.special.gamma_functions import lowergamma
+from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.special.bessel import besseli
+from sympy.functions.special.gamma_functions import gamma, uppergamma
+from sympy.functions.special.error_functions import expint, erf
+from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.special.bessel import besselj
+from sympy.functions.special.error_functions import Ei, Ci, Si, Shi
+from sympy.functions.elementary.hyperbolic import sinh, cosh
+from sympy.functions.special.error_functions import Chi, fresnels, fresnelc
+from sympy.functions.elementary.complexes import polar_lift
+from sympy.functions.elementary.exponential import exp_polar
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.combinatorial.factorials import rf, factorial
+from sympy.functions.special.zeta_functions import lerchphi
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.complexes import re
+from sympy.functions.special.elliptic_integrals import elliptic_k, elliptic_e
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
-from sympy.simplify import powdenest, simplify, polarify, unpolarify
-from sympy.polys import poly, Poly
-from sympy.series import residue
+from sympy.simplify.simplify import powdenest, simplify, polarify, unpolarify
+from sympy.polys.polytools import poly, Poly
+from sympy.series.residues import residue
 
 # leave add formulae at the top for easy reference
 def add_formulae(formulae):
