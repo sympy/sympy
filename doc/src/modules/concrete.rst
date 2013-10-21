@@ -79,20 +79,6 @@ hypergeometric:
     >>> hypersimp(factorial(n**2), n)
 
 
-Sum and Product manipulation
-----------------------------
-
-.. autofunction:: sympy.concrete.simplification.index
-
-.. autofunction:: sympy.concrete.simplification.change_index
-
-.. autofunction:: sympy.concrete.simplification.reorder_limit
-
-.. autofunction:: sympy.concrete.simplification.reorder
-
-.. autofunction:: sympy.concrete.simplification.reverse_order
-
-
 Concrete Class Reference
 ------------------------
 .. autoclass:: sympy.concrete.summations.Sum

@@ -1,12 +1,11 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
-                   Derivative, diff, I, sqrt, erf)
+                   Derivative, diff, I, sqrt, erf, Piecewise,
+                   Eq, Ne, Q, assuming, symbols, And)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
     integral_steps, _parts_rule
 
-x = Symbol('x')
-y = Symbol('y')
-u = Symbol('u')
+x, y, u, n, a, b = symbols('x y u n a b')
 
 def test_find_substitutions():
     assert find_substitutions((cot(x)**2 + 1)**2*csc(x)**2*cot(x)**2, x, u) == \
@@ -85,6 +84,17 @@ def test_manualintegrate_inversetrig():
     assert manualintegrate(1 / (16 + 16 * x**2), x) == atan(x) / 16
     assert manualintegrate(1 / (4 + x**2), x) == atan(x / 2) / 2
     assert manualintegrate(1 / (1 + 4 * x**2), x) == atan(2*x) / 2
+    assert manualintegrate(1/(a + b*x**2), x) == \
+        Piecewise((atan(x*sqrt(b/a))/(a*sqrt(b/a)), And(a > 0, b > 0)))
+    assert manualintegrate(1/(4 + b*x**2), x) == \
+        Piecewise((atan(sqrt(b)*x/2)/(2*sqrt(b)), b > 0))
+    assert manualintegrate(1/(a + 4*x**2), x) == \
+        Piecewise((atan(2*x*sqrt(1/a))/(2*a*sqrt(1/a)), a > 0))
+    assert manualintegrate(1/(4 + 4*x**2), x) == atan(x) / 4
+
+def test_manualintegrate_rational():
+    assert manualintegrate(1/(4 - x**2), x) == -log(x - 2)/4 + log(x + 2)/4
+    assert manualintegrate(1/(-1 + x**2), x) == log(x - 1)/2 - log(x + 1)/2
 
 def test_manualintegrate_derivative():
     assert manualintegrate(pi * Derivative(x**2 + 2*x + 3), x) == \
@@ -113,3 +123,29 @@ def test_manual_true():
         (exp(x) * sin(x)) / 2 - (exp(x) * cos(x)) / 2
     assert integrate(sin(x) * cos(x), x, manual=True) in \
         [sin(x) ** 2 / 2, -cos(x)**2 / 2]
+
+def test_issue_3647():
+    assert manualintegrate(y**x, x) == \
+        Piecewise((x, Eq(log(y), 0)), (y**x/log(y), True))
+    assert manualintegrate(y**(n*x), x) == \
+        Piecewise(
+            (x, Eq(n, 0)),
+            (Piecewise(
+                (n*x, Eq(log(y), 0)),
+                (y**(n*x)/log(y), True))/n, True))
+    assert manualintegrate(exp(n*x), x) == \
+        Piecewise((x, Eq(n, 0)), (exp(n*x)/n, True))
+
+    with assuming(~Q.zero(log(y))):
+        assert manualintegrate(y**x, x) == y**x/log(y)
+    with assuming(Q.zero(log(y))):
+        assert manualintegrate(y**x, x) == x
+    with assuming(~Q.zero(n)):
+        assert manualintegrate(y**(n*x), x) == \
+            Piecewise((n*x, Eq(log(y), 0)), (y**(n*x)/log(y), True))/n
+    with assuming(~Q.zero(n) & ~Q.zero(log(y))):
+        assert manualintegrate(y**(n*x), x) == \
+            y**(n*x)/(n*log(y))
+    with assuming(Q.negative(a)):
+        assert manualintegrate(1 / (a + b*x**2), x) == \
+            Integral(1/(a + b*x**2), x)

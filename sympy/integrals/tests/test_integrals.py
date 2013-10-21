@@ -505,21 +505,21 @@ def test_subs4():
 
 
 def test_subs5():
-    e = Integral(exp(-x**2), x)
-    assert e.subs(x, 5) == Integral(exp(-25), x)
-    e = Integral(exp(-x**2), (x, x))
-    assert e.subs(x, 5) == Integral(exp(-x**2), (x, 5))
     e = Integral(exp(-x**2), (x, -oo, oo))
     assert e.subs(x, 5) == e
     e = Integral(exp(-x**2 + y), x)
-    assert e.subs(x, 5) == Integral(exp(y - 25), x)
     assert e.subs(y, 5) == Integral(exp(-x**2 + 5), x)
     e = Integral(exp(-x**2 + y), (x, x))
     assert e.subs(x, 5) == Integral(exp(y - x**2), (x, 5))
-    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), (x, x))
+    assert e.subs(y, 5) == Integral(exp(-x**2 + 5), x)
     e = Integral(exp(-x**2 + y), (y, -oo, oo), (x, -oo, oo))
     assert e.subs(x, 5) == e
     assert e.subs(y, 5) == e
+    # Test evaluation of antiderivatives
+    e = Integral(exp(-x**2), (x, x))
+    assert e.subs(x, 5) == Integral(exp(-x**2), (x, 5))
+    e = Integral(exp(x), x)
+    assert (e.subs(x,1)-e.subs(x,0) - Integral(exp(x),(x,0,1))).doit().is_zero
 
 
 def test_subs6():
@@ -543,6 +543,9 @@ def test_subs7():
     assert e.subs(sin(x), 1) == Integral(sin(x) + sin(y), (x, 1, sin(y)),
                                          (y, 1, 2))
 
+def test_expand():
+    e = Integral(f(x)+f(x**2), (x, 1, y))
+    assert e.expand() == Integral(f(x), (x, 1, y)) + Integral(f(x**2), (x, 1, y))
 
 def test_integration_variable():
     raises(ValueError, lambda: Integral(exp(-x**2), 3))
@@ -551,9 +554,11 @@ def test_integration_variable():
 
 def test_expand_integral():
     assert Integral(cos(x**2)*(sin(x**2) + 1), (x, 0, 1)).expand() == \
-        Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
+        Integral(cos(x**2)*sin(x**2), (x, 0, 1)) + \
+        Integral(cos(x**2), (x, 0, 1))
     assert Integral(cos(x**2)*(sin(x**2) + 1), x).expand() == \
-        Integral(cos(x**2)*sin(x**2) + cos(x**2), x)
+        Integral(cos(x**2)*sin(x**2), x) + \
+        Integral(cos(x**2), x)
 
 
 def test_as_sum_midpoint1():
