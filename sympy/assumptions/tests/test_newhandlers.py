@@ -1,11 +1,11 @@
 from sympy import Mul, Basic, Q, Expr, And, symbols, Equivalent, Implies, Or
 
 from sympy.assumptions.newhandlers import (ClassFactRegistry, AllArgs,
-    UnevaluatedOnFree, AnyArgs, CheckOldAssump)
+    UnevaluatedOnFree, AnyArgs, CheckOldAssump, ExactlyOneArg)
 
 from sympy.utilities.pytest import raises
 
-x, y = symbols('x y')
+x, y, z = symbols('x y z')
 
 def test_class_handler_registry():
     my_handler_registry = ClassFactRegistry()
@@ -89,3 +89,13 @@ def test_CheckOldAssump():
 
     assert CheckOldAssump(Q.positive(t2)) == Q.positive(t2)
     assert CheckOldAssump(Q.negative(t2)) == ~Q.negative(t2)
+
+def test_ExactlyOneArg():
+    a = ExactlyOneArg(Q.zero)
+    b = ExactlyOneArg(Q.positive | Q.negative)
+    assert a.rcall(x*y) == Or(Q.zero(x) & ~Q.zero(y), Q.zero(y) & ~Q.zero(x))
+    assert a.rcall(x*y*z) == Or(Q.zero(x) & ~Q.zero(y) & ~Q.zero(z), Q.zero(y)
+        & ~Q.zero(x) & ~Q.zero(z), Q.zero(z) & ~Q.zero(x) & ~Q.zero(y))
+    assert b.rcall(x*y) == Or((Q.positive(x) | Q.negative(x)) &
+        ~(Q.positive(y) | Q.negative(y)), (Q.positive(y) | Q.negative(y)) &
+        ~(Q.positive(x) | Q.negative(x)))

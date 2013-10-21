@@ -13,7 +13,7 @@ from sympy.matrices.expressions import MatMul
 from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import Predicate, AppliedPredicate
 from sympy.logic.boolalg import (Equivalent, Implies, And, Or, BooleanFunction,
-    _find_predicates)
+    _find_predicates, Not)
 
 # APIs here may be subject to change
 
@@ -129,7 +129,38 @@ class AnyArgs(UnevaluatedOnFree):
     def apply(self):
         return Or(*[self.pred.rcall(arg) for arg in self.expr.args])
 
+class ExactlyOneArg(UnevaluatedOnFree):
+    """
+    Class representing a predicate holding on exactly one of the .args of an
+    expression.
 
+    See the docstring of UnevaluatedOnFree for more information on this
+    class.
+
+    The typical usage is to evaluate predicate with expressions using
+    .rcall().
+
+    Example
+    =======
+
+    >>> from sympy.assumptions.newhandlers import ExactlyOneArg
+    >>> from sympy import symbols, Q
+    >>> x, y = symbols('x y')
+    >>> a = ExactlyOneArg(Q.positive)
+    >>> a
+    ExactlyOneArg(Q.positive)
+    >>> a.rcall(x*y)
+    Or(And(Not(Q.positive(x)), Q.positive(y)), And(Not(Q.positive(y)), Q.positive(x)))
+    """
+    def apply(self):
+        expr = self.expr
+        pred = self.pred
+        # Technically this is xor, but if one term in the disjunction is true,
+        # it is not possible for the remainder to be true, so regular or is
+        # fine in this case.
+        return Or(*[And(pred.rcall(expr.args[i]), *map(lambda j:
+            Not(pred.rcall(j)), expr.args[:i] + expr.args[i+1:])) for i in
+            range(len(expr.args))])
 
 def _old_assump_replacer(obj):
     # Things to be careful of:
