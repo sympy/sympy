@@ -2509,46 +2509,44 @@ def test_W27():
 
 def test_X1():
     v, c = symbols('v c', real=True)
-    assert (series(1/sqrt(1 - (v/c)**2), v, x0 = 0, n = 8) ==
+    assert (series(1/sqrt(1 - (v/c)**2), v, x0=0, n=8) ==
             5*v**6/(16*c**6) + 3*v**4/(8*c**4) + v**2/(2*c**2) + 1 + O(v**8))
 
 
-@XFAIL
 def test_X2():
     v, c = symbols('v c', real=True)
-    f = 1/sqrt(1 - (v/c)**2)
-    s1 = series(f, v, x0 = 0, n = 8)
-    assert 1/f**2 == 1 - v**2/c**2
-    # 1/s1**2 returns (5*v**6/(16*c**6) + 3*v**4/(8*c**4)
-    # + v**2/(2*c**2) + 1 + O(v**8))**(-2)
-    assert 1/s1**2 == 1 - v**2/c*2 + O(v**8)
+    s1 = series(1/sqrt(1 - (v/c)**2), v, x0=0, n=8)
+    assert (1/s1**2).series(v, x0=0, n=8) == -v**2/c**2 + 1 + O(v**8)
 
 
-@XFAIL
 def test_X3():
-    s1 = series(sin(x))/series(cos(x))
-    # s1 = (x - x**3/6 + x**5/120 + O(x**6))/(1 - x**2/2 + x**4/24 + O(x**6))
-    #
-    # trying to use lazy series raises TypeError:
-    # s1 = series(sin(x), n=None)/series(cos(x), n=None)
-    # TypeError: unsupported operand type(s) for /: 'generator' and 'generator'
-    assert series(tan(x)) == x + x**3/3 + 2*x**5/15 + O(x**6)
-    assert s1 == x + x**3/3 + 2*x**5/15 + O(x**6)
+    s1 = (sin(x).series()/cos(x).series()).series()
+    s2 = tan(x).series()
+    assert s2 == x + x**3/3 + 2*x**5/15 + O(x**6)
+    assert s1 == s2
 
-@XFAIL
+
 def test_X4():
-    assert series(log(sin(x)/x)) == -x**2/6 - x**4/180 + O(x**6)
-    # log(series(sin(x)/x)) returns log(1 - x**2/6 + x**4/120 + O(x**6))
-    assert log(series(sin(x)/x)) == -x**2/6 - x**4/180 + O(x**6)
+    s1 = log(sin(x)/x).series()
+    assert s1 == -x**2/6 - x**4/180 + O(x**6)
+    assert log(series(sin(x)/x)).series() == s1
 
 
 @XFAIL
 def test_X5():
+    # test case in Mathematica syntax:
+    # In[21]:= (* => [a f'(a d) + g(b d) + integrate(h(c y), y = 0..d)]
+    #       + [a^2 f''(a d) + b g'(b d) + h(c d)] (x - d) *)
+    # In[22]:= D[f[a*x], x] + g[b*x] + Integrate[h[c*y], {y, 0, x}]
+    # Out[22]= g[b x] + Integrate[h[c y], {y, 0, x}] + a f'[a x]
+    # In[23]:= Series[%, {x, d, 1}]
+    # Out[23]= (g[b d] + Integrate[h[c y], {y, 0, d}] + a f'[a d]) +
+    #                                    2                               2
+    #             (h[c d] + b g'[b d] + a  f''[a d]) (-d + x) + O[-d + x]
     h = Function('h')
     a, b, c, d = symbols('a b c d', real=True)
     # series() raises NotImplementedError:
     # The _eval_nseries method should be added to <class
     # 'sympy.core.function.Subs'> to give terms up to O(x**n) at x=0
     assert series(diff(f(a*x), x) + g(b*x) + integrate(h(c*y), (y, 0, x)),
-           x, x0 = d, n = 2)
-
+           x, x0=d, n=2)
