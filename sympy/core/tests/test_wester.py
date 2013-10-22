@@ -12,7 +12,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, zoo,
     I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
-    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc,
+    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func, E, Q, And, Or, Ne, Eq, Le, Lt,
     ask, refine, AlgebraicNumber,
@@ -2548,5 +2548,62 @@ def test_X5():
     # series() raises NotImplementedError:
     # The _eval_nseries method should be added to <class
     # 'sympy.core.function.Subs'> to give terms up to O(x**n) at x=0
-    assert series(diff(f(a*x), x) + g(b*x) + integrate(h(c*y), (y, 0, x)),
+    series(diff(f(a*x), x) + g(b*x) + integrate(h(c*y), (y, 0, x)),
            x, x0=d, n=2)
+    # assert missing, until exception is removed
+
+
+def test_X6():
+    # Taylor series of nonscalar objects (noncommutative multiplication)
+    # expected result => (B A - A B) t^2/2 + O(t^3)   [Stanly Steinberg]
+    a, b = symbols('a b', commutative=False, scalar=False)
+    assert (series(exp((a + b)*x) - exp(a*x) * exp(b*x), x, x0=0, n=3) ==
+              x**2*(-a*b/2 + b*a/2) + O(x**3))
+
+
+def test_X7():
+    # => sum( Bernoulli[k]/k! x^(k - 2), k = 1..infinity )
+    #    = 1/x^2 - 1/(2 x) + 1/12 - x^2/720 + x^4/30240 + O(x^6)
+    #    [Levinson and Redheffer, p. 173]
+    assert (series(1/(x*(exp(x) - 1)), x, 0, 7) == x**(-2) - 1/(2*x) +
+            S(1)/12 - x**2/720 + x**4/30240 - 2363*x**6/604800 + O(x**7))
+
+
+@XFAIL
+def test_X8():
+    # Puiseux series (terms with fractional degree):
+    # => 1/sqrt(x - 3/2 pi) + (x - 3/2 pi)^(3/2) / 12 + O([x - 3/2 pi]^(7/2))
+    x = symbols('x', real=True)
+    # raises PoleError: Cannot expand sec(_x + 3*pi/2) around 0
+    # https://code.google.com/p/sympy/issues/detail?id=4068
+    series(sqrt(sec(x)), x, x0=pi*3/2, n=4)
+    # assert missing, until exception is removed
+
+
+def test_X9():
+    assert (series(x**x, x, x0=0, n=4) == 1 + x*log(x) + x**2*log(x)**2/2 +
+            x**3*log(x)**3/6 + O(x**4*log(x)**4))
+
+
+def test_X10():
+    z, w = symbols('z w')
+    assert (series(log(sinh(z)) + log(cosh(z + w)), z, x0=0, n=2) ==
+            log(cosh(w)) + log(z) + z*sinh(w)/cosh(w) + O(z**2))
+
+
+def test_X11():
+    z, w = symbols('z w')
+    assert (series(log(sinh(z) * cosh(z + w)), z, x0=0, n=2) ==
+            log(cosh(w)) + log(z) + z*sinh(w)/cosh(w) + O(z**2))
+
+
+@XFAIL
+def test_X12():
+    # Look at the generalized Taylor series around x = 1
+    # Result => (x - 1)^a/e^b [1 - (a + 2 b) (x - 1) / 2 + O((x - 1)^2)]
+    # http://www.wolframalpha.com/input/?i=Series%5BLog%5Bx%5D%5Ea*Exp%5B-b*x%5D%2C+%7Bx%2C1%2C0%7D%5D
+    a, b, x = symbols('a b x', real=True)
+    # series returns O(log(x)**2)
+    # https://code.google.com/p/sympy/issues/detail?id=4069
+    assert (series(log(x)**a*exp(-b*x), x, x0=1, n=2) ==
+            (x - 1)**a/exp(b)*(1 - (a + 2*b)*(x - 1)/2 + O((x - 1)**2)))
