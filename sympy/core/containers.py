@@ -99,6 +99,11 @@ class Tuple(Basic):
     def __le__(self, other):
         return self.args <= other.args
 
+    def _eval_simplify(self, ratio, measure):
+        from sympy.simplify.simplify import simplify
+        return self.func(*[simplify(x, ratio=ratio, measure=measure)
+                           for x in self.args])
+
     # XXX: Basic defines count() as something different, so we can't
     # redefine it here. Originally this lead to cse() test failure.
     def tuple_count(self, value):

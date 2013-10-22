@@ -247,6 +247,13 @@ def test_piecewise_integrate_independent_conditions():
         Piecewise((0, Eq(y, 0)), (4*y, True))
 
 
+def test_piecewise_simplify():
+    p = Piecewise(((x**2 + 1)/x**2, Eq(x*(1 + x) - x**2, 0)),
+                  ((-1)**x*(-1), True))
+    assert p.simplify() == \
+        Piecewise((1 + 1/x**2, Eq(x, 0)), ((-1)**(x + 1), True))
+
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
