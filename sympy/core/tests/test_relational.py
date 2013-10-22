@@ -1,6 +1,6 @@
 import sys
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy import Symbol, symbols, oo, I, pi, Float, And, Or, Not, Implies, Xor
 from sympy.core.relational import ( Relational, Equality, Unequality,
     GreaterThan, LessThan, StrictGreaterThan, StrictLessThan, Rel, Eq, Lt, Le,

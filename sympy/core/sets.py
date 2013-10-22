@@ -7,13 +7,11 @@ from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.compatibility import iterable, with_metaclass
+from sympy.core.compatibility import iterable, with_metaclass, default_sort_key
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions.ask import ask
 from sympy.logic.boolalg import And, Or
-
-from sympy.core.compatibility import default_sort_key
 
 
 class Set(Basic):

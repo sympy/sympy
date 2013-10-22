@@ -4,7 +4,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.series.order import O
-from sympy.utilities.pytest import XFAIL, slow
+from sympy.utilities.pytest import slow
 
 
 def test_rational():

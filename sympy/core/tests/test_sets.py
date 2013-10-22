@@ -1,12 +1,11 @@
 from sympy import (
     Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    GreaterThan, LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
+    LessThan, Max, Min, And, Or, Eq, Ge, Le, Gt, Lt, Float,
     FiniteSet, Intersection, imageset
 )
 from sympy.mpmath import mpi
 
 from sympy.utilities.pytest import raises
-from sympy.utilities.pytest import raises, XFAIL
 
 
 def test_interval_arguments():
