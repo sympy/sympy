@@ -1,8 +1,8 @@
 from __future__ import division
 
 from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
-        sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        sign, im
+        sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols, oo, Integer,
+        sign
 )
 from sympy.core.compatibility import long
 from sympy.utilities.pytest import XFAIL, raises

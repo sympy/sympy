@@ -1,10 +1,10 @@
 from sympy import (
     symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, Abs, O, factorial, exp_polar, polar_lift, gruntz, limit,
+    re, im, Abs, O, exp_polar, polar_lift, gruntz, limit,
     Symbol, I, integrate, S,
     sqrt, sin, cos, sinh, cosh, exp, log, pi, EulerGamma,
     erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-    gamma, uppergamma, loggamma,
+    gamma, uppergamma,
     Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
     fresnels, fresnelc,
     hyper, meijerg)

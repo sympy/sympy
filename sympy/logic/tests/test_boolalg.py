@@ -208,7 +208,7 @@ def test_bool_equal():
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
-    from sympy.abc import a, b, c, x, y, z
+    from sympy.abc import a, b, y, z
     assert bool_equal(Not(Not(a)), a)
     assert bool_equal(SOPform(['w', 'x', 'y', 'z'], minterms),
         POSform(['w', 'x', 'y', 'z'], minterms))

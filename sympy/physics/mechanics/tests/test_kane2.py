@@ -1,7 +1,7 @@
-from sympy import cos, expand, Matrix, Poly, simplify, sin, solve, sqrt
-from sympy import symbols, tan, trigsimp, zeros
+from sympy import cos, Matrix, simplify, sin, solve
+from sympy import symbols, trigsimp, zeros
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, KanesMethod,
-                                     inertia, inertia_of_point_mass, Particle,
+                                     inertia, inertia_of_point_mass,
                                      Point, ReferenceFrame, RigidBody)
 
 

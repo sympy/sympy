@@ -5,7 +5,7 @@ from sympy import (
     factorial)
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
-    _partition, _set_partitions, binary_partitions, bracelets, capture,
+    _partition, _set_partitions, binary_partitions, capture,
     cartes, common_prefix, common_suffix, dict_merge, flatten,
     generate_bell, generate_derangements, generate_involutions,
     generate_oriented_forest, group, has_dups, kbins, minlex, multiset,

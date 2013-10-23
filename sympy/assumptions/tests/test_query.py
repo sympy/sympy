@@ -9,7 +9,7 @@ from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
 from sympy.core.compatibility import exec_
 from sympy.functions import (Abs, cos, exp, im, log, re, sign, sin, sqrt,
         tan, atan, acos, asin, cot, acot)
-from sympy.logic import Equivalent, Implies, Xor, And, to_cnf, Not
+from sympy.logic import Equivalent, Implies, Xor, And, to_cnf
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
 

@@ -8,7 +8,7 @@ from sympy import (
     Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2, binomial,
     catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
     factorial2, floor, gamma, groebner, hyper, log, lowergamma, meijerg,
-    oo, pi, sin, sqrt, subfactorial, symbols, tan, uppergamma, lex, ilex,
+    oo, pi, sin, sqrt, subfactorial, symbols, tan, uppergamma, ilex,
     grlex, elliptic_k, elliptic_f, elliptic_e, elliptic_pi)
 
 from sympy.printing.pretty import pretty as xpretty

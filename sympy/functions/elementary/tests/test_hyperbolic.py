@@ -2,7 +2,7 @@ from sympy import symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log, sq
     coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth, \
     Integer, O, exp
 
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 
 def test_sinh():

@@ -1,4 +1,4 @@
-from sympy.core import Set, Dict, Tuple, Rational
+from sympy.core import Rational
 from .cartan_type import Standard_Cartan
 from sympy.matrices import eye
 

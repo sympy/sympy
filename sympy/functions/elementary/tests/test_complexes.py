@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
+    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
     sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
 )

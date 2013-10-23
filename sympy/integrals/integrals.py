@@ -4,13 +4,12 @@ from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.core import C
-from sympy.core.compatibility import is_sequence, xrange
+from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
-from sympy.core.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -21,7 +20,6 @@ from sympy.integrals.rationaltools import ratint
 from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities.decorator import xthreaded
-from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import filldedent
 from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import PolynomialError
@@ -31,7 +29,6 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import sign
 from sympy.geometry.curve import Curve
-from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series.limits import limit
 
 

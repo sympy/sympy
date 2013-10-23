@@ -1,6 +1,6 @@
 from sympy import (meijerg, I, S, integrate, Integral, oo, gamma,
                    hyperexpand, exp, simplify, sqrt, pi, erf, sin, cos,
-                   exp_polar, polar_lift, polygamma, hyper, log, expand_func)
+                   exp_polar, polygamma, hyper, log, expand_func)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
          meijerint_indefinite, _inflate_g, _create_lookup_table,
          meijerint_definite, meijerint_inversion)
@@ -90,7 +90,7 @@ def test_inflate():
 
 
 def test_recursive():
-    from sympy import symbols, expand
+    from sympy import symbols
     a, b, c = symbols('a b c', positive=True)
     e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))
     assert simplify(e.expand()) == (
@@ -210,7 +210,7 @@ def test_meijerint():
 
 
 def test_bessel():
-    from sympy import besselj, Heaviside, besseli, powdenest
+    from sympy import besselj, besseli
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
                      meijerg=True, conds='none')) == \
         2*sin(pi*(a/2 - b/2))/(pi*(a - b)*(a + b))
@@ -275,7 +275,7 @@ def test_inversion():
 
 def test_lookup_table():
     from random import uniform, randrange
-    from sympy import Add, unpolarify
+    from sympy import Add
     from sympy.integrals.meijerint import z as z_dummy
     table = {}
     _create_lookup_table(table)
@@ -567,9 +567,9 @@ def test_expint():
 
 
 def test_messy():
-    from sympy import (laplace_transform, Si, Ci, Shi, Chi, atan, Piecewise,
-                       atanh, acoth, E1, besselj, acosh, asin, Ne, And, re,
-                       fourier_transform, Abs)
+    from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
+                       acoth, E1, besselj, acosh, asin, And, re,
+                       fourier_transform)
     assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)

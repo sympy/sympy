@@ -3,11 +3,11 @@ from sympy import (
     cos, cosh, cot, coth, count_ops, Derivative, diff, Dummy, E, Eq, erf, exp,
     exp_polar, expand, exptrigsimp, factor, factorial, FallingFactorial, Float,
     fraction, Function, gamma, GoldenRatio, hyper, hypersimp, I,
-    Integer, Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
+    Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
     oo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
     radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
     root, S, separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
-    Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
+    Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic,
     expand_multinomial, denom)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import (
@@ -1697,7 +1697,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, besselk, bessely, jn, yn, cosine_transform
+    from sympy import besselj, besseli, cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \

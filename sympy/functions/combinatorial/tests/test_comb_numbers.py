@@ -2,7 +2,7 @@ import string
 
 from sympy import (bernoulli, Symbol, symbols, Dummy, Sum, harmonic, Rational, oo,
     zoo, pi, I, bell, fibonacci, lucas, euler, catalan, binomial, gamma, sqrt,
-    hyper, log, digamma, trigamma, polygamma, diff, Expr, sympify, expand_func,
+    hyper, log, digamma, trigamma, polygamma, diff, expand_func,
     EulerGamma, factorial)
 
 from sympy.utilities.pytest import XFAIL, raises

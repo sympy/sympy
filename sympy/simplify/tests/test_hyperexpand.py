@@ -13,7 +13,7 @@ from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
 from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
-from sympy.utilities.pytest import XFAIL, skip, slow
+from sympy.utilities.pytest import XFAIL, slow
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf)

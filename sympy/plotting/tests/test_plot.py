@@ -8,7 +8,6 @@ from sympy.plotting.experimental_lambdify import lambdify
 from sympy.external import import_module
 
 from tempfile import NamedTemporaryFile
-import warnings
 
 unset_show()
 

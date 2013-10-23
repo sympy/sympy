@@ -2,7 +2,7 @@ from sympy.categories import (Object, Morphism, IdentityMorphism,
                               NamedMorphism, CompositeMorphism,
                               Diagram, Category)
 from sympy.categories.baseclasses import Class
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
 
 

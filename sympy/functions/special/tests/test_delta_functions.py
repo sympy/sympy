@@ -1,5 +1,5 @@
 from sympy import (
-    adjoint, conjugate, DiracDelta, Heaviside, nan, oo, pi, sqrt, symbols,
+    adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sqrt, symbols,
     transpose, Symbol, Piecewise, I, S, Eq
 )
 

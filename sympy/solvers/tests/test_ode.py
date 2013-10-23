@@ -2,7 +2,7 @@ from __future__ import division
 
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
-    Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
+    Dummy, Eq, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
     Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,

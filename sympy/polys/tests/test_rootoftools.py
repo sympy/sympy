@@ -10,13 +10,11 @@ from sympy.polys.polyerrors import (
     PolynomialError,
 )
 
-from sympy import (
-    S, symbols, sqrt, I, Rational, Float, Lambda, log, exp, tan,
-)
+from sympy import S, sqrt, I, Rational, Float, Lambda, log, exp, tan
 
 from sympy.utilities.pytest import raises
 
-from sympy.abc import a, b, c, d, x, y, z, r
+from sympy.abc import a, b, x, y, z, r
 
 
 def test_RootOf___new__():

@@ -1,7 +1,7 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
-from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
-    powsimp, Lambda, sin, cos, pi, I, Interval, re, im, exp, ZZ)
+from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
+    powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ)
 
 from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
     PolynomialError)

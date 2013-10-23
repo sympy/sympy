@@ -1,4 +1,4 @@
-from sympy.core import Set, Dict, Tuple, Rational
+from sympy.core import Rational
 from .cartan_type import Standard_Cartan
 from sympy.matrices import Matrix
 
@@ -90,12 +90,12 @@ class TypeF(Standard_Cartan):
         k = 0
         for i in range(0, n-1):
             for j in range(i+1, n):
-               k += 1
-               posroots[k] = self.basic_root(i, j)
-               k += 1
-               root = self.basic_root(i, j)
-               root[j] = 1
-               posroots[k] = root
+                k += 1
+                posroots[k] = self.basic_root(i, j)
+                k += 1
+                root = self.basic_root(i, j)
+                root[j] = 1
+                posroots[k] = root
 
         for i in range(0, n):
             k += 1

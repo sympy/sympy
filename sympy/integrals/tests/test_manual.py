@@ -1,9 +1,9 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
-                   Symbol, Mul, Integral, integrate, pi, Dummy,
+                   Symbol, Integral, integrate, pi, Dummy,
                    Derivative, diff, I, sqrt, erf, Piecewise,
-                   Eq, Ne, Q, assuming, symbols, And)
+                   Eq, Q, assuming, symbols, And)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, \
-    integral_steps, _parts_rule
+    _parts_rule
 
 x, y, u, n, a, b = symbols('x y u n a b')
 

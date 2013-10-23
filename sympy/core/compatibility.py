@@ -59,7 +59,6 @@ Metaclasses:
 PY3 = sys.version_info[0] > 2
 
 if PY3:
-    import collections
 
     class_types = type,
     integer_types = (int,)
