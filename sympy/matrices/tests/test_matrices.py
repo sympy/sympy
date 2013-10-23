@@ -2194,7 +2194,6 @@ def test_adjoint():
         assert ans == cls(dat).adjoint()
 
 def test_simplify():
-    from sympy import simplify, sin, cos
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
 
@@ -2208,7 +2207,7 @@ def test_rank():
     assert p.rank() == 0
 
 def test_replace():
-    from sympy import symbols, Function, Matrix
+    from sympy import Function
     F, G = symbols('F, G', cls=Function)
     K = Matrix(2, 2, lambda i, j: G(i+j))
     M = Matrix(2, 2, lambda i, j: F(i+j))
@@ -2216,7 +2215,7 @@ def test_replace():
     assert N == K
 
 def test_replace_map():
-    from sympy import symbols, Function, Matrix
+    from sympy import Function
     F, G = symbols('F, G', cls=Function)
     K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1)\
     : G(1)}), (G(2), {F(2): G(2)})])
@@ -2225,7 +2224,6 @@ def test_replace_map():
     assert N == K
 
 def test_atoms():
-    from sympy.abc import x
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.atoms() == set([S(1),S(2),S(-1), x])
     assert m.atoms(Symbol) == set([x])

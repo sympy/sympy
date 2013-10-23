@@ -1551,8 +1551,6 @@ def wronskian(functions, var, method='bareis'):
     sympy.matrices.mutable.Matrix.jacobian
     hessian
     """
-    from .dense import Matrix
-
     for index in range(0, len(functions)):
         functions[index] = sympify(functions[index])
     n = len(functions)
@@ -1592,8 +1590,6 @@ def casoratian(seqs, n, zero=True):
        True
 
     """
-    from .dense import Matrix
-
     seqs = list(map(sympify, seqs))
 
     if not zero:

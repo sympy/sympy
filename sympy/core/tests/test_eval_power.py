@@ -247,7 +247,7 @@ def test_issue_3001():
 
 
 def test_issue_3109():
-    from sympy import root, Rational
+    from sympy import root
     I = S.ImaginaryUnit
     assert sqrt(33**(9*I/10)) == -33**(9*I/20)
     assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3)  # != 2*I/3

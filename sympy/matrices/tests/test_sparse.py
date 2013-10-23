@@ -510,7 +510,6 @@ def test_copyin():
 
 
 def test_sparse_solve():
-    from sympy.matrices import SparseMatrix
     A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     assert A.cholesky() == Matrix([
         [ 5, 0, 0],

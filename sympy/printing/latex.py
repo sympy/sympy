@@ -1230,7 +1230,7 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_MatMul(self, expr):
-        from sympy import Add, MatAdd, HadamardProduct
+        from sympy import MatAdd, HadamardProduct
 
         def parens(x):
             if isinstance(x, (Add, MatAdd, HadamardProduct)):
@@ -1239,7 +1239,7 @@ class LatexPrinter(Printer):
         return ' '.join(map(parens, expr.args))
 
     def _print_HadamardProduct(self, expr):
-        from sympy import Add, MatAdd, MatMul
+        from sympy import MatAdd, MatMul
 
         def parens(x):
             if isinstance(x, (Add, MatAdd, MatMul)):

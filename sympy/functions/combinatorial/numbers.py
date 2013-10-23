@@ -886,7 +886,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
 
     if k == 0:

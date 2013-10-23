@@ -122,7 +122,7 @@ def myexpand(func, target):
 
 
 def test_polylog_expansion():
-    from sympy import factor, log
+    from sympy import factor
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == dirichlet_eta(s)

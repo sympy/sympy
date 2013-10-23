@@ -324,7 +324,6 @@ def test_complicated_codegen():
 
 def test_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -392,7 +391,6 @@ def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
@@ -891,7 +889,6 @@ def test_complicated_codegen_f95():
 
 def test_loops():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
 
     n, m = symbols('n,m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
@@ -968,7 +965,6 @@ def test_dummy_loops_f95():
 
 def test_loops_InOut():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
 
     i, j, n, m = symbols('i,j,n,m', integer=True)
     A, x, y = symbols('A,x,y')
@@ -1019,7 +1015,6 @@ def test_partial_loops_f():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
@@ -1081,7 +1076,6 @@ def test_output_arg_f():
 
 def test_inline_function():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
     i = Idx('i', m)

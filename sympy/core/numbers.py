@@ -231,7 +231,6 @@ class Number(AtomicExpr):
         raise TypeError(msg % type(obj).__name__)
 
     def __divmod__(self, other):
-        from .containers import Tuple
         from sympy.functions.elementary.complexes import sign
 
         try:
@@ -1564,14 +1563,12 @@ class Integer(Rational):
             return Integer(-self.p)
 
     def __divmod__(self, other):
-        from .containers import Tuple
         if isinstance(other, Integer):
             return Tuple(*(divmod(self.p, other.p)))
         else:
             return Number.__divmod__(self, other)
 
     def __rdivmod__(self, other):
-        from .containers import Tuple
         if isinstance(other, integer_types):
             return Tuple(*(divmod(other, self.p)))
         else:

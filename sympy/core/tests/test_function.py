@@ -360,7 +360,6 @@ def test_doit():
 
 
 def test_evalf_default():
-    from sympy.functions.special.gamma_functions import polygamma
     assert type(sin(4.0)) == Float
     assert type(re(sin(I + 1.0))) == Float
     assert type(im(sin(I + 1.0))) == Float

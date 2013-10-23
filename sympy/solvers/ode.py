@@ -724,7 +724,6 @@ def classify_ode(eq, func=None, dict=False, ics=None, **kwargs):
 
     """
     prep = kwargs.pop('prep', True)
-    from sympy import expand
 
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only "
@@ -2420,8 +2419,6 @@ def homogeneous_order(eq, *symbols):
     True
 
     """
-    from sympy.simplify.simplify import separatevars
-
     if not symbols:
         raise ValueError("homogeneous_order: no symbols were given.")
     symset = set(symbols)
@@ -3945,7 +3942,6 @@ def _undetermined_coefficients_match(expr, x):
     {'test': False}
 
     """
-    from sympy import S
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
     expr = powsimp(expr, combine='exp')  # exp(x)*exp(2*x + 1) => exp(3*x + 1)

@@ -9,6 +9,8 @@ import operator
 from collections import defaultdict
 from sympy.external.importtools import import_module
 
+import sys
+
 
 """
 Python 2 and Python 3 compatible imports
@@ -54,7 +56,6 @@ Metaclasses:
             pass
 """
 
-import sys
 PY3 = sys.version_info[0] > 2
 
 if PY3:
@@ -698,8 +699,6 @@ if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
     GROUND_TYPES = 'python'
 
 # SYMPY_INTS is a tuple containing the base types for valid integer types.
-
-import sys
 
 if sys.version_info[0] == 2:
     SYMPY_INTS = (int, long)

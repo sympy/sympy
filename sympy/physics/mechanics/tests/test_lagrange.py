@@ -1,6 +1,6 @@
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
-                                    kinetic_energy, dynamicsymbols, inertia,
+                                    kinetic_energy, inertia,
                                     potential_energy, Lagrangian)
 from sympy import symbols, pi, sin, cos, tan, simplify, expand, Function, \
     Derivative

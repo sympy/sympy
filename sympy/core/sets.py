@@ -979,7 +979,6 @@ class Intersection(Set):
         return Intersection(imageset(f, arg) for arg in self.args)
 
     def _contains(self, other):
-        from sympy.logic.boolalg import And
         return And(*[set.contains(other) for set in self.args])
 
     def __iter__(self):
@@ -1311,7 +1310,6 @@ class FiniteSet(Set, EvalfMixin):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities import default_sort_key
         return sorted(self.args, key=default_sort_key)
 
 def imageset(*args):

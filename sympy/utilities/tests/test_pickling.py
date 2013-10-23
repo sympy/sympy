@@ -173,13 +173,13 @@ def test_Singletons():
 from sympy.functions import (Piecewise, lowergamma, acosh,
         chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
         Heaviside, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
-        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ynm,
+        arg, asin, DiracDelta, re, rf, Abs, uppergamma, sinh, Ynm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
-        LambertW, zeta, log, factorial, asinh, acoth, Znm,
+        LambertW, zeta, log, asinh, acoth, Znm,
         cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
         conjugate, tan, chebyshevu_root, floor, atanh, sqrt,
         RisingFactorial, sin, atan, ff, FallingFactorial, lucas, atan2,
-        polygamma, exp)
+        polygamma)
 
 
 def test_functions():
@@ -323,7 +323,7 @@ def test_plotting2():
 from sympy import Poly, ZZ, QQ, lex
 
 def test_pickling_polys_polytools():
-    from sympy.polys.polytools import Poly, PurePoly, GroebnerBasis
+    from sympy.polys.polytools import PurePoly, GroebnerBasis
     x = Symbol('x')
 
     for c in (Poly, Poly(x, x)):

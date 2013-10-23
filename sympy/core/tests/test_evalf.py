@@ -321,7 +321,7 @@ def test_issue_2387():
 
 
 def test_issue_2387_bug():
-    from sympy import I, Expr
+    from sympy import Expr
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
 
 

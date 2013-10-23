@@ -195,8 +195,7 @@ def test_mat_inv_mul():
     # intended. Uses SymPy generated primes as matrix entries, so each entry in
     # each matrix should be symbolic and unique, allowing proper comparison.
     # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
-    from sympy import Matrix, prime
-    from sympy.physics.mechanics import ReferenceFrame, KanesMethod
+    from sympy import prime
 
     # Just need to create an instance of KanesMethod to get to _mat_inv_mul
     mat_inv_mul = KanesMethod(ReferenceFrame('N'), [1], [1])._mat_inv_mul

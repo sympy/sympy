@@ -5,7 +5,6 @@ from sympy import (
 )
 from sympy.mpmath import mpi
 
-from sympy.utilities.pytest import raises
 from sympy.utilities.pytest import raises, XFAIL
 
 

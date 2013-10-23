@@ -1306,7 +1306,7 @@ class FourierTypeTransform(IntegralTransform):
                                   self.__class__._name, **hints)
 
     def _as_integral(self, f, x, k):
-        from sympy import Integral, exp, I
+        from sympy import exp, I
         a = self.__class__._a
         b = self.__class__._b
         return Integral(a*f*exp(b*I*x*k), (x, -oo, oo))

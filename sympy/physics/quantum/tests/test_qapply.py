@@ -11,7 +11,6 @@ from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
 from sympy.physics.quantum.state import Ket
 from sympy.physics.quantum.density import Density
-from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.gate import UGate
 
 j, jp, m, mp = symbols("j j' m m'")

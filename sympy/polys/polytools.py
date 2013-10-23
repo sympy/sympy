@@ -5531,7 +5531,6 @@ def to_rational_coeffs(f):
         ``alpha`` is the rescaling factor, and ``f`` is the rescaled
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
@@ -5565,7 +5564,6 @@ def to_rational_coeffs(f):
         ``alpha`` is the translating factor, and ``f`` is the shifted
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()

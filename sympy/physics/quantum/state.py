@@ -171,7 +171,6 @@ class StateBase(QExpr):
         return '%s%s%s' % (self.lbracket, contents, self.rbracket)
 
     def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm
         # Get brackets
         pform = self._print_contents_pretty(printer, *args)
         lbracket, rbracket = self._pretty_brackets(

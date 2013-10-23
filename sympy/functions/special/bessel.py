@@ -683,8 +683,6 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
     jn, yn, besselj, besselk, bessely
     """
-    from math import pi
-
     if method == "sympy":
         from sympy.mpmath import besseljzero
         from sympy.mpmath.libmp.libmpf import dps_to_prec

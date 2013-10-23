@@ -1689,7 +1689,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     If only x was excluded then a solution for y or z might be obtained.
 
     """
-    from sympy import Equality
     if isinstance(lhs, Equality):
         if rhs:
             raise ValueError(filldedent('''

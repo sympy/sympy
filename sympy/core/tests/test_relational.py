@@ -144,7 +144,6 @@ def test_rich_cmp():
 
 
 def test_doit():
-    from sympy import Symbol
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     np = Symbol('np', nonpositive=True)

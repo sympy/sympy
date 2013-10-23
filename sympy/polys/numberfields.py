@@ -118,7 +118,7 @@ def _separate_sq(p):
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
     """
-    from sympy.simplify.simplify import _split_gcd, _mexpand
+    from sympy.simplify.simplify import _split_gcd
     from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
@@ -181,8 +181,6 @@ def _minimal_polynomial_sq(p, n, x):
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
-    from sympy.simplify.simplify import _is_sum_surds
-
     p = sympify(p)
     n = sympify(n)
     r = _is_sum_surds(p)
@@ -604,7 +602,6 @@ def minimal_polynomial(ex, x=None, **args):
     x**2 - y
 
     """
-    from sympy.polys.polytools import degree
     from sympy.polys.domains import FractionField
     from sympy.core.basic import preorder_traversal
 
@@ -657,7 +654,6 @@ def _minpoly_groebner(ex, x, cls):
     x**2 - 2*x - 1
 
     """
-    from sympy.polys.polytools import degree
     from sympy.core.function import expand_multinomial
 
     generator = numbered_symbols('a', cls=Dummy)

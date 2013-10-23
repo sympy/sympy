@@ -289,7 +289,7 @@ class hyper(TupleParametersBase):
     @property
     def convergence_statement(self):
         """ Return a condition on z under which the series converges. """
-        from sympy import And, Or, re, Ne, oo
+        from sympy import And, Or, re, Ne
         R = self.radius_of_convergence
         if R == 0:
             return False

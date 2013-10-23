@@ -377,7 +377,6 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
-    from sympy.core.core import C
 
     terms = [t for t in terms if not iszero(t)]
     if not terms:
@@ -482,8 +481,7 @@ def evalf_add(v, prec, options):
 
 
 def evalf_mul(v, prec, options):
-    from sympy.core.core import C
-
+    from numbers import Float
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -498,7 +496,7 @@ def evalf_mul(v, prec, options):
         arg = evalf(arg, prec, options)
         if arg[0] is None:
             continue
-        arg = C.Float._new(arg[0], 1)
+        arg = Float._new(arg[0], 1)
         if arg is S.NaN or arg.is_unbounded:
             special.append(arg)
     if special:
