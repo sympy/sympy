@@ -2601,9 +2601,160 @@ def test_X11():
 def test_X12():
     # Look at the generalized Taylor series around x = 1
     # Result => (x - 1)^a/e^b [1 - (a + 2 b) (x - 1) / 2 + O((x - 1)^2)]
-    # http://www.wolframalpha.com/input/?i=Series%5BLog%5Bx%5D%5Ea*Exp%5B-b*x%5D%2C+%7Bx%2C1%2C0%7D%5D
     a, b, x = symbols('a b x', real=True)
     # series returns O(log(x)**2)
     # https://code.google.com/p/sympy/issues/detail?id=4069
     assert (series(log(x)**a*exp(-b*x), x, x0=1, n=2) ==
             (x - 1)**a/exp(b)*(1 - (a + 2*b)*(x - 1)/2 + O((x - 1)**2)))
+
+
+def test_X13():
+    assert series(sqrt(2*x**2 + 1), x, x0=oo, n=1) == sqrt(2)*x + O(1/x, x, oo)
+
+
+@XFAIL
+def test_X14():
+    # Wallis' product => 1/sqrt(pi n) + ...   [Knopp, p. 385]
+    assert series(1/2**(2*n)*binomial(2*n, n),
+                  n, x==oo, n=1) == 1/(sqrt(pi)*sqrt(n)) + O(1/x, x, oo)
+
+
+@XFAIL
+def test_X15():
+    # => 0!/x - 1!/x^2 + 2!/x^3 - 3!/x^4 + O(1/x^5)   [Knopp, p. 544]
+    x, t = symbols('x t', real=True)
+    # raises RuntimeError: maximum recursion depth exceeded
+    # https://code.google.com/p/sympy/issues/detail?id=4065
+    e1 = integrate(exp(-t)/t, (t, x, oo))
+    assert (series(e1, x, x0=oo, n=5) ==
+            6/x**4 + 2/x**3 - 1/x**2 + 1/x + O(x**(-5), x, oo))
+
+
+def test_X16():
+    # Multivariate Taylor series expansion => 1 - (x^2 + 2 x y + y^2)/2 + O(x^4)
+    assert (series(cos(x + y), x + y, x0=0, n=4) == 1 - (x + y)**2/2 +
+            O(x**4 + x**3*y + x**2*y**2 + x*y**3 + y**4, x, y))
+
+
+@XFAIL
+def test_X17():
+    # Power series (compute the general formula)
+    # (c41) powerseries(log(sin(x)/x), x, 0);
+    # /aquarius/data2/opt/local/macsyma_422/library1/trgred.so being loaded.
+    #              inf
+    #              ====     i1  2 i1          2 i1
+    #              \        (- 1)   2      bern(2 i1) x
+    # (d41)               >        ------------------------------
+    #              /             2 i1 (2 i1)!
+    #              ====
+    #              i1 = 1
+    raise NotImplementedError("Formal power series not supported")
+
+
+@XFAIL
+def test_X18():
+    # Power series (compute the general formula). Maple FPS:
+    # > FormalPowerSeries(exp(-x)*sin(x), x = 0);
+    #                        infinity
+    #                         -----    (1/2 k)                k
+    #                          \      2        sin(3/4 k Pi) x
+    #                           )     -------------------------
+    #                          /                 k!
+    #                         -----
+    raise NotImplementedError("Formal power series not supported")
+
+
+@XFAIL
+def test_X19():
+    # (c45) /* Derive an explicit Taylor series solution of y as a function of
+    # x from the following implicit relation:
+    #    y = x - 1 + (x - 1)^2/2 + 2/3 (x - 1)^3 + (x - 1)^4 +
+    #        17/10 (x - 1)^5 + ...
+    #    */
+    # x = sin(y) + cos(y);
+    # Time= 0 msecs
+    # (d45)                   x = sin(y) + cos(y)
+    #
+    # (c46) taylor_revert(%, y, 7);
+    raise NotImplementedError("Solve using series not supported. \
+Inverse Taylor series expansion also not supported")
+
+
+@XFAIL
+def test_X20():
+    # Pade (rational function) approximation => (2 - x)/(2 + x)
+    # > numapprox[pade](exp(-x), x = 0, [1, 1]);
+    # bytes used=9019816, alloc=3669344, time=13.12
+    #                                    1 - 1/2 x
+    #                                    ---------
+    #                                    1 + 1/2 x
+    # mpmath support numeric Pade approximant but there is
+    # no symbolic implementation in SymPy
+    # http://en.wikipedia.org/wiki/Pad%C3%A9_approximant
+    raise NotImplementedError("Symbolic Pade approximant not supported")
+
+
+@XFAIL
+def test_X21():
+    # (c48) /* Fourier series of f(x) of period 2 p over the interval [-p, p]
+    #    => - (2 p / pi) sum( (-1)^n sin(n pi x / p) / n, n = 1..infinity ) */
+    # assume(p > 0)$
+    # Time= 0 msecs
+    #
+    # (c49) fourier_series(x, x, p);
+    # /aquarius/data2/opt/local/macsyma_422/share/fourier.so being loaded.
+    # (e49)                      a  = 0
+    #                       0
+    #
+    # (e50)                     a    = 0
+    #                      %nn
+    #
+    #                          %nn
+    #                       2 (- 1)    p
+    # (e51)                  b      = - ------------
+    #                   %nn       %pi %nn
+    #
+    # Time= 4540 msecs
+    #                inf            %nn     %pi %nn x
+    #                ====       (- 1)    sin(---------)
+    #                \                p
+    #                2 p  >       -----------------------
+    #                /             %nn
+    #                ====
+    #                %nn = 1
+    # (d51)              - -----------------------------------
+    #                        %pi
+    raise NotImplementedError("Fourier series not supported")
+
+
+@XFAIL
+def test_X22():
+    # (c52) /* => p / 2
+    #    - (2 p / pi^2) sum( [1 - (-1)^n] cos(n pi x / p) / n^2,
+    #                        n = 1..infinity ) */
+    # fourier_series(abs(x), x, p);
+    #                       p
+    # (e52)                      a  = -
+    #                       0      2
+    #
+    #                       %nn
+    #                   (2 (- 1)    - 2) p
+    # (e53)                a    = ------------------
+    #                 %nn         2    2
+    #                       %pi  %nn
+    #
+    # (e54)                     b    = 0
+    #                      %nn
+    #
+    # Time= 5290 msecs
+    #            inf           %nn            %pi %nn x
+    #            ====       (2 (- 1)    - 2) cos(---------)
+    #            \                    p
+    #          p  >       -------------------------------
+    #            /               2
+    #            ====                %nn
+    #            %nn = 1                     p
+    # (d54)          ----------------------------------------- + -
+    #                       2                 2
+    #                    %pi
+    raise NotImplementedError("Fourier series not supported")
