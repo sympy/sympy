@@ -586,7 +586,6 @@ def test_util():
 
     v1 = Matrix(1, 3, [1, 2, 3])
     v2 = Matrix(1, 3, [3, 4, 5])
-    assert v1.cross(v2) == Matrix(1, 3, [-2, 4, -2])
     assert v1.norm() == sqrt(14)
     assert v1.project(v2) == Matrix(1, 3, [R(39)/25, R(52)/25, R(13)/5])
     assert Matrix.zeros(1, 2) == Matrix(1, 2, [0, 0])
@@ -600,7 +599,6 @@ def test_util():
     test = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert test.cofactorMatrix() == \
         Matrix([[-3, 6, -3], [6, -12, 6], [-3, 6, -3]])
-    raises(ShapeError, lambda: Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
 
 def test_jacobian_hessian():
@@ -2155,18 +2153,21 @@ def test_issue2221():
 def test_cross():
     a = [1, 2, 3]
     b = [3, 4, 5]
-    ans = Matrix([-2, 4, -2]).T
+    col = Matrix([-2, 4, -2])
+    row = col.T
 
-    def test(M):
+    def test(M, ans):
         assert ans == M
         assert type(M) == cls
     for cls in classes:
         A = cls(a)
         B = cls(b)
-        test(A.cross(B))
-        test(A.T.cross(B))
-        test(A.T.cross(B.T))
-        test(A.cross(B.T))
+        test(A.cross(B), col)
+        test(A.cross(B.T), col)
+        test(A.T.cross(B.T), row)
+        test(A.T.cross(B), row)
+    raises(ShapeError, lambda:
+        Matrix(1, 2, [1, 1]).cross(Matrix(1, 2, [1, 1])))
 
 
 def test_hash():
