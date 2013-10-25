@@ -3,7 +3,7 @@ from sympy import (Add, ceiling, cos, E, Eq, exp, factorial, fibonacci, floor,
                    sin, sqrt, sstr, Sum, sympify, S, integrate, atan, product)
 from sympy.core.evalf import complex_accuracy, PrecisionExhausted, scaled_zero
 from sympy.core.compatibility import long
-from sympy.mpmath import inf, ninf, nan
+from sympy.mpmath import inf, ninf
 from sympy.abc import n, x, y
 from sympy.mpmath.libmp.libmpf import from_float
 from sympy.utilities.pytest import raises, XFAIL

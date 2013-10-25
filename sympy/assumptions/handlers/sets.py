@@ -5,7 +5,6 @@ from __future__ import print_function, division
 
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
-from sympy import I, S
 
 
 class AskIntegerHandler(CommonHandler):

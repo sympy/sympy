@@ -1,10 +1,9 @@
 from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy, Function, flatten
+    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy
 )
 
 from sympy.core.compatibility import u
 from sympy.utilities.pytest import raises
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def test_Symbol():

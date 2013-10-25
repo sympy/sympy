@@ -24,7 +24,6 @@ from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .core import C
 from .singleton import S
-from .containers import Tuple
 
 LG10 = math.log(10, 2)
 rnd = round_nearest

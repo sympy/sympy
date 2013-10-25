@@ -6,7 +6,7 @@ from sympy import (
 )
 from sympy.abc import a, b, c, d, f, k, m, x, y, z
 from sympy.concrete.summations import telescopic
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.pytest import raises
 
 n = Symbol('n', integer=True)
 

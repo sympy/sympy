@@ -9,9 +9,8 @@
 from __future__ import print_function, division
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, iterable
 from sympy.core.sympify import sympify, converter
-from sympy.core.compatibility import iterable
 
 
 class Tuple(Basic):

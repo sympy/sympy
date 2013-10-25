@@ -8,8 +8,6 @@ this stuff for general purpose.
 """
 from __future__ import print_function, division
 
-from sympy.core.compatibility import iterable
-
 
 def fuzzy_bool(x):
     """Return True, False or None according to x.

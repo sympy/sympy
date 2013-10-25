@@ -11,7 +11,7 @@ from .containers import Tuple
 from .sympify import converter, sympify, _sympify, SympifyError
 from .singleton import S, Singleton
 from .expr import Expr, AtomicExpr
-from .decorators import _sympifyit, deprecated
+from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
 from sympy.core.compatibility import (
     as_int, integer_types, long, string_types, with_metaclass, HAS_GMPY,
