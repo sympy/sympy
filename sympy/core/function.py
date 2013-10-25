@@ -98,6 +98,25 @@ class FunctionClass(with_metaclass(BasicMeta, ManagedProperties)):
     """
     _new = type.__new__
 
+    _nargs = None
+
+    def __init__(cls, *args, **kw_args):
+        super(FunctionClass, cls).__init__(args, kw_args)
+
+        # Canonicalize nargs here:
+        try:
+            nargs = cls.__dict__['nargs']
+            if isinstance(nargs, tuple):
+                cls._nargs = nargs
+            else:
+                cls._nargs = (nargs,)
+        except KeyError:
+            pass
+
+    @property
+    def nargs(self):
+        return self._nargs
+
     def __repr__(cls):
         return cls.__name__
 
@@ -109,11 +128,8 @@ class Application(with_metaclass(FunctionClass, Basic)):
     Instances of Application represent the result of applying an application of
     any type to any object.
     """
-    __slots__ = []
 
     is_Function = True
-
-    nargs = None
 
     @cacheit
     def __new__(cls, *args, **options):
@@ -126,7 +142,10 @@ class Application(with_metaclass(FunctionClass, Basic)):
             evaluated = cls.eval(*args)
             if evaluated is not None:
                 return evaluated
-        return super(Application, cls).__new__(cls, *args)
+
+        obj = super(Application, cls).__new__(cls, *args)
+        obj.nargs = cls.nargs
+        return obj
 
     @classmethod
     def eval(cls, *args):
@@ -254,15 +273,9 @@ class Function(Application, Expr):
             return UndefinedFunction(*args)
 
         if cls.nargs is not None:
-            if isinstance(cls.nargs, tuple):
-                nargs = cls.nargs
-            else:
-                nargs = (cls.nargs,)
-            cls.nargs = nargs
-
             n = len(args)
 
-            if n not in nargs:
+            if n not in cls.nargs:
                 # XXX: exception message must be in exactly this format to make
                 # it work with NumPy's functions like vectorize(). The ideal
                 # solution would be just to attach metadata to the exception
