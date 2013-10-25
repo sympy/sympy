@@ -181,3 +181,7 @@ def test_propKB_tolerant():
     kb = PropKB()
     A, B, C = symbols('A,B,C')
     assert kb.ask(B) is False
+
+def test_satisfiable_bool():
+    assert satisfiable(True) == {}
+    assert satisfiable(False) == False

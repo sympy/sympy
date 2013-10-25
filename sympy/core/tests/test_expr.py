@@ -610,25 +610,6 @@ def test_as_independent():
            (Integral(x, (x, 1, 2)), x)
 
 
-def test_call():
-    # See the long history of this in issues 1927 and 2006.
-
-    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
-    raises(TypeError, lambda: sin(x)(1))
-
-    # No effect as there are no callables
-    assert sin(x).rcall(1) == sin(x)
-    assert (1 + sin(x)).rcall(1) == 1 + sin(x)
-
-    # Effect in the pressence of callables
-    l = Lambda(x, 2*x)
-    assert (l + x).rcall(y) == 2*y + x
-    assert (x**l).rcall(2) == x**4
-    # TODO UndefinedFunction does not subclass Expr
-    #f = Function('f')
-    #assert (2*f)(x) == 2*f(x)
-
-
 def test_replace():
     f = log(sin(x)) + tan(sin(x**2))
 
